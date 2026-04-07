@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Quadratic Graph Explorer</title>
+  <meta property="og:title" content="Quadratic Graph Explorer"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="600"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .header {
+      width: 560px;
+      padding: 14px 4px 6px;
+    }
+
+    .title {
+      color: #00abfa;
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .instruction {
+      color: #b4b2a9;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .equation-bar {
+      width: 560px;
+      padding: 5px 4px 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: #f0f0ee;
+      min-height: 28px;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    .sliders {
+      width: 560px;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      padding: 10px 4px;
+      border-top: 1px solid #1a2535;
+      border-bottom: 1px solid #1a2535;
+    }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Fixed-width label so decimal values never cause a layout shift */
+    .slider-label {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      width: 72px;      /* wide enough for "a = −3.0" */
+      flex-shrink: 0;
+    }
+    .slider-label.la { color: #00abfa; }
+    .slider-label.lb { color: #fff067; }
+    .slider-label.lc { color: #0fee89; }
+
+    input[type="range"] {
+      flex: 1;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: #1e2e3e;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    #slider-a::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 15px; height: 15px;
+      border-radius: 50%; background: #00abfa; cursor: pointer;
+    }
+    #slider-b::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 15px; height: 15px;
+      border-radius: 50%; background: #fff067; cursor: pointer;
+    }
+    #slider-c::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 15px; height: 15px;
+      border-radius: 50%; background: #0fee89; cursor: pointer;
+    }
+
+    .slider-bounds {
+      color: #3a4a5a;
+      font-size: 11px;
+      width: 46px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .footer {
+      width: 560px;
+      padding: 8px 4px 14px;
+    }
+
+    .tip {
+      color: #0fee89;
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="title">Quadratic Graph Explorer</div>
+    <div class="instruction">
+      Move the sliders — watch how
+      <b style="color:#00abfa">a</b>,
+      <b style="color:#fff067">b</b>, and
+      <b style="color:#0fee89">c</b>
+      each change the parabola
+    </div>
+  </div>
+
+  <div class="equation-bar" id="eq-display">y = x²</div>
+
+  <canvas id="graph" width="560" height="360"></canvas>
+
+  <div class="sliders">
+    <div class="slider-row">
+      <div class="slider-label la" id="label-a">a = &nbsp;1.0</div>
+      <input type="range" id="slider-a" min="-3" max="3" step="0.1" value="1"/>
+      <div class="slider-bounds">−3 … 3</div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label lb" id="label-b">b = &nbsp;0.0</div>
+      <input type="range" id="slider-b" min="-5" max="5" step="0.1" value="0"/>
+      <div class="slider-bounds">−5 … 5</div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label lc" id="label-c">c = &nbsp;0.0</div>
+      <input type="range" id="slider-c" min="-5" max="5" step="0.1" value="0"/>
+      <div class="slider-bounds">−5 … 5</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="tip">
+      Cambridge tip: <strong>y-intercept is always (0, c)</strong> — state this explicitly in your answer for 1 mark.
+      The sign of <strong>a</strong> tells you if the parabola opens up (a &gt; 0) or down (a &lt; 0).
+    </div>
+  </div>
+
+  <script>
+    var a_val = 1.0, b_val = 0.0, c_val = 0.0;
+
+    var canvas = document.getElementById('graph');
+    var ctx    = canvas.getContext('2d');
+    var W = 560, H = 360;
+
+    // Scale canvas for HiDPI / Retina — keeps CSS size but renders at full resolution
+    var DPR = window.devicePixelRatio || 1;
+    canvas.width  = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(DPR, DPR);
+
+    // Math coordinate space: x ∈ [−6, 6], y ∈ [−5, 5]
+    var X_MIN = -6, X_MAX = 6, Y_MIN = -5, Y_MAX = 5;
+
+    function toCanvas(mx, my) {
+      var cx = (mx - X_MIN) / (X_MAX - X_MIN) * W;
+      var cy = (Y_MAX - my) / (Y_MAX - Y_MIN) * H;
+      return { x: cx, y: cy };
+    }
+
+    // ── Format number: always 1 decimal, sign space for positives ──
+    function fmt(v) {
+      var r = Math.round(v * 10) / 10;
+      return r.toFixed(1);
+    }
+
+    // ── Build equation string ──────────────────────────────────────
+    function equationString() {
+      var a = a_val, b = b_val, c = c_val;
+
+      if (a === 0 && b === 0) return 'y = ' + fmt(c);
+
+      var s = 'y = ';
+
+      // ax² term
+      if (a !== 0) {
+        var absA = Math.abs(a);
+        var signA = a < 0 ? '−' : '';
+        if (absA === 1) s += signA + 'x²';
+        else            s += signA + fmt(absA) + 'x²';
+      }
+
+      // bx term
+      if (b !== 0) {
+        var absB = Math.abs(b);
+        var signB = b > 0 ? ' + ' : ' − ';
+        if (a === 0) signB = b < 0 ? '−' : '';
+        if (absB === 1) s += signB + 'x';
+        else            s += signB + fmt(absB) + 'x';
+      }
+
+      // c term
+      if (c !== 0) {
+        var absC = Math.abs(c);
+        var signC = c > 0 ? ' + ' : ' − ';
+        if (a === 0 && b === 0) signC = c < 0 ? '−' : '';
+        s += signC + fmt(absC);
+      }
+
+      return s;
+    }
+
+    // ── Main draw ─────────────────────────────────────────────────
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      // Background
+      ctx.fillStyle = '#0d1216';
+      ctx.fillRect(0, 0, W, H);
+
+      // ── Grid ──────────────────────────────────────────────────
+      ctx.strokeStyle = '#111f2c';
+      ctx.lineWidth = 0.8;
+      ctx.beginPath();
+      for (var ky = Y_MIN; ky <= Y_MAX; ky++) {
+        ctx.moveTo(toCanvas(X_MIN, ky).x, toCanvas(X_MIN, ky).y);
+        ctx.lineTo(toCanvas(X_MAX, ky).x, toCanvas(X_MAX, ky).y);
+      }
+      for (var kx = X_MIN; kx <= X_MAX; kx++) {
+        ctx.moveTo(toCanvas(kx, Y_MIN).x, toCanvas(kx, Y_MIN).y);
+        ctx.lineTo(toCanvas(kx, Y_MAX).x, toCanvas(kx, Y_MAX).y);
+      }
+      ctx.stroke();
+
+      // ── Axes ──────────────────────────────────────────────────
+      ctx.strokeStyle = '#3a5060';
+      ctx.lineWidth = 1.5;
+      var ax1 = toCanvas(X_MIN, 0), ax2 = toCanvas(X_MAX, 0);
+      ctx.beginPath(); ctx.moveTo(ax1.x, ax1.y); ctx.lineTo(ax2.x, ax2.y); ctx.stroke();
+      var ay1 = toCanvas(0, Y_MIN), ay2 = toCanvas(0, Y_MAX);
+      ctx.beginPath(); ctx.moveTo(ay1.x, ay1.y); ctx.lineTo(ay2.x, ay2.y); ctx.stroke();
+
+      // ── Axis tick labels ──────────────────────────────────────
+      ctx.fillStyle = '#6a8898';
+      ctx.font = '11px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      // x-axis numbers
+      for (var kx = X_MIN + 1; kx < X_MAX; kx++) {
+        if (kx === 0) continue;
+        var p = toCanvas(kx, 0);
+        ctx.fillText(kx, p.x, p.y + 4);
+      }
+      // y-axis numbers
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      for (var ky = Y_MIN + 1; ky < Y_MAX; ky++) {
+        if (ky === 0) continue;
+        var p = toCanvas(0, ky);
+        ctx.fillText(ky, p.x + 5, p.y);
+      }
+      // Axis end labels
+      ctx.fillStyle = '#7a9aaa';
+      ctx.font = '12px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText('x', toCanvas(X_MAX, 0).x - 14, toCanvas(X_MAX, 0).y - 10);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText('y', toCanvas(0, Y_MAX).x + 5, toCanvas(0, Y_MAX).y + 2);
+
+      // ── Parabola ──────────────────────────────────────────────
+      ctx.strokeStyle = '#00abfa';
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+
+      var STEPS = 400;
+      for (var i = 0; i <= STEPS; i++) {
+        var mx = X_MIN + i * (X_MAX - X_MIN) / STEPS;
+        var my = a_val * mx * mx + b_val * mx + c_val;
+        var cp = toCanvas(mx, my);
+        i === 0 ? ctx.moveTo(cp.x, cp.y) : ctx.lineTo(cp.x, cp.y);
+      }
+      ctx.stroke();
+
+      // ── Y-intercept dot ───────────────────────────────────────
+      var yint = toCanvas(0, c_val);
+
+      // Outer glow ring when hovering or dragging
+      if (dragging || hovering) {
+        ctx.fillStyle = dragging ? 'rgba(15,238,137,0.18)' : 'rgba(15,238,137,0.10)';
+        ctx.beginPath();
+        ctx.arc(yint.x, yint.y, 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = dragging ? '#5fffa8' : '#0fee89';
+      ctx.beginPath();
+      ctx.arc(yint.x, yint.y, dragging ? 8 : 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Y-intercept label — flip side if c is near top/bottom
+      var labelY = yint.y < 30 ? yint.y + 18 : yint.y - 18;
+      ctx.fillStyle = '#0fee89';
+      ctx.font = '12px Courier New, monospace';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('(0, ' + fmt(c_val) + ')', yint.x + 11, labelY);
+    }
+
+    // ── Convert canvas CSS coords → math coords ───────────────────
+    function fromCanvas(cx, cy) {
+      return {
+        mx: X_MIN + (cx / W) * (X_MAX - X_MIN),
+        my: Y_MAX - (cy / H) * (Y_MAX - Y_MIN)
+      };
+    }
+
+    // ── Get mouse position relative to canvas in CSS pixels ───────
+    function getPos(e) {
+      var rect = canvas.getBoundingClientRect();
+      var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * (W / rect.width),
+        y: (clientY - rect.top)  * (H / rect.height)
+      };
+    }
+
+    // ── Drag state ────────────────────────────────────────────────
+    var dragging = false;
+    var hovering = false;
+    var DOT_HIT  = 14; // px hit radius for the dot
+
+    function isNearDot(px, py) {
+      var dot = toCanvas(0, c_val);
+      var dx = px - dot.x, dy = py - dot.y;
+      return Math.sqrt(dx*dx + dy*dy) < DOT_HIT;
+    }
+
+    function setCFromY(py) {
+      var math = fromCanvas(0, py);
+      // Clamp to slider range
+      c_val = Math.max(-5, Math.min(5, Math.round(math.my * 10) / 10));
+    }
+
+    // ── Shared update: sync label + equation + redraw ─────────────
+    function update() {
+      document.getElementById('eq-display').textContent = equationString();
+      draw();
+    }
+
+    function setLabel(letter, val) {
+      document.getElementById('label-' + letter).textContent =
+        letter + ' = ' + (val < 0 ? '−' : ' ') + fmt(Math.abs(val));
+    }
+
+    // ── Mouse events ──────────────────────────────────────────────
+    canvas.addEventListener('mousedown', function (e) {
+      var p = getPos(e);
+      if (isNearDot(p.x, p.y)) { dragging = true; e.preventDefault(); }
+    });
+
+    canvas.addEventListener('mousemove', function (e) {
+      var p = getPos(e);
+      if (dragging) {
+        setCFromY(p.y);
+        document.getElementById('slider-c').value = c_val;
+        setLabel('c', c_val);
+        update();
+      } else {
+        var was = hovering;
+        hovering = isNearDot(p.x, p.y);
+        canvas.style.cursor = hovering ? 'grab' : 'default';
+        if (hovering !== was) draw();
+      }
+    });
+
+    canvas.addEventListener('mouseup',    function () { dragging = false; });
+    canvas.addEventListener('mouseleave', function () {
+      if (dragging || hovering) {
+        dragging = hovering = false;
+        canvas.style.cursor = 'default';
+        draw();
+      }
+    });
+
+    // ── Touch events (mobile) ─────────────────────────────────────
+    canvas.addEventListener('touchstart', function (e) {
+      var p = getPos(e);
+      if (isNearDot(p.x, p.y)) { dragging = true; e.preventDefault(); }
+    }, { passive: false });
+
+    canvas.addEventListener('touchmove', function (e) {
+      if (!dragging) return;
+      e.preventDefault();
+      var p = getPos(e);
+      setCFromY(p.y);
+      document.getElementById('slider-c').value = c_val;
+      setLabel('c', c_val);
+      update();
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', function () { dragging = false; });
+
+    // ── Slider wiring ─────────────────────────────────────────────
+    var sliders = [
+      { id: 'a', ref: function(v) { a_val = v; } },
+      { id: 'b', ref: function(v) { b_val = v; } },
+      { id: 'c', ref: function(v) { c_val = v; } }
+    ];
+
+    sliders.forEach(function(s) {
+      document.getElementById('slider-' + s.id).oninput = function () {
+        s.ref(parseFloat(this.value));
+        setLabel(s.id, parseFloat(this.value));
+        update();
+      };
+    });
+
+    // ── Initial draw ──────────────────────────────────────────────
+    draw();
+  </script>
+</body>
+</html>

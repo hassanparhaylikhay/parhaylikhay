@@ -1,0 +1,16 @@
+# Manim rendered output
+media/
+**/__pycache__/
+*.pyc
+
+# Large binary files (regenerate from source)
+*.mp4
+*.mov
+*.jpeg
+*.jpg
+*.png
+
+# macOS
+.DS_Store
+.env
+.claude/

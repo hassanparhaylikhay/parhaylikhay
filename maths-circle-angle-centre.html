@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Angle at Centre Theorem</title>
+  <meta property="og:title" content="Angle at Centre Theorem"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="600"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header  { width: 560px; padding: 14px 4px 6px; }
+    .title   { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+    .instr   { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    canvas   { display: block; cursor: default; }
+    .footer  { width: 560px; padding: 8px 4px 14px; }
+    .tip     { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Circle Theorem — Angle at the Centre</div>
+  <div class="instr">
+    Drag <b style="color:#00abfa">A</b> and <b style="color:#fff067">B</b>
+    along the circle to change the arc — drag
+    <b style="color:#ff4670">P</b> anywhere on the major arc and watch both angles update live
+  </div>
+</div>
+
+<canvas id="c" width="560" height="440"></canvas>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: State <strong>"angle at centre = 2 × angle at circumference, subtended by the same arc"</strong>
+    — this exact wording earns the reason mark. Always name the arc both angles subtend.
+  </div>
+</div>
+
+<script>
+var canvas = document.getElementById('c');
+var ctx    = canvas.getContext('2d');
+var W = 560, H = 440;
+
+var DPR = window.devicePixelRatio || 1;
+canvas.width        = W * DPR;
+canvas.height       = H * DPR;
+canvas.style.width  = W + 'px';
+canvas.style.height = H + 'px';
+ctx.scale(DPR, DPR);
+
+// ── Coordinate system ──────────────────────────────────────────────────────
+var CX = W / 2;        // canvas centre x
+var CY = H / 2 + 8;   // canvas centre y (slightly below midpoint for label room)
+var R  = 3;            // circle radius in math units
+var S  = 62;           // pixels per math unit  →  circle = 186px radius
+
+function toC(mx, my)   { return { x: CX + mx * S,   y: CY - my * S }; }
+function fromC(cx, cy) { return { mx: (cx - CX) / S, my: (CY - cy) / S }; }
+function ptOnCircle(t) { return { x: R * Math.cos(t), y: R * Math.sin(t) }; }
+
+// Normalise angle to [0, 2π)
+function N(a) { return ((a % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI); }
+
+// ── Point angles (initial positions) ──────────────────────────────────────
+var tA = N(145 * Math.PI / 180);  // A  upper-left
+var tB = N( 35 * Math.PI / 180);  // B  upper-right
+var tP = N(255 * Math.PI / 180);  // P  lower-left (on major arc)
+
+// ── Minor arc logic ────────────────────────────────────────────────────────
+// The minor arc is the SHORTER arc between A and B.
+
+function minorIsCCW() {
+  // Returns true when going CCW from A to B is the shorter path (< 180°)
+  return N(tB - tA) <= Math.PI;
+}
+
+function isOnMinorArc(t) {
+  t = N(t);
+  var a = N(tA), b = N(tB), d = N(b - a);
+  // d = CCW distance from A to B
+  return d <= Math.PI
+    ? N(t - a) < d                  // minor arc is CCW from A to B
+    : N(t - b) < (2*Math.PI - d);   // minor arc is CW from A to B (= CCW from B to A)
+}
+
+function minorMidAngle() {
+  // Math angle of the midpoint of the minor arc
+  var a = N(tA), b = N(tB), d = N(b - a);
+  return d <= Math.PI ? N(a + d / 2) : N(b + (2*Math.PI - d) / 2);
+}
+
+function clampP(t) {
+  t = N(t);
+  if (!isOnMinorArc(t)) return t;
+  // P landed on the minor arc — push it to the nearest boundary on the major arc side
+  var EPS = 0.13;  // ~7.5° buffer
+  var a = N(tA), b = N(tB);
+  var da = N(t - a); if (da > Math.PI) da = 2*Math.PI - da;
+  var db = N(t - b); if (db > Math.PI) db = 2*Math.PI - db;
+  var ccw = minorIsCCW();
+  if (da <= db) return ccw ? N(a - EPS) : N(a + EPS);   // push off endpoint A
+  else          return ccw ? N(b + EPS) : N(b - EPS);   // push off endpoint B
+}
+
+// ── Point setters (with constraints) ──────────────────────────────────────
+var MIN_SEP = 20 * Math.PI / 180;  // A and B must stay ≥ 20° apart
+
+function setA(t) {
+  var d = N(t - tB); if (d > Math.PI) d = 2*Math.PI - d;
+  if (d >= MIN_SEP) { tA = N(t); tP = clampP(tP); }
+}
+function setB(t) {
+  var d = N(t - tA); if (d > Math.PI) d = 2*Math.PI - d;
+  if (d >= MIN_SEP) { tB = N(t); tP = clampP(tP); }
+}
+function setP(t) { tP = clampP(N(t)); }
+
+// ── Angle computation ──────────────────────────────────────────────────────
+function computeAngles() {
+  var A = ptOnCircle(tA), B = ptOnCircle(tB), P = ptOnCircle(tP);
+
+  // Central angle = minor arc angle (always < 180°)
+  var d = N(tB - tA);
+  var central = d <= Math.PI ? d : 2*Math.PI - d;
+
+  // Inscribed angle ∠APB via dot product of vectors PA and PB
+  var PAx = A.x - P.x, PAy = A.y - P.y;
+  var PBx = B.x - P.x, PBy = B.y - P.y;
+  var dot  = PAx*PBx + PAy*PBy;
+  var mag  = Math.sqrt(PAx*PAx + PAy*PAy) * Math.sqrt(PBx*PBx + PBy*PBy);
+  var inscribed = mag > 0 ? Math.acos(Math.max(-1, Math.min(1, dot / mag))) : 0;
+
+  return { central: central, inscribed: inscribed };
+}
+
+// ── Draw helpers ───────────────────────────────────────────────────────────
+
+// Draw the shorter arc between two canvas angles ca, cb
+function arcBetween(cx, cy, r, ca, cb) {
+  var cw = ((cb - ca) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, ca, cb, cw > Math.PI);
+  ctx.stroke();
+}
+
+// Draw a dot with optional hover glow
+function dot(cx, cy, color, r, glowing) {
+  if (glowing) {
+    ctx.fillStyle = color.replace('#', '') === color ? color : hexAlpha(color, 0.15);
+    ctx.beginPath(); ctx.arc(cx, cy, r + 9, 0, 2*Math.PI); ctx.fill();
+  }
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(cx, cy, glowing ? r + 2 : r, 0, 2*Math.PI); ctx.fill();
+}
+
+function hexAlpha(hex, a) {
+  var r = parseInt(hex.slice(1,3),16),
+      g = parseInt(hex.slice(3,5),16),
+      b = parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+
+// Draw text with a dark backing rect so it's legible over any geometry
+function label(x, y, text, color, size) {
+  size = size || 12;
+  ctx.font = 'bold ' + size + 'px -apple-system, BlinkMacSystemFont, sans-serif';
+  var tw = ctx.measureText(text).width;
+  ctx.fillStyle = 'rgba(13,18,22,0.82)';
+  ctx.fillRect(x - tw/2 - 5, y - size/2 - 4, tw + 10, size + 8);
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+}
+
+// ── Main draw ──────────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0d1216';
+  ctx.fillRect(0, 0, W, H);
+
+  var A  = ptOnCircle(tA), B  = ptOnCircle(tB), P  = ptOnCircle(tP);
+  var Ac = toC(A.x, A.y),  Bc = toC(B.x, B.y),  Pc = toC(P.x, P.y);
+  var ang = computeAngles();
+  var cDeg = Math.round(ang.central  * 180 / Math.PI);
+  var iDeg = Math.round(ang.inscribed * 180 / Math.PI);
+  var mm   = minorMidAngle();
+
+  // 1. Full circle (faint)
+  ctx.beginPath();
+  ctx.arc(CX, CY, R * S, 0, 2*Math.PI);
+  ctx.strokeStyle = '#1a3350';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 2. Minor arc highlight (yellow)
+  ctx.lineWidth = 3.5;
+  ctx.strokeStyle = '#fff067';
+  arcBetween(CX, CY, R * S, -tA, -tB);
+
+  // 3. Dashed lines: O→A and O→B (blue)
+  ctx.strokeStyle = 'rgba(0,171,250,0.55)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(CX, CY); ctx.lineTo(Ac.x, Ac.y);
+  ctx.moveTo(CX, CY); ctx.lineTo(Bc.x, Bc.y);
+  ctx.stroke();
+
+  // 4. Dashed lines: P→A and P→B (pink)
+  ctx.strokeStyle = 'rgba(255,70,112,0.55)';
+  ctx.beginPath();
+  ctx.moveTo(Pc.x, Pc.y); ctx.lineTo(Ac.x, Ac.y);
+  ctx.moveTo(Pc.x, Pc.y); ctx.lineTo(Bc.x, Bc.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 5. Angle arc at O — shows central angle (blue, radius 44px)
+  ctx.strokeStyle = '#00abfa';
+  ctx.lineWidth = 2.5;
+  arcBetween(CX, CY, 44, -tA, -tB);
+
+  // 6. Angle arc at P — shows inscribed angle (pink, radius 34px)
+  var dPA = Math.atan2(Ac.y - Pc.y, Ac.x - Pc.x);
+  var dPB = Math.atan2(Bc.y - Pc.y, Bc.x - Pc.x);
+  ctx.strokeStyle = '#ff4670';
+  ctx.lineWidth = 2.5;
+  arcBetween(Pc.x, Pc.y, 34, dPA, dPB);
+
+  // 7. Points
+  // O (centre)
+  ctx.fillStyle = '#fff067';
+  ctx.beginPath(); ctx.arc(CX, CY, 5, 0, 2*Math.PI); ctx.fill();
+
+  dot(Ac.x, Ac.y, '#00abfa', 7, dragging === 'A' || hovering === 'A');
+  dot(Bc.x, Bc.y, '#fff067', 7, dragging === 'B' || hovering === 'B');
+  dot(Pc.x, Pc.y, '#ff4670', 7, dragging === 'P' || hovering === 'P');
+
+  // 8. Point name labels (just outside circle)
+  var lo = R * S + 20;
+  ctx.font = 'bold 14px -apple-system, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#00abfa';
+  ctx.fillText('A', CX + Math.cos(tA) * lo, CY - Math.sin(tA) * lo);
+  ctx.fillStyle = '#fff067';
+  ctx.fillText('B', CX + Math.cos(tB) * lo, CY - Math.sin(tB) * lo);
+  ctx.fillStyle = '#ff4670';
+  ctx.fillText('P', CX + Math.cos(tP) * lo, CY - Math.sin(tP) * lo);
+  ctx.fillStyle = '#b4b2a9';
+  ctx.fillText('O', CX + 10, CY - 10);
+
+  // 9. Angle value labels
+  // Central: near O toward minor arc midpoint
+  var cLx = CX + Math.cos(mm) * 76;
+  var cLy = CY - Math.sin(mm) * 76;
+  label(cLx, cLy, '\u2220AOB = ' + cDeg + '\u00b0', '#00abfa', 13);
+
+  // Inscribed: near P, toward centre
+  var iLx = Pc.x - Math.cos(tP) * 58;
+  var iLy = Pc.y + Math.sin(tP) * 58;   // canvas y is flipped, so + moves toward centre
+  label(iLx, iLy, '\u2220APB = ' + iDeg + '\u00b0', '#ff4670', 13);
+
+  // 10. "2×" relationship banner at bottom of canvas
+  var rel = cDeg + '\u00b0  =  2 \u00d7  ' + iDeg + '\u00b0';
+  ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, sans-serif';
+  var rw = ctx.measureText(rel).width;
+  ctx.fillStyle = 'rgba(13,18,22,0.88)';
+  ctx.fillRect(W/2 - rw/2 - 16, H - 30, rw + 32, 24);
+  ctx.strokeStyle = '#0fee8944';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(W/2 - rw/2 - 16, H - 30, rw + 32, 24);
+  ctx.fillStyle = '#0fee89';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(rel, W/2, H - 18);
+}
+
+// ── Interaction ────────────────────────────────────────────────────────────
+var dragging = null, hovering = null;
+var HIT = 18;
+
+function getPos(e) {
+  var rect = canvas.getBoundingClientRect();
+  var ev   = e.touches ? e.touches[0] : e;
+  return {
+    x: (ev.clientX - rect.left) * (W / rect.width),
+    y: (ev.clientY - rect.top)  * (H / rect.height)
+  };
+}
+
+function nearPoint(px, py, t) {
+  var c = toC(R * Math.cos(t), R * Math.sin(t));
+  var dx = px - c.x, dy = py - c.y;
+  return Math.sqrt(dx*dx + dy*dy) < HIT;
+}
+
+function angleFromPos(px, py) {
+  var m = fromC(px, py);
+  return Math.atan2(m.my, m.mx);
+}
+
+canvas.addEventListener('mousedown', function(e) {
+  var p = getPos(e);
+  if      (nearPoint(p.x, p.y, tA)) dragging = 'A';
+  else if (nearPoint(p.x, p.y, tB)) dragging = 'B';
+  else if (nearPoint(p.x, p.y, tP)) dragging = 'P';
+  if (dragging) e.preventDefault();
+});
+
+canvas.addEventListener('mousemove', function(e) {
+  var p = getPos(e);
+  if (dragging) {
+    var t = angleFromPos(p.x, p.y);
+    if      (dragging === 'A') setA(t);
+    else if (dragging === 'B') setB(t);
+    else if (dragging === 'P') setP(t);
+    draw();
+  } else {
+    var prev = hovering;
+    if      (nearPoint(p.x, p.y, tA)) hovering = 'A';
+    else if (nearPoint(p.x, p.y, tB)) hovering = 'B';
+    else if (nearPoint(p.x, p.y, tP)) hovering = 'P';
+    else hovering = null;
+    canvas.style.cursor = hovering ? 'grab' : 'default';
+    if (hovering !== prev) draw();
+  }
+});
+
+canvas.addEventListener('mouseup',    function() { dragging = null; });
+canvas.addEventListener('mouseleave', function() {
+  if (dragging || hovering) {
+    dragging = hovering = null;
+    canvas.style.cursor = 'default';
+    draw();
+  }
+});
+
+canvas.addEventListener('touchstart', function(e) {
+  var p = getPos(e);
+  if      (nearPoint(p.x, p.y, tA)) dragging = 'A';
+  else if (nearPoint(p.x, p.y, tB)) dragging = 'B';
+  else if (nearPoint(p.x, p.y, tP)) dragging = 'P';
+  if (dragging) e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchmove', function(e) {
+  if (!dragging) return;
+  e.preventDefault();
+  var p = getPos(e);
+  var t = angleFromPos(p.x, p.y);
+  if      (dragging === 'A') setA(t);
+  else if (dragging === 'B') setB(t);
+  else if (dragging === 'P') setP(t);
+  draw();
+}, { passive: false });
+
+canvas.addEventListener('touchend', function() { dragging = null; });
+
+// ── Initial render ─────────────────────────────────────────────────────────
+draw();
+</script>
+</body>
+</html>
