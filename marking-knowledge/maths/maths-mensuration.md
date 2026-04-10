@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — Mensuration Topic Knowledge
-**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_22, w24_21, w24_22 (2024 series)
+**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_22, w24_21, w24_22 (2024 series) + s23_11, s23_21, s23_22, w23_12, w23_21, w23_22 (2023 series)
 ---
 
 ## 1. Area and Circumference of a Circle
@@ -32,6 +32,15 @@
 
 ### Key examples from 2025 papers
 
+**s23_11 Q16:** A sector has area 30 cm² and radius 20 cm. Find the angle of the sector.
+- Area = (θ/360) × πr²
+- 30 = (θ/360) × π × 20²
+- θ = 30 × 360 / (π × 400)
+- M2 for 30 × 360 / (π × 20²) oe (rearrangement of sector area formula correct)
+- M1 for (θ/360) × π × 20² = 30 seen (correct formula set up)
+- Full answer: 27.0° (or 8.59/π × 10 ≈ 27.3 — accept values 27.0 to 27.3)
+- Full marks = 3
+
 **s25_12 Q23:** Complex sector problem involving major arc and major sector
 - M2 for AOB = 100° identified (or reflex/major angle derived correctly)
 - M1 for arc length formula correctly applied
@@ -49,6 +58,23 @@
 - M2 for difference of two sector area expressions
 - M1 for one sector area correctly expressed
 - Full marks = 3
+
+**w23_12 Q21(a):** Two sectors: Diagram A has centre D, radius (3y/4) cm, obtuse angle EDF = 6x°. Diagram B has centre P, radius y cm, angle QPR = x°. The major arc EF is 9 times the length of arc QR. Show that x = 20.
+- Major arc EF: angle = 360 − 6x°; arc length = (360−6x)/360 × 2π × (3y/4)
+- Arc QR: arc length = x/360 × 2πy
+- Equation: (360−6x)/360 × 2π × (3y/4) = 9 × x/360 × 2πy
+- Simplify (cancel 2πy and 360): (360−6x) × (3/4) = 9x → 3(360−6x)/4 = 9x → 3(360−6x) = 36x → 1080−18x = 36x → 1080 = 54x → x = 20 ✓
+- M2 for full equation set up: (360−6x)/360 × 2π × (3y/4) = 9 × x/360 × 2πy oe
+- M1 for x/360 × 2πy oe (minor arc QR) OR for (6x/360) × 2π × (3y/4) oe (minor arc for sector A) OR for (360−6x) seen
+- A1 for at least one step of correct rearrangement leading to x=20 (A0 if any errors or omissions in the show-that chain)
+- Full marks = 3
+
+**w23_12 Q21(b):** Using x = 20, find the value of y when the area of sector QPR = 2π cm².
+- Area of QPR = (x/360) × πy² = (20/360) × πy² = πy²/18 = 2π
+- y²/18 = 2 → y² = 36 → y = 6
+- M1 for (20/360) × πy² = 2π oe or better
+- Full answer: y = 6
+- Full marks = 2
 
 ---
 
@@ -267,6 +293,149 @@ A sector (or shape) changes in two dimensions simultaneously. Find the percentag
 
 **w24_22 Q3(b):** A different tank is a prism with trapezoidal cross-section ABCD. Given dimensions 40 cm, 70 cm, 80 cm, AB = 110 cm. Base is a square. Find total surface area.
 - Full marks = 5 (breakdown from MS)
+
+---
+
+## 14. Cone Formed from Sector — Volume Calculation
+
+### Key insight: sector radius = cone slant height; sector arc = cone base circumference
+When a sector of a circle (angle θ, radius R) is bent into a cone:
+- Slant height of cone = R
+- Arc length of sector = circumference of cone base → 2πr_cone = (θ/360) × 2πR → r_cone = θR/360
+- Height of cone: h = √(R² − r_cone²)
+- Volume = ⅓πr_cone²h
+
+### What the mark scheme rewards
+- M1 for arc length → r_cone (arc length / 2π)
+- M2 for h = √(R² − r_cone²) (or M1 for R² − r_cone²)
+- M1 for ⅓π × r_cone² × h with correct values
+
+### Key example from 2023 papers
+
+**s23_22 Q8(b):** A sector with angle 75° and radius 8 cm is bent to form the curved surface of a cone.
+(i) Arc length = (75/360) × 2π × 8 = 10π/3 cm [M1 for 75/360 × 2π × 8]. Full marks = 2.
+(ii) Volume of cone:
+- r_cone: 2πr = 10π/3 → r = 5/3 cm [M1 for arc/(2π)]
+- h: h² = 8² − (5/3)² = 64 − 25/9 = 551/9 → h = √551/3 ≈ 7.82 cm [M2 for √(8² − r²); M1 for 8² − r²]
+- V = ⅓ × π × (5/3)² × √551/3 ≈ 22.7 cm³ [M1 for ⅓π × r² × h]
+- Full answer: 22.7 to 22.9 cm³ nfww
+- Full marks = 5
+
+---
+
+## 15. Volume of Trapezoidal Prism — Fraction Comparison
+
+### When this appears
+A container with trapezoidal cross-section. Given pour rate × time, determine whether the fraction filled exceeds a stated threshold.
+
+### What the mark scheme rewards
+- M1 for correct trapezoid cross-section area: ½(a+b)×h
+- M1 dep for multiplying by prism length (Volume = area × length)
+- B1 dep for comparing volume poured to the required fraction of total volume, with correct conclusion
+
+### Key example from 2023 papers
+
+**s23_21 Q11(b):** Trapezoidal prism container: AB=28 cm, DC=24 cm, AD=16 cm (angles at A and D are 90°), prism depth BF=29 cm. Water poured at 4000 cm³/min for 2 minutes. Is the container more than two-thirds full?
+- Volume poured = 4000 × 2 = 8000 cm³
+- Trapezoid cross-section area = ½(28 + 24) × 16 = ½ × 52 × 16 = 416 cm²
+- Total volume = 416 × 29 = 12064 cm³
+- Two-thirds volume = 2/3 × 12064 = 8042.7 cm³
+- 8000 < 8042.7 → No, the container is NOT more than two-thirds full
+- M1 for ½(28 + 24) × 16 oe [trapezoid area]
+- M1 dep for × 29 [volume = area × length]
+- B1 dep for comparing 8000 to 2/3 × their volume with correct conclusion "No"
+- Full answer: No (8000 < 2/3 × 12064 = 8042.7)
+- Full marks = 3
+
+---
+
+## 16. Volume and Surface Area — Similar Cone Removed from Larger Cone
+
+### New pattern from 2023: a solid formed by removing a smaller similar cone from the interior of a larger cone
+
+### What the mark scheme rewards — Volume
+- M1 for finding the radius of the smaller cone from the similar ratio (scale factor = h_small/h_large)
+- A2 for ⅓π×r_large²×h_large − ⅓π×r_small²×h_small = target value (no errors, show-that)
+- M1 for ⅓π×r_large²×h_large OR ⅓π×(their r_small)²×h_small
+
+### What the mark scheme rewards — Surface Area
+- M2 for computing both slant heights: √(h²+r²) for large AND √(h²+r²) for small
+- M2 for π×r_large×l_large + π×r_small×l_small (both curved surfaces added)
+- M1 for either curved surface alone
+- M1 for π(r_large²−r_small²) (annular ring at the open top)
+
+### Key example from 2023 papers
+
+**w23_22 Q10(a)(i):** A solid formed by removing a small cone from the top of a large cone. Both cones share the same apex (pointing down). Large cone: height 21 cm, diameter 18 cm (radius 9 cm). Small cone: height 14 cm (similar, so radius = 9×14/21 = 6 cm). Show volume = 399π cm³.
+- r_small = 9×(14/21) = 6 cm [M1 for scale factor ×14/21 or equivalent proportion]
+- V_large = ⅓π×9²×21 = 567π; V_small = ⅓π×6²×14 = 168π
+- Volume of solid = 567π−168π = 399π ✓
+- A2 for correct final subtraction with no errors; M1 for ⅓π×9²×21 or ⅓π×6²×14 seen
+- Full marks = 3
+
+**w23_22 Q10(a)(ii):** Calculate the total surface area of the same solid (large cone with small cone cavity).
+- Exposed surfaces: (1) outer curved surface of large cone, (2) inner curved surface of small cone (cavity wall), (3) annular ring at the top
+- Slant of large cone: l_large = √(21²+9²) = √522; slant of small cone: l_small = √(14²+6²) = √232 [or (2/3)√522]
+- Outer curved: π×9×√522; Inner curved: π×6×√232; Annular ring: π(9²−6²) = 45π
+- SA = 9π√522 + 6π√232 + 45π ≈ 1074 cm²
+- M2 for √(21²+9²) and √(14²+6²) or (2/3)√(21²+9²) oe [both slant heights]
+- M1 for either slant height alone: 21²+9² or 14²+6²
+- M2 for π×9×their √522 + π×6×their √232 oe [both curved surfaces added]
+- M1 for π×9×their √522 alone or π×6×their √232 alone
+- M1 for π(9²−6²) oe [annular ring]
+- Full answer: 1070 or 1074 to 1075
+- Full marks = 6
+
+---
+
+## 17. Space Diagonal of a Cuboid (3D Pythagoras)
+
+### Method
+For a cuboid with dimensions l × w × h, space diagonal = √(l² + w² + h²)
+For a square-base cuboid: base side s² = Volume/height first, then diagonal = √(2s² + h²)
+
+### What the mark scheme rewards
+- M1 for finding the area (or side) of the base from volume ÷ height
+- M2 for their s² + their s² + h² under the square root (full diagonal formula correct)
+- M1 for their s² + their s² only (forgetting the height term gets M1 not M2)
+
+### Key example from 2023 papers
+
+**w23_21 Q9(b):** A cuboid has a square base. Height = 8 cm, volume = 98 cm³. P is a bottom corner, Q is the diagonally opposite top corner. Calculate PQ.
+- Area of base = 98/8 = 12.25 cm² → side s = 3.5 cm [M1 for 98/8 soi]
+- PQ = √(3.5² + 3.5² + 8²) = √(12.25 + 12.25 + 64) = √88.5 ≈ 9.41 cm
+- M2 for their 12.25 + their 12.25 + 8² oe (all three terms inside root)
+- M1 for their 12.25 + their 12.25 oe only (base diagonal without height) — partial credit
+- Full answer: 9.41 or 9.407…
+- Full marks = 4
+
+---
+
+## 17. Circle Circumference vs Perimeter of Inscribed Shape with Mixed Chord/Arc Sides
+
+### New pattern from 2023: a shape inscribed in a circle whose perimeter uses chord sides + arc sides
+
+### What the mark scheme rewards
+- M1/M2 for finding the central angle using cosine rule or sine formula
+- M1/M2 for arc length formula applied to the arc sides
+- Final answer from circumference − their perimeter
+
+### Key example from 2023 papers
+
+**w23_21 Q10(b):** Circle with centre O and diameter 10 cm. AC and BD are diameters. ABCD is a rectangle inscribed in the circle with AB = 9 cm. Calculate the difference between the circumference of the circle and the perimeter of the shaded shape ABCD.
+- The "perimeter of the shaded shape" = chord AB + arc BC + chord DC + arc DA (two chord sides + two arc sides)
+- Step 1: Find angle AOB using radii OA = OB = 5 cm, chord AB = 9 cm:
+  - sin(AOB/2) = 4.5/5 → AOB = 2 × sin⁻¹(0.9) ≈ 128.3°
+  - Or cosine rule: cos(AOB) = (25 + 25 − 81)/50 = −31/50
+- Step 2: Angle AOD = 180° − AOB = 51.7° (supplementary since A, O, C are collinear)
+- Step 3: Arc AD = (51.7/360) × 10π ≈ 4.51 cm; perimeter = 9 + 9 + 2 × 4.51 = 27.02 cm
+- Step 4: Circumference = 10π ≈ 31.42; difference = 31.42 − 27.02 ≈ 4.39 cm
+- M2 for [AOB =] 2×sin⁻¹(4.5/5) oe or cos[AOB] = (5²+5²−9²)/(2×5×5) oe
+- M1 for sin[]=4.5/5 oe or 9²=5²+5²−2×5×5cos[] oe (partial angle working)
+- M2 for 10π − (9+9+2×their AOD/360×10π) oe [full perimeter subtraction set up]
+- M1 for [2×] their AOD/360×10π oe (arc formula for one pair of arc sides)
+- Full answer: 4.39 or 4.40 or 4.392 to 4.398
+- Full marks = 5
 
 ---
 

@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — Probability Topic Knowledge
-**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_21, s24_22, w24_21, w24_22 (2024 series)
+**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_21, s24_22, w24_21, w24_22 (2024 series) + s23_12, s23_21, w23_11 (2023 series)
 ---
 
 ## 1. Basic Probability — Single Event
@@ -9,6 +9,24 @@
 - Must be expressed as a fraction (decimal or percentage also accepted unless "fraction" specified)
 
 ### Key examples from 2025 papers
+
+**s23_12 Q23(a):** 10 cards: 3 green squares, 1 red square, 4 green triangles, 2 red triangles. Ken takes one card, notes colour, replaces it, then takes another. Find P(both cards show a green shape).
+- 7 green cards out of 10. With replacement, events are independent.
+- P(both green) = (7/10) × (7/10) = 49/100
+- B1 for 7/10 seen
+- Full answer: 49/100
+- Full marks = 2
+
+**s23_12 Q23(b):** Same set of 10 cards. Irina takes two cards without replacement. Find P(both cards show the same shape).
+- 4 square cards (3+1=4) and 6 triangle cards (4+2=6)
+- P(both square) = 4/10 × 3/9 = 12/90
+- P(both triangle) = 6/10 × 5/9 = 30/90
+- P(same shape) = 12/90 + 30/90 = 42/90
+- M2 for 4/10 × 3/9 + 6/10 × 5/9 oe (both products correctly formed and added)
+- M1 for one correct product: 4/10 × 3/9 oe or 6/10 × 5/9 oe
+- SC1 for 52/100 (with replacement: (4/10)² + (6/10)²)
+- Full answer: 42/90 oe
+- Full marks = 3
 
 **w25_11 Q2(b):** 9 children, hours watching TV: 1, 2, 2, 2, 6, 7, 7, 8, 10. Probability of more than 6 hours.
 - Children spending more than 6 hours: 7, 7, 8, 10 → 4 children
@@ -180,6 +198,24 @@ Completed sample space (all 16 outcomes):
 - Answer: 2 [B1 FT their Venn diagram]
 - Full marks = 1
 
+### 6b. Completing a Three-Circle Venn Diagram from Given Data
+
+**w23_11 Q18(a):** A sports club has 40 members. Given: n(R) = 22 run, n(C) = 24 cycle, n(S) = 14 sail, n(C∩S∩R') = 3, n(R∩C∩S') = 9, n(R∩S∩C') = 5, n(R only) = 6. Complete the three-circle Venn diagram.
+- Find n(R∩C∩S): n(R) = 6 + 9 + 5 + n(R∩C∩S) = 22 → n(R∩C∩S) = 2
+- Find n(C only): n(C) = 9 + 3 + 2 + n(C only) = 24 → n(C only) = 10
+- Find n(S only): n(S) = 5 + 3 + 2 + n(S only) = 14 → n(S only) = 4
+- Total in circles = 6+9+5+3+2+10+4 = 39; outside all circles = 40−39 = 1
+- B1 for n(R∩C∩S) = 2 soi; B1 for n(C only) = 10 and n(S only) = 4; B1 for all 8 regions correct
+- Full marks = 3
+
+### 6c. Set Notation for a Shaded Venn Diagram Region
+
+**w23_11 Q18(b):** Three sets F, G, H. The shaded region is inside G and H but outside F. Express in set notation.
+- The shaded region is in the G∩H overlap but excludes F
+- Answer: G ∩ H ∩ F' oe (equivalently written as (G ∩ H) \ F)
+- B1 for G ∩ H ∩ F' oe
+- Full marks = 1
+
 **w24_21 Q11(a):** P(selecting a marble from set of n) = 4/9.
 - B1 for answer n/9 or 4/n (partial) before cancelling
 - Full answer: 4/9
@@ -216,6 +252,40 @@ Completed sample space (all 16 outcomes):
 - MS answer: 7/9, 0.8, 84.5%, 17/20 [B2 for all correct; B1 for 3 correct when one covered]
 - "SC1 for 17/20, 84.5%, 0.8, 7/9" (reverse order)
 - Full marks = 2
+
+---
+
+## 6. Probability Equation → "Show That" Quadratic
+
+### When this appears
+A without-replacement probability P(two specific values) is given as a fraction. An unknown frequency r appears in the total, making the probability equation produce a quadratic. Cambridge asks you to "show that" the quadratic equals zero — all steps must be shown explicitly.
+
+### What the mark scheme rewards
+- M1 for the correct probability expression for one draw (e.g., 9/(88+r))
+- M1 for the complete without-replacement equation set up correctly
+- A1 for correctly expanding and simplifying to reach the required quadratic (no errors)
+
+### Key example from 2023 papers
+
+**s23_21 Q10(b)(i):** A box of sweets has frequencies 12, 28, 39, r, 9 for 11–15 sweets respectively (total = 88 + r). Two bags drawn without replacement. P(both contain 15 sweets) = 4/539. Show that r² + 175r − 2046 = 0.
+- P(both 15) = 9/(88+r) × 8/(87+r) = 4/539
+- 72 × 539 = 4(88+r)(87+r)
+- 38808 = 4(7656 + 175r + r²)
+- 9702 = 7656 + 175r + r²
+- r² + 175r − 2046 = 0 ✓
+- M1 for 9/(88+r) oe seen (P(first bag = 15) set up)
+- M1 for 9/(88+r) × 8/(87+r) = 4/539 oe (full equation)
+- A1 for correctly reaching r² + 175r − 2046 = 0 (all algebra shown)
+- Full marks = 3
+
+**s23_21 Q10(b)(ii):** Solve r² + 175r − 2046 = 0 to find r. Show working.
+- (r + 186)(r − 11) = 0 → r = −186 or r = 11
+- r = 11 (cao — frequency must be positive; reject r = −186)
+- M1 for (r + 186)(r − 11) = 0 oe or quadratic formula applied correctly
+- A1 for r = 11 and r = −186 seen
+- A1 cao for r = 11 (cao means must reject the negative root explicitly or by context)
+- Full answer: r = 11
+- Full marks = 3
 
 ---
 

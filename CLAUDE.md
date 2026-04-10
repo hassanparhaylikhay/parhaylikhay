@@ -89,6 +89,7 @@ ParhayLikhay/
 ├── CINDY_SKILL.md                     ← CindyJS rules
 ├── CINDY_PATTERNS.md                  ← ground-truth CindyJS patterns
 ├── MANIPULATIVE_SKILL.md              ← HTML5 Canvas widget rules
+├── MARKING_SKILL.md                   ← annotating student answer sheets → marked_answer.jpeg
 │
 ├── maths-quadratic-explorer.html      ← widget: y = ax² + bx + c
 ├── maths-circle-angle-centre.html     ← widget: angle at centre theorem
@@ -129,7 +130,7 @@ ParhayLikhay/
 
 The `marking-knowledge/maths/` folder contains marking patterns extracted from Cambridge 4024 past papers. Before writing any marked worked example, check the relevant topic file first.
 
-**Years processed:** 2025 (8 papers, fully verified) + 2024 (8 papers, processed + systematically verified for diagram-dependent errors April 2026)
+**Years processed:** 2025 (8 papers, fully verified) + 2024 (8 papers, processed + systematically verified for diagram-dependent errors April 2026) + 2023 (8 papers: s23_11, s23_12, s23_21, s23_22, w23_11, w23_12, w23_21, w23_22 — processed using Read tool directly on PDFs)
 
 ---
 

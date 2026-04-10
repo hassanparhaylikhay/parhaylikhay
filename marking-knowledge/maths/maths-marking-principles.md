@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — General Marking Principles
-**Sources:** All 16 papers from 2025 series (s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22) + all 8 papers from 2024 series (s24_11, s24_12, s24_21, s24_22, w24_11, w24_12, w24_21, w24_22)
+**Sources:** All 8 papers from 2025 series (s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22) + all 8 papers from 2024 series (s24_11, s24_12, s24_21, s24_22, w24_11, w24_12, w24_21, w24_22) + all 8 papers from 2023 series (s23_11, s23_12, s23_21, s23_22, w23_11, w23_12, w23_21, w23_22)
 
 ---
 
@@ -74,6 +74,15 @@
 
 ---
 
+### "Strict FT their graph" — variant
+
+Some graph-reading marks carry "**Strict FT their graph**" rather than plain FT. This means:
+- The student's answer is correct **only relative to whatever they drew**, even if the drawn curve is wrong
+- No mark if the student reads a value that would only be correct from the intended curve, not from their actual drawn curve
+- The distinction matters when a student's curve is plausibly drawn but shifted — plain FT would accept consistent readings; Strict FT requires the reading to actually come off the student's drawn line, not from the examiner's ideal curve
+
+---
+
 ## SC (Special Case) Rules
 
 - SC marks are awarded when a student uses a wrong approach that happens to produce a partially valid result.
@@ -117,6 +126,24 @@
   - "isosceles triangle" (base angles equal)
   - "opposite angles of cyclic quadrilateral sum to 180°"
 - Partial marks: often B1 for the angle value, B1 for the correct reason stated. Both needed for full marks.
+
+### Multi-step proofs — double-B allocation
+
+Some multi-step geometry proofs (typically 4 marks) split as:
+- **B2 for the correct final angle/conclusion** (nfww — must arise from valid reasoning)
+- **B2 for complete correct reasons for every step**
+
+These are NOT paired per step. They are two independent holistic assessments. A student can earn B2 + B0 (correct answer, wrong/missing reasons) or B0 + B2 (all reasons stated but arithmetic error in an angle). The mark scheme then adds: **"Max 3 marks if any incorrect angles or reasons"** — a cap that prevents a student with errors from earning both full B2 blocks.
+
+This structure appears on questions that say "give a reason for each step of your working" and carry 4 marks (e.g., w23_22 Q2(b): find angle ADC from diameter + angle given, 4 marks).
+
+### Congruence Proofs — Marking Pattern
+
+- **B1 for each correct statement with correct reason** (e.g., "OA = OB [equal radii]")
+- Must name the **congruence condition** at the end: SSS, SAS, AAS, or RHS
+- Three such statements + condition name = full marks (typically 3 marks)
+- Cambridge accepts any valid complete congruence proof — multiple routes exist (e.g., SAS or RHS may both be valid for the same diagram)
+- Leaving out the condition name at the end (just writing the three pairs) usually loses 1 mark
 
 ---
 
@@ -222,6 +249,16 @@ Each element is typically B1. All elements together = full marks.
 - M marks (dep) for correct expansion of brackets
 - A1 for final correct simplified form "with no errors or omissions"
 - B marks for numerator/denominator correct separately before simplification
+
+### isw on B marks for intermediate fraction components
+
+When combining two fractions into one, the mark scheme often reads:
+- "B1 for [correct numerator expression] oe **isw**"
+- "B1 for [correct denominator] oe **isw**"
+
+The **isw** here is critical: it means these B marks are locked in as soon as the correct numerator/denominator is seen, even if the student then simplifies incorrectly or makes an error in the final step. This is different from the final-answer A1, which carries "no errors or omissions".
+
+Practical implication: a student who correctly writes the combined numerator (e.g., 3(2x+1)−7(x−5)) and the denominator (e.g., (2x+1)(x−5)) earns both B marks even if they then expand incorrectly and produce a wrong final fraction. They cannot earn the A1 for the final answer.
 
 ---
 

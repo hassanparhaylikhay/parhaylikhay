@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — Trigonometry Topic Knowledge
-**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_21, s24_22, w24_21 (2024 series)
+**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_21, s24_22, w24_21 (2024 series) + s23_21, s23_22, w23_22 (2023 series)
 ---
 
 ## 1. Right-Angled Trigonometry (SOH-CAH-TOA)
@@ -8,6 +8,19 @@
 - Correct identification of the sides relative to the angle (opp, adj, hyp)
 - Correct trig ratio set up (M1)
 - Correct answer with appropriate units (A1)
+
+### Key examples from 2023 papers
+
+**s23_21 Q11(a):** A trapezoidal prism container. Cross-section ABCD is a trapezoid with AB=28 cm (top), DC=24 cm (bottom), AD=16 cm (left side, vertical). Both angles DAB and ADC are right angles. Calculate angle DCB.
+- Place: D(0,0), A(0,16), B(28,16), C(24,0). CB connects C(24,0) to B(28,16).
+- Horizontal offset: 28 − 24 = 4. Vertical: 16.
+- Angle DCB: CD is horizontal; CB goes up-right with horizontal component 4 and vertical 16.
+- tan(angle CB makes with vertical) = 4/16
+- Angle DCB = 90° + arctan(4/16) = 90° + 14.04° ≈ 104.0°
+- M1 for tan = 4/16 oe (identifying the correct horizontal and vertical components)
+- M2 for 90° + arctan(4/16) oe (correctly adding 90° because CB goes beyond the vertical from C's perspective)
+- Full answer: 104.0° (awrt)
+- Full marks = 3
 
 ---
 
@@ -126,6 +139,14 @@
 
 ### Key examples from 2025 papers
 
+**s23_21 Q11(c):** A trapezoidal prism container. Cross-section ABCD: AB=28, DC=24, AD=16 (vertical). Depth BF=29. Vertices: A(0,16,0), B(28,16,0), C(24,0,0), D(0,0,0) at front; H(0,0,29) and F(28,16,29) at back. Calculate angle DFH.
+- FH lies in the plane z=29: FH = H − F = (−28,−16,0), so |FH| = √(28²+16²) = √1040
+- FD drops 29 in the z-direction from F(28,16,29) to D(0,0,0): tan(DFH) = 29/|FH| = 29/√(28²+16²)
+- M1 for FH = √(28² + 16²) oe (base diagonal found)
+- M2 for tan(angle DFH) = 29/√(28² + 16²) oe (full expression set up)
+- Full answer: 42.0° (awrt)
+- Full marks = 3
+
 **w25_21 Q25(a):** Length CE (3D diagonal)
 - M2 for √(12² + 10²) oe or √(10² + 7²) oe or √(12² + 7²) oe (intermediate diagonals)
 - M1 for one correct Pythagoras component
@@ -204,6 +225,28 @@ A triangle question where: one side is unknown (variable x), the cosine rule pro
 - Full answer: 195 or 194.79 to 194.81
 - Full marks = 5
 
+**w23_22 Q9(a)(ii):** ABCD is a rectangular field. AB = 450 m, BC = 210 m. C is due south of A. Show that the bearing of D from A is 245°, correct to 3 significant figures.
+- C due south means diagonal AC points south (bearing 180°). D is to the west of A.
+- In right triangle ADC (right angle at D, since ABCD is rectangle): AD = BC = 210, DC = AB = 450
+- Angle DAC = arctan(DC/AD) = arctan(450/210) → bearing goes south then turns west by this angle
+- Bearing of D = 180° + arctan(450/210) oe [or 270° − arctan(210/450) oe]
+- M2 for 180 + arctan(450/210) oe or 270 − arctan(210/450) oe
+- M1 for tan[DAC] = 450/210 oe OR tan[CAB] = 210/450 oe (identifies the correct trig ratio)
+- A1 for 244.98… shown leading to 245° ✓
+- Full marks = 3
+
+**w23_22 Q9(b):** Triangle PQR with S on PR. PS = 10.3 cm, QR = 12.6 cm, angle QPS = 42°, angle QRS = 35°. Calculate QS.
+- Step 1: Find angle PQR = 180°−42°−35° = 103° [angles in triangle sum to 180°]
+- Step 2: Sine rule in triangle PQR: PQ/sin35° = 12.6/sin42° → PQ = 12.6×sin35°/sin42° ≈ 10.80 cm
+- Step 3: Cosine rule in triangle PQS: QS² = PQ²+PS²−2×PQ×PS×cos42°
+  = 10.80²+10.3²−2×10.80×10.3×cos42° ≈ 57.3 → QS ≈ 7.58 cm
+- M2 for PQ = 12.6×sin35/sin42 oe (sine rule in full) or PR = 12.6×sin103/sin42 oe
+- M1 for sin35/PQ = sin42/12.6 oe (sine rule set up, not yet solved)
+- M2 for cosine rule using their PQ (or PR): √(PQ²+10.3²−2×PQ×10.3×cos42) oe
+- M1 for QS² = PQ²+10.3²−2×PQ×10.3×cos42 oe (cosine rule set up, not yet solved)
+- Full answer: 7.58 or 7.575 to 7.577
+- Full marks = 5
+
 **w25_22 Q22(a):** ABCD is a field. A diagonal path runs from B to D (BD = 495 m). The angle between BD and the base AB is 42°. There is a right angle at B. Find the length AB.
 - AB is adjacent to the 42° angle, BD is the hypotenuse → AB = 495 × cos42°
 - M1 for cos42° = AB/495 oe
@@ -242,6 +285,32 @@ A triangle question where: one side is unknown (variable x), the cosine rule pro
 - Full marks = 3
 
 Note: This is a vectors question (finding magnitude of a + b), not a distance between coordinate points.
+
+---
+
+## 8. 3D Trig — Bearing → Ground Distance → Angle of Elevation Chain
+
+### When this appears
+A vertical mast stands at A. Bearings establish the angle BAC between two directions. A ground point D is due south of A and due east of C. The angle of elevation of the top of the mast from B is given. Find the angle of elevation from D (a closer point).
+
+### What the mark scheme rewards
+- M1 for tan(elevation from B) = mast height / AB [finding height AX]
+- M1 for tan(elevation from D) = AX / AD [using AD from earlier]
+- A1 for correct angle
+
+### Key example from 2023 papers
+
+**s23_22 Q9(c):** Bearings of B and C from A are 072° and 205° respectively. AB = 170 m, AC = 95 m. D is due south of A and due east of C. AX is a vertical mast. Angle of elevation of X from B is 7°.
+(i) Show that AD = 86.1 m. Bearing of C from A = 205° → bearing of A from C = 025°. In right triangle ACD (right angle at D): AD = AC × cos(25°) = 95 × cos(25°) = 86.09... ≈ 86.1 m. [M1 for cos(25°) = AD/95; A1 for 86.1]
+(ii) Calculate angle of elevation of X from D.
+- Height AX = AB × tan(7°) = 170 × tan(7°) ≈ 20.87 m [M2 for AX = 170tan7; M1 for tan7 = AX/170]
+- tan(angle from D) = AX/AD = 20.87/86.1 [M1 for tan = their AX / their 86.1]
+- Full answer: 13.6° nfww (or 13.62 to 13.63°)
+- Full marks = 4
+
+### Key insight
+- This is a chain: bearings → AD (ground distance) → AX (mast height from another bearing + trig) → angle from D
+- Each step uses a different horizontal distance. The mast height is found using the known angle from B.
 
 ---
 

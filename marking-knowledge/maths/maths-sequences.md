@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — Sequences Topic Knowledge
-**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_22, w24_12 (2024 series)
+**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_22, w24_12 (2024 series) + w23_12, w23_21 (2023 series)
 ---
 
 ## 1. Linear (Arithmetic) Sequences — nth Term
@@ -38,6 +38,14 @@
 ## 2. Linear Sequences — Specific Term or Working Backwards
 
 ### Key examples from 2025 papers
+
+**w23_21 Q4(a)(iii):** A sequence has nth term 7n − 2. The sum of the nth term and the (n+1)th term equals 703. Find n.
+- (7n − 2) + (7(n+1) − 2) = 703 → 14n + 3 = 703 → 14n = 700 → n = 50
+- M1 for correct equation using their 7n − 2 for both terms: e.g. (7n−2) + (7(n+1)−2) = 703 oe
+- M1 for correct rearrangement to ak = b (linear equation with two n-terms and a constant)
+- Note: "Not k + k + 1 = 703 oe" — MS specifically excludes omitting the actual term expressions
+- Full answer: n = 50
+- Full marks = 3
 
 **w25_21 Q10(c):** Find p when 4p + 1 = 1105
 - 4p = 1104 → p = 276
@@ -117,6 +125,28 @@ Two terms are given (e.g., 3rd and 8th) but not consecutive. Must form and solve
 - B1 for correct answer seen (alternate form n² + n)
 - B1 for at least two second differences of 2 seen
 - Full answer: n(n + 1) oe final answer
+- Full marks = 2
+
+**w23_21 Q4(b):** A sequence has nth term n² + an + b. The 1st term is 3 and the 3rd term is 19. Find the 6th term.
+- Form two equations: 1 + a + b = 3 → a + b = 2; 9 + 3a + b = 19 → 3a + b = 10
+- Subtract: 2a = 8 → a = 4, b = −2; nth term = n² + 4n − 2
+- 6th term = 36 + 24 − 2 = 58
+- B4 for a = 4 and b = −2 [or equivalent — worth 4 of the 5 marks]
+- B2 for both equations 1²+a+b=3 AND 3²+3a+b=19 correctly set up; B1 for one correct
+- M1 for correct method to eliminate one variable from their simultaneous equations
+- M1 FT for substituting n = 6 into their n² + an + b: 6² + their a×6 + their b
+- Alternative extension method: second difference = 2 → T₂ = 10 [B3]; differences 7,9,11,13,15 → T₄=30, T₅=43, T₆=58 [B1 each]
+- Full answer: 58
+- Full marks = 5
+
+**w23_12 Q15(b):** First five terms: 3, 9, 19, 33, 51. Find the nth term.
+- First differences: 6, 10, 14, 18 — these are increasing by 4
+- Second differences: 4, 4, 4 → coefficient of n² = 4/2 = 2
+- Subtract 2n² from sequence: 2(1)=2, 2(4)=8, 2(9)=18, 2(16)=32, 2(25)=50
+- Residuals: 3−2=1, 9−8=1, 19−18=1, 33−32=1, 51−50=1 → constant +1
+- nth term = 2n² + 1 oe
+- B1 for quadratic expression in n (any 2n² term) OR for correct answer seen OR for at least two second differences of 4 seen
+- Full answer: 2n² + 1 oe final answer
 - Full marks = 2
 
 ---

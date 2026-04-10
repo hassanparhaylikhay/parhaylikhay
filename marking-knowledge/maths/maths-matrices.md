@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — Matrices Topic Knowledge
-**Sources:** s24_11, s24_12, w24_11, w24_12 (2024 series — new topic first appearing)
+**Sources:** s24_11, s24_12, w24_11, w24_12 (2024 series — new topic first appearing) + s23_12, w23_12 (2023 series)
 ---
 
 ## 1. Matrix Operations — Addition, Subtraction, Multiplication
@@ -10,6 +10,19 @@
 - M1 for correct method of matrix multiplication (row × column)
 
 ### Key examples from 2024 papers
+
+**s23_12 Q18(b)(i):** Matrix C = [[6, 4], [2, 1]] gives the contents of a large and small gift bag (soaps, candles). Matrix M = column vector (120, 60) gives the mass in grams of a soap and a candle. Find N = CM.
+- N = CM: row 1 × M: 6(120) + 4(60) = 720 + 240 = 960; row 2 × M: 2(120) + 1(60) = 240 + 60 = 300
+- N = column vector (960, 300)
+- B1 for (960, k) or (k, 300) or both 960 and 300 seen in final answer (partial if one element correct)
+- Full answer: N = (960, 300) [column vector]
+- Full marks = 2
+
+**s23_12 Q18(b)(ii):** Explain what each element of N represents.
+- Each element is the total mass (in grams) of the contents of each bag type: 960 g for the large bag, 300 g for the small bag
+- Answer: mass [of contents] of a large bag, and mass [of contents] of a small bag [B1]
+- Full marks = 1
+- Key point: "explain what the elements represent" questions test understanding of the context, not calculation. Must explicitly link the matrix elements to the real-world quantities.
 
 **s24_11 Q20:** Matrix N satisfies the equation 3N = N + 5[[4, 0], [6, −2]]. Find N.
 - 3N − N = 5[[4, 0], [6, −2]] → 2N = [[20, 0], [30, −10]] → N = [[10, 0], [15, −5]]
@@ -115,6 +128,40 @@ For system: ax + by = p, cx + dy = q:
 **w24_12 Q21:** Two simultaneous equations given; find the unknown elements of the coefficient matrix, then solve using the matrix method.
 - Combined with the matrix structure question above (same question number)
 - Full marks = 3 (M1A1 structure with B marks for partial credit)
+
+---
+
+## 5. Matrix Multiplication with Unknown Elements → Quadratic Equation
+
+### New pattern from 2023: matrices with variable entries; multiply and equate elements to form and solve a quadratic
+
+### What the mark scheme rewards
+- M1 for correctly computing the top-left element of the product (must show row × column multiplication)
+- A1 for reaching the target quadratic "with no errors or omissions" (A0 if any errors)
+- M1 for factorisation/quadratic formula when solving
+- A1 for both solutions
+- Further marks (M1A1 or B2) for finding y when a specific root is substituted back
+
+### Key example from 2023 papers
+
+**w23_12 Q22:** [[x, 3], [2, x+1]] × [[x−1], [2]] = [[2x+6], [y]]
+- (a) Show that x² − 3x = 0:
+  Top-left product: x(x−1) + 3(2) = x² − x + 6. Set equal to 2x + 6: x² − x + 6 = 2x + 6 → x² − 3x = 0 ✓
+  M1 for x(x−1) + 3×2 [= 2x+6] (top row multiplication set up correctly)
+  A1 for x² − x + 6 = 2x + 6 leading to x² − 3x = 0 with brackets expanded and no errors
+  Full marks = 2
+
+- (b)(i) Solve x² − 3x = 0: x(x−3) = 0 → x = 0 or x = 3
+  M1 for x(x−3) [= 0] seen OR for (3 ± √9)/2 OR for 3/2 ± √(9/4)
+  Full answer: x = 0 or x = 3
+  Full marks = 2
+
+- (b)(ii) Find y when x > 0 (so x = 3):
+  Bottom row: 2(x−1) + (x+1)(2) = 2(3−1) + (3+1)(2) = 4 + 8 = 12
+  Equivalently: 2(x−1) + 2(x+1) = 4x = 4(3) = 12
+  M1 for 2(x−1) + 2(x+1) [= y] oe or for substitution of their x>0 into 2(their x−1) + 2(their x+1)
+  Full answer: y = 12
+  Full marks = 2
 
 ---
 

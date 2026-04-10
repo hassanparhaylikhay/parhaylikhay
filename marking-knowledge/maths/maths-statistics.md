@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — Statistics Topic Knowledge
-**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_21, s24_22, w24_11, w24_12, w24_22 (2024 series)
+**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_21, s24_22, w24_11, w24_12, w24_22 (2024 series) + s23_21, s23_22, w23_12 (2023 series)
 ---
 
 ## 1. Mean — From a Frequency Table (Grouped Data)
@@ -157,6 +157,12 @@
 
 **w25_22 Q2(b):** Range = 35 − 10 = 25 [B1]
 
+**w23_12 Q4(b):** 12 temperatures given in order, starting with coldest: −6, −5, −3, −2, −1, −1, T, 5, 5, 6, 6, 7. The median is 1°C. Find the value of T.
+- Median of 12 ordered values = average of 6th and 7th terms = (−1 + T)/2 = 1 → T = 3
+- Full answer: T = 3 [B1]
+- Full marks = 1
+- Note: the 6th term is −1 (already known), 7th term is T. T must be ≥ −1 for the ordering to be consistent.
+
 ---
 
 ## 9. Mean from Table with Unknown Frequencies (Two-Variable Problem)
@@ -215,6 +221,148 @@ A frequency table has two unknown frequencies p and q. The total frequency and t
 - Answer: "Outside range of data" OR "12 would give a negative value [which is impossible]" OR "The line of best fit does not go as far as 12"
 - Full marks = 1 [B1]
 - Key: Any equivalent explanation of why extrapolation beyond the data range is unreliable
+
+---
+
+## 10b. Mean — Find Count Given Old Mean, Added Value, New Mean
+
+### When this appears
+A group of k values has mean m₁. One value is added; the new mean is m₂. Find k.
+
+### What the mark scheme rewards
+- B1 for expressing the old total as m₁k or the new total as (m₁k + added value)
+- B2 for setting up (m₁k + value)/(k+1) = m₂ oe
+- B3 for correct algebraic simplification to find k
+
+### Key example from 2023 papers
+
+**s23_22 Q2(e):** A group of k numbers has mean 56.8. The number 52 is added. The new mean is 56.5. Find k.
+- Old total = 56.8k; new total = 56.8k + 52; new count = k + 1
+- (56.8k + 52)/(k + 1) = 56.5 → 56.8k + 52 = 56.5k + 56.5 → 0.3k = 4.5 → k = 15
+- B3 for 56.8k − 56.5k = 56.5 − 52 or better [direct simplification step]
+- B2 for (56.8k + 52)/(k + 1) = 56.5 oe [equation formed]
+- B1 for 56.8k or 56.5(k + 1) oe seen [one side of equation]
+- Full answer: k = 15
+- Full marks = 4
+
+### Key insight
+- The added value (52) is BELOW both means, which is why the mean decreases. Check: if added value > old mean, new mean increases; if added value < old mean, new mean decreases.
+- Alternative method (proportional reasoning): displacement from new mean for old group = (56.5−52) = 4.5 spread over k items each contributing (56.8−56.5)=0.3 → k = 4.5/0.3 = 15.
+
+---
+
+## 11. Mean from Frequency Table — Single Unknown Frequency
+
+### When this appears
+A frequency table for discrete data has one unknown frequency p. The mean is given. Set up one equation and solve.
+
+### What the mark scheme rewards
+- B1 for Σfx correctly expressed (including the term with p)
+- M1 for forming the mean equation: Σfx / Σf = given mean
+- A1 for correct value of p
+
+### Key examples from 2023 papers
+
+**s23_21 Q10(a)(i):** Bags of sweets: frequencies are 15, 26, 38, p, 9 for 11–15 sweets respectively. Explain why the total cannot be 87.
+- Total = 15 + 26 + 38 + p + 9 = 88 + p. For total = 87, p = −1, which is impossible (frequency cannot be negative).
+- Answer: p cannot be negative [B1]
+- Full marks = 1
+
+**s23_21 Q10(a)(ii):** Same table. Mean = 12.8. Find p.
+- Σfx = 11×15 + 12×26 + 13×38 + 14p + 15×9 = 165 + 312 + 494 + 14p + 135 = 1106 + 14p
+- Σf = 88 + p
+- Equation: (1106 + 14p)/(88 + p) = 12.8
+- 1106 + 14p = 12.8(88 + p) = 1126.4 + 12.8p
+- 1.2p = 20.4 → p = 17
+- B1 for Σfx = 1106 + 14p oe (correct sum including p term)
+- M1 for (1106 + 14p)/(88 + p) = 12.8 oe
+- A1 for p = 17
+- Full answer: p = 17
+- Full marks = 3
+
+### Distinction from two-unknown version (Section 9)
+- Two unknowns (p and q): need two equations — one from total frequency, one from mean
+- Single unknown (p): mean equation alone is sufficient; total frequency appears in denominator
+
+---
+
+## 12. Mean — "Explain Why" Adding a Value Changes the Estimate
+
+### When this appears
+A grouped data estimated mean is calculated. An additional value is given and the question asks: "Without calculation, explain why the estimated mean would be higher/lower."
+
+### What the mark scheme rewards
+- B1 for explaining that the additional value falls in a class whose midpoint is above/below the current estimated mean
+- Answer must link the midpoint of the relevant class to the current mean
+
+### Key example from 2023 papers
+
+**s23_22 Q7(b)(ii):** A grouped frequency table for Tuesday sales gives estimated mean $42.80. An additional customer spent $41 (not in table). Tristan says the estimated mean would have been higher. Explain why he is correct.
+- $41 falls in class 40 < m ≤ 50, so its midpoint = $45 would have been used
+- $45 > $42.80 (estimated mean), so including it raises the mean
+- Full answer: "41 is in the 40 < m ≤ 50 class; the midpoint 45 is higher than the estimated mean" [B1]
+- Full marks = 1
+
+---
+
+## 13. Mean — Sum of Remaining Items Given Two Means
+
+### When this appears
+A set of n values has mean m₁. A subset of k values has mean m₂. Find the sum of the remaining (n−k) values.
+
+### What the mark scheme rewards
+- M1 for total sum = n × m₁ soi (e.g., 12 × 8 = 96)
+- M1 for subset sum = k × m₂ soi (e.g., 5 × 9 = 45)
+- A1 for remainder = total − subset
+
+### Key example from 2023 papers
+
+**w23_12 Q13:** A list of 8 numbers has a mean of 12. The first 5 numbers have a mean of 9. Find the sum of the three remaining numbers.
+- Total sum = 8 × 12 = 96
+- Sum of first 5 = 5 × 9 = 45
+- Sum of remaining 3 = 96 − 45 = 51
+- M1 for 12 × 8 soi OR M1 for 5 × 9 soi
+- Full answer: 51
+- Full marks = 2
+
+---
+
+## 14. Interquartile Range (IQR) from Cumulative Frequency Diagram
+
+### What the mark scheme rewards
+- B2 for correct IQR = UQ − LQ (strict FT from their diagram)
+- B1 dep for their UQ written OR their LQ written (showing one quartile identified)
+- Must READ UQ at CF = 3n/4 and LQ at CF = n/4 from the diagram
+
+### Key example from 2023 papers
+
+**w23_12 Q17(b):** Heights of 80 plants. Cumulative frequency diagram given. Find interquartile range.
+- LQ at CF = 20: interpolate between h≤4 (CF=18) and h≤6 (CF=42) → LQ ≈ 4.2 cm
+- UQ at CF = 60: exactly matches h≤8 (CF=60) → UQ = 8 cm
+- IQR = UQ − LQ ≈ 3.8 cm
+- B2 for their UQ − their LQ correctly evaluated (strict FT from their increasing curve)
+- B1 dep for their UQ written or their LQ written
+- Full marks = 2
+
+---
+
+## 15. Finding Threshold Value from Cumulative Frequency ("N plants sold above H cm")
+
+### When this appears
+"k items above a threshold are sold/selected." → (total − k) items are at or below the threshold → read that cumulative frequency value from the graph.
+
+### What the mark scheme rewards
+- M1 for correctly computing (total − k) and using it as the CF value to read from the diagram
+- A1 FT for correct reading from their diagram at that CF value
+
+### Key example from 2023 papers
+
+**w23_12 Q17(c):** 80 plants measured. 28 plants are sold when they are taller than H cm. Find H.
+- 80 − 28 = 52 plants are at or below H cm → read H at CF = 52 from the cumulative frequency diagram
+- Interpolate between h≤6 (CF=42) and h≤8 (CF=60): H ≈ 6 + (52−42)/(60−42) × 2 ≈ 7.1 cm
+- M1 for 52 soi (correct CF value to read at)
+- A1 FT for correct reading from their diagram at CF = 52
+- Full marks = 2
 
 ---
 

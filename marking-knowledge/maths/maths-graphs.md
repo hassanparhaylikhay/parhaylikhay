@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — Graphs Topic Knowledge
-**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_12, s24_21, w24_22 (2024 series)
+**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_12, s24_21, w24_22 (2024 series) + s23_11, s23_12, s23_21, s23_22, w23_11, w23_22 (2023 series)
 ---
 
 ## 1. Straight Line Graphs — Equation, Gradient, Intercept
@@ -30,6 +30,26 @@
 - M1 for substituting (15, 0): 0 = (1/5)(15) + c → c = −3 → B = (0, −3)
 - A1 dep on both M marks, "with no errors"
 - Full marks = 3 (M2A1 — "show that" so full working required)
+
+**s23_12 Q24:** A is (3, 11) and B is (−5, −5). The equation of line L is 2y + x = 5. Show that line L is the perpendicular bisector of AB. [5 marks — "show that" requires verifying TWO things]
+- Step 1 — Show midpoint of AB lies on L:
+  Midpoint = ((3+(−5))/2, (11+(−5))/2) = (−1, 3)
+  Check: 2(3) + (−1) = 5 ✓ → midpoint lies on L [B1 for midpoint (−1, 3); M1 for substituting into L]
+- Step 2 — Show L is perpendicular to AB:
+  Gradient of AB = (11−(−5))/(3−(−5)) = 16/8 = 2 [M1 for 2]
+  From L: 2y + x = 5 → y = −x/2 + 5/2 → gradient of L = −1/2 [B1]
+  Product: 2 × (−1/2) = −1 ✓ → perpendicular [A1 for complete correct argument]
+- Note: both conditions (midpoint on L AND perpendicularity) must be shown — showing only one earns partial credit
+- Full marks = 5
+
+**s23_11 Q26(b):** Two points A and B are given. Find the equation of the perpendicular bisector of AB, giving your answer in a specific form.
+- Step 1: Find midpoint M of AB — M = (1, 5) [this is Q26(a), B1]
+- Step 2: Find gradient of AB; gradient of perpendicular bisector = −3/2 (negative reciprocal of gradient of AB)
+- Step 3: Substitute midpoint (1, 5) into y − y₁ = m(x − x₁): y − 5 = −(3/2)(x − 1) → 2y − 10 = −3x + 3 → 2y + 3x = 13
+- Verify: 2(5) + 3(1) = 13 ✓
+- M1 for gradient of AB; M1 for perpendicular gradient (negative reciprocal); M1 for substituting midpoint into line equation; A1 for correct equation
+- Full answer: 2y + 3x = 13 oe
+- Full marks = 4
 
 **w25_22 Q18(b)(ii):** Line N is perpendicular bisector of AB. Find x-intercept C.
 - B4 for y = −5x + 36 oe (full equation of N found)
@@ -72,6 +92,17 @@
 - B1 for correct exponential shape (increasing, crossing y-axis above x-axis)
 - B1 for y-intercept = 1 or (0, 1) indicated
 - Full marks = 2
+
+### 2b-ii. Finding coefficients from a quadratic sketch (given roots)
+
+**w23_22 Q6(b):** A sketch of y = x² + ax + b is shown. The graph crosses the x-axis at x = 2 and x = 5. Find a and b.
+- Roots x=2 and x=5 → y = (x−2)(x−5) = x²−7x+10
+- a = −7, b = 10
+- B2 for y = x²−7x+10 seen [both coefficients correct]
+- M1 for (x−2)(x−5) oe [factored form with correct roots] OR for 2a+b=−4 and 5a+b=−25 oe [substituting both roots] OR for 2×5=b and 2+5=−a oe [Vieta's formulas]
+- B1 for one correct (a or b only)
+- Full answer: a = −7, b = 10
+- Full marks = 3
 
 ### 2c. Quadratic graphs (y = a(x − h)² + k, completing the square)
 
@@ -202,6 +233,15 @@ The graph already drawn is y = x³ − 4x² + 12. To solve x³ − 4x² + x + 4 
 
 ### Key examples from 2025 papers
 
+**s23_12 Q16:** Speed-time graph for a car. Speed starts at 20 m/s, decreases linearly to 14 m/s at t = 100 s, then remains constant at 14 m/s until t = 150 s. Calculate the total distance in 150 seconds.
+- Area under graph = distance
+- Section 1 (trapezoid, t=0 to t=100): ½ × (20 + 14) × 100 = 1700 m
+- Section 2 (rectangle, t=100 to t=150): 14 × 50 = 700 m
+- Total = 1700 + 700 = 2400 m
+- M1 for correct method to find relevant area (e.g. two correct sub-areas seen: 1700, 700; or 2100 − 300; or 2100 − 1400 etc.)
+- Full answer: 2400 m
+- Full marks = 2
+
 **w25_11 Q14(a):** Speed-time graph: Lia cycles 800m in 105s. Trapezoidal shape (0 to v in 10s, constant v from 10s to 105s). Find v.
 - Accelerates from 0 to v in first 10s (triangle), then constant v for remaining 95s (rectangle)
 - Area = ½ × 10 × v + 95 × v = 5v + 95v = 100v = 800 → v = 8
@@ -213,6 +253,41 @@ The graph already drawn is y = x³ − 4x² + 12. To solve x³ − 4x² + x + 4 
 - acceleration = (v − 0)/10 = 8/10 = 0.8 m/s²
 - Answer: 8/10 oe [B1 FT (their 8) ÷ 10]
 - Full marks = 1
+
+**w23_11 Q19(b):** Speed-time graph for a car: accelerates from 0 to 20 m/s in the first 10 seconds, then travels at constant 20 m/s until time T seconds. The car travels 700 m in T seconds. Find T.
+- Treat the whole shape as a trapezoid with parallel sides T and (T − 10) along the time axis, height 20 m/s
+- Area = ½ × (T + T − 10) × 20 = 700 → 10(2T − 10) = 700 → 20T = 800 → T = 40
+- M2 for 20(T + T − 10)/2 = 700 oe (correct trapezoid or triangle+rectangle equation set up)
+- M1 for area method used (recognising area = distance, with correct shape structure attempted)
+- Full answer: T = 40
+- Full marks = 3
+
+---
+
+## 6b. Distance-Time Graph — Algebraic Labels
+
+### New pattern from 2023: distance-time graph where axis labels are algebraic expressions
+
+### What the mark scheme rewards
+- M1 for recognising speed = distance ÷ time for one segment
+- M1 dep for forming the full equation connecting two speed expressions
+- A1 for solving for the unknown
+
+### Key example from 2023 papers
+
+**s23_21 Q8(b):** Cyclist travels d metres from home to a lake and back. Distance-time graph shows:
+- 08:00–08:36 (36 min): travels (d − 7200) metres
+- 08:36–09:10: continues to d metres (reaches lake)
+- 09:10–09:55 (45 min): returns from lake (d metres back to home)
+The average speed 08:00–08:36 is 4/5 of the average speed 09:10–09:55.
+- Speed 08:00–08:36 = (d − 7200)/36; Speed 09:10–09:55 = d/45
+- Equation: (d − 7200)/36 = (4/5) × (d/45)
+- 225(d − 7200) = 144d → 81d = 1620000 → d = 20000
+- M1 for speed = distance/time for one segment (e.g., (d − 7200)/36 oe)
+- M1 dep for full equation correctly formed: (d − 7200)/36 = (4/5)(d/45) oe
+- A1 for d = 20000
+- Full answer: d = 20000
+- Full marks = 3
 
 ---
 
@@ -228,6 +303,25 @@ The graph already drawn is y = x³ − 4x² + 12. To solve x³ − 4x² + x + 4 
 - M1 for correct proportionality structure y = k/(x − 3)² oe
 - Full answer: 2.56 oe
 - Full marks = 3
+
+---
+
+## 7b. Regions Defined by Multiple Inequalities
+
+### New pattern from 2023: drawing a bounded region from 3 or more simultaneous inequalities including a diagonal line
+
+### What the mark scheme rewards
+- B1 for each boundary line correctly drawn (each inequality contributes one boundary)
+- B1 for the region correctly identified and labelled
+- Total marks = one per boundary + one for labelling (or B1 per line pair for horizontal/vertical pairs)
+
+### Key examples from 2023 papers
+
+**w23_11 Q16:** The region R is defined by 1 ≤ x ≤ 3, 2 ≤ y ≤ 3, y ≥ x/2 + 1. Find and label region R on a grid.
+- Boundaries: x = 1, x = 3 (vertical lines); y = 2, y = 3 (horizontal lines); y = x/2 + 1 (diagonal, gradient ½, passes through (0,1) and (2,2))
+- The diagonal y = x/2 + 1 intersects x=1 at y=1.5 and x=3 at y=2.5, so within 1≤x≤3 the active constraint y≥x/2+1 cuts off part of the lower rectangle
+- B1 for each of the 5 boundary lines correctly drawn; B4 for all 5 correct gives the fully bounded region; B1 for region labelled R
+- Full marks = 4
 
 ---
 
@@ -263,6 +357,22 @@ Questions where an exponential curve y = a^(x + k) is drawn and you must solve a
 ### Key rule for exponential solving:
 - Always rewrite a^(x+k) as a^x × a^k before equating to a table value
 - The horizontal line on the graph gives the approximate solution
+
+### Key examples from 2023 papers
+
+**s23_22 Q4(c):** y = 2^x/5 is drawn. By drawing a suitable line, solve 2^x = 6.
+- Rewrite: 2^x = 6 → 2^x/5 = 6/5 = 1.2 → draw y = 1.2 on the grid
+- B1 for ruled line y = 1.2 drawn; B1 for answer 2.5 to 2.7 (FT their line)
+- SC1 for y = 1.2 soi without drawing the line
+- Full marks = 2
+
+**s23_22 Q4(d)(iv):** Intersections of y = 2^x/5 and 4y = 2x + 1 are solutions of A × 2^x + Bx + C = 0 where A, B, C are integers. Find A, B and C.
+- Equate: 2^x/5 = (2x+1)/4 → 4 × 2^x = 5(2x+1) = 10x + 5 → 4 × 2^x − 10x − 5 = 0
+- So A = 4, B = −10, C = −5 (or equivalently A = −4, B = 10, C = 5)
+- M1 for 2^x/5 = (2x+1)/4 oe (equating the two expressions)
+- A2 for A = 4, B = −10, C = −5 all correct; A1 for A correct AND (B or C) correct
+- Full answer: A = 4, B = −10, C = −5 (oe with all same sign flipped)
+- Full marks = 3
 
 ---
 

@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — Number Topic Knowledge
-**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_21, w24_21, w24_22 (2024 series)
+**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_21, w24_21, w24_22 (2024 series) + s23_11, s23_12, s23_21, s23_22, w23_12, w23_21 (2023 series)
 ---
 
 ## 1. Arithmetic Operations & Order of Operations
@@ -151,6 +151,12 @@
 - M2 for 480 × 3.6/100 × 5 + 480
 - M1 for interest only (480 × 3.6/100 × 5)
 
+**s23_21 Q2(d):** Miguel invests $x at simple interest 1.2% per year. At the end of 3 years he has $890.96. Find x.
+- x(1 + 3 × 1.2/100) = 890.96 → x × 1.036 = 890.96 → x = 860
+- M1 for x(1 + 3 × 1.2/100) = 890.96 oe (equation set up with total amount = principal × (1 + nrt/100))
+- Full answer: x = 860
+- Full marks = 2
+
 ---
 
 ## 6. Compound Interest / Exponential Growth and Decay
@@ -222,6 +228,13 @@
 
 ### Key examples from 2025 papers
 
+**s23_12 Q11:** By writing each number correct to 1 significant figure, estimate the value of 18.2³ / 0.395.
+- Round: 18.2 → 20; 0.395 → 0.4
+- Estimate = 20³ / 0.4 = 8000 / 0.4 = 20 000
+- B1 for both 20 and 0.4 seen as rounded values (needed for M mark)
+- Full answer: 20 000 or 2 × 10⁴
+- Full marks = 2
+
 **w25_11 Q9:** By writing each number correct to 1 significant figure, estimate the value of (√102.5 × 8.5) / 27.
 - Round each: 102.5 → 100 (so √100 = 10); 8.5 → 9; 27 → 30
 - Estimate = (10 × 9) / 30 = 90/30 = 3
@@ -252,6 +265,19 @@
 - B1 for 0.034 oe OR B1FT for their decimal < 1 correctly converted
 - Full answer: 3.4 × 10⁻² cao
 - Full marks = 2
+
+**s23_11 Q17:** Work out (5.7 × 10²⁶) − (4.9 × 10²⁴). Give your answer in standard form.
+- Rewrite: 570 × 10²⁴ − 4.9 × 10²⁴ = 565.1 × 10²⁴ = 5.651 × 10²⁶
+- M1 for any correct method to align powers (e.g. expressing both as × 10²⁴ or × 10²⁶)
+- Full answer: 5.651 × 10²⁶ cao
+- Full marks = 2
+
+**s23_22 Q5(b):** A = 8.6 × 10^n and B = 1.5 × 10^(n−1). Find A − B and A × B in standard form in terms of n.
+- A − B: B = 1.5 × 10^(n−1) = 0.15 × 10^n → A − B = (8.6 − 0.15) × 10^n = 8.45 × 10^n
+- Full answer: 8.45 × 10^n [B1] — Full marks = 1
+- A × B: 8.6 × 1.5 × 10^(n + n−1) = 12.9 × 10^(2n−1) = 1.29 × 10^(2n)
+- Full answer: 1.29 × 10^(2n) [B2; B1 for 12.9 × 10^(2n−1) oe seen] — Full marks = 2
+- Key: must convert to standard form a × 10^k where 1 ≤ a < 10; leaving as 12.9 × 10^(2n−1) loses the B2 mark
 
 ---
 
@@ -285,6 +311,13 @@
 
 ### Key examples from 2025 papers
 
+**s23_12 Q14(b):** P = x^n y² and Q = x^(n−1) y⁴, where x and y are prime. Find the HCF of P and Q in terms of x, y and n.
+- HCF takes the lowest power of each prime factor
+- x: lowest power is min(n, n−1) = n−1; y: lowest power is min(2, 4) = 2
+- Full answer: x^(n−1) y² final answer
+- B1 for x^(n−1) y^k (any k) or x^k y² (any k) — one component correct
+- Full marks = 2
+
 **s25_13 Q11:** Two flashing lights: green flashes every 12 minutes, red flashes every 45 minutes. They flash together at 11:00. Find the next time they flash together.
 - LCM(12, 45): 12 = 2² × 3; 45 = 3² × 5; LCM = 2² × 3² × 5 = 180 minutes = 3 hours
 - Next simultaneous flash: 11:00 + 3 hours = 14:00
@@ -307,14 +340,48 @@
 - Full answer: 2² × 3^n × 7
 - Full marks = 2
 
+**s23_21 Q5(b)(i):** M = 2^(2x) × 3⁴ × 5 × 7 and N = 2³ × 3^(x−y) × 5². The LCM of M and N is 2⁸ × 3⁶ × 5² × 7. Find x and y.
+- For the factor 2: max(2x, 3) = 8 → 2x = 8 → x = 4
+- For the factor 3: max(4, x−y) = 6 → x−y = 6 → 4−y = 6 → y = −2
+- B1 for x = 4 (from 2x = 8)
+- B1 FT for y = (their x) − 6 (accept y = −2 if FT gives this)
+- Full marks = 2
+
+**s23_21 Q5(b)(ii):** Using x = 4, find the largest square number that is a factor of M = 2⁸ × 3⁴ × 5 × 7.
+- Square factors require all prime powers to be even: 2⁸ and 3⁴ are already even powers; 5 and 7 have odd power 1 so excluded
+- Largest square factor = 2⁸ × 3⁴ = 256 × 81 = 20736
+- Full answer: 20736 [B1]
+- Full marks = 1
+
+**s23_21 Q5(b)(iii):** Using x = 4, y = −2, find the HCF of M and N as a product of prime factors.
+- M = 2⁸ × 3⁴ × 5 × 7; N = 2³ × 3⁶ × 5²
+- HCF = min powers of each common prime: 2^min(8,3) × 3^min(4,6) × 5^min(1,2) = 2³ × 3⁴ × 5
+- Full answer: 2³ × 3⁴ × 5 [B1]
+- Full marks = 1
+
+**w23_12 Q9(b):** 36 = 2² × 3² and N = 2² × 3 × k, where k > 3. 180 is the LCM of 36 and N. Find k.
+- 180 = 2² × 3² × 5 (prime factorisation of 180)
+- LCM(36, N) = LCM(2² × 3², 2² × 3 × k) = 2² × 3² × k (if k introduces a new prime not already in 36)
+- For LCM = 180 = 2² × 3² × 5: the extra factor must be k = 5
+- Check: LCM(2²×3², 2²×3×5) = 2²×3²×5 = 180 ✓; k=5>3 ✓
+- Full answer: k = 5 cao [B1]
+- Full marks = 1
+
 ---
 
 ## 12. Map Scale / Scale Factor
 
-**w25_22 Q6:** Map scale 1:5000, path = 8.3 cm on map
+**w25_22 Q6:** Map scale 1:5000, path = 8.3 cm on map. Find the actual length in metres.
 - M1 for 5000 × 8.3 / 100
 - Full answer: 415 m
 - B1 for answer figs 415 (unit error loses 1 mark)
+- Full marks = 2
+
+**s23_11 Q13(b):** A map has scale 4.5 cm to 9 km. Express this as a representative fraction (ratio 1 : n).
+- 9 km = 9 × 100 000 cm = 900 000 cm
+- Scale = 4.5 : 900 000 = 1 : 200 000
+- M1 for converting 9 km to cm and dividing by 4.5, or 9/4.5 × 100 000 oe
+- Full answer: 1 : 200 000
 - Full marks = 2
 
 ---
@@ -394,6 +461,51 @@
 - (b) Cube number: **27** [B1] — 27 = 3³
 - (c) Factor of 26: **√169 = 13** [B1] — 13 is a factor of 26 (26 = 2 × 13) ✓
 - (d) Irrational number: **√8** [B1] — √8 = 2√2, which is irrational ✓
+
+---
+
+## 16. Bounds — Upper/Lower Bound of a Formula (Cylinder Volume)
+
+### When this appears
+Two measurements are given with different precisions. Find the upper (or lower) bound of a formula that uses both.
+
+### What the mark scheme rewards
+- B1 for identifying each bound correctly
+- M1 for substituting BOTH upper bounds into the formula (for upper bound of product)
+- nfww applies — the answer must come from correct bound values, not from the nominal values
+
+### Key example from 2023 papers
+
+**w23_22 Q10(b):** The height of a cylinder is 13 cm, correct to the nearest centimetre. The radius of the base is 4.5 cm, correct to the nearest 0.1 cm. Calculate the upper bound of the volume in cm³.
+- Upper bound of h: 13.5 cm (nearest cm → half-unit = 0.5)
+- Upper bound of r: 4.55 cm (nearest 0.1 cm → half-unit = 0.05)
+- Upper bound V = π × 4.55² × 13.5 = π × 20.7025 × 13.5 ≈ 878.1 cm³
+- B1 for 13.5 seen or 4.55 seen [either bound identified]
+- M1 for π × their 4.55² × their 13.5 oe
+- Full answer: 878 or 878.0 to 878.1 nfww
+- Full marks = 3
+
+---
+
+## 17. Population Density — Comparing Multiple Rates
+
+### When this appears
+A table of population and area for several countries. Calculate population density (= population ÷ area) for each and identify which is highest/lowest.
+
+### What the mark scheme rewards
+- M1 for one correct population density computed
+- M2 for all required densities computed (even if one is slightly off due to rounding)
+- B1 for identifying the correct country from their densities (FT their values)
+
+### Key example from 2023 papers
+
+**w23_21 Q1(d)(ii):** A table gives population and area for four countries. Find which country has the highest population density.
+- Population densities (population ÷ area): approximately 1100, 2030, 1320, and 510 people/km² for the four countries
+- Bahrain has the highest density ≈ 2030 people/km²
+- M2 for all four correct densities seen (M1 for one correct density)
+- B1 for Bahrain cao [awarded FT their densities — must be consistent]
+- Full answer: Bahrain
+- Full marks = 3
 
 ---
 

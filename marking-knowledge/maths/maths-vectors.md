@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — Vectors Topic Knowledge
-**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_11, s24_12, w24_12 (2024 series)
+**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_11, s24_12, w24_12 (2024 series) + s23_11 (2023 series)
 ---
 
 ## 1. Vector Notation and Components

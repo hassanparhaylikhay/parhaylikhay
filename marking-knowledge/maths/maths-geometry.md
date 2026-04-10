@@ -1,5 +1,5 @@
 # Cambridge 4024 O-Level Mathematics — Geometry Topic Knowledge
-**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_11, s24_21, w24_21, w24_22 (2024 series)
+**Sources:** s25_12, s25_13, s25_22, s25_23, w25_11, w25_12, w25_21, w25_22 (2025 series) + s24_11, s24_21, w24_21, w24_22 (2024 series) + s23_11, s23_21, s23_22, w23_11, w23_21, w23_22 (2023 series)
 ---
 
 ## 1. Angles in Parallel Lines
@@ -148,6 +148,21 @@
 - B1 for isosceles triangle reason; B1 for cyclic quadrilateral reason; B1 for y = 100 (dep on both)
 - "Max 2 if not fully correct"
 - Full marks = 3
+
+**w23_22 Q2(b):** A, B, C, D are points on a circle with centre O. AB is a diameter. Angle BAC = 24°. Find angle ADC, giving a reason for each step.
+- Method 1: angle ACB = 90° [angle in a semicircle]; angle ABC = 180°−90°−24° = 66° [angles in a triangle]; angle ADC = 180°−66° = 114° [angles in opposite segments are supplementary] — 3 steps, 3 reasons
+- Method 2: angle ADB = 90° [angle in a semicircle]; angle BDC = 24° [angles in the same segment = angle BAC]; angle ADC = 90°+24° = 114°
+- B2 for angle ADC = 114° nfww; B1 for angle ACB=90° or angle ABC=66° or angle ADB=90° or angle BDC=24° (any correct intermediate angle)
+- AND B2 for complete correct reasons for all steps; B1 for one correct reason correctly linked to its angle
+- Max 3 marks if any incorrect angles or reasons
+- Full marks = 4
+
+**w23_11 Q15:** B, C, D are points on a circle with centre O. AB and AC are tangents to the circle from external point A. Angle BAC = 38°. Find angle ABC, angle BOC, and angle BDC.
+- (a) Angle ABC = 71°: AB = AC (tangents from same external point, so triangle ABC isosceles) → angle ABC = angle ACB = (180 − 38)/2 = 71°. [B1] Full marks = 1
+- (b) Angle BOC = 142°: angle OBA = angle OCA = 90° (radius ⊥ tangent). Quadrilateral ABOC: 38 + 90 + 90 + BOC = 360 → BOC = 142°. M1 for angle ABO = 90 or angle ACO = 90. Full marks = 2
+- (c) Angle BDC = 71°: D on major arc. Angle at circumference = half angle at centre → BDC = BOC/2 = 71°. B1 FT (b)/2. Full marks = 1
+- SC1 if student gives 2 × their answer to (a) for part (c)
+- Full marks (a)+(b)+(c) = 4
 
 ---
 
@@ -365,6 +380,81 @@
 - B1 for AED = 50° or EDC = 50°
 - Full answer: x = 20 nfww
 - Full marks = 4
+
+---
+
+## 12. Congruence Proof
+
+### New question type from 2023: proving triangles are congruent
+
+### What the mark scheme rewards
+- B1 for each correct pair of equal sides or angles, with correct reason
+- Must name the congruence condition at the end: SSS, SAS, AAS, or RHS
+- Cambridge accepts any valid congruence proof — multiple valid routes exist
+
+### Congruence conditions
+| Condition | Meaning |
+|-----------|---------|
+| SSS | All three sides equal |
+| SAS | Two sides and the included angle equal |
+| AAS | Two angles and a corresponding side equal |
+| RHS | Right angle, hypotenuse, and one other side equal |
+
+### Key examples from 2023 papers
+
+**w23_21 Q10(a):** Circle with centre O. AC and BD are diameters. Show that triangle OAB is congruent to triangle ODC.
+- AO = DO [equal radii]
+- BO = CO [equal radii]
+- Angle AOB = angle DOC [vertically opposite angles]
+- Therefore congruent by SAS
+- B2 for two correct pairs of equal sides/angles with correct reasons; B1 for one correct pair with reason OR two correct pairs with no/incorrect reasons
+- Note: angles must be described using 3-letter convention (angle AOB, not just "O")
+- Full marks = 3
+
+**s23_11 Q19:** O is the centre of a circle. OA and OB are radii. AT and BT are tangents to the circle from external point T. Prove that triangle OAT is congruent to triangle OBT.
+- OA = OB [radii of the same circle]
+- OAT = OBT = 90° [radius to tangent is perpendicular]
+- OT is common [common side]
+- Hence triangles OAT and OBT are congruent by RHS (Right angle, Hypotenuse, Side)
+- B1 for each of the three correct statements with correct reasons
+- Note: also valid via SSS (since AT = BT can be shown from the equal tangent property) or SAS — mark any valid complete set of three
+- Full marks = 3
+
+---
+
+## 13. Circle Theorems — Algebraic Chain (Multiple Theorems in Sequence)
+
+### New pattern from 2023: expressing an angle algebraically through a chain of circle theorem steps
+
+### What the mark scheme rewards
+- M1 for each theorem correctly stated with its reason
+- B marks for key intermediate angles (expressed algebraically)
+- A1 for the final expression in simplest form
+
+### Key examples from 2023 papers
+
+**s23_22 Q3(b)(i):** A, B, C are on a circle with centre O. Angle ABC = x°. Show that angle OAC = (90 − x)°, giving reasons.
+- Method 1 (angle at centre): angle AOC = 2x° [angle at centre = twice angle at circumference for same arc AC]
+- Triangle OAC is isosceles (OA = OC = radii): angle OAC = (180° − 2x°)/2 = 90° − x°
+- B2 for angle AOC = 2x with correct reason (angle at centre is twice angle at circumference)
+- B1 dep for angle OAC = (180 − their 2x)/2 with isosceles triangle OAC stated
+- Method 2 (alternate): angle AYC = x° (angles in same segment); angle YCA = 90° (angle in semicircle, UY diameter); angle OAC = 90° − x° (angle sum in triangle)
+- Full marks = 3
+
+**s23_21 Q3(b):** U, V, W, X, Y are on a circle with centre O. UY is a diameter. ZX is a tangent to the circle at X. Z is on the line UY extended beyond Y. VUX = 35°, XZY = a°, VWY = b°. Find b in terms of a in simplest form.
+- Step 1: OXZ = 90° [tangent is perpendicular to radius] [M1]
+- Step 2: angle XOY = angle XOZ = 90° − a° [O, Y, Z are collinear with Z beyond Y, so OZ and OY are in the same direction]
+- Step 3: Triangle OUX is isosceles (OU = OX = radii): angle XUO = (180° − (90° − a°))/2 = 45° − a/2° [B2]
+- Step 4: Since O lies on UY (diameter), ray UO = ray UY, so angle XUY = angle XUO = 45° − a/2°
+- Step 5: angle VUY = VUX + XUY = 35° + 45° − a/2° = 80° − a/2°
+- Step 6: Arc VY not containing W = 360° − 2(80° − a/2°) = 200° + a°
+- Step 7: angle VWY = ½(200° + a°) = 100° + a/2° [inscribed angle = half arc] [M1]
+- Full answer: b = 100 + a/2
+- Full marks = 4
+
+### Key insight
+- When Z is external and on the diameter line extended, angles at O from the tangent-point equal the same angle as viewed from the near diameter end, not the far end
+- "Algebraic circle angle" questions require chaining: tangent property → isosceles triangle → inscribed angle theorem. Each must be shown with a reason to earn marks.
 
 ---
 
