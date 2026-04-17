@@ -21,6 +21,16 @@ BODY_SIZE     = 30
 SMALL_SIZE    = 24
 EQUATION_SIZE = 40
 
+PL_FONT = "Roboto"
+
+# Roboto is bundled with Manim. Manim's default "sans" resolves via Pango
+# to Helvetica on macOS, which has inconsistent glyph spacing. This subclass
+# forces Roboto for every Text() call without touching individual call sites.
+_TextBase = Text
+class Text(_TextBase):
+    def __init__(self, text, font=PL_FONT, **kwargs):
+        super().__init__(text, font=font, **kwargs)
+
 
 def pl_axes(x_range, y_range, x_length=7, y_length=5):
     return Axes(

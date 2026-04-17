@@ -61,6 +61,18 @@ HEADING_SIZE  = 36   # Sub-headings within a scene
 BODY_SIZE     = 30   # Explanations, working steps
 SMALL_SIZE    = 24   # Labels, annotations, footnotes
 EQUATION_SIZE = 40   # All LaTeX equations
+
+PL_FONT = "Roboto"
+
+# Manim's default font is "sans", which Pango resolves to Helvetica on macOS.
+# Helvetica has inconsistent glyph spacing that causes text merging in renders.
+# Roboto is bundled with Manim and renders consistently across platforms.
+# Add this subclass near the top of every script — it fixes all Text() calls
+# without needing to add font= to every individual call site.
+_TextBase = Text
+class Text(_TextBase):
+    def __init__(self, text, font=PL_FONT, **kwargs):
+        super().__init__(text, font=font, **kwargs)
 ```
 
 ### Scene Background
