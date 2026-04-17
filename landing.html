@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parhaylikhay — Cambridge O-Level Maths & Physics</title>
+<meta name="description" content="The only Cambridge O-Level Maths resource built around the mark scheme. Learn by doing with interactive widgets, crisp Manim videos, and a teacher-led community."/>
+<style>
+:root {
+  --bg:     #0d1216;
+  --bg2:    #0f1820;
+  --blue:   #00abfa;
+  --yellow: #fff067;
+  --green:  #0fee89;
+  --orange: #ff822c;
+  --pink:   #ff4670;
+  --text:   #e8e8e8;
+  --muted:  #888780;
+  --border: #1e2c3a;
+  --card:   #141d27;
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+.label {
+  font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: 0.13em; font-weight: 700;
+}
+h1 { font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 800; line-height: 1.1; letter-spacing: -0.025em; }
+h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; }
+h3 { font-size: 1.15rem; font-weight: 600; }
+.container { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+section { padding: 100px 0; }
+
+/* ── NAV ─────────────────────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 0 28px; height: 62px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(13,18,22,0.88);
+  backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.nav-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.logo-mark {
+  width: 34px; height: 34px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--blue) 0%, #0076c0 100%);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.82rem; color: #fff; letter-spacing: -0.04em;
+  box-shadow: 0 0 18px rgba(0,171,250,0.35);
+}
+.logo-text { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+.nav-links { display: flex; align-items: center; gap: 28px; }
+.nav-links a {
+  color: var(--muted); text-decoration: none; font-size: 0.88rem;
+  transition: color 0.15s;
+}
+.nav-links a:hover { color: var(--text); }
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.nav-badge {
+  font-size: 0.7rem; padding: 2px 8px; border-radius: 20px;
+  background: rgba(15,238,137,0.12); color: var(--green);
+  border: 1px solid rgba(15,238,137,0.25); font-weight: 600;
+}
+.btn-nav {
+  background: var(--blue); color: #fff; border: none;
+  padding: 8px 18px; border-radius: 7px; font-size: 0.88rem; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+  text-decoration: none; display: inline-block;
+}
+.btn-nav:hover { background: #009de6; box-shadow: 0 0 20px rgba(0,171,250,0.4); }
+
+/* ── HERO ────────────────────────────────────────────────────────────── */
+#hero {
+  min-height: 100vh; display: flex; align-items: center;
+  position: relative; overflow: hidden; padding-top: 62px;
+}
+#hero-bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.hero-grid-overlay {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,171,250,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,171,250,0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+.hero-radial {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(ellipse 60% 60% at 30% 50%, rgba(0,171,250,0.07) 0%, transparent 60%);
+}
+.hero-content {
+  position: relative; z-index: 2;
+  max-width: 1160px; margin: 0 auto; padding: 80px 28px;
+  display: grid; grid-template-columns: 1.1fr 1fr; gap: 64px; align-items: center;
+}
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,171,250,0.08); border: 1px solid rgba(0,171,250,0.2);
+  border-radius: 20px; padding: 5px 14px 5px 10px;
+  margin-bottom: 24px;
+}
+.hero-eyebrow-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--blue); box-shadow: 0 0 8px var(--blue);
+}
+.hero-eyebrow span { font-size: 0.78rem; color: var(--blue); font-weight: 600; }
+.hero-title { margin-bottom: 22px; }
+.hero-title em { font-style: normal; color: var(--yellow); }
+.hero-sub {
+  font-size: 1.12rem; color: #a8b4be; line-height: 1.75;
+  max-width: 520px; margin-bottom: 36px;
+}
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 40px; }
+.btn-primary {
+  background: var(--blue); color: #fff; border: none;
+  padding: 13px 26px; border-radius: 8px; font-size: 0.98rem; font-weight: 600;
+  cursor: pointer; font-family: inherit; transition: all 0.2s;
+  text-decoration: none; display: inline-block;
+  box-shadow: 0 0 0 rgba(0,171,250,0);
+}
+.btn-primary:hover {
+  background: #009de6; transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(0,171,250,0.35);
+}
+.btn-ghost {
+  background: transparent; color: var(--text);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 13px 26px; border-radius: 8px; font-size: 0.98rem; font-weight: 500;
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+  text-decoration: none; display: inline-block;
+}
+.btn-ghost:hover { border-color: var(--blue); color: var(--blue); }
+.hero-proof {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 0.82rem; color: var(--muted);
+}
+.hero-proof-dots { display: flex; gap: -4px; }
+.proof-dot {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--bg);
+  background: var(--card); display: flex; align-items: center; justify-content: center;
+  font-size: 0.62rem; font-weight: 700; margin-right: -8px;
+}
+.hero-right { position: relative; }
+.browser-glow {
+  position: absolute; inset: -60px; z-index: -1;
+  background: radial-gradient(ellipse at 50% 40%, rgba(0,171,250,0.12) 0%, transparent 65%);
+  pointer-events: none;
+}
+.browser-frame {
+  background: #0a1118;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04);
+}
+.browser-bar {
+  background: #111c28; padding: 10px 14px;
+  display: flex; align-items: center; gap: 7px;
+  border-bottom: 1px solid var(--border);
+}
+.b-dot { width: 10px; height: 10px; border-radius: 50%; }
+.browser-url {
+  flex: 1; background: rgba(255,255,255,0.04); border-radius: 5px;
+  padding: 4px 10px; margin: 0 8px; font-size: 0.7rem;
+  color: var(--muted); font-family: monospace; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+}
+.hero-iframe-wrap { width: 100%; height: 410px; overflow: hidden; position: relative; }
+.hero-iframe-wrap iframe {
+  width: 120%; height: 120%;
+  transform: scale(0.833); transform-origin: top left;
+  border: none; display: block;
+}
+
+/* ── TRUST BAR ───────────────────────────────────────────────────────── */
+.trust-bar {
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  background: rgba(15,24,32,0.7); padding: 20px 0;
+}
+.trust-inner {
+  max-width: 1160px; margin: 0 auto; padding: 0 28px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 36px; flex-wrap: wrap;
+}
+.trust-item { display: flex; align-items: center; gap: 9px; }
+.trust-item span.ico { font-size: 1rem; }
+.trust-item span.txt { font-size: 0.85rem; color: var(--muted); }
+.trust-item span.txt strong { color: #ccd3d9; font-weight: 600; }
+.trust-sep { width: 1px; height: 20px; background: var(--border); }
+
+/* ── PAIN SECTION ────────────────────────────────────────────────────── */
+.pain-wrap {
+  background: var(--bg2);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.pain-grid {
+  max-width: 1160px; margin: 0 auto; padding: 96px 28px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+}
+.pain-sub-text { color: #a8b4be; font-size: 1rem; line-height: 1.8; margin-bottom: 18px; }
+.compare-stack { display: flex; flex-direction: column; gap: 10px; }
+.cmp {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 18px;
+  display: flex; align-items: flex-start; gap: 12px; transition: border-color 0.2s;
+}
+.cmp.bad  { border-left: 3px solid var(--pink); }
+.cmp.good { border-left: 3px solid var(--green); }
+.cmp-ico  { font-size: 0.95rem; margin-top: 2px; flex-shrink: 0; }
+.cmp-body { font-size: 0.87rem; color: #a8b4be; line-height: 1.55; }
+.cmp-body strong { color: var(--text); display: block; margin-bottom: 3px; font-size: 0.9rem; }
+
+/* ── SECTION HEADER ──────────────────────────────────────────────────── */
+.sec-header { text-align: center; max-width: 660px; margin: 0 auto 60px; }
+.sec-header .label { margin-bottom: 12px; }
+.sec-header h2 { margin-bottom: 14px; }
+.sec-header p { color: #a8b4be; font-size: 1.02rem; line-height: 1.7; }
+
+/* ── MARKS SECTION ───────────────────────────────────────────────────── */
+.marks-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 16px;
+  max-width: 1160px; margin: 0 auto 40px; padding: 0 28px;
+}
+.mark-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px 20px; position: relative; overflow: hidden;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.mark-card:hover { transform: translateY(-3px); }
+.mark-card::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  border-radius: 12px 12px 0 0;
+}
+.mark-card.m::after { background: var(--blue); }
+.mark-card.a::after { background: var(--green); }
+.mark-card.b::after { background: var(--yellow); }
+.mark-card.e::after { background: var(--orange); }
+.mark-card:hover.m { border-color: rgba(0,171,250,0.3); }
+.mark-card:hover.a { border-color: rgba(15,238,137,0.3); }
+.mark-card:hover.b { border-color: rgba(255,240,103,0.3); }
+.mark-card:hover.e { border-color: rgba(255,130,44,0.3); }
+.mark-pill {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 5px;
+  font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em;
+  margin-bottom: 14px;
+}
+.pill-m { background: rgba(0,171,250,0.12); color: var(--blue); border: 1px solid rgba(0,171,250,0.25); }
+.pill-a { background: rgba(15,238,137,0.12); color: var(--green); border: 1px solid rgba(15,238,137,0.25); }
+.pill-b { background: rgba(255,240,103,0.12); color: var(--yellow); border: 1px solid rgba(255,240,103,0.25); }
+.pill-e { background: rgba(255,130,44,0.12); color: var(--orange); border: 1px solid rgba(255,130,44,0.25); }
+.mark-card h3 { margin-bottom: 8px; }
+.mark-card p { color: #8fa0b0; font-size: 0.87rem; line-height: 1.6; }
+
+/* Worked example */
+.we-wrap { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+.we-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 30px;
+}
+.we-qhead {
+  font-size: 0.82rem; color: var(--muted); margin-bottom: 20px;
+  padding-bottom: 18px; border-bottom: 1px solid var(--border);
+}
+.we-qhead strong { color: var(--text); display: block; font-size: 1rem; margin-bottom: 5px; }
+.we-steps { display: flex; flex-direction: column; gap: 10px; }
+.we-step {
+  display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center;
+  padding: 12px 16px; background: rgba(255,255,255,0.025);
+  border-radius: 8px; border: 1px solid rgba(255,255,255,0.06);
+}
+.we-math { font-family: 'Georgia', 'Times New Roman', serif; font-size: 1rem; }
+.we-note { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+.we-badges { display: flex; gap: 5px; flex-shrink: 0; }
+.mk {
+  padding: 3px 8px; border-radius: 4px;
+  font-size: 0.7rem; font-weight: 700; white-space: nowrap;
+}
+.mk-m { background: rgba(0,171,250,0.18); color: var(--blue); }
+.mk-a { background: rgba(15,238,137,0.18); color: var(--green); }
+.mk-b { background: rgba(255,240,103,0.18); color: var(--yellow); }
+.we-warn {
+  margin-top: 16px; padding: 12px 16px;
+  background: rgba(255,240,103,0.05); border: 1px solid rgba(255,240,103,0.18);
+  border-radius: 8px; font-size: 0.84rem; color: var(--yellow); line-height: 1.6;
+}
+
+/* ── MANIPULATIVES SECTION ───────────────────────────────────────────── */
+.manip-section { background: var(--bg2); }
+.manip-inner { max-width: 1160px; margin: 0 auto; padding: 100px 28px; }
+.manip-header { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: end; margin-bottom: 36px; }
+.manip-header h2 { margin-bottom: 12px; }
+.manip-header p { color: #a8b4be; font-size: 1rem; max-width: 520px; line-height: 1.7; }
+.manip-tabs {
+  display: flex; gap: 0; background: var(--card);
+  border: 1px solid var(--border); border-radius: 9px;
+  overflow: hidden; width: fit-content; margin-bottom: 28px;
+}
+.mtab {
+  padding: 10px 22px; font-size: 0.85rem; cursor: pointer;
+  color: var(--muted); background: none; border: none; font-family: inherit;
+  transition: all 0.15s; white-space: nowrap;
+}
+.mtab.on { background: rgba(0,171,250,0.12); color: var(--blue); font-weight: 600; }
+.manip-stage {
+  display: grid; grid-template-columns: 1.3fr 1fr; gap: 28px; align-items: start;
+}
+.widget-shell {
+  background: #080e14; border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+}
+.widget-topbar {
+  background: #111c28; padding: 9px 12px;
+  display: flex; align-items: center; gap: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.wdot { width: 9px; height: 9px; border-radius: 50%; }
+.widget-label {
+  font-size: 0.7rem; color: var(--muted); margin-left: 8px;
+  font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.widget-iframe { width: 100%; height: 460px; border: none; display: block; }
+.manip-desc { padding: 8px 0; }
+.manip-desc .label { margin-bottom: 10px; }
+.manip-desc h3 { font-size: 1.3rem; margin-bottom: 12px; line-height: 1.3; }
+.manip-desc p { color: #a0aab4; font-size: 0.92rem; line-height: 1.75; margin-bottom: 20px; }
+.manip-tip {
+  background: rgba(15,238,137,0.06); border: 1px solid rgba(15,238,137,0.18);
+  border-radius: 9px; padding: 14px 16px;
+  font-size: 0.84rem; color: var(--green); line-height: 1.65;
+}
+.manip-tip strong { font-weight: 600; }
+.manip-feature-list { display: flex; flex-direction: column; gap: 9px; margin-bottom: 20px; }
+.mf {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 0.87rem; color: #a0aab4;
+}
+.mf::before { content: '✦'; color: var(--green); font-size: 0.65rem; flex-shrink: 0; }
+
+/* ── VIDEOS SECTION ──────────────────────────────────────────────────── */
+.videos-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 20px;
+  max-width: 1160px; margin: 0 auto; padding: 0 28px;
+}
+.vid-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 13px; overflow: hidden; cursor: pointer;
+  transition: all 0.2s;
+}
+.vid-card:hover {
+  border-color: rgba(0,171,250,0.35);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 48px rgba(0,0,0,0.45);
+}
+.vid-thumb {
+  position: relative; aspect-ratio: 16/9;
+  background: #080e14; overflow: hidden;
+}
+.vid-thumb canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.vid-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(8,14,20,0.35);
+}
+.play-ring {
+  width: 46px; height: 46px; border-radius: 50%;
+  border: 2px solid rgba(0,171,250,0.6);
+  background: rgba(0,171,250,0.12);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.vid-card:hover .play-ring {
+  background: var(--blue); border-color: var(--blue);
+  box-shadow: 0 0 20px rgba(0,171,250,0.5);
+}
+.play-tri {
+  width: 0; height: 0;
+  border-top: 7px solid transparent; border-bottom: 7px solid transparent;
+  border-left: 12px solid rgba(0,171,250,0.8); margin-left: 3px;
+  transition: border-color 0.2s;
+}
+.vid-card:hover .play-tri { border-left-color: #fff; }
+.vid-info { padding: 16px 18px 20px; }
+.vid-tag { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+.vid-title { font-size: 0.92rem; font-weight: 600; margin-bottom: 10px; line-height: 1.45; }
+.vid-meta { display: flex; gap: 10px; align-items: center; font-size: 0.78rem; color: var(--muted); }
+.vid-dur { background: rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 4px; }
+.vid-manim {
+  margin-top: 10px; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.72rem; color: rgba(0,171,250,0.6); background: rgba(0,171,250,0.06);
+  border: 1px solid rgba(0,171,250,0.12); padding: 2px 8px; border-radius: 4px;
+}
+
+/* ── COMMUNITY SECTION ───────────────────────────────────────────────── */
+.community-section { background: var(--bg2); }
+.community-grid {
+  max-width: 1160px; margin: 0 auto; padding: 100px 28px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+}
+.comm-features { display: flex; flex-direction: column; gap: 20px; margin: 28px 0 36px; }
+.cf {
+  display: flex; gap: 14px; align-items: flex-start;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 16px 18px;
+  transition: border-color 0.15s;
+}
+.cf:hover { border-color: rgba(255,70,112,0.25); }
+.cf-ico { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+.cf-body h4 { font-size: 0.92rem; margin-bottom: 4px; }
+.cf-body p { font-size: 0.84rem; color: #8fa0b0; line-height: 1.55; }
+.chat-mock {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; overflow: hidden;
+  box-shadow: 0 20px 56px rgba(0,0,0,0.45);
+}
+.chat-bar {
+  background: #111c28; padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.chat-bar .ico { font-size: 1rem; }
+.chat-bar .name { font-size: 0.88rem; font-weight: 600; }
+.chat-bar .online { font-size: 0.72rem; color: var(--green); margin-left: 4px; }
+.chat-msgs { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+.cm { display: flex; gap: 10px; }
+.cm-av {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700;
+}
+.cm-body {}
+.cm-name { font-size: 0.75rem; font-weight: 600; margin-bottom: 3px; }
+.cm-text { font-size: 0.84rem; color: #b0bcc8; line-height: 1.5; }
+.cm-text .hl { color: var(--yellow); font-weight: 600; }
+.cm-text .formula { color: var(--blue); font-family: monospace; }
+.cm-time { font-size: 0.68rem; color: var(--muted); margin-left: 6px; }
+.chat-input {
+  margin: 0 16px 16px; padding: 10px 14px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  border-radius: 8px; display: flex; justify-content: space-between;
+  align-items: center; font-size: 0.83rem; color: var(--muted);
+}
+.chat-input .send { color: var(--blue); font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+
+/* ── STATS BAR ───────────────────────────────────────────────────────── */
+.stats-bar {
+  padding: 72px 0;
+  background: linear-gradient(135deg, #0d1f30 0%, var(--bg) 100%);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.stats-grid {
+  max-width: 1160px; margin: 0 auto; padding: 0 28px;
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 20px; text-align: center;
+}
+.stat-n {
+  font-size: 2.6rem; font-weight: 800; color: var(--yellow);
+  line-height: 1; margin-bottom: 8px; letter-spacing: -0.03em;
+}
+.stat-l { font-size: 0.88rem; color: var(--muted); }
+
+/* ── TOPICS SECTION ──────────────────────────────────────────────────── */
+.topics-grid {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+  max-width: 1160px; margin: 0 auto; padding: 0 28px;
+}
+.tc {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: 18px 16px; transition: all 0.15s;
+}
+.tc:hover { border-color: rgba(0,171,250,0.3); transform: translateY(-2px); }
+.tc-num { font-size: 0.68rem; color: var(--muted); font-family: monospace; margin-bottom: 5px; }
+.tc-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 5px; }
+.tc-desc { font-size: 0.76rem; color: var(--muted); line-height: 1.45; }
+.tc-bar { height: 2px; border-radius: 2px; background: rgba(0,171,250,0.1); margin-top: 12px; }
+.tc-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--blue), var(--green)); }
+
+/* ── FINAL CTA ───────────────────────────────────────────────────────── */
+.cta-section {
+  padding: 120px 0; text-align: center;
+  background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(0,171,250,0.07) 0%, transparent 70%);
+  border-top: 1px solid var(--border);
+}
+.cta-inner { max-width: 660px; margin: 0 auto; padding: 0 28px; }
+.cta-inner h2 { margin-bottom: 18px; }
+.cta-inner p { color: #a8b4be; font-size: 1.05rem; line-height: 1.75; margin-bottom: 38px; }
+.cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.cta-sub { font-size: 0.8rem; color: var(--muted); margin-top: 20px; }
+
+/* ── FOOTER ──────────────────────────────────────────────────────────── */
+footer {
+  background: var(--bg2); border-top: 1px solid var(--border);
+  padding: 52px 28px 32px;
+}
+.footer-grid {
+  max-width: 1160px; margin: 0 auto;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
+}
+.footer-brand p { font-size: 0.87rem; color: var(--muted); line-height: 1.75; margin-top: 14px; max-width: 280px; }
+.footer-col h4 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 14px; }
+.footer-col a { display: block; color: #8fa0b0; text-decoration: none; font-size: 0.88rem; margin-bottom: 9px; transition: color 0.15s; }
+.footer-col a:hover { color: var(--blue); }
+.footer-bottom {
+  max-width: 1160px; margin: 40px auto 0; padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.footer-bottom p { font-size: 0.78rem; color: var(--muted); }
+
+/* ── SCROLL ANIMATIONS ───────────────────────────────────────────────── */
+.appear { opacity: 0; transform: translateY(20px); transition: opacity 0.55s ease, transform 0.55s ease; }
+.appear.in { opacity: 1; transform: none; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────────────────── */
+@media (max-width: 1000px) {
+  .hero-content { grid-template-columns: 1fr; }
+  .hero-right { display: none; }
+  .pain-grid { grid-template-columns: 1fr; gap: 48px; }
+  .marks-grid { grid-template-columns: 1fr 1fr; }
+  .manip-stage { grid-template-columns: 1fr; }
+  .community-grid { grid-template-columns: 1fr; gap: 48px; }
+  .stats-grid { grid-template-columns: repeat(2,1fr); }
+  .topics-grid { grid-template-columns: repeat(2,1fr); }
+  .videos-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .nav-links { display: none; }
+  .nav-badge { display: none; }
+  .marks-grid { grid-template-columns: 1fr; }
+  .videos-grid { grid-template-columns: 1fr; }
+  .topics-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .manip-tabs { flex-wrap: wrap; }
+  h1 { font-size: 2.1rem; }
+  h2 { font-size: 1.7rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ─────────────────────────────────────────────────────────────── -->
+<nav>
+  <a class="nav-logo" href="#">
+    <div class="logo-mark">PL</div>
+    <div class="logo-text">Parhaylikhay</div>
+  </a>
+  <div class="nav-links">
+    <a href="#marks">Mark Scheme</a>
+    <a href="#learn">Manipulatives</a>
+    <a href="#videos">Videos</a>
+    <a href="#community">Community</a>
+    <a href="#topics">Topics</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-badge">● Live</span>
+    <a class="btn-nav" href="#">Get Started Free</a>
+  </div>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────────────────────────── -->
+<section id="hero">
+  <canvas id="hero-bg"></canvas>
+  <div class="hero-grid-overlay"></div>
+  <div class="hero-radial"></div>
+  <div class="hero-content">
+    <div class="hero-left">
+      <div class="hero-eyebrow">
+        <div class="hero-eyebrow-dot"></div>
+        <span>Cambridge 4024 · O-Level Maths &amp; Physics</span>
+      </div>
+      <h1 class="hero-title">
+        Stop Losing Marks<br/>You <em>Actually Deserve.</em>
+      </h1>
+      <p class="hero-sub">
+        Most students understand the maths but still drop marks.
+        Parhaylikhay teaches you exactly what Cambridge examiners want —
+        step by step, mark by mark, with interactive tools that make the concept click.
+      </p>
+      <div class="hero-actions">
+        <a class="btn-primary" href="#">Start Learning Free</a>
+        <a class="btn-ghost" href="#learn">See It In Action →</a>
+      </div>
+      <div class="hero-proof">
+        <div style="display:flex;margin-right:6px">
+          <div class="proof-dot" style="background:#00abfa22;color:var(--blue)">AH</div>
+          <div class="proof-dot" style="background:#0fee8922;color:var(--green)">SA</div>
+          <div class="proof-dot" style="background:#fff06722;color:var(--yellow)">MK</div>
+          <div class="proof-dot" style="background:#ff822c22;color:var(--orange)">ZB</div>
+        </div>
+        Cambridge O-Level students learning the right way
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="browser-glow"></div>
+      <div class="browser-frame">
+        <div class="browser-bar">
+          <div class="b-dot" style="background:#ff5f57"></div>
+          <div class="b-dot" style="background:#febc2e"></div>
+          <div class="b-dot" style="background:#28c840"></div>
+          <div class="browser-url">parhaylikhay · Rates — Speed, Distance, Time</div>
+        </div>
+        <div class="hero-iframe-wrap">
+          <iframe src="./manipulatives/1-number/1.12-rates.html"
+                  sandbox="allow-scripts allow-same-origin"
+                  title="Interactive rates widget" loading="lazy"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TRUST BAR ─────────────────────────────────────────────────────────── -->
+<div class="trust-bar">
+  <div class="trust-inner">
+    <div class="trust-item"><span class="ico">🎓</span><span class="txt"><strong>Cambridge 4024</strong> — O-Level Maths</span></div>
+    <div class="trust-sep"></div>
+    <div class="trust-item"><span class="ico">✦</span><span class="txt"><strong>Marking-scheme aware</strong> — every step annotated</span></div>
+    <div class="trust-sep"></div>
+    <div class="trust-item"><span class="ico">🇵🇰</span><span class="txt">Built for <strong>Pakistani students</strong>, ages 14–16</span></div>
+    <div class="trust-sep"></div>
+    <div class="trust-item"><span class="ico">🎬</span><span class="txt"><strong>Manim-animated</strong> explainer videos</span></div>
+    <div class="trust-sep"></div>
+    <div class="trust-item"><span class="ico">⚡</span><span class="txt"><strong>24+ interactive</strong> manipulatives</span></div>
+  </div>
+</div>
+
+<!-- ── PAIN SECTION ───────────────────────────────────────────────────────── -->
+<div class="pain-wrap">
+  <div class="pain-grid">
+    <div class="appear">
+      <div class="label" style="color:var(--pink);margin-bottom:14px">The Real Problem</div>
+      <h2 style="margin-bottom:20px">Other courses teach you maths.<br/>We teach you <span style="color:var(--yellow)">marks.</span></h2>
+      <p class="pain-sub-text">You can fully understand a topic and still drop marks — because Cambridge examiners follow a rigid mark scheme, and most courses never show you what's actually on it.</p>
+      <p class="pain-sub-text" style="margin-bottom:0">Parhaylikhay puts the mark scheme at the centre of everything. Not as an afterthought. As the <em style="color:var(--text);font-style:normal;font-weight:600">starting point.</em></p>
+    </div>
+    <div class="compare-stack appear">
+      <div class="cmp bad">
+        <span class="cmp-ico">✗</span>
+        <div class="cmp-body"><strong>What other courses do</strong>"Solve the equation and find x." Shows answer. Moves on.</div>
+      </div>
+      <div class="cmp bad">
+        <span class="cmp-ico">✗</span>
+        <div class="cmp-body"><strong>What happens in the exam</strong>Right answer, wrong presentation. No M1 shown. Full marks lost.</div>
+      </div>
+      <div class="cmp good">
+        <span class="cmp-ico">✓</span>
+        <div class="cmp-body"><strong>What Parhaylikhay does</strong>"Write the formula first — that's your M1. Substituting earns A1. Without M1, A1 cannot be awarded. Here's exactly what the mark scheme says."</div>
+      </div>
+      <div class="cmp good">
+        <span class="cmp-ico">✓</span>
+        <div class="cmp-body"><strong>The result</strong>You know what to write, how to present it, and exactly which line earns which mark. Every time.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── MARKS SECTION ──────────────────────────────────────────────────────── -->
+<section id="marks">
+  <div class="container">
+    <div class="sec-header appear">
+      <div class="label" style="color:var(--blue)">Mark Scheme Aware</div>
+      <h2>Every step. Every mark. Explained.</h2>
+      <p>Cambridge uses four mark types. Every Parhaylikhay explanation and worked example is annotated with exactly which line earns which mark — and why.</p>
+    </div>
+  </div>
+  <div class="marks-grid appear">
+    <div class="mark-card m">
+      <div class="mark-pill pill-m">M1 — Method</div>
+      <h3>The Method Mark</h3>
+      <p>Awarded for the correct approach — even if the final answer is wrong. Always show your method. Writing the formula earns M1 before you calculate anything.</p>
+    </div>
+    <div class="mark-card a">
+      <div class="mark-pill pill-a">A1 — Accuracy</div>
+      <h3>The Accuracy Mark</h3>
+      <p>Awarded for the correct answer. Depends on M1 — no method shown means no A1, even if the answer is right. "nfww" means the correct answer must come from valid working.</p>
+    </div>
+    <div class="mark-card b">
+      <div class="mark-pill pill-b">B1 — Independent</div>
+      <h3>The Independent Mark</h3>
+      <p>Awarded regardless of method — for a correct stated fact, formula, or value. These are the "free marks" if you know your theory. Miss them and you've left marks on the table.</p>
+    </div>
+    <div class="mark-card e">
+      <div class="mark-pill pill-e">ECF — Follow Through</div>
+      <h3>Error Carried Forward</h3>
+      <p>If part (a) is wrong but you correctly apply that wrong value in part (b), you still earn marks. Understanding ECF can recover marks most students think they've permanently lost.</p>
+    </div>
+  </div>
+
+  <div class="we-wrap appear" style="margin-top:40px">
+    <div class="we-card">
+      <div class="we-qhead">
+        <strong>Cambridge 4024 — Worked Example: Solve 2x² + x − 6 = 0</strong>
+        Full marks = 3. Here is exactly how to write your working to earn all three marks — and what happens if you skip a step.
+      </div>
+      <div class="we-steps">
+        <div class="we-step">
+          <div>
+            <div class="we-math">2x² + x − 6 = (2x − 3)(x + 2)</div>
+            <div class="we-note">Correct factorisation — any valid method (quadratic formula also accepted for M1)</div>
+          </div>
+          <div class="we-badges"><span class="mk mk-m">M1</span></div>
+        </div>
+        <div class="we-step">
+          <div>
+            <div class="we-math">x = 3/2 &nbsp;&nbsp;&nbsp; or &nbsp;&nbsp;&nbsp; x = −2</div>
+            <div class="we-note">Both values correct and stated — awarded because M1 was earned first</div>
+          </div>
+          <div class="we-badges"><span class="mk mk-a">A1</span><span class="mk mk-a">A1</span></div>
+        </div>
+      </div>
+      <div class="we-warn">⚠ Cambridge tip: Writing x = 3/2 and x = −2 without any working scores 0 — the M1 mark unlocks both A1 marks. Never skip your method, even if it seems obvious.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MANIPULATIVES SECTION ───────────────────────────────────────────────── -->
+<section id="learn" class="manip-section">
+  <div class="manip-inner">
+    <div class="appear" style="max-width:620px;margin-bottom:40px">
+      <div class="label" style="color:var(--green);margin-bottom:12px">Learn by Doing</div>
+      <h2 style="margin-bottom:14px">Don't just watch. <span style="color:var(--green)">Interact.</span></h2>
+      <p style="color:#a8b4be;font-size:1.02rem;line-height:1.75">Every topic has a live interactive widget. Drag the controls, watch the maths respond in real time. Built to build the intuition no textbook can give you.</p>
+    </div>
+    <div class="manip-tabs appear">
+      <button class="mtab on" onclick="switchManip(0,this)">📐 Rates &amp; SDT</button>
+      <button class="mtab" onclick="switchManip(1,this)">📈 Exponential Growth</button>
+      <button class="mtab" onclick="switchManip(2,this)">⚖️ Ratio &amp; Proportion</button>
+    </div>
+    <div class="manip-stage appear">
+      <div class="widget-shell">
+        <div class="widget-topbar">
+          <div class="wdot" style="background:#ff5f57"></div>
+          <div class="wdot" style="background:#febc2e"></div>
+          <div class="wdot" style="background:#28c840"></div>
+          <span class="widget-label" id="wlabel">Rates — Speed, Distance, Time</span>
+        </div>
+        <iframe class="widget-iframe" id="widgetFrame"
+                src="./manipulatives/1-number/1.12-rates.html"
+                sandbox="allow-scripts allow-same-origin"
+                title="Interactive widget" loading="lazy"></iframe>
+      </div>
+      <div id="mdesc0" class="manip-desc">
+        <div class="label" style="color:var(--green);margin-bottom:8px">Topic 1.12</div>
+        <h3>Speed, Distance &amp; Time</h3>
+        <div class="manip-feature-list" style="margin-top:12px">
+          <div class="mf">Click the unknown quantity — the triangle highlights it</div>
+          <div class="mf">Enter the two known values, press Solve</div>
+          <div class="mf">Step-by-step working shown automatically</div>
+          <div class="mf">Includes Density, Pressure, Flow Rate, Pay Rate</div>
+        </div>
+        <p>The triangle shows you exactly which formula to use — the same "cover" method Cambridge examiners expect you to know and use correctly.</p>
+        <div class="manip-tip"><strong>Cambridge tip:</strong> Cover the quantity you want — what remains is the formula. Cover S → D÷T. Cover D → S×T. Always check units match before substituting.</div>
+      </div>
+      <div id="mdesc1" class="manip-desc" style="display:none">
+        <div class="label" style="color:var(--green);margin-bottom:8px">Topic 1.17</div>
+        <h3>Exponential Growth &amp; Decay</h3>
+        <div class="manip-feature-list" style="margin-top:12px">
+          <div class="mf">Drag the slider to change the rate — watch the curve reshape</div>
+          <div class="mf">Drag the probe dot along the curve to read off any value</div>
+          <div class="mf">Toggle growth ↔ decay — see the curve flip</div>
+          <div class="mf">Spring-animated: values interpolate smoothly</div>
+        </div>
+        <p>See exactly how the multiplier drives exponential curves — and why compound interest grows so much faster than simple interest over time.</p>
+        <div class="manip-tip"><strong>Cambridge tip:</strong> Always write the multiplier explicitly: for 20% growth, multiplier = 1.20. Cambridge awards B1 for a correct multiplier before you've finished any calculation.</div>
+      </div>
+      <div id="mdesc2" class="manip-desc" style="display:none">
+        <div class="label" style="color:var(--green);margin-bottom:8px">Topic 1.11</div>
+        <h3>Ratio &amp; Proportion</h3>
+        <div class="manip-feature-list" style="margin-top:12px">
+          <div class="mf">Adjust ratio parts and total — animated bar splits in real time</div>
+          <div class="mf">Up to 4 parts — add or remove with a button</div>
+          <div class="mf">Switch to "Scaling / Best Value" mode for unit pricing</div>
+          <div class="mf">One-part method shown step by step</div>
+        </div>
+        <p>The animated bar makes the one-part method visual. When you change the ratio, the bar springs into the new proportions — no static diagram can do that.</p>
+        <div class="manip-tip"><strong>Cambridge tip:</strong> Divide total by sum of parts to find "one part", then multiply. This earns M1 even with an arithmetic slip in the final answer.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── VIDEOS SECTION ─────────────────────────────────────────────────────── -->
+<section id="videos">
+  <div class="container">
+    <div class="sec-header appear">
+      <div class="label" style="color:var(--orange)">Explainer Videos</div>
+      <h2>Crisp videos. No fluff. Just marks.</h2>
+      <p>Every video is built with Manim — the same animation engine behind 3Blue1Brown. Precisely timed animations, mark-scheme callouts, and zero wasted time.</p>
+    </div>
+  </div>
+  <div class="videos-grid appear">
+    <div class="vid-card">
+      <div class="vid-thumb">
+        <canvas id="vt1"></canvas>
+        <div class="vid-overlay"><div class="play-ring"><div class="play-tri"></div></div></div>
+      </div>
+      <div class="vid-info">
+        <div class="vid-tag">Number · 1.17</div>
+        <div class="vid-title">Exponential Growth &amp; Decay — Full Walkthrough</div>
+        <div class="vid-meta"><span class="vid-dur">8 min</span><span>Cambridge 4024</span></div>
+        <div class="vid-manim">✦ Manim-animated</div>
+      </div>
+    </div>
+    <div class="vid-card">
+      <div class="vid-thumb">
+        <canvas id="vt2"></canvas>
+        <div class="vid-overlay"><div class="play-ring"><div class="play-tri"></div></div></div>
+      </div>
+      <div class="vid-info">
+        <div class="vid-tag">Algebra · 2.10</div>
+        <div class="vid-title">Quadratic Graphs — Vertex, Roots &amp; Axis of Symmetry</div>
+        <div class="vid-meta"><span class="vid-dur">12 min</span><span>Cambridge 4024</span></div>
+        <div class="vid-manim">✦ Manim-animated</div>
+      </div>
+    </div>
+    <div class="vid-card">
+      <div class="vid-thumb">
+        <canvas id="vt3"></canvas>
+        <div class="vid-overlay"><div class="play-ring"><div class="play-tri"></div></div></div>
+      </div>
+      <div class="vid-info">
+        <div class="vid-tag">Number · 1.11</div>
+        <div class="vid-title">Ratio &amp; Proportion — The One-Part Method</div>
+        <div class="vid-meta"><span class="vid-dur">6 min</span><span>Cambridge 4024</span></div>
+        <div class="vid-manim">✦ Manim-animated</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── COMMUNITY SECTION ──────────────────────────────────────────────────── -->
+<section id="community" class="community-section">
+  <div class="community-grid">
+    <div class="appear">
+      <div class="label" style="color:var(--pink);margin-bottom:14px">Community</div>
+      <h2>Never stuck <span style="color:var(--pink)">alone.</span></h2>
+      <p style="color:#a8b4be;font-size:1rem;line-height:1.75;margin:16px 0">Join a teacher-led community inside Circle — where every answer is marking-scheme aware. Ask the question, get the mark.</p>
+      <div class="comm-features">
+        <div class="cf">
+          <span class="cf-ico">💬</span>
+          <div class="cf-body">
+            <h4>Topic-specific channels</h4>
+            <p>Ask about the exact question you're stuck on — not a generic chatroom.</p>
+          </div>
+        </div>
+        <div class="cf">
+          <span class="cf-ico">📋</span>
+          <div class="cf-body">
+            <h4>Past paper discussions</h4>
+            <p>See how others approached the same question. Compare working. Spot patterns.</p>
+          </div>
+        </div>
+        <div class="cf">
+          <span class="cf-ico">✅</span>
+          <div class="cf-body">
+            <h4>Teacher-moderated answers</h4>
+            <p>Every explanation is mark-scheme aware. No misinformation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-mock appear">
+      <div class="chat-bar">
+        <span class="ico">#</span>
+        <div>
+          <div class="name">maths-number-help<span class="online"> ● 34 active</span></div>
+        </div>
+      </div>
+      <div class="chat-msgs">
+        <div class="cm">
+          <div class="cm-av" style="background:rgba(0,171,250,0.15);color:var(--blue)">AH</div>
+          <div class="cm-body">
+            <div class="cm-name" style="color:var(--blue)">Ali Hassan <span class="cm-time">3 min ago</span></div>
+            <div class="cm-text">For compound interest, do I need to show the multiplier or can I just use the formula directly?</div>
+          </div>
+        </div>
+        <div class="cm">
+          <div class="cm-av" style="background:rgba(15,238,137,0.15);color:var(--green)">T</div>
+          <div class="cm-body">
+            <div class="cm-name" style="color:var(--green)">Teacher <span class="cm-time">2 min ago</span></div>
+            <div class="cm-text">Always write <span class="formula">A = P(1 + r/100)ⁿ</span> first — that's your <span class="hl">M1</span>. Then substitute values. The mark scheme awards M1 for the formula even if your arithmetic is wrong.</div>
+          </div>
+        </div>
+        <div class="cm">
+          <div class="cm-av" style="background:rgba(255,240,103,0.15);color:var(--yellow)">SA</div>
+          <div class="cm-body">
+            <div class="cm-name" style="color:var(--yellow)">Sara Ahmed <span class="cm-time">just now</span></div>
+            <div class="cm-text">That's exactly what I was missing! I was writing the answer without the formula and losing the M1 every time 😭 thank you!</div>
+          </div>
+        </div>
+      </div>
+      <div class="chat-input">
+        <span>Ask a question in this channel...</span>
+        <span class="send">↵ send</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── STATS ───────────────────────────────────────────────────────────────── -->
+<div class="stats-bar">
+  <div class="stats-grid">
+    <div class="appear" style="text-align:center">
+      <div class="stat-n">24+</div>
+      <div class="stat-l">Interactive manipulatives</div>
+    </div>
+    <div class="appear" style="text-align:center">
+      <div class="stat-n">8</div>
+      <div class="stat-l">Past paper series analysed</div>
+    </div>
+    <div class="appear" style="text-align:center">
+      <div class="stat-n">M·A·B</div>
+      <div class="stat-l">Every mark type explained</div>
+    </div>
+    <div class="appear" style="text-align:center">
+      <div class="stat-n">4024</div>
+      <div class="stat-l">Cambridge O-Level Maths</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOPICS ──────────────────────────────────────────────────────────────── -->
+<section id="topics">
+  <div class="container">
+    <div class="sec-header appear">
+      <div class="label" style="color:var(--blue)">Full Curriculum</div>
+      <h2>Every Cambridge 4024 topic. Built properly.</h2>
+      <p>Interactive widgets, annotated worked examples, and mark-scheme walkthroughs — for every topic that appears on the paper.</p>
+    </div>
+  </div>
+  <div class="topics-grid">
+    <div class="tc appear"><div class="tc-num">1.1</div><div class="tc-name">Types of Number</div><div class="tc-desc">Nested set diagram — ℝ, ℚ, ℤ, ℕ, Irrational</div><div class="tc-bar"><div class="tc-fill" style="width:100%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">1.7</div><div class="tc-name">Indices</div><div class="tc-desc">7 laws verified live with sliders</div><div class="tc-bar"><div class="tc-fill" style="width:90%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">1.8</div><div class="tc-name">Standard Form</div><div class="tc-desc">Converter + place value chart</div><div class="tc-bar"><div class="tc-fill" style="width:95%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">1.9</div><div class="tc-name">Estimation &amp; Rounding</div><div class="tc-desc">Digits highlighted in real time</div><div class="tc-bar"><div class="tc-fill" style="width:85%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">1.10</div><div class="tc-name">Limits of Accuracy</div><div class="tc-desc">Draggable bound markers on number line</div><div class="tc-bar"><div class="tc-fill" style="width:100%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">1.11</div><div class="tc-name">Ratio &amp; Proportion</div><div class="tc-desc">Animated bar + best-value mode</div><div class="tc-bar"><div class="tc-fill" style="width:100%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">1.12</div><div class="tc-name">Rates (SDT)</div><div class="tc-desc">Cover-method triangle + 4 rate types</div><div class="tc-bar"><div class="tc-fill" style="width:100%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">1.13</div><div class="tc-name">Percentages &amp; Interest</div><div class="tc-desc">SI vs CI curve with draggable probe</div><div class="tc-bar"><div class="tc-fill" style="width:95%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">1.17</div><div class="tc-name">Exponential Growth</div><div class="tc-desc">Animated curve with draggable probe</div><div class="tc-bar"><div class="tc-fill" style="width:100%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">1.18</div><div class="tc-name">Surds</div><div class="tc-desc">Simplify, add/subtract, rationalise</div><div class="tc-bar"><div class="tc-fill" style="width:80%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">2.7</div><div class="tc-name">Sequences</div><div class="tc-desc">Spring-animated bar chart</div><div class="tc-bar"><div class="tc-fill" style="width:85%"></div></div></div>
+    <div class="tc appear"><div class="tc-num">2.9</div><div class="tc-name">Distance–Time Graphs</div><div class="tc-desc">Drag knots to reshape the journey</div><div class="tc-bar"><div class="tc-fill" style="width:90%"></div></div></div>
+  </div>
+</section>
+
+<!-- ── FINAL CTA ───────────────────────────────────────────────────────────── -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <div class="label appear" style="color:var(--blue);margin-bottom:14px">Ready to Score More?</div>
+    <h2 class="appear">The mark scheme is not a secret.<br/>We just show it to you.</h2>
+    <p class="appear">Join Cambridge O-Level students who are done guessing — learning with interactive tools, annotated examples, crisp Manim videos, and a community that speaks Cambridge.</p>
+    <div class="cta-actions appear">
+      <a class="btn-primary" href="#" style="font-size:1rem;padding:15px 30px">Start Learning Free</a>
+      <a class="btn-ghost" href="#learn" style="font-size:1rem;padding:15px 30px">Explore Manipulatives</a>
+    </div>
+    <div class="cta-sub appear">Cambridge 4024 · O-Level Maths &amp; Physics · For Pakistan · Built for marks, not just understanding</div>
+  </div>
+</section>
+
+<!-- ── FOOTER ──────────────────────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="logo-mark">PL</div>
+        <span style="font-weight:700">Parhaylikhay</span>
+      </div>
+      <p>Marking-scheme aware Cambridge O-Level Maths &amp; Physics. Built for Pakistani students who want every mark — not just understanding.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Topics</h4>
+      <a href="#">Unit 1 — Number</a>
+      <a href="#">Unit 2 — Algebra &amp; Graphs</a>
+      <a href="#">Unit 3 — Geometry</a>
+      <a href="#">Unit 4 — Statistics &amp; Probability</a>
+    </div>
+    <div class="footer-col">
+      <h4>Resources</h4>
+      <a href="#">Interactive Manipulatives</a>
+      <a href="#">Explainer Videos</a>
+      <a href="#">Past Papers</a>
+      <a href="#">Mark Scheme Guide</a>
+    </div>
+    <div class="footer-col">
+      <h4>Community</h4>
+      <a href="#">Join on Circle</a>
+      <a href="#">Ask a Question</a>
+      <a href="#">Past Paper Discussion</a>
+      <a href="#">Teacher Channel</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Parhaylikhay. Cambridge 4024 O-Level Maths &amp; Physics.</p>
+    <p style="color:rgba(136,135,128,0.5)">Not affiliated with Cambridge Assessment International Education.</p>
+  </div>
+</footer>
+
+<script>
+// ── Hero math particles ──────────────────────────────────────────────────────
+var hcanvas = document.getElementById('hero-bg');
+var hctx = hcanvas.getContext('2d');
+var SYMS = ['π','√','Σ','∫','Δ','∞','α','β','θ','±','≤','≥','≠','∈','∂','∇',
+            'x²','n²','sin θ','f(x)','d/dx','log','eˣ','∛','∑','∏',
+            'M₁','A₁','B₁','ECF','4024','ax²+bx+c','S=D/T','y=mx+c'];
+var hparts = [];
+
+function initHero() {
+  hcanvas.width  = window.innerWidth;
+  hcanvas.height = window.innerHeight;
+  hparts = [];
+  var n = Math.min(45, Math.floor(window.innerWidth / 32));
+  for (var i = 0; i < n; i++) {
+    hparts.push({
+      x: Math.random() * hcanvas.width,
+      y: Math.random() * hcanvas.height,
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: (Math.random() - 0.5) * 0.25,
+      sym: SYMS[Math.floor(Math.random() * SYMS.length)],
+      sz: 10 + Math.random() * 13,
+      a: 0.03 + Math.random() * 0.1,
+      ph: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+function tickHero(t) {
+  hctx.clearRect(0, 0, hcanvas.width, hcanvas.height);
+  hparts.forEach(function(p) {
+    p.x += p.vx; p.y += p.vy;
+    if (p.x < -60) p.x = hcanvas.width + 60;
+    if (p.x > hcanvas.width + 60) p.x = -60;
+    if (p.y < -60) p.y = hcanvas.height + 60;
+    if (p.y > hcanvas.height + 60) p.y = -60;
+    var alpha = p.a * (0.65 + 0.35 * Math.sin(t * 0.0008 + p.ph));
+    hctx.fillStyle = 'rgba(0,171,250,' + alpha + ')';
+    hctx.font = p.sz + 'px -apple-system, sans-serif';
+    hctx.fillText(p.sym, p.x, p.y);
+  });
+  requestAnimationFrame(tickHero);
+}
+
+initHero();
+window.addEventListener('resize', initHero);
+requestAnimationFrame(tickHero);
+
+// ── Manipulative tab switch ──────────────────────────────────────────────────
+var MDATA = [
+  { src: './manipulatives/1-number/1.12-rates.html',              label: 'Rates — Speed, Distance, Time' },
+  { src: './manipulatives/1-number/1.17-exponential-growth-decay.html', label: 'Exponential Growth & Decay' },
+  { src: './manipulatives/1-number/1.11-ratio-proportion.html',   label: 'Ratio and Proportion' }
+];
+
+function switchManip(i, btn) {
+  document.getElementById('widgetFrame').src = MDATA[i].src;
+  document.getElementById('wlabel').textContent = MDATA[i].label;
+  document.querySelectorAll('.mtab').forEach(function(t, j) { t.classList.toggle('on', j === i); });
+  for (var k = 0; k < 3; k++) {
+    var el = document.getElementById('mdesc' + k);
+    if (el) el.style.display = k === i ? '' : 'none';
+  }
+}
+
+// ── Video thumbnail canvases ─────────────────────────────────────────────────
+function drawVT(id, drawFn) {
+  var c = document.getElementById(id);
+  if (!c) return;
+  var DPR = window.devicePixelRatio || 1;
+  c.width = 400 * DPR; c.height = 225 * DPR;
+  c.style.width = '100%'; c.style.height = '100%';
+  var ctx = c.getContext('2d');
+  ctx.scale(DPR, DPR);
+  drawFn(ctx, 400, 225);
+}
+
+function drawGrid(ctx, W, H, step) {
+  ctx.strokeStyle = 'rgba(0,171,250,0.07)'; ctx.lineWidth = 0.8;
+  for (var x = 0; x < W; x += step) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (var y = 0; y < H; y += step) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+}
+
+// Thumbnail 1: Exponential decay
+drawVT('vt1', function(ctx, W, H) {
+  ctx.fillStyle = '#080e16'; ctx.fillRect(0,0,W,H);
+  drawGrid(ctx, W, H, 40);
+  // Axis
+  ctx.strokeStyle = 'rgba(0,171,250,0.2)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(30,10); ctx.lineTo(30,H-30); ctx.lineTo(W-10,H-30); ctx.stroke();
+  // Growth curve
+  ctx.strokeStyle = '#00abfa'; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (var x = 0; x <= W - 40; x++) {
+    var t = x / (W-40) * 4;
+    var y = (H-40) * Math.exp(-t * 0.7);
+    var cy = (H-30) - y * 0.7;
+    x === 0 ? ctx.moveTo(x+30, cy) : ctx.lineTo(x+30, cy);
+  }
+  ctx.stroke();
+  // Decay curve (dashed, green)
+  ctx.strokeStyle = '#0fee8955'; ctx.lineWidth = 1.5; ctx.setLineDash([4,4]);
+  ctx.beginPath();
+  for (var x = 0; x <= W - 40; x++) {
+    var t = x / (W-40) * 4;
+    var cy = (H-30) - (H-60) * (1 - Math.exp(-t));
+    x === 0 ? ctx.moveTo(x+30, cy) : ctx.lineTo(x+30, cy);
+  }
+  ctx.stroke(); ctx.setLineDash([]);
+  // Label
+  ctx.fillStyle = 'rgba(0,171,250,0.18)'; ctx.font = 'bold 36px sans-serif';
+  ctx.fillText('eˣ', 260, 60);
+  // M1 badge
+  ctx.fillStyle = 'rgba(0,171,250,0.2)'; ctx.fillRect(W-68,12,56,22); ctx.fillStyle='var(--blue)';
+  ctx.font='bold 11px sans-serif'; ctx.fillStyle='#00abfa'; ctx.fillText('× multiplier',W-67,27);
+});
+
+// Thumbnail 2: Quadratic parabola
+drawVT('vt2', function(ctx, W, H) {
+  ctx.fillStyle = '#080e16'; ctx.fillRect(0,0,W,H);
+  drawGrid(ctx, W, H, 40);
+  var cx = W/2, cy = H-30;
+  // Axes
+  ctx.strokeStyle = 'rgba(15,238,137,0.2)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(20,H-30); ctx.lineTo(W-10,H-30); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W/2,10); ctx.lineTo(W/2,H-10); ctx.stroke();
+  // Parabola (x-2)(x+2) scaled
+  ctx.strokeStyle = '#0fee89'; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (var x = 0; x < W; x++) {
+    var mx = (x/W - 0.5) * 9;
+    var my = mx*mx - 3;
+    var py = cy - my * 22;
+    x === 0 ? ctx.moveTo(x, py) : ctx.lineTo(x, py);
+  }
+  ctx.stroke();
+  // Vertex dot
+  ctx.fillStyle = '#fff067'; ctx.beginPath(); ctx.arc(W/2, cy-3*22, 5, 0, Math.PI*2); ctx.fill();
+  // Root dots
+  ctx.fillStyle = '#0fee89';
+  ctx.beginPath(); ctx.arc(W/2 - 3/9*W, cy, 5, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(W/2 + 3/9*W, cy, 5, 0, Math.PI*2); ctx.fill();
+  // Label
+  ctx.fillStyle = 'rgba(15,238,137,0.15)'; ctx.font = 'bold 28px sans-serif';
+  ctx.fillText('ax²+bx+c', 14, 46);
+});
+
+// Thumbnail 3: Ratio bars
+drawVT('vt3', function(ctx, W, H) {
+  ctx.fillStyle = '#080e16'; ctx.fillRect(0,0,W,H);
+  drawGrid(ctx, W, H, 40);
+  var ratios = [2,3,5], colors = ['#00abfa','#0fee89','#ff822c'];
+  var total = 10, BAR_H = 44, Y = H/2 - BAR_H/2;
+  var x = 20;
+  ratios.forEach(function(r, i) {
+    var bw = r / total * (W - 40);
+    ctx.fillStyle = colors[i] + '28';
+    ctx.strokeStyle = colors[i]; ctx.lineWidth = 1.5;
+    ctx.fillRect(x, Y, bw-3, BAR_H);
+    ctx.strokeRect(x, Y, bw-3, BAR_H);
+    ctx.fillStyle = '#0d1216'; ctx.font = 'bold 15px sans-serif';
+    ctx.textAlign = 'center'; ctx.fillText(r, x + bw/2 - 1.5, Y+BAR_H/2+5);
+    x += bw;
+  });
+  ctx.textAlign = 'left';
+  // Values below
+  x = 20; var total2 = 200;
+  ratios.forEach(function(r, i) {
+    var bw = r / 10 * (W-40);
+    ctx.fillStyle = colors[i]; ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center'; ctx.fillText((r/10*total2), x+bw/2-1.5, Y+BAR_H+18);
+    x += bw;
+  });
+  ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(255,240,103,0.15)'; ctx.font = 'bold 30px sans-serif';
+  ctx.fillText('2 : 3 : 5', 18, 44);
+});
+
+// ── Scroll fade-in ───────────────────────────────────────────────────────────
+var obs = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } });
+}, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+document.querySelectorAll('.appear').forEach(function(el, i) {
+  el.style.transitionDelay = (i % 5) * 0.07 + 's';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>
