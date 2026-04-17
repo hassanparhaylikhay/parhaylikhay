@@ -76,44 +76,54 @@ self.camera.background_color = "#0d1216"
 
 ### General Principles — Non-Negotiable
 
-1. **Never rush.** Every concept gets time to breathe. Minimum 2 seconds of `self.wait()` after every significant animation. If in doubt, wait longer.
-2. **Multiple examples always.** Every concept must be demonstrated with at least 3 worked examples, going from simple to exam-level difficulty.
-3. **Marking scheme awareness.** At least one scene per video must explicitly show how Cambridge examiners award marks. Use PL_GREEN to highlight mark-worthy steps.
-4. **Build up, don't dump.** Never show a full equation at once. Reveal it term by term, left to right, with pauses between each part.
+1. **Never rush — but not for YouTube reasons.** Minimum 2 seconds of `self.wait()` after every significant animation. The reason is not contemplation — it's so students can pause, copy working, and check their understanding before moving on.
+2. **Three worked examples minimum.** Simple → medium → exam-level. Never fewer.
+3. **Marking scheme is the frame, not a bonus scene.** Annotate M1/A1/B1 marks *as you build each example*, not just at the end.
+4. **Build up, don't dump.** Never show a full equation at once. Reveal term by term, left to right, with pauses between each part.
 5. **Voiceover gaps.** Every animation must have at least 1.5× the time it would take to speak about it. Hassan is adding voiceover — give him room.
+6. **Target length: 8–10 minutes.** Long enough for 3 examples with full mark-scheme walkthrough. Anything beyond 12 minutes should be split into two videos.
 
-### Scene Types to Include in Every Video
-
-Every Parhaylikhay video must have these scene types in this order:
+### Scene Structure
 
 ```
-Scene 1: Hook          — A surprising or relatable question that creates curiosity
-Scene 2: Foundation    — What you need to know first (prerequisites, quick recap)
-Scene 3: Core Concept  — The main idea, built up slowly with visual intuition
-Scene 4: Example 1     — Simple worked example, step by step
-Scene 5: Example 2     — Medium difficulty, introduces a twist or variation
-Scene 6: Example 3     — Exam-level difficulty, Cambridge past paper style
-Scene 7: Exam Insight  — How the examiner marks this. What earns marks. Common mistakes.
-Scene 8: Summary       — Concise recap of key rules, shown as clean visual cards
+Scene 1: Exam Opener*   — The actual Cambridge question, marks available, how often it appears.
+Scene 2: Concept Build  — The maths, built slowly with visual intuition. Term by term.
+Scene 3: Example 1      — Simple worked example, annotated with M1/A1/B1 as you go.
+Scene 4: Example 2      — Harder variation or common twist on the same topic.
+Scene 5: Example 3      — Cambridge past paper question, full mark scheme walkthrough.
+Scene 6: Traps & Fixes  — The 2–3 mistakes that cost marks most. Show wrong working, then correct it.
+Scene 7: Summary Card   — One screen: the key formula/method, the mark-scheme rule, the trap to avoid.
 ```
 
-For longer topics, add Example 4 and Example 5 between Scene 6 and 7. More examples are always better.
+*Scene 1 (Exam Opener) is **conditional**:
+- **Include it** if there is a specific Cambridge past paper question that directly illustrates why this topic matters — show the question exactly as printed, state the marks available, mention how frequently it appears.
+- **Skip it** if no clean past paper question is available, or if the topic needs the concept explained before any question makes sense. In that case, start directly with Scene 2 (Concept Build).
 
-### Hook Scene Requirements
+Never fabricate or paraphrase a past paper question for the Exam Opener. Only use real, verified questions from the marking knowledge base.
 
-The hook must feel like a genuine question, not a textbook intro. Examples:
-- "A ball is thrown — how far will it go?"
-- "If I double the speed, does the kinetic energy double?" (Answer: no, it quadruples — show why)
-- Show a relatable graph or scenario FIRST, then ask what it means
+### Exam Opener Requirements (when included)
 
-### Marking Scheme Scene Requirements
+- Show the Cambridge question exactly as it appears — no paraphrasing
+- State marks available (e.g., "This question is worth 3 marks")
+- State frequency (e.g., "This type appears in roughly 80% of Paper 2 exams")
+- Do NOT solve it yet — let it sit on screen as a goal for the video
+- Use PL_YELLOW for the mark allocation, PL_BLUE for the question text
 
-This is Parhaylikhay's core USP. Every video must include:
-- A Cambridge-style question shown exactly as it appears in a past paper
-- A worked answer shown step by step
-- Each step annotated with its mark value (e.g., "M1 — for correct method", "A1 — for correct answer")
-- Use PL_GREEN for mark-awarded steps, PL_PINK for common mistakes that lose marks
-- End with the total mark count
+### Mark Scheme Annotation (in every example scene)
+
+This is Parhaylikhay's core USP — not a separate scene, woven into every example:
+- Annotate each step with its mark type as it appears: M1, A1, B1, ECF
+- Use PL_GREEN for mark-awarded steps
+- Use PL_PINK for the step students most often skip (the one that loses the M1)
+- End each example with the total mark tally shown clearly
+
+### Traps & Fixes Scene Requirements
+
+Show the wrong working first — rendered in PL_PINK — then cross it out and show the correction in PL_GREEN. The most common traps for Cambridge 4024:
+- Correct answer, no method shown → M1 not awarded, A1 lost
+- Right formula, wrong substitution → ECF may apply, explain when
+- Forgetting units or the % sign → B1 lost
+- Not simplifying a final answer when the question says "simplify"
 
 ---
 
