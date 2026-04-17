@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Gradient of a Straight Line</title>
+  <meta property="og:title" content="Gradient of a Straight Line"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="500"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .eq-bar {
+      width: 560px; padding: 8px 4px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #f0f0ee; min-height: 34px; line-height: 1.8;
+    }
+    canvas { display: block; cursor: crosshair; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Gradient of a Straight Line</div>
+  <div class="instruction">
+    Drag <b style="color:#00abfa">A</b> or <b style="color:#fff067">B</b> — watch rise, run, and m update live.
+  </div>
+</div>
+
+<div class="eq-bar" id="eq-bar">m = (y₂ − y₁) ÷ (x₂ − x₁)</div>
+
+<canvas id="graph"></canvas>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>write m = (y₂ − y₁) ÷ (x₂ − x₁) and substitute — that earns M1</strong>
+    even if the arithmetic goes wrong. Negative m = slopes down left to right.
+    Horizontal line: m = 0. Vertical line: m is undefined.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx    = canvas.getContext('2d');
+  var W = 560, H = 340;
+  var DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+
+  var PAD = { l: 42, r: 18, t: 18, b: 36 };
+  var X_MIN = -6, X_MAX = 6, Y_MIN = -5, Y_MAX = 5;
+
+  function toC(mx, my) {
+    return {
+      x: PAD.l + (mx - X_MIN) / (X_MAX - X_MIN) * (W - PAD.l - PAD.r),
+      y: H - PAD.b - (my - Y_MIN) / (Y_MAX - Y_MIN) * (H - PAD.t - PAD.b)
+    };
+  }
+  function fromC(cx, cy) {
+    return {
+      mx: X_MIN + (cx - PAD.l) / (W - PAD.l - PAD.r) * (X_MAX - X_MIN),
+      my: Y_MIN + (H - PAD.b - cy) / (H - PAD.t - PAD.b) * (Y_MAX - Y_MIN)
+    };
+  }
+
+  var ptA = { mx: -3, my: -1 };
+  var ptB = { mx:  3, my:  3 };
+  var drag = null;
+  var HIT  = 16;
+
+  function snap(v)     { return Math.round(v); }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  function fmt(n) {
+    var r = Math.round(n * 100) / 100;
+    return r % 1 === 0 ? r.toString() : r.toFixed(2);
+  }
+
+  function fmtGrad(rise, run) {
+    if (Math.abs(run) < 0.01) return 'undefined';
+    var m = rise / run;
+    if (Math.abs(m) < 0.005) return '0';
+    // Try clean fraction with small integers
+    var num = Math.round(rise), den = Math.round(run);
+    if (Math.abs(num - rise) < 0.05 && Math.abs(den - run) < 0.05 && den !== 0) {
+      function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = b; b = a % b; a = t; } return a; }
+      var g = gcd(Math.abs(num), Math.abs(den));
+      num /= g; den /= g;
+      if (den < 0) { num = -num; den = -den; }
+      if (den === 1) return String(num);
+      return num + '/' + den;
+    }
+    return (Math.round(m * 100) / 100).toFixed(2);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d1216';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#111f2c';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    for (var ky = Y_MIN; ky <= Y_MAX; ky++) {
+      var a = toC(X_MIN, ky), b = toC(X_MAX, ky);
+      ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+    }
+    for (var kx = X_MIN; kx <= X_MAX; kx++) {
+      var a = toC(kx, Y_MIN), b = toC(kx, Y_MAX);
+      ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle = '#3a5060';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    var ax = toC(X_MIN, 0), bx = toC(X_MAX, 0);
+    ctx.moveTo(ax.x, ax.y); ctx.lineTo(bx.x, bx.y);
+    var ay = toC(0, Y_MIN), by2 = toC(0, Y_MAX);
+    ctx.moveTo(ay.x, ay.y); ctx.lineTo(by2.x, by2.y);
+    ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle = '#4a6070';
+    ctx.font = '10px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (var kx = X_MIN + 1; kx < X_MAX; kx++) {
+      if (kx === 0) continue;
+      var p = toC(kx, 0); ctx.fillText(kx, p.x, p.y + 3);
+    }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (var ky = Y_MIN + 1; ky < Y_MAX; ky++) {
+      if (ky === 0) continue;
+      var p = toC(0, ky); ctx.fillText(ky, p.x - 4, p.y);
+    }
+
+    var ax1 = ptA.mx, ay1 = ptA.my;
+    var bx1 = ptB.mx, by1 = ptB.my;
+    var pA = toC(ax1, ay1), pB = toC(bx1, by1);
+    var rise = by1 - ay1;
+    var run  = bx1 - ax1;
+
+    // Extended faint line
+    if (Math.abs(run) > 0.01) {
+      var m = rise / run;
+      var xL = X_MIN, yL = m * (xL - ax1) + ay1;
+      var xR = X_MAX, yR = m * (xR - ax1) + ay1;
+      // Clip to Y range
+      function clipLine(x1, y1, x2, y2) {
+        var pts = [];
+        var steps = 200;
+        for (var i = 0; i <= steps; i++) {
+          var t = i / steps;
+          var cx = x1 + t * (x2 - x1), cy = y1 + t * (y2 - y1);
+          if (cy >= Y_MIN && cy <= Y_MAX) pts.push(toC(cx, cy));
+        }
+        return pts;
+      }
+      var pts = clipLine(xL, yL, xR, yR);
+      if (pts.length > 1) {
+        ctx.strokeStyle = '#00abfa33';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    } else {
+      // Vertical
+      ctx.strokeStyle = '#00abfa33';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      var vT = toC(ax1, Y_MAX), vB = toC(ax1, Y_MIN);
+      ctx.moveTo(vT.x, vT.y); ctx.lineTo(vB.x, vB.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // Main segment A→B
+    ctx.strokeStyle = '#00abfa';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(pA.x, pA.y); ctx.lineTo(pB.x, pB.y);
+    ctx.stroke();
+
+    // Rise/run triangle
+    var corner = toC(bx1, ay1);
+    if (Math.abs(run) > 0.3 && Math.abs(rise) > 0.3) {
+      // Run leg (horizontal)
+      ctx.strokeStyle = '#fff06799';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(pA.x, pA.y); ctx.lineTo(corner.x, corner.y);
+      ctx.stroke();
+
+      // Rise leg (vertical)
+      ctx.strokeStyle = '#0fee8999';
+      ctx.beginPath();
+      ctx.moveTo(corner.x, corner.y); ctx.lineTo(pB.x, pB.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Right-angle marker
+      var sq = 6, dx = run > 0 ? sq : -sq, dy = rise > 0 ? -sq : sq;
+      ctx.strokeStyle = '#5a7080';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(corner.x + dx, corner.y);
+      ctx.lineTo(corner.x + dx, corner.y + dy);
+      ctx.lineTo(corner.x, corner.y + dy);
+      ctx.stroke();
+
+      // Labels
+      ctx.font = 'bold 11px -apple-system, sans-serif';
+      ctx.fillStyle = '#fff067';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = rise > 0 ? 'bottom' : 'top';
+      ctx.fillText('run = ' + fmt(run), (pA.x + corner.x) / 2, pA.y + (rise > 0 ? -5 : 5));
+
+      ctx.fillStyle = '#0fee89';
+      ctx.textAlign = run > 0 ? 'left' : 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('rise = ' + fmt(rise), corner.x + (run > 0 ? 7 : -7), (corner.y + pB.y) / 2);
+    }
+
+    // Points
+    function drawPoint(px, py, label, coordStr, color, above) {
+      ctx.fillStyle = '#0d1216';
+      ctx.beginPath(); ctx.arc(px, py, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(px, py, 8, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.font = 'bold 12px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = above ? 'bottom' : 'top';
+      ctx.fillText(label + ' (' + coordStr + ')', px, py + (above ? -12 : 12));
+    }
+    drawPoint(pA.x, pA.y, 'A', fmt(ax1) + ', ' + fmt(ay1), '#00abfa', true);
+    drawPoint(pB.x, pB.y, 'B', fmt(bx1) + ', ' + fmt(by1), '#fff067', false);
+
+    // Eq bar
+    var eqEl = document.getElementById('eq-bar');
+    if (Math.abs(run) < 0.01) {
+      eqEl.innerHTML = '<span style="color:#ff4670">Vertical line — gradient is <strong>undefined</strong></span>';
+    } else {
+      var mStr = fmtGrad(rise, run);
+      var mColor = rise / run > 0 ? '#0fee89' : rise / run < 0 ? '#ff4670' : '#b4b2a9';
+      eqEl.innerHTML =
+        'm = <span style="color:#0fee89">(' + fmt(by1) + ' − ' + fmt(ay1) + ')</span>' +
+        ' ÷ <span style="color:#fff067">(' + fmt(bx1) + ' − ' + fmt(ax1) + ')</span>' +
+        ' = <span style="color:#0fee89">' + fmt(rise) + '</span>' +
+        ' ÷ <span style="color:#fff067">' + fmt(run) + '</span>' +
+        ' = <span style="color:' + mColor + '; font-size:15px; font-weight:bold"> ' + mStr + '</span>';
+    }
+  }
+
+  function getPos(e) {
+    var r = canvas.getBoundingClientRect();
+    var s = e.touches ? e.touches[0] : e;
+    return { cx: s.clientX - r.left, cy: s.clientY - r.top };
+  }
+  function hitTest(pos) {
+    var pA = toC(ptA.mx, ptA.my), pB = toC(ptB.mx, ptB.my);
+    if (Math.hypot(pos.cx - pA.x, pos.cy - pA.y) < HIT) return 'A';
+    if (Math.hypot(pos.cx - pB.x, pos.cy - pB.y) < HIT) return 'B';
+    return null;
+  }
+  function moveDrag(pos) {
+    var m = fromC(pos.cx, pos.cy);
+    var snapped = {
+      mx: clamp(snap(m.mx), X_MIN + 1, X_MAX - 1),
+      my: clamp(snap(m.my), Y_MIN + 1, Y_MAX - 1)
+    };
+    if (drag === 'A') ptA = snapped;
+    else              ptB = snapped;
+    draw();
+  }
+  canvas.addEventListener('mousedown',  function(e) { drag = hitTest(getPos(e)); if (drag) canvas.style.cursor = 'grabbing'; });
+  canvas.addEventListener('mousemove',  function(e) { var pos = getPos(e); if (!drag) { canvas.style.cursor = hitTest(pos) ? 'grab' : 'crosshair'; return; } moveDrag(pos); });
+  canvas.addEventListener('mouseup',    function()  { drag = null; canvas.style.cursor = 'crosshair'; });
+  canvas.addEventListener('mouseleave', function()  { drag = null; });
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); drag = hitTest(getPos(e)); }, { passive: false });
+  canvas.addEventListener('touchmove',  function(e) { e.preventDefault(); if (drag) moveDrag(getPos(e)); }, { passive: false });
+  canvas.addEventListener('touchend',   function()  { drag = null; });
+
+  draw();
+</script>
+</body>
+</html>

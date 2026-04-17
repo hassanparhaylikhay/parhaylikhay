@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Parallel and Perpendicular Lines</title>
+  <meta property="og:title" content="Parallel and Perpendicular Lines"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="540"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .toggle-row {
+      width: 560px; display: flex; gap: 0;
+      background: #111f2c; border: 1px solid #1a2535;
+      border-radius: 6px; overflow: hidden; margin: 8px 0 0;
+    }
+    .tog-btn {
+      flex: 1; padding: 9px 0; text-align: center; font-size: 13px;
+      cursor: pointer; color: #6a8898; background: none; border: none;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .tog-btn.active { background: #00abfa22; color: #00abfa; font-weight: 600; }
+    canvas { display: block; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 8px; padding: 8px 4px;
+      border-top: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 100px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    .slider-val { font-family: 'Courier New', monospace; font-size: 13px; width: 50px; text-align: right; flex-shrink: 0; }
+    .fact-bar {
+      width: 560px; padding: 7px 4px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #f0f0ee; min-height: 30px; line-height: 1.7;
+      border-top: 1px solid #1a2535;
+    }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Parallel and Perpendicular Lines</div>
+  <div class="instruction">
+    Change the gradient of Line 1 — see how parallel and perpendicular lines respond.
+  </div>
+</div>
+
+<div class="toggle-row">
+  <button class="tog-btn active" id="btn-par" onclick="setMode('parallel')">Parallel lines</button>
+  <button class="tog-btn" id="btn-perp" onclick="setMode('perp')">Perpendicular lines</button>
+</div>
+
+<canvas id="graph"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <span class="slider-label" style="color:#00abfa">Line 1 gradient</span>
+    <input type="range" id="sl-m" min="-4" max="4" step="0.5" value="1"/>
+    <span class="slider-val" id="val-m" style="color:#00abfa">m = 1</span>
+  </div>
+</div>
+
+<div class="fact-bar" id="fact-bar"></div>
+
+<div class="footer">
+  <div class="tip" id="tip-text"></div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx    = canvas.getContext('2d');
+  var W = 560, H = 290;
+  var DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+
+  var PAD = { l: 42, r: 18, t: 18, b: 36 };
+  var X_MIN = -6, X_MAX = 6, Y_MIN = -5, Y_MAX = 5;
+
+  var mode = 'parallel';
+  var mT = 1, mD = 1, SPRING = 0.13;
+  var raf = null;
+
+  function toC(mx, my) {
+    return {
+      x: PAD.l + (mx - X_MIN) / (X_MAX - X_MIN) * (W - PAD.l - PAD.r),
+      y: H - PAD.b - (my - Y_MIN) / (Y_MAX - Y_MIN) * (H - PAD.t - PAD.b)
+    };
+  }
+
+  function fmt(n) {
+    var r = Math.round(n * 100) / 100;
+    if (r % 1 === 0) return String(r);
+    // nice fraction
+    var num = Math.round(r * 2), den = 2;
+    if (num % 2 === 0) { num /= 2; den = 1; }
+    if (den === 1) return String(num);
+    return num + '/2';
+  }
+
+  function drawLine(m, c, color, lineWidth, dashed) {
+    if (Math.abs(m) < 0.001) {
+      // Horizontal
+      if (c < Y_MIN || c > Y_MAX) return;
+      var p0 = toC(X_MIN, c), p1 = toC(X_MAX, c);
+      ctx.strokeStyle = color; ctx.lineWidth = lineWidth;
+      if (dashed) ctx.setLineDash([7, 4]); else ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+      ctx.setLineDash([]);
+      return;
+    }
+    var xL = X_MIN, yL = m * xL + c;
+    var xR = X_MAX, yR = m * xR + c;
+    if (yL > Y_MAX) { xL = (Y_MAX - c) / m; yL = Y_MAX; }
+    if (yL < Y_MIN) { xL = (Y_MIN - c) / m; yL = Y_MIN; }
+    if (yR > Y_MAX) { xR = (Y_MAX - c) / m; yR = Y_MAX; }
+    if (yR < Y_MIN) { xR = (Y_MIN - c) / m; yR = Y_MIN; }
+    if (xL > xR) { var t = xL; xL = xR; xR = t; var tt = yL; yL = yR; yR = tt; }
+    var p0 = toC(xL, yL), p1 = toC(xR, yR);
+    ctx.strokeStyle = color; ctx.lineWidth = lineWidth;
+    if (dashed) ctx.setLineDash([7, 4]); else ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function lineLabelPos(m, c, labelX) {
+    // Get canvas y for a point midway along the line for labeling
+    return toC(labelX, m * labelX + c);
+  }
+
+  function draw(m) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d1216';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#111f2c';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    for (var ky = Y_MIN; ky <= Y_MAX; ky++) {
+      var a = toC(X_MIN, ky), b = toC(X_MAX, ky);
+      ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+    }
+    for (var kx = X_MIN; kx <= X_MAX; kx++) {
+      var a = toC(kx, Y_MIN), b = toC(kx, Y_MAX);
+      ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle = '#3a5060';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    var ax0 = toC(X_MIN, 0), ax1 = toC(X_MAX, 0);
+    ctx.moveTo(ax0.x, ax0.y); ctx.lineTo(ax1.x, ax1.y);
+    var ay0 = toC(0, Y_MIN), ay1 = toC(0, Y_MAX);
+    ctx.moveTo(ay0.x, ay0.y); ctx.lineTo(ay1.x, ay1.y);
+    ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle = '#4a6070';
+    ctx.font = '10px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (var kx = X_MIN + 1; kx < X_MAX; kx++) {
+      if (kx === 0) continue;
+      var p = toC(kx, 0); ctx.fillText(kx, p.x, p.y + 3);
+    }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (var ky = Y_MIN + 1; ky < Y_MAX; ky++) {
+      if (ky === 0) continue;
+      var p = toC(0, ky); ctx.fillText(ky, p.x - 4, p.y);
+    }
+
+    var factEl = document.getElementById('fact-bar');
+    var tipEl  = document.getElementById('tip-text');
+    var angle  = Math.atan((m) * (H - PAD.t - PAD.b) / (W - PAD.l - PAD.r));
+
+    if (mode === 'parallel') {
+      // Line 1: y = mx + 2
+      drawLine(m, 2, '#00abfa', 2.5, false);
+      // Line 2: y = mx − 2 (parallel — same gradient)
+      drawLine(m, -2, '#ff822c', 2.5, false);
+
+      // Label Line 1
+      var lp1 = lineLabelPos(m, 2, -2);
+      ctx.save(); ctx.translate(lp1.x, lp1.y); ctx.rotate(-angle);
+      ctx.fillStyle = '#00abfa'; ctx.font = 'bold 11px -apple-system, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText('L₁: y = ' + fmt(m) + 'x + 2', 0, -7); ctx.restore();
+
+      // Label Line 2
+      var lp2 = lineLabelPos(m, -2, 2);
+      ctx.save(); ctx.translate(lp2.x, lp2.y); ctx.rotate(-angle);
+      ctx.fillStyle = '#ff822c'; ctx.font = 'bold 11px -apple-system, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('L₂: y = ' + fmt(m) + 'x − 2', 0, 7); ctx.restore();
+
+      factEl.innerHTML =
+        'Same gradient → <strong style="color:#0fee89">parallel</strong>:' +
+        '  m₁ = <span style="color:#00abfa">' + fmt(m) + '</span>' +
+        '  m₂ = <span style="color:#ff822c">' + fmt(m) + '</span>' +
+        '  → <strong style="color:#0fee89">m₁ = m₂</strong>';
+
+      tipEl.innerHTML =
+        '<span style="color:#0fee89">Cambridge tip: <strong>parallel lines have equal gradients</strong>' +
+        ' — if asked to show lines are parallel, calculate both gradients and state they are equal.</span>';
+
+    } else {
+      // Perpendicular mode
+      var mPerp = Math.abs(m) < 0.01 ? 'undefined' : -1 / m;
+
+      // Line 1: y = mx + 1
+      drawLine(m, 1, '#00abfa', 2.5, false);
+      // Line 2 (perpendicular): y = (-1/m)x − 1
+      if (typeof mPerp === 'number') {
+        drawLine(mPerp, -1, '#ff4670', 2.5, false);
+      } else {
+        // m is 0 → perp is vertical x = ...
+        // draw vertical line at x = 1
+        var vt = toC(0, Y_MAX), vb = toC(0, Y_MIN);
+        ctx.strokeStyle = '#ff4670'; ctx.lineWidth = 2.5; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(vt.x, vt.y); ctx.lineTo(vb.x, vb.y); ctx.stroke();
+      }
+
+      // Right-angle marker at intersection of L1 and L2
+      if (typeof mPerp === 'number') {
+        // Intersection of y=mx+1 and y=mPerp*x−1
+        // mx+1 = mPerp*x−1 → x(m−mPerp) = −2 → x = −2/(m−mPerp)
+        var denom = m - mPerp;
+        if (Math.abs(denom) > 0.01) {
+          var ix = -2 / denom, iy = m * ix + 1;
+          if (ix > X_MIN && ix < X_MAX && iy > Y_MIN && iy < Y_MAX) {
+            var ip = toC(ix, iy);
+            var sq = 10;
+            // Unit vectors along each line
+            var len1 = Math.sqrt(1 + m * m);
+            var len2 = Math.sqrt(1 + mPerp * mPerp);
+            var scaleX = (W - PAD.l - PAD.r) / (X_MAX - X_MIN);
+            var scaleY = (H - PAD.t - PAD.b) / (Y_MAX - Y_MIN);
+            var u1x = scaleX / len1, u1y = -m * scaleY / len1;
+            var u2x = scaleX / len2, u2y = -mPerp * scaleY / len2;
+            ctx.strokeStyle = '#ffffff44'; ctx.lineWidth = 1; ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(ip.x + u1x * sq / scaleX * scaleX, ip.y + u1y * sq / scaleX * scaleX);
+            // Simpler: just draw a small square indicator
+            var s = 8;
+            ctx.moveTo(ip.x + s, ip.y); ctx.lineTo(ip.x + s, ip.y - s); ctx.lineTo(ip.x, ip.y - s);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Labels
+      var lp1 = lineLabelPos(m, 1, -3);
+      ctx.save(); ctx.translate(lp1.x, lp1.y); ctx.rotate(-angle);
+      ctx.fillStyle = '#00abfa'; ctx.font = 'bold 11px -apple-system, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText('L₁: gradient = ' + fmt(m), 0, -7); ctx.restore();
+
+      if (typeof mPerp === 'number') {
+        var perpAngle = Math.atan(mPerp * (H - PAD.t - PAD.b) / (W - PAD.l - PAD.r));
+        var lp2 = lineLabelPos(mPerp, -1, 3);
+        ctx.save(); ctx.translate(lp2.x, lp2.y); ctx.rotate(-perpAngle);
+        ctx.fillStyle = '#ff4670'; ctx.font = 'bold 11px -apple-system, sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillText('L₂: gradient = ' + fmt(mPerp), 0, 7); ctx.restore();
+
+        var prod = Math.round(m * mPerp * 100) / 100;
+        factEl.innerHTML =
+          '<span style="color:#00abfa">m₁ = ' + fmt(m) + '</span>' +
+          '  ×  <span style="color:#ff4670">m₂ = ' + fmt(mPerp) + '</span>' +
+          '  =  <strong style="color:#0fee89">' + prod + '</strong>' +
+          '  → <strong style="color:#0fee89">perpendicular ✓</strong>';
+      } else {
+        factEl.innerHTML =
+          '<span style="color:#00abfa">m₁ = 0</span>' +
+          '  → L₂ is a <strong style="color:#ff4670">vertical line</strong>' +
+          '  (gradient undefined). Still perpendicular.';
+      }
+
+      tipEl.innerHTML =
+        '<span style="color:#0fee89">Cambridge tip: <strong>perpendicular gradients multiply to −1: m₁ × m₂ = −1</strong>' +
+        ', so m₂ = −1/m₁. This is how you find the gradient of a perpendicular bisector — the most common coordinate geometry exam question.</span>';
+    }
+  }
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('btn-par').classList.toggle('active', m === 'parallel');
+    document.getElementById('btn-perp').classList.toggle('active', m === 'perp');
+    draw(mD);
+  }
+
+  function tick() {
+    var changed = Math.abs(mD - mT) > 0.005;
+    if (changed) mD += (mT - mD) * SPRING; else mD = mT;
+    draw(mD);
+    if (changed) raf = requestAnimationFrame(tick); else raf = null;
+  }
+  function startAnim() { if (!raf) raf = requestAnimationFrame(tick); }
+
+  document.getElementById('sl-m').addEventListener('input', function() {
+    mT = parseFloat(this.value);
+    document.getElementById('val-m').textContent = 'm = ' + fmt(mT);
+    startAnim();
+  });
+
+  draw(mD);
+</script>
+</body>
+</html>

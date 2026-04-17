@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · y = mx + c</title>
+  <meta property="og:title" content="Equation of a Straight Line — y = mx + c"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="520"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .eq-bar {
+      width: 560px; padding: 8px 4px;
+      font-family: 'Courier New', monospace; font-size: 15px; font-weight: 600;
+      color: #f0f0ee; min-height: 34px; text-align: center;
+    }
+    canvas { display: block; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 10px 4px;
+      border-top: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 90px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    .slider-val { font-family: 'Courier New', monospace; font-size: 13px; width: 46px; text-align: right; flex-shrink: 0; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Equation of a Straight Line — y = mx + c</div>
+  <div class="instruction">
+    Adjust <b style="color:#fff067">m</b> (gradient) and <b style="color:#0fee89">c</b> (y-intercept) to explore how each changes the line.
+  </div>
+</div>
+
+<div class="eq-bar" id="eq-bar">y = x + 0</div>
+
+<canvas id="graph"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <span class="slider-label" style="color:#fff067">m (gradient)</span>
+    <input type="range" id="sl-m" min="-4" max="4" step="0.5" value="1"/>
+    <span class="slider-val" id="val-m" style="color:#fff067">1</span>
+  </div>
+  <div class="slider-row">
+    <span class="slider-label" style="color:#0fee89">c (y-intercept)</span>
+    <input type="range" id="sl-c" min="-5" max="5" step="0.5" value="0"/>
+    <span class="slider-val" id="val-c" style="color:#0fee89">0</span>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>read c directly from where the line crosses the y-axis</strong>, then use
+    two points to find m = (y₂−y₁)÷(x₂−x₁). Write the equation as y = mx + c —
+    leaving it as y − y₁ = m(x − x₁) loses the A1 if the form is specified.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx    = canvas.getContext('2d');
+  var W = 560, H = 310;
+  var DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+
+  var PAD = { l: 42, r: 18, t: 18, b: 36 };
+  var X_MIN = -6, X_MAX = 6, Y_MIN = -5, Y_MAX = 5;
+
+  // Spring display values
+  var mD = 1, cD = 0, SPRING = 0.13;
+  var mT = 1, cT = 0;
+  var raf = null;
+
+  function toC(mx, my) {
+    return {
+      x: PAD.l + (mx - X_MIN) / (X_MAX - X_MIN) * (W - PAD.l - PAD.r),
+      y: H - PAD.b - (my - Y_MIN) / (Y_MAX - Y_MIN) * (H - PAD.t - PAD.b)
+    };
+  }
+
+  function fmt(n) {
+    var r = Math.round(n * 10) / 10;
+    return r % 1 === 0 ? r.toString() : r.toFixed(1);
+  }
+
+  function eqText(m, c) {
+    var mStr = m === 1 ? '' : m === -1 ? '−' : fmt(m < 0 ? -m : m);
+    var mSign = m < 0 ? '−' : '';
+    var cStr, cPart;
+    if (Math.abs(c) < 0.01) cPart = '';
+    else cPart = (c > 0 ? ' + ' : ' − ') + fmt(Math.abs(c));
+    var xPart = (m === 0) ? '' : (mSign + mStr + 'x');
+    if (m === 0 && Math.abs(c) < 0.01) return 'y = 0';
+    if (m === 0) return 'y = ' + fmt(c);
+    return 'y = ' + xPart + cPart;
+  }
+
+  function draw(m, c) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d1216';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#111f2c';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    for (var ky = Y_MIN; ky <= Y_MAX; ky++) {
+      var a = toC(X_MIN, ky), b = toC(X_MAX, ky);
+      ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+    }
+    for (var kx = X_MIN; kx <= X_MAX; kx++) {
+      var a = toC(kx, Y_MIN), b = toC(kx, Y_MAX);
+      ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle = '#3a5060';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    var ax0 = toC(X_MIN, 0), ax1 = toC(X_MAX, 0);
+    ctx.moveTo(ax0.x, ax0.y); ctx.lineTo(ax1.x, ax1.y);
+    var ay0 = toC(0, Y_MIN), ay1 = toC(0, Y_MAX);
+    ctx.moveTo(ay0.x, ay0.y); ctx.lineTo(ay1.x, ay1.y);
+    ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle = '#4a6070';
+    ctx.font = '10px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (var kx = X_MIN + 1; kx < X_MAX; kx++) {
+      if (kx === 0) continue;
+      var p = toC(kx, 0); ctx.fillText(kx, p.x, p.y + 3);
+    }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (var ky = Y_MIN + 1; ky < Y_MAX; ky++) {
+      if (ky === 0) continue;
+      var p = toC(0, ky); ctx.fillText(ky, p.x - 4, p.y);
+    }
+
+    // Line y = mx + c (clip to canvas)
+    if (Math.abs(m) < 0.001) {
+      // Horizontal
+      var y0 = toC(X_MIN, c), y1 = toC(X_MAX, c);
+      if (c >= Y_MIN && c <= Y_MAX) {
+        ctx.strokeStyle = '#00abfa';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(y0.x, y0.y); ctx.lineTo(y1.x, y1.y);
+        ctx.stroke();
+      }
+    } else {
+      var xL = X_MIN, yL = m * xL + c;
+      var xR = X_MAX, yR = m * xR + c;
+      // Clip vertically
+      if (yL > Y_MAX) { xL = (Y_MAX - c) / m; yL = Y_MAX; }
+      if (yL < Y_MIN) { xL = (Y_MIN - c) / m; yL = Y_MIN; }
+      if (yR > Y_MAX) { xR = (Y_MAX - c) / m; yR = Y_MAX; }
+      if (yR < Y_MIN) { xR = (Y_MIN - c) / m; yR = Y_MIN; }
+      var lp0 = toC(xL, yL), lp1 = toC(xR, yR);
+      ctx.strokeStyle = '#00abfa';
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(lp0.x, lp0.y); ctx.lineTo(lp1.x, lp1.y);
+      ctx.stroke();
+    }
+
+    // Y-intercept dot (0, c)
+    if (c >= Y_MIN && c <= Y_MAX) {
+      var cyPt = toC(0, c);
+      ctx.fillStyle = '#0d1216';
+      ctx.beginPath(); ctx.arc(cyPt.x, cyPt.y, 7, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#0fee89'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(cyPt.x, cyPt.y, 7, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#0fee89';
+      ctx.font = '11px -apple-system, sans-serif';
+      ctx.textAlign = c > 0 ? 'right' : 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('(0, ' + fmt(c) + ')', cyPt.x + (c > 0 ? -10 : 10), cyPt.y);
+    }
+
+    // X-intercept dot (-c/m, 0)
+    if (Math.abs(m) > 0.01) {
+      var xInt = -c / m;
+      if (xInt > X_MIN && xInt < X_MAX) {
+        var xPt = toC(xInt, 0);
+        ctx.fillStyle = '#0d1216';
+        ctx.beginPath(); ctx.arc(xPt.x, xPt.y, 7, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#fff067'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(xPt.x, xPt.y, 7, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#fff067';
+        ctx.font = '11px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('(' + fmt(xInt) + ', 0)', xPt.x, xPt.y + 8);
+      }
+    }
+
+    // Gradient label on line (near middle of visible segment)
+    if (Math.abs(m) > 0.01) {
+      var midX = 2, midY = m * midX + c;
+      if (midY > Y_MAX - 0.5) midY = Y_MAX - 0.5;
+      if (midY < Y_MIN + 0.5) midY = Y_MIN + 0.5;
+      var mp = toC(midX, midY);
+      var angle = Math.atan(m * (H - PAD.t - PAD.b) / (W - PAD.l - PAD.r));
+      ctx.save();
+      ctx.translate(mp.x, mp.y);
+      ctx.rotate(-angle);
+      ctx.fillStyle = '#fff067cc';
+      ctx.font = 'bold 11px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('m = ' + fmt(m), 0, -6);
+      ctx.restore();
+    }
+
+    // Update eq-bar
+    document.getElementById('eq-bar').textContent = eqText(m, c);
+  }
+
+  function tick() {
+    var changed = false;
+    if (Math.abs(mD - mT) > 0.005) { mD += (mT - mD) * SPRING; changed = true; }
+    else mD = mT;
+    if (Math.abs(cD - cT) > 0.005) { cD += (cT - cD) * SPRING; changed = true; }
+    else cD = cT;
+    draw(mD, cD);
+    if (changed) raf = requestAnimationFrame(tick);
+    else raf = null;
+  }
+
+  function startAnim() { if (!raf) raf = requestAnimationFrame(tick); }
+
+  document.getElementById('sl-m').addEventListener('input', function() {
+    mT = parseFloat(this.value);
+    document.getElementById('val-m').textContent = fmt(mT);
+    startAnim();
+  });
+  document.getElementById('sl-c').addEventListener('input', function() {
+    cT = parseFloat(this.value);
+    document.getElementById('val-c').textContent = fmt(cT);
+    startAnim();
+  });
+
+  draw(mT, cT);
+</script>
+</body>
+</html>
