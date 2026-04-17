@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Functions</title>
+  <meta property="og:title" content="Functions"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="600"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .fn-inputs {
+      width: 560px; display: flex; flex-direction: column; gap: 6px;
+      padding: 8px 4px; border-top: 1px solid #1a2535;
+    }
+    .fn-row { display: flex; align-items: center; gap: 8px; }
+    .fn-name { font-family: 'Courier New', monospace; font-size: 13px; width: 56px; flex-shrink: 0; }
+    input.fn-expr {
+      flex: 1; background: #111f2c; border: 1px solid #1a2535;
+      border-radius: 4px; padding: 6px 8px;
+      color: #f0f0ee; font-family: 'Courier New', monospace; font-size: 13px; outline: none;
+    }
+    input.fn-expr:focus { border-color: #00abfa; }
+    .equation-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+    }
+    canvas { display: block; cursor: default; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 10px 4px;
+      border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 80px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #sl-x::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff822c; cursor:pointer; }
+    .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Functions: f(x), gf(x), f⁻¹(x)</div>
+  <div class="instruction">
+    Enter f(x) and g(x), then drag the <b style="color:#ff822c">orange dot</b> or use the slider —
+    f(x), gf(x) and f⁻¹(x) are evaluated live at your chosen x
+  </div>
+</div>
+
+<div class="fn-inputs">
+  <div class="fn-row">
+    <div class="fn-name" style="color:#0fee89">f(x) =</div>
+    <input class="fn-expr" id="inp-f" value="2*x + 1" spellcheck="false"/>
+  </div>
+  <div class="fn-row">
+    <div class="fn-name" style="color:#fff067">g(x) =</div>
+    <input class="fn-expr" id="inp-g" value="x^2 - 3" spellcheck="false"/>
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="340"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#ff822c" id="lbl-x">x =  2.00</div>
+    <input type="range" id="sl-x" min="-5" max="5" step="0.01" value="2"/>
+    <div class="slider-bounds">−5 … 5</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>gf(x) means apply f first, then g</strong> — not the other way round.
+    Write gf(x) = g(f(x)) and substitute step by step. fg ≠ gf in general.
+  </div>
+</div>
+
+<script>
+  var x_target=2, xD=2;
+  var fExpr='2*x + 1', gExpr='x^2 - 3';
+  var SPRING=0.15;
+  var dragging=false, hovering=false;
+  var HIT=18;
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=340;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var X_MIN=-6, X_MAX=6, Y_MIN=-8, Y_MAX=8;
+
+  function toCanvas(mx,my){
+    return{x:(mx-X_MIN)/(X_MAX-X_MIN)*W, y:(Y_MAX-my)/(Y_MAX-Y_MIN)*H};
+  }
+  function fromCanvasX(cx){ return X_MIN+cx/W*(X_MAX-X_MIN); }
+
+  function evalFn(expr,xv){
+    var e=expr.replace(/\^/g,'**').replace(/\bx\b/g,'('+xv+')');
+    try{return Function('"use strict";return('+e+')')();}catch(err){return NaN;}
+  }
+
+  function fmt(v){
+    if(!isFinite(v))return'?';
+    var r=Math.round(v*100)/100;
+    return r.toString();
+  }
+
+  function findInverse(target){
+    var fn=function(xv){return evalFn(fExpr,xv)-target;};
+    var lo=-50,hi=50,steps=800;
+    var prev=fn(lo),prevX=lo;
+    for(var i=1;i<=steps;i++){
+      var xv=lo+i/steps*(hi-lo);
+      var curr=fn(xv);
+      if(isFinite(prev)&&isFinite(curr)&&prev*curr<=0){
+        var a=prevX,b=xv;
+        for(var j=0;j<50;j++){var mid=(a+b)/2; if(fn(a)*fn(mid)<=0)b=mid;else a=mid;}
+        return(a+b)/2;
+      }
+      prev=curr; prevX=xv;
+    }
+    return null;
+  }
+
+  function getPos(e){
+    var r=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return{x:(cx-r.left)*W/r.width, y:(cy-r.top)*H/r.height};
+  }
+
+  function dotCanvasPos(){
+    var fv=evalFn(fExpr,xD);
+    if(!isFinite(fv)||fv<Y_MIN||fv>Y_MAX)return{x:-999,y:-999};
+    return toCanvas(xD,fv);
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    // Grid (batched)
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var ky=Y_MIN;ky<=Y_MAX;ky++){
+      ctx.moveTo(toCanvas(X_MIN,ky).x,toCanvas(X_MIN,ky).y);
+      ctx.lineTo(toCanvas(X_MAX,ky).x,toCanvas(X_MAX,ky).y);
+    }
+    for(var kx=X_MIN;kx<=X_MAX;kx++){
+      ctx.moveTo(toCanvas(kx,Y_MIN).x,toCanvas(kx,Y_MIN).y);
+      ctx.lineTo(toCanvas(kx,Y_MAX).x,toCanvas(kx,Y_MAX).y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    var ax=[toCanvas(X_MIN,0),toCanvas(X_MAX,0)];
+    ctx.beginPath(); ctx.moveTo(ax[0].x,ax[0].y); ctx.lineTo(ax[1].x,ax[1].y); ctx.stroke();
+    var ay=[toCanvas(0,Y_MIN),toCanvas(0,Y_MAX)];
+    ctx.beginPath(); ctx.moveTo(ay[0].x,ay[0].y); ctx.lineTo(ay[1].x,ay[1].y); ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle='#6a8898'; ctx.font='11px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var kx=X_MIN+1;kx<X_MAX;kx++){
+      if(kx===0)continue;
+      var p=toCanvas(kx,0); ctx.fillText(kx,p.x,p.y+4);
+    }
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    for(var ky=Y_MIN+2;ky<Y_MAX;ky+=2){
+      if(ky===0)continue;
+      var p=toCanvas(0,ky); ctx.fillText(ky,p.x+5,p.y);
+    }
+
+    // f(x) curve (green)
+    ctx.strokeStyle='#0fee89'; ctx.lineWidth=2.5; ctx.lineJoin='round';
+    ctx.beginPath(); var pen=false;
+    for(var i=0;i<=400;i++){
+      var mx=X_MIN+i*(X_MAX-X_MIN)/400;
+      var my=evalFn(fExpr,mx);
+      if(!isFinite(my)||my<Y_MIN-2||my>Y_MAX+2){pen=false;continue;}
+      var cp=toCanvas(mx,my);
+      if(!pen){ctx.moveTo(cp.x,cp.y);pen=true;}else ctx.lineTo(cp.x,cp.y);
+    }
+    ctx.stroke();
+
+    // g(x) curve (yellow)
+    ctx.strokeStyle='#fff067'; ctx.lineWidth=2.5;
+    ctx.beginPath(); pen=false;
+    for(var i=0;i<=400;i++){
+      var mx=X_MIN+i*(X_MAX-X_MIN)/400;
+      var my=evalFn(gExpr,mx);
+      if(!isFinite(my)||my<Y_MIN-2||my>Y_MAX+2){pen=false;continue;}
+      var cp=toCanvas(mx,my);
+      if(!pen){ctx.moveTo(cp.x,cp.y);pen=true;}else ctx.lineTo(cp.x,cp.y);
+    }
+    ctx.stroke();
+
+    // Curve labels at right edge
+    var fyR=evalFn(fExpr,X_MAX-0.3), gyR=evalFn(gExpr,X_MAX-0.3);
+    if(isFinite(fyR)&&fyR>Y_MIN&&fyR<Y_MAX){
+      var fp=toCanvas(X_MAX-0.3,fyR);
+      ctx.fillStyle='#0fee89'; ctx.font='bold 11px sans-serif';
+      ctx.textAlign='right'; ctx.textBaseline='middle';
+      ctx.fillText('f(x)',fp.x-4,fp.y);
+    }
+    if(isFinite(gyR)&&gyR>Y_MIN&&gyR<Y_MAX){
+      var gp=toCanvas(X_MAX-0.3,gyR);
+      ctx.fillStyle='#fff067'; ctx.font='bold 11px sans-serif';
+      ctx.textAlign='right'; ctx.textBaseline='middle';
+      ctx.fillText('g(x)',gp.x-4,gp.y);
+    }
+
+    // Vertical guide at xD
+    var xcp=toCanvas(xD,0);
+    ctx.strokeStyle='#ff822c22'; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(xcp.x,toCanvas(0,Y_MIN).y); ctx.lineTo(xcp.x,toCanvas(0,Y_MAX).y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draggable dot on f(x)
+    var fv=evalFn(fExpr,xD);
+    if(isFinite(fv)&&fv>=Y_MIN&&fv<=Y_MAX){
+      var fp=toCanvas(xD,fv);
+      var r2=dragging?9:(hovering?8:6);
+      var gr2=dragging?22:(hovering?18:14);
+      var grad=ctx.createRadialGradient(fp.x,fp.y,0,fp.x,fp.y,gr2);
+      grad.addColorStop(0,'rgba(255,130,44,0.30)'); grad.addColorStop(1,'rgba(255,130,44,0)');
+      ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(fp.x,fp.y,gr2,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=dragging?'#ffaa60':'#ff822c';
+      ctx.beginPath(); ctx.arc(fp.x,fp.y,r2,0,Math.PI*2); ctx.fill();
+
+      // Coordinate label
+      var lx=fp.x+(fp.x>W*0.75?-14:14);
+      ctx.fillStyle='#ff822c'; ctx.font='bold 12px Courier New, monospace';
+      ctx.textAlign=fp.x>W*0.75?'right':'left'; ctx.textBaseline='middle';
+      ctx.fillText('('+fmt(xD)+', '+fmt(fv)+')',lx,fp.y-14);
+    }
+  }
+
+  function buildEqBar(){
+    var fv=evalFn(fExpr,xD);
+    var gfv=isFinite(fv)?evalFn(gExpr,fv):NaN;
+    var inv=findInverse(xD);
+    var invStr=inv!==null?fmt(Math.round(inv*1000)/1000):'no real solution';
+    var xStr=fmt(xD);
+    return 'f('+xStr+') = '+fmt(fv)+'   |   gf('+xStr+') = g('+fmt(fv)+') = '+fmt(gfv)+'   |   f⁻¹('+xStr+') = '+invStr;
+  }
+
+  function tick(){
+    xD+=(x_target-xD)*(dragging?0.85:SPRING);
+    draw();
+    document.getElementById('eq-display').textContent=buildEqBar();
+    requestAnimationFrame(tick);
+  }
+
+  // Mouse drag
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e), dp=dotCanvasPos();
+    var dx=p.x-dp.x,dy=p.y-dp.y;
+    if(dx*dx+dy*dy<HIT*HIT){dragging=true;e.preventDefault();}
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if(dragging){
+      var newX=Math.max(X_MIN+0.05,Math.min(X_MAX-0.05,fromCanvasX(p.x)));
+      x_target=newX; xD=newX;
+      document.getElementById('sl-x').value=newX.toFixed(2);
+      document.getElementById('lbl-x').textContent='x = '+newX.toFixed(2);
+    } else {
+      var dp=dotCanvasPos(); var dx=p.x-dp.x,dy=p.y-dp.y;
+      hovering=(dx*dx+dy*dy<HIT*HIT);
+      canvas.style.cursor=hovering?'grab':'default';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){dragging=false; canvas.style.cursor=hovering?'grab':'default';});
+  canvas.addEventListener('mouseleave',function(){dragging=false; hovering=false;});
+
+  // Touch drag
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e), dp=dotCanvasPos(); var dx=p.x-dp.x,dy=p.y-dp.y;
+    if(dx*dx+dy*dy<HIT*HIT){dragging=true;e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(!dragging)return; e.preventDefault();
+    var p=getPos(e);
+    var newX=Math.max(X_MIN+0.05,Math.min(X_MAX-0.05,fromCanvasX(p.x)));
+    x_target=newX; xD=newX;
+    document.getElementById('sl-x').value=newX.toFixed(2);
+    document.getElementById('lbl-x').textContent='x = '+newX.toFixed(2);
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){dragging=false;});
+
+  document.getElementById('sl-x').oninput=function(){
+    x_target=parseFloat(this.value);
+    document.getElementById('lbl-x').textContent='x = '+x_target.toFixed(2);
+  };
+
+  document.getElementById('inp-f').oninput=function(){fExpr=this.value.trim()||'0';};
+  document.getElementById('inp-g').oninput=function(){gExpr=this.value.trim()||'0';};
+
+  tick();
+</script>
+</body>
+</html>

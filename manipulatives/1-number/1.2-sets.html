@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parhaylikhay · Sets</title>
+<meta property="og:title" content="Sets and Venn Diagrams"/>
+<meta property="og:type" content="video.other"/>
+<meta property="og:video:type" content="text/html"/>
+<meta property="og:video:width" content="600"/>
+<meta property="og:video:height" content="560"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0d1216;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #e8e8e8;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+}
+h1 { font-size: 1.3rem; color: #00abfa; margin-bottom: 4px; }
+.subtitle { font-size: 0.85rem; color: #888780; margin-bottom: 20px; }
+.layout { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+canvas { border-radius: 8px; }
+.controls { width: 280px; display: flex; flex-direction: column; gap: 14px; }
+.section-label { font-size: 0.78rem; color: #888780; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+.op-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.op-btn {
+  background: #1a2530;
+  border: 1px solid #2a3a4a;
+  border-radius: 6px;
+  padding: 8px 6px;
+  color: #e8e8e8;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.op-btn:hover { border-color: #00abfa55; }
+.op-btn.active { background: #00abfa22; border-color: #00abfa; color: #00abfa; }
+.info-box {
+  background: #141d27;
+  border: 1px solid #2a3a4a;
+  border-radius: 8px;
+  padding: 14px;
+}
+.info-box .op-title { font-size: 1rem; font-weight: 700; color: #fff067; margin-bottom: 6px; }
+.info-box .op-desc { font-size: 0.83rem; color: #b0b8c4; line-height: 1.55; }
+.info-box .result { margin-top: 10px; font-size: 0.88rem; color: #0fee89; }
+.set-inputs { display: flex; flex-direction: column; gap: 8px; }
+.set-row { display: flex; align-items: center; gap: 8px; }
+.set-row label { font-size: 0.88rem; width: 14px; font-weight: 700; }
+.set-row input {
+  flex: 1;
+  background: #1a2530;
+  border: 1px solid #2a3a4a;
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: #e8e8e8;
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+}
+.set-row input:focus { border-color: #00abfa; }
+.toggle-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #888780; }
+.toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; }
+.slider-t {
+  position: absolute;
+  inset: 0;
+  background: #2a3a4a;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.slider-t:before {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  left: 3px; bottom: 3px;
+  background: #888780;
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+input:checked + .slider-t { background: #00abfa44; }
+input:checked + .slider-t:before { transform: translateX(16px); background: #00abfa; }
+</style>
+</head>
+<body>
+<h1>Sets &amp; Venn Diagrams</h1>
+<p class="subtitle">Select an operation to shade the region — watch n(result) update</p>
+
+<div class="layout">
+  <canvas id="c" width="400" height="360"></canvas>
+
+  <div class="controls">
+    <div>
+      <div class="section-label">Define your sets (space-separated)</div>
+      <div class="set-inputs">
+        <div class="set-row">
+          <label style="color:#00abfa">A</label>
+          <input id="setA" value="1 2 3 4 5" placeholder="e.g. 1 2 3 4 5"/>
+        </div>
+        <div class="set-row">
+          <label style="color:#0fee89">B</label>
+          <input id="setB" value="3 4 5 6 7" placeholder="e.g. 3 4 5 6 7"/>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle"><input type="checkbox" id="threeCircle"/><span class="slider-t"></span></label>
+          <span>Three circles</span>
+          <label style="color:#ff822c; display:none" id="cLabel">C</label>
+          <input id="setC" value="5 6 7 8 9" placeholder="C" style="display:none; width:120px; background:#1a2530; border:1px solid #2a3a4a; border-radius:6px; padding:6px 10px; color:#e8e8e8; font-size:0.85rem; outline:none;"/>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Operation</div>
+      <div class="op-grid" id="ops"></div>
+    </div>
+
+    <div class="info-box" id="info">
+      <div class="op-title" id="opTitle">A ∩ B</div>
+      <div class="op-desc" id="opDesc">Intersection: elements in BOTH A and B.</div>
+      <div class="result" id="opResult"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = 400, H = 360;
+const DPR = window.devicePixelRatio || 1;
+canvas.width = W * DPR; canvas.height = H * DPR;
+canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+ctx.scale(DPR, DPR);
+
+let threeMode = false;
+
+const OPS_2 = [
+  { label: 'A ∩ B', sym: '∩', desc: 'Intersection: elements in BOTH A and B.', shade: 'intersect' },
+  { label: 'A ∪ B', sym: '∪', desc: 'Union: elements in A OR B (or both).', shade: 'union' },
+  { label: "A'", sym: "A'", desc: "Complement of A: everything NOT in A (within ξ).", shade: 'compA' },
+  { label: "B'", sym: "B'", desc: "Complement of B: everything NOT in B (within ξ).", shade: 'compB' },
+  { label: 'A only', sym: '\\', desc: 'A minus B: elements in A but NOT in B.', shade: 'Aonly' },
+  { label: 'B only', sym: '\\', desc: 'B minus A: elements in B but NOT in A.', shade: 'Bonly' },
+  { label: "(A ∪ B)'", sym: "(∪)'", desc: "Complement of union: elements outside both A and B.", shade: 'neitherAB' },
+  { label: "(A ∩ B)'", sym: "(∩)'", desc: "Complement of intersection: NOT in both simultaneously.", shade: 'compIntersect' },
+];
+
+const OPS_3 = [
+  { label: 'A ∩ B ∩ C', sym: '∩∩', desc: 'Elements in all three sets.', shade: 'ABC' },
+  { label: 'A ∪ B ∪ C', sym: '∪∪', desc: 'Elements in at least one of A, B, C.', shade: 'unionABC' },
+  { label: 'A ∩ B', sym: 'A∩B', desc: 'Elements in both A and B (may also be in C).', shade: 'AB' },
+  { label: 'A only', sym: 'Aonly', desc: 'In A but not B or C.', shade: 'Aonly3' },
+  { label: "(A∪B∪C)'", sym: "(∪)'", desc: 'Outside all three sets.', shade: 'noneABC' },
+  { label: "A'", sym: "A'", desc: 'Everything NOT in A.', shade: 'compA3' },
+];
+
+let currentOp = OPS_2[0];
+let currentOp3 = OPS_3[0];
+
+function parseSet(id) {
+  return new Set(document.getElementById(id).value.trim().split(/\s+/).filter(Boolean));
+}
+
+// 2-circle layout
+const c2 = { Ax: 155, Ay: 180, Bx: 245, By: 180, r: 110 };
+// 3-circle layout
+const c3 = { Ax: 155, Ay: 155, Bx: 245, By: 155, Cx: 200, Cy: 230, r: 100 };
+
+function inCircle(px, py, cx, cy, r) {
+  return (px - cx) ** 2 + (py - cy) ** 2 <= r * r;
+}
+
+function shadeRegion(shade, A, B, C) {
+  const pw = W * DPR, ph = H * DPR;
+  const idata = ctx.createImageData(pw, ph);
+  const d = idata.data;
+  for (let y = 0; y < ph; y++) {
+    for (let x = 0; x < pw; x++) {
+      const lx = x / DPR, ly = y / DPR;
+      let inA = inCircle(lx, ly, c2.Ax, c2.Ay, c2.r);
+      let inB = inCircle(lx, ly, c2.Bx, c2.By, c2.r);
+      let inC = threeMode ? inCircle(lx, ly, c3.Cx, c3.Cy, c3.r) : false;
+      if (threeMode) {
+        inA = inCircle(lx, ly, c3.Ax, c3.Ay, c3.r);
+        inB = inCircle(lx, ly, c3.Bx, c3.By, c3.r);
+      }
+      let fill = false;
+      switch (shade) {
+        case 'intersect': fill = inA && inB; break;
+        case 'union': fill = inA || inB; break;
+        case 'compA': fill = !inA; break;
+        case 'compB': fill = !inB; break;
+        case 'Aonly': fill = inA && !inB; break;
+        case 'Bonly': fill = inB && !inA; break;
+        case 'neitherAB': fill = !inA && !inB; break;
+        case 'compIntersect': fill = !(inA && inB); break;
+        // 3-circle
+        case 'ABC': fill = inA && inB && inC; break;
+        case 'unionABC': fill = inA || inB || inC; break;
+        case 'AB': fill = inA && inB; break;
+        case 'Aonly3': fill = inA && !inB && !inC; break;
+        case 'noneABC': fill = !inA && !inB && !inC; break;
+        case 'compA3': fill = !inA; break;
+      }
+      if (fill) {
+        const idx = (y * pw + x) * 4;
+        d[idx]   = 0; d[idx+1] = 171; d[idx+2] = 250;
+        d[idx+3] = 55;
+      }
+    }
+  }
+  // putImageData ignores ctx transform — save/restore to bypass DPR scale
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.putImageData(idata, 0, 0);
+  ctx.restore();
+}
+
+function drawVenn() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Background ξ box
+  ctx.fillStyle = '#141d27';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#2a3a4a';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(8, 8, W - 16, H - 16);
+  ctx.font = '13px -apple-system, sans-serif';
+  ctx.fillStyle = '#888780';
+  ctx.fillText('ξ', 18, 26);
+
+  const op = threeMode ? currentOp3 : currentOp;
+  shadeRegion(op.shade);
+
+  if (!threeMode) {
+    // Draw circles
+    ctx.beginPath();
+    ctx.arc(c2.Ax, c2.Ay, c2.r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#00abfa';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(c2.Bx, c2.By, c2.r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#0fee89';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Labels
+    ctx.font = 'bold 18px -apple-system, sans-serif';
+    ctx.fillStyle = '#00abfa';
+    ctx.fillText('A', c2.Ax - c2.r + 14, c2.Ay - c2.r + 28);
+    ctx.fillStyle = '#0fee89';
+    ctx.fillText('B', c2.Bx + c2.r - 28, c2.By - c2.r + 28);
+
+    // Draw set elements
+    drawElements2();
+  } else {
+    ctx.beginPath();
+    ctx.arc(c3.Ax, c3.Ay, c3.r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#00abfa'; ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(c3.Bx, c3.By, c3.r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#0fee89'; ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(c3.Cx, c3.Cy, c3.r, 0, Math.PI * 2);
+    ctx.strokeStyle = '#ff822c'; ctx.lineWidth = 2; ctx.stroke();
+
+    ctx.font = 'bold 18px -apple-system, sans-serif';
+    ctx.fillStyle = '#00abfa';
+    ctx.fillText('A', c3.Ax - c3.r + 10, c3.Ay - c3.r + 26);
+    ctx.fillStyle = '#0fee89';
+    ctx.fillText('B', c3.Bx + c3.r - 24, c3.By - c3.r + 26);
+    ctx.fillStyle = '#ff822c';
+    ctx.fillText('C', c3.Cx - 6, c3.Cy + c3.r - 10);
+  }
+}
+
+function drawElements2() {
+  const A = parseSet('setA'), B = parseSet('setB');
+  const Aonly = [...A].filter(e => !B.has(e));
+  const Bonly = [...B].filter(e => !A.has(e));
+  const both = [...A].filter(e => B.has(e));
+
+  ctx.font = '11px -apple-system, sans-serif';
+  ctx.textAlign = 'center';
+
+  Aonly.slice(0, 6).forEach((el, i) => {
+    ctx.fillStyle = '#00abfa';
+    ctx.fillText(el, c2.Ax - 50 + (i % 2) * 28, c2.Ay - 20 + Math.floor(i / 2) * 24);
+  });
+  Bonly.slice(0, 6).forEach((el, i) => {
+    ctx.fillStyle = '#0fee89';
+    ctx.fillText(el, c2.Bx + 22 + (i % 2) * 28, c2.By - 20 + Math.floor(i / 2) * 24);
+  });
+  both.slice(0, 4).forEach((el, i) => {
+    ctx.fillStyle = '#fff067';
+    ctx.fillText(el, 200 + (i % 2 === 0 ? -14 : 14), c2.Ay - 14 + Math.floor(i / 2) * 22);
+  });
+  ctx.textAlign = 'left';
+}
+
+function computeResult() {
+  const A = parseSet('setA'), B = parseSet('setB');
+  const C = threeMode ? parseSet('setC') : new Set();
+  const op = threeMode ? currentOp3 : currentOp;
+  let result = new Set();
+  const xi = new Set([...A, ...B, ...C]);
+
+  switch (op.shade) {
+    case 'intersect': result = new Set([...A].filter(x => B.has(x))); break;
+    case 'union': result = new Set([...A, ...B]); break;
+    case 'compA': result = new Set([...xi].filter(x => !A.has(x))); break;
+    case 'compB': result = new Set([...xi].filter(x => !B.has(x))); break;
+    case 'Aonly': result = new Set([...A].filter(x => !B.has(x))); break;
+    case 'Bonly': result = new Set([...B].filter(x => !A.has(x))); break;
+    case 'neitherAB': result = new Set([...xi].filter(x => !A.has(x) && !B.has(x))); break;
+    case 'compIntersect': result = new Set([...xi].filter(x => !(A.has(x) && B.has(x)))); break;
+    case 'ABC': result = new Set([...A].filter(x => B.has(x) && C.has(x))); break;
+    case 'unionABC': result = new Set([...A, ...B, ...C]); break;
+    case 'AB': result = new Set([...A].filter(x => B.has(x))); break;
+    case 'Aonly3': result = new Set([...A].filter(x => !B.has(x) && !C.has(x))); break;
+    case 'noneABC': result = new Set(); break;
+    case 'compA3': result = new Set([...xi].filter(x => !A.has(x))); break;
+  }
+
+  const arr = [...result];
+  return `n = ${arr.length} &nbsp;→&nbsp; { ${arr.join(', ') || '∅'} }`;
+}
+
+function buildOpButtons() {
+  const container = document.getElementById('ops');
+  container.innerHTML = '';
+  const ops = threeMode ? OPS_3 : OPS_2;
+  ops.forEach((op, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'op-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = op.label;
+    btn.onclick = () => {
+      document.querySelectorAll('.op-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (threeMode) currentOp3 = op; else currentOp = op;
+      updateInfo();
+      drawVenn();
+    };
+    container.appendChild(btn);
+  });
+}
+
+function updateInfo() {
+  const op = threeMode ? currentOp3 : currentOp;
+  document.getElementById('opTitle').textContent = op.label;
+  document.getElementById('opDesc').textContent = op.desc;
+  document.getElementById('opResult').innerHTML = computeResult();
+}
+
+document.getElementById('threeCircle').addEventListener('change', function () {
+  threeMode = this.checked;
+  document.getElementById('cLabel').style.display = threeMode ? '' : 'none';
+  document.getElementById('setC').style.display = threeMode ? '' : 'none';
+  if (threeMode) { currentOp3 = OPS_3[0]; } else { currentOp = OPS_2[0]; }
+  buildOpButtons();
+  updateInfo();
+  drawVenn();
+});
+
+['setA', 'setB', 'setC'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => { updateInfo(); drawVenn(); });
+});
+
+buildOpButtons();
+updateInfo();
+drawVenn();
+</script>
+<div style="width:400px;padding:8px 4px 14px;font-size:11px;color:#0fee89;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  Cambridge tip: <strong style="font-weight:600">n(A ∪ B) = n(A) + n(B) − n(A ∩ B)</strong> — always subtract the overlap or you double-count.
+  A complement (A′) means everything in ξ outside A. State n(result) and list the elements.
+</div>
+</body>
+</html>

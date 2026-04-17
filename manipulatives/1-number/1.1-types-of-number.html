@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parhaylikhay · Types of Number</title>
+<meta property="og:title" content="Types of Number"/>
+<meta property="og:type" content="video.other"/>
+<meta property="og:video:type" content="text/html"/>
+<meta property="og:video:width" content="600"/>
+<meta property="og:video:height" content="560"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0d1216;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #e8e8e8;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+}
+h1 { font-size: 1.3rem; color: #00abfa; margin-bottom: 4px; }
+.subtitle { font-size: 0.85rem; color: #888780; margin-bottom: 20px; }
+.layout { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+canvas { border-radius: 8px; background: #0d1216; }
+.panel { width: 280px; }
+.panel h2 { font-size: 0.85rem; color: #888780; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+.examples { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+.num-btn {
+  background: #1a2530;
+  border: 1px solid #2a3a4a;
+  border-radius: 6px;
+  padding: 6px 12px;
+  color: #e8e8e8;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.num-btn:hover { border-color: #00abfa; color: #00abfa; }
+.num-btn.active { background: #00abfa22; border-color: #00abfa; color: #00abfa; }
+.info-box {
+  background: #141d27;
+  border: 1px solid #2a3a4a;
+  border-radius: 8px;
+  padding: 14px;
+  min-height: 100px;
+}
+.info-box .number { font-size: 1.6rem; font-weight: bold; color: #fff067; margin-bottom: 8px; }
+.info-box .sets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.set-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.info-box .note { font-size: 0.82rem; color: #888780; line-height: 1.5; }
+.legend { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+.legend-row { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+.legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<h1>Types of Number</h1>
+<p class="subtitle">Click a number to see which sets it belongs to</p>
+
+<div class="layout">
+  <canvas id="c" width="420" height="380"></canvas>
+  <div class="panel">
+    <div class="examples">
+      <h2>Try these numbers</h2>
+    </div>
+    <div id="examples" class="examples"></div>
+    <div class="info-box" id="info">
+      <div style="color:#888780; font-size:0.88rem; padding-top:8px;">Click a number above to explore which sets it belongs to.</div>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const DPR = window.devicePixelRatio || 1;
+canvas.width = 420 * DPR; canvas.height = 380 * DPR;
+canvas.style.width = '420px'; canvas.style.height = '380px';
+ctx.scale(DPR, DPR);
+
+const SETS = [
+  { name: 'ℝ Real', symbol: 'ℝ', color: '#00abfa', desc: 'All numbers on the number line' },
+  { name: 'ℚ Rational', symbol: 'ℚ', color: '#0fee89', desc: 'Can be written as p/q (p,q integers, q≠0)' },
+  { name: 'ℤ Integer', symbol: 'ℤ', color: '#fff067', desc: '…, −2, −1, 0, 1, 2, … (whole numbers)' },
+  { name: 'ℕ Natural', symbol: 'ℕ', color: '#ff822c', desc: '1, 2, 3, 4, … (positive whole numbers)' },
+];
+
+// Nested ellipses: cx, cy, rx, ry
+const ellipses = [
+  { cx: 210, cy: 200, rx: 195, ry: 170 }, // ℝ
+  { cx: 200, cy: 210, rx: 148, ry: 125 }, // ℚ
+  { cx: 192, cy: 218, rx: 100, ry: 83 },  // ℤ
+  { cx: 186, cy: 225, rx: 55, ry: 43 },   // ℕ
+];
+
+// Irrationals label position (between ℝ and ℚ)
+const irrPos = { x: 355, y: 105 };
+
+const examples = [
+  { val: '5', label: '5', sets: [0,1,2,3], note: 'A counting number — natural, integer, rational, and real.' },
+  { val: '-3', label: '−3', sets: [0,1,2], note: 'Negative whole number — integer and rational (−3/1), but NOT natural.' },
+  { val: '2/3', label: '²⁄₃', sets: [0,1], note: 'Fraction — rational (p/q form), but not an integer.' },
+  { val: '0.5', label: '0.5', sets: [0,1], note: '0.5 = 1/2 — rational decimal.' },
+  { val: '0.333...', label: '0.3̄', sets: [0,1], note: 'Recurring decimal = 1/3 — still rational.' },
+  { val: '√2', label: '√2', sets: [0], note: '√2 = 1.41421… — irrational. Cannot be written as p/q.' },
+  { val: 'π', label: 'π', sets: [0], note: 'π = 3.14159… — irrational. Transcendental number.' },
+  { val: '0', label: '0', sets: [0,1,2], note: 'Zero is an integer and rational (0/1), but NOT a natural number.' },
+  { val: '-7/2', label: '−³⁄₂', sets: [0,1], note: 'Negative fraction — rational but not an integer.' },
+  { val: '√9', label: '√9', sets: [0,1,2,3], note: '√9 = 3 — a perfect square, so it is natural!' },
+];
+
+let active = null;
+
+function drawDiagram(highlightSets = []) {
+  ctx.clearRect(0, 0, 420, 380);
+
+  // Draw from outside in
+  for (let i = 0; i < ellipses.length; i++) {
+    const e = ellipses[i];
+    const col = SETS[i].color;
+    const isHighlighted = highlightSets.includes(i);
+
+    ctx.beginPath();
+    ctx.ellipse(e.cx, e.cy, e.rx, e.ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = isHighlighted ? col + '1a' : '#ffffff08';
+    ctx.fill();
+    ctx.strokeStyle = isHighlighted ? col : col + '55';
+    ctx.lineWidth = isHighlighted ? 2.5 : 1.5;
+    ctx.stroke();
+
+    // Label in top-left of each ellipse
+    ctx.font = `bold 14px -apple-system, sans-serif`;
+    ctx.fillStyle = isHighlighted ? col : col + '88';
+    const lx = e.cx - e.rx + 10;
+    const ly = e.cy - e.ry + 20;
+    ctx.fillText(SETS[i].symbol, lx, ly);
+  }
+
+  // Irrational label
+  ctx.font = '12px -apple-system, sans-serif';
+  ctx.fillStyle = '#888780';
+  ctx.fillText('Irrational', irrPos.x - 28, irrPos.y);
+  ctx.fillText('√2, π, √3…', irrPos.x - 30, irrPos.y + 16);
+}
+
+function drawHighlightedNumber(item) {
+  if (!item) return;
+  // Place the number in the appropriate innermost set
+  const innermost = Math.max(...item.sets);
+  const e = ellipses[innermost];
+  ctx.font = 'bold 22px -apple-system, sans-serif';
+  ctx.fillStyle = '#fff067';
+  ctx.textAlign = 'center';
+  ctx.fillText(item.label, e.cx, e.cy + 7);
+  ctx.textAlign = 'left';
+}
+
+function render() {
+  const hl = active ? active.sets : [];
+  drawDiagram(hl);
+  if (active) drawHighlightedNumber(active);
+}
+
+// Build example buttons
+const exDiv = document.getElementById('examples');
+examples.forEach((ex, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'num-btn';
+  btn.textContent = ex.label;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    active = ex;
+    render();
+    showInfo(ex);
+  });
+  exDiv.appendChild(btn);
+});
+
+function showInfo(ex) {
+  const box = document.getElementById('info');
+  const badges = ex.sets.map(si =>
+    `<span class="set-badge" style="background:${SETS[si].color}22;color:${SETS[si].color};border:1px solid ${SETS[si].color}55">${SETS[si].name}</span>`
+  ).join('');
+  box.innerHTML = `
+    <div class="number">${ex.label}</div>
+    <div class="sets">${badges}</div>
+    <div class="note">${ex.note}</div>
+  `;
+}
+
+// Build legend
+const legendDiv = document.getElementById('legend');
+SETS.forEach(s => {
+  const row = document.createElement('div');
+  row.className = 'legend-row';
+  row.innerHTML = `<div class="legend-dot" style="background:${s.color}"></div><span style="color:${s.color};font-weight:600">${s.symbol}</span> <span style="color:#888780">${s.desc}</span>`;
+  legendDiv.appendChild(row);
+});
+const irrRow = document.createElement('div');
+irrRow.className = 'legend-row';
+irrRow.innerHTML = `<div class="legend-dot" style="background:#888780"></div><span style="color:#888780;font-weight:600">Irrational</span> <span style="color:#888780">Cannot be written as p/q</span>`;
+legendDiv.appendChild(irrRow);
+
+function loop(){ render(); requestAnimationFrame(loop); }
+loop();
+</script>
+<div style="width:420px;padding:8px 4px 14px;font-size:11px;color:#0fee89;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  Cambridge tip: <strong style="font-weight:600">every natural number is also an integer, rational, and real</strong>.
+  Irrational numbers (√2, π) cannot be written as a fraction — they are real but not rational.
+  0 is an integer and rational (0/1) but NOT natural.
+</div>
+</body>
+</html>

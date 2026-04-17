@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parhaylikhay · Rates — Speed, Distance, Time</title>
+<meta property="og:title" content="Rates — Speed, Distance, Time"/>
+<meta property="og:type" content="video.other"/>
+<meta property="og:video:type" content="text/html"/>
+<meta property="og:video:width" content="600"/>
+<meta property="og:video:height" content="580"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0d1216;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #e8e8e8;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+}
+h1 { font-size: 1.3rem; color: #00abfa; margin-bottom: 4px; }
+.subtitle { font-size: 0.85rem; color: #888780; margin-bottom: 24px; }
+.widget { width: 100%; max-width: 540px; display: flex; flex-direction: column; gap: 20px; }
+
+.mode-tabs { display: flex; gap: 0; background: #141d27; border: 1px solid #2a3a4a; border-radius: 8px; overflow: hidden; }
+.tab { flex: 1; padding: 9px; text-align: center; font-size: 0.85rem; cursor: pointer; color: #888780; font-family: inherit; background: none; border: none; transition: all 0.15s; }
+.tab.active { background: #00abfa22; color: #00abfa; font-weight: 600; }
+
+/* SDT Triangle */
+.triangle-container { display: flex; justify-content: center; margin: 8px 0; }
+canvas.tri { display: block; }
+
+.sdt-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.sdt-card {
+  background: #141d27;
+  border: 2px solid #2a3a4a;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sdt-card.selected { border-color: #fff067 !important; background: #fff06710; }
+.sdt-card.known { border-color: #0fee8966; }
+.sdt-card label { font-size: 0.75rem; color: #888780; text-transform: uppercase; letter-spacing: 0.07em; pointer-events: none; }
+.sdt-card .symbol { font-size: 1.3rem; font-weight: 800; pointer-events: none; }
+.sdt-card input {
+  background: #1a2530; border: 1px solid #2a3a4a; border-radius: 5px;
+  padding: 6px 8px; color: #e8e8e8; font-size: 1rem; outline: none;
+  font-family: inherit; width: 100%;
+}
+.sdt-card input:focus { border-color: #00abfa; }
+.sdt-card .unit { font-size: 0.78rem; color: #888780; pointer-events: none; }
+.sdt-card.unknown { border-color: #fff06766; background: #fff0670a; }
+.sdt-card.unknown .symbol { color: #fff067; }
+
+.solve-btn {
+  width: 100%;
+  background: #00abfa22;
+  border: 1px solid #00abfa;
+  border-radius: 8px;
+  padding: 12px;
+  color: #00abfa;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.solve-btn:hover { background: #00abfa33; }
+
+.result-box { background: #141d27; border: 1px solid #2a3a4a; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+.result-big { font-size: 2rem; font-weight: 800; color: #fff067; }
+.result-formula { font-size: 1rem; color: #00abfa; }
+.result-steps { font-size: 0.85rem; color: #b0b8c4; line-height: 1.7; }
+.result-steps strong { color: #0fee89; }
+
+/* Other rates */
+.rate-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rate-card { background: #141d27; border: 1px solid #2a3a4a; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.rate-card h3 { font-size: 0.82rem; color: #00abfa; text-transform: uppercase; letter-spacing: 0.07em; }
+.rate-card label { font-size: 0.78rem; color: #888780; }
+.rate-card input { width: 100%; background: #1a2530; border: 1px solid #2a3a4a; border-radius: 5px; padding: 6px 8px; color: #e8e8e8; font-size: 0.9rem; outline: none; font-family: inherit; margin-top: 2px; }
+.rate-card input:focus { border-color: #00abfa; }
+.rate-card .rate-result { font-size: 0.88rem; color: #0fee89; margin-top: 4px; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Rates</h1>
+<p class="subtitle">Click the unknown — enter the known values — press Solve</p>
+
+<div class="widget">
+  <div class="mode-tabs">
+    <button class="tab active" id="tabSDT" onclick="setMode('sdt')">Speed / Distance / Time</button>
+    <button class="tab" id="tabOther" onclick="setMode('other')">Other rates</button>
+  </div>
+
+  <div id="modeSdt">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="font-size:0.82rem;color:#888780;text-align:center">Click the quantity you want to <span style="color:#fff067;font-weight:600">find</span>, then enter the other two.</div>
+
+      <canvas class="tri" id="triCanvas" width="280" height="160" style="display:block;margin:0 auto"></canvas>
+
+      <div class="sdt-inputs">
+        <div class="sdt-card known" id="cardS" onclick="selectUnknown('S')">
+          <label>Speed</label>
+          <div class="symbol" style="color:#00abfa">S</div>
+          <input type="number" id="inS" value="" placeholder="?" step="any"/>
+          <div class="unit">units/h</div>
+        </div>
+        <div class="sdt-card known" id="cardD" onclick="selectUnknown('D')">
+          <label>Distance</label>
+          <div class="symbol" style="color:#0fee89">D</div>
+          <input type="number" id="inD" value="150" step="any"/>
+          <div class="unit">km</div>
+        </div>
+        <div class="sdt-card known" id="cardT" onclick="selectUnknown('T')">
+          <label>Time</label>
+          <div class="symbol" style="color:#ff822c">T</div>
+          <input type="number" id="inT" value="2.5" step="any"/>
+          <div class="unit">hours</div>
+        </div>
+      </div>
+
+      <button class="solve-btn" onclick="solve()">Solve →</button>
+
+      <div class="result-box" id="sdtResult" style="display:none">
+        <div class="result-formula" id="resFormula"></div>
+        <div class="result-big" id="resBig"></div>
+        <div class="result-steps" id="resSteps"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modeOther" style="display:none">
+    <div class="rate-grid">
+      <div class="rate-card">
+        <h3>Density</h3>
+        <label>Mass (g)</label><input type="number" id="dMass" value="500" step="any"/>
+        <label>Volume (cm³)</label><input type="number" id="dVol" value="250" step="any"/>
+        <div class="rate-result" id="dResult"></div>
+      </div>
+      <div class="rate-card">
+        <h3>Pressure</h3>
+        <label>Force (N)</label><input type="number" id="pForce" value="120" step="any"/>
+        <label>Area (m²)</label><input type="number" id="pArea" value="0.4" step="any"/>
+        <div class="rate-result" id="pResult"></div>
+      </div>
+      <div class="rate-card">
+        <h3>Flow rate</h3>
+        <label>Volume (litres)</label><input type="number" id="fVol" value="300" step="any"/>
+        <label>Time (min)</label><input type="number" id="fTime" value="5" step="any"/>
+        <div class="rate-result" id="fResult"></div>
+      </div>
+      <div class="rate-card">
+        <h3>Pay rate</h3>
+        <label>Earnings ($)</label><input type="number" id="payEarn" value="48" step="any"/>
+        <label>Hours worked</label><input type="number" id="payHours" value="6" step="any"/>
+        <div class="rate-result" id="payResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let unknown = 'S';
+let mode = 'sdt';
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('tabSDT').classList.toggle('active', m==='sdt');
+  document.getElementById('tabOther').classList.toggle('active', m==='other');
+  document.getElementById('modeSdt').style.display = m==='sdt' ? '' : 'none';
+  document.getElementById('modeOther').style.display = m==='other' ? '' : 'none';
+  if (m==='other') updateOther();
+}
+
+function selectUnknown(q) {
+  unknown = q;
+  ['S','D','T'].forEach(x => {
+    const card = document.getElementById('card'+x);
+    const inp = document.getElementById('in'+x);
+    if (x === q) {
+      card.className = 'sdt-card unknown';
+      inp.value = ''; inp.placeholder = '?'; inp.disabled = true;
+    } else {
+      card.className = 'sdt-card known';
+      inp.disabled = false; inp.placeholder = '';
+    }
+  });
+  drawTriangle();
+  document.getElementById('sdtResult').style.display = 'none';
+}
+
+function drawTriangle() {
+  const canvas = document.getElementById('triCanvas');
+  const DPR = window.devicePixelRatio || 1;
+  const W = 280, H = 160;
+  if (canvas.width !== W * DPR) {
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0,0,W,H);
+
+  const cx = W/2, top = 15, bot = H-15, triW = 180;
+  // Triangle outline
+  ctx.beginPath();
+  ctx.moveTo(cx, top);
+  ctx.lineTo(cx - triW/2, bot);
+  ctx.lineTo(cx + triW/2, bot);
+  ctx.closePath();
+  ctx.strokeStyle = '#2a3a4a';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Horizontal divider
+  const midY = (top + bot) / 2 + 10;
+  ctx.beginPath();
+  ctx.moveTo(cx - triW/4 - 15, midY);
+  ctx.lineTo(cx + triW/4 + 15, midY);
+  ctx.strokeStyle = '#2a3a4a';
+  ctx.stroke();
+  // Vertical divider (bottom half)
+  ctx.beginPath();
+  ctx.moveTo(cx, midY);
+  ctx.lineTo(cx, bot);
+  ctx.stroke();
+
+  const hl = u => u === unknown ? '#fff067' : '#e8e8e8';
+  const bg = u => u === unknown ? '#fff06722' : 'transparent';
+
+  // S — top
+  ctx.fillStyle = bg('S');
+  ctx.fillRect(cx-30, top, 60, midY-top);
+  ctx.font = 'bold 24px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = hl('S');
+  ctx.fillText('S', cx, (top+midY)/2+8);
+
+  // D — bottom left
+  ctx.fillStyle = bg('D');
+  ctx.fillRect(cx-triW/2+2, midY+2, triW/2-4, bot-midY-4);
+  ctx.fillStyle = hl('D');
+  ctx.fillText('D', cx - triW/4, (midY+bot)/2+8);
+
+  // T — bottom right
+  ctx.fillStyle = bg('T');
+  ctx.fillRect(cx+2, midY+2, triW/2-4, bot-midY-4);
+  ctx.fillStyle = hl('T');
+  ctx.fillText('T', cx + triW/4, (midY+bot)/2+8);
+
+  // Cover formula (below)
+  ctx.fillStyle = '#888780';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('D = S × T', cx, H-2);
+}
+
+function solve() {
+  const S = parseFloat(document.getElementById('inS').value);
+  const D = parseFloat(document.getElementById('inD').value);
+  const T = parseFloat(document.getElementById('inT').value);
+  const res = document.getElementById('sdtResult');
+  res.style.display = '';
+
+  let answer, formula, steps;
+  if (unknown === 'S') {
+    if (isNaN(D)||isNaN(T)||T===0) { document.getElementById('resBig').textContent='Enter D and T'; return; }
+    answer = D/T;
+    formula = 'S = D ÷ T';
+    steps = `S = ${D} ÷ ${T} = <strong>${answer.toFixed(4).replace(/\.?0+$/,'')}</strong> units/h`;
+  } else if (unknown === 'D') {
+    if (isNaN(S)||isNaN(T)) { document.getElementById('resBig').textContent='Enter S and T'; return; }
+    answer = S*T;
+    formula = 'D = S × T';
+    steps = `D = ${S} × ${T} = <strong>${answer.toFixed(4).replace(/\.?0+$/,'')}</strong> km`;
+  } else {
+    if (isNaN(D)||isNaN(S)||S===0) { document.getElementById('resBig').textContent='Enter D and S'; return; }
+    answer = D/S;
+    formula = 'T = D ÷ S';
+    const h = Math.floor(answer);
+    const m = Math.round((answer-h)*60);
+    steps = `T = ${D} ÷ ${S} = <strong>${answer.toFixed(4).replace(/\.?0+$/,'')}</strong> hours = <strong>${h}h ${m}min</strong>`;
+  }
+  document.getElementById('resFormula').textContent = formula;
+  document.getElementById('resBig').textContent = answer.toFixed(4).replace(/\.?0+$/,'');
+  document.getElementById('resSteps').innerHTML = steps;
+}
+
+function updateOther() {
+  const dMass = parseFloat(document.getElementById('dMass').value)||0;
+  const dVol = parseFloat(document.getElementById('dVol').value)||1;
+  document.getElementById('dResult').textContent = `Density = ${dMass}/${dVol} = ${(dMass/dVol).toFixed(4).replace(/\.?0+$/,'')} g/cm³`;
+
+  const pF = parseFloat(document.getElementById('pForce').value)||0;
+  const pA = parseFloat(document.getElementById('pArea').value)||1;
+  document.getElementById('pResult').textContent = `Pressure = ${pF}/${pA} = ${(pF/pA).toFixed(4).replace(/\.?0+$/,'')} Pa`;
+
+  const fV = parseFloat(document.getElementById('fVol').value)||0;
+  const fT = parseFloat(document.getElementById('fTime').value)||1;
+  document.getElementById('fResult').textContent = `Flow rate = ${fV}/${fT} = ${(fV/fT).toFixed(4).replace(/\.?0+$/,'')} litres/min`;
+
+  const pE = parseFloat(document.getElementById('payEarn').value)||0;
+  const pH = parseFloat(document.getElementById('payHours').value)||1;
+  document.getElementById('payResult').textContent = `Hourly rate = $${pE}/${pH} = $${(pE/pH).toFixed(2)} per hour`;
+}
+
+document.getElementById('modeOther')?.querySelectorAll('input')?.forEach(i => i.addEventListener('input', updateOther));
+
+selectUnknown('S');
+drawTriangle();
+</script>
+<div style="width:100%;max-width:540px;padding:8px 4px 14px;font-size:11px;color:#0fee89;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  Cambridge tip: <strong style="font-weight:600">cover the quantity you want — what remains is the formula</strong>.
+  Cover S → D/T. Cover D → S×T. Cover T → D/S. Always check units — convert hours to minutes if needed (× 60).
+</div>
+</body>
+</html>

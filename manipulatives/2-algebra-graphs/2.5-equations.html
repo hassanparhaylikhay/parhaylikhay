@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Solving Linear Equations</title>
+  <meta property="og:title" content="Solving Linear Equations"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="520"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .equation-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+    }
+    canvas { display: block; cursor: default; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 10px 4px;
+      border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 80px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #sl-a::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-b::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    #sl-c::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Solving Linear Equations</div>
+  <div class="instruction">
+    Drag the <b style="color:#ff822c">orange dot</b> to try x values and watch the scale tip.
+    Balance it — then the sliders tell you what <b style="color:#00abfa">a</b>x + <b style="color:#fff067">b</b> = <b style="color:#0fee89">c</b> means.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="300"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-a">a =  3.00</div>
+    <input type="range" id="sl-a" min="-6" max="6" step="0.01" value="3"/>
+    <div class="slider-bounds">−6 … 6</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-b">b =  2.00</div>
+    <input type="range" id="sl-b" min="-10" max="10" step="0.01" value="2"/>
+    <div class="slider-bounds">−10 … 10</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#0fee89" id="lbl-c">c = 14.00</div>
+    <input type="range" id="sl-c" min="-20" max="20" step="0.01" value="14"/>
+    <div class="slider-bounds">−20 … 20</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>show each algebraic step on its own line</strong> —
+    collect x terms first, then divide. Each step earns a method mark; writing only the answer may score just 1 of 3.
+  </div>
+</div>
+
+<script>
+  var a=3, b=2, c=14;
+  var aD=3, bD=2, cD=14;   // spring display values
+  var xD=4.0, xT=4.0;      // probe x: displayed vs target
+  var tiltD=0.0;            // spring tilt angle (rad)
+  var SPRING=0.14;
+  var dragging=false, hovering=false;
+  var HIT=18;
+
+  // Canvas
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=300;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  // Balance geometry
+  var PIV_Y=88, ARM=178, STR=56, PAN_W=36;
+  // Number line geometry
+  var LINE_Y=258, LINE_PAD=52, LINE_MIN=-10, LINE_MAX=10;
+
+  function toLineX(v) { return LINE_PAD + (v-LINE_MIN)/(LINE_MAX-LINE_MIN)*(W-2*LINE_PAD); }
+  function fromLineX(px) { return LINE_MIN + (px-LINE_PAD)/(W-2*LINE_PAD)*(LINE_MAX-LINE_MIN); }
+  function dotCanvasPos() { return {x:toLineX(Math.max(LINE_MIN,Math.min(LINE_MAX,xD))), y:LINE_Y}; }
+
+  function solve(av, bv, cv) {
+    if (Math.abs(av)<0.005) return null;
+    return (cv-bv)/av;
+  }
+
+  function fmt(v) {
+    var r=Math.round(v*100)/100;
+    if (Math.abs(r)<0.005) return '0';
+    return r%1===0 ? String(r) : r.toFixed(2);
+  }
+
+  function getPos(e) {
+    var r=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return {x:(cx-r.left)*W/r.width, y:(cy-r.top)*H/r.height};
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var cx=W/2;
+    var θ=tiltD;
+    var lx=cx-ARM*Math.cos(θ), ly=PIV_Y+ARM*Math.sin(θ);
+    var rx=cx+ARM*Math.cos(θ), ry=PIV_Y-ARM*Math.sin(θ);
+    var lpY=ly+STR, rpY=ry+STR;
+
+    var lhsVal=aD*xD+bD;
+    var balanced=Math.abs(lhsVal-cD)<0.15;
+
+    // ── Fulcrum ──────────────────────────────────────────────────────
+    ctx.fillStyle='#1a2e40';
+    ctx.beginPath(); ctx.moveTo(cx-13,PIV_Y+6); ctx.lineTo(cx+13,PIV_Y+6); ctx.lineTo(cx,PIV_Y-7); ctx.closePath(); ctx.fill();
+    ctx.fillRect(cx-22,PIV_Y+6,44,11);
+
+    // ── Beam glow when balanced ──────────────────────────────────────
+    if (balanced) {
+      ctx.strokeStyle='#0fee8938'; ctx.lineWidth=18; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(rx,ry); ctx.stroke();
+    }
+
+    // ── Beam ────────────────────────────────────────────────────────
+    ctx.strokeStyle=balanced?'#0fee89':'#3a5060'; ctx.lineWidth=5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(rx,ry); ctx.stroke();
+
+    // Pivot dot
+    ctx.fillStyle='#0d1f30'; ctx.beginPath(); ctx.arc(cx,PIV_Y,6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#2a4050'; ctx.beginPath(); ctx.arc(cx,PIV_Y,4,0,Math.PI*2); ctx.fill();
+
+    // ── Strings ──────────────────────────────────────────────────────
+    ctx.strokeStyle='#1a2e40'; ctx.lineWidth=1.5; ctx.lineCap='square';
+    ctx.beginPath();
+    ctx.moveTo(lx-PAN_W+5,ly); ctx.lineTo(lx-PAN_W+5,lpY);
+    ctx.moveTo(lx+PAN_W-5,ly); ctx.lineTo(lx+PAN_W-5,lpY);
+    ctx.moveTo(rx-PAN_W+5,ry); ctx.lineTo(rx-PAN_W+5,rpY);
+    ctx.moveTo(rx+PAN_W-5,ry); ctx.lineTo(rx+PAN_W-5,rpY);
+    ctx.stroke();
+
+    // ── Left pan ─────────────────────────────────────────────────────
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=2.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(lx-PAN_W,lpY); ctx.lineTo(lx+PAN_W,lpY); ctx.stroke();
+
+    // LHS numeric value
+    ctx.fillStyle='#00abfa'; ctx.font='bold 17px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText(fmt(lhsVal), lx, lpY-6);
+
+    // LHS formula
+    var aCoeff=(Math.abs(aD-1)<0.01)?'':(Math.abs(aD+1)<0.01)?'−':fmt(aD);
+    ctx.fillStyle='#2a5066'; ctx.font='11px Courier New, monospace';
+    ctx.textBaseline='top';
+    ctx.fillText(aCoeff+'x'+(bD>=0?' + ':' − ')+fmt(Math.abs(bD)), lx, lpY+5);
+
+    // ── Right pan ────────────────────────────────────────────────────
+    ctx.strokeStyle='#0fee89'; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(rx-PAN_W,rpY); ctx.lineTo(rx+PAN_W,rpY); ctx.stroke();
+
+    ctx.fillStyle='#0fee89'; ctx.font='bold 17px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText(fmt(cD), rx, rpY-6);
+
+    ctx.fillStyle='#1e5030'; ctx.font='11px Courier New, monospace';
+    ctx.textBaseline='top';
+    ctx.fillText('= c', rx, rpY+5);
+
+    // ── Balanced badge ───────────────────────────────────────────────
+    if (balanced) {
+      ctx.fillStyle='#0fee89'; ctx.font='bold 12px sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('✓  balanced', cx, PIV_Y-28);
+    }
+
+    // ── Number line ──────────────────────────────────────────────────
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(LINE_PAD,LINE_Y); ctx.lineTo(W-LINE_PAD,LINE_Y); ctx.stroke();
+
+    ctx.lineWidth=1;
+    ctx.fillStyle='#4a6870'; ctx.font='10px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for (var i=LINE_MIN; i<=LINE_MAX; i+=2) {
+      var tx=toLineX(i);
+      ctx.strokeStyle='#1e2e3e';
+      ctx.beginPath(); ctx.moveTo(tx,LINE_Y-4); ctx.lineTo(tx,LINE_Y+4); ctx.stroke();
+      ctx.fillText(String(i), tx, LINE_Y+6);
+    }
+
+    // Gold solution marker
+    var sol=solve(aD,bD,cD);
+    if (sol!==null) {
+      var sx=toLineX(Math.max(LINE_MIN,Math.min(LINE_MAX,sol)));
+      ctx.fillStyle='#fff067bb';
+      ctx.beginPath(); ctx.moveTo(sx,LINE_Y-15); ctx.lineTo(sx-5,LINE_Y-6); ctx.lineTo(sx+5,LINE_Y-6); ctx.closePath(); ctx.fill();
+    }
+
+    // Draggable x dot (orange)
+    var dotX=toLineX(Math.max(LINE_MIN,Math.min(LINE_MAX,xD)));
+    var r2=dragging?9:(hovering?8:6);
+    var gr2=dragging?22:(hovering?18:14);
+    var grad=ctx.createRadialGradient(dotX,LINE_Y,0,dotX,LINE_Y,gr2);
+    grad.addColorStop(0,'rgba(255,130,44,0.30)'); grad.addColorStop(1,'rgba(255,130,44,0)');
+    ctx.fillStyle=grad;
+    ctx.beginPath(); ctx.arc(dotX,LINE_Y,gr2,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=dragging?'#ffaa60':'#ff822c';
+    ctx.beginPath(); ctx.arc(dotX,LINE_Y,r2,0,Math.PI*2); ctx.fill();
+
+    // x label
+    ctx.fillStyle='#ff822c'; ctx.font='bold 12px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText('x = '+fmt(xD), dotX, LINE_Y-19);
+  }
+
+  function buildEq() {
+    if (Math.abs(a)<0.005) return '0·x + '+fmt(b)+' = '+fmt(c)+'   →   no solution (a = 0)';
+    var sol=(c-b)/a;
+    var aStr=(Math.abs(a-1)<0.01)?'':(Math.abs(a+1)<0.01)?'−':fmt(a);
+    var bPart=(b>=0)?' + '+fmt(b):' − '+fmt(Math.abs(b));
+    return aStr+'x'+bPart+' = '+fmt(c)+'   →   '+aStr+'x = '+fmt(c-b)+'   →   x = '+fmt(sol);
+  }
+
+  function tick() {
+    aD+=(a-aD)*SPRING; bD+=(b-bD)*SPRING; cD+=(c-cD)*SPRING;
+
+    var sol=solve(aD,bD,cD);
+    if (!dragging && sol!==null) xT=sol;
+    xD+=(xT-xD)*(dragging?0.85:SPRING);
+
+    // Tilt proportional to imbalance
+    var imb=(aD*xD+bD)-cD;
+    var tiltTarget=Math.max(-0.28,Math.min(0.28, imb*0.034));
+    tiltD+=(tiltTarget-tiltD)*SPRING;
+
+    draw();
+    document.getElementById('eq-display').textContent=buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  // Mouse drag
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e), dp=dotCanvasPos();
+    var dx=p.x-dp.x, dy=p.y-dp.y;
+    if (dx*dx+dy*dy<HIT*HIT){dragging=true; e.preventDefault();}
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if (dragging){
+      xT=Math.max(LINE_MIN+0.05,Math.min(LINE_MAX-0.05,fromLineX(p.x)));
+      xD=xT;
+    } else {
+      var dp=dotCanvasPos(); var dx=p.x-dp.x,dy=p.y-dp.y;
+      hovering=(dx*dx+dy*dy<HIT*HIT);
+      canvas.style.cursor=hovering?'grab':'default';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){dragging=false; canvas.style.cursor=hovering?'grab':'default';});
+  canvas.addEventListener('mouseleave',function(){dragging=false; hovering=false;});
+
+  // Touch drag
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e), dp=dotCanvasPos(); var dx=p.x-dp.x,dy=p.y-dp.y;
+    if(dx*dx+dy*dy<HIT*HIT){dragging=true;e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(!dragging)return; e.preventDefault();
+    var p=getPos(e);
+    xT=Math.max(LINE_MIN+0.05,Math.min(LINE_MAX-0.05,fromLineX(p.x)));
+    xD=xT;
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){dragging=false;});
+
+  // Sliders
+  [
+    {id:'a',ref:function(v){a=v;},letter:'a',color:'#00abfa'},
+    {id:'b',ref:function(v){b=v;},letter:'b',color:'#fff067'},
+    {id:'c',ref:function(v){c=v;},letter:'c',color:'#0fee89'},
+  ].forEach(function(s){
+    document.getElementById('sl-'+s.id).oninput=function(){
+      var v=parseFloat(this.value); s.ref(v);
+      document.getElementById('lbl-'+s.id).textContent=s.letter+' = '+v.toFixed(2);
+      document.getElementById('lbl-'+s.id).style.color=s.color;
+    };
+  });
+
+  tick();
+</script>
+</body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Graph Sketching</title>
+  <meta property="og:title" content="Graph Sketching"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="620"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .curve-row {
+      width: 560px; display: flex; gap: 0;
+      background: #111f2c; border: 1px solid #1a2535;
+      border-radius: 6px; overflow: hidden; margin: 6px 0;
+    }
+    .cv-btn {
+      flex: 1; padding: 8px 0; text-align: center; font-size: 12px;
+      cursor: pointer; color: #6a8898; background: none; border: none;
+      font-family: 'Courier New', monospace; transition: all 0.15s;
+      border-right: 1px solid #1a2535;
+    }
+    .cv-btn:last-child { border-right: none; }
+    .cv-btn.active { background: #00abfa22; color: #00abfa; font-weight: 700; }
+    .equation-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+    }
+    canvas { display: block; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 10px 4px;
+      border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 80px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Graph Sketching</div>
+  <div class="instruction">
+    Select a curve type and move the sliders — key features are labelled live.
+    The curve morphs smoothly as values change.
+  </div>
+</div>
+
+<div class="curve-row">
+  <button class="cv-btn" id="btn-linear" onclick="setCurve('linear')">y = mx+c</button>
+  <button class="cv-btn active" id="btn-quad" onclick="setCurve('quad')">y = ax²+c</button>
+  <button class="cv-btn" id="btn-recip" onclick="setCurve('recip')">y = k/x</button>
+  <button class="cv-btn" id="btn-exp" onclick="setCurve('exp')">y = aˣ</button>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="360"></canvas>
+
+<div class="sliders" id="slider-section"></div>
+
+<div class="footer">
+  <div class="tip" id="cambridge-tip"></div>
+</div>
+
+<script>
+  var curveType='quad';
+  var p_val=1, q_val=-2;
+  var pD=1, qD=-2;   // spring display values
+  var SPRING=0.13;
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=360;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var X_MIN=-6, X_MAX=6, Y_MIN=-6, Y_MAX=6;
+
+  function toCanvas(mx,my){
+    return{x:(mx-X_MIN)/(X_MAX-X_MIN)*W, y:(Y_MAX-my)/(Y_MAX-Y_MIN)*H};
+  }
+
+  var CURVES={
+    linear:{
+      label:'y = mx+c',
+      pLabel:'m', pMin:-4, pMax:4, pStep:0.01, pDef:2,
+      qLabel:'c', qMin:-5, qMax:5, qStep:0.01, qDef:-3,
+      fn:function(x,p,q){return p*x+q;},
+      eqFn:function(p,q){return 'y = '+fmt(p)+'x'+(q>=0?' + ':' − ')+fmt(Math.abs(q));},
+      tip:'Cambridge tip: <strong>state the gradient and y-intercept explicitly</strong>. For a sketch, mark (0, c) and show the correct slope direction.',
+    },
+    quad:{
+      label:'y = ax²+c',
+      pLabel:'a', pMin:-3, pMax:3, pStep:0.01, pDef:1,
+      qLabel:'c', qMin:-5, qMax:5, qStep:0.01, qDef:-2,
+      fn:function(x,p,q){return p*x*x+q;},
+      eqFn:function(p,q){
+        var vx='vertex (0, '+fmt(q)+'),  opens '+(p>0?'up ↑':p<0?'down ↓':'flat');
+        return 'y = '+fmt(p)+'x²'+(q>=0?' + ':' − ')+fmt(Math.abs(q))+'   |   '+vx;
+      },
+      tip:'Cambridge tip: <strong>always state the y-intercept (0, c) and the vertex</strong>. If a > 0 it opens up (minimum); if a < 0 it opens down (maximum).',
+    },
+    recip:{
+      label:'y = k/x',
+      pLabel:'k', pMin:-8, pMax:8, pStep:0.01, pDef:4,
+      qLabel:null, qMin:0, qMax:0, qStep:1, qDef:0,
+      fn:function(x,p,q){return x===0?Infinity:p/x;},
+      eqFn:function(p,q){return 'y = '+fmt(p)+'/x   |   asymptotes: x = 0,  y = 0';},
+      tip:'Cambridge tip: <strong>draw both branches and label both asymptotes x = 0 and y = 0</strong>. The curve never crosses either axis.',
+    },
+    exp:{
+      label:'y = aˣ',
+      pLabel:'a', pMin:1.2, pMax:4, pStep:0.01, pDef:2,
+      qLabel:null, qMin:0, qMax:0, qStep:1, qDef:0,
+      fn:function(x,p,q){return Math.pow(p,x);},
+      eqFn:function(p,q){return 'y = '+fmt(p)+'ˣ   |   passes through (0, 1) always   |   asymptote: y = 0';},
+      tip:'Cambridge tip: <strong>always passes through (0, 1)</strong> because a⁰ = 1 — label this point. Show the asymptote y = 0.',
+    },
+  };
+
+  function fmt(v){
+    var r=Math.round(v*100)/100;
+    if(Math.abs(r)<0.005)return'0';
+    return r%1===0?String(r):r.toFixed(2);
+  }
+
+  function setCurve(t){
+    curveType=t;
+    var cfg=CURVES[t];
+    p_val=cfg.pDef; q_val=cfg.qDef;
+    pD=p_val; qD=q_val;
+    Object.keys(CURVES).forEach(function(k){
+      document.getElementById('btn-'+k).classList.toggle('active',k===t);
+    });
+    buildSliders(cfg);
+  }
+
+  function buildSliders(cfg){
+    var sec=document.getElementById('slider-section');
+    sec.innerHTML='';
+    function addRow(id,label,min,max,step,val,color){
+      if(!label)return;
+      if(min===max)return;
+      var row=document.createElement('div'); row.className='slider-row';
+      row.innerHTML=
+        '<div class="slider-label" style="color:'+color+'" id="lbl-'+id+'">'+
+        label+' = '+val.toFixed(2)+'</div>'+
+        '<input type="range" id="sl-'+id+'" min="'+min+'" max="'+max+
+        '" step="'+step+'" value="'+val+'"/>'+
+        '<div class="slider-bounds" style="color:#3a4a5a;font-size:11px;width:46px;text-align:right;flex-shrink:0;">'+
+        min+' … '+max+'</div>';
+      sec.appendChild(row);
+      var s=document.createElement('style');
+      s.textContent='#sl-'+id+'::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:'+color+';cursor:pointer;}';
+      document.head.appendChild(s);
+      document.getElementById('sl-'+id).oninput=function(){
+        var v=parseFloat(this.value);
+        if(id==='p')p_val=v; else q_val=v;
+        document.getElementById('lbl-'+id).textContent=label+' = '+v.toFixed(2);
+      };
+    }
+    addRow('p',cfg.pLabel,cfg.pMin,cfg.pMax,cfg.pStep,cfg.pDef,'#00abfa');
+    addRow('q',cfg.qLabel,cfg.qMin,cfg.qMax,cfg.qStep,cfg.qDef,'#fff067');
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    // Grid (batched)
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var ky=Y_MIN;ky<=Y_MAX;ky++){
+      ctx.moveTo(toCanvas(X_MIN,ky).x,toCanvas(X_MIN,ky).y);
+      ctx.lineTo(toCanvas(X_MAX,ky).x,toCanvas(X_MAX,ky).y);
+    }
+    for(var kx=X_MIN;kx<=X_MAX;kx++){
+      ctx.moveTo(toCanvas(kx,Y_MIN).x,toCanvas(kx,Y_MIN).y);
+      ctx.lineTo(toCanvas(kx,Y_MAX).x,toCanvas(kx,Y_MAX).y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    var ax=[toCanvas(X_MIN,0),toCanvas(X_MAX,0)];
+    ctx.beginPath(); ctx.moveTo(ax[0].x,ax[0].y); ctx.lineTo(ax[1].x,ax[1].y); ctx.stroke();
+    var ay=[toCanvas(0,Y_MIN),toCanvas(0,Y_MAX)];
+    ctx.beginPath(); ctx.moveTo(ay[0].x,ay[0].y); ctx.lineTo(ay[1].x,ay[1].y); ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var kx=X_MIN+1;kx<X_MAX;kx++){
+      if(kx===0)continue;
+      var p=toCanvas(kx,0); ctx.fillText(kx,p.x,p.y+4);
+    }
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    for(var ky=Y_MIN+1;ky<Y_MAX;ky++){
+      if(ky===0)continue;
+      var p=toCanvas(0,ky); ctx.fillText(ky,p.x+5,p.y);
+    }
+
+    var cfg=CURVES[curveType];
+
+    // Curve (using spring display values pD, qD)
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=2.5; ctx.lineJoin='round';
+    ctx.beginPath();
+    var pen=false;
+    for(var i=0;i<=400;i++){
+      var mx=X_MIN+i*(X_MAX-X_MIN)/400;
+      var my=cfg.fn(mx,pD,qD);
+      if(!isFinite(my)||my<Y_MIN-2||my>Y_MAX+2){pen=false;continue;}
+      var cp=toCanvas(mx,my);
+      if(!pen){ctx.moveTo(cp.x,cp.y);pen=true;}else ctx.lineTo(cp.x,cp.y);
+    }
+    ctx.stroke();
+
+    // Key feature dots
+    function dot(mx,my,label,side){
+      if(my<Y_MIN||my>Y_MAX||mx<X_MIN||mx>X_MAX)return;
+      var cp=toCanvas(mx,my);
+      var grad=ctx.createRadialGradient(cp.x,cp.y,0,cp.x,cp.y,12);
+      grad.addColorStop(0,'rgba(15,238,137,0.18)'); grad.addColorStop(1,'rgba(15,238,137,0)');
+      ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(cp.x,cp.y,12,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#0fee89'; ctx.beginPath(); ctx.arc(cp.x,cp.y,5,0,Math.PI*2); ctx.fill();
+      ctx.font='bold 11px Courier New, monospace'; ctx.fillStyle='#0fee89';
+      if(side==='right'){ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(label,cp.x+10,cp.y);}
+      else if(side==='above'){ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(label,cp.x,cp.y-8);}
+      else{ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(label,cp.x-10,cp.y);}
+    }
+
+    function asymptote(horizontal,val){
+      ctx.strokeStyle='#ff467044'; ctx.lineWidth=1; ctx.setLineDash([6,4]);
+      ctx.beginPath();
+      if(horizontal){
+        ctx.moveTo(toCanvas(X_MIN,val).x,toCanvas(X_MIN,val).y);
+        ctx.lineTo(toCanvas(X_MAX,val).x,toCanvas(X_MAX,val).y);
+      } else {
+        ctx.moveTo(toCanvas(val,Y_MIN).x,toCanvas(val,Y_MIN).y);
+        ctx.lineTo(toCanvas(val,Y_MAX).x,toCanvas(val,Y_MAX).y);
+      }
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle='#ff4670'; ctx.font='11px Courier New, monospace';
+      if(horizontal){
+        ctx.textAlign='left'; ctx.textBaseline='bottom';
+        ctx.fillText('y='+val+' (asymptote)',toCanvas(X_MIN+0.3,val).x,toCanvas(X_MIN+0.3,val).y-3);
+      } else {
+        ctx.textAlign='left'; ctx.textBaseline='top';
+        ctx.fillText('x='+val,toCanvas(val,Y_MAX-0.4).x+4,toCanvas(val,Y_MAX-0.4).y);
+      }
+    }
+
+    if(curveType==='linear'){
+      dot(0,qD,'(0, '+fmt(qD)+')',qD>0?'right':'right');
+      if(Math.abs(pD)>0.005){
+        var xInt=-qD/pD;
+        if(xInt>=X_MIN&&xInt<=X_MAX) dot(xInt,0,'('+fmt(xInt)+', 0)','above');
+      }
+    }
+    if(curveType==='quad'){
+      dot(0,qD,'vertex (0, '+fmt(qD)+')',pD>0?'right':'right');
+      if(Math.abs(pD)>0.005&&(-qD/pD)>=0){
+        var r=Math.sqrt(-qD/pD);
+        if(r>0.05){dot(r,0,'('+fmt(r)+',0)','above'); dot(-r,0,'('+fmt(-r)+',0)','above');}
+        else dot(0,0,'(0,0)','right');
+      }
+    }
+    if(curveType==='recip'){asymptote(true,0); asymptote(false,0);}
+    if(curveType==='exp'){dot(0,1,'(0, 1)','right'); asymptote(true,0);}
+  }
+
+  function buildEqBar(){
+    return CURVES[curveType].eqFn(p_val,q_val);
+  }
+
+  function tick(){
+    pD+=(p_val-pD)*SPRING;
+    qD+=(q_val-qD)*SPRING;
+    draw();
+    document.getElementById('eq-display').textContent=buildEqBar();
+    document.getElementById('cambridge-tip').innerHTML=CURVES[curveType].tip;
+    requestAnimationFrame(tick);
+  }
+
+  setCurve('quad');
+  tick();
+</script>
+</body>
+</html>

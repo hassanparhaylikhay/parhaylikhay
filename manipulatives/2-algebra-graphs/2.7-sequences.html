@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Arithmetic Sequences</title>
+  <meta property="og:title" content="Arithmetic Sequences"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="520"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .equation-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+    }
+    canvas { display: block; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 10px 4px;
+      border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 80px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #sl-a::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-d::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Arithmetic Sequences</div>
+  <div class="instruction">
+    Set first term <b style="color:#00abfa">a</b> and common difference <b style="color:#fff067">d</b> —
+    each bar grows or shrinks smoothly as the sequence changes shape
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="300"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-a">a =  3.00</div>
+    <input type="range" id="sl-a" min="-10" max="20" step="0.01" value="3"/>
+    <div class="slider-bounds">−10 … 20</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-d">d =  4.00</div>
+    <input type="range" id="sl-d" min="-8" max="8" step="0.01" value="4"/>
+    <div class="slider-bounds">−8 … 8</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>nth term = a + (n−1)d = dn + (a−d)</strong> —
+    the coefficient of n is always d. Write the answer in the form pn + q.
+  </div>
+</div>
+
+<script>
+  var a_val=3, d_val=4;
+  var N=10;
+  var SPRING=0.13;
+
+  // Spring-animated bar heights (display values)
+  var barD=[];
+  for(var i=0;i<N;i++) barD.push(a_val+(i)*d_val);
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=300;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  function term(n){ return a_val+(n-1)*d_val; }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var maxAbs=0;
+    for(var i=0;i<N;i++) maxAbs=Math.max(maxAbs,Math.abs(barD[i]));
+    maxAbs=Math.max(1,maxAbs)*1.18;
+
+    var hasNeg=false;
+    for(var i=0;i<N;i++) if(barD[i]<0) hasNeg=true;
+    var pad={l:32, r:12, t:42, b:hasNeg?72:40};
+    var chartH=H-pad.t-pad.b;
+
+    var yMax=maxAbs, yMin=hasNeg?-maxAbs:0;
+    if(yMax===yMin){yMax+=1;}
+    var baselineY=pad.t+(yMax/(yMax-yMin))*chartH;
+    var toY=function(v){return pad.t+(yMax-v)/(yMax-yMin)*chartH;};
+
+    // Baseline
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(pad.l,baselineY); ctx.lineTo(W-pad.r,baselineY); ctx.stroke();
+
+    var bw=(W-pad.l-pad.r)/N;
+    var barW=bw*0.58;
+    var barGap=bw*0.21;
+
+    // Bars
+    for(var i=0;i<N;i++){
+      var t=barD[i];
+      var bx=pad.l+i*bw+barGap;
+      var by=toY(t);
+      var bh=Math.abs(by-baselineY);
+      var topY=t>=0?by:baselineY;
+
+      ctx.fillStyle=t>=0?'#00abfa44':'#ff467044';
+      ctx.fillRect(bx,topY,barW,bh);
+      ctx.strokeStyle=t>=0?'#00abfa':'#ff4670'; ctx.lineWidth=1.5;
+      ctx.strokeRect(bx,topY,barW,bh);
+
+      // Value label
+      var tv=Math.round(t*100)/100;
+      ctx.fillStyle=t>=0?'#00abfa':'#ff4670';
+      ctx.font='bold 10px -apple-system, sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline=t>=0?'bottom':'top';
+      ctx.fillText(tv, bx+barW/2, t>=0?by-3:by+3);
+
+      // n label
+      ctx.fillStyle='#5a7888'; ctx.font='10px sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText('n='+(i+1), bx+barW/2, H-pad.b+6);
+    }
+
+    // Difference arrows
+    if(Math.abs(d_val)>0.005){
+      for(var i=0;i<N-1;i++){
+        var x1=pad.l+i*bw+barGap+barW;
+        var x2=pad.l+(i+1)*bw+barGap;
+        var midX=(x1+x2)/2;
+        var arrowY=pad.t-16;
+        ctx.strokeStyle='#fff06766'; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(x1,arrowY); ctx.lineTo(x2,arrowY); ctx.stroke();
+        var dStr=(d_val>=0?'+':'')+Math.round(d_val*100)/100;
+        ctx.fillStyle='#fff067'; ctx.font='10px Courier New, monospace';
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText(dStr, midX, arrowY-1);
+      }
+    }
+  }
+
+  function buildEqBar(){
+    var c=a_val-d_val;
+    var dStr=Math.round(d_val*100)/100;
+    var cStr=Math.abs(Math.round(c*100)/100);
+    var sign=c>=0?' + ':' − ';
+    var nth=dStr+'n'+sign+cStr;
+    var t10=Math.round((a_val+9*d_val)*100)/100;
+    return 'T(n) = '+nth+'   |   T(1) = '+Math.round(a_val*100)/100+',   d = '+dStr+',   T(10) = '+t10;
+  }
+
+  function tick(){
+    // Spring bar heights
+    for(var i=0;i<N;i++){
+      var target=a_val+i*d_val;
+      barD[i]+=(target-barD[i])*SPRING;
+    }
+    draw();
+    document.getElementById('eq-display').textContent=buildEqBar();
+    requestAnimationFrame(tick);
+  }
+
+  [
+    {id:'a',ref:function(v){a_val=v;},letter:'a',color:'#00abfa'},
+    {id:'d',ref:function(v){d_val=v;},letter:'d',color:'#fff067'},
+  ].forEach(function(s){
+    document.getElementById('sl-'+s.id).oninput=function(){
+      var v=parseFloat(this.value); s.ref(v);
+      document.getElementById('lbl-'+s.id).textContent=s.letter+' = '+v.toFixed(2);
+      document.getElementById('lbl-'+s.id).style.color=s.color;
+    };
+  });
+
+  tick();
+</script>
+</body>
+</html>

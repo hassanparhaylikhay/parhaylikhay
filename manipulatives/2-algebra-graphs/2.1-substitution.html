@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Substitution</title>
+  <meta property="og:title" content="Substitution"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="580"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .equation-bar {
+      width: 560px; padding: 5px 4px 6px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+    }
+    canvas { display: block; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 10px 4px;
+      border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label {
+      font-family: 'Courier New', monospace; font-size: 13px;
+      width: 80px; flex-shrink: 0;
+    }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #sl-a::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-b::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    #sl-c::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    #sl-x::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff822c; cursor:pointer; }
+    .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Substitution</div>
+  <div class="instruction">
+    Drag the <b style="color:#ff822c">orange dot</b> along the curve, or use the <b style="color:#ff822c">x</b> slider.
+    See f(x) = <b style="color:#00abfa">a</b>x² + <b style="color:#fff067">b</b>x + <b style="color:#0fee89">c</b> evaluated step by step.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display">f(x) = x²</div>
+
+<canvas id="graph" width="560" height="340"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-a">a = 1.00</div>
+    <input type="range" id="sl-a" min="-3" max="3" step="0.01" value="1"/>
+    <div class="slider-bounds">−3 … 3</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-b">b = 0.00</div>
+    <input type="range" id="sl-b" min="-5" max="5" step="0.01" value="0"/>
+    <div class="slider-bounds">−5 … 5</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#0fee89" id="lbl-c">c = 0.00</div>
+    <input type="range" id="sl-c" min="-5" max="5" step="0.01" value="0"/>
+    <div class="slider-bounds">−5 … 5</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#ff822c" id="lbl-x">x = 2.00</div>
+    <input type="range" id="sl-x" min="-5.5" max="5.5" step="0.01" value="2"/>
+    <div class="slider-bounds">−5 … 5</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>substitute the value, then simplify each term separately</strong> —
+    writing each step earns method marks even if the final arithmetic is wrong.
+  </div>
+</div>
+
+<script>
+  var a = 1, b = 0, c = 0, x = 2;
+  // Spring targets
+  var aT = 1, bT = 0, cT = 0, xT = 2;
+  var SPRING = 0.18;
+  var dragging = false, hovering = false;
+
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W = 560, H = 340;
+  var DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+
+  var X_MIN = -6, X_MAX = 6, Y_MIN = -6, Y_MAX = 6;
+
+  function toC(mx, my) {
+    return { x: (mx - X_MIN) / (X_MAX - X_MIN) * W,
+             y: (Y_MAX - my) / (Y_MAX - Y_MIN) * H };
+  }
+  function fromC(cx, cy) {
+    return { mx: X_MIN + cx / W * (X_MAX - X_MIN),
+             my: Y_MAX - cy / H * (Y_MAX - Y_MIN) };
+  }
+  function getPos(e) {
+    var r = canvas.getBoundingClientRect();
+    var cx = e.touches ? e.touches[0].clientX : e.clientX;
+    var cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (cx - r.left) * W / r.width, y: (cy - r.top) * H / r.height };
+  }
+  function dist2(p, q) { var dx=p.x-q.x,dy=p.y-q.y; return dx*dx+dy*dy; }
+  function f(xv) { return a * xv * xv + b * xv + c; }
+  function fmt2(v) { return (Math.round(v * 100) / 100).toFixed(2); }
+  function fmt(v) {
+    var r = Math.round(v * 100) / 100;
+    if (Math.abs(r) < 0.005) return '0';
+    return r % 1 === 0 ? String(r) : r.toFixed(2);
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d1216';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = '#111f2c'; ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    for (var ky = Y_MIN; ky <= Y_MAX; ky++) {
+      ctx.moveTo(toC(X_MIN,ky).x, toC(X_MIN,ky).y);
+      ctx.lineTo(toC(X_MAX,ky).x, toC(X_MAX,ky).y);
+    }
+    for (var kx = X_MIN; kx <= X_MAX; kx++) {
+      ctx.moveTo(toC(kx,Y_MIN).x, toC(kx,Y_MIN).y);
+      ctx.lineTo(toC(kx,Y_MAX).x, toC(kx,Y_MAX).y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle = '#3a5060'; ctx.lineWidth = 1.5;
+    var ax = [toC(X_MIN,0), toC(X_MAX,0)];
+    ctx.beginPath(); ctx.moveTo(ax[0].x,ax[0].y); ctx.lineTo(ax[1].x,ax[1].y); ctx.stroke();
+    var ay = [toC(0,Y_MIN), toC(0,Y_MAX)];
+    ctx.beginPath(); ctx.moveTo(ay[0].x,ay[0].y); ctx.lineTo(ay[1].x,ay[1].y); ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle = '#6a8898'; ctx.font = '11px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (var kx = X_MIN+1; kx < X_MAX; kx++) {
+      if (kx===0) continue;
+      var p = toC(kx,0); ctx.fillText(kx, p.x, p.y+4);
+    }
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    for (var ky = Y_MIN+1; ky < Y_MAX; ky++) {
+      if (ky===0) continue;
+      var p = toC(0,ky); ctx.fillText(ky, p.x+5, p.y);
+    }
+
+    // Parabola
+    ctx.strokeStyle = '#00abfa'; ctx.lineWidth = 2.5; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    var pen = false;
+    for (var i = 0; i <= 400; i++) {
+      var mx = X_MIN + i*(X_MAX-X_MIN)/400;
+      var my = f(mx);
+      if (my < Y_MIN-2 || my > Y_MAX+2) { pen=false; continue; }
+      var cp = toC(mx,my);
+      if (!pen) { ctx.moveTo(cp.x,cp.y); pen=true; } else ctx.lineTo(cp.x,cp.y);
+    }
+    ctx.stroke();
+
+    // Dashed vertical and horizontal guide lines
+    var fv = f(x);
+    var dotP = toC(x, fv);
+    var axisP = toC(x, 0);
+    var yAxisP = toC(0, fv);
+
+    ctx.strokeStyle = '#ff822c55'; ctx.lineWidth = 1; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(dotP.x, axisP.y); ctx.lineTo(dotP.x, dotP.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(yAxisP.x, dotP.y); ctx.lineTo(dotP.x, dotP.y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draggable dot
+    if (fv >= Y_MIN-1 && fv <= Y_MAX+1) {
+      var radius = dragging ? 9 : (hovering ? 8 : 6);
+      var glowR = dragging ? 22 : (hovering ? 18 : 14);
+      // Outer glow
+      var grad = ctx.createRadialGradient(dotP.x, dotP.y, 0, dotP.x, dotP.y, glowR);
+      grad.addColorStop(0, 'rgba(255,130,44,0.25)');
+      grad.addColorStop(1, 'rgba(255,130,44,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(dotP.x, dotP.y, glowR, 0, Math.PI*2); ctx.fill();
+      // Dot
+      ctx.fillStyle = dragging ? '#ffaa60' : '#ff822c';
+      ctx.beginPath(); ctx.arc(dotP.x, dotP.y, radius, 0, Math.PI*2); ctx.fill();
+
+      // Label
+      var lx = dotP.x + (dotP.x > W*0.75 ? -14 : 14);
+      var align = dotP.x > W*0.75 ? 'right' : 'left';
+      ctx.fillStyle = '#ff822c';
+      ctx.font = 'bold 12px Courier New, monospace';
+      ctx.textAlign = align; ctx.textBaseline = 'middle';
+      ctx.fillText('(' + fmt(x) + ', ' + fmt(fv) + ')', lx, dotP.y - 14);
+    }
+  }
+
+  function buildEq() {
+    var fv = f(x);
+    var ax2 = a*x*x, bx = b*x;
+    var aStr = fmt(a), bStr = fmt(b), cStr = fmt(c), xStr = fmt(x);
+    var ax2Str = fmt(ax2), bxStr = fmt(bx), fvStr = fmt(fv);
+    return 'f(' + xStr + ')  =  ' + aStr + '×' + xStr + '²  +  ' + bStr + '×' + xStr + '  +  ' + cStr +
+           '  =  ' + ax2Str + '  +  ' + bxStr + '  +  ' + cStr + '  =  ' + fvStr;
+  }
+
+  function syncLabel(id, letter, v, color) {
+    var el = document.getElementById('lbl-' + id);
+    el.textContent = letter + ' = ' + fmt2(v);
+    el.style.color = color;
+  }
+
+  // Animation loop
+  function tick() {
+    a += (aT - a) * SPRING;
+    b += (bT - b) * SPRING;
+    c += (cT - c) * SPRING;
+    x += (xT - x) * (dragging ? 0.9 : SPRING); // snap faster when dragging
+    draw();
+    document.getElementById('eq-display').textContent = buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  // Slider wiring
+  [
+    { id:'a', T: function(v){aT=v;}, letter:'a', color:'#00abfa' },
+    { id:'b', T: function(v){bT=v;}, letter:'b', color:'#fff067' },
+    { id:'c', T: function(v){cT=v;}, letter:'c', color:'#0fee89' },
+    { id:'x', T: function(v){xT=v;}, letter:'x', color:'#ff822c' },
+  ].forEach(function(s) {
+    document.getElementById('sl-'+s.id).oninput = function() {
+      var v = parseFloat(this.value);
+      s.T(v);
+      syncLabel(s.id, s.letter, v, s.color);
+    };
+  });
+
+  // Canvas drag
+  var HIT = 18;
+  function dotPos() { return toC(x, f(x)); }
+
+  canvas.addEventListener('mousedown', function(e) {
+    var p = getPos(e);
+    var dp = dotPos();
+    if (dist2(p, dp) < HIT*HIT) { dragging=true; e.preventDefault(); }
+  });
+  canvas.addEventListener('mousemove', function(e) {
+    var p = getPos(e);
+    if (dragging) {
+      xT = Math.max(X_MIN+0.1, Math.min(X_MAX-0.1, fromC(p.x, p.y).mx));
+      document.getElementById('sl-x').value = xT;
+      syncLabel('x', 'x', xT, '#ff822c');
+    } else {
+      var dp = dotPos();
+      hovering = dist2(p, dp) < HIT*HIT;
+      canvas.style.cursor = hovering ? 'grab' : 'default';
+    }
+  });
+  canvas.addEventListener('mouseup', function(){ dragging=false; canvas.style.cursor=hovering?'grab':'default'; });
+  canvas.addEventListener('mouseleave', function(){ dragging=false; hovering=false; });
+
+  canvas.addEventListener('touchstart', function(e) {
+    var p = getPos(e); var dp = dotPos();
+    if (dist2(p, dp) < HIT*HIT) { dragging=true; e.preventDefault(); }
+  }, {passive:false});
+  canvas.addEventListener('touchmove', function(e) {
+    if (!dragging) return; e.preventDefault();
+    var p = getPos(e);
+    xT = Math.max(X_MIN+0.1, Math.min(X_MAX-0.1, fromC(p.x, p.y).mx));
+    document.getElementById('sl-x').value = xT;
+    syncLabel('x', 'x', xT, '#ff822c');
+  }, {passive:false});
+  canvas.addEventListener('touchend', function(){ dragging=false; });
+
+  tick();
+</script>
+</body>
+</html>

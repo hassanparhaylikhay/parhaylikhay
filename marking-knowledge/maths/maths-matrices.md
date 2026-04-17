@@ -1,5 +1,8 @@
 # Cambridge 4024 O-Level Mathematics — Matrices Topic Knowledge
-**Sources:** s24_11, s24_12, w24_11, w24_12 (2024 series — new topic first appearing) + s23_12, w23_12 (2023 series)
+**Sources:** s24_11, s24_12, w24_11, w24_12 (2024 series) + s23_12, w23_12 (2023 series)
+
+> ⚠️ **Matrices were removed from the Cambridge 4024 syllabus for first examination from 2025.** This file is for historical reference only — applicable when marking 2023 or 2024 papers. Do not apply these patterns to 2025+ papers.
+
 ---
 
 ## 1. Matrix Operations — Addition, Subtraction, Multiplication

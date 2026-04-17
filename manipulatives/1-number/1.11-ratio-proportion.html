@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Ratio and Proportion</title>
+  <meta property="og:title" content="Ratio and Proportion"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="600"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .toggle-row {
+      width: 560px; display: flex; gap: 0;
+      background: #111f2c; border: 1px solid #1a2535;
+      border-radius: 6px; overflow: hidden; margin-bottom: 8px;
+    }
+    .tog-btn {
+      flex: 1; padding: 9px 0; text-align: center; font-size: 13px;
+      cursor: pointer; color: #6a8898; background: none; border: none;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .tog-btn.active { background: #00abfa22; color: #00abfa; font-weight: 600; }
+    .mode-panel { width: 560px; }
+    canvas { display: block; }
+    /* ratio inputs */
+    .input-block { background: #111f2c; border: 1px solid #1a2535; border-radius: 8px; padding: 12px 14px; margin: 0 4px 10px; }
+    .ib-label { font-size: 11px; color: #6a8898; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+    .ratio-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ratio-row input {
+      width: 68px; background: #0d1c28; border: 1px solid #1a3350;
+      border-radius: 5px; padding: 7px 9px; color: #f0f0ee; font-size: 0.95rem;
+      text-align: center; outline: none; font-family: inherit;
+    }
+    .ratio-row input:focus { border-color: #00abfa; }
+    .ratio-row span { color: #6a8898; font-size: 0.95rem; }
+    .mini-btn {
+      background: #0d1c28; border: 1px solid #1a3350; border-radius: 5px;
+      padding: 5px 11px; color: #6a8898; font-size: 12px; cursor: pointer;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .mini-btn:hover { border-color: #0fee89; color: #0fee89; }
+    .mini-btn.rm:hover { border-color: #ff4670; color: #ff4670; }
+    .parts-grid { display: flex; flex-wrap: wrap; gap: 10px; padding: 8px 4px; }
+    .part-card {
+      flex: 1; min-width: 80px;
+      background: #111f2c; border: 1px solid #1a2535; border-radius: 8px;
+      padding: 12px; text-align: center;
+    }
+    .part-card .plabel { font-size: 11px; color: #6a8898; margin-bottom: 4px; }
+    .part-card .pval  { font-size: 22px; font-weight: 800; }
+    .part-card .pfrac { font-size: 11px; color: #5a7888; margin-top: 3px; }
+    .step-box {
+      padding: 8px 4px 4px;
+      font-family: 'Courier New', monospace; font-size: 12px;
+      color: #b4b2a9; line-height: 1.7;
+    }
+    .step-box strong { color: #0fee89; font-weight: 600; }
+    /* scaling mode */
+    .scale-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+    .scale-row label { font-size: 12px; color: #6a8898; width: 110px; }
+    .scale-row input {
+      width: 100px; background: #0d1c28; border: 1px solid #1a3350; border-radius: 5px;
+      padding: 7px 10px; color: #f0f0ee; font-size: 13px; outline: none; font-family: inherit;
+    }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Ratio and Proportion</div>
+  <div class="instruction">
+    Split a total into a ratio — the bar animates smoothly as the ratio changes.
+    Switch to scaling/best-value for unit-price comparisons.
+  </div>
+</div>
+
+<div class="toggle-row">
+  <button class="tog-btn active" id="tab1" onclick="setMode(1)">Split by ratio</button>
+  <button class="tog-btn"        id="tab2" onclick="setMode(2)">Scaling / best value</button>
+</div>
+
+<!-- Mode 1 -->
+<div class="mode-panel" id="mode1">
+  <div class="input-block">
+    <div class="ib-label">Ratio parts (up to 4)</div>
+    <div class="ratio-row" id="ratioRow">
+      <input class="ratio-in" type="number" value="2" min="0.01" step="0.01"/>
+      <span>:</span>
+      <input class="ratio-in" type="number" value="3" min="0.01" step="0.01"/>
+      <span>:</span>
+      <input class="ratio-in" type="number" value="5" min="0.01" step="0.01"/>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="mini-btn" id="addPart">+ Add</button>
+      <button class="mini-btn rm" id="rmPart">− Remove</button>
+    </div>
+  </div>
+  <div class="input-block">
+    <div class="ib-label">Total amount</div>
+    <div class="ratio-row">
+      <input type="number" id="totalIn" value="200" min="0" step="any" style="width:120px"/>
+    </div>
+  </div>
+  <canvas id="barCanvas" width="560" height="80"></canvas>
+  <div class="parts-grid" id="partsGrid"></div>
+  <div class="step-box" id="stepBox"></div>
+</div>
+
+<!-- Mode 2 -->
+<div class="mode-panel" id="mode2" style="display:none">
+  <div style="padding:0 4px">
+    <div class="input-block">
+      <div class="ib-label">Item A</div>
+      <div class="scale-row"><label>Quantity</label><input type="number" id="qA" value="5" min="0.01" step="any"/></div>
+      <div class="scale-row"><label>Price ($)</label><input type="number" id="pA" value="3.50" min="0" step="0.01"/></div>
+    </div>
+    <div class="input-block">
+      <div class="ib-label">Item B</div>
+      <div class="scale-row"><label>Quantity</label><input type="number" id="qB" value="8" min="0.01" step="any"/></div>
+      <div class="scale-row"><label>Price ($)</label><input type="number" id="pB" value="5.20" min="0" step="0.01"/></div>
+    </div>
+    <div class="step-box" id="scaleResult"></div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>always simplify the ratio first — divide all parts by the HCF</strong>.
+    To share in a ratio, find "one part" by dividing the total by the sum of ratio parts, then multiply.
+    Best value: divide price by quantity — lower price per unit wins.
+  </div>
+</div>
+
+<script>
+  var COLORS=['#00abfa','#0fee89','#ff822c','#fff067'];
+  var activeMode=1;
+  var barWidthsD=[]; // spring display bar widths as fractions
+  var SPRING=0.13;
+
+  var canvas=document.getElementById('barCanvas');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=80;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  function setMode(m){
+    activeMode=m;
+    document.getElementById('tab1').classList.toggle('active',m===1);
+    document.getElementById('tab2').classList.toggle('active',m===2);
+    document.getElementById('mode1').style.display=m===1?'':'none';
+    document.getElementById('mode2').style.display=m===2?'':'none';
+    if(m===2) updateScale();
+  }
+
+  function gcd(a,b){return b?gcd(b,a%b):a;}
+  function gcdArr(arr){return arr.reduce(gcd);}
+
+  function getParts(){
+    return [...document.querySelectorAll('.ratio-in')].map(function(i){return Math.max(parseFloat(i.value)||1,0.001);});
+  }
+
+  function getTargetFracs(){
+    var parts=getParts();
+    var sum=parts.reduce(function(a,b){return a+b;},0);
+    return parts.map(function(p){return p/sum;});
+  }
+
+  function drawBar(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+    var parts=getParts();
+    var total=parseFloat(document.getElementById('totalIn').value)||0;
+    var sum=parts.reduce(function(a,b){return a+b;},0);
+    var BY=14, BH=36;
+    var x=0;
+    barWidthsD.forEach(function(frac,i){
+      var w=frac*W;
+      ctx.fillStyle=COLORS[i%COLORS.length]+'44';
+      ctx.fillRect(x,BY,w-2,BH);
+      ctx.strokeStyle=COLORS[i%COLORS.length]; ctx.lineWidth=1.5;
+      ctx.strokeRect(x,BY,w-2,BH);
+      if(w>30){
+        ctx.fillStyle='#0d1216';
+        ctx.font='bold 12px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(parts[i]||'',x+w/2,BY+BH/2);
+      }
+      // Value label
+      var val=(parts[i]/sum)*total;
+      ctx.fillStyle=COLORS[i%COLORS.length];
+      ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText(val.toFixed(val%1===0?0:2),x+w/2,BY+BH+5);
+      x+=w;
+    });
+  }
+
+  function updateCards(){
+    var parts=getParts();
+    var total=parseFloat(document.getElementById('totalIn').value)||0;
+    var sum=parts.reduce(function(a,b){return a+b;},0);
+    var values=parts.map(function(p){return(p/sum)*total;});
+    var grid=document.getElementById('partsGrid');
+    grid.innerHTML='';
+    parts.forEach(function(p,i){
+      var div=document.createElement('div');
+      div.className='part-card';
+      div.innerHTML='<div class="plabel">Part '+(i+1)+'</div>'+
+        '<div class="pval" style="color:'+COLORS[i%COLORS.length]+'">'+values[i].toFixed(values[i]%1===0?0:2)+'</div>'+
+        '<div class="pfrac">'+p+' / '+sum+' of total</div>';
+      grid.appendChild(div);
+    });
+    // Steps
+    var g=gcdArr(parts.map(function(p){return Math.round(p);}));
+    var simple=parts.map(function(p){return Math.round(p/g);}).join(' : ');
+    var perPart=total/sum;
+    document.getElementById('stepBox').innerHTML=
+      '<strong>Total parts:</strong> '+parts.join(' + ')+' = '+sum+'<br>'+
+      '<strong>Simplified ratio:</strong> '+simple+'<br>'+
+      '<strong>One part</strong> = '+total+' ÷ '+sum+' = <strong>'+perPart.toFixed(4).replace(/\.?0+$/,'')+'</strong><br>'+
+      parts.map(function(p,i){
+        return '<strong>Part '+(i+1)+':</strong> '+p+' × '+perPart.toFixed(2)+' = <strong>'+values[i].toFixed(values[i]%1===0?0:2)+'</strong>';
+      }).join('<br>');
+  }
+
+  function tick(){
+    var fracs=getTargetFracs();
+    // Ensure barWidthsD has correct length
+    while(barWidthsD.length<fracs.length) barWidthsD.push(fracs[barWidthsD.length]||1/fracs.length);
+    while(barWidthsD.length>fracs.length) barWidthsD.pop();
+    // Normalise display fracs so they sum to 1
+    var dsum=barWidthsD.reduce(function(a,b){return a+b;},0)||1;
+    for(var i=0;i<barWidthsD.length;i++){
+      barWidthsD[i]+=(fracs[i]-barWidthsD[i])*SPRING;
+    }
+    if(activeMode===1) drawBar();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('ratioRow').addEventListener('input',updateCards);
+  document.getElementById('totalIn').addEventListener('input',updateCards);
+
+  document.getElementById('addPart').onclick=function(){
+    if(document.querySelectorAll('.ratio-in').length>=4) return;
+    var row=document.getElementById('ratioRow');
+    var sep=document.createElement('span'); sep.textContent=':';
+    var inp=document.createElement('input');
+    inp.className='ratio-in'; inp.type='number'; inp.value='1'; inp.min='0.01'; inp.step='0.01';
+    inp.addEventListener('input',updateCards);
+    row.appendChild(sep); row.appendChild(inp);
+    updateCards();
+  };
+  document.getElementById('rmPart').onclick=function(){
+    var row=document.getElementById('ratioRow');
+    var inputs=row.querySelectorAll('.ratio-in');
+    if(inputs.length<=2) return;
+    row.removeChild(row.lastChild); // input
+    row.removeChild(row.lastChild); // colon
+    barWidthsD.pop();
+    updateCards();
+  };
+
+  function updateScale(){
+    var qA=parseFloat(document.getElementById('qA').value)||1;
+    var pA=parseFloat(document.getElementById('pA').value)||0;
+    var qB=parseFloat(document.getElementById('qB').value)||1;
+    var pB=parseFloat(document.getElementById('pB').value)||0;
+    var ppA=pA/qA, ppB=pB/qB;
+    var better=ppA<ppB?'A':ppB<ppA?'B':'equal';
+    document.getElementById('scaleResult').innerHTML=
+      'Item A: $'+pA+' ÷ '+qA+' = <strong>$'+ppA.toFixed(4).replace(/\.?0+$/,'')+'</strong> per unit<br>'+
+      'Item B: $'+pB+' ÷ '+qB+' = <strong>$'+ppB.toFixed(4).replace(/\.?0+$/,'')+'</strong> per unit<br>'+
+      (better==='equal'?'<strong style="color:#0fee89">Both items have equal value per unit.</strong>'
+      :'<strong style="color:#0fee89">Item '+better+' is better value</strong> (lower price per unit).');
+  }
+  ['qA','pA','qB','pB'].forEach(function(id){document.getElementById(id).addEventListener('input',updateScale);});
+
+  // Initialise
+  var initialFracs=getTargetFracs();
+  barWidthsD=initialFracs.slice();
+  updateCards();
+  tick();
+</script>
+</body>
+</html>

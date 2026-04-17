@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Limits of Accuracy</title>
+  <meta property="og:title" content="Limits of Accuracy"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="680"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    canvas { display: block; cursor: crosshair; }
+    .equation-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #fff067; min-height: 28px; line-height: 1.6; font-weight: 700;
+      text-align: center;
+    }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 10px 4px;
+      border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 80px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #sl-val::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    .slider-bounds { color: #3a4a5a; font-size: 11px; width: 52px; text-align: right; flex-shrink: 0; }
+    select {
+      flex: 1; background: #0d1c28; border: 1px solid #1a3350; border-radius: 5px;
+      padding: 7px 10px; color: #f0f0ee; font-size: 13px; outline: none; font-family: inherit;
+    }
+    .bounds-row {
+      width: 560px; display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; padding: 10px 4px;
+    }
+    .bound-card { background: #111f2c; border: 1px solid #1a2535; border-radius: 8px; padding: 12px 14px; }
+    .bc-label { font-size: 11px; color: #6a8898; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+    .bc-value { font-size: 22px; font-weight: 800; }
+    .bc-note { font-size: 11px; color: #5a7888; margin-top: 4px; }
+    .step-box {
+      width: 560px; padding: 8px 4px 4px;
+      font-family: 'Courier New', monospace; font-size: 12px;
+      color: #b4b2a9; line-height: 1.7;
+    }
+    .step-box strong { color: #00abfa; font-weight: 600; }
+    .calc-section {
+      width: 560px; padding: 8px 4px;
+      background: #111f2c; border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .calc-title { font-size: 12px; color: #00abfa; font-weight: 600; margin-bottom: 8px; }
+    .calc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .calc-label { font-size: 12px; color: #6a8898; width: 120px; flex-shrink: 0; }
+    input[type="number"] {
+      width: 100px; background: #0d1c28; border: 1px solid #1a3350; border-radius: 5px;
+      padding: 6px 10px; color: #f0f0ee; font-size: 12px; outline: none; font-family: inherit;
+    }
+    input[type="number"]:focus { border-color: #00abfa; }
+    select.small {
+      flex: none; width: 140px; padding: 6px 8px; font-size: 12px;
+    }
+    .calc-result {
+      font-family: 'Courier New', monospace; font-size: 12px;
+      color: #0fee89; line-height: 1.7; padding: 4px 0;
+    }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Limits of Accuracy</div>
+  <div class="instruction">
+    <b style="color:#fff067">Drag the yellow dot</b> on the number line or use the slider to set the rounded value.
+    The lower bound (blue) is closed (≤); the upper bound (orange) is open (&lt;).
+  </div>
+</div>
+
+<canvas id="lineCanvas" width="560" height="150"></canvas>
+
+<div class="equation-bar" id="ineqDisplay">7.35 ≤ x &lt; 7.45</div>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-val">x = 7.4</div>
+    <input type="range" id="sl-val" min="-20" max="20" step="0.01" value="7.4"/>
+    <div class="slider-bounds">−20…20</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#6a8898">Nearest</div>
+    <select id="accIn">
+      <option value="10">10</option>
+      <option value="1">1 (whole number)</option>
+      <option value="0.1" selected>0.1 (1 d.p.)</option>
+      <option value="0.01">0.01 (2 d.p.)</option>
+      <option value="0.001">0.001 (3 d.p.)</option>
+      <option value="0.5">0.5 (half)</option>
+      <option value="5">5</option>
+      <option value="100">100</option>
+    </select>
+    <div class="slider-bounds"></div>
+  </div>
+</div>
+
+<div class="bounds-row">
+  <div class="bound-card">
+    <div class="bc-label">Lower Bound (LB)</div>
+    <div class="bc-value" style="color:#00abfa" id="lbVal">7.35</div>
+    <div class="bc-note" id="lbNote">7.4 − 0.05 = 7.35   (closed ≤)</div>
+  </div>
+  <div class="bound-card">
+    <div class="bc-label">Upper Bound (UB)</div>
+    <div class="bc-value" style="color:#ff822c" id="ubVal">7.45</div>
+    <div class="bc-note" id="ubNote">7.4 + 0.05 = 7.45   (open &lt;)</div>
+  </div>
+</div>
+
+<div class="step-box" id="stepBox"></div>
+
+<div class="calc-section">
+  <div class="calc-title">Bounds of a combined calculation</div>
+  <div style="font-size:11px;color:#5a7888;margin-bottom:8px">Enter a second rounded value to see bounds of sum, difference, product and quotient.</div>
+  <div class="calc-row">
+    <div class="calc-label">Second value</div>
+    <input type="number" id="val2" value="3.2" step="any"/>
+    <select id="acc2" class="small">
+      <option value="10">nearest 10</option>
+      <option value="1">nearest 1</option>
+      <option value="0.1" selected>1 d.p.</option>
+      <option value="0.01">2 d.p.</option>
+    </select>
+  </div>
+  <div class="calc-result" id="calcResult"></div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>LB = value − half the accuracy, UB = value + half the accuracy</strong>.
+    UB is always excluded (strict inequality, open circle). For products: max = UB₁ × UB₂;
+    for quotients: max = UB₁ ÷ LB₂. Always state the inequality as LB ≤ x &lt; UB.
+  </div>
+</div>
+
+<script>
+  var val_target=7.4, val_D=7.4;
+  var lb_D=7.35, ub_D=7.45;
+  var SPRING=0.13;
+  var dragging=false, hovering=false;
+  var HIT=14;
+
+  var canvas=document.getElementById('lineCanvas');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=150;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var PAD=52;
+  var AY=76; // axis y
+
+  function fmt(x){ return parseFloat(x.toPrecision(10)).toString(); }
+
+  function getAcc(){ return parseFloat(document.getElementById('accIn').value); }
+
+  function getBounds(v,acc){ return{lb:v-acc/2, ub:v+acc/2}; }
+
+  function toX(v,lo,hi){ return PAD+(v-lo)/(hi-lo)*(W-2*PAD); }
+  function fromX(cx,lo,hi){ return lo+(cx-PAD)/(W-2*PAD)*(hi-lo); }
+
+  function viewRange(){
+    var acc=getAcc();
+    var lb=val_D-acc/2, ub=val_D+acc/2;
+    var span=(ub-lb)*3;
+    return{lo:lb-span*0.4, hi:ub+span*0.4};
+  }
+
+  function getPos(e){
+    var r=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    return(cx-r.left)*W/r.width;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var acc=getAcc();
+    var lb=lb_D, ub=ub_D;
+    var rng=viewRange();
+    var lo=rng.lo, hi=rng.hi;
+    var x1=toX(lb,lo,hi), x2=toX(ub,lo,hi), xv=toX(val_D,lo,hi);
+
+    // Shaded interval
+    ctx.fillStyle='#00abfa18';
+    ctx.fillRect(x1,AY-22,x2-x1,44);
+
+    // Axis
+    ctx.strokeStyle='#2a3a4a'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(PAD-10,AY); ctx.lineTo(W-PAD+10,AY); ctx.stroke();
+    // Arrow
+    ctx.fillStyle='#2a3a4a';
+    ctx.beginPath(); ctx.moveTo(W-PAD+8,AY-4); ctx.lineTo(W-PAD+16,AY); ctx.lineTo(W-PAD+8,AY+4); ctx.fill();
+
+    // Tick marks
+    var step=acc;
+    var start=Math.ceil(lo/step)*step;
+    ctx.strokeStyle='#2a3a4a'; ctx.lineWidth=1;
+    ctx.fillStyle='#5a7888'; ctx.font='10px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var v=start;v<=hi;v+=step){
+      var tx=toX(v,lo,hi);
+      ctx.beginPath(); ctx.moveTo(tx,AY-5); ctx.lineTo(tx,AY+5); ctx.stroke();
+      ctx.fillText(fmt(v),tx,AY+8);
+    }
+
+    // LB — closed filled circle
+    ctx.beginPath(); ctx.arc(x1,AY,9,0,Math.PI*2);
+    ctx.fillStyle='#00abfa'; ctx.fill();
+    ctx.fillStyle='#0d1216'; ctx.font='bold 9px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('LB',x1,AY);
+    ctx.fillStyle='#00abfa'; ctx.font='bold 11px sans-serif'; ctx.textBaseline='bottom';
+    ctx.fillText(fmt(lb),x1,AY-14);
+
+    // UB — open circle
+    ctx.beginPath(); ctx.arc(x2,AY,9,0,Math.PI*2);
+    ctx.strokeStyle='#ff822c'; ctx.lineWidth=2; ctx.fillStyle='#0d1216';
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#ff822c'; ctx.font='bold 9px sans-serif'; ctx.textBaseline='middle';
+    ctx.fillText('UB',x2,AY);
+    ctx.font='bold 11px sans-serif'; ctx.textBaseline='bottom';
+    ctx.fillText(fmt(ub),x2,AY-14);
+
+    // Rounded value dot (draggable)
+    var isHov=hovering, isDrag=dragging;
+    var gr2=isDrag?18:(isHov?14:10);
+    var grad=ctx.createRadialGradient(xv,AY,0,xv,AY,gr2);
+    grad.addColorStop(0,'rgba(255,240,103,0.35)');
+    grad.addColorStop(1,'rgba(255,240,103,0)');
+    ctx.fillStyle=grad;
+    ctx.beginPath(); ctx.arc(xv,AY,gr2,0,Math.PI*2); ctx.fill();
+    var rd=isDrag?8:(isHov?7:5);
+    ctx.fillStyle=isDrag?'#ffe840':'#fff067';
+    ctx.beginPath(); ctx.arc(xv,AY,rd,0,Math.PI*2); ctx.fill();
+    // Label
+    ctx.fillStyle='#fff067'; ctx.font='bold 11px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText(fmt(val_D)+' (rounded)',xv,AY+14);
+
+    // Legend
+    ctx.fillStyle='#5a7888'; ctx.font='10px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='bottom';
+    ctx.fillText('● closed (included)',PAD,H-6);
+    ctx.fillText('○ open (excluded)',PAD+140,H-6);
+  }
+
+  function updateDisplay(){
+    var acc=getAcc(), v=val_D;
+    var lb=lb_D, ub=ub_D;
+    var half=acc/2;
+    document.getElementById('ineqDisplay').textContent=fmt(lb)+' ≤ x < '+fmt(ub);
+    document.getElementById('lbVal').textContent=fmt(lb);
+    document.getElementById('ubVal').textContent=fmt(ub);
+    document.getElementById('lbNote').textContent=fmt(v)+' − '+half+' = '+fmt(lb)+'   (closed ≤)';
+    document.getElementById('ubNote').textContent=fmt(v)+' + '+half+' = '+fmt(ub)+'   (open <)';
+    document.getElementById('stepBox').innerHTML=
+      '<strong>Rule:</strong> rounded to nearest '+acc+', so half = '+half+'<br>'+
+      '<strong>LB</strong> = '+fmt(v)+' − '+half+' = <strong>'+fmt(lb)+'</strong>   (closed, ≤)<br>'+
+      '<strong>UB</strong> = '+fmt(v)+' + '+half+' = <strong>'+fmt(ub)+'</strong>   (open, <, excluded)<br>'+
+      'Cambridge writes: <strong>'+fmt(lb)+' ≤ x < '+fmt(ub)+'</strong>';
+    updateCalc(lb,ub);
+  }
+
+  function updateCalc(lb1,ub1){
+    var val2=parseFloat(document.getElementById('val2').value);
+    var acc2=parseFloat(document.getElementById('acc2').value);
+    if(isNaN(val2)||isNaN(acc2)) return;
+    var bds=getBounds(val2,acc2);
+    var lb2=bds.lb, ub2=bds.ub;
+    document.getElementById('calcResult').innerHTML=
+      '<strong>Sum:</strong> UB='+fmt(ub1+ub2)+', LB='+fmt(lb1+lb2)+'<br>'+
+      '<strong>Difference:</strong> UB='+fmt(ub1-lb2)+', LB='+fmt(lb1-ub2)+'<br>'+
+      '<strong>Product:</strong> UB='+fmt(ub1*ub2)+', LB='+fmt(lb1*lb2)+'<br>'+
+      '<strong>Quotient:</strong> UB='+fmt(ub1/lb2)+', LB='+fmt(lb1/ub2);
+  }
+
+  function tick(){
+    val_D+=(val_target-val_D)*SPRING;
+    var acc=getAcc();
+    var lb_tgt=val_D-acc/2, ub_tgt=val_D+acc/2;
+    lb_D+=(lb_tgt-lb_D)*SPRING;
+    ub_D+=(ub_tgt-ub_D)*SPRING;
+    draw();
+    updateDisplay();
+    requestAnimationFrame(tick);
+  }
+
+  function hitTestDot(cx){
+    var rng=viewRange();
+    var xv=toX(val_D,rng.lo,rng.hi);
+    return Math.abs(cx-xv)<HIT;
+  }
+
+  canvas.addEventListener('mousedown',function(e){
+    var cx=getPos(e);
+    if(hitTestDot(cx)){dragging=true;e.preventDefault();}
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var cx=getPos(e);
+    if(dragging){
+      var rng=viewRange();
+      var newV=fromX(cx,rng.lo,rng.hi);
+      val_target=Math.max(-20,Math.min(20,Math.round(newV*100)/100));
+      val_D=val_target;
+      document.getElementById('sl-val').value=val_target;
+      document.getElementById('lbl-val').textContent='x = '+val_target;
+    } else {
+      hovering=hitTestDot(cx);
+      canvas.style.cursor=hovering?'grab':'crosshair';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){dragging=false;canvas.style.cursor=hovering?'grab':'crosshair';});
+  canvas.addEventListener('mouseleave',function(){dragging=false;hovering=false;});
+  canvas.addEventListener('touchstart',function(e){
+    var cx=getPos(e);
+    if(hitTestDot(cx)){dragging=true;e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(!dragging)return; e.preventDefault();
+    var cx=getPos(e);
+    var rng=viewRange();
+    var newV=fromX(cx,rng.lo,rng.hi);
+    val_target=Math.max(-20,Math.min(20,Math.round(newV*100)/100));
+    val_D=val_target;
+    document.getElementById('sl-val').value=val_target;
+    document.getElementById('lbl-val').textContent='x = '+val_target;
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){dragging=false;});
+
+  document.getElementById('sl-val').oninput=function(){
+    val_target=parseFloat(this.value);
+    document.getElementById('lbl-val').textContent='x = '+val_target;
+  };
+  document.getElementById('accIn').addEventListener('change',function(){});
+  document.getElementById('val2').addEventListener('input',function(){
+    var acc=getAcc(), v=val_D;
+    updateCalc(v-acc/2,v+acc/2);
+  });
+  document.getElementById('acc2').addEventListener('change',function(){
+    var acc=getAcc(), v=val_D;
+    updateCalc(v-acc/2,v+acc/2);
+  });
+
+  // Initialise springs to match starting values
+  lb_D=val_D-getAcc()/2;
+  ub_D=val_D+getAcc()/2;
+  tick();
+</script>
+</body>
+</html>

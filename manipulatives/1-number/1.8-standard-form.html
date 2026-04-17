@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parhaylikhay · Standard Form</title>
+<meta property="og:title" content="Standard Form"/>
+<meta property="og:type" content="video.other"/>
+<meta property="og:video:type" content="text/html"/>
+<meta property="og:video:width" content="600"/>
+<meta property="og:video:height" content="580"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0d1216;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #e8e8e8;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+}
+h1 { font-size: 1.3rem; color: #00abfa; margin-bottom: 4px; }
+.subtitle { font-size: 0.85rem; color: #888780; margin-bottom: 24px; }
+.widget { width: 100%; max-width: 580px; display: flex; flex-direction: column; gap: 20px; }
+
+.mode-tabs { display: flex; gap: 0; background: #141d27; border: 1px solid #2a3a4a; border-radius: 8px; overflow: hidden; }
+.tab {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: #888780;
+  transition: all 0.15s;
+  font-family: inherit;
+  background: none;
+  border: none;
+}
+.tab.active { background: #00abfa22; color: #00abfa; font-weight: 600; }
+
+.input-box {
+  background: #141d27;
+  border: 1px solid #2a3a4a;
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.input-box label { font-size: 0.78rem; color: #888780; text-transform: uppercase; letter-spacing: 0.08em; }
+input[type=text], input[type=number] {
+  width: 100%;
+  background: #1a2530;
+  border: 1px solid #2a3a4a;
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: #e8e8e8;
+  font-size: 1.1rem;
+  outline: none;
+  font-family: inherit;
+}
+input:focus { border-color: #00abfa; }
+
+.sf-input-row { display: flex; align-items: center; gap: 10px; }
+.sf-input-row input { width: 120px; }
+.sf-input-row span { font-size: 1.1rem; color: #888780; }
+.sf-input-row input.n-input { width: 72px; }
+
+.result-area {
+  background: #141d27;
+  border: 1px solid #2a3a4a;
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.big-result { font-size: 2rem; font-weight: 800; color: #fff067; word-break: break-all; }
+.sf-result { font-size: 1.3rem; font-weight: 700; color: #00abfa; }
+.step { font-size: 0.88rem; color: #b0b8c4; line-height: 1.6; }
+.step strong { color: #0fee89; }
+.error { color: #ff4670; font-size: 0.9rem; }
+
+.place-value {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: flex-end;
+  padding: 12px;
+  background: #1a2530;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+.pv-col { display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 32px; }
+.pv-header { font-size: 0.68rem; color: #888780; text-align: center; white-space: nowrap; }
+.pv-digit {
+  width: 30px; height: 36px;
+  border-radius: 5px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 700;
+}
+.pv-digit.sig { background: #00abfa33; color: #00abfa; border: 1px solid #00abfa55; }
+.pv-digit.zero { background: #1a2530; color: #444; border: 1px solid #2a3a4a; }
+.pv-digit.dp { background: transparent; color: #fff067; font-size: 0.9rem; border: none; width: 12px; min-width: 12px; }
+
+.examples { display: flex; flex-wrap: wrap; gap: 6px; }
+.ex-btn {
+  background: #1a2530; border: 1px solid #2a3a4a; border-radius: 6px;
+  padding: 5px 10px; color: #888780; font-size: 0.8rem; cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+}
+.ex-btn:hover { border-color: #00abfa; color: #00abfa; }
+</style>
+</head>
+<body>
+<h1>Standard Form</h1>
+<p class="subtitle">A × 10<sup>n</sup> &nbsp;where&nbsp; 1 ≤ A &lt; 10</p>
+
+<div class="widget">
+  <div class="mode-tabs">
+    <button class="tab active" id="tab1" onclick="setMode(1)">Number → Standard form</button>
+    <button class="tab" id="tab2" onclick="setMode(2)">Standard form → Number</button>
+  </div>
+
+  <div class="input-box" id="inputBox1">
+    <label>Enter a number</label>
+    <input type="text" id="numIn" value="0.0000456" placeholder="e.g. 3700000 or 0.00052"/>
+    <div>
+      <div style="font-size:0.75rem;color:#888780;margin-bottom:6px">Quick examples</div>
+      <div class="examples" id="examplesNum"></div>
+    </div>
+  </div>
+
+  <div class="input-box" id="inputBox2" style="display:none">
+    <label>Enter A × 10<sup>n</sup></label>
+    <div class="sf-input-row">
+      <input type="number" id="sfA" value="4.56" step="0.001" min="1" max="9.9999" placeholder="A"/>
+      <span>× 10</span>
+      <input type="number" id="sfN" class="n-input" value="-5" step="1" min="-15" max="15" placeholder="n"/>
+    </div>
+  </div>
+
+  <div class="result-area" id="result">
+    <div id="sfDisplay" class="sf-result"></div>
+    <div id="bigDisplay" class="big-result"></div>
+    <div id="steps" class="step"></div>
+    <div id="pvChart" class="place-value" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+let mode = 1;
+const NUM_EXAMPLES = ['3700000', '0.0000456', '5200', '0.000007', '93000000', '0.00105', '1234.5', '8.9e-4'];
+const exDiv = document.getElementById('examplesNum');
+NUM_EXAMPLES.forEach(ex => {
+  const btn = document.createElement('button');
+  btn.className = 'ex-btn';
+  btn.textContent = ex;
+  btn.onclick = () => { document.getElementById('numIn').value = ex; fromNumber(); };
+  exDiv.appendChild(btn);
+});
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('tab1').classList.toggle('active', m === 1);
+  document.getElementById('tab2').classList.toggle('active', m === 2);
+  document.getElementById('inputBox1').style.display = m === 1 ? '' : 'none';
+  document.getElementById('inputBox2').style.display = m === 2 ? '' : 'none';
+  if (m === 1) fromNumber(); else fromSF();
+}
+
+function toSF(x) {
+  if (x === 0) return { A: 0, n: 0, str: '0' };
+  const neg = x < 0;
+  const abs = Math.abs(x);
+  const n = Math.floor(Math.log10(abs));
+  const A = abs / Math.pow(10, n);
+  const Arounded = Math.round(A * 1e10) / 1e10;
+  return { A: neg ? -Arounded : Arounded, n, str: `${neg ? '−' : ''}${Arounded} × 10<sup>${n}</sup>` };
+}
+
+function makePVChart(numStr) {
+  // Build place value columns for the number
+  const pv = document.getElementById('pvChart');
+  pv.innerHTML = '';
+  pv.style.display = 'flex';
+
+  const s = numStr.replace(/^-/, '');
+  const dpPos = s.indexOf('.');
+  const intPart = dpPos >= 0 ? s.slice(0, dpPos) : s;
+  const fracPart = dpPos >= 0 ? s.slice(dpPos + 1) : '';
+
+  const labels = ['billions','hundred millions','ten millions','millions','hundred thousands','ten thousands','thousands','hundreds','tens','units'];
+  const intLen = intPart.length;
+
+  intPart.split('').forEach((d, i) => {
+    const col = document.createElement('div');
+    col.className = 'pv-col';
+    const labelIdx = labels.length - intLen + i;
+    col.innerHTML = `
+      <div class="pv-header">${labelIdx >= 0 ? labels[labelIdx] : ''}</div>
+      <div class="pv-digit sig">${d}</div>
+    `;
+    pv.appendChild(col);
+  });
+
+  if (fracPart) {
+    const dp = document.createElement('div');
+    dp.className = 'pv-col';
+    dp.innerHTML = `<div class="pv-header"> </div><div class="pv-digit dp">.</div>`;
+    pv.appendChild(dp);
+
+    fracPart.split('').forEach((d, i) => {
+      const col = document.createElement('div');
+      col.className = 'pv-col';
+      const place = i === 0 ? 'tenths' : i === 1 ? 'hundredths' : i === 2 ? 'thousandths' : `10⁻${i+1}`;
+      col.innerHTML = `<div class="pv-header">${place}</div><div class="pv-digit ${d === '0' ? 'zero' : 'sig'}">${d}</div>`;
+      pv.appendChild(col);
+    });
+  }
+}
+
+function fromNumber() {
+  const raw = document.getElementById('numIn').value.trim();
+  const x = parseFloat(raw);
+  if (isNaN(x)) {
+    document.getElementById('sfDisplay').innerHTML = '';
+    document.getElementById('bigDisplay').innerHTML = '<span class="error">Enter a valid number</span>';
+    document.getElementById('steps').innerHTML = '';
+    document.getElementById('pvChart').style.display = 'none';
+    return;
+  }
+  const { A, n, str } = toSF(x);
+  document.getElementById('sfDisplay').innerHTML = str;
+  document.getElementById('bigDisplay').textContent = x;
+
+  let stepsHtml = `
+    <strong>Step 1:</strong> Move the decimal point so that 1 ≤ A &lt; 10.<br>
+    The decimal goes after the first significant digit → A = ${Math.abs(A)}<br>
+    <strong>Step 2:</strong> Count how many places the decimal moved.<br>
+    n = ${n} ${n > 0 ? '(large number, positive power)' : n < 0 ? '(small number, negative power)' : '(already between 1 and 10)'}<br>
+    <strong>Answer:</strong> ${str}
+  `;
+  document.getElementById('steps').innerHTML = stepsHtml;
+  makePVChart(raw.replace('e','×10^'));
+}
+
+function fromSF() {
+  const A = parseFloat(document.getElementById('sfA').value);
+  const n = parseInt(document.getElementById('sfN').value);
+  if (isNaN(A) || isNaN(n)) return;
+
+  const x = A * Math.pow(10, n);
+  const xStr = n >= 0
+    ? (Number.isInteger(x) ? x.toString() : x.toPrecision(10).replace(/\.?0+$/, ''))
+    : x.toFixed(Math.max(0, -n + String(A).replace('.','').length - 1)).replace(/0+$/, '').replace(/\.$/, '');
+
+  document.getElementById('sfDisplay').innerHTML = `${A} × 10<sup>${n}</sup>`;
+  document.getElementById('bigDisplay').textContent = x;
+
+  const valid = Math.abs(A) >= 1 && Math.abs(A) < 10;
+  document.getElementById('steps').innerHTML = `
+    ${!valid ? '<span class="error">⚠ A must satisfy 1 ≤ A &lt; 10 for valid standard form</span><br>' : ''}
+    <strong>Calculation:</strong> ${A} × 10<sup>${n}</sup> = ${A} × ${Math.pow(10,n)} = <strong>${x}</strong><br>
+    ${n > 0 ? `Move decimal <strong>${n}</strong> places right (multiply by 10 n times).` :
+               `Move decimal <strong>${Math.abs(n)}</strong> places left (divide by 10 n times).`}
+  `;
+  document.getElementById('pvChart').style.display = 'none';
+}
+
+document.getElementById('numIn').addEventListener('input', fromNumber);
+document.getElementById('sfA').addEventListener('input', fromSF);
+document.getElementById('sfN').addEventListener('input', fromSF);
+fromNumber();
+</script>
+<div style="width:100%;max-width:580px;padding:8px 4px 14px;font-size:11px;color:#0fee89;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  Cambridge tip: <strong style="font-weight:600">A must satisfy 1 ≤ A &lt; 10 — if A = 10 or more, you lose the mark</strong>.
+  Positive n for numbers ≥ 10 (large), negative n for numbers between 0 and 1 (small). For calculations in standard form, handle the powers of 10 separately and adjust A back into range at the end.
+</div>
+</body>
+</html>

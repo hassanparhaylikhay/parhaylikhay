@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parhaylikhay · Indices</title>
+<meta property="og:title" content="Indices — Laws of Powers"/>
+<meta property="og:type" content="video.other"/>
+<meta property="og:video:type" content="text/html"/>
+<meta property="og:video:width" content="600"/>
+<meta property="og:video:height" content="620"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0d1216;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #e8e8e8;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+}
+h1 { font-size: 1.3rem; color: #00abfa; margin-bottom: 4px; }
+.subtitle { font-size: 0.85rem; color: #888780; margin-bottom: 24px; }
+.widget { width: 100%; max-width: 620px; display: flex; flex-direction: column; gap: 18px; }
+
+.sliders { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.slider-card {
+  background: #141d27;
+  border: 1px solid #2a3a4a;
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.slider-card label { font-size: 0.75rem; color: #888780; text-transform: uppercase; letter-spacing: 0.07em; }
+.val-display { font-size: 1.6rem; font-weight: 800; text-align: center; }
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 5px;
+  background: #2a3a4a;
+  border-radius: 3px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.laws-grid { display: flex; flex-direction: column; gap: 10px; }
+.law-card {
+  background: #141d27;
+  border: 1px solid #2a3a4a;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.law-card:hover { border-color: #2a3a5a; }
+.law-name { font-size: 0.75rem; color: #888780; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+.law-expr { font-size: 1rem; color: #b0b8c4; font-style: italic; }
+.law-nums { font-size: 1rem; font-weight: 700; color: #fff067; }
+.law-verified {
+  font-size: 0.78rem;
+  color: #888780;
+  font-style: normal;
+  text-align: right;
+}
+.verified-ok { color: #0fee89; font-weight: 600; }
+.section-label { font-size: 0.78rem; color: #888780; text-transform: uppercase; letter-spacing: 0.08em; }
+</style>
+</head>
+<body>
+<h1>Indices — Laws of Powers</h1>
+<p class="subtitle">Adjust a, m, n — watch every index law verify numerically</p>
+
+<div class="widget">
+  <div class="sliders">
+    <div class="slider-card">
+      <label>Base: a</label>
+      <div class="val-display" style="color:#00abfa" id="aVal">2</div>
+      <input type="range" id="slA" min="2" max="10" value="2" style="--c:#00abfa">
+      <style>#slA::-webkit-slider-thumb{background:#00abfa}</style>
+    </div>
+    <div class="slider-card">
+      <label>Exponent: m</label>
+      <div class="val-display" style="color:#0fee89" id="mVal">3</div>
+      <input type="range" id="slM" min="-4" max="6" value="3">
+      <style>#slM::-webkit-slider-thumb{background:#0fee89}</style>
+    </div>
+    <div class="slider-card">
+      <label>Exponent: n</label>
+      <div class="val-display" style="color:#ff822c" id="nVal">2</div>
+      <input type="range" id="slN" min="-4" max="6" value="2">
+      <style>#slN::-webkit-slider-thumb{background:#ff822c}</style>
+    </div>
+  </div>
+
+  <div class="section-label">Index laws — verified with your values</div>
+  <div class="laws-grid" id="laws"></div>
+</div>
+
+<script>
+function fmt(x) {
+  if (Math.abs(x) > 1e10 || (Math.abs(x) < 1e-6 && x !== 0)) return x.toExponential(3);
+  // Round to avoid float weirdness
+  const r = Math.round(x * 1e9) / 1e9;
+  if (Number.isInteger(r)) return String(r);
+  return r.toFixed(6).replace(/\.?0+$/, '');
+}
+
+function pow(a, n) {
+  if (n === 0) return 1;
+  if (n > 0) return Math.pow(a, n);
+  return 1 / Math.pow(a, -n);
+}
+
+const LAWS = [
+  {
+    name: 'Multiplication law',
+    expr: (a,m,n) => `a<sup>m</sup> × a<sup>n</sup> = a<sup>m+n</sup>`,
+    nums: (a,m,n) => `${a}<sup>${m}</sup> × ${a}<sup>${n}</sup> = ${a}<sup>${m+n}</sup>`,
+    lhs: (a,m,n) => pow(a,m) * pow(a,n),
+    rhs: (a,m,n) => pow(a,m+n),
+    verify: (a,m,n) => `${fmt(pow(a,m))} × ${fmt(pow(a,n))} = ${fmt(pow(a,m+n))}`
+  },
+  {
+    name: 'Division law',
+    expr: (a,m,n) => `a<sup>m</sup> ÷ a<sup>n</sup> = a<sup>m−n</sup>`,
+    nums: (a,m,n) => `${a}<sup>${m}</sup> ÷ ${a}<sup>${n}</sup> = ${a}<sup>${m-n}</sup>`,
+    lhs: (a,m,n) => pow(a,m) / pow(a,n),
+    rhs: (a,m,n) => pow(a,m-n),
+    verify: (a,m,n) => `${fmt(pow(a,m))} ÷ ${fmt(pow(a,n))} = ${fmt(pow(a,m-n))}`
+  },
+  {
+    name: 'Power of a power',
+    expr: (a,m,n) => `(a<sup>m</sup>)<sup>n</sup> = a<sup>mn</sup>`,
+    nums: (a,m,n) => `(${a}<sup>${m}</sup>)<sup>${n}</sup> = ${a}<sup>${m*n}</sup>`,
+    lhs: (a,m,n) => pow(pow(a,m),n),
+    rhs: (a,m,n) => pow(a,m*n),
+    verify: (a,m,n) => `(${fmt(pow(a,m))})<sup>${n}</sup> = ${fmt(pow(a,m*n))}`
+  },
+  {
+    name: 'Zero index',
+    expr: () => `a<sup>0</sup> = 1`,
+    nums: (a) => `${a}<sup>0</sup> = 1`,
+    lhs: (a) => pow(a,0),
+    rhs: () => 1,
+    verify: (a) => `${a}<sup>0</sup> = ${pow(a,0)}`
+  },
+  {
+    name: 'Negative index',
+    expr: (a,m) => `a<sup>−m</sup> = 1/a<sup>m</sup>`,
+    nums: (a,m) => `${a}<sup>−${m>0?m:-m}</sup> = 1/${a}<sup>${m>0?m:-m}</sup>`,
+    lhs: (a,m) => pow(a,-Math.abs(m)),
+    rhs: (a,m) => 1/pow(a,Math.abs(m)),
+    verify: (a,m) => {
+      const exp = Math.abs(m) || 1;
+      return `${a}<sup>−${exp}</sup> = 1/${fmt(pow(a,exp))} = ${fmt(pow(a,-exp))}`;
+    }
+  },
+  {
+    name: 'Fractional index (square root)',
+    expr: (a) => `a<sup>1/2</sup> = √a`,
+    nums: (a) => `${a}<sup>1/2</sup> = √${a}`,
+    lhs: (a) => Math.pow(a, 0.5),
+    rhs: (a) => Math.sqrt(a),
+    verify: (a) => `${a}<sup>1/2</sup> = ${fmt(Math.sqrt(a))}`
+  },
+  {
+    name: 'Fractional index (nth root)',
+    expr: (a,m,n) => `a<sup>1/n</sup> = ⁿ√a`,
+    nums: (a,m,n) => {
+      const exp = Math.abs(n) || 2;
+      return `${a}<sup>1/${exp}</sup> = <sup>${exp}</sup>√${a}`;
+    },
+    lhs: (a,m,n) => Math.pow(a, 1/Math.abs(n||2)),
+    rhs: (a,m,n) => Math.pow(a, 1/Math.abs(n||2)),
+    verify: (a,m,n) => {
+      const exp = Math.abs(n) || 2;
+      return `${a}<sup>1/${exp}</sup> = ${fmt(Math.pow(a, 1/exp))}`;
+    }
+  },
+];
+
+function update() {
+  const a = parseInt(document.getElementById('slA').value);
+  const m = parseInt(document.getElementById('slM').value);
+  const n = parseInt(document.getElementById('slN').value);
+  document.getElementById('aVal').textContent = a;
+  document.getElementById('mVal').textContent = m;
+  document.getElementById('nVal').textContent = n;
+
+  const container = document.getElementById('laws');
+  container.innerHTML = '';
+  LAWS.forEach(law => {
+    const div = document.createElement('div');
+    div.className = 'law-card';
+
+    const lhs = law.lhs(a, m, n);
+    const rhs = law.rhs(a, m, n);
+    const ok = Math.abs(lhs - rhs) < 1e-6;
+
+    div.innerHTML = `
+      <div>
+        <div class="law-name">${law.name}</div>
+        <div class="law-expr">${law.expr(a, m, n)}</div>
+        <div class="law-nums">${law.nums(a, m, n)}</div>
+      </div>
+      <div>
+        <div class="law-verified ${ok ? 'verified-ok' : ''}">${law.verify(a, m, n)}</div>
+        <div style="text-align:right;margin-top:4px;font-size:1rem">${ok ? '✓' : '—'}</div>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+['slA','slM','slN'].forEach(id => document.getElementById(id).addEventListener('input', update));
+update();
+</script>
+<div style="width:100%;max-width:620px;padding:8px 4px 14px;font-size:11px;color:#0fee89;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  Cambridge tip: <strong style="font-weight:600">the three most tested laws are aᵐ × aⁿ = aᵐ⁺ⁿ, aᵐ ÷ aⁿ = aᵐ⁻ⁿ, and (aᵐ)ⁿ = aᵐⁿ</strong>.
+  Always write a⁰ = 1 and a⁻ᵐ = 1/aᵐ without a calculator. Fractional indices: a^(m/n) = (ⁿ√a)ᵐ — take the root first, then the power, to keep numbers small.
+</div>
+</body>
+</html>

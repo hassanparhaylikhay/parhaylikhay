@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parhaylikhay · Ordering Numbers</title>
+<meta property="og:title" content="Ordering Numbers"/>
+<meta property="og:type" content="video.other"/>
+<meta property="og:video:type" content="text/html"/>
+<meta property="og:video:width" content="600"/>
+<meta property="og:video:height" content="560"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0d1216;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #e8e8e8;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  user-select: none;
+}
+h1 { font-size: 1.3rem; color: #00abfa; margin-bottom: 4px; }
+.subtitle { font-size: 0.85rem; color: #888780; margin-bottom: 24px; }
+.widget { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 20px; }
+
+canvas { width: 100%; height: 100px; border-radius: 8px; }
+
+.cards-area {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-height: 60px;
+  background: #141d27;
+  border: 1px dashed #2a3a4a;
+  border-radius: 10px;
+  padding: 12px;
+  justify-content: center;
+}
+.num-card {
+  background: #1a2530;
+  border: 2px solid #2a3a4a;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: grab;
+  transition: border-color 0.15s, transform 0.1s;
+  touch-action: none;
+}
+.num-card:hover { border-color: #00abfa; }
+.num-card.dragging { opacity: 0.4; transform: scale(0.95); cursor: grabbing; }
+.num-card.correct { border-color: #0fee89; color: #0fee89; }
+.num-card.wrong { border-color: #ff4670; color: #ff4670; }
+
+.answer-slots {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 56px;
+  justify-content: center;
+  align-items: center;
+}
+.slot {
+  width: 80px;
+  height: 48px;
+  border: 2px dashed #2a3a4a;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: #141d27;
+  transition: border-color 0.15s;
+  position: relative;
+}
+.slot.over { border-color: #00abfa; background: #00abfa11; }
+.slot.filled { border-style: solid; }
+.slot .pos-label {
+  position: absolute;
+  bottom: -18px;
+  font-size: 0.7rem;
+  color: #888780;
+  white-space: nowrap;
+}
+
+.btn-row { display: flex; gap: 10px; justify-content: center; }
+.btn {
+  background: #1a2530;
+  border: 1px solid #2a3a4a;
+  border-radius: 6px;
+  padding: 8px 18px;
+  color: #e8e8e8;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btn:hover { border-color: #00abfa; color: #00abfa; }
+.btn.primary { background: #00abfa22; border-color: #00abfa; color: #00abfa; }
+
+.result-msg {
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 700;
+  min-height: 28px;
+}
+
+.difficulty-row { display: flex; gap: 8px; justify-content: center; }
+.diff-btn {
+  background: #1a2530;
+  border: 1px solid #2a3a4a;
+  border-radius: 6px;
+  padding: 5px 14px;
+  color: #888780;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.diff-btn:hover, .diff-btn.active { border-color: #fff067; color: #fff067; background: #fff06715; }
+</style>
+</head>
+<body>
+<h1>Ordering Numbers</h1>
+<p class="subtitle">Drag the cards into order from smallest to largest</p>
+
+<div class="widget">
+  <div class="difficulty-row" id="diffRow"></div>
+
+  <div>
+    <div style="font-size:0.78rem;color:#888780;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">Cards to order</div>
+    <div class="cards-area" id="cardsArea"></div>
+  </div>
+
+  <div>
+    <div style="font-size:0.78rem;color:#888780;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Your order (smallest → largest)</div>
+    <div class="answer-slots" id="slots"></div>
+  </div>
+
+  <canvas id="lineCanvas" height="100"></canvas>
+
+  <div class="btn-row">
+    <button class="btn" id="clearBtn">Clear slots</button>
+    <button class="btn primary" id="checkBtn">Check order</button>
+    <button class="btn" id="newBtn">New question</button>
+  </div>
+  <div class="result-msg" id="resultMsg"></div>
+</div>
+
+<script>
+const DIFFICULTIES = [
+  {
+    label: 'Integers', key: 'int',
+    generate: () => {
+      const arr = [];
+      while (arr.length < 5) {
+        const n = Math.floor(Math.random() * 41) - 20;
+        if (!arr.includes(n)) arr.push(n);
+      }
+      return arr.map(n => ({ label: String(n), value: n }));
+    }
+  },
+  {
+    label: 'Decimals', key: 'dec',
+    generate: () => {
+      const arr = [];
+      while (arr.length < 5) {
+        const n = +(Math.random() * 10 - 2).toFixed(2);
+        if (!arr.some(x => x.value === n)) arr.push({ label: String(n), value: n });
+      }
+      return arr;
+    }
+  },
+  {
+    label: 'Fractions', key: 'frac',
+    generate: () => {
+      const fracs = [
+        {l:'1/2',v:0.5},{l:'1/3',v:1/3},{l:'2/3',v:2/3},{l:'1/4',v:0.25},{l:'3/4',v:0.75},
+        {l:'1/5',v:0.2},{l:'2/5',v:0.4},{l:'3/5',v:0.6},{l:'4/5',v:0.8},
+        {l:'1/8',v:0.125},{l:'3/8',v:0.375},{l:'5/8',v:0.625},{l:'7/8',v:0.875},
+        {l:'1/6',v:1/6},{l:'5/6',v:5/6},{l:'1/10',v:0.1},{l:'3/10',v:0.3}
+      ];
+      const picked = [];
+      const used = new Set();
+      while (picked.length < 5) {
+        const i = Math.floor(Math.random() * fracs.length);
+        if (!used.has(i)) { used.add(i); picked.push({ label: fracs[i].l, value: fracs[i].v }); }
+      }
+      return picked;
+    }
+  },
+  {
+    label: 'Mixed', key: 'mix',
+    generate: () => {
+      const items = [
+        {l:'-1/2',v:-0.5},{l:'0.3',v:0.3},{l:'-2',v:-2},{l:'√2',v:Math.sqrt(2)},
+        {l:'3/4',v:0.75},{l:'-0.8',v:-0.8},{l:'2/3',v:2/3},{l:'1.5',v:1.5},
+        {l:'-3/4',v:-0.75},{l:'0',v:0},{l:'1.1',v:1.1},{l:'-1',v:-1}
+      ];
+      const picked = [];
+      const used = new Set();
+      while (picked.length < 5) {
+        const i = Math.floor(Math.random() * items.length);
+        if (!used.has(i)) { used.add(i); picked.push({ label: items[i].l, value: items[i].v }); }
+      }
+      return picked;
+    }
+  }
+];
+
+let activeDiff = 0;
+let cards = [];
+let slots = []; // array of card indices placed in slot positions
+let dragging = null;
+const N = 5;
+
+// Build diff buttons
+const diffRow = document.getElementById('diffRow');
+DIFFICULTIES.forEach((d, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'diff-btn' + (i === 0 ? ' active' : '');
+  btn.textContent = d.label;
+  btn.onclick = () => {
+    activeDiff = i;
+    document.querySelectorAll('.diff-btn').forEach((b, j) => b.classList.toggle('active', j === i));
+    newQuestion();
+  };
+  diffRow.appendChild(btn);
+});
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function newQuestion() {
+  cards = shuffle(DIFFICULTIES[activeDiff].generate());
+  slots = new Array(N).fill(null);
+  document.getElementById('resultMsg').textContent = '';
+  render();
+}
+
+function render() {
+  renderCards();
+  renderSlots();
+  drawNumberLine();
+}
+
+function renderCards() {
+  const area = document.getElementById('cardsArea');
+  area.innerHTML = '';
+  const placed = new Set(slots.filter(s => s !== null));
+  cards.forEach((card, i) => {
+    if (placed.has(i)) return;
+    const el = document.createElement('div');
+    el.className = 'num-card';
+    el.textContent = card.label;
+    el.dataset.idx = i;
+    el.draggable = true;
+    el.addEventListener('dragstart', e => {
+      dragging = { idx: i, from: 'card' };
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => el.classList.remove('dragging'));
+    area.appendChild(el);
+  });
+}
+
+function renderSlots() {
+  const cont = document.getElementById('slots');
+  cont.innerHTML = '';
+  slots.forEach((cardIdx, si) => {
+    const slot = document.createElement('div');
+    slot.className = 'slot' + (cardIdx !== null ? ' filled' : '');
+    slot.dataset.slot = si;
+
+    if (cardIdx !== null) {
+      slot.textContent = cards[cardIdx].label;
+      slot.style.color = '#fff067';
+      slot.style.borderColor = '#fff06788';
+      // Allow dragging from slot
+      slot.draggable = true;
+      slot.addEventListener('dragstart', e => {
+        dragging = { idx: cardIdx, from: 'slot', slot: si };
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      slot.addEventListener('dragend', () => {});
+    } else {
+      const posLabel = document.createElement('span');
+      posLabel.className = 'pos-label';
+      posLabel.textContent = si === 0 ? 'smallest' : si === N - 1 ? 'largest' : '';
+      slot.appendChild(posLabel);
+    }
+
+    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('over'); });
+    slot.addEventListener('dragleave', () => slot.classList.remove('over'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('over');
+      if (!dragging) return;
+      // Remove from old position
+      if (dragging.from === 'slot') slots[dragging.slot] = null;
+      // Place in new slot (swap if occupied)
+      const existing = slots[si];
+      slots[si] = dragging.idx;
+      if (dragging.from === 'slot' && existing !== null) {
+        slots[dragging.slot] = existing;
+      }
+      dragging = null;
+      document.getElementById('resultMsg').textContent = '';
+      render();
+    });
+
+    cont.appendChild(slot);
+  });
+}
+
+function drawNumberLine() {
+  const canvas = document.getElementById('lineCanvas');
+  const W = 560, H = 100;
+  const DPR = window.devicePixelRatio || 1;
+  if (canvas.width !== W * DPR) {
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#141d27';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, W, H, 8);
+  ctx.fill();
+
+  const values = cards.map(c => c.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const pad = (max - min) * 0.15 || 1;
+  const lo = min - pad, hi = max + pad;
+  const toX = v => 40 + (v - lo) / (hi - lo) * (W - 80);
+
+  // Axis line
+  const ay = 60;
+  ctx.strokeStyle = '#2a3a4a';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(30, ay);
+  ctx.lineTo(W - 30, ay);
+  ctx.stroke();
+
+  // Arrow
+  ctx.fillStyle = '#2a3a4a';
+  ctx.beginPath();
+  ctx.moveTo(W - 28, ay - 5);
+  ctx.lineTo(W - 18, ay);
+  ctx.lineTo(W - 28, ay + 5);
+  ctx.fill();
+
+  // Zero mark if in range
+  if (lo < 0 && hi > 0) {
+    const x0 = toX(0);
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x0, ay - 8);
+    ctx.lineTo(x0, ay + 8);
+    ctx.stroke();
+    ctx.fillStyle = '#888780';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('0', x0, ay + 20);
+  }
+
+  // Plot each card
+  const placed = slots.filter(s => s !== null);
+  cards.forEach((card, i) => {
+    const x = toX(card.value);
+    const isPlaced = placed.includes(i);
+    ctx.beginPath();
+    ctx.arc(x, ay, 7, 0, Math.PI * 2);
+    ctx.fillStyle = isPlaced ? '#00abfa' : '#1a2530';
+    ctx.strokeStyle = isPlaced ? '#00abfa' : '#888780';
+    ctx.lineWidth = 2;
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = isPlaced ? '#fff' : '#888780';
+    ctx.font = 'bold 10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(card.label, x, ay - 16);
+  });
+  ctx.textAlign = 'left';
+}
+
+document.getElementById('clearBtn').onclick = () => {
+  slots = new Array(N).fill(null);
+  document.getElementById('resultMsg').textContent = '';
+  render();
+};
+
+document.getElementById('checkBtn').onclick = () => {
+  if (slots.some(s => s === null)) {
+    document.getElementById('resultMsg').innerHTML = '<span style="color:#ff4670">Fill all slots first!</span>';
+    return;
+  }
+  const ordered = slots.map(i => cards[i].value);
+  let allOk = true;
+  for (let i = 1; i < ordered.length; i++) {
+    if (ordered[i] < ordered[i - 1]) { allOk = false; break; }
+  }
+  const msg = document.getElementById('resultMsg');
+  if (allOk) {
+    msg.innerHTML = '<span style="color:#0fee89">✓ Correct! Well done.</span>';
+    // Mark cards green
+    document.querySelectorAll('.slot.filled').forEach(s => { s.style.color = '#0fee89'; s.style.borderColor = '#0fee89'; });
+  } else {
+    msg.innerHTML = '<span style="color:#ff4670">Not quite — check the number line for clues.</span>';
+    document.querySelectorAll('.slot.filled').forEach(s => { s.style.color = '#ff4670'; s.style.borderColor = '#ff4670'; });
+  }
+};
+
+document.getElementById('newBtn').onclick = newQuestion;
+
+
+document.getElementById('cardsArea').addEventListener('dragover', e => e.preventDefault());
+document.getElementById('cardsArea').addEventListener('drop', e => {
+  e.preventDefault();
+  if (dragging && dragging.from === 'slot') {
+    slots[dragging.slot] = null;
+    dragging = null;
+    render();
+  }
+});
+
+newQuestion();
+</script>
+<div style="width:100%;max-width:600px;padding:8px 4px 14px;font-size:11px;color:#0fee89;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  Cambridge tip: <strong style="font-weight:600">to compare fractions, convert to decimals or a common denominator</strong>.
+  Negative numbers: remember −0.8 > −2. Mixed types (fractions, decimals, surds): convert everything to decimals first.
+</div>
+</body>
+</html>

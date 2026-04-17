@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Distance–Time Graphs</title>
+  <meta property="og:title" content="Distance–Time Graphs"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="540"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .equation-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+    }
+    canvas { display: block; cursor: crosshair; }
+    .toggle-row {
+      width: 560px; display: flex; gap: 0;
+      background: #111f2c; border: 1px solid #1a2535;
+      border-radius: 6px; overflow: hidden; margin-bottom: 4px;
+    }
+    .tog-btn {
+      flex: 1; padding: 9px 0; text-align: center; font-size: 13px;
+      cursor: pointer; color: #6a8898; background: none; border: none;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .tog-btn.active { background: #00abfa22; color: #00abfa; font-weight: 600; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Distance–Time &amp; Speed–Time Graphs</div>
+  <div class="instruction">
+    Hover a segment to read its gradient. <b style="color:#0fee89">Drag any dot</b> to reshape the journey —
+    on D–T gradient = speed; on S–T gradient = acceleration.
+  </div>
+</div>
+
+<div class="toggle-row">
+  <button class="tog-btn active" id="btn-dt" onclick="setMode('dt')">Distance–Time</button>
+  <button class="tog-btn" id="btn-st" onclick="setMode('st')">Speed–Time</button>
+</div>
+
+<div class="equation-bar" id="eq-display">Hover a segment, or drag a dot to reshape</div>
+
+<canvas id="graph" width="560" height="340"></canvas>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>gradient = Δy ÷ Δx — always use the full rise and run of the segment</strong>,
+    not just one point. On S–T graphs, area under the curve = distance travelled.
+  </div>
+</div>
+
+<script>
+  var mode = 'dt';
+  var hoverSeg = -1, hoverPt = -1, dragPt = -1;
+
+  // Mutable knot arrays (copies so user can reshape)
+  var DT = [[0,0],[2,60],[3,60],[5,100],[7,100],[9,0]];
+  var ST = [[0,0],[2,20],[5,20],[7,0]];
+
+  // Fixed world bounds
+  var DT_XMAX=10, DT_YMAX=120;
+  var ST_XMAX=8,  ST_YMAX=28;
+
+  var canvas = document.getElementById('graph');
+  var ctx    = canvas.getContext('2d');
+  var W=560, H=340;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var PAD = {l:52, r:16, t:20, b:42};
+  var HIT=14;
+  var SEGCOLS=['#0fee89','#fff067','#ff822c','#ff4670','#00abfa'];
+
+  function pts(){ return mode==='dt'?DT:ST; }
+  function bounds(){ return mode==='dt'?{xMax:DT_XMAX,yMax:DT_YMAX}:{xMax:ST_XMAX,yMax:ST_YMAX}; }
+
+  function toC(x, y){
+    var b=bounds();
+    return{
+      x: PAD.l+(x/b.xMax)*(W-PAD.l-PAD.r),
+      y: H-PAD.b-(y/b.yMax)*(H-PAD.t-PAD.b)
+    };
+  }
+  function fromC(cx, cy){
+    var b=bounds();
+    return{
+      x: (cx-PAD.l)/(W-PAD.l-PAD.r)*b.xMax,
+      y: (H-PAD.b-cy)/(H-PAD.t-PAD.b)*b.yMax
+    };
+  }
+
+  function setMode(m){
+    mode=m; hoverSeg=-1; hoverPt=-1; dragPt=-1;
+    document.getElementById('btn-dt').classList.toggle('active',m==='dt');
+    document.getElementById('btn-st').classList.toggle('active',m==='st');
+    document.getElementById('eq-display').textContent='Hover a segment, or drag a dot to reshape';
+  }
+
+  function getPos(e){
+    var r=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return{x:(cx-r.left)*W/r.width, y:(cy-r.top)*H/r.height};
+  }
+
+  function findKnot(p){
+    var P=pts();
+    for(var i=0;i<P.length;i++){
+      var cp=toC(P[i][0],P[i][1]);
+      var dx=p.x-cp.x, dy=p.y-cp.y;
+      if(dx*dx+dy*dy<HIT*HIT) return i;
+    }
+    return -1;
+  }
+
+  function findSeg(p){
+    var P=pts();
+    for(var i=0;i<P.length-1;i++){
+      var p1=toC(P[i][0],P[i][1]), p2=toC(P[i+1][0],P[i+1][1]);
+      var dx=p2.x-p1.x, dy=p2.y-p1.y, len2=dx*dx+dy*dy;
+      if(len2===0)continue;
+      var t=Math.max(0,Math.min(1,((p.x-p1.x)*dx+(p.y-p1.y)*dy)/len2));
+      var nx=p1.x+t*dx, ny=p1.y+t*dy;
+      if(Math.hypot(p.x-nx,p.y-ny)<14){return i;}
+    }
+    return -1;
+  }
+
+  function dragPoint(p){
+    var P=pts();
+    var b=bounds();
+    var mc=fromC(p.x,p.y);
+    var newX=mc.x, newY=mc.y;
+    // Clamp y
+    newY=Math.max(0,Math.min(b.yMax,newY));
+    // Clamp x between neighbours (first point x is fixed)
+    if(dragPt===0){
+      newX=P[0][0]; newY=0; // first point locked at origin
+    } else {
+      var xLo=P[dragPt-1][0]+0.1;
+      var xHi=(dragPt<P.length-1)?P[dragPt+1][0]-0.1:b.xMax;
+      newX=Math.max(xLo,Math.min(xHi,newX));
+    }
+    P[dragPt][0]=Math.round(newX*10)/10;
+    P[dragPt][1]=Math.round(newY*10)/10;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var P=pts();
+    var b=bounds();
+
+    // Grid (batched)
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var gx=0;gx<=b.xMax;gx++){
+      var p1=toC(gx,0),p2=toC(gx,b.yMax);
+      ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
+    }
+    var yStep=mode==='dt'?20:5;
+    for(var gy=0;gy<=b.yMax;gy+=yStep){
+      var p1=toC(0,gy),p2=toC(b.xMax,gy);
+      ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    var o=toC(0,0), xEnd=toC(b.xMax,0), yEnd=toC(0,b.yMax);
+    ctx.beginPath(); ctx.moveTo(o.x,yEnd.y); ctx.lineTo(o.x,o.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(o.x,o.y); ctx.lineTo(xEnd.x,o.y); ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle='#6a8898'; ctx.font='11px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var gx=0;gx<=b.xMax;gx++){
+      ctx.fillText(String(gx),toC(gx,0).x,toC(gx,0).y+5);
+    }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var gy=0;gy<=b.yMax;gy+=yStep){
+      ctx.fillText(String(gy),toC(0,gy).x-5,toC(0,gy).y);
+    }
+
+    // Axis labels
+    ctx.fillStyle='#7a9aaa'; ctx.font='12px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('Time (h)',W/2,H-12);
+    ctx.save(); ctx.translate(14,H/2); ctx.rotate(-Math.PI/2);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(mode==='dt'?'Distance (km)':'Speed (km/h)',0,0);
+    ctx.restore();
+
+    // S-T area shading
+    if(mode==='st'){
+      ctx.beginPath();
+      ctx.moveTo(toC(P[0][0],0).x,toC(P[0][0],0).y);
+      P.forEach(function(p){ctx.lineTo(toC(p[0],p[1]).x,toC(p[0],p[1]).y);});
+      ctx.lineTo(toC(P[P.length-1][0],0).x,toC(P[P.length-1][0],0).y);
+      ctx.closePath();
+      ctx.fillStyle='#00abfa0e'; ctx.fill();
+    }
+
+    // Segments
+    for(var i=0;i<P.length-1;i++){
+      var isHov=i===hoverSeg;
+      var p1=toC(P[i][0],P[i][1]), p2=toC(P[i+1][0],P[i+1][1]);
+      ctx.strokeStyle=isHov?'#ffffff':SEGCOLS[i%SEGCOLS.length];
+      ctx.lineWidth=isHov?3.5:2.5;
+      ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    }
+
+    // Knot dots
+    P.forEach(function(p,i){
+      var cp=toC(p[0],p[1]);
+      var isDrag=(i===dragPt), isHov=(i===hoverPt);
+      var r2=isDrag?8:(isHov?7:4);
+      if(isDrag||isHov){
+        var gr2=isDrag?20:16;
+        var grad=ctx.createRadialGradient(cp.x,cp.y,0,cp.x,cp.y,gr2);
+        grad.addColorStop(0,'rgba(15,238,137,0.28)'); grad.addColorStop(1,'rgba(15,238,137,0)');
+        ctx.fillStyle=grad;
+        ctx.beginPath(); ctx.arc(cp.x,cp.y,gr2,0,Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle=isDrag?'#5fffa0':(isHov?'#4de8a0':'#c8c8c8');
+      ctx.beginPath(); ctx.arc(cp.x,cp.y,r2,0,Math.PI*2); ctx.fill();
+      // Coordinate label when dragging
+      if(isDrag){
+        ctx.fillStyle='#0fee89'; ctx.font='bold 11px Courier New, monospace';
+        ctx.textAlign='center'; ctx.textBaseline='bottom';
+        ctx.fillText('('+p[0]+', '+p[1]+')',cp.x,cp.y-12);
+      }
+    });
+  }
+
+  function updateEqBar(seg){
+    var P=pts();
+    if(seg<0||seg>=P.length-1){
+      document.getElementById('eq-display').textContent='Hover a segment, or drag a dot to reshape';
+      return;
+    }
+    var dx=P[seg+1][0]-P[seg][0];
+    var dy=P[seg+1][1]-P[seg][1];
+    var grad=dx===0?Infinity:dy/dx;
+    var gradStr=(Math.round(grad*100)/100).toString();
+    if(mode==='dt'){
+      var meaning=grad===0?'stationary (speed = 0)':grad>0?'moving away at '+gradStr+' km/h':'returning at '+Math.abs(grad)+' km/h';
+      document.getElementById('eq-display').textContent=
+        'Seg '+(seg+1)+': gradient = ('+P[seg+1][1]+'−'+P[seg][1]+')÷('+P[seg+1][0]+'−'+P[seg][0]+') = '+gradStr+' km/h   →   '+meaning;
+    } else {
+      var area=0.5*(P[seg][1]+P[seg+1][1])*dx;
+      document.getElementById('eq-display').textContent=
+        'Seg '+(seg+1)+': acceleration = '+gradStr+' km/h²   |   area (distance) = ½×('+P[seg][1]+'+'+P[seg+1][1]+')×'+dx+' = '+area+' km';
+    }
+  }
+
+  function tick(){
+    draw();
+    requestAnimationFrame(tick);
+  }
+
+  // Mouse events
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e);
+    var ki=findKnot(p);
+    if(ki>=0){ dragPt=ki; hoverSeg=-1; canvas.style.cursor='grabbing'; e.preventDefault(); }
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if(dragPt>=0){
+      dragPoint(p);
+      if(hoverSeg>=0) updateEqBar(hoverSeg);
+    } else {
+      var ki=findKnot(p);
+      hoverPt=ki;
+      if(ki>=0){
+        canvas.style.cursor='grab';
+        hoverSeg=-1;
+        document.getElementById('eq-display').textContent='Drag to reshape the journey';
+      } else {
+        canvas.style.cursor='crosshair';
+        var si=findSeg(p);
+        if(si!==hoverSeg){ hoverSeg=si; updateEqBar(si); }
+      }
+    }
+  });
+  canvas.addEventListener('mouseup',function(){
+    dragPt=-1; canvas.style.cursor=hoverPt>=0?'grab':'crosshair';
+  });
+  canvas.addEventListener('mouseleave',function(){
+    dragPt=-1; hoverPt=-1; hoverSeg=-1;
+    document.getElementById('eq-display').textContent='Hover a segment, or drag a dot to reshape';
+  });
+
+  // Touch events
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e); var ki=findKnot(p);
+    if(ki>=0){dragPt=ki;e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(dragPt<0)return; e.preventDefault();
+    dragPoint(getPos(e));
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){dragPt=-1;});
+
+  tick();
+</script>
+</body>
+</html>

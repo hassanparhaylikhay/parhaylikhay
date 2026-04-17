@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Percentages and Interest</title>
+  <meta property="og:title" content="Percentages and Interest"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="780"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .toggle-row {
+      width: 560px; display: flex; gap: 0;
+      background: #111f2c; border: 1px solid #1a2535;
+      border-radius: 6px; overflow: hidden; margin-bottom: 8px;
+    }
+    .tog-btn {
+      flex: 1; padding: 9px 0; text-align: center; font-size: 13px;
+      cursor: pointer; color: #6a8898; background: none; border: none;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .tog-btn.active { background: #00abfa22; color: #00abfa; font-weight: 600; }
+    /* Mode panels */
+    .mode-panel { width: 560px; }
+    /* SI vs CI sliders */
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 8px 4px;
+      border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 80px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #sl-P::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-r::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    #sl-n::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff822c; cursor:pointer; }
+    .slider-bounds { color: #3a4a5a; font-size: 11px; width: 52px; text-align: right; flex-shrink: 0; }
+    canvas { display: block; cursor: crosshair; }
+    /* step box */
+    .step-box {
+      width: 560px; padding: 10px 4px;
+      font-family: 'Courier New', monospace; font-size: 12px;
+      color: #b4b2a9; line-height: 1.7;
+    }
+    .step-box strong { color: #0fee89; font-weight: 600; }
+    /* mode 2/3 */
+    .input-group {
+      background: #141d27; border: 1px solid #1a2535;
+      border-radius: 8px; padding: 14px; margin-bottom: 10px;
+    }
+    .ig-label { font-size: 11px; color: #6a8898; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+    .ig-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    input[type="number"] {
+      width: 110px; background: #0d1c28; border: 1px solid #1a3350;
+      border-radius: 5px; padding: 7px 10px; color: #f0f0ee; font-size: 13px;
+      outline: none; font-family: inherit;
+    }
+    input[type="number"]:focus { border-color: #00abfa; }
+    select {
+      background: #0d1c28; border: 1px solid #1a3350; border-radius: 5px;
+      padding: 7px 10px; color: #f0f0ee; font-size: 13px; outline: none; font-family: inherit;
+    }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Percentages</div>
+  <div class="instruction">
+    Simple vs compound interest — <b style="color:#0fee89">drag the green dot</b> along the CI curve.
+    Switch to percentage change or reverse percentage using the tabs.
+  </div>
+</div>
+
+<div class="toggle-row">
+  <button class="tog-btn active" id="t1" onclick="setMode(1)">Simple vs Compound</button>
+  <button class="tog-btn"        id="t2" onclick="setMode(2)">% increase / decrease</button>
+  <button class="tog-btn"        id="t3" onclick="setMode(3)">Reverse percentage</button>
+</div>
+
+<!-- Mode 1 -->
+<div class="mode-panel" id="mode1">
+  <div class="sliders">
+    <div class="slider-row">
+      <div class="slider-label" style="color:#00abfa" id="lbl-P">P = $1000</div>
+      <input type="range" id="sl-P" min="100" max="5000" step="100" value="1000"/>
+      <div class="slider-bounds">100…5000</div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label" style="color:#0fee89" id="lbl-r">r = 8.00%</div>
+      <input type="range" id="sl-r" min="0.5" max="30" step="0.01" value="8"/>
+      <div class="slider-bounds">0.5…30%</div>
+    </div>
+    <div class="slider-row">
+      <div class="slider-label" style="color:#ff822c" id="lbl-n">n = 5 yr</div>
+      <input type="range" id="sl-n" min="1" max="20" step="1" value="5"/>
+      <div class="slider-bounds">1…20</div>
+    </div>
+  </div>
+  <canvas id="ciCanvas" width="560" height="260"></canvas>
+  <div class="step-box" id="ciSteps"></div>
+</div>
+
+<!-- Mode 2 -->
+<div class="mode-panel" id="mode2" style="display:none">
+  <div style="padding:8px 4px">
+    <div class="input-group">
+      <div class="ig-label">Percentage increase / decrease</div>
+      <div class="ig-row">
+        <div style="font-size:13px;color:#b4b2a9">Original value</div>
+        <input type="number" id="origVal" value="240" step="any"/>
+        <select id="changeDir">
+          <option value="inc">% increase</option>
+          <option value="dec">% decrease</option>
+        </select>
+        <input type="number" id="pctChange" value="15" step="any" style="width:80px"/>
+        <div style="font-size:13px;color:#888780">%</div>
+      </div>
+    </div>
+    <div class="step-box" id="pctSteps"></div>
+  </div>
+</div>
+
+<!-- Mode 3 -->
+<div class="mode-panel" id="mode3" style="display:none">
+  <div style="padding:8px 4px; display:grid; grid-template-columns:1fr 1fr; gap:10px">
+    <div class="input-group">
+      <div class="ig-label">Value after increase</div>
+      <input type="number" id="revAfterInc" value="345" step="any" style="width:100%"/>
+      <div class="ig-label" style="margin-top:8px">% increase applied</div>
+      <input type="number" id="revPctInc" value="15" step="any" style="width:100%"/>
+      <div style="margin-top:10px;font-size:14px;font-weight:700;color:#fff067" id="revOrigInc"></div>
+      <div style="font-size:12px;color:#888780;margin-top:4px" id="revStepInc"></div>
+    </div>
+    <div class="input-group">
+      <div class="ig-label">Value after decrease</div>
+      <input type="number" id="revAfterDec" value="204" step="any" style="width:100%"/>
+      <div class="ig-label" style="margin-top:8px">% decrease applied</div>
+      <input type="number" id="revPctDec" value="15" step="any" style="width:100%"/>
+      <div style="margin-top:10px;font-size:14px;font-weight:700;color:#fff067" id="revOrigDec"></div>
+      <div style="font-size:12px;color:#888780;margin-top:4px" id="revStepDec"></div>
+    </div>
+  </div>
+  <div class="step-box" id="revNote">
+    <strong>Key rule:</strong> A 15% increase gives multiplier 1.15. To reverse: original = new ÷ 1.15.<br>
+    <strong>Never</strong> subtract 15% of the new value — that gives the wrong answer.
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>compound interest formula A = P(1 + r/100)<sup>n</sup></strong> — write it with the
+    multiplier in one step. Simple interest earns the same amount every year; compound interest grows faster
+    because interest is earned on interest. The difference is worth a separate mark.
+  </div>
+</div>
+
+<script>
+  var P_val=1000, r_val=8, n_val=5;
+  var P_D=1000, r_D=8;
+  var SPRING=0.13;
+  var activeMode=1;
+  var dragging=false, hovering=false;
+  var xProbe=2.0, xProbeT=2.0;
+  var HIT=16;
+
+  var canvas=document.getElementById('ciCanvas');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=260;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var PAD={l:56,r:20,t:20,b:34};
+
+  function setMode(m){
+    activeMode=m;
+    [1,2,3].forEach(function(i){
+      document.getElementById('t'+i).classList.toggle('active',i===m);
+      document.getElementById('mode'+i).style.display=i===m?'':'none';
+    });
+    if(m===2) updatePct();
+    if(m===3) updateRev();
+  }
+
+  function siVal(y){ return P_D+P_D*(r_D/100)*y; }
+  function ciVal(y){ return P_D*Math.pow(1+r_D/100,y); }
+
+  function getPos(e){
+    var r2=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return{x:(cx-r2.left)*W/r2.width, y:(cy-r2.top)*H/r2.height};
+  }
+
+  function toC(y,v,minV,maxV){
+    return{
+      x: PAD.l+(y/n_val)*(W-PAD.l-PAD.r),
+      y: H-PAD.b-(v-minV)/(maxV-minV)*(H-PAD.t-PAD.b)
+    };
+  }
+
+  function dataRange(){
+    var allV=[];
+    for(var y=0;y<=n_val;y++){allV.push(siVal(y));allV.push(ciVal(y));}
+    var mn=Math.min.apply(null,allV), mx=Math.max.apply(null,allV);
+    var pad=(mx-mn)*0.08||mn*0.05||10;
+    return{minV:mn-pad, maxV:mx+pad};
+  }
+
+  function probeCxy(minV,maxV){
+    var v=ciVal(xProbe);
+    if(!isFinite(v)) return null;
+    var cp=toC(xProbe,v,minV,maxV);
+    return cp;
+  }
+
+  function fmt(x){return '$'+(x>=1000?Math.round(x).toLocaleString():x.toFixed(2));}
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var rng=dataRange();
+    var minV=rng.minV, maxV=rng.maxV;
+
+    // Grid (batched)
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var i=0;i<=n_val;i++){
+      var px=toC(i,minV,minV,maxV).x;
+      ctx.moveTo(px,PAD.t); ctx.lineTo(px,H-PAD.b);
+    }
+    for(var k=0;k<=4;k++){
+      var yy=PAD.t+k*(H-PAD.t-PAD.b)/4;
+      ctx.moveTo(PAD.l,yy); ctx.lineTo(W-PAD.r,yy);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(PAD.l,PAD.t); ctx.lineTo(PAD.l,H-PAD.b); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD.l,H-PAD.b); ctx.lineTo(W-PAD.r,H-PAD.b); ctx.stroke();
+
+    // Y labels
+    ctx.fillStyle='#6a8898'; ctx.font='10px sans-serif';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var k=0;k<=4;k++){
+      var v2=minV+(1-k/4)*(maxV-minV);
+      var yy2=PAD.t+k*(H-PAD.t-PAD.b)/4;
+      ctx.fillText('$'+Math.round(v2),PAD.l-4,yy2);
+    }
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var i=0;i<=n_val;i++){
+      ctx.fillStyle='#6a8898';
+      ctx.fillText('Y'+i,toC(i,minV,minV,maxV).x,H-PAD.b+4);
+    }
+
+    // SI line (dashed grey)
+    ctx.strokeStyle='#4a6070'; ctx.lineWidth=1.8; ctx.setLineDash([5,4]);
+    ctx.beginPath();
+    for(var y=0;y<=n_val;y++){
+      var cp=toC(y,siVal(y),minV,maxV);
+      y===0?ctx.moveTo(cp.x,cp.y):ctx.lineTo(cp.x,cp.y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // CI line (green)
+    ctx.strokeStyle='#0fee89'; ctx.lineWidth=2.5;
+    ctx.beginPath();
+    for(var yi=0;yi<=n_val;yi+=0.05){
+      var v=ciVal(yi);
+      var cp=toC(yi,v,minV,maxV);
+      yi===0?ctx.moveTo(cp.x,cp.y):ctx.lineTo(cp.x,cp.y);
+    }
+    ctx.stroke();
+
+    // CI dots
+    for(var y=0;y<=n_val;y++){
+      var cp2=toC(y,ciVal(y),minV,maxV);
+      ctx.beginPath(); ctx.arc(cp2.x,cp2.y,3,0,Math.PI*2);
+      ctx.fillStyle='#0fee89'; ctx.fill();
+    }
+
+    // Legend
+    ctx.fillStyle='#4a6070'; ctx.font='11px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('── Simple',PAD.l+4,PAD.t+8);
+    ctx.fillStyle='#0fee89';
+    ctx.fillText('── Compound',PAD.l+80,PAD.t+8);
+
+    // Probe dot on CI curve
+    var sp=probeCxy(minV,maxV);
+    if(sp&&sp.y>PAD.t-10&&sp.y<H-PAD.b+10){
+      var probeV=ciVal(xProbe);
+      ctx.strokeStyle='#0fee8944'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(sp.x,H-PAD.b); ctx.lineTo(sp.x,sp.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(PAD.l,sp.y); ctx.lineTo(sp.x,sp.y); ctx.stroke();
+      ctx.setLineDash([]);
+      var gr=dragging?22:(hovering?18:14);
+      var grad=ctx.createRadialGradient(sp.x,sp.y,0,sp.x,sp.y,gr);
+      grad.addColorStop(0,'rgba(15,238,137,0.30)');
+      grad.addColorStop(1,'rgba(15,238,137,0)');
+      ctx.fillStyle=grad;
+      ctx.beginPath(); ctx.arc(sp.x,sp.y,gr,0,Math.PI*2); ctx.fill();
+      var rd=dragging?9:(hovering?8:6);
+      ctx.fillStyle=dragging?'#5fffa0':'#0fee89';
+      ctx.beginPath(); ctx.arc(sp.x,sp.y,rd,0,Math.PI*2); ctx.fill();
+      var yr=Math.round(xProbe*10)/10;
+      var lx=sp.x+(sp.x>W*0.7?-14:14);
+      ctx.fillStyle='#0fee89'; ctx.font='bold 12px Courier New, monospace';
+      ctx.textAlign=sp.x>W*0.7?'right':'left'; ctx.textBaseline='middle';
+      ctx.fillText('Y'+yr+': '+fmt(probeV),lx,sp.y-14);
+    }
+  }
+
+  function buildSteps(){
+    var ciF=ciVal(n_val), siF=siVal(n_val);
+    var pStr='$'+Math.round(P_D), rStr=(Math.round(r_D*100)/100).toFixed(2);
+    document.getElementById('ciSteps').innerHTML=
+      '<strong>Simple Interest:</strong> A = P + PRT = '+pStr+' + '+pStr+'×'+rStr+'/100×'+n_val+' = <strong>'+fmt(siF)+'</strong><br>'+
+      '<strong>Compound Interest:</strong> A = P(1+r/100)<sup>n</sup> = '+pStr+'×(1+'+rStr+'/100)<sup>'+n_val+'</sup> = <strong>'+fmt(ciF)+'</strong><br>'+
+      '<strong>Difference:</strong> CI earns $'+(ciF-siF).toFixed(2)+' more than SI over '+n_val+' years.';
+  }
+
+  function tick(){
+    P_D+=(P_val-P_D)*SPRING;
+    r_D+=(r_val-r_D)*SPRING;
+    xProbe+=(xProbeT-xProbe)*(dragging?0.9:SPRING);
+    xProbe=Math.max(0,Math.min(n_val,xProbe));
+    if(activeMode===1){ draw(); buildSteps(); }
+    requestAnimationFrame(tick);
+  }
+
+  function hitTest(p){
+    var rng=dataRange();
+    var sp=probeCxy(rng.minV,rng.maxV);
+    if(!sp) return false;
+    var dx=p.x-sp.x, dy=p.y-sp.y;
+    return dx*dx+dy*dy<HIT*HIT;
+  }
+
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e);
+    if(hitTest(p)){dragging=true;e.preventDefault();}
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if(dragging){
+      xProbeT=Math.max(0,Math.min(n_val,(p.x-PAD.l)/(W-PAD.l-PAD.r)*n_val));
+      xProbe=xProbeT;
+    } else {
+      hovering=hitTest(p);
+      canvas.style.cursor=hovering?'grab':'crosshair';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){dragging=false;canvas.style.cursor=hovering?'grab':'crosshair';});
+  canvas.addEventListener('mouseleave',function(){dragging=false;hovering=false;});
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e);
+    if(hitTest(p)){dragging=true;e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(!dragging)return; e.preventDefault();
+    var p=getPos(e);
+    xProbeT=Math.max(0,Math.min(n_val,(p.x-PAD.l)/(W-PAD.l-PAD.r)*n_val));
+    xProbe=xProbeT;
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){dragging=false;});
+
+  document.getElementById('sl-P').oninput=function(){
+    P_val=parseFloat(this.value);
+    document.getElementById('lbl-P').textContent='P = $'+P_val;
+  };
+  document.getElementById('sl-r').oninput=function(){
+    r_val=parseFloat(this.value);
+    document.getElementById('lbl-r').textContent='r = '+r_val.toFixed(2)+'%';
+  };
+  document.getElementById('sl-n').oninput=function(){
+    n_val=parseInt(this.value);
+    document.getElementById('lbl-n').textContent='n = '+n_val+' yr';
+    if(xProbe>n_val){xProbe=n_val;xProbeT=n_val;}
+  };
+
+  function updatePct(){
+    var orig=parseFloat(document.getElementById('origVal').value)||0;
+    var pct=parseFloat(document.getElementById('pctChange').value)||0;
+    var dir=document.getElementById('changeDir').value;
+    var mult=dir==='inc'?1+pct/100:1-pct/100;
+    var result=orig*mult;
+    var change=result-orig;
+    document.getElementById('pctSteps').innerHTML=
+      '<strong>Multiplier:</strong> '+(dir==='inc'?'1 + ':'1 − ')+pct+'/100 = <strong>'+mult+'</strong><br>'+
+      '<strong>New value:</strong> '+orig+' × '+mult+' = <strong>'+result.toFixed(2)+'</strong><br>'+
+      '<strong>Change:</strong> '+(change>=0?'+':'')+change.toFixed(2)+'<br><br>'+
+      '<strong>% change check:</strong> ('+result.toFixed(2)+' − '+orig+') ÷ '+orig+' × 100 = '+((result-orig)/orig*100).toFixed(2)+'%';
+  }
+
+  function updateRev(){
+    var aI=parseFloat(document.getElementById('revAfterInc').value)||0;
+    var pI=parseFloat(document.getElementById('revPctInc').value)||0;
+    var mI=1+pI/100;
+    var oI=aI/mI;
+    document.getElementById('revOrigInc').textContent='Original: $'+oI.toFixed(2);
+    document.getElementById('revStepInc').textContent='$'+aI+' ÷ '+mI+' = $'+oI.toFixed(2);
+    var aD=parseFloat(document.getElementById('revAfterDec').value)||0;
+    var pD=parseFloat(document.getElementById('revPctDec').value)||0;
+    var mD=1-pD/100;
+    var oD=aD/mD;
+    document.getElementById('revOrigDec').textContent='Original: $'+oD.toFixed(2);
+    document.getElementById('revStepDec').textContent='$'+aD+' ÷ '+mD+' = $'+oD.toFixed(2);
+  }
+
+  ['origVal','pctChange','changeDir'].forEach(function(id){document.getElementById(id).addEventListener('input',updatePct);});
+  ['revAfterInc','revPctInc','revAfterDec','revPctDec'].forEach(function(id){document.getElementById(id).addEventListener('input',updateRev);});
+
+  tick();
+  updatePct();
+  updateRev();
+</script>
+</body>
+</html>

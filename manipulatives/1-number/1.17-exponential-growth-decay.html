@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Exponential Growth and Decay</title>
+  <meta property="og:title" content="Exponential Growth and Decay"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="620"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .equation-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+    }
+    .toggle-row {
+      width: 560px; display: flex; gap: 0;
+      background: #111f2c; border: 1px solid #1a2535;
+      border-radius: 6px; overflow: hidden; margin-bottom: 4px;
+    }
+    .tog-btn {
+      flex: 1; padding: 9px 0; text-align: center; font-size: 13px;
+      cursor: pointer; color: #6a8898; background: none; border: none;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .tog-btn.growth.active { background: #0fee8922; color: #0fee89; font-weight: 600; }
+    .tog-btn.decay.active  { background: #ff467022; color: #ff4670; font-weight: 600; }
+    canvas { display: block; cursor: crosshair; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 10px 4px;
+      border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 80px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #sl-A::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-r::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    #sl-T::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff822c; cursor:pointer; }
+    .slider-bounds { color: #3a4a5a; font-size: 11px; width: 52px; text-align: right; flex-shrink: 0; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Exponential Growth and Decay</div>
+  <div class="instruction">
+    Toggle growth / decay — <b style="color:#0fee89">drag the green dot</b> along the curve to read values.
+    Adjust A (initial), r (rate %) and T (periods) with the sliders.
+  </div>
+</div>
+
+<div class="toggle-row">
+  <button class="tog-btn growth active" id="btn-growth" onclick="setType('growth')">Growth ↑</button>
+  <button class="tog-btn decay"         id="btn-decay"  onclick="setType('decay')">Decay ↓</button>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="300"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-A">A = 1000</div>
+    <input type="range" id="sl-A" min="100" max="5000" step="100" value="1000"/>
+    <div class="slider-bounds">100…5000</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#0fee89" id="lbl-r">r = 20.0%</div>
+    <input type="range" id="sl-r" min="1" max="50" step="0.1" value="20"/>
+    <div class="slider-bounds">1…50%</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#ff822c" id="lbl-T">T = 5</div>
+    <input type="range" id="sl-T" min="1" max="20" step="1" value="5"/>
+    <div class="slider-bounds">1…20</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>write the multiplier first — (1 + r/100) for growth, (1 − r/100) for decay</strong>.
+    Formula: y = A × multiplier<sup>t</sup>. The multiplier earns its own B1 mark.
+    Compound interest uses the accumulated total each period, not just the original principal.
+  </div>
+</div>
+
+<script>
+  var A_val=1000, r_val=20, T_val=5;
+  var A_D=1000, r_D=20;
+  var SPRING=0.13;
+  var expType='growth';
+  var dragging=false, hovering=false;
+  var xProbe=2.0, xProbeT=2.0;
+  var HIT=16;
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=300;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var PAD={l:60,r:20,t:24,b:38};
+
+  function mult(){ return expType==='growth'?1+r_D/100:1-r_D/100; }
+  function fCurve(t){ return A_D*Math.pow(mult(),t); }
+
+  function setType(t){
+    expType=t;
+    document.getElementById('btn-growth').classList.toggle('active',t==='growth');
+    document.getElementById('btn-decay').classList.toggle('active',t==='decay');
+  }
+
+  function dataRange(){
+    var lo=fCurve(0), hi=fCurve(T_val);
+    var mn=Math.min(lo,hi), mx=Math.max(lo,hi);
+    var pad=(mx-mn)*0.12||lo*0.1||10;
+    return{minV:mn-pad, maxV:mx+pad};
+  }
+
+  function toC(t,v,minV,maxV){
+    return{
+      x: PAD.l+(t/T_val)*(W-PAD.l-PAD.r),
+      y: H-PAD.b-(v-minV)/(maxV-minV)*(H-PAD.t-PAD.b)
+    };
+  }
+
+  function fromCX(cx){ return (cx-PAD.l)/(W-PAD.l-PAD.r)*T_val; }
+
+  function getPos(e){
+    var r2=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return{x:(cx-r2.left)*W/r2.width, y:(cy-r2.top)*H/r2.height};
+  }
+
+  function probeCanvasXY(minV,maxV){
+    var v=fCurve(xProbe);
+    if(!isFinite(v)) return null;
+    var cp=toC(xProbe,v,minV,maxV);
+    if(cp.y<PAD.t-10||cp.y>H-PAD.b+10) return null;
+    return cp;
+  }
+
+  function fmt(x){
+    if(Math.abs(x)>=1000) return Math.round(x).toLocaleString();
+    return parseFloat(x.toPrecision(5)).toString();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var rng=dataRange();
+    var minV=rng.minV, maxV=rng.maxV;
+
+    // Grid (batched)
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var i=0;i<=T_val;i++){
+      var px=toC(i,minV,minV,maxV).x;
+      ctx.moveTo(px,PAD.t); ctx.lineTo(px,H-PAD.b);
+    }
+    for(var k=0;k<=4;k++){
+      var yy=PAD.t+k*(H-PAD.t-PAD.b)/4;
+      ctx.moveTo(PAD.l,yy); ctx.lineTo(W-PAD.r,yy);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(PAD.l,PAD.t); ctx.lineTo(PAD.l,H-PAD.b); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD.l,H-PAD.b); ctx.lineTo(W-PAD.r,H-PAD.b); ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle='#6a8898'; ctx.font='11px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var i=0;i<=T_val;i++){
+      ctx.fillText(String(i),toC(i,minV,minV,maxV).x,H-PAD.b+5);
+    }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var k=0;k<=4;k++){
+      var v2=minV+(1-k/4)*(maxV-minV);
+      var yy2=PAD.t+k*(H-PAD.t-PAD.b)/4;
+      ctx.fillText(fmt(v2),PAD.l-5,yy2);
+    }
+
+    // Axis labels
+    ctx.fillStyle='#7a9aaa'; ctx.font='12px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('Time (periods)',W/2,H-14);
+    ctx.save(); ctx.translate(14,H/2); ctx.rotate(-Math.PI/2);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('Value',0,0);
+    ctx.restore();
+
+    // Curve
+    var color=expType==='growth'?'#0fee89':'#ff4670';
+    ctx.strokeStyle=color; ctx.lineWidth=2.5; ctx.lineJoin='round';
+    ctx.beginPath();
+    var pen=false;
+    for(var ti=0;ti<=T_val;ti+=0.02){
+      var v=fCurve(ti);
+      if(!isFinite(v)){pen=false;continue;}
+      var cp=toC(ti,v,minV,maxV);
+      if(!pen){ctx.moveTo(cp.x,cp.y);pen=true;}else ctx.lineTo(cp.x,cp.y);
+    }
+    ctx.stroke();
+
+    // Integer data points
+    for(var i=0;i<=T_val;i++){
+      var dv=fCurve(i);
+      var dp=toC(i,dv,minV,maxV);
+      ctx.beginPath(); ctx.arc(dp.x,dp.y,3,0,Math.PI*2);
+      ctx.fillStyle=color; ctx.fill();
+    }
+
+    // Probe dot
+    var sp=probeCanvasXY(minV,maxV);
+    if(sp){
+      var probeV=fCurve(xProbe);
+      // Dashed guides
+      ctx.strokeStyle=color+'44'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(sp.x,H-PAD.b); ctx.lineTo(sp.x,sp.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(PAD.l,sp.y); ctx.lineTo(sp.x,sp.y); ctx.stroke();
+      ctx.setLineDash([]);
+      // Glow
+      var gr=dragging?22:(hovering?18:14);
+      var grad=ctx.createRadialGradient(sp.x,sp.y,0,sp.x,sp.y,gr);
+      grad.addColorStop(0,'rgba(15,238,137,0.30)');
+      grad.addColorStop(1,'rgba(15,238,137,0)');
+      ctx.fillStyle=grad;
+      ctx.beginPath(); ctx.arc(sp.x,sp.y,gr,0,Math.PI*2); ctx.fill();
+      // Dot
+      var rd=dragging?9:(hovering?8:6);
+      ctx.fillStyle=dragging?'#5fffa0':'#0fee89';
+      ctx.beginPath(); ctx.arc(sp.x,sp.y,rd,0,Math.PI*2); ctx.fill();
+      // Coordinate label
+      ctx.fillStyle='#0fee89'; ctx.font='bold 12px Courier New, monospace';
+      var lx=sp.x+(sp.x>W*0.7?-14:14);
+      ctx.textAlign=sp.x>W*0.7?'right':'left'; ctx.textBaseline='middle';
+      ctx.fillText('('+Math.round(xProbe*10)/10+', '+fmt(probeV)+')',lx,sp.y-14);
+    }
+
+    // Doubling/halving annotation
+    var m2=mult();
+    if(m2>0&&m2!==1&&isFinite(m2)){
+      var hl=expType==='growth'?Math.log(2)/Math.log(m2):Math.log(0.5)/Math.log(m2);
+      if(hl>0&&hl<99){
+        ctx.fillStyle='#888780'; ctx.font='11px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='top';
+        ctx.fillText((expType==='growth'?'Doubles':'Halves')+' every '+hl.toFixed(2)+' periods',PAD.l+4,PAD.t+4);
+      }
+    }
+  }
+
+  function buildEqBar(){
+    var m=mult();
+    var probeV=fCurve(xProbe);
+    var sign=expType==='growth'?'+':'−';
+    var mStr=(Math.round(m*10000)/10000).toString();
+    var rStr=(Math.round(r_D*10)/10).toFixed(1);
+    var AStr=Math.round(A_D).toString();
+    var tStr=(Math.round(xProbe*10)/10).toString();
+    return 'y = '+AStr+' × (1 '+sign+' '+rStr+'/100)^t = '+AStr+' × '+mStr+'^t   |   t='+tStr+': y='+fmt(probeV);
+  }
+
+  function tick(){
+    A_D+=(A_val-A_D)*SPRING;
+    r_D+=(r_val-r_D)*SPRING;
+    xProbe+=(xProbeT-xProbe)*(dragging?0.9:SPRING);
+    xProbe=Math.max(0,Math.min(T_val,xProbe));
+    draw();
+    document.getElementById('eq-display').textContent=buildEqBar();
+    requestAnimationFrame(tick);
+  }
+
+  function hitTest(p){
+    var rng=dataRange();
+    var sp=probeCanvasXY(rng.minV,rng.maxV);
+    if(!sp) return false;
+    var dx=p.x-sp.x, dy=p.y-sp.y;
+    return dx*dx+dy*dy<HIT*HIT;
+  }
+
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e);
+    if(hitTest(p)){dragging=true;e.preventDefault();}
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if(dragging){
+      var t=fromCX(p.x);
+      xProbeT=Math.max(0,Math.min(T_val,t));
+      xProbe=xProbeT;
+    } else {
+      hovering=hitTest(p);
+      canvas.style.cursor=hovering?'grab':'crosshair';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){dragging=false;canvas.style.cursor=hovering?'grab':'crosshair';});
+  canvas.addEventListener('mouseleave',function(){dragging=false;hovering=false;});
+
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e);
+    if(hitTest(p)){dragging=true;e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(!dragging)return; e.preventDefault();
+    var p=getPos(e);
+    var t=fromCX(p.x);
+    xProbeT=Math.max(0,Math.min(T_val,t));
+    xProbe=xProbeT;
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){dragging=false;});
+
+  document.getElementById('sl-A').oninput=function(){
+    A_val=parseFloat(this.value);
+    document.getElementById('lbl-A').textContent='A = '+A_val;
+  };
+  document.getElementById('sl-r').oninput=function(){
+    r_val=parseFloat(this.value);
+    document.getElementById('lbl-r').textContent='r = '+r_val.toFixed(1)+'%';
+  };
+  document.getElementById('sl-T').oninput=function(){
+    T_val=parseInt(this.value);
+    document.getElementById('lbl-T').textContent='T = '+T_val;
+    if(xProbe>T_val){xProbe=T_val;xProbeT=T_val;}
+  };
+
+  tick();
+</script>
+</body>
+</html>

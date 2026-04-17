@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parhaylikhay · Estimation &amp; Rounding</title>
+<meta property="og:title" content="Estimation and Rounding"/>
+<meta property="og:type" content="video.other"/>
+<meta property="og:video:type" content="text/html"/>
+<meta property="og:video:width" content="600"/>
+<meta property="og:video:height" content="560"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0d1216;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #e8e8e8;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+}
+h1 { font-size: 1.3rem; color: #00abfa; margin-bottom: 4px; }
+.subtitle { font-size: 0.85rem; color: #888780; margin-bottom: 24px; }
+.widget { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 20px; }
+
+.input-box {
+  background: #141d27;
+  border: 1px solid #2a3a4a;
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.input-box label { font-size: 0.78rem; color: #888780; text-transform: uppercase; letter-spacing: 0.08em; }
+input[type=text] {
+  width: 100%;
+  background: #1a2530;
+  border: 1px solid #2a3a4a;
+  border-radius: 6px;
+  padding: 10px 14px;
+  color: #e8e8e8;
+  font-size: 1.2rem;
+  outline: none;
+  font-family: inherit;
+}
+input[type=text]:focus { border-color: #00abfa; }
+
+.mode-tabs { display: flex; gap: 0; background: #141d27; border: 1px solid #2a3a4a; border-radius: 8px; overflow: hidden; }
+.tab { flex: 1; padding: 9px; text-align: center; font-size: 0.85rem; cursor: pointer; color: #888780; font-family: inherit; background: none; border: none; transition: all 0.15s; }
+.tab.active { background: #00abfa22; color: #00abfa; font-weight: 600; }
+
+.n-slider { display: flex; align-items: center; gap: 12px; }
+.n-slider label { font-size: 0.85rem; color: #888780; white-space: nowrap; }
+input[type=range] {
+  -webkit-appearance: none; flex: 1; height: 5px; background: #2a3a4a; border-radius: 3px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #00abfa; cursor: pointer;
+}
+.n-val { font-size: 1.1rem; font-weight: 700; color: #00abfa; width: 24px; text-align: center; }
+
+.digit-display {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  align-items: center;
+  padding: 14px;
+  background: #1a2530;
+  border-radius: 8px;
+  min-height: 54px;
+}
+.digit {
+  width: 30px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 5px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+.digit.kept { background: #0fee8933; color: #0fee89; border: 1px solid #0fee8955; }
+.digit.rounded { background: #00abfa33; color: #00abfa; border: 1px solid #00abfa55; }
+.digit.dropped { background: #1a2530; color: #444; border: 1px solid #2a3a4a; text-decoration: line-through; }
+.digit.dp { background: none; color: #fff067; font-size: 0.9rem; border: none; width: 10px; }
+
+.result-card {
+  background: #141d27;
+  border: 1px solid #2a3a4a;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.result-main { font-size: 2rem; font-weight: 800; color: #fff067; }
+.result-step { font-size: 0.85rem; color: #b0b8c4; line-height: 1.6; }
+.result-step strong { color: #00abfa; }
+
+.examples { display: flex; flex-wrap: wrap; gap: 6px; }
+.ex-btn {
+  background: #1a2530; border: 1px solid #2a3a4a; border-radius: 6px;
+  padding: 4px 10px; color: #888780; font-size: 0.8rem; cursor: pointer; font-family: inherit;
+  transition: all 0.15s;
+}
+.ex-btn:hover { border-color: #00abfa; color: #00abfa; }
+</style>
+</head>
+<body>
+<h1>Estimation and Rounding</h1>
+<p class="subtitle">Round to significant figures or decimal places — digits highlighted in real time</p>
+
+<div class="widget">
+  <div class="input-box">
+    <label>Number to round</label>
+    <input type="text" id="numIn" value="0.074562"/>
+    <div>
+      <div style="font-size:0.75rem;color:#888780;margin-bottom:6px">Examples</div>
+      <div class="examples" id="exDiv"></div>
+    </div>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="tab active" id="tabSF" onclick="setMode('sf')">Significant figures</button>
+    <button class="tab" id="tabDP" onclick="setMode('dp')">Decimal places</button>
+    <button class="tab" id="tabNearest" onclick="setMode('nearest')">Nearest value</button>
+  </div>
+
+  <div>
+    <div class="n-slider">
+      <label id="sliderLabel">Sig. figs:</label>
+      <input type="range" id="nSlider" min="1" max="5" value="2"/>
+      <div class="n-val" id="nVal">2</div>
+    </div>
+  </div>
+
+  <div class="digit-display" id="digitDisplay"></div>
+
+  <div class="result-card">
+    <div class="result-main" id="resultMain"></div>
+    <div class="result-step" id="resultStep"></div>
+  </div>
+</div>
+
+<script>
+let mode = 'sf';
+const EXAMPLES = ['4578.92', '0.074562', '0.007003', '12345', '9.9876', '0.00391', '1003.7', '56789000'];
+const exDiv = document.getElementById('exDiv');
+EXAMPLES.forEach(ex => {
+  const btn = document.createElement('button');
+  btn.className = 'ex-btn';
+  btn.textContent = ex;
+  btn.onclick = () => { document.getElementById('numIn').value = ex; update(); };
+  exDiv.appendChild(btn);
+});
+
+function setMode(m) {
+  mode = m;
+  ['sf','dp','nearest'].forEach(t => document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t === m));
+  const slider = document.getElementById('nSlider');
+  const label = document.getElementById('sliderLabel');
+  if (m === 'sf') { slider.min=1; slider.max=6; slider.value=2; label.textContent='Sig. figs:'; }
+  else if (m === 'dp') { slider.min=0; slider.max=6; slider.value=2; label.textContent='Dec. places:'; }
+  else { slider.min=0; slider.max=5; slider.value=1; label.textContent='Round to 10^:'; }
+  update();
+}
+
+function roundSF(x, sf) {
+  if (x === 0) return 0;
+  const mag = Math.floor(Math.log10(Math.abs(x)));
+  const factor = Math.pow(10, sf - 1 - mag);
+  return Math.round(x * factor) / factor;
+}
+
+function getSigFigDigits(str) {
+  // Find sig figs in a string like "0.0074562"
+  // Returns array of {char, isSig, isDP}
+  const chars = str.split('');
+  let sigStarted = false;
+  let sigCount = 0;
+  return chars.map(c => {
+    if (c === '.') return { char: c, type: 'dp' };
+    if (c === '-') return { char: c, type: 'misc' };
+    if (!sigStarted && c === '0') return { char: c, type: 'leading' };
+    sigStarted = true;
+    sigCount++;
+    return { char: c, type: 'sig', idx: sigCount };
+  });
+}
+
+function update() {
+  const raw = document.getElementById('numIn').value.trim();
+  const x = parseFloat(raw);
+  const n = parseInt(document.getElementById('nSlider').value);
+  document.getElementById('nVal').textContent = n;
+
+  if (isNaN(x)) {
+    document.getElementById('digitDisplay').innerHTML = '<span style="color:#ff4670">Invalid number</span>';
+    document.getElementById('resultMain').textContent = '';
+    document.getElementById('resultStep').innerHTML = '';
+    return;
+  }
+
+  let rounded, stepHtml, xStr;
+
+  if (mode === 'sf') {
+    rounded = roundSF(x, n);
+    xStr = raw;
+    stepHtml = buildSFDisplay(x, n, rounded);
+  } else if (mode === 'dp') {
+    rounded = parseFloat(x.toFixed(n));
+    xStr = raw;
+    stepHtml = buildDPDisplay(x, n, rounded);
+  } else {
+    const power = parseInt(document.getElementById('nSlider').value);
+    const factor = Math.pow(10, power);
+    rounded = Math.round(x / factor) * factor;
+    xStr = raw;
+    stepHtml = `Nearest 10<sup>${power}</sup> = ${factor}: &nbsp; ${x} ÷ ${factor} = ${(x/factor).toFixed(3)} → round → ${Math.round(x/factor)} × ${factor} = <strong>${rounded}</strong>`;
+  }
+
+  document.getElementById('resultMain').textContent = rounded;
+  document.getElementById('resultStep').innerHTML = stepHtml;
+}
+
+function buildSFDisplay(x, sf, rounded) {
+  // Identify which digits are kept, which is the rounded digit, which are dropped
+  const origStr = String(Math.abs(x));
+  const chars = origStr.split('');
+  const display = document.getElementById('digitDisplay');
+  display.innerHTML = '';
+
+  let sigCount = 0;
+  let sigStarted = false;
+  chars.forEach(c => {
+    const el = document.createElement('div');
+    if (c === '.') {
+      el.className = 'digit dp'; el.textContent = '.';
+    } else if (c === '0' && !sigStarted) {
+      el.className = 'digit dropped'; el.textContent = c;
+    } else {
+      sigStarted = true;
+      sigCount++;
+      if (sigCount < sf) { el.className = 'digit kept'; el.textContent = c; }
+      else if (sigCount === sf) { el.className = 'digit rounded'; el.textContent = c; }
+      else { el.className = 'digit dropped'; el.textContent = c; }
+    }
+    display.appendChild(el);
+  });
+
+  return `Round to <strong>${sf}</strong> significant figure${sf>1?'s':''}:<br>
+    Keep the first ${sf} sig. fig${sf>1?'s':''}, then look at the next digit to decide whether to round up or down.<br>
+    ${origStr} → <strong>${rounded}</strong>`;
+}
+
+function buildDPDisplay(x, dp, rounded) {
+  const origStr = String(Math.abs(x));
+  const display = document.getElementById('digitDisplay');
+  display.innerHTML = '';
+  const dotIdx = origStr.indexOf('.');
+  const intPart = dotIdx >= 0 ? origStr.slice(0, dotIdx) : origStr;
+  const fracPart = dotIdx >= 0 ? origStr.slice(dotIdx + 1) : '';
+
+  intPart.split('').forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'digit kept'; el.textContent = c;
+    display.appendChild(el);
+  });
+  if (fracPart || dp > 0) {
+    const dpEl = document.createElement('div');
+    dpEl.className = 'digit dp'; dpEl.textContent = '.';
+    display.appendChild(dpEl);
+  }
+  fracPart.split('').forEach((c, i) => {
+    const el = document.createElement('div');
+    if (i < dp - 1) el.className = 'digit kept';
+    else if (i === dp - 1) el.className = 'digit rounded';
+    else el.className = 'digit dropped';
+    el.textContent = c;
+    display.appendChild(el);
+  });
+
+  return `Round to <strong>${dp}</strong> decimal place${dp>1?'s':''}:<br>
+    Keep ${dp} digit${dp>1?'s':''} after the decimal point, round based on the (${dp+1})th digit.<br>
+    ${origStr} → <strong>${rounded.toFixed(dp)}</strong>`;
+}
+
+document.getElementById('numIn').addEventListener('input', update);
+document.getElementById('nSlider').addEventListener('input', update);
+update();
+</script>
+<div style="width:100%;max-width:560px;padding:8px 4px 14px;font-size:11px;color:#0fee89;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  Cambridge tip: <strong style="font-weight:600">leading zeros are NOT significant figures</strong> — 0.0074 has 2 SF, not 4.
+  For estimation questions, round each value to 1 SF first, then calculate — this earns M1. Write the estimate clearly; do not just write the exact answer. Trailing zeros after a decimal point ARE significant (3.40 has 3 SF).
+</div>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parhaylikhay · Powers and Roots</title>
+<meta property="og:title" content="Powers and Roots"/>
+<meta property="og:type" content="video.other"/>
+<meta property="og:video:type" content="text/html"/>
+<meta property="og:video:width" content="600"/>
+<meta property="og:video:height" content="580"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0d1216;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #e8e8e8;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+}
+h1 { font-size: 1.3rem; color: #00abfa; margin-bottom: 4px; }
+.subtitle { font-size: 0.85rem; color: #888780; margin-bottom: 24px; }
+.layout { display: flex; flex-direction: column; align-items: center; gap: 24px; width: 100%; max-width: 700px; }
+.slider-row { display: flex; align-items: center; gap: 16px; width: 100%; max-width: 500px; }
+.slider-row label { font-size: 0.88rem; color: #888780; width: 40px; text-align: right; }
+input[type=range] {
+  -webkit-appearance: none;
+  flex: 1;
+  height: 6px;
+  background: #2a3a4a;
+  border-radius: 3px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: #00abfa;
+  cursor: pointer;
+}
+.n-display { font-size: 2rem; font-weight: 800; color: #fff067; width: 48px; text-align: center; }
+
+.cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; }
+.card {
+  background: #141d27;
+  border: 1px solid #2a3a4a;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.card-title { font-size: 0.78rem; color: #888780; text-transform: uppercase; letter-spacing: 0.08em; }
+.card-expr { font-size: 1.1rem; color: #b0b8c4; }
+.card-val { font-size: 2rem; font-weight: 800; }
+.card-vis { margin-top: 8px; }
+.sq-grid { display: flex; flex-wrap: wrap; gap: 3px; }
+.sq-cell { width: 12px; height: 12px; border-radius: 2px; }
+canvas { width: 100%; height: 120px; border-radius: 8px; background: #141d27; }
+.known-table { width: 100%; background: #141d27; border: 1px solid #2a3a4a; border-radius: 8px; overflow: hidden; }
+.known-table table { width: 100%; border-collapse: collapse; }
+.known-table th {
+  background: #1a2530;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  color: #888780;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+.known-table td {
+  padding: 8px 10px;
+  font-size: 0.88rem;
+  text-align: center;
+  border-top: 1px solid #1e2c3a;
+}
+.known-table tr:hover td { background: #1a2530; }
+.hl { background: #00abfa22 !important; }
+</style>
+</head>
+<body>
+<h1>Powers and Roots</h1>
+<p class="subtitle">Drag the slider — Cambridge requires instant recall of squares 1–15 and cubes 1–5, 10</p>
+
+<div class="layout">
+  <div class="slider-row">
+    <label>n =</label>
+    <input type="range" id="slider" min="1" max="15" value="5"/>
+    <div class="n-display" id="nDisplay">5</div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-title">Square</div>
+      <div class="card-expr" id="sqExpr">5² = 5 × 5</div>
+      <div class="card-val" style="color:#00abfa" id="sqVal">25</div>
+      <div class="card-vis">
+        <div class="sq-grid" id="sqGrid"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Square root</div>
+      <div class="card-expr" id="sqrtExpr">√25 = ?</div>
+      <div class="card-val" style="color:#0fee89" id="sqrtVal">5</div>
+      <div style="font-size:0.8rem; color:#888780; margin-top:4px" id="sqrtNote"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Cube</div>
+      <div class="card-expr" id="cbExpr">5³ = 5 × 5 × 5</div>
+      <div class="card-val" style="color:#ff822c" id="cbVal">125</div>
+      <div style="font-size:0.8rem; color:#888780; margin-top:4px" id="cbNote"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Cube root</div>
+      <div class="card-expr" id="cbrtExpr">∛125 = ?</div>
+      <div class="card-val" style="color:#fff067" id="cbrtVal">5</div>
+      <div style="font-size:0.8rem; color:#888780; margin-top:4px" id="cbrtNote"></div>
+    </div>
+  </div>
+
+  <div class="known-table">
+    <table>
+      <thead>
+        <tr>
+          <th>n</th>
+          <th style="color:#00abfa">n²</th>
+          <th style="color:#0fee89">√n²</th>
+          <th style="color:#ff822c">n³</th>
+          <th style="color:#fff067">∛n³</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const slider = document.getElementById('slider');
+const cubeRecall = new Set([1,2,3,4,5,10]);
+
+function buildTable(n) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  for (let i = 1; i <= 15; i++) {
+    const tr = document.createElement('tr');
+    const isHL = i === n;
+    const cubeCells = cubeRecall.has(i)
+      ? `<td class="${isHL?'hl':''}" style="color:#ff822c">${i**3}</td><td class="${isHL?'hl':''}" style="color:#fff067">${i}</td>`
+      : `<td class="${isHL?'hl':''}" style="color:#444">—</td><td class="${isHL?'hl':''}" style="color:#444">—</td>`;
+    tr.innerHTML = `
+      <td class="${isHL?'hl':''}" style="font-weight:${isHL?700:400};color:${isHL?'#fff067':'#e8e8e8'}">${i}</td>
+      <td class="${isHL?'hl':''}" style="color:#00abfa">${i**2}</td>
+      <td class="${isHL?'hl':''}" style="color:#0fee89">${i}</td>
+      ${cubeCells}
+    `;
+    tbody.appendChild(tr);
+  }
+}
+
+function buildSquareGrid(n) {
+  const grid = document.getElementById('sqGrid');
+  grid.innerHTML = '';
+  const total = n * n;
+  const size = total <= 25 ? 14 : total <= 64 ? 10 : total <= 100 ? 8 : 6;
+  for (let i = 0; i < total; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'sq-cell';
+    cell.style.width = size + 'px';
+    cell.style.height = size + 'px';
+    // colour by column to show n groups of n
+    const col = i % n;
+    const hue = 195 + col * (160 / n);
+    cell.style.background = `hsl(${hue},80%,55%)`;
+    grid.appendChild(cell);
+  }
+}
+
+function update() {
+  const n = parseInt(slider.value);
+  document.getElementById('nDisplay').textContent = n;
+  const sq = n * n;
+  const cb = n * n * n;
+
+  document.getElementById('sqExpr').textContent = `${n}² = ${n} × ${n}`;
+  document.getElementById('sqVal').textContent = sq;
+  document.getElementById('sqrtExpr').textContent = `√${sq}`;
+  document.getElementById('sqrtVal').textContent = n;
+
+  document.getElementById('cbExpr').textContent = `${n}³ = ${n} × ${n} × ${n}`;
+  document.getElementById('cbVal').textContent = cb;
+  document.getElementById('cbrtExpr').textContent = `∛${cb}`;
+  document.getElementById('cbrtVal').textContent = n;
+
+  const mustKnowCube = cubeRecall.has(n);
+  document.getElementById('cbNote').textContent = mustKnowCube
+    ? '★ Must know by heart (Cambridge syllabus)'
+    : 'Not required by recall — calculate if needed';
+  document.getElementById('cbNote').style.color = mustKnowCube ? '#ff822c' : '#444';
+  document.getElementById('cbrtNote').textContent = document.getElementById('cbNote').textContent;
+  document.getElementById('cbrtNote').style.color = document.getElementById('cbNote').style.color;
+
+  const mustKnowSq = n <= 15;
+  document.getElementById('sqrtNote') && (document.getElementById('sqrtNote').textContent = mustKnowSq
+    ? '★ Must know √1–√225 by heart'
+    : '');
+
+  buildSquareGrid(n);
+  buildTable(n);
+}
+
+slider.addEventListener('input', update);
+update();
+</script>
+<div style="width:100%;max-width:700px;padding:8px 4px 14px;font-size:11px;color:#0fee89;line-height:1.7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  Cambridge tip: <strong style="font-weight:600">you must know squares 1²–15² and cubes 1³–5³ and 10³ by heart</strong>.
+  √ of a perfect square is always an integer (B1 mark). For other square roots, leave as a surd or use a calculator — do not round unless asked.
+</div>
+</body>
+</html>

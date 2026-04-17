@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Expanding Double Brackets</title>
+  <meta property="og:title" content="Expanding Double Brackets"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="520"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .equation-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 14px;
+      color: #f0f0ee; min-height: 28px;
+    }
+    canvas { display: block; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 10px 4px;
+      border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 80px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #sl-a::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-b::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    #sl-c::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    #sl-d::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff4670; cursor:pointer; }
+    .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Expanding Double Brackets</div>
+  <div class="instruction">
+    Drag the sliders — four multiplication arrows animate live.
+    (<b style="color:#00abfa">a</b>x + <b style="color:#fff067">b</b>)(<b style="color:#0fee89">c</b>x + <b style="color:#ff4670">d</b>)
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="280"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-a">a = 2.00</div>
+    <input type="range" id="sl-a" min="-5" max="5" step="0.01" value="2"/>
+    <div class="slider-bounds">−5 … 5</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-b">b = 3.00</div>
+    <input type="range" id="sl-b" min="-5" max="5" step="0.01" value="3"/>
+    <div class="slider-bounds">−5 … 5</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#0fee89" id="lbl-c">c = 1.00</div>
+    <input type="range" id="sl-c" min="-5" max="5" step="0.01" value="1"/>
+    <div class="slider-bounds">−5 … 5</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#ff4670" id="lbl-d">d = −4.00</div>
+    <input type="range" id="sl-d" min="-5" max="5" step="0.01" value="-4"/>
+    <div class="slider-bounds">−5 … 5</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>FOIL gives four terms — always collect the middle two x-terms</strong>.
+    Show each multiplication step; the method mark is awarded before you simplify.
+  </div>
+</div>
+
+<script>
+  var a=2, b=3, c=1, d=-4;
+  var aD=2, bD=3, cD=1, dD=-4; // display (spring targets)
+  var SPRING = 0.15;
+  var COLORS = ['#00abfa','#fff067','#0fee89','#ff4670'];
+
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=280;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR, DPR);
+
+  function rnd(v,dp){ return parseFloat(v.toFixed(dp||2)); }
+  function fmt(v) {
+    var r = Math.round(v*100)/100;
+    if (Math.abs(r)<0.005) return '0';
+    return r%1===0 ? String(r) : r.toFixed(1);
+  }
+  function termStr(coeff, varStr, first) {
+    if (Math.abs(coeff)<0.005) return '';
+    var abs = Math.abs(coeff), r = rnd(abs);
+    var sign = coeff<0 ? (first?'−':' − ') : (first?'':' + ');
+    var co = (Math.abs(abs-1)<0.005 && varStr) ? '' : String(r);
+    return sign + co + varStr;
+  }
+  function expanded() {
+    var t1=aD*cD, t2=aD*dD, t3=bD*cD, t4=bD*dD;
+    var xCoeff = t2+t3;
+    var s='';
+    s+=termStr(t1,'x²',true);
+    if (Math.abs(xCoeff)>0.005) s+=termStr(xCoeff,'x',s==='');
+    if (Math.abs(t4)>0.005) s+=termStr(t4,'',s==='');
+    return s||'0';
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var cx=W/2, bw=130, bh=88;
+    var gridT=44, gridL=cx-bw, gridR=cx+bw;
+
+    // Column headers
+    ctx.font='bold 17px Courier New, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    var aStr = fmt(aD), bStr=fmt(bD);
+    ctx.fillStyle=COLORS[0]; ctx.fillText((Math.abs(aD-1)<0.01?'':aStr)+'x', gridL+bw/2, gridT-26);
+    ctx.fillStyle=COLORS[1]; ctx.fillText(bStr, gridR-bw/2, gridT-26);
+    // Row headers
+    var cStr=fmt(cD), dStr=fmt(dD);
+    ctx.textAlign='right';
+    ctx.fillStyle=COLORS[2]; ctx.fillText((Math.abs(cD-1)<0.01?'':cStr)+'x', gridL-10, gridT+bh/2);
+    ctx.fillStyle=COLORS[3]; ctx.fillText(dStr, gridL-10, gridT+bh+bh/2);
+    // × symbol
+    ctx.fillStyle='#3a5060'; ctx.font='16px sans-serif';
+    ctx.fillText('×', gridL-10, gridT-26);
+
+    // Cells
+    var products = [aD*cD, bD*cD, aD*dD, bD*dD];
+    var varSuffix = ['x²','x','x',''];
+    var colorsCell = [COLORS[0],COLORS[1],COLORS[0],COLORS[1]];
+    var positions = [{x:gridL,y:gridT},{x:cx,y:gridT},{x:gridL,y:gridT+bh},{x:cx,y:gridT+bh}];
+
+    positions.forEach(function(pos, i) {
+      // Background
+      ctx.fillStyle='#111f2c';
+      ctx.fillRect(pos.x, pos.y, bw, bh);
+      // Border with color hint
+      ctx.strokeStyle=colorsCell[i]+'44'; ctx.lineWidth=1.5;
+      ctx.strokeRect(pos.x, pos.y, bw, bh);
+      // Product
+      var val = products[i];
+      var vStr = fmt(val)+varSuffix[i];
+      ctx.fillStyle='#e8e8e8'; ctx.font='bold 15px Courier New, monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(vStr, pos.x+bw/2, pos.y+bh/2);
+    });
+
+    // Arrow lines from each term to its cell
+    function arrow(x1,y1,x2,y2,col) {
+      ctx.strokeStyle=col+'88'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    arrow(gridL+bw/2, gridT-14, gridL+bw/2, gridT, COLORS[0]);
+    arrow(gridR-bw/2, gridT-14, gridR-bw/2, gridT, COLORS[1]);
+
+    // Result line
+    var resultY = gridT + bh*2 + 18;
+    ctx.fillStyle='#0fee89'; ctx.font='13px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    var t1=aD*cD,t2=aD*dD,t3=bD*cD,t4=bD*dD;
+    var parts=[];
+    if(Math.abs(t1)>0.005) parts.push(fmt(t1)+'x²');
+    if(Math.abs(t2)>0.005) parts.push((t2>=0&&parts.length?'+':'')+fmt(t2)+'x');
+    if(Math.abs(t3)>0.005) parts.push((t3>=0&&parts.length?'+':'')+fmt(t3)+'x');
+    if(Math.abs(t4)>0.005) parts.push((t4>=0&&parts.length?'+':'')+fmt(t4));
+    ctx.fillText('= '+parts.join(' '), W/2, resultY);
+  }
+
+  function buildEq() {
+    var a2=fmt(aD),b2=fmt(bD),c2=fmt(cD),d2=fmt(dD);
+    var as=(Math.abs(aD-1)<0.01?'':a2), cs=(Math.abs(cD-1)<0.01?'':c2);
+    var bSign=bD>=0?' + ':' − ', dSign=dD>=0?' + ':' − ';
+    return '('+as+'x'+bSign+Math.abs(rnd(bD))+')'+'('+cs+'x'+dSign+Math.abs(rnd(dD))+')  =  '+expanded();
+  }
+
+  function tick() {
+    aD+=(a-aD)*SPRING; bD+=(b-bD)*SPRING;
+    cD+=(c-cD)*SPRING; dD+=(d-dD)*SPRING;
+    draw();
+    document.getElementById('eq-display').textContent = buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  [
+    {id:'a',ref:function(v){a=v;},letter:'a',color:COLORS[0]},
+    {id:'b',ref:function(v){b=v;},letter:'b',color:COLORS[1]},
+    {id:'c',ref:function(v){c=v;},letter:'c',color:COLORS[2]},
+    {id:'d',ref:function(v){d=v;},letter:'d',color:COLORS[3]},
+  ].forEach(function(s){
+    document.getElementById('sl-'+s.id).oninput=function(){
+      var v=parseFloat(this.value); s.ref(v);
+      document.getElementById('lbl-'+s.id).textContent = s.letter+' = '+v.toFixed(2);
+      document.getElementById('lbl-'+s.id).style.color = s.color;
+    };
+  });
+
+  tick();
+</script>
+</body>
+</html>

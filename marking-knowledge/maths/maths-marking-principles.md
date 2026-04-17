@@ -282,7 +282,8 @@ Practical implication: a student who correctly writes the combined numerator (e.
 
 ## Matrices — Marking Pattern
 
-New topic appearing from 2024 onwards (not in 2025 KB earlier):
+⚠️ **Matrices were removed from the Cambridge 4024 syllabus for first examination from 2025. Entries below and in `maths-matrices.md` are for historical reference (2023–2024 papers) only.**
+
 - **B1 per correct element** for matrix operations (addition, subtraction, multiplication)
 - **B1 for 2 or 3 correct elements** (partial credit threshold when total is 4 elements)
 - **Determinant**: B1 for correct det = ad − bc
@@ -399,3 +400,86 @@ FT does not apply when:
 - The mark scheme explicitly states "nfww" on the later part
 
 In practice: most multi-part questions allow FT generously unless the subsequent part becomes trivial.
+
+---
+
+## Official Accuracy Requirements (from Cambridge 4024 Syllabus, 2025–2027)
+
+*These are the syllabus-level rules, distinct from individual mark scheme notes.*
+
+**Paper 2 (Calculator) defaults:**
+- Non-exact numerical answers: give to **3 significant figures** unless a different accuracy is specified in the question
+- Angles in degrees: give to **1 decimal place** unless a different accuracy is specified
+- Do **not** round intermediate values — keep full calculator precision and only round the final answer
+- If a later part of the question needs a value from an earlier part, use the unrounded value
+- Use π from a calculator, or 3.142 if π is not available
+
+**General accuracy rules (both papers):**
+- Answers should be in their simplest form unless the question states otherwise
+- "Exact values" → give in terms of π or in surd form (not a decimal approximation)
+- Answers exact to 4 or 5 significant figures should **not** be rounded (leave them as-is)
+- For "show that" or "prove" questions: working must include intermediate answers to **at least one more degree of accuracy** than the final stated result
+- A numerical answer must not be given as a combination of fractions and decimals (e.g. 1/0.2 is **not** acceptable)
+
+**Marking implication:** Premature rounding in working (e.g., using 3.46 when 3.464 was needed) is penalised — this is what "awrt" and the intermediate-accuracy rule protect against. When marking, check whether a wrong final answer is a rounding penalty rather than a method error.
+
+---
+
+## Formulas Given in the Examination (page 2 of every paper)
+
+These formulas appear on page 2 of every 4024 question paper. Students do **not** need to memorise them — but they must know how to apply them correctly.
+
+| Formula | Expression |
+|---------|-----------|
+| Area of triangle, base b, height h | A = ½bh |
+| Area of circle, radius r | A = πr² |
+| Circumference of circle, radius r | C = 2πr |
+| Curved surface area of cylinder (radius r, height h) | A = 2πrh |
+| Curved surface area of cone (radius r, slant l) | A = πrl |
+| Surface area of sphere, radius r | A = 4πr² |
+| Volume of prism, cross-section A, length l | V = Al |
+| Volume of pyramid, base area A, height h | V = ⅓Ah |
+| Volume of cylinder (radius r, height h) | V = πr²h |
+| Volume of cone (radius r, height h) | V = ⅓πr²h |
+| Volume of sphere, radius r | V = (4/3)πr³ |
+| Quadratic formula (ax² + bx + c = 0, a ≠ 0) | x = (−b ± √(b²−4ac)) / 2a |
+| Sine rule | a/sinA = b/sinB = c/sinC |
+| Cosine rule | a² = b² + c² − 2bc cosA |
+| Area of triangle | Area = ½ab sinC |
+
+**What is NOT given (students must know from memory):**
+- Pythagoras' theorem (a² + b² = c²)
+- Basic trig ratios (SOH CAH TOA)
+- Area of rectangle, parallelogram, trapezium
+- Arc length and sector area formulas
+- Standard form, index laws
+- All algebra and number facts
+
+**Marking implication:** If a student uses a formula from the given list incorrectly (e.g., uses curved surface area when total surface area was needed, omitting the base), it is a method error — they had access to the correct formula. No benefit of the doubt.
+
+---
+
+## Command Words — Official Definitions (Cambridge 4024 Syllabus, 2025–2027)
+
+These are the official Cambridge meanings. When reading a question, the command word tells you exactly what the mark scheme expects.
+
+| Command word | What it means | Marking implication |
+|---|---|---|
+| **Calculate** | Work out from given facts, figures or information | Full working expected; method marks apply |
+| **Construct** | Make an accurate drawing | Arcs must be shown; B marks for accuracy within tolerance |
+| **Determine** | Establish with certainty | Full justification needed, not just an answer |
+| **Describe** | State the points of a topic / give characteristics and main features | Specific geometric language needed (e.g. transformation descriptions) |
+| **Explain** | Set out purposes or reasons / make relationships between things clear / say why and/or how with relevant evidence | A reason is required — the angle value alone is not enough |
+| **Give** | Produce an answer from a given source or recall/memory | Short answer expected; no working usually required |
+| **Plot** | Mark point(s) on a graph | Each point must be within half the smallest grid square |
+| **Show (that)** | Provide structured evidence that leads to a given result | Full working required with no errors or omissions; A0 if any step is skipped |
+| **Sketch** | Make a simple freehand drawing showing the key features | Must show intercepts, turning points, asymptotes — not to scale |
+| **State** | Express in clear terms | Brief answer acceptable; no justification needed |
+| **Work out** | Calculate from given facts, figures or information with or without a calculator | Same as Calculate — full working expected |
+| **Write** | Give an answer in a specific form | Must match the required form exactly (e.g. standard form, simplified fraction) |
+| **Write down** | Give an answer without significant working | Answer only; no penalty if working is shown but not required |
+
+**Key distinctions for marking:**
+- "Write down" → no working penalty, but answer must be correct; a wrong answer with correct working may earn M marks if the mark scheme supports it
+- "Show (that)" → the answer is given; full marks require every step shown with no errors; A0 even if final answer matches if a step is missing
+- "Explain" vs "State" → Explain requires a reason; State allows a bare answer; "Describe a transformation" requires all geometric elements (see Transformation Questions section)

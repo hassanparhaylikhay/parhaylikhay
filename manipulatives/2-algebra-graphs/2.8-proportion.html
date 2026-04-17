@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Direct and Inverse Proportion</title>
+  <meta property="og:title" content="Direct and Inverse Proportion"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="560"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .equation-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 13px;
+      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+    }
+    .toggle-row {
+      width: 560px; display: flex; gap: 0;
+      background: #111f2c; border: 1px solid #1a2535;
+      border-radius: 6px; overflow: hidden; margin-bottom: 4px;
+    }
+    .tog-btn {
+      flex: 1; padding: 9px 0; text-align: center; font-size: 13px;
+      cursor: pointer; color: #6a8898; background: none; border: none;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .tog-btn.active { background: #0fee8922; color: #0fee89; font-weight: 600; }
+    canvas { display: block; cursor: default; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column;
+      gap: 9px; padding: 10px 4px;
+      border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label { font-family: 'Courier New', monospace; font-size: 13px; width: 80px; flex-shrink: 0; }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #sl-k::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Direct and Inverse Proportion</div>
+  <div class="instruction">
+    Toggle between direct (y = kx) and inverse (y = k/x) —
+    drag the <b style="color:#0fee89">green dot</b> along the curve to explore, or move the <b style="color:#0fee89">k</b> slider
+  </div>
+</div>
+
+<div class="toggle-row">
+  <button class="tog-btn active" id="btn-direct" onclick="setType('direct')">Direct &nbsp; y = kx</button>
+  <button class="tog-btn" id="btn-inverse" onclick="setType('inverse')">Inverse &nbsp; y = k ∕ x</button>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="340"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#0fee89" id="lbl-k">k =  2.00</div>
+    <input type="range" id="sl-k" min="0.1" max="8" step="0.01" value="2"/>
+    <div class="slider-bounds">0.1 … 8</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>for direct proportion, the graph is a straight line through the origin</strong>.
+    For inverse, it is a hyperbola — never touching either axis. State the equation y = kx or y = k/x first.
+  </div>
+</div>
+
+<script>
+  var k_val=2, propType='direct';
+  var kD=2; // spring display k
+  var SPRING=0.13;
+  var dragging=false, hovering=false;
+  var HIT=18;
+  var xProbe=3.0; // x position of draggable dot
+  var xProbeT=3.0;
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=340;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var X_MIN=0, X_MAX=8, Y_MIN=0, Y_MAX=16;
+
+  function toCanvas(mx,my){
+    return{x:(mx-X_MIN)/(X_MAX-X_MIN)*W, y:(Y_MAX-my)/(Y_MAX-Y_MIN)*H};
+  }
+  function fromCanvasX(cx){ return X_MIN+cx/W*(X_MAX-X_MIN); }
+  function fromCanvasY(cy){ return Y_MAX-cy/H*(Y_MAX-Y_MIN); }
+
+  function fCurve(xv){
+    return propType==='direct' ? kD*xv : kD/xv;
+  }
+
+  function setType(t){
+    propType=t;
+    document.getElementById('btn-direct').classList.toggle('active',t==='direct');
+    document.getElementById('btn-inverse').classList.toggle('active',t==='inverse');
+    xProbeT=3.0; xProbe=3.0;
+  }
+
+  function getPos(e){
+    var r=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return{x:(cx-r.left)*W/r.width, y:(cy-r.top)*H/r.height};
+  }
+
+  function dotCanvasPos(){
+    var yv=fCurve(xProbe);
+    if(!isFinite(yv)||yv<Y_MIN||yv>Y_MAX) return{x:-999,y:-999};
+    return toCanvas(xProbe,yv);
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    // Grid (batched)
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var ky=Y_MIN;ky<=Y_MAX;ky+=2){
+      ctx.moveTo(toCanvas(X_MIN,ky).x,toCanvas(X_MIN,ky).y);
+      ctx.lineTo(toCanvas(X_MAX,ky).x,toCanvas(X_MAX,ky).y);
+    }
+    for(var kx=X_MIN;kx<=X_MAX;kx++){
+      ctx.moveTo(toCanvas(kx,Y_MIN).x,toCanvas(kx,Y_MIN).y);
+      ctx.lineTo(toCanvas(kx,Y_MAX).x,toCanvas(kx,Y_MAX).y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    var origin=toCanvas(0,0);
+    ctx.beginPath(); ctx.moveTo(origin.x,toCanvas(0,Y_MAX).y); ctx.lineTo(origin.x,origin.y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(origin.x,origin.y); ctx.lineTo(toCanvas(X_MAX,0).x,origin.y); ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var kx=1;kx<=X_MAX;kx+=2){var p=toCanvas(kx,0); ctx.fillText(kx,p.x,p.y+4);}
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var ky=2;ky<=Y_MAX;ky+=2){var p=toCanvas(0,ky); ctx.fillText(ky,p.x-4,p.y);}
+
+    // Axis labels
+    ctx.fillStyle='#7a9aaa'; ctx.font='12px sans-serif';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText('y', toCanvas(0,Y_MAX).x+14, toCanvas(0,Y_MAX).y+8);
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('x', toCanvas(X_MAX,0).x-8, toCanvas(X_MAX,0).y+4);
+
+    // Curve
+    ctx.strokeStyle='#0fee89'; ctx.lineWidth=2.5; ctx.lineJoin='round';
+    ctx.beginPath();
+    var pen=false;
+    for(var i=0;i<=400;i++){
+      var mx=X_MIN+i*(X_MAX-X_MIN)/400;
+      if(mx<0.05){pen=false;continue;}
+      var my=fCurve(mx);
+      if(!isFinite(my)||my<Y_MIN||my>Y_MAX+0.5){pen=false;continue;}
+      var cp=toCanvas(mx,my);
+      if(!pen){ctx.moveTo(cp.x,cp.y);pen=true;}else ctx.lineTo(cp.x,cp.y);
+    }
+    ctx.stroke();
+
+    // Draggable dot on curve
+    var yv=fCurve(xProbe);
+    if(isFinite(yv)&&yv>=Y_MIN&&yv<=Y_MAX){
+      var sp=toCanvas(xProbe,yv);
+
+      // Dashed guide lines
+      ctx.strokeStyle='#0fee8940'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(sp.x,toCanvas(xProbe,0).y); ctx.lineTo(sp.x,sp.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(toCanvas(0,yv).x,sp.y); ctx.lineTo(sp.x,sp.y); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Glow
+      var r2=dragging?9:(hovering?8:6);
+      var gr2=dragging?22:(hovering?18:14);
+      var grad=ctx.createRadialGradient(sp.x,sp.y,0,sp.x,sp.y,gr2);
+      grad.addColorStop(0,'rgba(15,238,137,0.30)');
+      grad.addColorStop(1,'rgba(15,238,137,0)');
+      ctx.fillStyle=grad;
+      ctx.beginPath(); ctx.arc(sp.x,sp.y,gr2,0,Math.PI*2); ctx.fill();
+
+      // Dot
+      ctx.fillStyle=dragging?'#5fffa0':'#0fee89';
+      ctx.beginPath(); ctx.arc(sp.x,sp.y,r2,0,Math.PI*2); ctx.fill();
+
+      // Label
+      var yvFmt=Math.round(yv*100)/100;
+      var xFmt=Math.round(xProbe*100)/100;
+      ctx.fillStyle='#0fee89'; ctx.font='bold 12px Courier New, monospace';
+      var lx=sp.x+(sp.x>W*0.75?-14:14);
+      ctx.textAlign=sp.x>W*0.75?'right':'left'; ctx.textBaseline='middle';
+      ctx.fillText('('+xFmt+', '+yvFmt+')', lx, sp.y-14);
+    }
+  }
+
+  function buildEqBar(){
+    var kStr=Math.round(kD*100)/100;
+    var yv=fCurve(xProbe);
+    var yvStr=isFinite(yv)?Math.round(yv*100)/100:'?';
+    var xStr=Math.round(xProbe*100)/100;
+    if(propType==='direct'){
+      return 'y = '+kStr+'x   |   at x='+xStr+': y='+yvStr+'   |   y/x = '+kStr+' (constant)';
+    } else {
+      return 'y = '+kStr+'/x   |   at x='+xStr+': y='+yvStr+'   |   xy = '+kStr+' (constant)';
+    }
+  }
+
+  function tick(){
+    kD+=(k_val-kD)*SPRING;
+
+    // Spring xProbe toward xProbeT (when not dragging)
+    xProbe+=(xProbeT-xProbe)*(dragging?0.9:SPRING);
+    // Clamp to visible range
+    xProbe=Math.max(0.25,Math.min(X_MAX-0.1,xProbe));
+
+    draw();
+    document.getElementById('eq-display').textContent=buildEqBar();
+    requestAnimationFrame(tick);
+  }
+
+  // Mouse drag
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e), dp=dotCanvasPos();
+    var dx=p.x-dp.x,dy=p.y-dp.y;
+    if(dx*dx+dy*dy<HIT*HIT){dragging=true;e.preventDefault();}
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if(dragging){
+      var newX=fromCanvasX(p.x);
+      newX=Math.max(0.25,Math.min(X_MAX-0.1,newX));
+      xProbeT=newX; xProbe=newX;
+      // Back-calculate k from dragged position
+      var newY=fromCanvasY(p.y);
+      newY=Math.max(0.1,Math.min(Y_MAX,newY));
+      var newK=(propType==='direct')?newY/newX:newY*newX;
+      newK=Math.max(0.1,Math.min(8,newK));
+      k_val=newK; kD=newK;
+      document.getElementById('sl-k').value=newK.toFixed(2);
+      document.getElementById('lbl-k').textContent='k = '+newK.toFixed(2);
+    } else {
+      var dp=dotCanvasPos(); var dx=p.x-dp.x,dy=p.y-dp.y;
+      hovering=(dx*dx+dy*dy<HIT*HIT);
+      canvas.style.cursor=hovering?'grab':'default';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){dragging=false; canvas.style.cursor=hovering?'grab':'default';});
+  canvas.addEventListener('mouseleave',function(){dragging=false; hovering=false;});
+
+  // Touch drag
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e), dp=dotCanvasPos(); var dx=p.x-dp.x,dy=p.y-dp.y;
+    if(dx*dx+dy*dy<HIT*HIT){dragging=true;e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(!dragging)return; e.preventDefault();
+    var p=getPos(e);
+    var newX=fromCanvasX(p.x);
+    newX=Math.max(0.25,Math.min(X_MAX-0.1,newX));
+    xProbeT=newX; xProbe=newX;
+    var newY=fromCanvasY(p.y);
+    newY=Math.max(0.1,Math.min(Y_MAX,newY));
+    var newK=(propType==='direct')?newY/newX:newY*newX;
+    newK=Math.max(0.1,Math.min(8,newK));
+    k_val=newK; kD=newK;
+    document.getElementById('sl-k').value=newK.toFixed(2);
+    document.getElementById('lbl-k').textContent='k = '+newK.toFixed(2);
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){dragging=false;});
+
+  document.getElementById('sl-k').oninput=function(){
+    k_val=parseFloat(this.value);
+    document.getElementById('lbl-k').textContent='k = '+k_val.toFixed(2);
+  };
+
+  tick();
+</script>
+</body>
+</html>

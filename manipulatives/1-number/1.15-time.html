@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Time</title>
+  <meta property="og:title" content="Time"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="540"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .toggle-row {
+      width: 560px; display: flex; gap: 0;
+      background: #111f2c; border: 1px solid #1a2535;
+      border-radius: 6px; overflow: hidden; margin-bottom: 8px;
+    }
+    .tog-btn {
+      flex: 1; padding: 9px 0; text-align: center; font-size: 13px;
+      cursor: pointer; color: #6a8898; background: none; border: none;
+      font-family: inherit; transition: all 0.15s;
+    }
+    .tog-btn.active { background: #00abfa22; color: #00abfa; font-weight: 600; }
+    .mode-panel { width: 560px; }
+    /* clock mode */
+    .clock-wrap { display: flex; justify-content: center; align-items: center; gap: 32px; padding: 10px 4px; flex-wrap: wrap; }
+    canvas.clock { display: block; }
+    .time-inputs { display: flex; flex-direction: column; gap: 12px; }
+    .time-group {
+      background: #111f2c; border: 1px solid #1a2535;
+      border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .tg-label { font-size: 11px; color: #6a8898; text-transform: uppercase; letter-spacing: 0.07em; }
+    .time-entry { display: flex; align-items: center; gap: 8px; }
+    .time-entry input {
+      width: 60px; background: #0d1c28; border: 1px solid #1a3350;
+      border-radius: 5px; padding: 7px 9px; color: #f0f0ee; font-size: 1rem;
+      text-align: center; outline: none; font-family: inherit;
+    }
+    .time-entry input:focus { border-color: #00abfa; }
+    .time-entry span { color: #6a8898; font-size: 1rem; }
+    .time-entry select {
+      background: #0d1c28; border: 1px solid #1a3350; border-radius: 5px;
+      padding: 7px 9px; color: #f0f0ee; font-size: 0.9rem; outline: none; font-family: inherit;
+    }
+    .big-time { font-size: 1.8rem; font-weight: 800; color: #fff067; letter-spacing: 0.05em; }
+    .step-text { font-size: 12px; color: #b4b2a9; line-height: 1.6; }
+    .step-text strong { color: #00abfa; font-weight: 600; }
+    /* duration */
+    .dur-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 4px; }
+    .dur-card { background: #111f2c; border: 1px solid #1a2535; border-radius: 8px; padding: 12px 14px; }
+    .dur-result { font-size: 1.2rem; font-weight: 700; color: #0fee89; margin-top: 8px; }
+    /* timetable */
+    .tt-wrap { padding: 8px 4px; }
+    .tt-wrap table { width: 100%; border-collapse: collapse; }
+    .tt-wrap th { background: #111f2c; padding: 7px 10px; font-size: 11px; color: #6a8898; text-align: center; }
+    .tt-wrap td { padding: 7px 10px; font-size: 13px; border-top: 1px solid #1a2535; text-align: center; }
+    .result-card { background: #111f2c; border: 1px solid #1a2535; border-radius: 8px; padding: 12px 14px; margin: 8px 4px; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Time</div>
+  <div class="instruction">
+    12-hour ↔ 24-hour clock, duration between times, timetable problems.
+    The clock hand animates smoothly when you change the time.
+  </div>
+</div>
+
+<div class="toggle-row">
+  <button class="tog-btn active" id="t1" onclick="setMode(1)">12h ↔ 24h clock</button>
+  <button class="tog-btn"        id="t2" onclick="setMode(2)">Duration</button>
+  <button class="tog-btn"        id="t3" onclick="setMode(3)">Timetable</button>
+</div>
+
+<!-- Mode 1 -->
+<div class="mode-panel" id="mode1">
+  <div class="clock-wrap">
+    <canvas class="clock" id="clockCanvas" width="240" height="240"></canvas>
+    <div class="time-inputs">
+      <div class="time-group">
+        <div class="tg-label">12-hour time</div>
+        <div class="time-entry">
+          <input type="number" id="h12" value="3" min="1" max="12"/>
+          <span>:</span>
+          <input type="number" id="m12" value="45" min="0" max="59"/>
+          <select id="ampm"><option value="am">AM</option><option value="pm" selected>PM</option></select>
+        </div>
+        <div class="step-text" id="step12to24"></div>
+      </div>
+      <div style="text-align:center;color:#6a8898;font-size:1.2rem">⇕</div>
+      <div class="time-group">
+        <div class="tg-label">24-hour time</div>
+        <div class="time-entry">
+          <input type="number" id="h24" value="15" min="0" max="23"/>
+          <span>:</span>
+          <input type="number" id="m24" value="45" min="0" max="59"/>
+        </div>
+        <div class="big-time" id="big24">1545</div>
+        <div class="step-text" id="step24to12"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mode 2 -->
+<div class="mode-panel" id="mode2" style="display:none">
+  <div class="dur-grid">
+    <div class="dur-card">
+      <div class="tg-label">Start time (24h)</div>
+      <div class="time-entry" style="margin-top:6px">
+        <input type="number" id="startH" value="9" min="0" max="23"/>
+        <span>:</span>
+        <input type="number" id="startM" value="35" min="0" max="59"/>
+      </div>
+    </div>
+    <div class="dur-card">
+      <div class="tg-label">End time (24h)</div>
+      <div class="time-entry" style="margin-top:6px">
+        <input type="number" id="endH" value="14" min="0" max="23"/>
+        <span>:</span>
+        <input type="number" id="endM" value="10" min="0" max="59"/>
+      </div>
+    </div>
+  </div>
+  <div class="result-card">
+    <div class="dur-result" id="durResult"></div>
+    <div class="step-text" style="margin-top:8px" id="durSteps"></div>
+  </div>
+</div>
+
+<!-- Mode 3 -->
+<div class="mode-panel" id="mode3" style="display:none">
+  <div class="tt-wrap">
+    <div style="font-size:12px;color:#6a8898;margin-bottom:8px;padding:0 4px">
+      Three trains, four stops. Times in 24-hour format.
+    </div>
+    <table id="ttTable">
+      <thead>
+        <tr>
+          <th style="text-align:left">Stop</th>
+          <th style="color:#00abfa">Train A</th>
+          <th style="color:#0fee89">Train B</th>
+          <th style="color:#ff822c">Train C</th>
+        </tr>
+      </thead>
+      <tbody id="ttBody"></tbody>
+    </table>
+    <div class="result-card" id="ttResult" style="margin-top:8px;font-size:12px;color:#b4b2a9;line-height:1.7"></div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>24-hour clock — always use 4 digits, e.g. 0935 not 9:35</strong>.
+    PM times: add 12 to the hour (except 12 PM which stays 12). 12 AM = 0000.
+    Duration: convert both times to minutes from midnight, then subtract.
+  </div>
+</div>
+
+<script>
+  // Clock animation state
+  var targetH24=15, targetM=45;
+  var dispH=15, dispM=45; // spring display values
+  var SPRING=0.12;
+  var activeMode=1;
+
+  var clockCanvas=document.getElementById('clockCanvas');
+  var ctx=clockCanvas.getContext('2d');
+  var CW=240, CH=240;
+  var DPR=window.devicePixelRatio||1;
+  clockCanvas.width=CW*DPR; clockCanvas.height=CH*DPR;
+  clockCanvas.style.width=CW+'px'; clockCanvas.style.height=CH+'px';
+  ctx.scale(DPR,DPR);
+
+  var cx=CW/2, cy=CH/2, R=108;
+
+  function drawClock(h24,m){
+    ctx.clearRect(0,0,CW,CH);
+    // Face
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+    ctx.fillStyle='#111f2c'; ctx.fill();
+    ctx.strokeStyle='#1a3350'; ctx.lineWidth=2.5; ctx.stroke();
+
+    // Tick marks
+    for(var i=0;i<60;i++){
+      var a=i/60*Math.PI*2-Math.PI/2;
+      var isMaj=i%5===0;
+      var inner=isMaj?R-16:R-8;
+      ctx.strokeStyle=isMaj?'#3a5060':'#1a2535';
+      ctx.lineWidth=isMaj?2:1;
+      ctx.beginPath();
+      ctx.moveTo(cx+Math.cos(a)*inner, cy+Math.sin(a)*inner);
+      ctx.lineTo(cx+Math.cos(a)*(R-1), cy+Math.sin(a)*(R-1));
+      ctx.stroke();
+    }
+    // Hour numbers
+    ctx.fillStyle='#5a7888'; ctx.font='bold 13px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    for(var i=1;i<=12;i++){
+      var a2=i/12*Math.PI*2-Math.PI/2;
+      ctx.fillText(String(i),cx+Math.cos(a2)*(R-26),cy+Math.sin(a2)*(R-26));
+    }
+
+    // Hand angles — use continuous (fractional) time for smooth animation
+    var totalMins=h24*60+m;
+    var h12=totalMins/60; // fractional hours in 0-12 range
+    var ha=(h12/12)*Math.PI*2-Math.PI/2;
+    var ma=(m/60)*Math.PI*2-Math.PI/2;
+
+    // Hour hand
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(ha)*56,cy+Math.sin(ha)*56); ctx.stroke();
+    // Minute hand
+    ctx.strokeStyle='#0fee89'; ctx.lineWidth=4; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(ma)*80,cy+Math.sin(ma)*80); ctx.stroke();
+    // Centre dot
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2); ctx.fill();
+
+    // AM/PM label
+    ctx.fillStyle=h24<12?'#00abfa':'#ff822c';
+    ctx.font='bold 11px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(h24<12?'AM':'PM',cx,cy+R-24);
+  }
+
+  function lerpAngle(a,b,t){
+    // Lerp on the shortest arc
+    var diff=((b-a)%1+1.5)%1-0.5;
+    return a+diff*t;
+  }
+
+  function tick(){
+    // Spring toward target
+    // dispH and dispM are fractional total-minutes-style values for smooth lerp
+    var tgtTotal=targetH24*60+targetM;
+    var curTotal=dispH*60+dispM;
+    // simple lerp on total minutes
+    var newTotal=curTotal+(tgtTotal-curTotal)*SPRING;
+    var newH=Math.floor(newTotal/60)%24;
+    var newM=newTotal%60;
+    dispH=newH+(newTotal%60)/60-newM/60; // keep fractional h
+    dispM=newM;
+
+    if(activeMode===1) drawClock(newTotal/60, newM);
+    requestAnimationFrame(tick);
+  }
+
+  function pad2(n){ return String(Math.floor(n)).padStart(2,'0'); }
+
+  function setMode(m){
+    activeMode=m;
+    [1,2,3].forEach(function(i){
+      document.getElementById('t'+i).classList.toggle('active',i===m);
+      document.getElementById('mode'+i).style.display=i===m?'':'none';
+    });
+    if(m===2) updateDur();
+    if(m===3) buildTimetable();
+  }
+
+  function syncClock(h24,m){
+    targetH24=h24; targetM=m;
+  }
+
+  function from12(){
+    var h=parseInt(document.getElementById('h12').value)||12;
+    var m=parseInt(document.getElementById('m12').value)||0;
+    var ap=document.getElementById('ampm').value;
+    var h24=h;
+    if(ap==='am'&&h===12) h24=0;
+    if(ap==='pm'&&h!==12) h24=h+12;
+    document.getElementById('h24').value=h24;
+    document.getElementById('m24').value=m;
+    document.getElementById('big24').textContent=pad2(h24)+pad2(m);
+    document.getElementById('step12to24').innerHTML=
+      ap==='pm'&&h!==12?'PM: '+h+'+12 = <strong>'+h24+'</strong>'
+      :ap==='am'&&h===12?'12 AM = midnight = <strong>00:'+pad2(m)+'</strong>'
+      :'AM (not 12): hour stays <strong>'+pad2(h24)+'</strong>';
+    document.getElementById('step24to12').innerHTML=
+      'Converted: <strong>'+pad2(h24)+pad2(m)+'</strong>';
+    syncClock(h24,m);
+  }
+
+  function from24(){
+    var h24=parseInt(document.getElementById('h24').value)||0;
+    var m=parseInt(document.getElementById('m24').value)||0;
+    var h12=h24%12||12;
+    var ap=h24<12?'am':'pm';
+    document.getElementById('h12').value=h12;
+    document.getElementById('m12').value=m;
+    document.getElementById('ampm').value=ap;
+    document.getElementById('big24').textContent=pad2(h24)+pad2(m);
+    document.getElementById('step24to12').innerHTML=
+      h24===0?'00:'+pad2(m)+' = <strong>12:'+pad2(m)+' AM</strong>'
+      :h24===12?'12:'+pad2(m)+' = <strong>12:'+pad2(m)+' PM</strong>'
+      :h24>12?h24+':'+pad2(m)+' → '+h24+'−12 = <strong>'+h12+':'+pad2(m)+' PM</strong>'
+      :h24+':'+pad2(m)+' → <strong>'+h12+':'+pad2(m)+' AM</strong>';
+    syncClock(h24,m);
+  }
+
+  ['h12','m12','ampm'].forEach(function(id){ document.getElementById(id).addEventListener('input',from12); });
+  ['h24','m24'].forEach(function(id){ document.getElementById(id).addEventListener('input',from24); });
+
+  function updateDur(){
+    var sH=parseInt(document.getElementById('startH').value)||0;
+    var sM=parseInt(document.getElementById('startM').value)||0;
+    var eH=parseInt(document.getElementById('endH').value)||0;
+    var eM=parseInt(document.getElementById('endM').value)||0;
+    var total=(eH*60+eM)-(sH*60+sM);
+    if(total<0) total+=24*60;
+    var h=Math.floor(total/60), m=total%60;
+    document.getElementById('durResult').textContent='Duration: '+h+'h '+m+'min ('+total+' minutes)';
+    document.getElementById('durSteps').innerHTML=
+      'Start: '+pad2(sH)+pad2(sM)+' = '+(sH*60+sM)+' min from midnight<br>'+
+      'End: '+pad2(eH)+pad2(eM)+' = '+(eH*60+eM)+' min from midnight<br>'+
+      'Duration = '+(eH*60+eM)+' − '+(sH*60+sM)+' = <strong>'+total+' min = '+h+'h '+m+'min</strong>';
+  }
+  ['startH','startM','endH','endM'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener('input',updateDur);
+  });
+
+  var stops=['City Centre','Station A','Station B','Airport'];
+  var ttData=[[700,820,1005,1130],[735,855,1040,1205],[810,930,1115,1240]];
+  var ttColors=['#00abfa','#0fee89','#ff822c'];
+
+  function buildTimetable(){
+    var tbody=document.getElementById('ttBody');
+    tbody.innerHTML='';
+    stops.forEach(function(s,i){
+      var tr=document.createElement('tr');
+      var html='<td style="text-align:left;color:#6a8898;font-size:12px">'+s+'</td>';
+      ttData.forEach(function(train,ti){
+        var raw=train[i], h=Math.floor(raw/100), m=raw%100;
+        html+='<td style="color:'+ttColors[ti]+'">'+pad2(h)+pad2(m)+'</td>';
+      });
+      tr.innerHTML=html; tbody.appendChild(tr);
+    });
+    var res='<strong>Journey times:</strong><br>';
+    ttData.forEach(function(train,ti){
+      var first=train[0], last=train[stops.length-1];
+      var fH=Math.floor(first/100),fM=first%100,lH=Math.floor(last/100),lM=last%100;
+      var tot=(lH*60+lM)-(fH*60+fM);
+      res+='Train '+['A','B','C'][ti]+': '+pad2(fH)+pad2(fM)+' → '+pad2(lH)+pad2(lM)+
+        ' = <strong>'+Math.floor(tot/60)+'h '+(tot%60)+'min</strong><br>';
+    });
+    document.getElementById('ttResult').innerHTML=res;
+  }
+
+  // Initialise display springs to match start values
+  var initH24=15, initM=45;
+  dispH=initH24; dispM=initM;
+  targetH24=initH24; targetM=initM;
+
+  from12();
+  tick();
+</script>
+</body>
+</html>
