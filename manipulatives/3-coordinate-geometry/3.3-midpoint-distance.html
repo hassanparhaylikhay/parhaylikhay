@@ -176,24 +176,26 @@
     var d2 = dx * dx + dy * dy;
     var dStr = fmtSqrt(d2);
     var midPx = (pA.x + pB.x) / 2, midPy = (pA.y + pB.y) / 2;
-    var angle = Math.atan2(pB.y - pA.y, pB.x - pA.x);
-    // Distance label — drawn BELOW the segment so it doesn't clash with M label above
-    ctx.save();
-    ctx.translate(midPx, midPy); ctx.rotate(angle);
-    ctx.fillStyle = '#ff822c'; ctx.font = 'bold 11px -apple-system, sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    ctx.fillText('d = ' + dStr, 0, 8);
-    ctx.restore();
-
-    // Midpoint M — dot at midpoint, label above the segment
+    // Midpoint M — dot at midpoint
     var mx = (ax + bx) / 2, my = (ay + by) / 2, pM = toC(mx, my);
     ctx.fillStyle = '#0d1216';
     ctx.beginPath(); ctx.arc(pM.x, pM.y, 7, 0, Math.PI * 2); ctx.fill();
     ctx.strokeStyle = '#0fee89'; ctx.lineWidth = 2.5;
     ctx.beginPath(); ctx.arc(pM.x, pM.y, 7, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = '#0fee89'; ctx.font = 'bold 11px -apple-system, sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('M (' + fmt(mx) + ', ' + fmt(my) + ')', pM.x, pM.y - 10);
+
+    // Perpendicular normal to the segment in screen space (rotated 90° CCW).
+    // Using this to offset M label and d label to OPPOSITE sides of the line —
+    // guaranteed never to overlap regardless of the segment's angle.
+    var segLen = Math.hypot(pB.x - pA.x, pB.y - pA.y) || 1;
+    var nx = -(pB.y - pA.y) / segLen;
+    var ny =  (pB.x - pA.x) / segLen;
+    var OFF = 20;
+
+    ctx.font = 'bold 11px -apple-system, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#0fee89';
+    ctx.fillText('M (' + fmt(mx) + ', ' + fmt(my) + ')', pM.x + nx * OFF, pM.y + ny * OFF);
+    ctx.fillStyle = '#ff822c';
+    ctx.fillText('d = ' + dStr, midPx - nx * OFF, midPy - ny * OFF);
 
     // Points
     function drawPt(px, py, label, coord, color, above) {
