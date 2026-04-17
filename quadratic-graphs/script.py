@@ -55,7 +55,7 @@ class Scene1_Hook(Scene):
 
         corner = Text("Quadratic Graphs", font_size=18, color=MUTED_TEXT)
         corner.to_corner(UL, buff=0.3)
-        self.play(Transform(title, corner), run_time=NORMAL)
+        self.play(ReplacementTransform(title, corner), run_time=NORMAL)
         self.wait(0.5)
 
         ## Scene1_Hook.hook_text
@@ -109,7 +109,7 @@ class Scene2_Foundation(Scene):
         self.wait(1.5)
 
         corner = Text("Foundation", font_size=18, color=MUTED_TEXT).to_corner(UL, buff=0.3)
-        self.play(Transform(title, corner), run_time=NORMAL)
+        self.play(ReplacementTransform(title, corner), run_time=NORMAL)
         self.wait(0.5)
 
         ## Scene2_Foundation.equation — term by term
@@ -191,7 +191,7 @@ class Scene3_CoreConcept(Scene):
         self.play(Write(title), run_time=SLOW)
         self.wait(1.5)
         corner = Text("Core Concept", font_size=18, color=MUTED_TEXT).to_corner(UL, buff=0.3)
-        self.play(Transform(title, corner), run_time=NORMAL)
+        self.play(ReplacementTransform(title, corner), run_time=NORMAL)
 
         axes = pl_axes([-4, 4, 1], [-5, 9, 1], x_length=7, y_length=5)
         axes.shift(RIGHT * 1.5 + DOWN * 0.3)
@@ -204,40 +204,47 @@ class Scene3_CoreConcept(Scene):
         self.play(FadeIn(head_a), run_time=NORMAL)
         self.wait(0.5)
 
+        # All curves share the same x_range and num_curves so Transform morphs
+        # point-to-point smoothly without squiggly intermediate paths.
+        NC = 80
+
         # a = 1
-        c1 = axes.plot(lambda x: x ** 2, x_range=[-3, 3], color=PL_BLUE, stroke_width=3)
+        c1 = axes.plot(lambda x: x ** 2, x_range=[-3, 3], num_curves=NC, color=PL_BLUE, stroke_width=3)
         l1 = MathTex(r"y = x^2", font_size=SMALL_SIZE + 2, color=PL_BLUE)
         l1.move_to(LEFT * 4.5 + UP * 2.3)
         self.play(Create(c1), Write(l1), run_time=SLOW)
         self.wait(2)
 
         # a = 2 — narrower
-        c2 = axes.plot(lambda x: 2 * x ** 2, x_range=[-2.1, 2.1], color=PL_BLUE, stroke_width=3)
+        c2 = axes.plot(lambda x: 2 * x ** 2, x_range=[-3, 3], num_curves=NC, color=PL_BLUE, stroke_width=3)
         l2 = MathTex(r"y = 2x^2", font_size=SMALL_SIZE + 2, color=PL_BLUE)
         l2.move_to(LEFT * 4.5 + UP * 2.3)
         note2 = Text("narrower", font_size=SMALL_SIZE - 4, color=MUTED_TEXT)
         note2.next_to(l2, DOWN, buff=0.15)
-        self.play(Transform(c1, c2), Transform(l1, l2), run_time=PATIENT)
+        self.play(Transform(c1, c2), FadeTransform(l1, l2), run_time=PATIENT)
+        l1 = l2
         self.play(FadeIn(note2), run_time=FAST)
         self.wait(2)
 
         # a = 0.5 — wider
-        c3 = axes.plot(lambda x: 0.5 * x ** 2, x_range=[-3, 3], color=PL_BLUE, stroke_width=3)
+        c3 = axes.plot(lambda x: 0.5 * x ** 2, x_range=[-3, 3], num_curves=NC, color=PL_BLUE, stroke_width=3)
         l3 = MathTex(r"y = 0.5x^2", font_size=SMALL_SIZE + 2, color=PL_BLUE)
         l3.move_to(LEFT * 4.5 + UP * 2.3)
         note3 = Text("wider", font_size=SMALL_SIZE - 4, color=MUTED_TEXT)
         note3.next_to(l3, DOWN, buff=0.15)
-        self.play(Transform(c1, c3), Transform(l1, l3), FadeOut(note2), run_time=PATIENT)
+        self.play(Transform(c1, c3), FadeTransform(l1, l3), FadeOut(note2), run_time=PATIENT)
+        l1 = l3
         self.play(FadeIn(note3), run_time=FAST)
         self.wait(2)
 
         # a = -1 — flipped
-        c4 = axes.plot(lambda x: -(x ** 2), x_range=[-2.8, 2.8], color=PL_PINK, stroke_width=3)
+        c4 = axes.plot(lambda x: -(x ** 2), x_range=[-3, 3], num_curves=NC, color=PL_PINK, stroke_width=3)
         l4 = MathTex(r"y = -x^2", font_size=SMALL_SIZE + 2, color=PL_PINK)
         l4.move_to(LEFT * 4.5 + UP * 2.3)
         note4 = Text("flipped! opens downward", font_size=SMALL_SIZE - 4, color=PL_PINK)
         note4.next_to(l4, DOWN, buff=0.15)
-        self.play(Transform(c1, c4), Transform(l1, l4), FadeOut(note3), run_time=PATIENT)
+        self.play(Transform(c1, c4), FadeTransform(l1, l4), FadeOut(note3), run_time=PATIENT)
+        l1 = l4
         self.play(FadeIn(note4), run_time=NORMAL)
         self.wait(2.5)
 
@@ -251,29 +258,31 @@ class Scene3_CoreConcept(Scene):
         self.wait(0.5)
 
         # c = 0
-        g1 = axes.plot(lambda x: x ** 2, x_range=[-3, 3], color=PL_GREEN, stroke_width=3)
+        g1 = axes.plot(lambda x: x ** 2, x_range=[-3, 3], num_curves=NC, color=PL_GREEN, stroke_width=3)
         m1 = MathTex(r"y = x^2", font_size=SMALL_SIZE + 2, color=PL_GREEN)
         m1.move_to(LEFT * 4.5 + UP * 2.3)
         self.play(Create(g1), Write(m1), run_time=SLOW)
         self.wait(1.5)
 
         # c = 3 — shifts up
-        g2 = axes.plot(lambda x: x ** 2 + 3, x_range=[-2.4, 2.4], color=PL_GREEN, stroke_width=3)
+        g2 = axes.plot(lambda x: x ** 2 + 3, x_range=[-3, 3], num_curves=NC, color=PL_GREEN, stroke_width=3)
         m2 = MathTex(r"y = x^2 + 3", font_size=SMALL_SIZE + 2, color=PL_GREEN)
         m2.move_to(LEFT * 4.5 + UP * 2.3)
         p2 = Text("shifts up", font_size=SMALL_SIZE - 4, color=MUTED_TEXT)
         p2.next_to(m2, DOWN, buff=0.15)
-        self.play(Transform(g1, g2), Transform(m1, m2), run_time=PATIENT)
+        self.play(Transform(g1, g2), FadeTransform(m1, m2), run_time=PATIENT)
+        m1 = m2
         self.play(FadeIn(p2), run_time=FAST)
         self.wait(2)
 
         # c = -2 — shifts down
-        g3 = axes.plot(lambda x: x ** 2 - 2, x_range=[-3, 3], color=PL_GREEN, stroke_width=3)
+        g3 = axes.plot(lambda x: x ** 2 - 2, x_range=[-3, 3], num_curves=NC, color=PL_GREEN, stroke_width=3)
         m3 = MathTex(r"y = x^2 - 2", font_size=SMALL_SIZE + 2, color=PL_GREEN)
         m3.move_to(LEFT * 4.5 + UP * 2.3)
         p3 = Text("shifts down", font_size=SMALL_SIZE - 4, color=MUTED_TEXT)
         p3.next_to(m3, DOWN, buff=0.15)
-        self.play(Transform(g1, g3), Transform(m1, m3), FadeOut(p2), run_time=PATIENT)
+        self.play(Transform(g1, g3), FadeTransform(m1, m3), FadeOut(p2), run_time=PATIENT)
+        m1 = m3
         self.play(FadeIn(p3), run_time=FAST)
         self.wait(2.5)
 
@@ -291,7 +300,7 @@ class Scene4_Example1(Scene):
         self.play(Write(title), run_time=SLOW)
         self.wait(1.5)
         corner = Text("Example 1", font_size=18, color=MUTED_TEXT).to_corner(UL, buff=0.3)
-        self.play(Transform(title, corner), run_time=NORMAL)
+        self.play(ReplacementTransform(title, corner), run_time=NORMAL)
 
         ## Scene4_Example1.question
         q1 = Text("Sketch the curve:", font_size=BODY_SIZE, color=WHITE_TEXT)
@@ -380,7 +389,7 @@ class Scene5_Example2(Scene):
         self.play(Write(title), run_time=SLOW)
         self.wait(1.5)
         corner = Text("Example 2", font_size=18, color=MUTED_TEXT).to_corner(UL, buff=0.3)
-        self.play(Transform(title, corner), run_time=NORMAL)
+        self.play(ReplacementTransform(title, corner), run_time=NORMAL)
 
         ## Scene5_Example2.question
         q1 = Text("Sketch the curve:", font_size=BODY_SIZE, color=WHITE_TEXT)
@@ -491,7 +500,7 @@ class Scene6_Example3(Scene):
         self.play(Write(title), run_time=SLOW)
         self.wait(1.5)
         corner = Text("Example 3", font_size=18, color=MUTED_TEXT).to_corner(UL, buff=0.3)
-        self.play(Transform(title, corner), run_time=NORMAL)
+        self.play(ReplacementTransform(title, corner), run_time=NORMAL)
 
         ## Scene6_Example3.question — Cambridge style
         q_box = Rectangle(
@@ -590,7 +599,7 @@ class Scene7_ExamInsight(Scene):
         self.play(Write(title), run_time=SLOW)
         self.wait(2)
         corner = Text("Exam Insight", font_size=18, color=MUTED_TEXT).to_corner(UL, buff=0.3)
-        self.play(Transform(title, corner), run_time=NORMAL)
+        self.play(ReplacementTransform(title, corner), run_time=NORMAL)
 
         ## Scene7_ExamInsight.question
         q_box = Rectangle(
