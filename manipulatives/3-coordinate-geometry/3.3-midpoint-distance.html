@@ -177,14 +177,15 @@
     var dStr = fmtSqrt(d2);
     var midPx = (pA.x + pB.x) / 2, midPy = (pA.y + pB.y) / 2;
     var angle = Math.atan2(pB.y - pA.y, pB.x - pA.x);
+    // Distance label — drawn BELOW the segment so it doesn't clash with M label above
     ctx.save();
     ctx.translate(midPx, midPy); ctx.rotate(angle);
     ctx.fillStyle = '#ff822c'; ctx.font = 'bold 11px -apple-system, sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('d = ' + dStr, 0, -7);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('d = ' + dStr, 0, 8);
     ctx.restore();
 
-    // Midpoint M
+    // Midpoint M — dot at midpoint, label above the segment
     var mx = (ax + bx) / 2, my = (ay + by) / 2, pM = toC(mx, my);
     ctx.fillStyle = '#0d1216';
     ctx.beginPath(); ctx.arc(pM.x, pM.y, 7, 0, Math.PI * 2); ctx.fill();
