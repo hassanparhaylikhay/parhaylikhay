@@ -9,6 +9,9 @@
   <meta property="og:video:type" content="text/html"/>
   <meta property="og:video:width" content="600"/>
   <meta property="og:video:height" content="520"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -18,11 +21,11 @@
     }
     .header { width: 560px; padding: 14px 4px 6px; }
     .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
     .equation-bar {
       width: 560px; padding: 6px 4px;
-      font-family: 'Courier New', monospace; font-size: 13px;
-      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+      font-family: 'Courier New', monospace; font-size: 18px;
+      color: #f0f0ee; min-height: 34px; line-height: 1.6;
     }
     canvas { display: block; cursor: default; }
     .sliders {
@@ -41,8 +44,11 @@
     #sl-c::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
     .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
     .footer { width: 560px; padding: 8px 4px 14px; }
-    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
     .tip strong { font-weight: 600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
   </style>
 </head>
 <body>
@@ -181,7 +187,7 @@
 
     // LHS formula
     var aCoeff=(Math.abs(aD-1)<0.01)?'':(Math.abs(aD+1)<0.01)?'−':fmt(aD);
-    ctx.fillStyle='#2a5066'; ctx.font='11px Courier New, monospace';
+    ctx.fillStyle='#2a5066'; ctx.font='14px Courier New, monospace';
     ctx.textBaseline='top';
     ctx.fillText(aCoeff+'x'+(bD>=0?' + ':' − ')+fmt(Math.abs(bD)), lx, lpY+5);
 
@@ -193,13 +199,13 @@
     ctx.textAlign='center'; ctx.textBaseline='bottom';
     ctx.fillText(fmt(cD), rx, rpY-6);
 
-    ctx.fillStyle='#1e5030'; ctx.font='11px Courier New, monospace';
+    ctx.fillStyle='#1e5030'; ctx.font='14px Courier New, monospace';
     ctx.textBaseline='top';
     ctx.fillText('= c', rx, rpY+5);
 
     // ── Balanced badge ───────────────────────────────────────────────
     if (balanced) {
-      ctx.fillStyle='#0fee89'; ctx.font='bold 12px sans-serif';
+      ctx.fillStyle='#0fee89'; ctx.font='bold 15px sans-serif';
       ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.fillText('✓  balanced', cx, PIV_Y-28);
     }
@@ -209,7 +215,7 @@
     ctx.beginPath(); ctx.moveTo(LINE_PAD,LINE_Y); ctx.lineTo(W-LINE_PAD,LINE_Y); ctx.stroke();
 
     ctx.lineWidth=1;
-    ctx.fillStyle='#4a6870'; ctx.font='10px sans-serif';
+    ctx.fillStyle='#4a6870'; ctx.font='13px sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='top';
     for (var i=LINE_MIN; i<=LINE_MAX; i+=2) {
       var tx=toLineX(i);
@@ -238,7 +244,7 @@
     ctx.beginPath(); ctx.arc(dotX,LINE_Y,r2,0,Math.PI*2); ctx.fill();
 
     // x label
-    ctx.fillStyle='#ff822c'; ctx.font='bold 12px Courier New, monospace';
+    ctx.fillStyle='#ff822c'; ctx.font='bold 15px Courier New, monospace';
     ctx.textAlign='center'; ctx.textBaseline='bottom';
     ctx.fillText('x = '+fmt(xD), dotX, LINE_Y-19);
   }

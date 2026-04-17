@@ -9,6 +9,9 @@
   <meta property="og:video:type" content="text/html"/>
   <meta property="og:video:width" content="600"/>
   <meta property="og:video:height" content="560"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -18,10 +21,10 @@
     }
     .header { width: 560px; padding: 14px 4px 6px; }
     .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
     .eq-bar {
       width: 560px; padding: 8px 4px;
-      font-family: 'Courier New', monospace; font-size: 16px; font-weight: 700;
+      font-family: 'Courier New', monospace; font-size: 18px; font-weight: 700;
       color: #f0f0ee; min-height: 34px; text-align: center;
     }
     canvas { display: block; cursor: default; }
@@ -38,8 +41,11 @@
     }
     .slider-val { font-family: 'Courier New', monospace; font-size: 13px; width: 50px; text-align: right; flex-shrink: 0; }
     .footer { width: 560px; padding: 8px 4px 14px; }
-    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
     .tip strong { font-weight: 600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
   </style>
 </head>
 <body>
@@ -72,8 +78,8 @@
 <div class="footer">
   <div class="tip">
     Cambridge tip: <strong>read c directly from where the line crosses the y-axis</strong>, then pick two
-    integer points to find m = (y₂−y₁)÷(x₂−x₁). Write the final answer as y = mx + c —
-    leaving it in y − y₁ = m(x − x₁) form loses the A1 if the question specifies the form.
+    integer points to find \(m = \dfrac{y_2-y_1}{x_2-x_1}\). Write the final answer as \(y = mx + c\) —
+    leaving it in \(y - y_1 = m(x - x_1)\) form loses the A1 if the question specifies the form.
   </div>
 </div>
 
@@ -148,7 +154,7 @@
     var ax = toC(X_MIN, 0), bx = toC(X_MAX, 0); ctx.moveTo(ax.x, ax.y); ctx.lineTo(bx.x, bx.y);
     var ay = toC(0, Y_MIN), by = toC(0, Y_MAX); ctx.moveTo(ay.x, ay.y); ctx.lineTo(by.x, by.y);
     ctx.stroke();
-    ctx.fillStyle = '#4a6070'; ctx.font = '10px -apple-system, sans-serif';
+    ctx.fillStyle = '#4a6070'; ctx.font = '13px -apple-system, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     for (var kx = X_MIN + 1; kx < X_MAX; kx++) {
       if (kx === 0) continue; var p = toC(kx, 0); ctx.fillText(kx, p.x, p.y + 3);
@@ -195,7 +201,7 @@
         ctx.beginPath(); ctx.arc(xp.x, xp.y, 7, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = '#fff067'; ctx.lineWidth = 2.5;
         ctx.beginPath(); ctx.arc(xp.x, xp.y, 7, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = '#fff067'; ctx.font = '11px -apple-system, sans-serif';
+        ctx.fillStyle = '#fff067'; ctx.font = '14px -apple-system, sans-serif';
         ctx.textAlign = 'center'; ctx.textBaseline = 'top';
         ctx.fillText('(' + fmt(xi) + ', 0)', xp.x, xp.y + 9);
       }
@@ -209,7 +215,7 @@
       ctx.beginPath(); ctx.arc(cp.x, cp.y, 9, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = hov ? '#22ffaa' : '#0fee89'; ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.arc(cp.x, cp.y, 9, 0, Math.PI * 2); ctx.stroke();
-      ctx.fillStyle = '#0fee89'; ctx.font = '11px -apple-system, sans-serif';
+      ctx.fillStyle = '#0fee89'; ctx.font = '14px -apple-system, sans-serif';
       ctx.textAlign = c >= 0 ? 'right' : 'left'; ctx.textBaseline = 'middle';
       ctx.fillText('(0, ' + fmt(c) + ')', cp.x + (c >= 0 ? -12 : 12), cp.y);
     }

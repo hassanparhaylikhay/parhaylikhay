@@ -9,6 +9,9 @@
   <meta property="og:video:type" content="text/html"/>
   <meta property="og:video:width" content="600"/>
   <meta property="og:video:height" content="560"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -18,12 +21,15 @@
     }
     .header { width: 560px; padding: 14px 4px 6px; }
     .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
     .equation-bar {
       width: 560px; padding: 6px 4px;
-      font-family: 'Courier New', monospace; font-size: 13px;
-      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+      font-family: 'Courier New', monospace; font-size: 18px;
+      color: #f0f0ee; min-height: 34px; line-height: 1.6;
     }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
     .toggle-row {
       width: 560px; display: flex; gap: 0;
       background: #111f2c; border: 1px solid #1a2535;
@@ -50,7 +56,7 @@
     #sl-k::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
     .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
     .footer { width: 560px; padding: 8px 4px 14px; }
-    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
     .tip strong { font-weight: 600; }
   </style>
 </head>
@@ -84,7 +90,7 @@
 <div class="footer">
   <div class="tip">
     Cambridge tip: <strong>for direct proportion, the graph is a straight line through the origin</strong>.
-    For inverse, it is a hyperbola — never touching either axis. State the equation y = kx or y = k/x first.
+    For inverse, it is a hyperbola — never touching either axis. State the equation \(y = kx\) or \(y = \dfrac{k}{x}\) first.
   </div>
 </div>
 
@@ -161,14 +167,14 @@
     ctx.beginPath(); ctx.moveTo(origin.x,origin.y); ctx.lineTo(toCanvas(X_MAX,0).x,origin.y); ctx.stroke();
 
     // Tick labels
-    ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system, sans-serif';
+    ctx.fillStyle='#6a8898'; ctx.font='14px -apple-system, sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='top';
     for(var kx=1;kx<=X_MAX;kx+=2){var p=toCanvas(kx,0); ctx.fillText(kx,p.x,p.y+4);}
     ctx.textAlign='right'; ctx.textBaseline='middle';
     for(var ky=2;ky<=Y_MAX;ky+=2){var p=toCanvas(0,ky); ctx.fillText(ky,p.x-4,p.y);}
 
     // Axis labels
-    ctx.fillStyle='#7a9aaa'; ctx.font='12px sans-serif';
+    ctx.fillStyle='#7a9aaa'; ctx.font='15px sans-serif';
     ctx.textAlign='right'; ctx.textBaseline='middle';
     ctx.fillText('y', toCanvas(0,Y_MAX).x+14, toCanvas(0,Y_MAX).y+8);
     ctx.textAlign='center'; ctx.textBaseline='top';
@@ -215,11 +221,15 @@
       // Label
       var yvFmt=Math.round(yv*100)/100;
       var xFmt=Math.round(xProbe*100)/100;
-      ctx.fillStyle='#0fee89'; ctx.font='bold 12px Courier New, monospace';
+      ctx.fillStyle='#0fee89'; ctx.font='bold 15px Courier New, monospace';
       var lx=sp.x+(sp.x>W*0.75?-14:14);
       ctx.textAlign=sp.x>W*0.75?'right':'left'; ctx.textBaseline='middle';
       ctx.fillText('('+xFmt+', '+yvFmt+')', lx, sp.y-14);
     }
+  }
+
+  function FRAC(num, den) {
+    return '<span class="kfrac"><span class="knum">'+num+'</span><span class="kden">'+den+'</span></span>';
   }
 
   function buildEqBar(){
@@ -228,9 +238,9 @@
     var yvStr=isFinite(yv)?Math.round(yv*100)/100:'?';
     var xStr=Math.round(xProbe*100)/100;
     if(propType==='direct'){
-      return 'y = '+kStr+'x   |   at x='+xStr+': y='+yvStr+'   |   y/x = '+kStr+' (constant)';
+      return 'y = '+kStr+'x &nbsp; | &nbsp; at x='+xStr+': y='+yvStr+' &nbsp; | &nbsp; y/x = '+kStr+' (constant)';
     } else {
-      return 'y = '+kStr+'/x   |   at x='+xStr+': y='+yvStr+'   |   xy = '+kStr+' (constant)';
+      return 'y = '+FRAC(kStr,'x')+' &nbsp; | &nbsp; at x='+xStr+': y='+yvStr+' &nbsp; | &nbsp; xy = '+kStr+' (constant)';
     }
   }
 
@@ -243,7 +253,7 @@
     xProbe=Math.max(0.25,Math.min(X_MAX-0.1,xProbe));
 
     draw();
-    document.getElementById('eq-display').textContent=buildEqBar();
+    document.getElementById('eq-display').innerHTML=buildEqBar();
     requestAnimationFrame(tick);
   }
 

@@ -9,6 +9,9 @@
   <meta property="og:video:type" content="text/html"/>
   <meta property="og:video:width" content="600"/>
   <meta property="og:video:height" content="520"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -18,11 +21,11 @@
     }
     .header { width: 560px; padding: 14px 4px 6px; }
     .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
     .equation-bar {
       width: 560px; padding: 6px 4px;
-      font-family: 'Courier New', monospace; font-size: 13px;
-      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+      font-family: 'Courier New', monospace; font-size: 18px;
+      color: #f0f0ee; min-height: 34px; line-height: 1.6;
     }
     canvas { display: block; }
     .sliders {
@@ -40,8 +43,11 @@
     #sl-d::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
     .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
     .footer { width: 560px; padding: 8px 4px 14px; }
-    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
     .tip strong { font-weight: 600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
   </style>
 </head>
 <body>
@@ -73,7 +79,7 @@
 
 <div class="footer">
   <div class="tip">
-    Cambridge tip: <strong>nth term = a + (n−1)d = dn + (a−d)</strong> —
+    Cambridge tip: <strong>nth term \(= a + (n-1)d = dn + (a-d)\)</strong> —
     the coefficient of n is always d. Write the answer in the form pn + q.
   </div>
 </div>
@@ -139,12 +145,12 @@
       // Value label
       var tv=Math.round(t*100)/100;
       ctx.fillStyle=t>=0?'#00abfa':'#ff4670';
-      ctx.font='bold 10px -apple-system, sans-serif';
+      ctx.font='bold 13px -apple-system, sans-serif';
       ctx.textAlign='center'; ctx.textBaseline=t>=0?'bottom':'top';
       ctx.fillText(tv, bx+barW/2, t>=0?by-3:by+3);
 
       // n label
-      ctx.fillStyle='#5a7888'; ctx.font='10px sans-serif';
+      ctx.fillStyle='#5a7888'; ctx.font='13px sans-serif';
       ctx.textAlign='center'; ctx.textBaseline='top';
       ctx.fillText('n='+(i+1), bx+barW/2, H-pad.b+6);
     }
@@ -159,7 +165,7 @@
         ctx.strokeStyle='#fff06766'; ctx.lineWidth=1;
         ctx.beginPath(); ctx.moveTo(x1,arrowY); ctx.lineTo(x2,arrowY); ctx.stroke();
         var dStr=(d_val>=0?'+':'')+Math.round(d_val*100)/100;
-        ctx.fillStyle='#fff067'; ctx.font='10px Courier New, monospace';
+        ctx.fillStyle='#fff067'; ctx.font='13px Courier New, monospace';
         ctx.textAlign='center'; ctx.textBaseline='bottom';
         ctx.fillText(dStr, midX, arrowY-1);
       }

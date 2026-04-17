@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Circle Theorems</title>
+  <meta property="og:title" content="Circle Theorems"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="620"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
+    .tabs {
+      width: 560px; display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 4px 4px;
+    }
+    .tab {
+      padding: 5px 9px; background: #111f2c; border: 1px solid #1a3550;
+      color: #6a8898; font-size: 11px; border-radius: 4px; cursor: pointer;
+    }
+    .tab.active { background: #0d2235; border-color: #00abfa; color: #00abfa; }
+    .eq-bar {
+      width: 560px; padding: 6px 4px 4px;
+      font-family: 'Courier New', monospace; font-size: 18px;
+      color: #f0f0ee; min-height: 36px; line-height: 1.6;
+    }
+    canvas { display: block; cursor: crosshair; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Circle Theorems</div>
+  <div class="instruction">
+    Choose a theorem, then drag the <b style="color:#ff4670">red point</b> around the circle — the angles update live.
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="setThm(0)">Angle at Centre</button>
+  <button class="tab" onclick="setThm(1)">Angle in Semicircle</button>
+  <button class="tab" onclick="setThm(2)">Same Segment</button>
+  <button class="tab" onclick="setThm(3)">Cyclic Quad</button>
+  <button class="tab" onclick="setThm(4)">Tangent ⊥ Radius</button>
+  <button class="tab" onclick="setThm(5)">Alternate Segment</button>
+</div>
+
+<div class="eq-bar" id="eq-bar"></div>
+
+<canvas id="graph"></canvas>
+
+<div class="footer">
+  <div class="tip" id="tip-text"></div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx    = canvas.getContext('2d');
+  var W = 560, H = 400;
+  var DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+
+  var CX = W / 2, CY = H / 2 + 10;
+  var R = 155;
+  var HIT = 18;
+
+  var thm = 0;
+  var drag = null;
+
+  // Angles (radians) for draggable points on circle
+  // Different theorems use different point configs
+  var pAngles = [1.2, 2.5, 4.1, 5.2]; // up to 4 points on circle
+
+  var TIPS = [
+    'Cambridge tip: <strong>angle at centre = 2 × angle at circumference</strong> from the same arc. State this rule by name — it earns the reasoning mark.',
+    'Cambridge tip: <strong>angle in a semicircle is always 90°</strong> — the diameter is the hypotenuse. Just state "angle in semicircle = 90°" for the mark.',
+    'Cambridge tip: <strong>angles in the same segment are equal</strong>. Both angles stand on the same chord — state this reason explicitly.',
+    'Cambridge tip: <strong>opposite angles of a cyclic quadrilateral add up to 180°</strong>. Quote the theorem by name — "opposite angles of cyclic quadrilateral are supplementary".',
+    'Cambridge tip: <strong>tangent is perpendicular to radius at point of contact — angle = 90°</strong>. Draw the radius to the tangent point and state this theorem.',
+    'Cambridge tip: <strong>alternate segment theorem</strong> — angle between tangent and chord equals angle in alternate segment. This is a common 4-mark question — state the theorem name.'
+  ];
+
+  function setThm(n) {
+    thm = n;
+    document.querySelectorAll('.tab').forEach(function(t, i) { t.classList.toggle('active', i === n); });
+    // Reset point positions sensibly for each theorem
+    if (n === 0) pAngles = [0.5, 2.5, 4.2];
+    if (n === 1) pAngles = [0.0, Math.PI, 1.2];
+    if (n === 2) pAngles = [0.3, Math.PI + 0.3, 1.0, 2.0];
+    if (n === 3) pAngles = [0.5, 1.8, 3.2, 4.8];
+    if (n === 4) pAngles = [Math.PI / 2];
+    if (n === 5) pAngles = [0.0, 1.8, Math.PI + 0.5];
+    document.getElementById('tip-text').innerHTML = TIPS[n];
+    draw();
+  }
+
+  function ptOnCircle(ang) {
+    return { x: CX + R * Math.cos(ang), y: CY + R * Math.sin(ang) };
+  }
+
+  function angleBetween(cx, cy, ax, ay, bx, by) {
+    var a1 = Math.atan2(ay - cy, ax - cx);
+    var a2 = Math.atan2(by - cy, bx - cx);
+    var diff = Math.abs(a2 - a1);
+    if (diff > Math.PI) diff = 2 * Math.PI - diff;
+    return diff * 180 / Math.PI;
+  }
+
+  function drawPoint(x, y, label, color, above) {
+    ctx.fillStyle = '#0d1216';
+    ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = color; ctx.font = 'bold 15px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = above ? 'bottom' : 'top';
+    ctx.fillText(label, x, y + (above ? -11 : 11));
+  }
+
+  function drawAngle(cx, cy, ax, ay, bx, by, r, color, label) {
+    var a1 = Math.atan2(ay - cy, ax - cx);
+    var a2 = Math.atan2(by - cy, bx - cx);
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, r, Math.min(a1,a2), Math.max(a1,a2)); ctx.stroke();
+    var mid = (a1 + a2) / 2;
+    ctx.fillStyle = color; ctx.font = 'bold 14px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, cx + (r + 13) * Math.cos(mid), cy + (r + 13) * Math.sin(mid));
+  }
+
+  function drawCircle() {
+    ctx.strokeStyle = '#1a3550'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI * 2); ctx.stroke();
+    // Centre dot
+    ctx.fillStyle = '#3a5060';
+    ctx.beginPath(); ctx.arc(CX, CY, 3, 0, Math.PI * 2); ctx.fill();
+  }
+
+  function drawLine(ax, ay, bx, by, color, width, dash) {
+    ctx.strokeStyle = color; ctx.lineWidth = width || 1.5;
+    if (dash) ctx.setLineDash(dash); else ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  function drawThm0() {
+    // Angle at centre = 2 × angle at circumference
+    var A = ptOnCircle(pAngles[0]), B = ptOnCircle(pAngles[1]), P = ptOnCircle(pAngles[2]);
+    drawCircle();
+    drawLine(A.x, A.y, B.x, B.y, '#1a3550', 1, [4,3]);
+    drawLine(CX, CY, A.x, A.y, '#00abfa99', 1.5);
+    drawLine(CX, CY, B.x, B.y, '#00abfa99', 1.5);
+    drawLine(P.x, P.y, A.x, A.y, '#ff467099', 1.5);
+    drawLine(P.x, P.y, B.x, B.y, '#ff467099', 1.5);
+
+    var centreAng = angleBetween(CX, CY, A.x, A.y, B.x, B.y);
+    var circAng   = angleBetween(P.x, P.y, A.x, A.y, B.x, B.y);
+    // Centre angle might be reflex — use the minor arc
+    if (centreAng > 180) centreAng = 360 - centreAng;
+
+    drawAngle(CX, CY, A.x, A.y, B.x, B.y, 30, '#fff067', Math.round(centreAng) + '°');
+    drawAngle(P.x, P.y, A.x, A.y, B.x, B.y, 28, '#0fee89', Math.round(circAng) + '°');
+
+    drawPoint(A.x, A.y, 'A', '#00abfa', A.y < CY);
+    drawPoint(B.x, B.y, 'B', '#00abfa', B.y < CY);
+    drawPoint(P.x, P.y, 'P', '#ff4670', P.y < CY);
+    ctx.fillStyle = '#4a6070'; ctx.font = 'bold 10px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('O', CX + 8, CY + 5);
+
+    document.getElementById('eq-bar').innerHTML =
+      '∠AOB = <strong style="color:#fff067">' + Math.round(centreAng) + '°</strong>' +
+      ' = 2 × ∠APB = 2 × <strong style="color:#0fee89">' + Math.round(circAng) + '°</strong>';
+  }
+
+  function drawThm1() {
+    // Angle in semicircle = 90
+    // A and B are fixed endpoints of diameter; P is draggable
+    var A = ptOnCircle(0), B = ptOnCircle(Math.PI), P = ptOnCircle(pAngles[2]);
+    drawCircle();
+    drawLine(A.x, A.y, B.x, B.y, '#fff06755', 2);
+    drawLine(P.x, P.y, A.x, A.y, '#0fee8999', 1.5);
+    drawLine(P.x, P.y, B.x, B.y, '#0fee8999', 1.5);
+
+    var ang = angleBetween(P.x, P.y, A.x, A.y, B.x, B.y);
+    drawAngle(P.x, P.y, A.x, A.y, B.x, B.y, 26, '#0fee89', Math.round(ang) + '°');
+
+    // Right angle marker
+    var dAx = A.x - P.x, dAy = A.y - P.y;
+    var dBx = B.x - P.x, dBy = B.y - P.y;
+    var lenA = Math.hypot(dAx, dAy), lenB = Math.hypot(dBx, dBy);
+    var sq = 10;
+    var ux = dAx / lenA * sq, uy = dAy / lenA * sq;
+    var vx = dBx / lenB * sq, vy = dBy / lenB * sq;
+    ctx.strokeStyle = '#0fee8977'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(P.x + ux, P.y + uy);
+    ctx.lineTo(P.x + ux + vx, P.y + uy + vy);
+    ctx.lineTo(P.x + vx, P.y + vy);
+    ctx.stroke();
+
+    drawPoint(A.x, A.y, 'A', '#00abfa', A.y < CY);
+    drawPoint(B.x, B.y, 'B', '#00abfa', B.y < CY);
+    drawPoint(P.x, P.y, 'P', '#ff4670', P.y < CY);
+
+    document.getElementById('eq-bar').innerHTML =
+      '∠APB = <strong style="color:#0fee89">' + Math.round(ang) + '°</strong> — angle in a semicircle is always 90°';
+  }
+
+  function drawThm2() {
+    // Angles in same segment equal
+    var A = ptOnCircle(pAngles[0]), B = ptOnCircle(pAngles[1]);
+    var P = ptOnCircle(pAngles[2]), Q = ptOnCircle(pAngles[3]);
+    drawCircle();
+    drawLine(A.x, A.y, B.x, B.y, '#1a3550', 1, [4,3]);
+    drawLine(P.x, P.y, A.x, A.y, '#0fee8966', 1.5);
+    drawLine(P.x, P.y, B.x, B.y, '#0fee8966', 1.5);
+    drawLine(Q.x, Q.y, A.x, A.y, '#ff822c66', 1.5);
+    drawLine(Q.x, Q.y, B.x, B.y, '#ff822c66', 1.5);
+
+    var angP = angleBetween(P.x, P.y, A.x, A.y, B.x, B.y);
+    var angQ = angleBetween(Q.x, Q.y, A.x, A.y, B.x, B.y);
+    drawAngle(P.x, P.y, A.x, A.y, B.x, B.y, 24, '#0fee89', Math.round(angP) + '°');
+    drawAngle(Q.x, Q.y, A.x, A.y, B.x, B.y, 24, '#ff822c', Math.round(angQ) + '°');
+
+    drawPoint(A.x, A.y, 'A', '#00abfa', A.y < CY);
+    drawPoint(B.x, B.y, 'B', '#00abfa', B.y < CY);
+    drawPoint(P.x, P.y, 'P', '#0fee89', P.y < CY);
+    drawPoint(Q.x, Q.y, 'Q', '#ff822c', Q.y < CY);
+
+    document.getElementById('eq-bar').innerHTML =
+      '∠APB = <strong style="color:#0fee89">' + Math.round(angP) + '°</strong>' +
+      ' = ∠AQB = <strong style="color:#ff822c">' + Math.round(angQ) + '°</strong> (same segment)';
+  }
+
+  function drawThm3() {
+    // Cyclic quadrilateral: opposite angles sum to 180
+    var A = ptOnCircle(pAngles[0]), B = ptOnCircle(pAngles[1]);
+    var C = ptOnCircle(pAngles[2]), D = ptOnCircle(pAngles[3]);
+    drawCircle();
+    // Quadrilateral sides
+    [[A,B],[B,C],[C,D],[D,A]].forEach(function(seg) {
+      drawLine(seg[0].x, seg[0].y, seg[1].x, seg[1].y, '#1a3550', 1.5);
+    });
+
+    var angA = angleBetween(A.x, A.y, D.x, D.y, B.x, B.y);
+    var angC = angleBetween(C.x, C.y, B.x, B.y, D.x, D.y);
+    var angB = angleBetween(B.x, B.y, A.x, A.y, C.x, C.y);
+    var angD = angleBetween(D.x, D.y, C.x, C.y, A.x, A.y);
+
+    drawAngle(A.x, A.y, D.x, D.y, B.x, B.y, 24, '#0fee89', Math.round(angA) + '°');
+    drawAngle(C.x, C.y, B.x, B.y, D.x, D.y, 24, '#ff822c', Math.round(angC) + '°');
+    drawAngle(B.x, B.y, A.x, A.y, C.x, C.y, 24, '#fff067', Math.round(angB) + '°');
+    drawAngle(D.x, D.y, C.x, C.y, A.x, A.y, 24, '#ff4670', Math.round(angD) + '°');
+
+    drawPoint(A.x, A.y, 'A', '#0fee89', A.y < CY);
+    drawPoint(B.x, B.y, 'B', '#fff067', B.y < CY);
+    drawPoint(C.x, C.y, 'C', '#ff822c', C.y < CY);
+    drawPoint(D.x, D.y, 'D', '#ff4670', D.y < CY);
+
+    document.getElementById('eq-bar').innerHTML =
+      'A+C = <strong style="color:#0fee89">' + Math.round(angA) + '</strong>+<strong style="color:#ff822c">' + Math.round(angC) + '</strong> = ' + Math.round(angA+angC) + '°  ' +
+      'B+D = <strong style="color:#fff067">' + Math.round(angB) + '</strong>+<strong style="color:#ff4670">' + Math.round(angD) + '</strong> = ' + Math.round(angB+angD) + '°';
+  }
+
+  function drawThm4() {
+    // Tangent perpendicular to radius
+    var touchAng = pAngles[0];
+    var T = ptOnCircle(touchAng);
+    // Tangent direction: perpendicular to radius = rotate 90°
+    var tx = -Math.sin(touchAng), ty = Math.cos(touchAng);
+    var tangLen = 140;
+    drawCircle();
+    // Radius
+    drawLine(CX, CY, T.x, T.y, '#00abfa', 2);
+    // Tangent
+    ctx.strokeStyle = '#ff822c'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(T.x - tx * tangLen, T.y - ty * tangLen);
+    ctx.lineTo(T.x + tx * tangLen, T.y + ty * tangLen);
+    ctx.stroke();
+
+    // Right angle box
+    var sq = 12;
+    var rx = -Math.cos(touchAng), ry = -Math.sin(touchAng);
+    ctx.strokeStyle = '#0fee8977'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(T.x + rx * sq, T.y + ry * sq);
+    ctx.lineTo(T.x + rx * sq + tx * sq, T.y + ry * sq + ty * sq);
+    ctx.lineTo(T.x + tx * sq, T.y + ty * sq);
+    ctx.stroke();
+
+    // 90° label
+    ctx.fillStyle = '#0fee89'; ctx.font = 'bold 13px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('90°', T.x + rx * sq * 2 + tx * sq * 0.5, T.y + ry * sq * 2 + ty * sq * 0.5);
+
+    // Centre label
+    ctx.fillStyle = '#4a6070'; ctx.font = 'bold 14px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('O', CX, CY - 6);
+
+    drawPoint(T.x, T.y, 'T', '#ff4670', T.y < CY);
+
+    // Tangent label
+    ctx.fillStyle = '#ff822c88'; ctx.font = '14px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('tangent', T.x + tx * tangLen * 0.65, T.y + ty * tangLen * 0.65 - 5);
+
+    document.getElementById('eq-bar').innerHTML =
+      'Radius OT ⊥ tangent at T — <strong style="color:#0fee89">angle = 90°</strong> always';
+  }
+
+  function drawThm5() {
+    // Alternate segment theorem
+    // Chord AB, tangent at A, point P in alternate segment
+    var A = ptOnCircle(pAngles[0]), B = ptOnCircle(pAngles[1]), P = ptOnCircle(pAngles[2]);
+    // Tangent at A
+    var touchAng = pAngles[0];
+    var tx = -Math.sin(touchAng), ty = Math.cos(touchAng);
+    var tangLen = 130;
+    drawCircle();
+    // Tangent
+    ctx.strokeStyle = '#ff822c'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(A.x - tx * tangLen, A.y - ty * tangLen);
+    ctx.lineTo(A.x + tx * tangLen, A.y + ty * tangLen);
+    ctx.stroke();
+    // Chord AB
+    drawLine(A.x, A.y, B.x, B.y, '#fff06799', 2);
+    // PA and PB
+    drawLine(P.x, P.y, A.x, A.y, '#0fee8966', 1.5);
+    drawLine(P.x, P.y, B.x, B.y, '#0fee8966', 1.5);
+
+    // Angle between tangent (in +tx direction) and chord AB
+    var chordAng = Math.atan2(B.y - A.y, B.x - A.x);
+    var tangAng  = Math.atan2(ty, tx);
+    var thetaChord = Math.abs(chordAng - tangAng) * 180 / Math.PI;
+    if (thetaChord > 180) thetaChord = 360 - thetaChord;
+    if (thetaChord > 90)  thetaChord = 180 - thetaChord;
+
+    var angP = angleBetween(P.x, P.y, A.x, A.y, B.x, B.y);
+
+    // Angle between tangent and chord at A
+    ctx.strokeStyle = '#fff067'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(A.x, A.y, 28, Math.min(chordAng, tangAng), Math.max(chordAng, tangAng)); ctx.stroke();
+    ctx.fillStyle = '#fff067'; ctx.font = 'bold 14px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    var midTA = (chordAng + tangAng) / 2;
+    ctx.fillText(Math.round(thetaChord) + '°', A.x + 42 * Math.cos(midTA), A.y + 42 * Math.sin(midTA));
+
+    drawAngle(P.x, P.y, A.x, A.y, B.x, B.y, 24, '#0fee89', Math.round(angP) + '°');
+
+    drawPoint(A.x, A.y, 'A', '#ff4670', A.y < CY);
+    drawPoint(B.x, B.y, 'B', '#00abfa', B.y < CY);
+    drawPoint(P.x, P.y, 'P', '#0fee89', P.y < CY);
+
+    document.getElementById('eq-bar').innerHTML =
+      'Tangent-chord angle = <strong style="color:#fff067">' + Math.round(thetaChord) + '°</strong>' +
+      ' = ∠APB (alternate segment) = <strong style="color:#0fee89">' + Math.round(angP) + '°</strong>';
+  }
+
+  var thmDrawers = [drawThm0, drawThm1, drawThm2, drawThm3, drawThm4, drawThm5];
+
+  // Which points are draggable for each theorem, and which pAngles indices
+  var draggableCount = [3, 1, 4, 4, 1, 3];
+  var fixedPoints    = [[], [0,1], [], [], [], [0]]; // indices that are fixed (not draggable)
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d1216'; ctx.fillRect(0, 0, W, H);
+    thmDrawers[thm]();
+  }
+
+  function getPos(e) {
+    var r = canvas.getBoundingClientRect();
+    var s = e.touches ? e.touches[0] : e;
+    return { cx: (s.clientX - r.left) * (W / r.width), cy: (s.clientY - r.top) * (H / r.height) };
+  }
+
+  function hitIndex(pos) {
+    var n = draggableCount[thm];
+    var fixed = fixedPoints[thm];
+    for (var i = 0; i < n; i++) {
+      if (fixed.indexOf(i) >= 0) continue;
+      var p = ptOnCircle(pAngles[i]);
+      if (Math.hypot(pos.cx - p.x, pos.cy - p.y) < HIT) return i;
+    }
+    return -1;
+  }
+
+  function dragMove(pos) {
+    var dx = pos.cx - CX, dy = pos.cy - CY;
+    var newAng = Math.atan2(dy, dx);
+    // Keep dragged points from overlapping with adjacent points
+    pAngles[drag] = newAng;
+    draw();
+  }
+
+  canvas.addEventListener('mousedown',  function(e) { var p = getPos(e); drag = hitIndex(p); if (drag >= 0) canvas.style.cursor = 'grabbing'; });
+  canvas.addEventListener('mousemove',  function(e) { var p = getPos(e); if (drag < 0) { canvas.style.cursor = hitIndex(p) >= 0 ? 'grab' : 'crosshair'; return; } dragMove(p); });
+  canvas.addEventListener('mouseup',    function()  { drag = -1; canvas.style.cursor = 'crosshair'; });
+  canvas.addEventListener('mouseleave', function()  { drag = -1; });
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); drag = hitIndex(getPos(e)); }, { passive: false });
+  canvas.addEventListener('touchmove',  function(e) { e.preventDefault(); if (drag >= 0) dragMove(getPos(e)); }, { passive: false });
+  canvas.addEventListener('touchend',   function()  { drag = -1; });
+
+  drag = -1;
+  setThm(0);
+</script>
+</body>
+</html>

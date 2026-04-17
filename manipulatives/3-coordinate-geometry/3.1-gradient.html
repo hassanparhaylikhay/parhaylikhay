@@ -9,6 +9,10 @@
   <meta property="og:video:type" content="text/html"/>
   <meta property="og:video:width" content="600"/>
   <meta property="og:video:height" content="540"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" crossorigin="anonymous"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}]})"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -18,16 +22,24 @@
     }
     .header { width: 560px; padding: 14px 4px 6px; }
     .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
     .eq-bar {
-      width: 560px; padding: 8px 4px;
-      font-family: 'Courier New', monospace; font-size: 13px;
-      color: #f0f0ee; min-height: 34px; line-height: 1.8;
+      width: 560px; padding: 10px 4px;
+      font-size: 18px; font-weight: 700;
+      color: #f0f0ee; min-height: 44px;
+      display: flex; align-items: center;
     }
     canvas { display: block; cursor: crosshair; }
     .footer { width: 560px; padding: 8px 4px 14px; }
-    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.9; }
     .tip strong { font-weight: 600; }
+    /* Inline fraction helper */
+    .kfrac {
+      display: inline-flex; flex-direction: column; align-items: center;
+      vertical-align: middle; gap: 0; line-height: 1.15; margin: 0 3px;
+    }
+    .kfrac .knum { border-bottom: 2px solid currentColor; padding: 1px 4px; text-align: center; font-size: 0.88em; }
+    .kfrac .kden { padding: 1px 4px; text-align: center; font-size: 0.88em; }
   </style>
 </head>
 <body>
@@ -35,19 +47,19 @@
 <div class="header">
   <div class="title">Gradient of a Straight Line</div>
   <div class="instruction">
-    Drag <b style="color:#00abfa">A</b> or <b style="color:#ff4670">B</b> anywhere on the grid — rise, run, and m update live.
+    Drag <b style="color:#00abfa">A</b> or <b style="color:#ff4670">B</b> anywhere on the grid — rise, run, and <i>m</i> update live.
   </div>
 </div>
 
-<div class="eq-bar" id="eq-bar">m = (y₂ − y₁) ÷ (x₂ − x₁)</div>
+<div class="eq-bar" id="eq-bar">\(m = \dfrac{y_2 - y_1}{x_2 - x_1}\)</div>
 
 <canvas id="graph"></canvas>
 
 <div class="footer">
   <div class="tip">
-    Cambridge tip: <strong>write m = (y₂ − y₁) ÷ (x₂ − x₁) and substitute — that earns M1</strong>
-    even if the arithmetic goes wrong. Negative m = slopes down left to right.
-    Horizontal line: m = 0. Vertical line: m is undefined.
+    Cambridge tip: <strong>write \(m = \dfrac{y_2 - y_1}{x_2 - x_1}\) and substitute — that earns M1</strong>
+    even if the arithmetic goes wrong. Negative \(m\) = slopes down left to right.
+    Horizontal line: \(m = 0\). Vertical line: \(m\) is undefined.
   </div>
 </div>
 
@@ -65,7 +77,6 @@
   var PAD = { l: 44, r: 20, t: 18, b: 38 };
   var X_MIN = -6, X_MAX = 6, Y_MIN = -4, Y_MAX = 4;
 
-  // Uniform scale: same px-per-unit on both axes so grid squares are square
   var IW = W - PAD.l - PAD.r;
   var IH = H - PAD.t - PAD.b;
   var SCALE = Math.min(IW / (X_MAX - X_MIN), IH / (Y_MAX - Y_MIN));
@@ -104,6 +115,11 @@
     return (Math.round(m * 100) / 100).toFixed(2);
   }
 
+  // Inline HTML fraction helper
+  function FRAC(num, den) {
+    return '<span class="kfrac"><span class="knum">' + num + '</span><span class="kden">' + den + '</span></span>';
+  }
+
   function drawGrid() {
     ctx.strokeStyle = '#111f2c'; ctx.lineWidth = 0.8;
     ctx.beginPath();
@@ -125,7 +141,7 @@
     ctx.moveTo(ay.x, ay.y); ctx.lineTo(by.x, by.y);
     ctx.stroke();
 
-    ctx.fillStyle = '#4a6070'; ctx.font = '10px -apple-system, sans-serif';
+    ctx.fillStyle = '#4a6070'; ctx.font = '13px -apple-system, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     for (var kx = X_MIN + 1; kx < X_MAX; kx++) {
       if (kx === 0) continue;
@@ -186,7 +202,7 @@
       ctx.moveTo(corner.x + dx, corner.y); ctx.lineTo(corner.x + dx, corner.y + dy); ctx.lineTo(corner.x, corner.y + dy);
       ctx.stroke();
 
-      ctx.font = 'bold 11px -apple-system, sans-serif';
+      ctx.font = 'bold 14px -apple-system, sans-serif';
       ctx.fillStyle = '#fff067';
       ctx.textAlign = 'center'; ctx.textBaseline = rise > 0 ? 'bottom' : 'top';
       ctx.fillText('run = ' + fmt(run), (pA.x + corner.x) / 2, pA.y + (rise > 0 ? -5 : 5));
@@ -201,7 +217,7 @@
       ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = color; ctx.lineWidth = 2.5;
       ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI * 2); ctx.stroke();
-      ctx.fillStyle = color; ctx.font = 'bold 12px -apple-system, sans-serif';
+      ctx.fillStyle = color; ctx.font = 'bold 14px -apple-system, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = above ? 'bottom' : 'top';
       ctx.fillText(label + ' (' + coord + ')', px, py + (above ? -13 : 13));
     }
@@ -217,13 +233,13 @@
       var angle = Math.atan2(pB.y - pA.y, pB.x - pA.x);
       ctx.save();
       ctx.translate(midPx, midPy); ctx.rotate(angle);
-      ctx.fillStyle = mColor; ctx.font = 'bold 13px -apple-system, sans-serif';
+      ctx.fillStyle = mColor; ctx.font = 'bold 15px -apple-system, sans-serif';
       ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
       ctx.fillText('m = ' + mStr, 0, -8);
       ctx.restore();
     }
 
-    // Eq bar
+    // Eq bar — proper fraction HTML
     var eqEl = document.getElementById('eq-bar');
     if (Math.abs(run) < 0.01) {
       eqEl.innerHTML = '<span style="color:#ff4670">Vertical line — gradient is <strong>undefined</strong></span>';
@@ -232,11 +248,13 @@
       var mStr2 = fmtGrad(rise, run);
       var mColor2 = mVal2 > 0 ? '#0fee89' : mVal2 < 0 ? '#ff4670' : '#b4b2a9';
       eqEl.innerHTML =
-        'm = <span style="color:#0fee89">(' + fmt(by) + ' − ' + fmt(ay) + ')</span>' +
-        ' ÷ <span style="color:#fff067">(' + fmt(bx) + ' − ' + fmt(ax) + ')</span>' +
-        ' = <span style="color:#0fee89">' + fmt(rise) + '</span>' +
-        ' ÷ <span style="color:#fff067">' + fmt(run) + '</span>' +
-        ' = <span style="color:' + mColor2 + '; font-size:15px; font-weight:bold"> ' + mStr2 + '</span>';
+        '<span style="color:#b4b2a9">m = </span>' +
+        FRAC('<span style="color:#0fee89">' + fmt(by) + ' − ' + fmt(ay) + '</span>',
+             '<span style="color:#fff067">' + fmt(bx) + ' − ' + fmt(ax) + '</span>') +
+        ' = ' +
+        FRAC('<span style="color:#0fee89">' + fmt(rise) + '</span>',
+             '<span style="color:#fff067">' + fmt(run) + '</span>') +
+        ' = <span style="color:' + mColor2 + '; font-size:1.15em; font-weight:bold"> ' + mStr2 + '</span>';
     }
   }
 

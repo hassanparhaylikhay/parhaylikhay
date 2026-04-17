@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Angles in Parallel Lines</title>
+  <meta property="og:title" content="Angles in Parallel Lines"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="580"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
+    .mode-row {
+      width: 560px; display: flex; gap: 6px; padding: 8px 4px;
+    }
+    .mode-btn {
+      flex: 1; padding: 6px 0;
+      background: #111f2c; border: 1px solid #1a3550;
+      color: #6a8898; font-size: 12px; font-weight: 600;
+      border-radius: 4px; cursor: pointer; transition: all 0.15s;
+    }
+    .mode-btn.active { background: #0d2235; border-color: #00abfa; color: #00abfa; }
+    .eq-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 18px;
+      color: #f0f0ee; min-height: 36px;
+    }
+    canvas { display: block; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Angles in Parallel Lines</div>
+  <div class="instruction">
+    Drag the transversal angle handle to change θ — see which angles are equal and which are supplementary.
+  </div>
+</div>
+
+<div class="mode-row">
+  <button class="mode-btn active" id="btn-cor" onclick="setMode('corresponding')">Corresponding</button>
+  <button class="mode-btn" id="btn-alt" onclick="setMode('alternate')">Alternate</button>
+  <button class="mode-btn" id="btn-coi" onclick="setMode('cointerior')">Co-interior</button>
+</div>
+
+<div class="eq-bar" id="eq-bar"></div>
+
+<canvas id="graph"></canvas>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>always state the angle rule by name — "alternate angles" or "corresponding angles" earns the reasoning mark (R1)</strong>.
+    Co-interior (same-side interior) angles add up to 180° — they are supplementary, not equal.
+    You need both the answer AND the reason to get full marks.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx    = canvas.getContext('2d');
+  var W = 560, H = 380;
+  var DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+
+  var angleDeg = 55;
+  var mode = 'corresponding';
+  var HIT = 20;
+  var drag = false;
+
+  // Two parallel horizontal lines at y = 110 and y = 270
+  // Transversal passes through both
+  var L1Y = 120, L2Y = 270;
+  var HANDLE_X = 400; // x-position of the angle drag handle
+
+  function setMode(m) {
+    mode = m;
+    ['corresponding','alternate','cointerior'].forEach(function(k) {
+      document.getElementById('btn-' + k.slice(0,3)).classList.toggle('active', k === m);
+    });
+    draw();
+  }
+
+  function transX(y) {
+    // transversal: passes through (W/2, L1Y) and (W/2 + run, L2Y)
+    // angle is measured from the line, so slope = -cot(angleDeg) going downward
+    var run = (L2Y - L1Y) / Math.tan(angleDeg * Math.PI / 180);
+    return W / 2 + (y - L1Y) / (L2Y - L1Y) * run;
+  }
+
+  function drawAngleArc(cx, cy, startAng, endAng, r, color, label) {
+    ctx.strokeStyle = color; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(cx, cy, r, startAng, endAng); ctx.stroke();
+    var midA = (startAng + endAng) / 2;
+    ctx.fillStyle = color; ctx.font = 'bold 15px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, cx + (r + 14) * Math.cos(midA), cy + (r + 14) * Math.sin(midA));
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d1216'; ctx.fillRect(0, 0, W, H);
+
+    var rad = angleDeg * Math.PI / 180;
+    var x1 = transX(L1Y), x2 = transX(L2Y);
+    var slope = (L2Y - L1Y) / (x2 - x1 || 0.001);
+
+    // Parallel line 1
+    ctx.strokeStyle = '#00abfa'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(20, L1Y); ctx.lineTo(W - 20, L1Y); ctx.stroke();
+    // Tickmarks on L1
+    for (var i = 0; i < 2; i++) {
+      var tx = 70 + i * 18;
+      ctx.strokeStyle = '#00abfa'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(tx, L1Y - 6); ctx.lineTo(tx, L1Y + 6); ctx.stroke();
+    }
+
+    // Parallel line 2
+    ctx.strokeStyle = '#00abfa'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(20, L2Y); ctx.lineTo(W - 20, L2Y); ctx.stroke();
+    for (var i = 0; i < 2; i++) {
+      var tx = 70 + i * 18;
+      ctx.strokeStyle = '#00abfa'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(tx, L2Y - 6); ctx.lineTo(tx, L2Y + 6); ctx.stroke();
+    }
+
+    // Transversal — extend to full canvas
+    var extTop = 0, extBot = H;
+    var xtop = x1 + (extTop - L1Y) * (x2 - x1) / (L2Y - L1Y);
+    var xbot = x1 + (extBot - L1Y) * (x2 - x1) / (L2Y - L1Y);
+    ctx.strokeStyle = '#fff067'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(xtop, extTop); ctx.lineTo(xbot, extBot); ctx.stroke();
+
+    // Angle at intersection 1 (upper)
+    // Transversal goes from upper-left to lower-right if angleDeg < 90
+    var tranAngle = Math.atan2(L2Y - L1Y, x2 - x1); // angle of transversal in screen coords
+
+    // The angle θ is between the parallel line (rightward = 0) and the transversal (going down-right)
+    // At L1Y: transversal comes from top-left, parallel goes right
+    // The acute angle above the transversal to the right = angleDeg
+
+    var ARC_R = 28;
+
+    // At intersection 1: angles formed
+    // Transversal direction going down = tranAngle, going up = tranAngle + π
+    // Parallel right = 0, parallel left = π
+
+    if (mode === 'corresponding') {
+      // Highlight angle θ (upper-right at L1) and same angle (upper-right at L2) — equal
+      // Upper-right at L1: from transversal-up to horizontal-right, going clockwise = angleDeg
+      var a1s = -(Math.PI - tranAngle);  // start
+      var a1e = 0;                        // end (rightward)
+      ctx.fillStyle = '#0fee8933';
+      ctx.beginPath(); ctx.moveTo(x1, L1Y); ctx.arc(x1, L1Y, ARC_R, -Math.PI + tranAngle, 0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#0fee8933';
+      ctx.beginPath(); ctx.moveTo(x2, L2Y); ctx.arc(x2, L2Y, ARC_R, -Math.PI + tranAngle, 0); ctx.closePath(); ctx.fill();
+
+      drawAngleArc(x1, L1Y, -Math.PI + tranAngle, 0, ARC_R, '#0fee89', Math.round(angleDeg) + '°');
+      drawAngleArc(x2, L2Y, -Math.PI + tranAngle, 0, ARC_R, '#0fee89', Math.round(angleDeg) + '°');
+
+      document.getElementById('eq-bar').innerHTML =
+        '<span style="color:#0fee89">Corresponding angles</span> are equal: ' +
+        '<strong style="color:#fff067">' + Math.round(angleDeg) + '° = ' + Math.round(angleDeg) + '°</strong>';
+
+    } else if (mode === 'alternate') {
+      // Upper-right at L1 and lower-left at L2 — equal (Z-angles)
+      ctx.fillStyle = '#ff822c33';
+      ctx.beginPath(); ctx.moveTo(x1, L1Y); ctx.arc(x1, L1Y, ARC_R, -Math.PI + tranAngle, 0); ctx.closePath(); ctx.fill();
+      // Lower-left at L2: from π to tranAngle (going left of transversal below horizontal)
+      ctx.fillStyle = '#ff822c33';
+      ctx.beginPath(); ctx.moveTo(x2, L2Y); ctx.arc(x2, L2Y, ARC_R, Math.PI, Math.PI + tranAngle); ctx.closePath(); ctx.fill();
+
+      drawAngleArc(x1, L1Y, -Math.PI + tranAngle, 0, ARC_R, '#ff822c', Math.round(angleDeg) + '°');
+      drawAngleArc(x2, L2Y, Math.PI, Math.PI + tranAngle, ARC_R, '#ff822c', Math.round(angleDeg) + '°');
+
+      document.getElementById('eq-bar').innerHTML =
+        '<span style="color:#ff822c">Alternate angles</span> are equal: ' +
+        '<strong style="color:#fff067">' + Math.round(angleDeg) + '° = ' + Math.round(angleDeg) + '°</strong> (Z-angles)';
+
+    } else {
+      // Co-interior: upper-right at L1 + upper-right at L2 (same side) = 180°
+      var supp = 180 - angleDeg;
+      ctx.fillStyle = '#ff467033';
+      ctx.beginPath(); ctx.moveTo(x1, L1Y); ctx.arc(x1, L1Y, ARC_R, -Math.PI + tranAngle, 0); ctx.closePath(); ctx.fill();
+      // Supplement at L2 upper-right: from 0 to (π - tranAngle)
+      ctx.fillStyle = '#ff467033';
+      ctx.beginPath(); ctx.moveTo(x2, L2Y); ctx.arc(x2, L2Y, ARC_R, -Math.PI + tranAngle, 0); ctx.closePath(); ctx.fill();
+      // Actually show the supplement angle on L2 side (upper-left)
+      ctx.fillStyle = '#fff06733';
+      ctx.beginPath(); ctx.moveTo(x2, L2Y); ctx.arc(x2, L2Y, ARC_R, Math.PI, Math.PI + tranAngle); ctx.closePath(); ctx.fill();
+
+      drawAngleArc(x1, L1Y, -Math.PI + tranAngle, 0, ARC_R, '#ff4670', Math.round(angleDeg) + '°');
+      drawAngleArc(x2, L2Y, Math.PI, Math.PI + tranAngle, ARC_R, '#fff067', Math.round(supp) + '°');
+
+      document.getElementById('eq-bar').innerHTML =
+        '<span style="color:#ff4670">Co-interior angles</span> add to 180°: ' +
+        '<strong style="color:#fff067">' + Math.round(angleDeg) + '° + ' + Math.round(supp) + '° = 180°</strong>';
+    }
+
+    // Parallel indicator arrow labels
+    ctx.fillStyle = '#4a6070'; ctx.font = '14px -apple-system, sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('ℓ₁', W - 18, L1Y);
+    ctx.fillText('ℓ₂', W - 18, L2Y);
+
+    // Drag handle — circle on transversal above L1
+    var handleY = L1Y - 60;
+    var handleX = x1 + (handleY - L1Y) * (x2 - x1) / (L2Y - L1Y);
+    ctx.fillStyle = '#0d1216';
+    ctx.beginPath(); ctx.arc(handleX, handleY, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#fff067'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(handleX, handleY, 9, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#fff06799'; ctx.font = '10px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('drag', handleX, handleY - 10);
+  }
+
+  function getPos(e) {
+    var r = canvas.getBoundingClientRect();
+    var s = e.touches ? e.touches[0] : e;
+    return {
+      cx: (s.clientX - r.left) * (W / r.width),
+      cy: (s.clientY - r.top)  * (H / r.height)
+    };
+  }
+
+  function handlePos() {
+    var x1 = transX(L1Y), x2 = transX(L2Y);
+    var handleY = L1Y - 60;
+    var handleX = x1 + (handleY - L1Y) * (x2 - x1) / (L2Y - L1Y);
+    return { x: handleX, y: handleY };
+  }
+
+  function hitHandle(pos) {
+    var h = handlePos();
+    return Math.hypot(pos.cx - h.x, pos.cy - h.y) < HIT;
+  }
+
+  function updateAngle(pos) {
+    var dxDrag = pos.cx - W / 2;
+    var dyDrag = L1Y - pos.cy;
+    angleDeg = Math.atan2(dyDrag, Math.abs(dxDrag) || 1) * 180 / Math.PI;
+    angleDeg = Math.max(25, Math.min(155, angleDeg));
+    draw();
+  }
+
+  canvas.addEventListener('mousedown',  function(e) { if (hitHandle(getPos(e))) { drag = true; canvas.style.cursor = 'grabbing'; } });
+  canvas.addEventListener('mousemove',  function(e) { var p = getPos(e); if (!drag) { canvas.style.cursor = hitHandle(p) ? 'grab' : 'default'; return; } updateAngle(p); });
+  canvas.addEventListener('mouseup',    function()  { drag = false; canvas.style.cursor = 'default'; });
+  canvas.addEventListener('mouseleave', function()  { drag = false; });
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); if (hitHandle(getPos(e))) drag = true; }, { passive: false });
+  canvas.addEventListener('touchmove',  function(e) { e.preventDefault(); if (drag) updateAngle(getPos(e)); }, { passive: false });
+  canvas.addEventListener('touchend',   function()  { drag = false; });
+
+  draw();
+</script>
+</body>
+</html>

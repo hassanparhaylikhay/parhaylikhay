@@ -9,6 +9,9 @@
   <meta property="og:video:type" content="text/html"/>
   <meta property="og:video:width" content="600"/>
   <meta property="og:video:height" content="620"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -18,7 +21,7 @@
     }
     .header { width: 560px; padding: 14px 4px 6px; }
     .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
     .curve-row {
       width: 560px; display: flex; gap: 0;
       background: #111f2c; border: 1px solid #1a2535;
@@ -51,8 +54,16 @@
     }
     .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
     .footer { width: 560px; padding: 8px 4px 14px; }
-    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
     .tip strong { font-weight: 600; }
+    .equation-bar {
+      width: 560px; padding: 6px 4px;
+      font-family: 'Courier New', monospace; font-size: 18px;
+      color: #f0f0ee; min-height: 34px; line-height: 1.6;
+    }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
   </style>
 </head>
 <body>
@@ -67,7 +78,7 @@
 
 <div class="curve-row">
   <button class="cv-btn" id="btn-linear" onclick="setCurve('linear')">y = mx+c</button>
-  <button class="cv-btn active" id="btn-quad" onclick="setCurve('quad')">y = ax²+c</button>
+  <button class="cv-btn active" id="btn-quad" onclick="setCurve('quad')">y = ax<sup>2</sup>+c</button>
   <button class="cv-btn" id="btn-recip" onclick="setCurve('recip')">y = k/x</button>
   <button class="cv-btn" id="btn-exp" onclick="setCurve('exp')">y = aˣ</button>
 </div>
@@ -118,7 +129,7 @@
       fn:function(x,p,q){return p*x*x+q;},
       eqFn:function(p,q){
         var vx='vertex (0, '+fmt(q)+'),  opens '+(p>0?'up ↑':p<0?'down ↓':'flat');
-        return 'y = '+fmt(p)+'x²'+(q>=0?' + ':' − ')+fmt(Math.abs(q))+'   |   '+vx;
+        return 'y = '+fmt(p)+'x<sup>2</sup>'+(q>=0?' + ':' − ')+fmt(Math.abs(q))+'   |   '+vx;
       },
       tip:'Cambridge tip: <strong>always state the y-intercept (0, c) and the vertex</strong>. If a > 0 it opens up (minimum); if a < 0 it opens down (maximum).',
     },
@@ -127,7 +138,7 @@
       pLabel:'k', pMin:-8, pMax:8, pStep:0.01, pDef:4,
       qLabel:null, qMin:0, qMax:0, qStep:1, qDef:0,
       fn:function(x,p,q){return x===0?Infinity:p/x;},
-      eqFn:function(p,q){return 'y = '+fmt(p)+'/x   |   asymptotes: x = 0,  y = 0';},
+      eqFn:function(p,q){return 'y = <span class="kfrac"><span class="knum">'+fmt(p)+'</span><span class="kden">x</span></span>   |   asymptotes: x = 0,  y = 0';},
       tip:'Cambridge tip: <strong>draw both branches and label both asymptotes x = 0 and y = 0</strong>. The curve never crosses either axis.',
     },
     exp:{
@@ -210,7 +221,7 @@
     ctx.beginPath(); ctx.moveTo(ay[0].x,ay[0].y); ctx.lineTo(ay[1].x,ay[1].y); ctx.stroke();
 
     // Tick labels
-    ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system, sans-serif';
+    ctx.fillStyle='#6a8898'; ctx.font='14px -apple-system, sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='top';
     for(var kx=X_MIN+1;kx<X_MAX;kx++){
       if(kx===0)continue;
@@ -245,7 +256,7 @@
       grad.addColorStop(0,'rgba(15,238,137,0.18)'); grad.addColorStop(1,'rgba(15,238,137,0)');
       ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(cp.x,cp.y,12,0,Math.PI*2); ctx.fill();
       ctx.fillStyle='#0fee89'; ctx.beginPath(); ctx.arc(cp.x,cp.y,5,0,Math.PI*2); ctx.fill();
-      ctx.font='bold 11px Courier New, monospace'; ctx.fillStyle='#0fee89';
+      ctx.font='bold 14px Courier New, monospace'; ctx.fillStyle='#0fee89';
       if(side==='right'){ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(label,cp.x+10,cp.y);}
       else if(side==='above'){ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(label,cp.x,cp.y-8);}
       else{ctx.textAlign='right';ctx.textBaseline='middle';ctx.fillText(label,cp.x-10,cp.y);}
@@ -262,7 +273,7 @@
         ctx.lineTo(toCanvas(val,Y_MAX).x,toCanvas(val,Y_MAX).y);
       }
       ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle='#ff4670'; ctx.font='11px Courier New, monospace';
+      ctx.fillStyle='#ff4670'; ctx.font='14px Courier New, monospace';
       if(horizontal){
         ctx.textAlign='left'; ctx.textBaseline='bottom';
         ctx.fillText('y='+val+' (asymptote)',toCanvas(X_MIN+0.3,val).x,toCanvas(X_MIN+0.3,val).y-3);
@@ -299,7 +310,7 @@
     pD+=(p_val-pD)*SPRING;
     qD+=(q_val-qD)*SPRING;
     draw();
-    document.getElementById('eq-display').textContent=buildEqBar();
+    document.getElementById('eq-display').innerHTML=buildEqBar();
     document.getElementById('cambridge-tip').innerHTML=CURVES[curveType].tip;
     requestAnimationFrame(tick);
   }

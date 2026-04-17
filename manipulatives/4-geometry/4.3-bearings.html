@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Three-Figure Bearings</title>
+  <meta property="og:title" content="Three-Figure Bearings"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="560"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
+    .eq-bar {
+      width: 560px; padding: 8px 4px;
+      font-family: 'Courier New', monospace; font-size: 18px;
+      color: #fff067; font-weight: bold; min-height: 36px;
+      display: flex; align-items: center;
+    }
+    canvas { display: block; cursor: crosshair; }
+    .result-box {
+      width: 560px; display: flex; gap: 0; border-top: 1px solid #1a2535;
+    }
+    .res-col {
+      flex: 1; padding: 8px 10px;
+      font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 2; color: #f0f0ee;
+      border-right: 1px solid #1a2535;
+    }
+    .res-col:last-child { border-right: none; }
+    .res-label { font-size: 11px; color: #6a8898; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Three-Figure Bearings</div>
+  <div class="instruction">
+    Drag <b style="color:#ff4670">B</b> anywhere on the compass — bearing from A to B updates live with full working.
+  </div>
+</div>
+
+<div class="eq-bar" id="eq-bar">Bearing = 000°</div>
+
+<canvas id="graph"></canvas>
+
+<div class="result-box">
+  <div class="res-col">
+    <div class="res-label">Bearing A → B</div>
+    <div id="r-bearing"></div>
+  </div>
+  <div class="res-col">
+    <div class="res-label">Bearing B → A (back-bearing)</div>
+    <div id="r-back"></div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>always measure clockwise from North — write the full three figures (e.g. 045°, not 45°)</strong>.
+    Back-bearing = forward bearing ± 180°. Add 180° if bearing &lt; 180°, subtract if ≥ 180°.
+    Never use compass letters (NE, SW) in your answer — examiners want the three-figure number.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx    = canvas.getContext('2d');
+  var W = 560, H = 400;
+  var DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+
+  var CX = W / 2, CY = H / 2;
+  var RADIUS = 155;
+  var HIT = 18;
+
+  var bearingDeg = 60;
+  var drag = false;
+
+  function degToRad(d) { return d * Math.PI / 180; }
+  function fmt3(n)     { var v = ((Math.round(n) % 360) + 360) % 360; return String(v).padStart(3, '0') + '°'; }
+
+  function bearingToXY(deg, r) {
+    var rad = degToRad(deg - 90);
+    return { x: CX + r * Math.cos(rad), y: CY + r * Math.sin(rad) };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d1216'; ctx.fillRect(0, 0, W, H);
+
+    // Outer compass ring
+    ctx.strokeStyle = '#1a2535'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(CX, CY, RADIUS + 30, 0, Math.PI * 2); ctx.stroke();
+
+    // Grid circles
+    for (var r = 40; r <= RADIUS; r += 40) {
+      ctx.strokeStyle = '#111f2c'; ctx.lineWidth = 0.6;
+      ctx.beginPath(); ctx.arc(CX, CY, r, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // Cardinal spokes
+    ctx.strokeStyle = '#1e3040'; ctx.lineWidth = 0.8;
+    for (var a = 0; a < 360; a += 45) {
+      var rad = degToRad(a - 90);
+      ctx.beginPath();
+      ctx.moveTo(CX, CY);
+      ctx.lineTo(CX + (RADIUS + 25) * Math.cos(rad), CY + (RADIUS + 25) * Math.sin(rad));
+      ctx.stroke();
+    }
+
+    // North arrow (red up)
+    ctx.strokeStyle = '#ff4670'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(CX, CY - RADIUS - 5); ctx.stroke();
+    // Arrow head
+    ctx.fillStyle = '#ff4670';
+    ctx.beginPath();
+    ctx.moveTo(CX, CY - RADIUS - 5);
+    ctx.lineTo(CX - 6, CY - RADIUS + 10);
+    ctx.lineTo(CX + 6, CY - RADIUS + 10);
+    ctx.closePath(); ctx.fill();
+
+    // Cardinal labels
+    var dirs = [['N', 0], ['E', 90], ['S', 180], ['W', 270]];
+    ctx.font = 'bold 15px -apple-system, sans-serif';
+    dirs.forEach(function(d) {
+      var p = bearingToXY(d[1], RADIUS + 22);
+      ctx.fillStyle = d[0] === 'N' ? '#ff4670' : '#4a6070';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(d[0], p.x, p.y);
+    });
+
+    // Degree tick marks every 10°
+    ctx.strokeStyle = '#2a3f50'; ctx.lineWidth = 1;
+    for (var a = 0; a < 360; a += 10) {
+      var len = (a % 90 === 0) ? 12 : (a % 30 === 0) ? 8 : 4;
+      var r1 = RADIUS + 8, r2 = RADIUS + 8 + len;
+      var rad = degToRad(a - 90);
+      ctx.beginPath();
+      ctx.moveTo(CX + r1 * Math.cos(rad), CY + r1 * Math.sin(rad));
+      ctx.lineTo(CX + r2 * Math.cos(rad), CY + r2 * Math.sin(rad));
+      ctx.stroke();
+    }
+
+    // Point A at centre
+    ctx.fillStyle = '#0d1216';
+    ctx.beginPath(); ctx.arc(CX, CY, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#00abfa'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(CX, CY, 9, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#00abfa'; ctx.font = 'bold 15px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('A', CX, CY - 12);
+
+    // Point B position
+    var pB = bearingToXY(bearingDeg, RADIUS * 0.72);
+
+    // Dashed line from A to B
+    ctx.strokeStyle = '#fff06788'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(pB.x, pB.y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arc showing the bearing angle (clockwise from North)
+    var arcR = 55;
+    ctx.strokeStyle = '#0fee89'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(CX, CY, arcR, degToRad(-90), degToRad(bearingDeg - 90), false);
+    ctx.stroke();
+
+    // Angle label inside arc
+    var midBear = bearingDeg / 2;
+    var labelR = arcR + 14;
+    var lp = bearingToXY(midBear, labelR);
+    ctx.fillStyle = '#0fee89'; ctx.font = 'bold 15px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(fmt3(bearingDeg), lp.x, lp.y);
+
+    // North reference line from A (short, up)
+    ctx.strokeStyle = '#3a5060'; ctx.lineWidth = 1.2;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(CX, CY - arcR - 8); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Point B
+    ctx.fillStyle = '#0d1216';
+    ctx.beginPath(); ctx.arc(pB.x, pB.y, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ff4670'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(pB.x, pB.y, 9, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#ff4670'; ctx.font = 'bold 15px -apple-system, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = pB.y < CY ? 'bottom' : 'top';
+    ctx.fillText('B', pB.x, pB.y + (pB.y < CY ? -12 : 12));
+
+    // Results
+    var back = ((bearingDeg + 180) % 360);
+    document.getElementById('eq-bar').textContent = 'Bearing A → B = ' + fmt3(bearingDeg);
+    document.getElementById('r-bearing').innerHTML =
+      'Measured clockwise from North<br>' +
+      'Bearing = <strong style="color:#fff067">' + fmt3(bearingDeg) + '</strong>';
+    document.getElementById('r-back').innerHTML =
+      bearingDeg < 180
+        ? fmt3(bearingDeg) + ' + 180° = <strong style="color:#ff822c">' + fmt3(back) + '</strong>'
+        : fmt3(bearingDeg) + ' − 180° = <strong style="color:#ff822c">' + fmt3(back) + '</strong>';
+  }
+
+  function getPos(e) {
+    var r = canvas.getBoundingClientRect();
+    var s = e.touches ? e.touches[0] : e;
+    return {
+      cx: (s.clientX - r.left) * (W / r.width),
+      cy: (s.clientY - r.top)  * (H / r.height)
+    };
+  }
+
+  function updateFromPos(pos) {
+    var dx = pos.cx - CX, dy = pos.cy - CY;
+    var ang = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+    bearingDeg = ((Math.round(ang) % 360) + 360) % 360;
+    draw();
+  }
+
+  function hitB(pos) {
+    var pB = bearingToXY(bearingDeg, RADIUS * 0.72);
+    return Math.hypot(pos.cx - pB.x, pos.cy - pB.y) < HIT;
+  }
+
+  canvas.addEventListener('mousedown',  function(e) { var p = getPos(e); if (hitB(p)) { drag = true; canvas.style.cursor = 'grabbing'; } });
+  canvas.addEventListener('mousemove',  function(e) { var p = getPos(e); if (!drag) { canvas.style.cursor = hitB(p) ? 'grab' : 'crosshair'; return; } updateFromPos(p); });
+  canvas.addEventListener('mouseup',    function()  { drag = false; canvas.style.cursor = 'crosshair'; });
+  canvas.addEventListener('mouseleave', function()  { drag = false; });
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); var p = getPos(e); if (hitB(p)) drag = true; }, { passive: false });
+  canvas.addEventListener('touchmove',  function(e) { e.preventDefault(); if (drag) updateFromPos(getPos(e)); }, { passive: false });
+  canvas.addEventListener('touchend',   function()  { drag = false; });
+
+  draw();
+</script>
+</body>
+</html>

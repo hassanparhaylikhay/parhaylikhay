@@ -9,6 +9,9 @@
   <meta property="og:video:type" content="text/html"/>
   <meta property="og:video:width" content="600"/>
   <meta property="og:video:height" content="540"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -18,12 +21,15 @@
     }
     .header { width: 560px; padding: 14px 4px 6px; }
     .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
     .equation-bar {
       width: 560px; padding: 6px 4px;
-      font-family: 'Courier New', monospace; font-size: 13px;
-      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+      font-family: 'Courier New', monospace; font-size: 18px;
+      color: #f0f0ee; min-height: 34px; line-height: 1.6;
     }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
     canvas { display: block; cursor: crosshair; }
     .toggle-row {
       width: 560px; display: flex; gap: 0;
@@ -37,7 +43,7 @@
     }
     .tog-btn.active { background: #00abfa22; color: #00abfa; font-weight: 600; }
     .footer { width: 560px; padding: 8px 4px 14px; }
-    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
     .tip strong { font-weight: 600; }
   </style>
 </head>
@@ -62,7 +68,7 @@
 
 <div class="footer">
   <div class="tip">
-    Cambridge tip: <strong>gradient = Δy ÷ Δx — always use the full rise and run of the segment</strong>,
+    Cambridge tip: <strong>gradient \(= \dfrac{\Delta y}{\Delta x}\) — always use the full rise and run of the segment</strong>,
     not just one point. On S–T graphs, area under the curve = distance travelled.
   </div>
 </div>
@@ -113,7 +119,7 @@
     mode=m; hoverSeg=-1; hoverPt=-1; dragPt=-1;
     document.getElementById('btn-dt').classList.toggle('active',m==='dt');
     document.getElementById('btn-st').classList.toggle('active',m==='st');
-    document.getElementById('eq-display').textContent='Hover a segment, or drag a dot to reshape';
+    document.getElementById('eq-display').innerHTML='Hover a segment, or drag a dot to reshape';
   }
 
   function getPos(e){
@@ -193,7 +199,7 @@
     ctx.beginPath(); ctx.moveTo(o.x,o.y); ctx.lineTo(xEnd.x,o.y); ctx.stroke();
 
     // Tick labels
-    ctx.fillStyle='#6a8898'; ctx.font='11px sans-serif';
+    ctx.fillStyle='#6a8898'; ctx.font='14px sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='top';
     for(var gx=0;gx<=b.xMax;gx++){
       ctx.fillText(String(gx),toC(gx,0).x,toC(gx,0).y+5);
@@ -204,7 +210,7 @@
     }
 
     // Axis labels
-    ctx.fillStyle='#7a9aaa'; ctx.font='12px sans-serif';
+    ctx.fillStyle='#7a9aaa'; ctx.font='15px sans-serif';
     ctx.textAlign='center'; ctx.textBaseline='top';
     ctx.fillText('Time (h)',W/2,H-12);
     ctx.save(); ctx.translate(14,H/2); ctx.rotate(-Math.PI/2);
@@ -247,17 +253,21 @@
       ctx.beginPath(); ctx.arc(cp.x,cp.y,r2,0,Math.PI*2); ctx.fill();
       // Coordinate label when dragging
       if(isDrag){
-        ctx.fillStyle='#0fee89'; ctx.font='bold 11px Courier New, monospace';
+        ctx.fillStyle='#0fee89'; ctx.font='bold 14px Courier New, monospace';
         ctx.textAlign='center'; ctx.textBaseline='bottom';
         ctx.fillText('('+p[0]+', '+p[1]+')',cp.x,cp.y-12);
       }
     });
   }
 
+  function FRAC(num, den) {
+    return '<span class="kfrac"><span class="knum">'+num+'</span><span class="kden">'+den+'</span></span>';
+  }
+
   function updateEqBar(seg){
     var P=pts();
     if(seg<0||seg>=P.length-1){
-      document.getElementById('eq-display').textContent='Hover a segment, or drag a dot to reshape';
+      document.getElementById('eq-display').innerHTML='Hover a segment, or drag a dot to reshape';
       return;
     }
     var dx=P[seg+1][0]-P[seg][0];
@@ -265,13 +275,13 @@
     var grad=dx===0?Infinity:dy/dx;
     var gradStr=(Math.round(grad*100)/100).toString();
     if(mode==='dt'){
-      var meaning=grad===0?'stationary (speed = 0)':grad>0?'moving away at '+gradStr+' km/h':'returning at '+Math.abs(grad)+' km/h';
-      document.getElementById('eq-display').textContent=
-        'Seg '+(seg+1)+': gradient = ('+P[seg+1][1]+'−'+P[seg][1]+')÷('+P[seg+1][0]+'−'+P[seg][0]+') = '+gradStr+' km/h   →   '+meaning;
+      var meaning=grad===0?'stationary (speed = 0)':grad>0?'moving away at '+gradStr+' km/h':'returning at '+Math.abs(Math.round(grad*100)/100)+' km/h';
+      document.getElementById('eq-display').innerHTML=
+        'Seg '+(seg+1)+': gradient = '+FRAC(P[seg+1][1]+'−'+P[seg][1], P[seg+1][0]+'−'+P[seg][0])+' = <strong style="color:#0fee89">'+gradStr+' km/h</strong> &nbsp;→&nbsp; '+meaning;
     } else {
       var area=0.5*(P[seg][1]+P[seg+1][1])*dx;
-      document.getElementById('eq-display').textContent=
-        'Seg '+(seg+1)+': acceleration = '+gradStr+' km/h²   |   area (distance) = ½×('+P[seg][1]+'+'+P[seg+1][1]+')×'+dx+' = '+area+' km';
+      document.getElementById('eq-display').innerHTML=
+        'Seg '+(seg+1)+': accel = '+FRAC(P[seg+1][1]+'−'+P[seg][1], P[seg+1][0]+'−'+P[seg][0])+' = <strong style="color:#0fee89">'+gradStr+' km/h²</strong> &nbsp;|&nbsp; area = ½×('+P[seg][1]+'+'+P[seg+1][1]+')×'+dx+' = <strong style="color:#fff067">'+area+' km</strong>';
     }
   }
 
@@ -310,7 +320,7 @@
   });
   canvas.addEventListener('mouseleave',function(){
     dragPt=-1; hoverPt=-1; hoverSeg=-1;
-    document.getElementById('eq-display').textContent='Hover a segment, or drag a dot to reshape';
+    document.getElementById('eq-display').innerHTML='Hover a segment, or drag a dot to reshape';
   });
 
   // Touch events

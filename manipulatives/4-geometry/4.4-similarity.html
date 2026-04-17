@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Similarity: Lengths, Areas, Volumes</title>
+  <meta property="og:title" content="Similarity — Length, Area and Volume Scale Factors"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="600"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      background: #0d1216;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .header { width: 560px; padding: 14px 4px 6px; }
+    .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
+    .sliders {
+      width: 560px; display: flex; flex-direction: column; gap: 8px;
+      padding: 10px 4px; border-top: 1px solid #1a2535; border-bottom: 1px solid #1a2535;
+    }
+    .slider-row { display: flex; align-items: center; gap: 10px; }
+    .slider-label {
+      font-family: 'Courier New', monospace; font-size: 13px;
+      width: 80px; flex-shrink: 0;
+    }
+    input[type="range"] {
+      flex: 1; height: 4px; -webkit-appearance: none; appearance: none;
+      background: #1e2e3e; border-radius: 2px; outline: none; cursor: pointer;
+    }
+    #slider-k::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 15px; height: 15px;
+      border-radius: 50%; background: #00abfa; cursor: pointer;
+    }
+    canvas { display: block; }
+    .result-box {
+      width: 560px; display: flex; gap: 0; border-top: 1px solid #1a2535;
+    }
+    .res-col {
+      flex: 1; padding: 8px 10px;
+      font-family: 'Courier New', monospace; font-size: 15px;
+      line-height: 2.2; color: #f0f0ee;
+      border-right: 1px solid #1a2535;
+    }
+    .res-col:last-child { border-right: none; }
+    .res-label { font-size: 11px; color: #6a8898; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .footer { width: 560px; padding: 8px 4px 14px; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
+    .tip strong { font-weight: 600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Similarity — Lengths, Areas and Volumes</div>
+  <div class="instruction">
+    Drag the scale factor handle on the canvas, or use the slider — see how area and volume scale differently from length.
+  </div>
+</div>
+
+<div class="sliders">
+  <div class="slider-row">
+    <span class="slider-label" id="lbl-k" style="color:#00abfa">k = 2.00</span>
+    <input type="range" id="slider-k" min="0.3" max="3.5" step="0.01" value="2.0"/>
+  </div>
+</div>
+
+<canvas id="graph"></canvas>
+
+<div class="result-box">
+  <div class="res-col">
+    <div class="res-label">Length Scale Factor</div>
+    <div id="r-length"></div>
+  </div>
+  <div class="res-col">
+    <div class="res-label">Area Scale Factor</div>
+    <div id="r-area"></div>
+  </div>
+  <div class="res-col">
+    <div class="res-label">Volume Scale Factor</div>
+    <div id="r-vol"></div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>if lengths are in ratio k, areas are in ratio \(k^2\) and volumes are in ratio \(k^3\)</strong>.
+    Common mistake: using k instead of \(k^2\) for area — that loses the A mark.
+    To find k: always divide the bigger length by the smaller one first.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx    = canvas.getContext('2d');
+  var W = 560, H = 300;
+  var DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width  = W + 'px';
+  canvas.style.height = H + 'px';
+  ctx.scale(DPR, DPR);
+
+  var kT = 2.0, kD = 2.0;
+  var SPRING = 0.16;
+  var drag = false;
+  var HIT = 18;
+
+  // Small shape: a triangle with base 60, height 50 — centred at left side
+  // Scale it by k on the right side
+  var BASE_SIZE = 55; // base side length for small shape
+  var SX = 120, SY = H / 2; // centre of small shape
+  var LX = 360, LY = H / 2; // centre of large shape anchor
+
+  // Slider
+  var slK = document.getElementById('slider-k');
+  slK.addEventListener('input', function() {
+    kT = parseFloat(slK.value);
+    document.getElementById('lbl-k').textContent = 'k = ' + kT.toFixed(2);
+  });
+
+  function fmt2(n) { return (Math.round(n * 100) / 100).toFixed(2); }
+
+  function drawShape(cx, cy, size, color, label) {
+    // Draw a pentagon for fun variety — makes the scaling visual clear
+    var sides = 5;
+    ctx.strokeStyle = color; ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (var i = 0; i <= sides; i++) {
+      var ang = (i / sides) * Math.PI * 2 - Math.PI / 2;
+      var px = cx + size * Math.cos(ang);
+      var py = cy + size * Math.sin(ang);
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.fillStyle = color + '18';
+    ctx.fill();
+
+    // Side length label
+    var p1ang = -Math.PI / 2, p2ang = p1ang + 2 * Math.PI / sides;
+    var midX = cx + size * Math.cos((p1ang + p2ang) / 2);
+    var midY = cy + size * Math.sin((p1ang + p2ang) / 2);
+    ctx.fillStyle = color; ctx.font = 'bold 14px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, midX + 16, midY - 8);
+  }
+
+  function draw() {
+    kD += (kT - kD) * SPRING;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d1216'; ctx.fillRect(0, 0, W, H);
+
+    var k = kD;
+    var smallR = BASE_SIZE;
+    var largeR = BASE_SIZE * k;
+
+    // Small shape
+    drawShape(SX, SY, smallR, '#00abfa', '1');
+
+    // Dashed arrow between shapes
+    ctx.strokeStyle = '#3a5060'; ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(SX + smallR + 10, SY); ctx.lineTo(LX - largeR - 10, SY); ctx.stroke();
+    ctx.setLineDash([]);
+    // Arrow head
+    ctx.fillStyle = '#3a5060';
+    var ax = LX - largeR - 10;
+    ctx.beginPath(); ctx.moveTo(ax, SY); ctx.lineTo(ax - 10, SY - 5); ctx.lineTo(ax - 10, SY + 5); ctx.fill();
+
+    // k label on arrow
+    ctx.fillStyle = '#fff067'; ctx.font = 'bold 15px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('× k = ' + fmt2(k), (SX + smallR + LX - largeR) / 2, SY - 4);
+
+    // Large shape — only draw if it fits
+    if (LX - largeR > SX + smallR + 20 && largeR < 200) {
+      drawShape(LX, LY, largeR, '#ff822c', fmt2(k));
+    } else if (largeR >= 200) {
+      // Too big — just show label
+      ctx.fillStyle = '#ff822c55'; ctx.font = '14px -apple-system, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('(shape too large — scale the page)', LX, LY);
+    }
+
+    // Small shape label
+    ctx.fillStyle = '#00abfa'; ctx.font = 'bold 15px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('Shape A', SX, SY + smallR + 8);
+    ctx.fillStyle = '#ff822c';
+    if (LX - largeR > SX + smallR + 20)
+      ctx.fillText('Shape B', LX, LY + largeR + 8);
+
+    // Drag handle on slider-like scale bar
+    var TRACK_X = 40, TRACK_Y = 40, TRACK_W = W - 80;
+    var KMIN = 0.3, KMAX = 3.5;
+    ctx.fillStyle = '#111f2c'; ctx.fillRect(TRACK_X, TRACK_Y - 3, TRACK_W, 6);
+    var handleX = TRACK_X + (kT - KMIN) / (KMAX - KMIN) * TRACK_W;
+    ctx.fillStyle = '#0d1216';
+    ctx.beginPath(); ctx.arc(handleX, TRACK_Y, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#00abfa'; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(handleX, TRACK_Y, 10, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#00abfa'; ctx.font = 'bold 14px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('k = ' + fmt2(kT), handleX, TRACK_Y - 12);
+
+    // Track labels
+    ctx.fillStyle = '#4a6070'; ctx.font = '13px -apple-system, sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(KMIN, TRACK_X, TRACK_Y + 5);
+    ctx.fillText(KMAX.toFixed(1), TRACK_X + TRACK_W, TRACK_Y + 5);
+
+    // Result boxes
+    document.getElementById('r-length').innerHTML =
+      'k = <strong style="color:#00abfa">' + fmt2(k) + '</strong>';
+    document.getElementById('r-area').innerHTML =
+      'k<sup>2</sup> = <strong style="color:#fff067">' + fmt2(k * k) + '</strong>';
+    document.getElementById('r-vol').innerHTML =
+      'k<sup>3</sup> = <strong style="color:#ff822c">' + fmt2(k * k * k) + '</strong>';
+
+    if (Math.abs(kD - kT) > 0.001) requestAnimationFrame(draw);
+  }
+
+  function getPos(e) {
+    var r = canvas.getBoundingClientRect();
+    var s = e.touches ? e.touches[0] : e;
+    return { cx: (s.clientX - r.left) * (W / r.width), cy: (s.clientY - r.top) * (H / r.height) };
+  }
+
+  var TRACK_X = 40, TRACK_Y = 40, TRACK_W = W - 80;
+  var KMIN = 0.3, KMAX = 3.5;
+
+  function handleX() {
+    return TRACK_X + (kT - KMIN) / (KMAX - KMIN) * TRACK_W;
+  }
+
+  function hitHandle(pos) {
+    return Math.hypot(pos.cx - handleX(), pos.cy - TRACK_Y) < 18;
+  }
+
+  function updateFromPos(pos) {
+    var ratio = (pos.cx - TRACK_X) / TRACK_W;
+    kT = Math.max(KMIN, Math.min(KMAX, KMIN + ratio * (KMAX - KMIN)));
+    kT = Math.round(kT * 100) / 100;
+    slK.value = kT;
+    document.getElementById('lbl-k').textContent = 'k = ' + kT.toFixed(2);
+    requestAnimationFrame(draw);
+  }
+
+  canvas.addEventListener('mousedown',  function(e) { if (hitHandle(getPos(e))) { drag = true; canvas.style.cursor = 'grabbing'; } });
+  canvas.addEventListener('mousemove',  function(e) { var p = getPos(e); if (!drag) { canvas.style.cursor = hitHandle(p) ? 'grab' : 'default'; return; } updateFromPos(p); });
+  canvas.addEventListener('mouseup',    function()  { drag = false; canvas.style.cursor = 'default'; });
+  canvas.addEventListener('mouseleave', function()  { drag = false; });
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); if (hitHandle(getPos(e))) drag = true; }, { passive: false });
+  canvas.addEventListener('touchmove',  function(e) { e.preventDefault(); if (drag) updateFromPos(getPos(e)); }, { passive: false });
+  canvas.addEventListener('touchend',   function()  { drag = false; });
+
+  slK.addEventListener('input', function() { requestAnimationFrame(draw); });
+
+  draw();
+</script>
+</body>
+</html>

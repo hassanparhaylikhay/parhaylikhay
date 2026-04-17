@@ -126,6 +126,71 @@ ParhayLikhay/
 
 ---
 
+## Cambridge 4024 Syllabus — Unit Sub-Topics
+
+Pre-loaded so future sessions never need to open the PDF. Source: Cambridge 4024 syllabus.
+
+### Unit 1 — Number
+- **1.1** Types of number: natural, integer, rational, irrational, real; prime, square, cube, triangular numbers; HCF, LCM; prime factorisation
+- **1.2** Sets: notation, Venn diagrams, union, intersection, complement, subsets, empty set
+- **1.3** Fractions, decimals, percentages: conversions, rounding, significant figures, decimal places, standard form (a × 10ⁿ), estimation
+- **1.4** Ratio and proportion: simplifying, dividing quantities, scale, map distances, direct and inverse proportion
+- **1.5** Rates: speed/distance/time, unit rates, currency conversion, density, pressure
+- **1.6** Percentage calculations: percentage increase/decrease, reverse percentage, profit/loss, simple interest, compound interest
+- **1.7** Time: 12h/24h clocks, durations, timetables
+- **1.8** Money: bills, best-buy comparisons, exchange rates
+
+### Unit 2 — Algebra and Graphs
+- **2.1** Algebraic manipulation: expanding brackets (including (a+b)²), factorising (common factor, difference of squares, trinomials), simplifying expressions, algebraic fractions
+- **2.2** Solving equations: linear, quadratic (factorising, formula, completing the square), simultaneous (elimination, substitution, graphical), inequalities (number line notation)
+- **2.3** Indices: laws of indices, zero and negative indices, fractional indices, surds (simplify, rationalise denominator)
+- **2.4** Sequences: nth term of arithmetic and geometric sequences, recognising patterns
+- **2.5** Functions: notation f(x), composite fg(x), inverse f⁻¹(x), domain and range
+- **2.6** Graphs of functions: y = mx + c (gradient, intercepts), y = ax² + bx + c (vertex, roots, axis of symmetry), y = axⁿ for n = −2, −1, 0, 1, 2, 3; y = aˣ, y = |x|
+- **2.7** Graphical methods: reading gradients/intercepts, drawing tangents to find gradient, areas under velocity-time graphs, travel graphs, rates of change
+
+### Unit 3 — Coordinate Geometry
+- **3.1** Gradient: m = (y₂−y₁)÷(x₂−x₁); positive/negative/zero/undefined gradient
+- **3.2** Straight-line equation: y = mx + c; equation from two points or gradient + point; finding gradient and intercepts from equation
+- **3.3** Midpoint and distance: M = ((x₁+x₂)/2, (y₁+y₂)/2); d = √((x₂−x₁)²+(y₂−y₁)²)
+- **3.4** Parallel and perpendicular lines: parallel → same gradient; perpendicular → m₁×m₂ = −1
+
+### Unit 4 — Geometry
+- **4.1** Geometrical terms: triangles (equilateral/isosceles/scalene/right-angled/obtuse); quadrilaterals (square/rectangle/kite/rhombus/parallelogram/trapezium); polygons; solids; circle parts (centre/radius/diameter/circumference/semicircle/chord/tangent/arc/sector/segment)
+- **4.2** Geometrical constructions: drawing and measuring lines and angles; constructing triangles with ruler and compasses; nets of 3D solids
+- **4.3** Scale drawings and bearings: three-figure bearings measured clockwise from North (000°–360°); scale drawings; back-bearing = bearing ± 180°
+- **4.4** Similarity: similar shapes have equal angles and proportional sides; scale factor k → lengths ×k, areas ×k², volumes ×k³
+- **4.5** Symmetry: line symmetry (count lines of symmetry); rotational symmetry (order of rotation); planes of symmetry and axes of symmetry in 3D solids
+- **4.6** Angles: angles at a point = 360°; angles on a straight line = 180°; vertically opposite angles equal; parallel lines → corresponding angles equal, alternate angles equal, co-interior angles = 180°; interior angle sum of polygon = (n−2)×180°; exterior angles sum = 360°
+- **4.7** Circle theorems I: angle in semicircle = 90°; tangent ⊥ radius = 90°; angle at centre = 2 × angle at circumference; angles in same segment equal; opposite angles of cyclic quadrilateral = 180°; alternate segment theorem
+- **4.8** Circle theorems II: equal chords equidistant from centre; perpendicular from centre bisects chord; tangents from external point are equal in length
+
+### Unit 5 — Mensuration
+- **5.1** Perimeter and area: rectangle, triangle, parallelogram, trapezium, circle (C = 2πr, A = πr²), arc length, sector area
+- **5.2** Surface area and volume: cuboid, prism, cylinder, cone, sphere, pyramid; composite solids; converting units (cm²↔m², cm³↔m³)
+
+### Unit 6 — Trigonometry
+- **6.1** Right-angled triangles: sin/cos/tan ratios (SOH-CAH-TOA); finding sides and angles; Pythagoras' theorem
+- **6.2** Non-right-angled triangles: sine rule (a/sinA = b/sinB), cosine rule (a² = b²+c²−2bc cosA), area = ½ab sinC; ambiguous case of sine rule
+- **6.3** Angles of elevation and depression; 3D trigonometry (identify right-angled triangles in 3D)
+
+### Unit 7 — Transformations and Vectors
+- **7.1** Transformations: reflection (mirror line), rotation (centre, angle, direction), translation (vector), enlargement (centre, scale factor including negative); combined transformations; finding the transformation given object and image
+- **7.2** Vectors: column vector notation, adding/subtracting vectors, scalar multiplication, magnitude |v| = √(x²+y²); position vectors; geometric proofs using vectors
+
+### Unit 8 — Probability
+- **8.1** Basic probability: P(event) = favourable/total; complementary events; mutually exclusive events; P(A∪B) = P(A)+P(B)−P(A∩B)
+- **8.2** Combined events: tree diagrams; two-way tables; independent events P(A∩B) = P(A)×P(B); conditional probability P(A|B)
+- **8.3** Relative frequency; experimental vs theoretical probability
+
+### Unit 9 — Statistics
+- **9.1** Data collection and display: bar charts, pie charts, pictograms, stem-and-leaf, scatter diagrams, line graphs, histograms (frequency density = frequency ÷ class width), frequency polygons
+- **9.2** Averages and spread: mean, median, mode, range; quartiles and interquartile range; mean and modal class from grouped frequency tables; reading median from cumulative frequency curve
+- **9.3** Cumulative frequency: draw and read cumulative frequency curve, median, quartiles, interquartile range, percentiles
+- **9.4** Correlation: positive/negative/no correlation; line of best fit; using line of best fit to predict
+
+---
+
 ## Marking Knowledge Base
 
 The `marking-knowledge/maths/` folder contains marking patterns extracted from Cambridge 4024 past papers. Before writing any marked worked example, check the relevant topic file first.

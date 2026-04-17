@@ -9,6 +9,9 @@
   <meta property="og:video:type" content="text/html"/>
   <meta property="og:video:width" content="600"/>
   <meta property="og:video:height" content="580"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
@@ -18,11 +21,11 @@
     }
     .header { width: 560px; padding: 14px 4px 6px; }
     .title { color: #00abfa; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .instruction { color: #b4b2a9; font-size: 12px; line-height: 1.5; }
+    .instruction { color: #b4b2a9; font-size: 13px; line-height: 1.5; }
     .equation-bar {
       width: 560px; padding: 5px 4px 6px;
-      font-family: 'Courier New', monospace; font-size: 13px;
-      color: #f0f0ee; min-height: 28px; line-height: 1.6;
+      font-family: 'Courier New', monospace; font-size: 18px;
+      color: #f0f0ee; min-height: 34px; line-height: 1.6;
     }
     canvas { display: block; }
     .sliders {
@@ -45,8 +48,11 @@
     #sl-x::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff822c; cursor:pointer; }
     .slider-bounds { color: #3a4a5a; font-size: 11px; width: 46px; text-align: right; flex-shrink: 0; }
     .footer { width: 560px; padding: 8px 4px 14px; }
-    .tip { color: #0fee89; font-size: 11px; line-height: 1.7; }
+    .tip { color: #0fee89; font-size: 13px; line-height: 1.7; }
     .tip strong { font-weight: 600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
   </style>
 </head>
 <body>
@@ -55,11 +61,11 @@
   <div class="title">Substitution</div>
   <div class="instruction">
     Drag the <b style="color:#ff822c">orange dot</b> along the curve, or use the <b style="color:#ff822c">x</b> slider.
-    See f(x) = <b style="color:#00abfa">a</b>x² + <b style="color:#fff067">b</b>x + <b style="color:#0fee89">c</b> evaluated step by step.
+    See f(x) = <b style="color:#00abfa">a</b>x<sup>2</sup> + <b style="color:#fff067">b</b>x + <b style="color:#0fee89">c</b> evaluated step by step.
   </div>
 </div>
 
-<div class="equation-bar" id="eq-display">f(x) = x²</div>
+<div class="equation-bar" id="eq-display">f(x) = x<sup>2</sup></div>
 
 <canvas id="graph" width="560" height="340"></canvas>
 
@@ -161,7 +167,7 @@
     ctx.beginPath(); ctx.moveTo(ay[0].x,ay[0].y); ctx.lineTo(ay[1].x,ay[1].y); ctx.stroke();
 
     // Tick labels
-    ctx.fillStyle = '#6a8898'; ctx.font = '11px -apple-system, sans-serif';
+    ctx.fillStyle = '#6a8898'; ctx.font = '14px -apple-system, sans-serif';
     ctx.textAlign = 'center'; ctx.textBaseline = 'top';
     for (var kx = X_MIN+1; kx < X_MAX; kx++) {
       if (kx===0) continue;
@@ -215,7 +221,7 @@
       var lx = dotP.x + (dotP.x > W*0.75 ? -14 : 14);
       var align = dotP.x > W*0.75 ? 'right' : 'left';
       ctx.fillStyle = '#ff822c';
-      ctx.font = 'bold 12px Courier New, monospace';
+      ctx.font = 'bold 15px Courier New, monospace';
       ctx.textAlign = align; ctx.textBaseline = 'middle';
       ctx.fillText('(' + fmt(x) + ', ' + fmt(fv) + ')', lx, dotP.y - 14);
     }
@@ -226,7 +232,7 @@
     var ax2 = a*x*x, bx = b*x;
     var aStr = fmt(a), bStr = fmt(b), cStr = fmt(c), xStr = fmt(x);
     var ax2Str = fmt(ax2), bxStr = fmt(bx), fvStr = fmt(fv);
-    return 'f(' + xStr + ')  =  ' + aStr + '×' + xStr + '²  +  ' + bStr + '×' + xStr + '  +  ' + cStr +
+    return 'f(' + xStr + ')  =  ' + aStr + '×' + xStr + '<sup>2</sup>  +  ' + bStr + '×' + xStr + '  +  ' + cStr +
            '  =  ' + ax2Str + '  +  ' + bxStr + '  +  ' + cStr + '  =  ' + fvStr;
   }
 
@@ -243,7 +249,7 @@
     c += (cT - c) * SPRING;
     x += (xT - x) * (dragging ? 0.9 : SPRING); // snap faster when dragging
     draw();
-    document.getElementById('eq-display').textContent = buildEq();
+    document.getElementById('eq-display').innerHTML = buildEq();
     requestAnimationFrame(tick);
   }
 
