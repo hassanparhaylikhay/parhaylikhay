@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Angles of Elevation &amp; Depression</title>
+  <meta property="og:title" content="Angles of Elevation &amp; Depression"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="620"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      background:#0d1216;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .mode-btns { width:560px; padding:6px 4px; display:flex; gap:8px; }
+    .mode-btn {
+      padding:5px 16px; font-size:13px; font-weight:600; border-radius:4px;
+      border:1.5px solid #1e3a52; background:#111f2c; color:#6a8898; cursor:pointer;
+    }
+    .mode-btn.active { border-color:#00abfa; color:#00abfa; background:#0d2030; }
+    .equation-bar {
+      width:560px; padding:6px 4px;
+      font-family:'Courier New', monospace; font-size:15px;
+      color:#f0f0ee; min-height:54px; line-height:1.9;
+    }
+    canvas { display:block; }
+    .sliders {
+      width:560px; display:flex; flex-direction:column;
+      gap:9px; padding:10px 4px;
+      border-top:1px solid #1a2535; border-bottom:1px solid #1a2535;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New', monospace; font-size:13px; width:100px; flex-shrink:0; }
+    input[type="range"] {
+      flex:1; height:4px; -webkit-appearance:none;
+      background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer;
+    }
+    #sl-h::-webkit-slider-thumb  { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    #sl-d::-webkit-slider-thumb  { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:55px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Angles of Elevation &amp; Depression</div>
+  <div class="instruction">
+    Adjust the building height and observer distance.
+    <b style="color:#fff067">Elevation</b> is measured from horizontal <em>upward</em>;
+    <b style="color:#ff822c">depression</b> is measured from horizontal <em>downward</em> — they're equal alternate angles.
+  </div>
+</div>
+
+<div class="mode-btns">
+  <button class="mode-btn active" id="btn-elev" onclick="setMode('elev')">Elevation (observer on ground)</button>
+  <button class="mode-btn" id="btn-dep"  onclick="setMode('dep')">Depression (observer at top)</button>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="290"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-h">h = 20 m</div>
+    <input type="range" id="sl-h" min="5" max="40" step="0.5" value="20"/>
+    <div class="slider-bounds">5 … 40 m</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-d">d = 25 m</div>
+    <input type="range" id="sl-d" min="5" max="50" step="0.5" value="25"/>
+    <div class="slider-bounds">5 … 50 m</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip" id="tip-text"></div>
+</div>
+
+<script>
+  var hv=20, dv=25;
+  var hD=20, dD=25;
+  var mode='elev';
+  var SPRING=0.13;
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=290;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  function FRAC(n,d){return '<span class="kfrac"><span class="knum">'+n+'</span><span class="kden">'+d+'</span></span>';}
+  function f2(v){return (Math.round(v*100)/100).toFixed(2);}
+  function f1(v){return (Math.round(v*10)/10).toFixed(1);}
+
+  function setMode(m){
+    mode=m;
+    document.getElementById('btn-elev').className='mode-btn'+(m==='elev'?' active':'');
+    document.getElementById('btn-dep').className ='mode-btn'+(m==='dep' ?' active':'');
+    var tip=document.getElementById('tip-text');
+    tip.innerHTML= m==='elev'
+      ? 'Cambridge tip: <strong>angle of elevation uses tan θ = opposite/adjacent = height/distance</strong>. '
+       +'Always draw a diagram and label: the horizontal is the adjacent, the vertical height is the opposite. '
+       +'The exam question often gives two of {h, d, θ} and asks for the third.'
+      : 'Cambridge tip: <strong>angle of depression = angle of elevation</strong> — they are alternate interior angles between parallel horizontal lines. '
+       +'Examiners often say "from the top of a cliff…" — you still use tan θ = h/d from the right triangle, '
+       +'but the right angle is now at the BASE of the vertical, not at the observer\'s foot.';
+    if(window.renderMathInElement) renderMathInElement(tip,{delimiters:[{left:'\\(',right:'\\)',display:false}]});
+  }
+
+  var SC=4.5; // px per metre
+  var GY=240; // ground level y
+  var BLDG_X=420; // building x
+
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var h_px=hD*SC, d_px=dD*SC;
+    var obsX = Math.max(30, BLDG_X - d_px);
+    var obsY = GY; // observer on ground
+    var bldgTop = GY - h_px;
+
+    // ── Ground ────────────────────────────────────────────────────────
+    ctx.strokeStyle='#2a4050'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(20,GY); ctx.lineTo(W-20,GY); ctx.stroke();
+
+    // ── Building (rectangle) ─────────────────────────────────────────
+    var bw=32;
+    ctx.fillStyle='#1a2f40';
+    ctx.fillRect(BLDG_X-bw/2, bldgTop, bw, h_px);
+    ctx.strokeStyle='#2a4a5a'; ctx.lineWidth=1.5;
+    ctx.strokeRect(BLDG_X-bw/2, bldgTop, bw, h_px);
+    // Windows
+    for(var wy=bldgTop+14; wy<GY-10; wy+=22){
+      ctx.fillStyle='#0d4060';
+      ctx.fillRect(BLDG_X-bw/2+4, wy, 10, 8);
+      ctx.fillRect(BLDG_X+4, wy, 10, 8);
+    }
+
+    // ── Height dimension line ─────────────────────────────────────────
+    var hLineX = BLDG_X + bw/2 + 14;
+    ctx.strokeStyle='#fff06766'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(hLineX,GY); ctx.lineTo(hLineX,bldgTop);
+    ctx.moveTo(hLineX-4,GY); ctx.lineTo(hLineX+4,GY);
+    ctx.moveTo(hLineX-4,bldgTop); ctx.lineTo(hLineX+4,bldgTop);
+    ctx.stroke();
+    ctx.fillStyle='#fff067'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('h='+f1(hD)+'m', hLineX+6, (GY+bldgTop)/2);
+
+    // ── Distance dimension line ───────────────────────────────────────
+    ctx.strokeStyle='#00abfa66'; ctx.lineWidth=1.2;
+    ctx.beginPath();
+    ctx.moveTo(obsX,GY+18); ctx.lineTo(BLDG_X-bw/2,GY+18);
+    ctx.moveTo(obsX,GY+14); ctx.lineTo(obsX,GY+22);
+    ctx.moveTo(BLDG_X-bw/2,GY+14); ctx.lineTo(BLDG_X-bw/2,GY+22);
+    ctx.stroke();
+    ctx.fillStyle='#00abfa'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('d='+f1(dD)+'m', (obsX+BLDG_X-bw/2)/2, GY+24);
+
+    // ── Observer ──────────────────────────────────────────────────────
+    if(mode==='elev'){
+      // Observer at ground level
+      ctx.fillStyle='#00abfa';
+      ctx.beginPath(); ctx.arc(obsX,obsY,7,0,2*Math.PI); ctx.fill();
+      ctx.fillStyle='#00abfa'; ctx.font='12px Courier New, monospace';
+      ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('Observer',obsX,obsY-10);
+
+      // Horizontal reference line from observer
+      ctx.setLineDash([4,4]); ctx.strokeStyle='#ffffff33'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(obsX,obsY); ctx.lineTo(BLDG_X+20,obsY); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Line of sight from observer to building top
+      var theta=Math.atan2(obsY-bldgTop, BLDG_X-bw/2-obsX);
+      ctx.strokeStyle='#fff067'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(obsX,obsY); ctx.lineTo(BLDG_X-bw/2,bldgTop); ctx.stroke();
+
+      // Elevation angle arc
+      var elev=Math.atan2(h_px,BLDG_X-bw/2-obsX);
+      ctx.beginPath(); ctx.arc(obsX,obsY,36,0,-elev,true);
+      ctx.strokeStyle='#fff067aa'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='#fff067'; ctx.font='bold 14px Courier New, monospace';
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillText('θ='+f2(elev*180/Math.PI)+'°', obsX+40, obsY-20);
+
+    } else {
+      // Observer at building top (depression)
+      var topObs={x:BLDG_X-bw/2, y:bldgTop};
+      ctx.fillStyle='#ff822c';
+      ctx.beginPath(); ctx.arc(topObs.x,topObs.y,7,0,2*Math.PI); ctx.fill();
+      ctx.fillStyle='#ff822c'; ctx.font='12px Courier New, monospace';
+      ctx.textAlign='right'; ctx.textBaseline='bottom'; ctx.fillText('Observer',topObs.x-10,topObs.y-10);
+
+      // Horizontal line from observer at top
+      ctx.setLineDash([4,4]); ctx.strokeStyle='#ffffff33'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(topObs.x,topObs.y); ctx.lineTo(topObs.x-d_px-30,topObs.y); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Line of sight from top observer down to ground observer
+      var gObsX=Math.max(30, BLDG_X-bw/2-d_px);
+      ctx.strokeStyle='#ff822c'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(topObs.x,topObs.y); ctx.lineTo(gObsX,GY); ctx.stroke();
+
+      // Ground observer dot
+      ctx.beginPath(); ctx.arc(gObsX,GY,6,0,2*Math.PI);
+      ctx.fillStyle='#6a8898'; ctx.fill();
+      ctx.fillStyle='#6a8898'; ctx.font='12px Courier New, monospace';
+      ctx.textAlign='center'; ctx.textBaseline='bottom'; ctx.fillText('Person',gObsX,GY-10);
+
+      // Depression angle arc (from horizontal at top, going downward)
+      var depress=Math.atan2(h_px, d_px);
+      ctx.beginPath(); ctx.arc(topObs.x,topObs.y,36,0,depress);
+      ctx.strokeStyle='#ff822caa'; ctx.lineWidth=2; ctx.stroke();
+      ctx.fillStyle='#ff822c'; ctx.font='bold 14px Courier New, monospace';
+      ctx.textAlign='right'; ctx.textBaseline='top';
+      ctx.fillText('θ='+f2(depress*180/Math.PI)+'°', topObs.x-40, topObs.y+20);
+
+      // Show alternate angle at ground
+      ctx.fillStyle='#3a5060'; ctx.font='11px Courier New, monospace';
+      ctx.textAlign='center'; ctx.textBaseline='bottom';
+      ctx.fillText('alternate ∠ = same', (topObs.x+gObsX)/2, (topObs.y+GY)/2-4);
+    }
+
+    // Right-angle marker at base of building (vertical height)
+    var ra=8;
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.2;
+    ctx.beginPath();
+    ctx.moveTo(BLDG_X-bw/2-ra,GY); ctx.lineTo(BLDG_X-bw/2-ra,GY-ra); ctx.lineTo(BLDG_X-bw/2,GY-ra);
+    ctx.stroke();
+  }
+
+  function buildEq(){
+    var theta=Math.atan2(hD, dD)*180/Math.PI;
+    var sinT=Math.sin(theta*Math.PI/180), cosT=Math.cos(theta*Math.PI/180);
+    var hyp=Math.sqrt(hD*hD+dD*dD);
+    if(mode==='elev'){
+      return 'tan θ = '+FRAC('opp','adj')+' = '+FRAC('h','d')+' = '+FRAC(f1(hD),f1(dD))+
+             ' → θ = <strong style="color:#fff067">'+f2(theta)+'°</strong>'
+             +'&nbsp;&nbsp; hypotenuse (line of sight) = '+f2(hyp)+' m';
+    } else {
+      return 'Depression angle θ = arctan('+FRAC('h','d')+') = arctan('+FRAC(f1(hD),f1(dD))+') = <strong style="color:#ff822c">'+f2(theta)+'°</strong><br>'
+            +'<span style="color:#3a5060">Same right triangle — elevation ↔ depression are alternate angles, always equal</span>';
+    }
+  }
+
+  function tick(){
+    hD+=(hv-hD)*SPRING; dD+=(dv-dD)*SPRING;
+    draw();
+    document.getElementById('eq-display').innerHTML=buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('sl-h').oninput=function(){hv=parseFloat(this.value); document.getElementById('lbl-h').textContent='h = '+f1(hv)+' m';};
+  document.getElementById('sl-d').oninput=function(){dv=parseFloat(this.value); document.getElementById('lbl-d').textContent='d = '+f1(dv)+' m';};
+
+  setMode('elev');
+  tick();
+</script>
+</body>
+</html>

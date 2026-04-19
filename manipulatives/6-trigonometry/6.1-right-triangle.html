@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · SOH-CAH-TOA</title>
+  <meta property="og:title" content="SOH-CAH-TOA Right Triangle"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="600"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      background:#0d1216;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .mode-btns { width:560px; padding:6px 4px; display:flex; gap:8px; }
+    .mode-btn {
+      padding:5px 18px; font-size:13px; font-weight:600; border-radius:4px;
+      border:1.5px solid #1e3a52; background:#111f2c; color:#6a8898; cursor:pointer;
+    }
+    .mode-btn.active { border-color:#fff067; color:#fff067; background:#1a1800; }
+    .equation-bar {
+      width:560px; padding:6px 4px;
+      font-family:'Courier New', monospace; font-size:15px;
+      color:#f0f0ee; min-height:54px; line-height:1.9;
+    }
+    canvas { display:block; }
+    .sliders {
+      width:560px; display:flex; flex-direction:column;
+      gap:9px; padding:10px 4px;
+      border-top:1px solid #1a2535; border-bottom:1px solid #1a2535;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New', monospace; font-size:13px; width:100px; flex-shrink:0; }
+    input[type="range"] {
+      flex:1; height:4px; -webkit-appearance:none;
+      background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer;
+    }
+    #sl-theta::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:55px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">SOH-CAH-TOA — Right-Triangle Ratios</div>
+  <div class="instruction">
+    Move the angle slider. Hit <b style="color:#fff067">Switch angle</b> to see how Opposite and Adjacent
+    <em>swap</em> when you choose the other corner — Hypotenuse is always opposite the right angle.
+  </div>
+</div>
+
+<div class="mode-btns">
+  <button class="mode-btn active" id="btn-a" onclick="setMode('A')">θ at corner A</button>
+  <button class="mode-btn" id="btn-b" onclick="setMode('B')">θ at corner B</button>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="270"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-theta">θ = 35°</div>
+    <input type="range" id="sl-theta" min="5" max="85" step="0.5" value="35"/>
+    <div class="slider-bounds">5° … 85°</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip" id="tip-text"></div>
+</div>
+
+<script>
+  var theta = 35; // degrees
+  var thetaD = 35;
+  var mode = 'A';
+  var SPRING = 0.13;
+  var HYP = 160; // fixed hypotenuse length in px
+
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=270;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  function FRAC(n,d){return '<span class="kfrac"><span class="knum">'+n+'</span><span class="kden">'+d+'</span></span>';}
+  function f2(v){return (Math.round(v*100)/100).toFixed(2);}
+  function f1(v){return (Math.round(v*10)/10).toFixed(1);}
+
+  var C_OPP='#0fee89', C_ADJ='#ff822c', C_HYP='#00abfa';
+
+  function setMode(m){
+    mode=m;
+    document.getElementById('btn-a').className='mode-btn'+(m==='A'?' active':'');
+    document.getElementById('btn-b').className='mode-btn'+(m==='B'?' active':'');
+    var tip=document.getElementById('tip-text');
+    tip.innerHTML = m==='A'
+      ? 'Cambridge tip: <strong>SOH-CAH-TOA</strong> — to find a missing side, write the ratio first (e.g. sin 35° = opp/hyp), then rearrange. Examiners award M1 for a correct ratio, A1 for the final answer.'
+      : 'Cambridge tip: notice that sin(90°−θ) = cos θ. If two complementary angles appear in one triangle, switching which one you call θ swaps Opposite and Adjacent — but the Hypotenuse never changes.';
+    if(window.renderMathInElement) renderMathInElement(tip,{delimiters:[{left:'\\(',right:'\\)',display:false}]});
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var tRad = thetaD*Math.PI/180;
+    var opp=HYP*Math.sin(tRad), adj=HYP*Math.cos(tRad);
+
+    // Triangle vertices (θ at A, right angle at C)
+    // A = bottom left, C = bottom right, B = top right
+    var ax=80, ay=225;
+    var cx_v=ax+adj, cy_v=ay;
+    var bx=cx_v, by=ay-opp;
+
+    if(mode==='B'){
+      // θ at B means the angle in the top-right corner = 90-theta
+      // But we keep the same triangle shape; just relabel which angle is θ
+      // The "displayed" angle is still tRad (because slider says theta)
+      // But the angle at B = 90 - theta
+      // We just highlight B and swap opp/adj labels
+    }
+
+    var tVertex = (mode==='A') ? {x:ax,y:ay} : {x:bx,y:by};
+
+    // ── Triangle fill ──────────────────────────────────────────────────
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(cx_v,cy_v); ctx.lineTo(bx,by); ctx.closePath();
+    ctx.fillStyle='#101a22'; ctx.fill();
+
+    // ── Hypotenuse (blue) ──────────────────────────────────────────────
+    ctx.strokeStyle=C_HYP; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke();
+    // Hyp mid-label
+    ctx.fillStyle=C_HYP; ctx.font='bold 14px Courier New, monospace';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    var hmx=(ax+bx)/2-10, hmy=(ay+by)/2;
+    ctx.fillText('Hyp = '+f2(HYP/40), hmx, hmy);
+
+    // ── Adjacent and Opposite (swapped in mode B) ─────────────────────
+    var oppColor, adjColor;
+    if(mode==='A'){
+      oppColor=C_OPP; adjColor=C_ADJ;
+    } else {
+      oppColor=C_ADJ; adjColor=C_OPP; // labels swap
+    }
+    var oppLen = (mode==='A') ? opp : adj;
+    var adjLen = (mode==='A') ? adj : opp;
+
+    // The OPPOSITE side = the side NOT touching the chosen angle
+    // mode A: opposite is CB (vertical); adjacent is CA (horizontal)
+    // mode B: opposite is CA (horizontal); adjacent is CB (vertical)
+    var opp_x1=(mode==='A')?cx_v:ax,   opp_y1=(mode==='A')?cy_v:ay;
+    var opp_x2=(mode==='A')?bx:cx_v,   opp_y2=(mode==='A')?by:cy_v;
+    var adj_x1=(mode==='A')?ax:cx_v,   adj_y1=(mode==='A')?ay:cy_v;
+    var adj_x2=(mode==='A')?cx_v:bx,   adj_y2=(mode==='A')?cy_v:by;
+
+    ctx.strokeStyle=oppColor; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(opp_x1,opp_y1); ctx.lineTo(opp_x2,opp_y2); ctx.stroke();
+    ctx.strokeStyle=adjColor; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(adj_x1,adj_y1); ctx.lineTo(adj_x2,adj_y2); ctx.stroke();
+
+    // Side labels
+    ctx.fillStyle=oppColor; ctx.font='bold 14px Courier New, monospace';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('Opp = '+f2((mode==='A'?opp:adj)/40), opp_x2+8, (opp_y1+opp_y2)/2);
+    ctx.fillStyle=adjColor; ctx.font='bold 14px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('Adj = '+f2((mode==='A'?adj:opp)/40), (adj_x1+adj_x2)/2, adj_y2+8);
+
+    // ── Right-angle marker at C ─────────────────────────────────────────
+    var ra=10;
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(cx_v-ra,cy_v); ctx.lineTo(cx_v-ra,cy_v-ra); ctx.lineTo(cx_v,cy_v-ra); ctx.stroke();
+
+    // ── θ arc at chosen vertex ─────────────────────────────────────────
+    var arcR=28, chosenAngle = (mode==='A') ? tRad : (Math.PI/2-tRad);
+    ctx.beginPath();
+    if(mode==='A'){
+      ctx.arc(ax,ay,arcR,Math.atan2(by-ay,bx-ax),0); // from AB direction to horizontal
+    } else {
+      ctx.arc(bx,by,arcR,Math.atan2(ay-by,ax-bx),Math.atan2(cy_v-by,cx_v-bx));
+    }
+    ctx.strokeStyle='#fff06799'; ctx.lineWidth=2; ctx.stroke();
+    // θ label
+    ctx.fillStyle='#fff067'; ctx.font='bold 15px Courier New, monospace';
+    if(mode==='A'){
+      ctx.textAlign='left'; ctx.textBaseline='top';
+      ctx.fillText('θ='+Math.round(theta)+'°', ax+arcR+6, ay-arcR+4);
+    } else {
+      ctx.textAlign='right'; ctx.textBaseline='bottom';
+      var compAngle = 90-Math.round(theta);
+      ctx.fillText('θ='+(compAngle<0?0:compAngle)+'°', bx-arcR-4, by+arcR-4);
+    }
+
+    // ── Vertex labels ──────────────────────────────────────────────────
+    ctx.font='bold 14px -apple-system,sans-serif'; ctx.fillStyle='#6a8898';
+    ctx.textAlign='right'; ctx.textBaseline='top';   ctx.fillText('A',ax-4,ay+2);
+    ctx.textAlign='left';  ctx.textBaseline='top';   ctx.fillText('C',cx_v+4,cy_v+2);
+    ctx.textAlign='left';  ctx.textBaseline='bottom';ctx.fillText('B',bx+4,by-2);
+
+    // ── SOH-CAH-TOA boxes (right panel) ─────────────────────────────────
+    var bx0=320, bw=220, bh=58, gap=10;
+    var boxes=[
+      {y:30, label:'SOH', formula:'sin θ = Opp/Hyp', col:C_OPP,
+       val:'sin '+Math.round(mode==='A'?theta:90-theta)+'° = '+f2(Math.sin(mode==='A'?tRad:Math.PI/2-tRad))},
+      {y:30+bh+gap, label:'CAH', formula:'cos θ = Adj/Hyp', col:C_ADJ,
+       val:'cos '+Math.round(mode==='A'?theta:90-theta)+'° = '+f2(Math.cos(mode==='A'?tRad:Math.PI/2-tRad))},
+      {y:30+2*(bh+gap), label:'TOA', formula:'tan θ = Opp/Adj', col:'#ff822c',
+       val:'tan '+Math.round(mode==='A'?theta:90-theta)+'° = '+f2(Math.tan(mode==='A'?tRad:Math.PI/2-tRad))},
+    ];
+    boxes.forEach(function(b){
+      ctx.fillStyle='#0d1f2d'; ctx.strokeStyle=b.col+'55'; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.roundRect(bx0,b.y,bw,bh,4); ctx.fill(); ctx.stroke();
+      // Mnemonic label
+      ctx.fillStyle=b.col; ctx.font='bold 16px Courier New, monospace';
+      ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillText(b.label, bx0+10, b.y+8);
+      // Formula
+      ctx.fillStyle='#6a8898'; ctx.font='12px Courier New, monospace';
+      ctx.fillText(b.formula, bx0+70, b.y+8);
+      // Value
+      ctx.fillStyle=b.col; ctx.font='bold 14px Courier New, monospace';
+      ctx.textBaseline='bottom'; ctx.fillText(b.val, bx0+10, b.y+bh-8);
+    });
+  }
+
+  function buildEq(){
+    var tRad=thetaD*Math.PI/180;
+    var displayTheta = (mode==='A') ? thetaD : 90-thetaD;
+    var sinV=Math.sin(mode==='A'?tRad:Math.PI/2-tRad);
+    var cosV=Math.cos(mode==='A'?tRad:Math.PI/2-tRad);
+    var tanV=Math.tan(mode==='A'?tRad:Math.PI/2-tRad);
+    var t=Math.round(displayTheta);
+    return 'sin <strong style="color:#fff067">'+t+'°</strong> = '+FRAC('<span style="color:'+C_OPP+'">Opp</span>','<span style="color:'+C_HYP+'">Hyp</span>')+' = <strong style="color:'+C_OPP+'">'+f2(sinV)+'</strong>'
+         +'&nbsp;&nbsp; cos <strong style="color:#fff067">'+t+'°</strong> = '+FRAC('<span style="color:'+C_ADJ+'">Adj</span>','<span style="color:'+C_HYP+'">Hyp</span>')+' = <strong style="color:'+C_ADJ+'">'+f2(cosV)+'</strong><br>'
+         +'tan <strong style="color:#fff067">'+t+'°</strong> = '+FRAC('<span style="color:'+C_OPP+'">Opp</span>','<span style="color:'+C_ADJ+'">Adj</span>')+' = <strong style="color:#ff822c">'+f2(tanV)+'</strong>'
+         +'&nbsp;&nbsp;&nbsp;<span style="color:#3a5060">sin/cos check: '+f2(sinV/cosV)+' ≈ tan ✓</span>';
+  }
+
+  function tick(){
+    thetaD+=(theta-thetaD)*SPRING;
+    draw();
+    document.getElementById('eq-display').innerHTML=buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('sl-theta').oninput=function(){
+    theta=parseFloat(this.value);
+    document.getElementById('lbl-theta').textContent='θ = '+Math.round(theta)+'°';
+  };
+
+  setMode('A');
+  tick();
+</script>
+</body>
+</html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Pythagoras' Theorem — Visual Proof</title>
+  <meta property="og:title" content="Pythagoras Visual Proof"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="640"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      background:#0d1216;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar {
+      width:560px; padding:6px 4px;
+      font-family:'Courier New', monospace; font-size:16px;
+      color:#f0f0ee; min-height:54px; line-height:1.9;
+    }
+    canvas { display:block; }
+    .sliders {
+      width:560px; display:flex; flex-direction:column;
+      gap:9px; padding:10px 4px;
+      border-top:1px solid #1a2535; border-bottom:1px solid #1a2535;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New', monospace; font-size:13px; width:100px; flex-shrink:0; }
+    input[type="range"] {
+      flex:1; height:4px; -webkit-appearance:none;
+      background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer;
+    }
+    #sl-a::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    #sl-b::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff822c; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:46px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Pythagoras' Theorem — The Area Proof</div>
+  <div class="instruction">
+    Drag the sliders for legs <b style="color:#0fee89">a</b> and <b style="color:#ff822c">b</b>.
+    The <b style="color:#0fee89">green</b> + <b style="color:#ff822c">orange</b> squares always fill
+    the <b style="color:#ff4670">pink</b> square exactly — that IS the theorem.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="380"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#0fee89" id="lbl-a">a = 3</div>
+    <input type="range" id="sl-a" min="1" max="5" step="0.1" value="3"/>
+    <div class="slider-bounds">1 … 5</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#ff822c" id="lbl-b">b = 4</div>
+    <input type="range" id="sl-b" min="1" max="5" step="0.1" value="4"/>
+    <div class="slider-bounds">1 … 5</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>c² = a² + b²</strong> only applies when c is the <strong>hypotenuse</strong> (side opposite the right angle).
+    Many students apply it to the wrong side. Always identify the right angle first, then c is the side across from it.
+    For finding a shorter side: <strong>a² = c² − b²</strong> (subtract, not add).
+  </div>
+</div>
+
+<script>
+  var a=3, b=4;
+  var aD=3, bD=4;
+  var SPRING=0.13;
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=380;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  function f2(v){return (Math.round(v*100)/100).toFixed(2);}
+  function f1(v){return (Math.round(v*10)/10).toFixed(1);}
+
+  var CX=305, CY=250; // right-angle vertex C
+  var S=22; // px per unit
+
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var sc = Math.min(S, 100/Math.max(aD,bD,1));
+    var aS=aD*sc, bS=bD*sc;
+    var c=Math.sqrt(aD*aD+bD*bD);
+
+    // Triangle vertices
+    // C = right angle (CX, CY)
+    // A = top of vertical leg: (CX, CY - aS)
+    // B = left of horizontal leg: (CX - bS, CY)
+    var Ax=CX, Ay=CY-aS;
+    var Bx=CX-bS, By=CY;
+
+    // ── Square on leg a (to the RIGHT of AC, vertical side) ────────────
+    var sqAv=[[Ax,Ay],[CX,CY],[CX+aS,CY],[CX+aS,Ay-0]];
+    // Wait: right of AC means positive x. A=(CX,CY-aS), C=(CX,CY).
+    // Square to right: A, C, C+(aS,0), A+(aS,0) = (CX,CY-aS),(CX,CY),(CX+aS,CY),(CX+aS,CY-aS)
+    sqAv=[[Ax,Ay],[CX,CY],[CX+aS,CY],[CX+aS,Ay]];
+    ctx.beginPath();
+    sqAv.forEach(function(p,i){i===0?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]);});
+    ctx.closePath();
+    ctx.fillStyle='#0fee8918'; ctx.fill();
+    ctx.strokeStyle='#0fee89'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#0fee89'; ctx.font='bold 15px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('a² = '+f2(aD*aD), CX+aS/2, CY-aS/2);
+
+    // ── Square on leg b (BELOW BC, horizontal side) ────────────────────
+    // B=(CX-bS,CY), C=(CX,CY). Square below: B,C,C+(0,bS),B+(0,bS)
+    var sqBv=[[Bx,By],[CX,CY],[CX,CY+bS],[Bx,CY+bS]];
+    ctx.beginPath();
+    sqBv.forEach(function(p,i){i===0?ctx.moveTo(p[0],p[1]):ctx.lineTo(p[0],p[1]);});
+    ctx.closePath();
+    ctx.fillStyle='#ff822c18'; ctx.fill();
+    ctx.strokeStyle='#ff822c'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#ff822c'; ctx.font='bold 15px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('b² = '+f2(bD*bD), CX-bS/2, CY+bS/2);
+
+    // ── Square on hypotenuse (outward from triangle) ────────────────────
+    // Hypotenuse from A=(Ax,Ay) to B=(Bx,By)
+    // AB = (Bx-Ax, By-Ay) = (-bS, aS)
+    // 90° CCW rotation of AB: (-aS, -bS)
+    // Square vertices: A, B, B+(-aS,-bS), A+(-aS,-bS)
+    var D1x=Ax-aS, D1y=Ay-bS;  // A + (-aS,-bS)
+    var D2x=Bx-aS, D2y=By-bS;  // B + (-aS,-bS)
+    ctx.beginPath();
+    ctx.moveTo(Ax,Ay); ctx.lineTo(Bx,By);
+    ctx.lineTo(D2x,D2y); ctx.lineTo(D1x,D1y);
+    ctx.closePath();
+    ctx.fillStyle='#ff467018'; ctx.fill();
+    ctx.strokeStyle='#ff4670'; ctx.lineWidth=2; ctx.stroke();
+    // Label at centroid of hyp square
+    var hcx=(Ax+Bx+D2x+D1x)/4, hcy=(Ay+By+D2y+D1y)/4;
+    ctx.fillStyle='#ff4670'; ctx.font='bold 15px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('c² = '+f2(c*c), hcx, hcy);
+
+    // ── Triangle fill ──────────────────────────────────────────────────
+    ctx.beginPath(); ctx.moveTo(Ax,Ay); ctx.lineTo(CX,CY); ctx.lineTo(Bx,By); ctx.closePath();
+    ctx.fillStyle='#1e3a52'; ctx.fill();
+
+    // ── Triangle outline with side colors ──────────────────────────────
+    ctx.strokeStyle='#0fee89'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(CX,CY); ctx.lineTo(Ax,Ay); ctx.stroke(); // leg a
+    ctx.strokeStyle='#ff822c'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(CX,CY); ctx.lineTo(Bx,By); ctx.stroke(); // leg b
+    ctx.strokeStyle='#ff4670'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(Ax,Ay); ctx.lineTo(Bx,By); ctx.stroke(); // hyp
+
+    // ── Right-angle marker ──────────────────────────────────────────────
+    var ra=9;
+    ctx.strokeStyle='#6a8898'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(CX-ra,CY); ctx.lineTo(CX-ra,CY-ra); ctx.lineTo(CX,CY-ra); ctx.stroke();
+
+    // ── Vertex labels ───────────────────────────────────────────────────
+    ctx.fillStyle='#6a8898'; ctx.font='bold 14px -apple-system,sans-serif';
+    ctx.textAlign='right';  ctx.textBaseline='middle';  ctx.fillText('A',Ax-6, Ay);
+    ctx.textAlign='right';  ctx.textBaseline='top';     ctx.fillText('C',CX-6, CY+4);
+    ctx.textAlign='right';  ctx.textBaseline='top';     ctx.fillText('B',Bx-4, By+4);
+
+    // ── Side length labels ──────────────────────────────────────────────
+    ctx.fillStyle='#0fee89'; ctx.font='14px Courier New,monospace';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText('a='+f1(aD), CX-6, (CY+Ay)/2);
+    ctx.fillStyle='#ff822c';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('b='+f1(bD), (CX+Bx)/2, CY+6);
+    ctx.fillStyle='#ff4670';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    var hm=(Math.atan2(By-Ay,Bx-Ax));
+    ctx.save(); ctx.translate((Ax+Bx)/2, (Ay+By)/2); ctx.rotate(hm);
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText('c='+f2(c), 0, -4);
+    ctx.restore();
+
+    // ── Sum bar at bottom ───────────────────────────────────────────────
+    var barY=340, barH=22;
+    var maxArea=50; // c² max for visual scaling
+    var cSq=c*c, aSq=aD*aD, bSq=bD*bD;
+    var scaleBar=Math.min(1, 440/cSq);
+    var aBarW=aSq*scaleBar, bBarW=bSq*scaleBar, cBarW=cSq*scaleBar;
+    var startX=60;
+    // a² bar
+    ctx.fillStyle='#0fee8930'; ctx.fillRect(startX,barY,aBarW,barH);
+    ctx.strokeStyle='#0fee89'; ctx.lineWidth=1.5; ctx.strokeRect(startX,barY,aBarW,barH);
+    ctx.fillStyle='#0fee89'; ctx.font='12px Courier New,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('a²',startX+aBarW/2,barY+barH/2);
+    // b² bar
+    ctx.fillStyle='#ff822c30'; ctx.fillRect(startX+aBarW,barY,bBarW,barH);
+    ctx.strokeStyle='#ff822c'; ctx.lineWidth=1.5; ctx.strokeRect(startX+aBarW,barY,bBarW,barH);
+    ctx.fillStyle='#ff822c'; ctx.font='12px Courier New,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('b²',startX+aBarW+bBarW/2,barY+barH/2);
+    // c² reference line
+    ctx.strokeStyle='#ff467099'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+    ctx.beginPath(); ctx.moveTo(startX+cBarW, barY-6); ctx.lineTo(startX+cBarW, barY+barH+6); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#ff4670'; ctx.font='12px Courier New,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText('c²=a²+b²', startX+cBarW/2, barY-6);
+  }
+
+  function buildEq(){
+    var c=Math.sqrt(aD*aD+bD*bD);
+    var check=f2(aD*aD)+' + '+f2(bD*bD)+' = '+f2(c*c);
+    return 'a<sup>2</sup> + b<sup>2</sup> = c<sup>2</sup> &nbsp;→&nbsp; '+
+           f2(aD)+'<sup>2</sup> + '+f2(bD)+'<sup>2</sup> = '+check+
+           ' &nbsp;→&nbsp; c = <strong style="color:#ff4670">'+f2(c)+'</strong>';
+  }
+
+  function tick(){
+    aD+=(a-aD)*SPRING; bD+=(b-bD)*SPRING;
+    draw();
+    document.getElementById('eq-display').innerHTML=buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('sl-a').oninput=function(){a=parseFloat(this.value); document.getElementById('lbl-a').textContent='a = '+f1(a);};
+  document.getElementById('sl-b').oninput=function(){b=parseFloat(this.value); document.getElementById('lbl-b').textContent='b = '+f1(b);};
+
+  tick();
+</script>
+</body>
+</html>

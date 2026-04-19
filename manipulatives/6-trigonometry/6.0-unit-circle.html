@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · The Unit Circle</title>
+  <meta property="og:title" content="The Unit Circle"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="620"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      background:#0d1216;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar {
+      width:560px; padding:6px 4px;
+      font-family:'Courier New', monospace; font-size:15px;
+      color:#f0f0ee; min-height:54px; line-height:1.9;
+    }
+    canvas { display:block; cursor:default; }
+    .sliders {
+      width:560px; display:flex; flex-direction:column;
+      gap:9px; padding:10px 4px;
+      border-top:1px solid #1a2535; border-bottom:1px solid #1a2535;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New', monospace; font-size:13px; width:100px; flex-shrink:0; }
+    input[type="range"] {
+      flex:1; height:4px; -webkit-appearance:none;
+      background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer;
+    }
+    #sl-theta::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:55px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">The Unit Circle — Where sin and cos Come From</div>
+  <div class="instruction">
+    Drag the <b style="color:#fff067">yellow point</b> around the circle or use the slider.
+    <b style="color:#0fee89">sin θ</b> is the <em>height</em>, <b style="color:#00abfa">cos θ</b> is the <em>horizontal reach</em>.
+    Watch the <b>waves on the right</b> trace the shape they make as θ sweeps.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="320"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-theta">θ = 45°</div>
+    <input type="range" id="sl-theta" min="0" max="360" step="0.5" value="45"/>
+    <div class="slider-bounds">0° … 360°</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>CAST</strong> — the quadrant rule:
+    Q1 (0°–90°): all positive. Q2 (90°–180°): only <strong>sin</strong> positive.
+    Q3 (180°–270°): only <strong>tan</strong> positive. Q4 (270°–360°): only <strong>cos</strong> positive.
+    Cambridge questions sometimes give an obtuse angle — you must know sin is still positive above 90°.
+  </div>
+</div>
+
+<script>
+  var thetaT = 45 * Math.PI/180;
+  var thetaD = 45 * Math.PI/180;
+  var SPRING = 0.14;
+  var dragging = false;
+
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=320;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  // Unit circle
+  var CX=158, CY=162, R=120;
+  // Wave panel
+  var WX=302, WY=32, WW=248, WH=260; // left, top, width, height
+  var WCY = WY + WH/2; // wave centre y
+  var WSCALE = 100; // px per unit on wave
+
+  function f3(v){ return (Math.round(v*1000)/1000).toFixed(3); }
+  function f2(v){ return (Math.round(v*100)/100).toFixed(2); }
+  function col(v){ return v >= 0 ? '#0fee89' : '#ff4670'; }
+
+  function getPos(e){
+    var rect=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return {x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height)};
+  }
+
+  canvas.addEventListener('mousedown', function(e){
+    var p=getPos(e);
+    var px=CX+Math.cos(thetaT)*R, py=CY-Math.sin(thetaT)*R;
+    if(Math.hypot(p.x-px,p.y-py)<20){dragging=true; e.preventDefault();}
+  });
+  canvas.addEventListener('mousemove', function(e){
+    var p=getPos(e);
+    var px=CX+Math.cos(thetaT)*R, py=CY-Math.sin(thetaT)*R;
+    canvas.style.cursor = Math.hypot(p.x-px,p.y-py)<20 ? 'grab' : 'default';
+    if(!dragging) return;
+    var dx=p.x-CX, dy=-(p.y-CY);
+    thetaT = Math.atan2(dy,dx);
+    if(thetaT<0) thetaT+=2*Math.PI;
+    document.getElementById('sl-theta').value = thetaT*180/Math.PI;
+    document.getElementById('lbl-theta').textContent = 'θ = '+Math.round(thetaT*180/Math.PI)+'°';
+  });
+  canvas.addEventListener('mouseup', function(){ dragging=false; canvas.style.cursor='default'; });
+  canvas.addEventListener('mouseleave', function(){ dragging=false; });
+  canvas.addEventListener('touchstart', function(e){
+    var p=getPos(e);
+    var px=CX+Math.cos(thetaT)*R, py=CY-Math.sin(thetaT)*R;
+    if(Math.hypot(p.x-px,p.y-py)<24){dragging=true; e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove', function(e){
+    if(!dragging) return; e.preventDefault();
+    var p=getPos(e);
+    var dx=p.x-CX, dy=-(p.y-CY);
+    thetaT=Math.atan2(dy,dx); if(thetaT<0)thetaT+=2*Math.PI;
+    document.getElementById('sl-theta').value=thetaT*180/Math.PI;
+    document.getElementById('lbl-theta').textContent='θ = '+Math.round(thetaT*180/Math.PI)+'°';
+  },{passive:false});
+  canvas.addEventListener('touchend', function(){dragging=false;});
+
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var sinD=Math.sin(thetaD), cosD=Math.cos(thetaD), tanD=Math.tan(thetaD);
+    var px=CX+cosD*R, py=CY-sinD*R;
+
+    // ── Quadrant labels ─────────────────────────────────────────────────
+    var qs=[{x:CX+40,y:CY-46,t:'I',c:'#1e3a52'},
+            {x:CX-42,y:CY-46,t:'II',c:'#1e3a52'},
+            {x:CX-44,y:CY+48,t:'III',c:'#1e3a52'},
+            {x:CX+40,y:CY+48,t:'IV',c:'#1e3a52'}];
+    ctx.font='11px -apple-system,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    qs.forEach(function(q){ctx.fillStyle=q.c; ctx.fillText(q.t,q.x,q.y);});
+
+    // ── Unit circle ──────────────────────────────────────────────────────
+    ctx.beginPath(); ctx.arc(CX,CY,R,0,2*Math.PI);
+    ctx.fillStyle='#0d1f2d'; ctx.fill();
+    ctx.strokeStyle='#1e3a52'; ctx.lineWidth=1.5; ctx.stroke();
+
+    // Sector fill (the swept angle)
+    if(thetaD>0.02){
+      ctx.beginPath(); ctx.moveTo(CX,CY);
+      ctx.arc(CX,CY,R/3,-Math.PI/2,thetaD-Math.PI/2,true);
+      ctx.closePath();
+      // Actually sweep from 0 to thetaD from positive x-axis
+      ctx.beginPath(); ctx.moveTo(CX,CY);
+      ctx.arc(CX,CY,R/3,0,-thetaD,true); // negative because canvas y is flipped
+      ctx.closePath();
+      ctx.fillStyle='#fff06718'; ctx.fill();
+    }
+    // Angle arc
+    ctx.beginPath(); ctx.arc(CX,CY,R/3,0,-thetaD,true);
+    ctx.strokeStyle='#fff06766'; ctx.lineWidth=1.2; ctx.stroke();
+    // θ label
+    var midA = -thetaD/2;
+    ctx.fillStyle='#fff067'; ctx.font='bold 12px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('θ', CX+Math.cos(midA)*(R/3+14), CY+Math.sin(midA)*(R/3+14));
+
+    // ── Axes ──────────────────────────────────────────────────────────────
+    ctx.strokeStyle='#2a4050'; ctx.lineWidth=1.2;
+    ctx.beginPath();
+    ctx.moveTo(CX-R-20,CY); ctx.lineTo(CX+R+20,CY);
+    ctx.moveTo(CX,CY-R-20); ctx.lineTo(CX,CY+R+20);
+    ctx.stroke();
+    ctx.fillStyle='#3a5060'; ctx.font='11px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('1',CX+R,CY+4); ctx.fillText('−1',CX-R,CY+4);
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('1',CX+4,CY-R); ctx.fillText('−1',CX+4,CY+R);
+
+    // ── cos segment (blue horizontal, from center to foot) ───────────────
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(CX,CY); ctx.lineTo(px,CY); ctx.stroke();
+    ctx.fillStyle='#00abfa'; ctx.font='bold 12px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline= cosD>=0 ? 'top' : 'top';
+    ctx.fillText('cos θ', (CX+px)/2, CY+5);
+
+    // ── sin segment (green vertical, from foot to P) ──────────────────────
+    ctx.strokeStyle='#0fee89'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(px,CY); ctx.lineTo(px,py); ctx.stroke();
+    var sinLabelX = sinD>=0 ? px+6 : px+6;
+    ctx.fillStyle='#0fee89'; ctx.font='bold 12px Courier New, monospace';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('sin θ', px+6, (CY+py)/2);
+
+    // ── Tan construction ──────────────────────────────────────────────────
+    if(Math.abs(tanD)<4.5){
+      var tanPx = CX+R, tanPy=CY-tanD*R;
+      // Vertical tangent line (faint)
+      ctx.setLineDash([4,4]); ctx.strokeStyle='#ff822c44'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(tanPx,CY-R*4.5); ctx.lineTo(tanPx,CY+R*4.5); ctx.stroke();
+      ctx.setLineDash([]);
+      // Line from center through P to tangent
+      ctx.setLineDash([3,3]); ctx.strokeStyle='#ff822c66'; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.moveTo(CX,CY); ctx.lineTo(tanPx,tanPy); ctx.stroke();
+      ctx.setLineDash([]);
+      // tan segment (orange, on tangent line)
+      ctx.strokeStyle='#ff822c'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(tanPx,CY); ctx.lineTo(tanPx,tanPy); ctx.stroke();
+      ctx.fillStyle='#ff822c'; ctx.font='bold 11px Courier New, monospace';
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillText('tan θ', tanPx+5, (CY+tanPy)/2);
+    }
+
+    // ── Radius line (to point P) ──────────────────────────────────────────
+    ctx.strokeStyle='#ffffff22'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(CX,CY); ctx.lineTo(px,py); ctx.stroke();
+
+    // ── Point P (glow + dot) ──────────────────────────────────────────────
+    ctx.beginPath(); ctx.arc(px,py,16,0,2*Math.PI);
+    ctx.fillStyle='rgba(255,240,103,0.12)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(px,py,7,0,2*Math.PI);
+    ctx.fillStyle='#fff067'; ctx.fill();
+
+    // ── Right-angle marker at foot ─────────────────────────────────────────
+    var ra=6;
+    ctx.strokeStyle='#ffffff44'; ctx.lineWidth=1;
+    ctx.beginPath();
+    if(cosD>0){
+      ctx.moveTo(px-ra,CY); ctx.lineTo(px-ra,CY-(sinD>0?ra:-ra)); ctx.lineTo(px,CY-(sinD>0?ra:-ra));
+    } else {
+      ctx.moveTo(px+ra,CY); ctx.lineTo(px+ra,CY-(sinD>0?ra:-ra)); ctx.lineTo(px,CY-(sinD>0?ra:-ra));
+    }
+    ctx.stroke();
+
+    // ── Connecting dashed line to wave panel ──────────────────────────────
+    var tDeg = thetaD*180/Math.PI;
+    var cursorX = WX + (tDeg/360)*WW;
+    ctx.setLineDash([3,4]); ctx.strokeStyle='#0fee8933'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(WX, py); ctx.lineTo(cursorX, py); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ── WAVE PANEL ────────────────────────────────────────────────────────
+    // Box
+    ctx.fillStyle='#0d1a24'; ctx.fillRect(WX,WY,WW,WH);
+    ctx.strokeStyle='#1e3a52'; ctx.lineWidth=1; ctx.strokeRect(WX,WY,WW,WH);
+
+    // Grid line at y=0
+    ctx.strokeStyle='#1e3a52'; ctx.lineWidth=0.8;
+    ctx.beginPath(); ctx.moveTo(WX,WCY); ctx.lineTo(WX+WW,WCY); ctx.stroke();
+
+    // x-axis tick labels: 0°, 90°, 180°, 270°, 360°
+    [0,90,180,270,360].forEach(function(deg){
+      var wx=WX+(deg/360)*WW;
+      ctx.strokeStyle='#1e3a52'; ctx.lineWidth=0.8;
+      ctx.beginPath(); ctx.moveTo(wx,WCY-3); ctx.lineTo(wx,WCY+3); ctx.stroke();
+      ctx.fillStyle='#3a5060'; ctx.font='10px Courier New, monospace';
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText(deg+'°',wx,WCY+5);
+    });
+    // y-axis labels: ±1
+    ctx.fillStyle='#3a5060'; ctx.font='10px Courier New, monospace';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText('1',WX-3, WCY-WSCALE);
+    ctx.fillText('−1',WX-3,WCY+WSCALE);
+
+    // ── Draw sin wave (green) ────────────────────────────────────────────
+    ctx.beginPath(); ctx.lineWidth=1.8; ctx.strokeStyle='#0fee8966';
+    for(var i=0;i<=WW;i++){
+      var t=i/WW*2*Math.PI;
+      var wx=WX+i, wy=WCY-Math.sin(t)*WSCALE;
+      i===0?ctx.moveTo(wx,wy):ctx.lineTo(wx,wy);
+    }
+    ctx.stroke();
+
+    // ── Draw cos wave (blue) ─────────────────────────────────────────────
+    ctx.beginPath(); ctx.lineWidth=1.8; ctx.strokeStyle='#00abfa66';
+    for(var i=0;i<=WW;i++){
+      var t=i/WW*2*Math.PI;
+      var wx=WX+i, wy=WCY-Math.cos(t)*WSCALE;
+      i===0?ctx.moveTo(wx,wy):ctx.lineTo(wx,wy);
+    }
+    ctx.stroke();
+
+    // ── Cursor ────────────────────────────────────────────────────────────
+    ctx.strokeStyle='#fff06755'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(cursorX,WY); ctx.lineTo(cursorX,WY+WH); ctx.stroke();
+
+    // ── Dots on waves at current θ ────────────────────────────────────────
+    var sinWY=WCY-sinD*WSCALE, cosWY=WCY-cosD*WSCALE;
+    ctx.beginPath(); ctx.arc(cursorX,sinWY,5,0,2*Math.PI);
+    ctx.fillStyle='#0fee89'; ctx.fill();
+    ctx.beginPath(); ctx.arc(cursorX,cosWY,5,0,2*Math.PI);
+    ctx.fillStyle='#00abfa'; ctx.fill();
+
+    // Wave panel labels
+    ctx.fillStyle='#0fee8999'; ctx.font='bold 11px Courier New, monospace';
+    ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText('sin', WX+4, WY+4);
+    ctx.fillStyle='#00abfa99';
+    ctx.fillText('cos', WX+4, WY+18);
+  }
+
+  function buildEq(){
+    var sinD=Math.sin(thetaD), cosD=Math.cos(thetaD), tanD=Math.tan(thetaD);
+    var deg=Math.round(thetaD*180/Math.PI);
+    var sinStr='<strong style="color:'+col(sinD)+'">'+f3(sinD)+'</strong>';
+    var cosStr='<strong style="color:'+(cosD>=0?'#00abfa':'#ff4670')+'">'+f3(cosD)+'</strong>';
+    var tanStr=Math.abs(tanD)>20?'<strong style="color:#888">undef</strong>':'<strong style="color:'+(tanD>=0?'#ff822c':'#ff4670')+'">'+f3(tanD)+'</strong>';
+    return 'θ = <strong style="color:#fff067">'+deg+'°</strong> &nbsp;|&nbsp; sin θ = '+sinStr+' &nbsp;|&nbsp; cos θ = '+cosStr+'<br>'+
+           'tan θ = '+tanStr+' &nbsp;&nbsp;&nbsp; <span style="color:#3a5060">( sin²θ + cos²θ = '+f3(sinD*sinD+cosD*cosD)+' always )</span>';
+  }
+
+  function tick(){
+    var diff=thetaT-thetaD;
+    while(diff>Math.PI) diff-=2*Math.PI;
+    while(diff<-Math.PI) diff+=2*Math.PI;
+    thetaD+=diff*SPRING;
+    draw();
+    document.getElementById('eq-display').innerHTML=buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('sl-theta').oninput=function(){
+    thetaT=parseFloat(this.value)*Math.PI/180;
+    document.getElementById('lbl-theta').textContent='θ = '+Math.round(parseFloat(this.value))+'°';
+  };
+
+  tick();
+</script>
+</body>
+</html>

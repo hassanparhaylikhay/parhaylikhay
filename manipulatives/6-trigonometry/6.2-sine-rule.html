@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · The Sine Rule</title>
+  <meta property="og:title" content="The Sine Rule"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="620"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      background:#0d1216;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar {
+      width:560px; padding:6px 4px;
+      font-family:'Courier New', monospace; font-size:14px;
+      color:#f0f0ee; min-height:54px; line-height:1.9;
+    }
+    canvas { display:block; }
+    .sliders {
+      width:560px; display:flex; flex-direction:column;
+      gap:9px; padding:10px 4px;
+      border-top:1px solid #1a2535; border-bottom:1px solid #1a2535;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New', monospace; font-size:13px; width:100px; flex-shrink:0; }
+    input[type="range"] {
+      flex:1; height:4px; -webkit-appearance:none;
+      background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer;
+    }
+    #sl-A::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff822c; cursor:pointer; }
+    #sl-B::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:55px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">The Sine Rule — Why the Ratios Are Always Equal</div>
+  <div class="instruction">
+    Drag the angle sliders and watch all three ratios stay equal — they all equal the
+    <b style="color:#ff4670">diameter of the circumscribed circle</b> (the circle through all three vertices).
+    That's the <em>real</em> meaning of the sine rule.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="310"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#ff822c" id="lbl-A">A = 60°</div>
+    <input type="range" id="sl-A" min="20" max="140" step="0.5" value="60"/>
+    <div class="slider-bounds">20° … 140°</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#0fee89" id="lbl-B">B = 70°</div>
+    <input type="range" id="sl-B" min="20" max="140" step="0.5" value="70"/>
+    <div class="slider-bounds">20° … 140°</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-C">C = 50° (auto)</div>
+    <div style="flex:1; height:2px; background:#1e3a52; margin:0 10px; border-radius:1px;"></div>
+    <div class="slider-bounds" style="color:#fff067">auto</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>sine rule needs at least one matching side/angle pair.</strong>
+    If you know angle A and side a, you can find angle B if you know side b: write \(\frac{b}{\sin B} = \frac{a}{\sin A}\).
+    Always write the formula before substituting — that's your M1 mark.
+  </div>
+</div>
+
+<script>
+  var Av=60, Bv=70;
+  var AD=60, BD=70;
+  var SPRING=0.13;
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=310;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  function FRAC(n,d){return '<span class="kfrac"><span class="knum">'+n+'</span><span class="kden">'+d+'</span></span>';}
+  function f2(v){return (Math.round(v*100)/100).toFixed(2);}
+
+  // Fixed base c: from A to B
+  var c_px=130, Ax=215, Ay=270, Bx=345, By=270;
+
+  function circumcenter(x1,y1,x2,y2,x3,y3){
+    var D=2*(x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2));
+    if(Math.abs(D)<0.001) return null;
+    var ux=((x1*x1+y1*y1)*(y2-y3)+(x2*x2+y2*y2)*(y3-y1)+(x3*x3+y3*y3)*(y1-y2))/D;
+    var uy=((x1*x1+y1*y1)*(x3-x2)+(x2*x2+y2*y2)*(x1-x3)+(x3*x3+y3*y3)*(x2-x1))/D;
+    return {x:ux,y:uy};
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var A_rad=AD*Math.PI/180, B_rad=BD*Math.PI/180;
+    var C_deg=180-AD-BD;
+    if(C_deg<5){C_deg=5;}
+    var C_rad=C_deg*Math.PI/180;
+
+    // Side lengths using sine rule
+    var b_px=c_px*Math.sin(B_rad)/Math.sin(C_rad);
+    var a_px=c_px*Math.sin(A_rad)/Math.sin(C_rad);
+
+    // Scale down if needed to keep C on screen
+    var scale=1;
+    var Cx0=Ax+b_px*Math.cos(A_rad), Cy0=Ay-b_px*Math.sin(A_rad);
+    var margin=30;
+    if(Cx0<margin) scale=Math.min(scale,(Ax-margin)/(Ax-Cx0+0.001));
+    if(Cx0>W-margin) scale=Math.min(scale,(W-margin-Ax)/(Cx0-Ax+0.001));
+    if(Cy0<margin) scale=Math.min(scale,(Ay-margin)/(Ay-Cy0+0.001));
+    b_px*=scale; a_px*=scale; // c_px stays fixed
+
+    var Cvx=Ax+b_px*Math.cos(A_rad), Cvy=Ay-b_px*Math.sin(A_rad);
+
+    // ── Circumscribed circle ──────────────────────────────────────────
+    var cc=circumcenter(Ax,Ay,Bx,By,Cvx,Cvy);
+    if(cc){
+      var R_circ=Math.hypot(cc.x-Ax,cc.y-Ay);
+      ctx.beginPath(); ctx.arc(cc.x,cc.y,R_circ,0,2*Math.PI);
+      ctx.strokeStyle='#ff467030'; ctx.lineWidth=1.5; ctx.stroke();
+      // Circumcenter dot
+      ctx.beginPath(); ctx.arc(cc.x,cc.y,4,0,2*Math.PI);
+      ctx.fillStyle='#ff467066'; ctx.fill();
+      // 2R label
+      ctx.fillStyle='#ff4670'; ctx.font='bold 12px Courier New, monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      var rLabelY = cc.y + R_circ + 14;
+      if(rLabelY > H-8) rLabelY = cc.y - R_circ - 8;
+      ctx.fillText('2R = '+f2(2*R_circ/c_px*scale+0)+'', cc.x, Math.min(rLabelY, H-8));
+
+      // Show R line from circumcenter to vertex A
+      ctx.setLineDash([3,3]); ctx.strokeStyle='#ff467044'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(cc.x,cc.y); ctx.lineTo(Ax,Ay); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // ── Triangle fill ─────────────────────────────────────────────────
+    ctx.beginPath(); ctx.moveTo(Ax,Ay); ctx.lineTo(Bx,By); ctx.lineTo(Cvx,Cvy); ctx.closePath();
+    ctx.fillStyle='#0d2535'; ctx.fill();
+
+    // ── Sides with colors ─────────────────────────────────────────────
+    // side a = BC (opposite A), side b = CA (opposite B), side c = AB (opposite C)
+    var sideColors={a:'#ff822c',b:'#0fee89',c:'#00abfa'};
+    // side a: B to C
+    ctx.strokeStyle=sideColors.a; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(Bx,By); ctx.lineTo(Cvx,Cvy); ctx.stroke();
+    // side b: C to A
+    ctx.strokeStyle=sideColors.b; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(Cvx,Cvy); ctx.lineTo(Ax,Ay); ctx.stroke();
+    // side c: A to B
+    ctx.strokeStyle=sideColors.c; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(Ax,Ay); ctx.lineTo(Bx,By); ctx.stroke();
+
+    // ── Side labels (with values in units where c=1) ──────────────────
+    var cUnits=1.0, aUnits=a_px/c_px, bUnits=b_px/c_px;
+    ctx.font='bold 13px Courier New, monospace';
+    // a label: midpoint of BC
+    ctx.fillStyle=sideColors.a; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('a='+f2(aUnits*scale), (Bx+Cvx)/2+6, (By+Cvy)/2-4);
+    // b label: midpoint of CA
+    ctx.fillStyle=sideColors.b; ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText('b='+f2(bUnits), (Cvx+Ax)/2-6, (Cvy+Ay)/2-4);
+    // c label: midpoint of AB (below)
+    ctx.fillStyle=sideColors.c; ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('c='+f2(cUnits), (Ax+Bx)/2, Ay+6);
+
+    // ── Angle arcs ────────────────────────────────────────────────────
+    var arcR=22;
+    function drawAngleArc(vx,vy,dir1x,dir1y,dir2x,dir2y,col,label){
+      var ang1=Math.atan2(dir1y,dir1x), ang2=Math.atan2(dir2y,dir2x);
+      ctx.beginPath(); ctx.arc(vx,vy,arcR,ang1,ang2);
+      ctx.strokeStyle=col+'88'; ctx.lineWidth=1.5; ctx.stroke();
+      var mid=(ang1+ang2)/2;
+      ctx.fillStyle=col; ctx.font='bold 13px Courier New, monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(label, vx+Math.cos(mid)*(arcR+14), vy+Math.sin(mid)*(arcR+14));
+    }
+    // Angle at A
+    drawAngleArc(Ax,Ay, Bx-Ax,By-Ay, Cvx-Ax,Cvy-Ay, sideColors.a, 'A='+Math.round(AD)+'°');
+    // Angle at B
+    drawAngleArc(Bx,By, Ax-Bx,Ay-By, Cvx-Bx,Cvy-By, sideColors.b, 'B='+Math.round(BD)+'°');
+    // Angle at C
+    drawAngleArc(Cvx,Cvy, Ax-Cvx,Ay-Cvy, Bx-Cvx,By-Cvy, sideColors.c+'',
+      'C='+Math.round(180-AD-BD)+'°');
+    // Wait, C angle color - let's use yellow
+    // Redo angle at C with yellow
+    var ang1c=Math.atan2(Ay-Cvy,Ax-Cvx), ang2c=Math.atan2(By-Cvy,Bx-Cvx);
+    ctx.beginPath(); ctx.arc(Cvx,Cvy,arcR,ang1c,ang2c);
+    ctx.strokeStyle='#fff06788'; ctx.lineWidth=1.5; ctx.stroke();
+    var midc=(ang1c+ang2c)/2;
+    ctx.fillStyle='#fff067'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('C='+Math.round(180-AD-BD)+'°', Cvx+Math.cos(midc)*(arcR+14), Cvy+Math.sin(midc)*(arcR+14));
+  }
+
+  function buildEq(){
+    var A_rad=AD*Math.PI/180, B_rad=BD*Math.PI/180;
+    var C_deg=Math.max(5,180-AD-BD), C_rad=C_deg*Math.PI/180;
+    var aU=Math.sin(A_rad)/Math.sin(C_rad);
+    var bU=Math.sin(B_rad)/Math.sin(C_rad);
+    var cU=1;
+    var sinA=Math.sin(A_rad), sinB=Math.sin(B_rad), sinC=Math.sin(C_rad);
+    var twoR=1/sinC; // c/sinC where c=1
+    return FRAC('<span style="color:#ff822c">a</span>','sin <span style="color:#ff822c">A</span>')+
+           ' = '+FRAC(f2(aU),'sin '+Math.round(AD)+'°')+' = <strong style="color:#ff822c">'+f2(aU/sinA)+'</strong>'
+           +' &nbsp;=&nbsp; '+
+           FRAC('<span style="color:#0fee89">b</span>','sin <span style="color:#0fee89">B</span>')+
+           ' = '+FRAC(f2(bU),'sin '+Math.round(BD)+'°')+' = <strong style="color:#0fee89">'+f2(bU/sinB)+'</strong><br>'
+           +' = '+FRAC('<span style="color:#00abfa">c</span>','sin <span style="color:#00abfa">C</span>')+
+           ' = '+FRAC(f2(cU),'sin '+Math.round(C_deg)+'°')+' = <strong style="color:#00abfa">'+f2(cU/sinC)+'</strong>'
+           +' &nbsp;=&nbsp; <strong style="color:#ff4670">2R = '+f2(twoR)+'</strong> &nbsp;&nbsp;'
+           +'<span style="color:#3a5060">← all equal</span>';
+  }
+
+  function tick(){
+    AD+=(Av-AD)*SPRING; BD+=(Bv-BD)*SPRING;
+    draw();
+    document.getElementById('eq-display').innerHTML=buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('sl-A').oninput=function(){
+    Av=parseFloat(this.value);
+    if(Av+Bv>160){Bv=160-Av; document.getElementById('sl-B').value=Bv;}
+    document.getElementById('lbl-A').textContent='A = '+Math.round(Av)+'°';
+    document.getElementById('lbl-B').textContent='B = '+Math.round(Bv)+'°';
+    document.getElementById('lbl-C').textContent='C = '+Math.round(180-Av-Bv)+'° (auto)';
+  };
+  document.getElementById('sl-B').oninput=function(){
+    Bv=parseFloat(this.value);
+    if(Av+Bv>160){Av=160-Bv; document.getElementById('sl-A').value=Av;}
+    document.getElementById('lbl-A').textContent='A = '+Math.round(Av)+'°';
+    document.getElementById('lbl-B').textContent='B = '+Math.round(Bv)+'°';
+    document.getElementById('lbl-C').textContent='C = '+Math.round(180-Av-Bv)+'° (auto)';
+  };
+
+  tick();
+</script>
+</body>
+</html>

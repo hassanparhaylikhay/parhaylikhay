@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · The Ambiguous Case (SSA)</title>
+  <meta property="og:title" content="The Ambiguous Case"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="620"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      background:#0d1216;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar {
+      width:560px; padding:6px 4px;
+      font-family:'Courier New', monospace; font-size:14px;
+      color:#f0f0ee; min-height:70px; line-height:1.9;
+    }
+    canvas { display:block; }
+    .sliders {
+      width:560px; display:flex; flex-direction:column;
+      gap:9px; padding:10px 4px;
+      border-top:1px solid #1a2535; border-bottom:1px solid #1a2535;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New', monospace; font-size:13px; width:100px; flex-shrink:0; }
+    input[type="range"] {
+      flex:1; height:4px; -webkit-appearance:none;
+      background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer;
+    }
+    #sl-aa::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff822c; cursor:pointer; }
+    #sl-angA::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:55px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">The Ambiguous Case — When SSA Gives 0, 1, or 2 Triangles</div>
+  <div class="instruction">
+    You know angle <b style="color:#00abfa">A</b>, side <b>b</b> (from A to C), and side <b style="color:#ff822c">a</b> (variable).
+    Slide <b style="color:#ff822c">a</b> up slowly — watch the triangle appear, split into two, then collapse back to one.
+    This is the "ambiguous case" of the sine rule.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="290"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#ff822c" id="lbl-aa">a = 60</div>
+    <input type="range" id="sl-aa" min="0" max="200" step="1" value="60"/>
+    <div class="slider-bounds">0 … 200</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-angA">A = 35°</div>
+    <input type="range" id="sl-angA" min="15" max="75" step="0.5" value="35"/>
+    <div class="slider-bounds">15° … 75°</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: the ambiguous case only appears on harder A*-grade questions.
+    When using the sine rule to find an angle, always check: <strong>is the second solution (180° − answer) also valid?</strong>
+    If both give a positive remaining angle and valid triangle, state both.
+    Mark scheme awards credit for finding both solutions.
+  </div>
+</div>
+
+<script>
+  var aa=60, angA=35;
+  var aaD=60, angAD=35;
+  var SPRING=0.14;
+  var b_px=140; // fixed side b in pixels
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=290;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  function f2(v){return (Math.round(v*100)/100).toFixed(2);}
+  function f1(v){return (Math.round(v*10)/10).toFixed(1);}
+
+  // Vertex A is fixed
+  var Ax=70, Ay=235;
+
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var A_rad=angAD*Math.PI/180;
+    var a_px=aaD; // side a in pixels (slider units = px here)
+    var h_px=b_px*Math.sin(A_rad); // perpendicular height from C to base line
+
+    // Vertex C: at distance b_px from A, at angle A above horizontal
+    var Cx=Ax+b_px*Math.cos(A_rad), Cy=Ay-b_px*Math.sin(A_rad);
+
+    // ── Base ray (angle A's base arm going right) ──────────────────────
+    ctx.strokeStyle='#1e3a52'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(Ax,Ay); ctx.lineTo(Ax+350,Ay); ctx.stroke();
+
+    // ── Upper arm of angle A (toward C) ──────────────────────────────
+    ctx.strokeStyle='#1e3a52'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(Ax,Ay); ctx.lineTo(Ax+(b_px+60)*Math.cos(A_rad), Ay-(b_px+60)*Math.sin(A_rad)); ctx.stroke();
+
+    // ── Angle A arc ───────────────────────────────────────────────────
+    ctx.beginPath(); ctx.arc(Ax,Ay,30,0,-A_rad,true);
+    ctx.strokeStyle='#00abfa88'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle='#00abfa'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='left'; ctx.textBaseline='top';
+    ctx.fillText('A='+Math.round(angAD)+'°', Ax+34, Ay-22);
+
+    // ── Side b (A to C) ───────────────────────────────────────────────
+    ctx.strokeStyle='#6a8898'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(Ax,Ay); ctx.lineTo(Cx,Cy); ctx.stroke();
+    ctx.fillStyle='#6a8898'; ctx.font='13px Courier New, monospace';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText('b='+f1(b_px/30), (Ax+Cx)/2-6, (Ay+Cy)/2);
+
+    // ── Height h from C perpendicular to base line ─────────────────────
+    ctx.setLineDash([4,4]); ctx.strokeStyle='#fff06755'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(Cx,Cy); ctx.lineTo(Cx,Ay); ctx.stroke();
+    ctx.setLineDash([]);
+    // Right-angle marker at foot
+    var ra=7;
+    ctx.strokeStyle='#fff06766'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(Cx-ra,Ay); ctx.lineTo(Cx-ra,Ay-ra); ctx.lineTo(Cx,Ay-ra); ctx.stroke();
+    ctx.fillStyle='#fff06799'; ctx.font='11px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText('h='+f1(h_px/30), Cx, Ay-ra-2);
+
+    // ── Arc from C (radius = a_px) ─────────────────────────────────────
+    if(a_px > 3){
+      // Draw arc near the base line (where it would intersect)
+      var arcStartAngle = Math.PI*0.85;
+      var arcEndAngle   = Math.PI*0.15; // anticlockwise
+      ctx.beginPath();
+      ctx.arc(Cx, Cy, a_px, arcStartAngle, arcEndAngle, true);
+      ctx.strokeStyle='#ff822c88'; ctx.lineWidth=1.5; ctx.stroke();
+      // a label on arc
+      ctx.fillStyle='#ff822c'; ctx.font='bold 13px Courier New, monospace';
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillText('a='+f1(a_px/30), Cx+a_px*0.7+4, Cy-a_px*0.7);
+    }
+
+    // ── Find B intersections ───────────────────────────────────────────
+    var disc = a_px*a_px - h_px*h_px;
+    var B1=null, B2=null;
+
+    if(Math.abs(disc)<0.5){ // exactly 1 (right angle case)
+      B1={x:Cx, y:Ay};
+    } else if(disc>0){
+      var sq=Math.sqrt(disc);
+      var bx1=Cx+sq, bx2=Cx-sq;
+      if(bx1>Ax+2) B1={x:bx1,y:Ay};
+      if(bx2>Ax+2) B2={x:bx2,y:Ay};
+    }
+
+    // ── Draw triangle(s) ──────────────────────────────────────────────
+    function drawTriangle(Bv, col, label){
+      if(!Bv) return;
+      // Check Bv is on the base ray (right of A)
+      if(Bv.x < Ax+2) return;
+      ctx.beginPath(); ctx.moveTo(Ax,Ay); ctx.lineTo(Bv.x,Bv.y); ctx.lineTo(Cx,Cy); ctx.closePath();
+      ctx.fillStyle=col+'15'; ctx.fill();
+      ctx.strokeStyle=col; ctx.lineWidth=2.5; ctx.stroke();
+      // Label side a (B to C)
+      ctx.strokeStyle=col+'cc'; ctx.lineWidth=2;
+      ctx.fillStyle=col; ctx.font='bold 13px Courier New, monospace';
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText(label, (Bv.x+Cx)/2, (Bv.y+Cy)/2-16);
+      // B vertex dot
+      ctx.beginPath(); ctx.arc(Bv.x,Bv.y,5,0,2*Math.PI);
+      ctx.fillStyle=col; ctx.fill();
+    }
+    drawTriangle(B1,'#0fee89','B₁');
+    drawTriangle(B2,'#00abfa','B₂');
+
+    // ── A vertex dot ──────────────────────────────────────────────────
+    ctx.beginPath(); ctx.arc(Ax,Ay,6,0,2*Math.PI);
+    ctx.fillStyle='#fff067'; ctx.fill();
+    ctx.fillStyle='#fff067'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='right'; ctx.textBaseline='top'; ctx.fillText('A',Ax-6,Ay+3);
+
+    // ── C vertex dot ──────────────────────────────────────────────────
+    ctx.beginPath(); ctx.arc(Cx,Cy,5,0,2*Math.PI);
+    ctx.fillStyle='#6a8898'; ctx.fill();
+    ctx.fillStyle='#6a8898'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='left'; ctx.textBaseline='bottom'; ctx.fillText('C',Cx+6,Cy-4);
+
+    // ── Triangle count badge ──────────────────────────────────────────
+    var count=0;
+    if(B1&&B1.x>Ax+2) count++;
+    if(B2&&B2.x>Ax+2) count++;
+    var badgeCol = count===0?'#ff4670':count===1?'#fff067':'#0fee89';
+    var badgeMsg = count===0?'0 triangles possible':count===1?'1 triangle':'2 triangles!';
+    ctx.fillStyle='#0d1f2d'; ctx.strokeStyle=badgeCol; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.roundRect(W-175,10,165,36,5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=badgeCol; ctx.font='bold 16px -apple-system, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(badgeMsg, W-175+82, 28);
+  }
+
+  function buildEq(){
+    var A_rad=angAD*Math.PI/180;
+    var a_px=aaD, h_px=b_px*Math.sin(A_rad);
+    var disc=a_px*a_px-h_px*h_px;
+    var aU=f1(aaD/30), bU=f1(b_px/30), hU=f1(h_px/30);
+    var line1='Given: A='+Math.round(angAD)+'°, b='+bU+', a='+aU
+             +' &nbsp;&nbsp; h = b sinA = '+bU+' × sin'+Math.round(angAD)+'° = <strong style="color:#fff067">'+hU+'</strong>';
+    var line2;
+    if(a_px<h_px-0.5){
+      line2='<span style="color:#ff4670">a < h → arc misses the base line → <strong>0 triangles</strong></span>';
+    } else if(Math.abs(a_px-h_px)<1.5){
+      line2='<span style="color:#fff067">a = h → arc just touches → <strong>1 right-angled triangle</strong></span>';
+    } else if(disc>0){
+      var sq=Math.sqrt(disc);
+      var B1x=aaD/30*1; // just checking if B2 is valid
+      var B2valid = (70+b_px*Math.cos(A_rad)-sq)>Ax;
+      if(B2valid && aaD<b_px){
+        line2='<span style="color:#0fee89">h < a < b → arc crosses base TWICE → <strong>2 triangles!</strong></span>';
+      } else {
+        line2='<span style="color:#fff067">a ≥ b → arc crosses base once (acute only) → <strong>1 triangle</strong></span>';
+      }
+    } else {
+      line2='<span style="color:#ff4670">No real solution</span>';
+    }
+    return line1+'<br>'+line2;
+  }
+
+  function tick(){
+    aaD+=(aa-aaD)*SPRING;
+    angAD+=(angA-angAD)*SPRING;
+    draw();
+    document.getElementById('eq-display').innerHTML=buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('sl-aa').oninput=function(){
+    aa=parseFloat(this.value);
+    document.getElementById('lbl-aa').textContent='a = '+Math.round(aa);
+  };
+  document.getElementById('sl-angA').oninput=function(){
+    angA=parseFloat(this.value);
+    document.getElementById('lbl-angA').textContent='A = '+Math.round(angA)+'°';
+  };
+
+  tick();
+</script>
+</body>
+</html>
