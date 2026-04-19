@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Area of 2D Shapes</title>
+  <meta property="og:title" content="Area of 2D Shapes"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="600"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      background:#0d1216;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .mode-btns { width:560px; padding:6px 4px; display:flex; gap:8px; }
+    .mode-btn {
+      padding:5px 16px; font-size:13px; font-weight:600; border-radius:4px;
+      border:1.5px solid #1e3a52; background:#111f2c; color:#6a8898;
+      cursor:pointer; transition:all 0.15s;
+    }
+    .mode-btn.active { border-color:#00abfa; color:#00abfa; background:#0d2030; }
+    .equation-bar {
+      width:560px; padding:6px 4px;
+      font-family:'Courier New', monospace; font-size:16px;
+      color:#f0f0ee; min-height:34px; line-height:1.8;
+    }
+    canvas { display:block; }
+    .sliders {
+      width:560px; display:flex; flex-direction:column;
+      gap:9px; padding:10px 4px;
+      border-top:1px solid #1a2535; border-bottom:1px solid #1a2535;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New', monospace; font-size:13px; width:100px; flex-shrink:0; }
+    input[type="range"] {
+      flex:1; height:4px; -webkit-appearance:none;
+      background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer;
+    }
+    #sl-b::-webkit-slider-thumb  { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-h::-webkit-slider-thumb  { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    #sl-lean::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff4670; cursor:pointer; }
+    #sl-a::-webkit-slider-thumb  { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:46px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Area of Parallelogram &amp; Trapezium</div>
+  <div class="instruction" id="instr">
+    Slide the <b style="color:#ff4670">lean</b> slider — the shape changes but the <b style="color:#fff067">area stays the same</b>.
+    The <b style="color:#fff067">perpendicular height</b> matters, not the slant side.
+  </div>
+</div>
+
+<div class="mode-btns">
+  <button class="mode-btn active" id="btn-para" onclick="setMode('para')">Parallelogram</button>
+  <button class="mode-btn" id="btn-trap" onclick="setMode('trap')">Trapezium</button>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="270"></canvas>
+
+<div class="sliders">
+  <div class="slider-row" id="row-a" style="display:none">
+    <div class="slider-label" style="color:#0fee89" id="lbl-a">a = 4.0</div>
+    <input type="range" id="sl-a" min="1" max="9" step="0.1" value="4"/>
+    <div class="slider-bounds">1 … 9</div>
+  </div>
+  <div class="slider-row" id="row-b">
+    <div class="slider-label" style="color:#00abfa" id="lbl-b">b = 6.0</div>
+    <input type="range" id="sl-b" min="1" max="9" step="0.1" value="6"/>
+    <div class="slider-bounds">1 … 9</div>
+  </div>
+  <div class="slider-row" id="row-h">
+    <div class="slider-label" style="color:#fff067" id="lbl-h">h = 4.0</div>
+    <input type="range" id="sl-h" min="1" max="6" step="0.1" value="4"/>
+    <div class="slider-bounds">1 … 6</div>
+  </div>
+  <div class="slider-row" id="row-lean">
+    <div class="slider-label" style="color:#ff4670" id="lbl-lean">lean = 1.5</div>
+    <input type="range" id="sl-lean" min="0" max="5" step="0.1" value="1.5"/>
+    <div class="slider-bounds">0 … 5</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip" id="tip-text"></div>
+</div>
+
+<script>
+  var mode = 'para';
+  var a=4, b=6, h=4, lean=1.5;
+  var aD=4, bD=6, hD=4, leanD=1.5;
+  var SPRING = 0.13;
+
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=270;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR, DPR);
+
+  var S = 28; // px per unit
+  var cx = W/2, cy = H/2 + 10;
+
+  function FRAC(num, den) {
+    return '<span class="kfrac"><span class="knum">'+num+'</span><span class="kden">'+den+'</span></span>';
+  }
+  function f1(v) { return (Math.round(v*10)/10).toFixed(1); }
+  function f2(v) { return (Math.round(v*100)/100).toFixed(2); }
+
+  function verts() {
+    if (mode === 'para') {
+      var hbS = bD*S/2, hlS = leanD*S/2, hhS = hD*S/2;
+      return {
+        BL:{x:cx-hbS-hlS, y:cy+hhS},
+        BR:{x:cx+hbS-hlS, y:cy+hhS},
+        TR:{x:cx+hbS+hlS, y:cy-hhS},
+        TL:{x:cx-hbS+hlS, y:cy-hhS}
+      };
+    } else {
+      var hbS2=bD*S/2, haS2=aD*S/2, hhS2=hD*S/2;
+      return {
+        BL:{x:cx-hbS2, y:cy+hhS2},
+        BR:{x:cx+hbS2, y:cy+hhS2},
+        TR:{x:cx+haS2, y:cy-hhS2},
+        TL:{x:cx-haS2, y:cy-hhS2}
+      };
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var v = verts();
+
+    // ── Ghost rectangle (para mode, shows equiv rectangle) ───────────
+    if (mode==='para' && leanD > 0.1) {
+      ctx.setLineDash([4,4]);
+      ctx.strokeStyle='#ffffff14'; ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.rect(cx-bD*S/2, cy-hD*S/2, bD*S, hD*S);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // ── Main shape fill ────────────────────────────────────────────────
+    ctx.beginPath();
+    ctx.moveTo(v.BL.x,v.BL.y);
+    ctx.lineTo(v.BR.x,v.BR.y);
+    ctx.lineTo(v.TR.x,v.TR.y);
+    ctx.lineTo(v.TL.x,v.TL.y);
+    ctx.closePath();
+    ctx.fillStyle='#00abfa18'; ctx.fill();
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=2.5; ctx.stroke();
+
+    // ── Perpendicular height indicator (yellow dashed) ─────────────────
+    // Drop from TL's x-position straight down to baseline
+    var footX = v.TL.x;
+    var footY = v.BL.y;
+    // Height line
+    ctx.setLineDash([5,4]);
+    ctx.strokeStyle='#fff067bb'; ctx.lineWidth=1.8;
+    ctx.beginPath();
+    ctx.moveTo(footX, v.TL.y);
+    ctx.lineTo(footX, footY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // Right-angle marker at foot
+    var ra = 7;
+    ctx.strokeStyle='#fff06788'; ctx.lineWidth=1.2;
+    ctx.beginPath();
+    ctx.moveTo(footX+ra, footY);
+    ctx.lineTo(footX+ra, footY-ra);
+    ctx.lineTo(footX,    footY-ra);
+    ctx.stroke();
+
+    // ── Height label ───────────────────────────────────────────────────
+    ctx.fillStyle='#fff067'; ctx.font='bold 14px Courier New, monospace';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText('h='+f1(hD), footX-6, (v.TL.y+footY)/2);
+
+    // ── Slant side highlight (para mode, lean>0) ────────────────────
+    if (mode==='para' && leanD > 0.3) {
+      ctx.strokeStyle='#ff4670aa'; ctx.lineWidth=2.5;
+      ctx.setLineDash([4,3]);
+      ctx.beginPath();
+      ctx.moveTo(v.BL.x, v.BL.y);
+      ctx.lineTo(v.TL.x, v.TL.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      var slant = Math.sqrt(hD*hD + leanD*leanD);
+      ctx.fillStyle='#ff4670'; ctx.font='12px Courier New, monospace';
+      ctx.textAlign='right'; ctx.textBaseline='middle';
+      ctx.fillText('slant='+f1(slant), (v.BL.x+v.TL.x)/2 - 8, (v.BL.y+v.TL.y)/2);
+    }
+
+    // ── Base label (below shape) ───────────────────────────────────────
+    var bxMid = (v.BL.x+v.BR.x)/2;
+    ctx.strokeStyle='#00abfa55'; ctx.lineWidth=1.2;
+    ctx.beginPath();
+    ctx.moveTo(v.BL.x, v.BL.y+12); ctx.lineTo(v.BR.x, v.BR.y+12);
+    ctx.moveTo(v.BL.x, v.BL.y+8);  ctx.lineTo(v.BL.x, v.BL.y+16);
+    ctx.moveTo(v.BR.x, v.BR.y+8);  ctx.lineTo(v.BR.x, v.BR.y+16);
+    ctx.stroke();
+    ctx.fillStyle='#00abfa'; ctx.font='bold 14px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('b='+f1(bD), bxMid, v.BL.y+18);
+
+    // ── Top side label (trapezium) ─────────────────────────────────────
+    if (mode==='trap') {
+      var axMid = (v.TL.x+v.TR.x)/2;
+      ctx.strokeStyle='#0fee8955'; ctx.lineWidth=1.2;
+      ctx.beginPath();
+      ctx.moveTo(v.TL.x, v.TL.y-12); ctx.lineTo(v.TR.x, v.TR.y-12);
+      ctx.moveTo(v.TL.x, v.TL.y-8);  ctx.lineTo(v.TL.x, v.TL.y-16);
+      ctx.moveTo(v.TR.x, v.TR.y-8);  ctx.lineTo(v.TR.x, v.TR.y-16);
+      ctx.stroke();
+      ctx.fillStyle='#0fee89'; ctx.font='bold 14px Courier New, monospace';
+      ctx.textAlign='center'; ctx.textBaseline='bottom';
+      ctx.fillText('a='+f1(aD), axMid, v.TL.y-18);
+    }
+
+    // ── Area badge (top right) ─────────────────────────────────────────
+    var area = mode==='para' ? bD*hD : 0.5*(aD+bD)*hD;
+    ctx.fillStyle='#0d1f2d'; ctx.strokeStyle='#1e3a52'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.roundRect(W-130, 8, 122, 50, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#6a8898'; ctx.font='11px Courier New, monospace';
+    ctx.textAlign='right'; ctx.textBaseline='top';
+    ctx.fillText('Area =', W-10, 14);
+    ctx.fillStyle='#fff067'; ctx.font='bold 22px Courier New, monospace';
+    ctx.textBaseline='top'; ctx.textAlign='right';
+    ctx.fillText(f2(area), W-10, 30);
+    ctx.fillStyle='#3a5060'; ctx.font='11px Courier New, monospace';
+    ctx.textAlign='right'; ctx.textBaseline='top';
+    ctx.fillText('units²', W-10, 53);
+  }
+
+  function buildEq() {
+    var area;
+    if (mode==='para') {
+      area = bD*hD;
+      return 'A = b × h &nbsp;=&nbsp; '+f1(bD)+' × '+f1(hD)+' &nbsp;=&nbsp; <strong style="color:#fff067">'+f2(area)+'</strong> units²';
+    } else {
+      area = 0.5*(aD+bD)*hD;
+      return 'A = '+FRAC('(a + b)', '2')+' × h &nbsp;=&nbsp; '+FRAC('('+f1(aD)+' + '+f1(bD)+')', '2')+' × '+f1(hD)+' &nbsp;=&nbsp; <strong style="color:#fff067">'+f2(area)+'</strong> units²';
+    }
+  }
+
+  function tick() {
+    aD   += (a    - aD)   * SPRING;
+    bD   += (b    - bD)   * SPRING;
+    hD   += (h    - hD)   * SPRING;
+    leanD+= (lean - leanD)* SPRING;
+    draw();
+    document.getElementById('eq-display').innerHTML = buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('sl-a').oninput = function() { a=parseFloat(this.value); document.getElementById('lbl-a').textContent='a = '+f1(a); };
+  document.getElementById('sl-b').oninput = function() { b=parseFloat(this.value); document.getElementById('lbl-b').textContent='b = '+f1(b); };
+  document.getElementById('sl-h').oninput = function() { h=parseFloat(this.value); document.getElementById('lbl-h').textContent='h = '+f1(h); };
+  document.getElementById('sl-lean').oninput = function() { lean=parseFloat(this.value); document.getElementById('lbl-lean').textContent='lean = '+f1(lean); };
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById('btn-para').className = 'mode-btn'+(m==='para'?' active':'');
+    document.getElementById('btn-trap').className = 'mode-btn'+(m==='trap'?' active':'');
+    document.getElementById('row-a').style.display    = m==='trap' ? 'flex' : 'none';
+    document.getElementById('row-lean').style.display = m==='para' ? 'flex' : 'none';
+    document.getElementById('instr').innerHTML = m==='para'
+      ? 'Slide the <b style="color:#ff4670">lean</b> slider — the shape changes but the <b style="color:#fff067">area stays the same</b>. The <b style="color:#fff067">perpendicular height</b> matters, not the slant side.'
+      : 'The two parallel sides are <b style="color:#0fee89">a</b> (top) and <b style="color:#00abfa">b</b> (bottom). Adjust all three sliders and watch how A = ½(a+b)h updates.';
+    var tip = document.getElementById('tip-text');
+    tip.innerHTML = m==='para'
+      ? 'Cambridge tip: <strong>A = base × perpendicular height</strong> — the \\(\\perp\\) height, not the slant. Examiners award M1 for writing the correct formula and A1 for the correct numerical answer.'
+      : 'Cambridge tip: <strong>A = \\(\\frac{1}{2}\\)(a + b)h</strong> — this formula is NOT printed on the Cambridge paper, so you must recall it. Write it first on your working line to earn the method mark.';
+    if (window.renderMathInElement) renderMathInElement(tip, {delimiters:[{left:'\\(',right:'\\)',display:false}]});
+  }
+
+  setMode('para');
+  tick();
+</script>
+</body>
+</html>

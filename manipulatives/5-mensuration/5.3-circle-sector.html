@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Arc Length &amp; Sector Area</title>
+  <meta property="og:title" content="Arc Length &amp; Sector Area"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="580"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      background:#0d1216;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar {
+      width:560px; padding:6px 4px;
+      font-family:'Courier New', monospace; font-size:15px;
+      color:#f0f0ee; min-height:54px; line-height:1.85;
+    }
+    canvas { display:block; }
+    .sliders {
+      width:560px; display:flex; flex-direction:column;
+      gap:9px; padding:10px 4px;
+      border-top:1px solid #1a2535; border-bottom:1px solid #1a2535;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New', monospace; font-size:13px; width:100px; flex-shrink:0; }
+    input[type="range"] {
+      flex:1; height:4px; -webkit-appearance:none;
+      background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer;
+    }
+    #sl-r::-webkit-slider-thumb     { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-theta::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:46px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Arc Length &amp; Sector Area</div>
+  <div class="instruction">
+    Drag the <b style="color:#fff067">angle θ</b> slider from 0° to 360° —
+    watch what happens at exactly 360°. A sector is just a <b style="color:#fff067">fraction</b> of the full circle.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="300"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-r">r = 5 cm</div>
+    <input type="range" id="sl-r" min="2" max="8" step="0.1" value="5"/>
+    <div class="slider-bounds">2 … 8</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-theta">θ = 120°</div>
+    <input type="range" id="sl-theta" min="0" max="360" step="1" value="120"/>
+    <div class="slider-bounds">0° … 360°</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: both formulas are printed on the paper —
+    <strong>arc = \(\frac{\theta}{360} \times 2\pi r\)</strong> and
+    <strong>area = \(\frac{\theta}{360} \times \pi r^2\)</strong>.
+    You still need to show the substitution step (e.g. \(\frac{120}{360} \times 2\pi \times 5\))
+    before simplifying — that line earns the M1 method mark.
+  </div>
+</div>
+
+<script>
+  var r=5, theta=120;
+  var rD=5, thetaD=120;
+  var SPRING = 0.12;
+
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=300;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR, DPR);
+
+  function FRAC(n,d) { return '<span class="kfrac"><span class="knum">'+n+'</span><span class="kden">'+d+'</span></span>'; }
+  function f2(v)  { return (Math.round(v*100)/100).toFixed(2); }
+  function f1(v)  { return (Math.round(v*10)/10).toFixed(1); }
+
+  // Circle center and scale
+  var CCX = 185, CCY = H/2;  // circle center
+  var RS = 17; // px per radius unit (r=8 → R=136px, well inside canvas)
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var R = rD * RS;
+    var isFull = thetaD > 359.4;
+    var fracVal = thetaD / 360;
+
+    // ── Full circle (background, faint) ────────────────────────────────
+    ctx.beginPath(); ctx.arc(CCX, CCY, R, 0, Math.PI*2);
+    ctx.fillStyle='#0d1f2d'; ctx.fill();
+    ctx.strokeStyle='#1e3a52'; ctx.lineWidth=1.2; ctx.stroke();
+
+    // ── Sector fill ────────────────────────────────────────────────────
+    var startA = -Math.PI/2; // start from top (12 o'clock)
+    var endA   = startA + fracVal*2*Math.PI;
+
+    if (thetaD > 0.5) {
+      ctx.beginPath();
+      if (isFull) {
+        ctx.arc(CCX, CCY, R, 0, Math.PI*2);
+      } else {
+        ctx.moveTo(CCX, CCY);
+        ctx.arc(CCX, CCY, R, startA, endA);
+        ctx.closePath();
+      }
+      ctx.fillStyle = isFull ? '#00abfa30' : '#00abfa1e';
+      ctx.fill();
+    }
+
+    // ── Radius lines ────────────────────────────────────────────────────
+    if (!isFull && thetaD > 0.5) {
+      ctx.strokeStyle='#00abfa66'; ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.moveTo(CCX, CCY);
+      ctx.lineTo(CCX + Math.cos(startA)*R, CCY + Math.sin(startA)*R);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(CCX, CCY);
+      ctx.lineTo(CCX + Math.cos(endA)*R, CCY + Math.sin(endA)*R);
+      ctx.stroke();
+    }
+
+    // ── Arc highlight (yellow) ─────────────────────────────────────────
+    if (thetaD > 0.5) {
+      ctx.beginPath();
+      var arcEnd = isFull ? startA + Math.PI*2 - 0.001 : endA;
+      ctx.arc(CCX, CCY, R, startA, arcEnd);
+      ctx.strokeStyle = isFull ? '#0fee89' : '#fff067';
+      ctx.lineWidth = isFull ? 4 : 3.5;
+      ctx.stroke();
+    }
+
+    // ── Sector outline (when partial) ──────────────────────────────────
+    if (!isFull && thetaD > 0.5) {
+      ctx.beginPath();
+      ctx.moveTo(CCX, CCY);
+      ctx.arc(CCX, CCY, R, startA, endA);
+      ctx.closePath();
+      ctx.strokeStyle='#00abfa'; ctx.lineWidth=1.8; ctx.stroke();
+    }
+
+    // ── r label along first radius ─────────────────────────────────────
+    var rLabelAng = startA;
+    var rLabelX = CCX + Math.cos(rLabelAng)*R*0.52;
+    var rLabelY = CCY + Math.sin(rLabelAng)*R*0.52;
+    ctx.fillStyle='#00abfa'; ctx.font='bold 14px Courier New, monospace';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText('r', rLabelX - 4, rLabelY);
+
+    // ── Angle arc indicator ─────────────────────────────────────────────
+    if (thetaD > 6 && !isFull) {
+      var arcR2 = Math.min(R*0.28, 28);
+      ctx.beginPath(); ctx.arc(CCX, CCY, arcR2, startA, endA);
+      ctx.strokeStyle='#fff06766'; ctx.lineWidth=1.5; ctx.stroke();
+      var midA = startA + fracVal*Math.PI;
+      ctx.fillStyle='#fff067'; ctx.font='bold 13px Courier New, monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('θ', CCX + Math.cos(midA)*(arcR2+14), CCY + Math.sin(midA)*(arcR2+14));
+    }
+
+    // ── "Full circle!" burst when theta=360 ────────────────────────────
+    if (isFull) {
+      ctx.beginPath(); ctx.arc(CCX, CCY, R+5, 0, Math.PI*2);
+      ctx.strokeStyle='#0fee8966'; ctx.lineWidth=3; ctx.stroke();
+      ctx.fillStyle='#0fee89'; ctx.font='bold 14px -apple-system, sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('Full circle!', CCX, CCY);
+    }
+
+    // ── Right panel: fraction visual ───────────────────────────────────
+    var px = 360, pw = 190;
+    var pcx = px + pw/2;
+    var barH = 200, barY = H/2 + barH/2;
+    var bw = 58, gap = 16;
+    var b1x = pcx - bw - gap/2, b2x = pcx + gap/2;
+
+    // Bar containers
+    ctx.fillStyle='#0d1f2d'; ctx.strokeStyle='#1e3a52'; ctx.lineWidth=1;
+    ctx.fillRect(b1x, barY-barH, bw, barH); ctx.strokeRect(b1x, barY-barH, bw, barH);
+    ctx.fillRect(b2x, barY-barH, bw, barH); ctx.strokeRect(b2x, barY-barH, bw, barH);
+
+    // Filled portions (spring-animated via fracVal from thetaD)
+    var fillH = fracVal * barH;
+    if (fillH > 0.5) {
+      ctx.fillStyle='#fff06730';
+      ctx.fillRect(b1x, barY-fillH, bw, fillH);
+      ctx.strokeStyle='#fff067'; ctx.lineWidth=1.5;
+      ctx.strokeRect(b1x, barY-fillH, bw, fillH);
+      ctx.fillStyle='#00abfa25';
+      ctx.fillRect(b2x, barY-fillH, bw, fillH);
+      ctx.strokeStyle='#00abfa'; ctx.lineWidth=1.5;
+      ctx.strokeRect(b2x, barY-fillH, bw, fillH);
+    }
+
+    // Reference labels at top of bars
+    ctx.fillStyle='#6a8898'; ctx.font='11px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText('2πr='+f2(2*Math.PI*rD), b1x+bw/2, barY-barH-4);
+    ctx.fillText('πr²='+f2(Math.PI*rD*rD), b2x+bw/2, barY-barH-4);
+
+    // Column titles
+    ctx.fillStyle='#fff067'; ctx.font='bold 12px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('arc', b1x+bw/2, barY+6);
+    ctx.fillStyle='#00abfa';
+    ctx.fillText('area', b2x+bw/2, barY+6);
+
+    // Fraction label in centre between bars
+    var fracPct = Math.round(fracVal*100);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    if (isFull) {
+      ctx.fillStyle='#0fee89'; ctx.font='bold 12px Courier New, monospace';
+      ctx.fillText('= 2πr',   pcx, barY - barH/2 - 10);
+      ctx.fillText('= πr²',   pcx, barY - barH/2 +  8);
+    } else {
+      ctx.fillStyle='#b4b2a9'; ctx.font='13px Courier New, monospace';
+      ctx.fillText(fracPct+'%', pcx, barY - barH/2);
+    }
+  }
+
+  function buildEq() {
+    var frac = thetaD/360;
+    var arc  = frac * 2 * Math.PI * rD;
+    var area = frac * Math.PI * rD * rD;
+    var tStr = Math.round(thetaD);
+    var rStr = f1(rD);
+    var isFull = thetaD > 359.4;
+
+    var arcLine  = 'Arc &nbsp;= '+FRAC(tStr,'360')+' × 2π × '+rStr+' = <strong style="color:#fff067">'+f2(arc)+' cm</strong>';
+    var areaLine = 'Area = '+FRAC(tStr,'360')+' × π × '+rStr+'<sup>2</sup> = <strong style="color:#00abfa">'+f2(area)+' cm²</strong>';
+
+    if (isFull) {
+      arcLine  += ' <span style="color:#0fee89">✓ = 2πr</span>';
+      areaLine += ' <span style="color:#0fee89">✓ = πr²</span>';
+    }
+    return arcLine + '<br>' + areaLine;
+  }
+
+  function tick() {
+    rD     += (r     - rD)     * SPRING;
+    thetaD += (theta - thetaD) * SPRING;
+    draw();
+    document.getElementById('eq-display').innerHTML = buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('sl-r').oninput = function() {
+    r = parseFloat(this.value);
+    document.getElementById('lbl-r').textContent = 'r = '+f1(r)+' cm';
+  };
+  document.getElementById('sl-theta').oninput = function() {
+    theta = parseFloat(this.value);
+    document.getElementById('lbl-theta').textContent = 'θ = '+Math.round(theta)+'°';
+  };
+
+  tick();
+</script>
+</body>
+</html>

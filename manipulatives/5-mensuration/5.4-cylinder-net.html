@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Cylinder: Net &amp; Formulas</title>
+  <meta property="og:title" content="Cylinder: Net &amp; Formulas"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="600"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      background:#0d1216;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar {
+      width:560px; padding:6px 4px;
+      font-family:'Courier New', monospace; font-size:14px;
+      color:#f0f0ee; min-height:70px; line-height:1.85;
+    }
+    canvas { display:block; }
+    .sliders {
+      width:560px; display:flex; flex-direction:column;
+      gap:9px; padding:10px 4px;
+      border-top:1px solid #1a2535; border-bottom:1px solid #1a2535;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New', monospace; font-size:13px; width:100px; flex-shrink:0; }
+    input[type="range"] {
+      flex:1; height:4px; -webkit-appearance:none;
+      background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer;
+    }
+    #sl-r::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-h::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:46px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Cylinder — Unrolling the Curved Surface</div>
+  <div class="instruction">
+    Change the radius — watch how the <b style="color:#ff822c">rectangle width</b> on the right changes.
+    The curved surface of a cylinder is just a rectangle in disguise: width = <b style="color:#ff822c">2πr</b>, height = <b style="color:#fff067">h</b>.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="290"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-r">r = 3.0 cm</div>
+    <input type="range" id="sl-r" min="1" max="6" step="0.1" value="3"/>
+    <div class="slider-bounds">1 … 6</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-h">h = 5.0 cm</div>
+    <input type="range" id="sl-h" min="1" max="9" step="0.1" value="5"/>
+    <div class="slider-bounds">1 … 9</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: for total surface area, <strong>don't forget both circular ends</strong>.
+    Examiners see students write 2πrh and stop — that's only the curved SA. The full answer is
+    \(2\pi r h + 2\pi r^2\). If the question says "open cylinder" (no lid/base), use just \(2\pi r h\).
+  </div>
+</div>
+
+<script>
+  var r=3, h=5;
+  var rD=3, hD=5;
+  var SPRING=0.12;
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=290;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  function FRAC(n,d){return '<span class="kfrac"><span class="knum">'+n+'</span><span class="kden">'+d+'</span></span>';}
+  function f2(v){return (Math.round(v*100)/100).toFixed(2);}
+  function f1(v){return (Math.round(v*10)/10).toFixed(1);}
+
+  // Layout constants
+  var CYL_CX = 115;  // cylinder center x
+  var CYL_CY = H/2;  // cylinder center y
+  var RS = 22;       // px per radius unit (r=6 → 132px ellipse width)
+  var HS = 22;       // px per height unit (h=9 → 198px)
+  var EY = 0.35;     // ellipse y/x ratio for 3D effect
+
+  var NET_LEFT = 265; // x where the net rectangle starts
+  var NET_MAX_W = 270; // maximum width of net rectangle area
+
+  function drawArrow(x1,y1,x2,y2,col){
+    ctx.strokeStyle=col||'#6a8898'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    var ang=Math.atan2(y2-y1,x2-x1);
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-7*Math.cos(ang-0.4), y2-7*Math.sin(ang-0.4));
+    ctx.lineTo(x2-7*Math.cos(ang+0.4), y2-7*Math.sin(ang+0.4));
+    ctx.closePath(); ctx.fillStyle=col||'#6a8898'; ctx.fill();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var R = rD * RS;
+    var HH = hD * HS;  // pixel height of cylinder
+    var ey = R * EY;   // ellipse y-radius for 3D
+
+    // Clamp layout
+    R  = Math.min(R,  85);
+    HH = Math.min(HH, 200);
+    ey = R * EY;
+
+    var top    = CYL_CY - HH/2;
+    var bottom = CYL_CY + HH/2;
+
+    // ── CYLINDER (left) ─────────────────────────────────────────────────
+
+    // Cylinder body fill
+    ctx.fillStyle='#00abfa14';
+    ctx.fillRect(CYL_CX-R, top, 2*R, HH);
+
+    // Cylinder body sides
+    ctx.strokeStyle='#00abfa88'; ctx.lineWidth=1.8;
+    ctx.beginPath();
+    ctx.moveTo(CYL_CX-R, top);    ctx.lineTo(CYL_CX-R, bottom);
+    ctx.moveTo(CYL_CX+R, top);    ctx.lineTo(CYL_CX+R, bottom);
+    ctx.stroke();
+
+    // Bottom ellipse (fully visible)
+    ctx.beginPath(); ctx.ellipse(CYL_CX, bottom, R, ey, 0, 0, Math.PI*2);
+    ctx.fillStyle='#00abfa22'; ctx.fill();
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=1.8; ctx.stroke();
+
+    // Top ellipse (highlight — this is a circular END)
+    ctx.beginPath(); ctx.ellipse(CYL_CX, top, R, ey, 0, 0, Math.PI*2);
+    ctx.fillStyle='#00abfa30'; ctx.fill();
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=1.8; ctx.stroke();
+
+    // Radius arrow on top ellipse
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(CYL_CX, top); ctx.lineTo(CYL_CX+R, top);
+    ctx.stroke();
+    ctx.fillStyle='#00abfa'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText('r='+f1(rD), CYL_CX + R/2, top-5);
+
+    // Height arrow on left side
+    ctx.strokeStyle='#fff067'; ctx.lineWidth=1.5;
+    var hax = CYL_CX - R - 18;
+    ctx.beginPath(); ctx.moveTo(hax,top); ctx.lineTo(hax,bottom); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(hax-4,top+6); ctx.lineTo(hax,top); ctx.lineTo(hax+4,top+6); ctx.stroke();
+    ctx.moveTo(hax-4,bottom-6); ctx.lineTo(hax,bottom); ctx.lineTo(hax+4,bottom-6); ctx.stroke();
+    ctx.fillStyle='#fff067'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText('h='+f1(hD), hax-6, CYL_CY);
+
+    // "Peel!" label on the cylinder body
+    ctx.fillStyle='#ff822c'; ctx.font='bold 12px -apple-system, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('peel!', CYL_CX, CYL_CY);
+
+    // ── UNROLL ARROW (center divider) ──────────────────────────────────
+    var arrX1 = CYL_CX + R + 10, arrX2 = NET_LEFT - 10;
+    var arrY  = CYL_CY;
+    ctx.setLineDash([4,4]); ctx.strokeStyle='#ff822c55'; ctx.lineWidth=1; ctx.beginPath();
+    ctx.moveTo(CYL_CX+R+4, top); ctx.lineTo(CYL_CX+R+4, bottom); ctx.stroke();
+    ctx.setLineDash([]);
+    drawArrow(arrX1, arrY, arrX2, arrY, '#ff822c');
+    ctx.fillStyle='#ff822c'; ctx.font='bold 11px -apple-system, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillText('unroll', (arrX1+arrX2)/2, arrY-4);
+
+    // ── NET RECTANGLE (right) ──────────────────────────────────────────
+    var circ = 2 * Math.PI * rD; // circumference (math units)
+    var netScale = Math.min(1.0, NET_MAX_W / (circ * 18));
+    var netW = circ * 18 * netScale;  // width of rectangle in px (scale: 18px/unit)
+    var netH_px = Math.min(HH, 200);  // same height as cylinder
+
+    var netX = NET_LEFT;
+    var netY = CYL_CY - netH_px/2;
+
+    // Rectangle fill
+    ctx.fillStyle='#ff822c18';
+    ctx.fillRect(netX, netY, netW, netH_px);
+    ctx.strokeStyle='#ff822c'; ctx.lineWidth=2;
+    ctx.strokeRect(netX, netY, netW, netH_px);
+
+    // Width annotation (2πr)
+    ctx.strokeStyle='#ff822c88'; ctx.lineWidth=1.2;
+    ctx.beginPath();
+    ctx.moveTo(netX,       netY+netH_px+12);
+    ctx.lineTo(netX+netW,  netY+netH_px+12);
+    ctx.moveTo(netX,       netY+netH_px+8);
+    ctx.lineTo(netX,       netY+netH_px+16);
+    ctx.moveTo(netX+netW,  netY+netH_px+8);
+    ctx.lineTo(netX+netW,  netY+netH_px+16);
+    ctx.stroke();
+    ctx.fillStyle='#ff822c'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('2πr = '+f2(circ), netX+netW/2, netY+netH_px+18);
+
+    // Height annotation (h)
+    ctx.strokeStyle='#fff06788'; ctx.lineWidth=1.2;
+    var hax2 = netX + netW + 14;
+    ctx.beginPath();
+    ctx.moveTo(hax2, netY); ctx.lineTo(hax2, netY+netH_px);
+    ctx.moveTo(hax2-4, netY); ctx.lineTo(hax2+4, netY);
+    ctx.moveTo(hax2-4, netY+netH_px); ctx.lineTo(hax2+4, netY+netH_px);
+    ctx.stroke();
+    ctx.fillStyle='#fff067'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('h', hax2+6, netY+netH_px/2);
+
+    // Area label inside rectangle
+    var curved = 2 * Math.PI * rD * hD;
+    ctx.fillStyle='#ff822c'; ctx.font='bold 13px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(f2(curved)+' cm²', netX+netW/2, netY+netH_px/2);
+  }
+
+  function buildEq(){
+    var circ   = 2*Math.PI*rD;
+    var curved = 2*Math.PI*rD*hD;
+    var circEnd = Math.PI*rD*rD;
+    var total  = curved + 2*circEnd;
+    var vol    = Math.PI*rD*rD*hD;
+
+    return  'Curved SA = 2πr × h = 2π×'+f1(rD)+'×'+f1(hD)+' = <strong style="color:#ff822c">'+f2(curved)+' cm²</strong><br>'+
+            'Total SA &nbsp;= 2πrh + 2πr<sup>2</sup> = '+f2(curved)+' + 2×'+f2(circEnd)+' = <strong style="color:#0fee89">'+f2(total)+' cm²</strong><br>'+
+            'Volume &nbsp;&nbsp;= πr<sup>2</sup>h = π×'+f1(rD)+'<sup>2</sup>×'+f1(hD)+' = <strong style="color:#fff067">'+f2(vol)+' cm³</strong>';
+  }
+
+  function tick(){
+    rD += (r-rD)*SPRING;
+    hD += (h-hD)*SPRING;
+    draw();
+    document.getElementById('eq-display').innerHTML = buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('sl-r').oninput=function(){r=parseFloat(this.value); document.getElementById('lbl-r').textContent='r = '+f1(r)+' cm';};
+  document.getElementById('sl-h').oninput=function(){h=parseFloat(this.value); document.getElementById('lbl-h').textContent='h = '+f1(h)+' cm';};
+
+  tick();
+</script>
+</body>
+</html>

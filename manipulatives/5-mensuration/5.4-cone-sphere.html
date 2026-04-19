@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Cone, Sphere &amp; Cylinder Volumes</title>
+  <meta property="og:title" content="Cone, Sphere &amp; Cylinder Volumes"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="600"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      background:#0d1216;
+      font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display:flex; flex-direction:column; align-items:center;
+    }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar {
+      width:560px; padding:6px 4px;
+      font-family:'Courier New', monospace; font-size:14px;
+      color:#f0f0ee; min-height:70px; line-height:1.85;
+    }
+    canvas { display:block; }
+    .sliders {
+      width:560px; display:flex; flex-direction:column;
+      gap:9px; padding:10px 4px;
+      border-top:1px solid #1a2535; border-bottom:1px solid #1a2535;
+    }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New', monospace; font-size:13px; width:100px; flex-shrink:0; }
+    input[type="range"] {
+      flex:1; height:4px; -webkit-appearance:none;
+      background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer;
+    }
+    #sl-r::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:46px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 3px; }
+    .kfrac .knum { border-bottom:2px solid currentColor; padding:1px 4px; text-align:center; font-size:0.88em; }
+    .kfrac .kden { padding:1px 4px; text-align:center; font-size:0.88em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Cone, Sphere &amp; Cylinder — Volumes</div>
+  <div class="instruction">
+    All three have the same radius <b style="color:#00abfa">r</b>, and the cylinder/cone height = <b style="color:#00abfa">2r</b>.
+    The ratio of their volumes is always <b style="color:#fff067">1 : 2 : 3</b> — Archimedes was so proud of this he asked for it on his tombstone.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+
+<canvas id="graph" width="560" height="360"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-r">r = 4.0 cm</div>
+    <input type="range" id="sl-r" min="1" max="6" step="0.1" value="4"/>
+    <div class="slider-bounds">1 … 6</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>V<sub>cone</sub> = \(\frac{1}{3}\pi r^2 h\)</strong> — the \(\frac{1}{3}\) is crucial, examiners see it omitted constantly.
+    For a sphere: <strong>V = \(\frac{4}{3}\pi r^3\)</strong>. Both formulas are printed on the exam paper, but you still lose marks if you substitute wrong values.
+  </div>
+</div>
+
+<script>
+  var r=4, rD=4;
+  var SPRING=0.12;
+
+  var canvas=document.getElementById('graph');
+  var ctx=canvas.getContext('2d');
+  var W=560, H=360;
+  var DPR=window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  function FRAC(n,d){return '<span class="kfrac"><span class="knum">'+n+'</span><span class="kden">'+d+'</span></span>';}
+  function f2(v){return (Math.round(v*100)/100).toFixed(2);}
+  function f1(v){return (Math.round(v*10)/10).toFixed(1);}
+
+  var COLS = {
+    cone:'#ff822c',
+    sphere:'#ff4670',
+    cyl:'#00abfa'
+  };
+
+  function drawCone(cx, base, r_v, h_v, col) {
+    // base = y of base circle, r_v and h_v in pixels
+    var ey = r_v * 0.32; // ellipse y-radius
+    var tip_y = base - h_v;
+
+    // Fill
+    ctx.beginPath();
+    ctx.moveTo(cx-r_v, base);
+    ctx.lineTo(cx, tip_y);
+    ctx.lineTo(cx+r_v, base);
+    ctx.closePath();
+    ctx.fillStyle=col+'22'; ctx.fill();
+
+    // Body outline (sides)
+    ctx.strokeStyle=col; ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(cx-r_v, base);
+    ctx.lineTo(cx, tip_y);
+    ctx.lineTo(cx+r_v, base);
+    ctx.stroke();
+
+    // Base ellipse
+    ctx.beginPath(); ctx.ellipse(cx, base, r_v, ey, 0, 0, Math.PI*2);
+    ctx.fillStyle=col+'30'; ctx.fill();
+    ctx.strokeStyle=col; ctx.lineWidth=1.8; ctx.stroke();
+  }
+
+  function drawSphere(cx, cy, r_v, col) {
+    // Main circle
+    ctx.beginPath(); ctx.arc(cx, cy, r_v, 0, Math.PI*2);
+    ctx.fillStyle=col+'1e'; ctx.fill();
+    ctx.strokeStyle=col; ctx.lineWidth=2; ctx.stroke();
+
+    // Equator ellipse
+    ctx.beginPath(); ctx.ellipse(cx, cy, r_v, r_v*0.32, 0, 0, Math.PI*2);
+    ctx.strokeStyle=col+'55'; ctx.lineWidth=1.2; ctx.stroke();
+  }
+
+  function drawCylinder(cx, top, r_v, h_v, col) {
+    var ey = r_v * 0.32;
+    var bottom = top + h_v;
+
+    // Body fill
+    ctx.fillStyle=col+'18';
+    ctx.fillRect(cx-r_v, top, 2*r_v, h_v);
+
+    // Body sides
+    ctx.strokeStyle=col; ctx.lineWidth=1.8;
+    ctx.beginPath();
+    ctx.moveTo(cx-r_v, top); ctx.lineTo(cx-r_v, bottom);
+    ctx.moveTo(cx+r_v, top); ctx.lineTo(cx+r_v, bottom);
+    ctx.stroke();
+
+    // Bottom ellipse
+    ctx.beginPath(); ctx.ellipse(cx, bottom, r_v, ey, 0, 0, Math.PI*2);
+    ctx.fillStyle=col+'28'; ctx.fill();
+    ctx.strokeStyle=col; ctx.lineWidth=1.8; ctx.stroke();
+
+    // Top ellipse
+    ctx.beginPath(); ctx.ellipse(cx, top, r_v, ey, 0, 0, Math.PI*2);
+    ctx.fillStyle=col+'30'; ctx.fill();
+    ctx.strokeStyle=col; ctx.lineWidth=1.8; ctx.stroke();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H); ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var S = Math.min(22, 90/rD);  // px per unit, shrinks for large r
+    var r_v = rD * S;             // visual radius in px
+    var h_v = 2 * r_v;            // visual height = 2r in px (sphere diameter)
+    var r_v = Math.min(r_v, 80);
+    var h_v = 2 * r_v;
+
+    var baseY = 205; // y of all shape bases
+    var col1x=95, col2x=280, col3x=465;
+
+    // ── Shape column headers ────────────────────────────────────────────
+    ctx.font='bold 13px -apple-system, sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+    ctx.fillStyle=COLS.cone;   ctx.fillText('CONE',     col1x, 18);
+    ctx.fillStyle=COLS.sphere; ctx.fillText('SPHERE',   col2x, 18);
+    ctx.fillStyle=COLS.cyl;    ctx.fillText('CYLINDER', col3x, 18);
+
+    // ── Shapes ─────────────────────────────────────────────────────────
+    drawCone(col1x, baseY, r_v, h_v, COLS.cone);
+    drawSphere(col2x, baseY - r_v, r_v, COLS.sphere);
+    drawCylinder(col3x, baseY-h_v, r_v, h_v, COLS.cyl);
+
+    // ── r label on each (radius indicator) ─────────────────────────────
+    var labelY = baseY + 14;
+    ctx.font='13px Courier New, monospace'; ctx.textBaseline='top';
+    ctx.fillStyle=COLS.cone;
+    ctx.textAlign='center'; ctx.fillText('r='+f1(rD)+', h='+f1(2*rD), col1x, labelY);
+    ctx.fillStyle=COLS.sphere;
+    ctx.fillText('r='+f1(rD), col2x, labelY);
+    ctx.fillStyle=COLS.cyl;
+    ctx.fillText('r='+f1(rD)+', h='+f1(2*rD), col3x, labelY);
+
+    // ── Volume ratio bars ───────────────────────────────────────────────
+    var barAreaTop = 244;
+    var unitW = (W - 80) / 6; // one "unit" in px (6 units total)
+    var barY  = barAreaTop + 14;
+    var barH  = 20;
+
+    // bar 1: cone = 1 unit
+    var b1w = unitW;
+    ctx.fillStyle=COLS.cone+'55'; ctx.fillRect(40, barY, b1w, barH);
+    ctx.strokeStyle=COLS.cone; ctx.lineWidth=1.5; ctx.strokeRect(40, barY, b1w, barH);
+    ctx.fillStyle=COLS.cone; ctx.font='bold 14px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('1', 40+b1w/2, barY+barH/2);
+
+    // bar 2: sphere = 2 units
+    var b2w = 2*unitW;
+    ctx.fillStyle=COLS.sphere+'55'; ctx.fillRect(40, barY+barH+6, b2w, barH);
+    ctx.strokeStyle=COLS.sphere; ctx.lineWidth=1.5; ctx.strokeRect(40, barY+barH+6, b2w, barH);
+    ctx.fillStyle=COLS.sphere; ctx.font='bold 14px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('2', 40+b2w/2, barY+barH+6+barH/2);
+
+    // bar 3: cylinder = 3 units
+    var b3w = 3*unitW;
+    ctx.fillStyle=COLS.cyl+'55'; ctx.fillRect(40, barY+2*(barH+6), b3w, barH);
+    ctx.strokeStyle=COLS.cyl; ctx.lineWidth=1.5; ctx.strokeRect(40, barY+2*(barH+6), b3w, barH);
+    ctx.fillStyle=COLS.cyl; ctx.font='bold 14px Courier New, monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('3', 40+b3w/2, barY+2*(barH+6)+barH/2);
+
+    // ratio label on right
+    ctx.fillStyle='#fff067'; ctx.font='bold 20px Courier New, monospace';
+    ctx.textAlign='left'; ctx.textBaseline='middle';
+    // centre label on all 3 bar rows
+    ctx.fillText('1 : 2 : 3', 40+b3w+16, barY + (2*(barH+6)+barH)/2);
+  }
+
+  function buildEq(){
+    var Vc = (1/3)*Math.PI*rD*rD*(2*rD);
+    var Vs = (4/3)*Math.PI*rD*rD*rD;
+    var Vy = Math.PI*rD*rD*(2*rD);
+    return (
+      'V<sub>cone</sub> &nbsp;&nbsp;= '+FRAC('1','3')+'πr<sup>2</sup>h = '+FRAC('1','3')+'×π×'+f1(rD)+'<sup>2</sup>×'+f1(2*rD)+' = <strong style="color:'+COLS.cone+'">'+f2(Vc)+' cm³</strong><br>'+
+      'V<sub>sphere</sub> = '+FRAC('4','3')+'πr<sup>3</sup> &nbsp;= '+FRAC('4','3')+'×π×'+f1(rD)+'<sup>3</sup> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong style="color:'+COLS.sphere+'">'+f2(Vs)+' cm³</strong><br>'+
+      'V<sub>cylinder</sub> = πr<sup>2</sup>h &nbsp;&nbsp;= π×'+f1(rD)+'<sup>2</sup>×'+f1(2*rD)+'  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <strong style="color:'+COLS.cyl+'">'+f2(Vy)+' cm³</strong>'
+    );
+  }
+
+  function tick(){
+    rD += (r-rD)*SPRING;
+    draw();
+    document.getElementById('eq-display').innerHTML = buildEq();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('sl-r').oninput=function(){
+    r=parseFloat(this.value);
+    document.getElementById('lbl-r').textContent='r = '+f1(r)+' cm';
+  };
+
+  tick();
+</script>
+</body>
+</html>
