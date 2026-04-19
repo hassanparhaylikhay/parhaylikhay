@@ -91,19 +91,13 @@
     var rect=canvas.getBoundingClientRect();
     var cx=e.touches?e.touches[0].clientX:e.clientX;
     var cy=e.touches?e.touches[0].clientY:e.clientY;
-    return {x:(cx-rect.left)*(W/rect.width),(cy-rect.top)*(H/rect.height)};
-  }
-  function getPos(e){
-    var rect=canvas.getBoundingClientRect();
-    var cx=e.touches?e.touches[0].clientX:e.clientX;
-    var cy=e.touches?e.touches[0].clientY:e.clientY;
     return {x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height)};
   }
   function nearM(px,py,mx,my){
     var p=toC(mx,my); var dx=px-p.x,dy=py-p.y;
     return Math.sqrt(dx*dx+dy*dy)<HIT;
   }
-  function snapM(v){ return {x:Math.round(v.x*2)/2, y:Math.round(v.y*2)/2}; }
+  function snapM(m){ return {x:Math.round(m.mx*2)/2, y:Math.round(m.my*2)/2}; }
 
   canvas.addEventListener('mousedown',function(e){
     var p=getPos(e);
@@ -115,9 +109,9 @@
     var p=getPos(e);
     if(dragging){
       var m=fromC(p.x,p.y); var s=snapM(m);
-      if(dragging==='HA') HA={x:s.mx,y:s.my};
-      else if(dragging==='TA') TA={x:s.mx,y:s.my};
-      else if(dragging==='HB') HB={x:s.mx,y:s.my};
+      if(dragging==='HA') HA={x:s.x,y:s.y};
+      else if(dragging==='TA') TA={x:s.x,y:s.y};
+      else if(dragging==='HB') HB={x:s.x,y:s.y};
     } else {
       canvas.style.cursor=(nearM(p.x,p.y,HA.x,HA.y)||nearM(p.x,p.y,TA.x,TA.y)||nearM(p.x,p.y,HB.x,HB.y))?'grab':'default';
     }
@@ -133,9 +127,9 @@
   canvas.addEventListener('touchmove',function(e){
     if(!dragging)return; e.preventDefault();
     var p=getPos(e); var m=fromC(p.x,p.y); var s=snapM(m);
-    if(dragging==='HA') HA={x:s.mx,y:s.my};
-    else if(dragging==='TA') TA={x:s.mx,y:s.my};
-    else if(dragging==='HB') HB={x:s.mx,y:s.my};
+    if(dragging==='HA') HA={x:s.x,y:s.y};
+    else if(dragging==='TA') TA={x:s.x,y:s.y};
+    else if(dragging==='HB') HB={x:s.x,y:s.y};
   },{passive:false});
   canvas.addEventListener('touchend',function(){dragging=null;});
 
