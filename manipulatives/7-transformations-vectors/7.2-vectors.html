@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Vectors</title>
+  <meta property="og:title" content="Vectors"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="620"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:14px; color:#f0f0ee; min-height:54px; line-height:1.9; }
+    canvas { display:block; cursor:default; }
+    .mode-row { width:560px; display:flex; gap:8px; padding:8px 4px; border-top:1px solid #1a2535; }
+    .mode-btn { flex:1; padding:6px; background:#0d1f2d; border:1px solid #1e3a52; color:#b4b2a9; font-size:13px; border-radius:4px; cursor:pointer; }
+    .mode-btn.active { border-color:#00abfa; background:#001f35; color:#00abfa; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+    .kfrac { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; gap:0; line-height:1.15; margin:0 2px; }
+    .kfrac .knum { border-bottom:1.5px solid currentColor; padding:0 3px; text-align:center; font-size:0.85em; }
+    .kfrac .kden { padding:0 3px; text-align:center; font-size:0.85em; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Vectors — Head-to-Tail Addition & Subtraction</div>
+  <div class="instruction">
+    Drag the <b style="color:#00abfa">tips of a and b</b> (and their tails).
+    The <b style="color:#fff067">resultant</b> vector shows a+b or a−b.
+    Switch modes to see how subtraction reverses b and adds it head-to-tail.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+<canvas id="graph" width="560" height="360"></canvas>
+
+<div class="mode-row">
+  <button class="mode-btn active" id="btn-add">a + b</button>
+  <button class="mode-btn" id="btn-sub">a − b</button>
+  <button class="mode-btn" id="btn-scale">2a and ½b</button>
+</div>
+
+<div class="footer">
+  <div class="tip" id="tip-text">
+    Cambridge tip: <strong>always write vectors as column vectors</strong> in Cambridge 4024 — not as (x, y) coordinates.
+    The magnitude of vector <b>v</b> = <span class="kfrac"><span class="knum">x</span><span class="kden">y</span></span> is |<b>v</b>| = √(x² + y²).
+    To go from A to B using position vectors: <b>AB</b> = <b>b</b> − <b>a</b>.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=360;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var X_MIN=-7, X_MAX=7, Y_MIN=-4.5, Y_MAX=4.5;
+  function toC(mx,my){ return {x:(mx-X_MIN)/(X_MAX-X_MIN)*W, y:(Y_MAX-my)/(Y_MAX-Y_MIN)*H}; }
+  function fromC(cx,cy){ return {mx:X_MIN+(cx/W)*(X_MAX-X_MIN), my:Y_MAX-(cy/H)*(Y_MAX-Y_MIN)}; }
+
+  // Vector a: tail at TA, tip at HA
+  // Vector b: tail at TB, tip at HB
+  // In add/sub mode b's tail is placed at a's tip automatically
+  var TA={x:-4,y:-1}, HA={x:-1,y:2}; // a = (3, 3)
+  var HB={x:2,y:1};                    // b = (3, -1) relative; absolute tip
+  // TB is set to HA in add mode
+  var TAD={x:-4,y:-1}, HAD={x:-1,y:2}, HBD={x:2,y:1};
+  var SPRING=0.13;
+
+  var mode='add'; // 'add','sub','scale'
+
+  var dragging=null; // 'TA','HA','HB'
+  var HIT=18;
+
+  function getPos(e){
+    var rect=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return {x:(cx-rect.left)*(W/rect.width),(cy-rect.top)*(H/rect.height)};
+  }
+  function getPos(e){
+    var rect=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return {x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height)};
+  }
+  function nearM(px,py,mx,my){
+    var p=toC(mx,my); var dx=px-p.x,dy=py-p.y;
+    return Math.sqrt(dx*dx+dy*dy)<HIT;
+  }
+  function snapM(v){ return {x:Math.round(v.x*2)/2, y:Math.round(v.y*2)/2}; }
+
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e);
+    if(nearM(p.x,p.y,HA.x,HA.y)){dragging='HA';e.preventDefault();}
+    else if(nearM(p.x,p.y,TA.x,TA.y)){dragging='TA';e.preventDefault();}
+    else if(nearM(p.x,p.y,HB.x,HB.y)){dragging='HB';e.preventDefault();}
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if(dragging){
+      var m=fromC(p.x,p.y); var s=snapM(m);
+      if(dragging==='HA') HA={x:s.mx,y:s.my};
+      else if(dragging==='TA') TA={x:s.mx,y:s.my};
+      else if(dragging==='HB') HB={x:s.mx,y:s.my};
+    } else {
+      canvas.style.cursor=(nearM(p.x,p.y,HA.x,HA.y)||nearM(p.x,p.y,TA.x,TA.y)||nearM(p.x,p.y,HB.x,HB.y))?'grab':'default';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){dragging=null;});
+  canvas.addEventListener('mouseleave',function(){dragging=null;});
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e);
+    if(nearM(p.x,p.y,HA.x,HA.y)){dragging='HA';e.preventDefault();}
+    else if(nearM(p.x,p.y,TA.x,TA.y)){dragging='TA';e.preventDefault();}
+    else if(nearM(p.x,p.y,HB.x,HB.y)){dragging='HB';e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(!dragging)return; e.preventDefault();
+    var p=getPos(e); var m=fromC(p.x,p.y); var s=snapM(m);
+    if(dragging==='HA') HA={x:s.mx,y:s.my};
+    else if(dragging==='TA') TA={x:s.mx,y:s.my};
+    else if(dragging==='HB') HB={x:s.mx,y:s.my};
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){dragging=null;});
+
+  ['btn-add','btn-sub','btn-scale'].forEach(function(id){
+    document.getElementById(id).addEventListener('click',function(){
+      mode=id.replace('btn-','');
+      document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('active');});
+      this.classList.add('active');
+    });
+  });
+
+  function drawArrow(x1,y1,x2,y2,color,lw,label){
+    var p1=toC(x1,y1), p2=toC(x2,y2);
+    var dx=p2.x-p1.x, dy=p2.y-p1.y;
+    var len=Math.sqrt(dx*dx+dy*dy);
+    if(len<4) return;
+    var ux=dx/len, uy=dy/len;
+    var arrowLen=14, arrowW=7;
+    ctx.strokeStyle=color; ctx.lineWidth=lw;
+    ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+    // Arrowhead
+    ctx.fillStyle=color;
+    ctx.beginPath();
+    ctx.moveTo(p2.x,p2.y);
+    ctx.lineTo(p2.x-arrowLen*ux+arrowW*uy, p2.y-arrowLen*uy-arrowW*ux);
+    ctx.lineTo(p2.x-arrowLen*ux-arrowW*uy, p2.y-arrowLen*uy+arrowW*ux);
+    ctx.closePath(); ctx.fill();
+    // Label at midpoint
+    if(label){
+      var mx2=(p1.x+p2.x)/2, my2=(p1.y+p2.y)/2;
+      var nx=-uy, ny=ux; // normal
+      ctx.fillStyle=color; ctx.font='bold 14px Courier New,monospace';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(label, mx2+nx*18, my2+ny*18);
+    }
+  }
+
+  function fmtV(vx,vy){ return '('+Math.round(vx*10)/10+', '+Math.round(vy*10)/10+')'; }
+  function mag(vx,vy){ return Math.sqrt(vx*vx+vy*vy); }
+  function fmtN(v){ return (Math.round(v*100)/100).toFixed(2); }
+
+  function FRAC(n,d){
+    return '<span class="kfrac"><span class="knum">'+n+'</span><span class="kden">'+d+'</span></span>';
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var ky=Math.ceil(Y_MIN);ky<=Y_MAX;ky++){
+      var ya=toC(X_MIN,ky),yb=toC(X_MAX,ky); ctx.moveTo(ya.x,ya.y); ctx.lineTo(yb.x,yb.y);
+    }
+    for(var kx=Math.ceil(X_MIN);kx<=X_MAX;kx++){
+      var xa=toC(kx,Y_MIN),xb=toC(kx,Y_MAX); ctx.moveTo(xa.x,xa.y); ctx.lineTo(xb.x,xb.y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    var ax0=toC(X_MIN,0),ax1=toC(X_MAX,0);
+    ctx.beginPath(); ctx.moveTo(ax0.x,ax0.y); ctx.lineTo(ax1.x,ax1.y); ctx.stroke();
+    var ay0=toC(0,Y_MIN),ay1=toC(0,Y_MAX);
+    ctx.beginPath(); ctx.moveTo(ay0.x,ay0.y); ctx.lineTo(ay1.x,ay1.y); ctx.stroke();
+
+    ctx.fillStyle='#3a5060'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var kx2=X_MIN+1;kx2<X_MAX;kx2++){
+      if(kx2===0)continue; var pp=toC(kx2,0); ctx.fillText(kx2,pp.x,pp.y+3);
+    }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var ky2=Y_MIN+1;ky2<Y_MAX;ky2++){
+      if(ky2===0)continue; var pp=toC(0,ky2); ctx.fillText(ky2,pp.x-4,pp.y);
+    }
+
+    var ax=HAD.x-TAD.x, ay=HAD.y-TAD.y;
+    // b's absolute tip is HBD; for mode==add: TB = HA (head-to-tail)
+    // in all modes b is drawn from HA to HA+b
+    var bx=HBD.x-HA.x, by=HBD.y-HA.y; // b vector components (using non-animated for display)
+    // Use display for actual bx/by
+    var bxD=HBD.x-HAD.x, byD=HBD.y-HAD.y;
+
+    if(mode==='add'){
+      // a: TA → HA
+      drawArrow(TAD.x,TAD.y, HAD.x,HAD.y, '#00abfa', 3, 'a');
+      // b placed at head of a: HA → HA+b
+      drawArrow(HAD.x,HAD.y, HAD.x+bxD,HAD.y+byD, '#ff822c', 3, 'b');
+      // resultant: TA → HA+b
+      drawArrow(TAD.x,TAD.y, HAD.x+bxD,HAD.y+byD, '#fff067', 3.5, 'a+b');
+
+      var rx=ax+bxD, ry=ay+byD;
+      document.getElementById('eq-display').innerHTML=
+        '<b style="color:#00abfa">a</b> = '+FRAC(Math.round(ax*10)/10,Math.round(ay*10)/10)+
+        '&nbsp;&nbsp;<b style="color:#ff822c">b</b> = '+FRAC(Math.round(bxD*10)/10,Math.round(byD*10)/10)+
+        '<br><b style="color:#fff067">a+b</b> = '+FRAC(Math.round(rx*10)/10,Math.round(ry*10)/10)+
+        '&nbsp;&nbsp;|a+b| = <strong style="color:#fff067">'+fmtN(mag(rx,ry))+'</strong>';
+
+    } else if(mode==='sub'){
+      // a
+      drawArrow(TAD.x,TAD.y, HAD.x,HAD.y, '#00abfa', 3, 'a');
+      // −b at head of a (reversed)
+      drawArrow(HAD.x,HAD.y, HAD.x-bxD,HAD.y-byD, '#ff4670', 2.5, '−b');
+      // b shown faintly from HA (to compare)
+      ctx.globalAlpha=0.3;
+      drawArrow(HAD.x,HAD.y, HAD.x+bxD,HAD.y+byD, '#ff822c', 1.5, '');
+      ctx.globalAlpha=1;
+      // resultant
+      drawArrow(TAD.x,TAD.y, HAD.x-bxD,HAD.y-byD, '#fff067', 3.5, 'a−b');
+
+      var rx=ax-bxD, ry=ay-byD;
+      document.getElementById('eq-display').innerHTML=
+        '<b style="color:#00abfa">a</b> = '+FRAC(Math.round(ax*10)/10,Math.round(ay*10)/10)+
+        '&nbsp;&nbsp;<b style="color:#ff822c">b</b> = '+FRAC(Math.round(bxD*10)/10,Math.round(byD*10)/10)+
+        '<br><b style="color:#fff067">a−b</b> = '+FRAC(Math.round(rx*10)/10,Math.round(ry*10)/10)+
+        '&nbsp;&nbsp;|a−b| = <strong style="color:#fff067">'+fmtN(mag(rx,ry))+'</strong>';
+
+    } else { // scale
+      // a from origin
+      drawArrow(0,0, ax,ay, '#00abfa', 2.5, 'a');
+      // 2a
+      drawArrow(0,0, 2*ax,2*ay, '#0fee89', 3, '2a');
+      // ½b from origin
+      drawArrow(0,0, bxD/2,byD/2, '#ff822c', 2, '½b');
+      // b
+      drawArrow(0,0, bxD,byD, '#ff822c66', 2, 'b');
+
+      document.getElementById('eq-display').innerHTML=
+        '<b style="color:#00abfa">a</b> = '+FRAC(Math.round(ax*10)/10,Math.round(ay*10)/10)+
+        '&nbsp;&nbsp;→&nbsp;&nbsp;'+
+        '<b style="color:#0fee89">2a</b> = '+FRAC(Math.round(2*ax*10)/10,Math.round(2*ay*10)/10)+
+        '<br><b style="color:#ff822c">b</b> = '+FRAC(Math.round(bxD*10)/10,Math.round(byD*10)/10)+
+        '&nbsp;&nbsp;→&nbsp;&nbsp;'+
+        '<b style="color:#ff822c">½b</b> = '+FRAC(Math.round(bxD/2*10)/10,Math.round(byD/2*10)/10);
+    }
+
+    // Control dots
+    var dots=[
+      {m:TAD, c:'#00abfa', lbl:'tail'},
+      {m:HAD, c:'#00abfa', lbl:'a'},
+      {m:HBD, c:'#ff822c', lbl:'b tip'}
+    ];
+    dots.forEach(function(d){
+      var p=toC(d.m.x,d.m.y);
+      ctx.fillStyle=d.c;
+      ctx.beginPath(); ctx.arc(p.x,p.y,7,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#0d1216'; ctx.lineWidth=1.5; ctx.stroke();
+    });
+  }
+
+  function tick(){
+    TAD.x+=(TA.x-TAD.x)*SPRING; TAD.y+=(TA.y-TAD.y)*SPRING;
+    HAD.x+=(HA.x-HAD.x)*SPRING; HAD.y+=(HA.y-HAD.y)*SPRING;
+    HBD.x+=(HB.x-HBD.x)*SPRING; HBD.y+=(HB.y-HBD.y)*SPRING;
+    draw();
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Enlargement</title>
+  <meta property="og:title" content="Enlargement"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="640"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:14px; color:#f0f0ee; min-height:30px; line-height:1.9; }
+    canvas { display:block; cursor:default; }
+    .sliders { width:560px; display:flex; flex-direction:column; gap:9px; padding:10px 4px; border-top:1px solid #1a2535; border-bottom:1px solid #1a2535; }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New',monospace; font-size:13px; width:120px; flex-shrink:0; }
+    input[type="range"] { flex:1; height:4px; -webkit-appearance:none; background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer; }
+    #sl-k::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:55px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Enlargement — Scale Factor & Rays from Centre</div>
+  <div class="instruction">
+    Drag the <b style="color:#fff067">yellow dot</b> to choose the centre of enlargement.
+    Slide <b style="color:#0fee89">k</b> through zero and negative — the image jumps to the other side
+    of the centre. Rays always pass through the centre and through both object and image.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+<canvas id="graph" width="560" height="360"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#0fee89" id="lbl-k">k = 2.0</div>
+    <input type="range" id="sl-k" min="-3" max="3" step="0.1" value="2"/>
+    <div class="slider-bounds">−3 … 3</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>a negative scale factor means the image is on the opposite side of the centre</strong> and is also rotated 180°.
+    The mark scheme always wants: "enlargement, scale factor k, centre (x, y)."
+    For fractional k (e.g. ½): the image is smaller — this is still called an enlargement.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=360;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var X_MIN=-7, X_MAX=7, Y_MIN=-4.5, Y_MAX=4.5;
+  function toC(mx,my){ return {x:(mx-X_MIN)/(X_MAX-X_MIN)*W, y:(Y_MAX-my)/(Y_MAX-Y_MIN)*H}; }
+  function fromC(cx,cy){ return {mx:X_MIN+(cx/W)*(X_MAX-X_MIN), my:Y_MAX-(cy/H)*(Y_MAX-Y_MIN)}; }
+
+  var OBJ=[{x:1,y:1},{x:3,y:1},{x:1,y:3}];
+  var LABELS=['A','B','C'];
+
+  var kT=2, kD=2;
+  var CX=-1, CY=-1;
+  var CXD=-1, CYD=-1;
+  var SPRING=0.12;
+  var draggingCentre=false;
+
+  function enlargePt(px,py,cx,cy,k){
+    return {x:cx+k*(px-cx), y:cy+k*(py-cy)};
+  }
+  function fmtN(v){var r=Math.round(v*10)/10; return r%1===0?r.toFixed(0):r.toFixed(1);}
+  function fmtK(v){return (Math.round(v*10)/10).toFixed(1);}
+
+  function getPos(e){
+    var rect=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return {x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height)};
+  }
+  function nearPt(px,py,mx,my){
+    var p=toC(mx,my); var dx=px-p.x,dy=py-p.y;
+    return Math.sqrt(dx*dx+dy*dy)<16;
+  }
+
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e);
+    if(nearPt(p.x,p.y,CX,CY)){draggingCentre=true;e.preventDefault();}
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if(draggingCentre){
+      var m=fromC(p.x,p.y);
+      CX=Math.round(m.mx*2)/2; CY=Math.round(m.my*2)/2;
+    } else {
+      canvas.style.cursor=nearPt(p.x,p.y,CX,CY)?'grab':'default';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){draggingCentre=false;});
+  canvas.addEventListener('mouseleave',function(){draggingCentre=false;});
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e);
+    if(nearPt(p.x,p.y,CX,CY)){draggingCentre=true;e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(!draggingCentre)return; e.preventDefault();
+    var p=getPos(e); var m=fromC(p.x,p.y);
+    CX=Math.round(m.mx*2)/2; CY=Math.round(m.my*2)/2;
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){draggingCentre=false;});
+
+  document.getElementById('sl-k').oninput=function(){
+    kT=parseFloat(this.value);
+    document.getElementById('lbl-k').textContent='k = '+fmtK(kT);
+  };
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var ky=Math.ceil(Y_MIN);ky<=Y_MAX;ky++){
+      var ya=toC(X_MIN,ky),yb=toC(X_MAX,ky); ctx.moveTo(ya.x,ya.y); ctx.lineTo(yb.x,yb.y);
+    }
+    for(var kx=Math.ceil(X_MIN);kx<=X_MAX;kx++){
+      var xa=toC(kx,Y_MIN),xb=toC(kx,Y_MAX); ctx.moveTo(xa.x,xa.y); ctx.lineTo(xb.x,xb.y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    var ax0=toC(X_MIN,0),ax1=toC(X_MAX,0);
+    ctx.beginPath(); ctx.moveTo(ax0.x,ax0.y); ctx.lineTo(ax1.x,ax1.y); ctx.stroke();
+    var ay0=toC(0,Y_MIN),ay1=toC(0,Y_MAX);
+    ctx.beginPath(); ctx.moveTo(ay0.x,ay0.y); ctx.lineTo(ay1.x,ay1.y); ctx.stroke();
+
+    ctx.fillStyle='#3a5060'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var kx2=X_MIN+1;kx2<X_MAX;kx2++){
+      if(kx2===0)continue; var pp=toC(kx2,0); ctx.fillText(kx2,pp.x,pp.y+3);
+    }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var ky2=Y_MIN+1;ky2<Y_MAX;ky2++){
+      if(ky2===0)continue; var pp=toC(0,ky2); ctx.fillText(ky2,pp.x-4,pp.y);
+    }
+
+    var IMG=OBJ.map(function(pt){ return enlargePt(pt.x,pt.y,CXD,CYD,kD); });
+    var cp=toC(CXD,CYD);
+
+    // Rays: extend from centre through both object and image vertices
+    var RAY_COLORS=['#0fee8930','#ff822c30','#ff467030'];
+    OBJ.forEach(function(pt,i){
+      var ip=IMG[i];
+      // Direction: centre → object vertex
+      var dx=pt.x-CXD, dy=pt.y-CYD;
+      var len=Math.sqrt(dx*dx+dy*dy);
+      if(len<0.01) return;
+      // Extend ray far in both directions
+      var ext=12;
+      var r0=toC(CXD-ext*(dx/len), CYD-ext*(dy/len));
+      var r1=toC(CXD+ext*(dx/len), CYD+ext*(dy/len));
+      ctx.strokeStyle=RAY_COLORS[i]; ctx.lineWidth=1.5;
+      ctx.setLineDash([6,4]);
+      ctx.beginPath(); ctx.moveTo(r0.x,r0.y); ctx.lineTo(r1.x,r1.y); ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // Object
+    var ops=OBJ.map(function(p){return toC(p.x,p.y);});
+    ctx.beginPath(); ctx.moveTo(ops[0].x,ops[0].y);
+    for(var i=1;i<ops.length;i++) ctx.lineTo(ops[i].x,ops[i].y);
+    ctx.closePath();
+    ctx.fillStyle='#00abfa15'; ctx.fill();
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=2.5; ctx.stroke();
+
+    // Image
+    var ips=IMG.map(function(p){return toC(p.x,p.y);});
+    ctx.beginPath(); ctx.moveTo(ips[0].x,ips[0].y);
+    for(var i=1;i<ips.length;i++) ctx.lineTo(ips[i].x,ips[i].y);
+    ctx.closePath();
+    var imgStroke=kD<0?'#ff4670':'#0fee89';
+    ctx.fillStyle=kD<0?'#ff467015':'#0fee8915'; ctx.fill();
+    ctx.strokeStyle=imgStroke; ctx.lineWidth=2.5; ctx.stroke();
+
+    // Labels
+    ctx.font='bold 13px Courier New,monospace';
+    OBJ.forEach(function(pt,i){
+      var p=toC(pt.x,pt.y);
+      ctx.fillStyle='#00abfa';
+      ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+      ctx.textAlign='right'; ctx.textBaseline='bottom'; ctx.fillText(LABELS[i],p.x-5,p.y-3);
+    });
+    IMG.forEach(function(pt,i){
+      var p=toC(pt.x,pt.y);
+      ctx.fillStyle=imgStroke;
+      ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+      ctx.textAlign='left'; ctx.textBaseline='bottom'; ctx.fillText(LABELS[i]+"'",p.x+5,p.y-3);
+    });
+
+    // Centre dot
+    ctx.fillStyle='#fff067';
+    ctx.beginPath(); ctx.arc(cp.x,cp.y,8,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#0d1216'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#fff067'; ctx.font='bold 12px Courier New,monospace';
+    ctx.textAlign='left'; ctx.textBaseline='bottom';
+    ctx.fillText('('+fmtN(CXD)+','+fmtN(CYD)+')',cp.x+10,cp.y-4);
+
+    // Scale factor badge
+    var kAbs=Math.abs(kD);
+    var badgeColor=kD<0?'#ff4670':kD<1&&kD>0?'#fff067':'#0fee89';
+    ctx.fillStyle='#0d1f2d'; ctx.strokeStyle=badgeColor; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.roundRect(W-160,10,150,34,5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=badgeColor; ctx.font='bold 15px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    var kLabel=kD<0?'SF = '+fmtK(kD)+' (negative)':Math.abs(kD)<1?'SF = '+fmtK(kD)+' (fraction)':'SF = '+fmtK(kD);
+    ctx.fillText(kLabel,W-160+75,27);
+
+    // Eq bar
+    document.getElementById('eq-display').innerHTML=
+      'Enlargement, SF = <strong style="color:'+badgeColor+'">'+fmtK(kD)+'</strong>'+
+      ', centre (<span style="color:#fff067">'+fmtN(CXD)+', '+fmtN(CYD)+'</span>)'+
+      '&nbsp;&nbsp; A\'=(<span style="color:'+imgStroke+'">'+fmtN(IMG[0].x)+','+fmtN(IMG[0].y)+'</span>)';
+  }
+
+  function tick(){
+    kD+=(kT-kD)*SPRING;
+    CXD+=(CX-CXD)*SPRING; CYD+=(CY-CYD)*SPRING;
+    draw();
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Reflection</title>
+  <meta property="og:title" content="Reflection"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="620"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:14px; color:#f0f0ee; min-height:30px; line-height:1.9; }
+    canvas { display:block; cursor:default; }
+    .presets { width:560px; display:flex; gap:8px; padding:8px 4px; flex-wrap:wrap; border-top:1px solid #1a2535; }
+    .preset-btn { font-family:'Courier New',monospace; font-size:12px; padding:5px 12px; border:1px solid #1e3a52; background:#0d1f2d; color:#b4b2a9; border-radius:4px; cursor:pointer; }
+    .preset-btn:hover { border-color:#00abfa; color:#00abfa; }
+    .preset-btn.active { border-color:#00abfa; background:#001f35; color:#00abfa; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Reflection — Mirror Line Explorer</div>
+  <div class="instruction">
+    Drag the <b style="color:#fff067">two yellow handles</b> to set any mirror line you like.
+    Watch the perpendicular bisectors confirm each vertex maps exactly to its image.
+    Use the preset buttons for the lines Cambridge tests most.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+<canvas id="graph" width="560" height="360"></canvas>
+
+<div class="presets">
+  <button class="preset-btn" id="btn-xaxis">x-axis (y=0)</button>
+  <button class="preset-btn" id="btn-yaxis">y-axis (x=0)</button>
+  <button class="preset-btn" id="btn-yx">y = x</button>
+  <button class="preset-btn" id="btn-ynx">y = −x</button>
+  <button class="preset-btn" id="btn-y1">y = 1</button>
+  <button class="preset-btn" id="btn-x2">x = 2</button>
+</div>
+
+<div class="footer">
+  <div class="tip" id="tip-text">
+    Cambridge tip: <strong>always state the mirror line as an equation</strong> — "reflect in y = x" earns the mark, "reflect diagonally" does not.
+    For y = x: swap the coordinates — point (a, b) maps to (b, a). For x-axis: (a, b) → (a, −b). For y-axis: (a, b) → (−a, b).
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W = 560, H = 360;
+  var DPR = window.devicePixelRatio || 1;
+  canvas.width = W*DPR; canvas.height = H*DPR;
+  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  ctx.scale(DPR, DPR);
+
+  var X_MIN=-7, X_MAX=7, Y_MIN=-4.5, Y_MAX=4.5;
+  function toC(mx,my){ return {x:(mx-X_MIN)/(X_MAX-X_MIN)*W, y:(Y_MAX-my)/(Y_MAX-Y_MIN)*H}; }
+  function fromC(cx,cy){ return {mx:X_MIN+(cx/W)*(X_MAX-X_MIN), my:Y_MAX-(cy/H)*(Y_MAX-Y_MIN)}; }
+
+  // Object triangle
+  var OBJ = [{x:1,y:1},{x:4,y:1},{x:1,y:3}];
+  var LABELS = ['A','B','C'];
+
+  // Mirror line — defined by two control points in math coords
+  var P1 = {x:-3, y:-3}, P2 = {x:3, y:3}; // default: y=x
+  // Display (spring)
+  var P1D = {x:-3,y:-3}, P2D = {x:3,y:3};
+  var SPRING = 0.14;
+
+  function reflectPt(px,py,x1,y1,x2,y2){
+    var dx=x2-x1, dy=y2-y1;
+    var t=((px-x1)*dx+(py-y1)*dy)/(dx*dx+dy*dy);
+    return {x:2*(x1+t*dx)-px, y:2*(y1+t*dy)-py};
+  }
+
+  function midPt(a,b){ return {x:(a.x+b.x)/2, y:(a.y+b.y)/2}; }
+
+  function mirrorEquationLabel(){
+    var dx=P2.x-P1.x, dy=P2.y-P1.y;
+    var tol=0.01;
+    if(Math.abs(dx)<tol){ // vertical line x = c
+      return 'x = '+fmtN(P1.x);
+    }
+    if(Math.abs(dy)<tol){ // horizontal y = c
+      return 'y = '+fmtN(P1.y);
+    }
+    var m=dy/dx;
+    var c=P1.y-m*P1.x;
+    var mStr = Math.abs(m-1)<0.05?'':Math.abs(m+1)<0.05?'−':''+fmtN(m);
+    if(Math.abs(m-1)<0.05){ // y=x+c
+      if(Math.abs(c)<0.05) return 'y = x';
+      return 'y = x + '+fmtN(c);
+    }
+    if(Math.abs(m+1)<0.05){
+      if(Math.abs(c)<0.05) return 'y = −x';
+      return 'y = −x + '+fmtN(c);
+    }
+    return 'y = '+fmtN(m)+'x + '+fmtN(c);
+  }
+
+  function fmtN(v){ var r=Math.round(v*10)/10; return r%1===0?r.toFixed(0):r.toFixed(1); }
+
+  // Drag state
+  var dragPt = null; // 'p1' or 'p2'
+  var HIT = 16;
+
+  function getPos(e){
+    var rect=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return {x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height)};
+  }
+  function nearPt(px,py,mx,my){
+    var p=toC(mx,my); var dx=px-p.x,dy=py-p.y;
+    return Math.sqrt(dx*dx+dy*dy)<HIT;
+  }
+
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e);
+    if(nearPt(p.x,p.y,P1.x,P1.y)){dragPt='p1';e.preventDefault();}
+    else if(nearPt(p.x,p.y,P2.x,P2.y)){dragPt='p2';e.preventDefault();}
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if(dragPt){
+      var m=fromC(p.x,p.y);
+      var snapped={x:Math.round(m.mx*2)/2, y:Math.round(m.my*2)/2};
+      if(dragPt==='p1') P1=snapped; else P2=snapped;
+    } else {
+      canvas.style.cursor=(nearPt(p.x,p.y,P1.x,P1.y)||nearPt(p.x,p.y,P2.x,P2.y))?'grab':'default';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){dragPt=null;});
+  canvas.addEventListener('mouseleave',function(){dragPt=null;});
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e);
+    if(nearPt(p.x,p.y,P1.x,P1.y)){dragPt='p1';e.preventDefault();}
+    else if(nearPt(p.x,p.y,P2.x,P2.y)){dragPt='p2';e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(!dragPt)return; e.preventDefault();
+    var p=getPos(e); var m=fromC(p.x,p.y);
+    var snapped={x:Math.round(m.mx*2)/2, y:Math.round(m.my*2)/2};
+    if(dragPt==='p1') P1=snapped; else P2=snapped;
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){dragPt=null;});
+
+  // Preset buttons
+  var presets = {
+    'btn-xaxis': function(){ P1={x:-3,y:0}; P2={x:3,y:0}; },
+    'btn-yaxis': function(){ P1={x:0,y:-3}; P2={x:0,y:3}; },
+    'btn-yx':    function(){ P1={x:-3,y:-3};P2={x:3,y:3}; },
+    'btn-ynx':   function(){ P1={x:-3,y:3}; P2={x:3,y:-3}; },
+    'btn-y1':    function(){ P1={x:-3,y:1}; P2={x:3,y:1}; },
+    'btn-x2':    function(){ P1={x:2,y:-3}; P2={x:2,y:3}; }
+  };
+  Object.keys(presets).forEach(function(id){
+    document.getElementById(id).addEventListener('click',function(){
+      presets[id]();
+      document.querySelectorAll('.preset-btn').forEach(function(b){b.classList.remove('active');});
+      this.classList.add('active');
+    });
+  });
+  document.getElementById('btn-yx').classList.add('active');
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var ky=Math.ceil(Y_MIN);ky<=Y_MAX;ky++){
+      var ya=toC(X_MIN,ky), yb=toC(X_MAX,ky);
+      ctx.moveTo(ya.x,ya.y); ctx.lineTo(yb.x,yb.y);
+    }
+    for(var kx=Math.ceil(X_MIN);kx<=X_MAX;kx++){
+      var xa=toC(kx,Y_MIN), xb=toC(kx,Y_MAX);
+      ctx.moveTo(xa.x,xa.y); ctx.lineTo(xb.x,xb.y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    var ax0=toC(X_MIN,0),ax1=toC(X_MAX,0);
+    ctx.beginPath(); ctx.moveTo(ax0.x,ax0.y); ctx.lineTo(ax1.x,ax1.y); ctx.stroke();
+    var ay0=toC(0,Y_MIN),ay1=toC(0,Y_MAX);
+    ctx.beginPath(); ctx.moveTo(ay0.x,ay0.y); ctx.lineTo(ay1.x,ay1.y); ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle='#3a5060'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var kx2=Math.ceil(X_MIN)+1;kx2<X_MAX;kx2++){
+      if(kx2===0)continue;
+      var pp=toC(kx2,0); ctx.fillText(kx2,pp.x,pp.y+3);
+    }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var ky2=Math.ceil(Y_MIN)+1;ky2<Y_MAX;ky2++){
+      if(ky2===0)continue;
+      var pp=toC(0,ky2); ctx.fillText(ky2,pp.x-4,pp.y);
+    }
+
+    var dx=P2D.x-P1D.x, dy=P2D.y-P1D.y;
+    var len=Math.sqrt(dx*dx+dy*dy);
+    if(len<0.01){ return; }
+
+    // Extend mirror line across canvas
+    var t0=(-10-P1D.x)/dx, t1=(10-P1D.x)/dx;
+    if(Math.abs(dx)<0.001){ t0=(-10-P1D.y)/dy; t1=(10-P1D.y)/dy; }
+    var tA=Math.min(t0,t1), tB=Math.max(t0,t1);
+    var mA=toC(P1D.x+tA*dx, P1D.y+tA*dy);
+    var mB=toC(P1D.x+tB*dx, P1D.y+tB*dy);
+
+    // Mirror line
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=2;
+    ctx.setLineDash([8,5]);
+    ctx.beginPath(); ctx.moveTo(mA.x,mA.y); ctx.lineTo(mB.x,mB.y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Image triangle
+    var IMG = OBJ.map(function(pt){
+      return reflectPt(pt.x,pt.y,P1D.x,P1D.y,P2D.x,P2D.y);
+    });
+
+    // Perpendicular bisectors (dashed, faint)
+    ctx.strokeStyle='#ffffff22'; ctx.lineWidth=1; ctx.setLineDash([3,4]);
+    OBJ.forEach(function(pt,i){
+      var ip=IMG[i];
+      var op=toC(pt.x,pt.y), ipc=toC(ip.x,ip.y);
+      ctx.beginPath(); ctx.moveTo(op.x,op.y); ctx.lineTo(ipc.x,ipc.y); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // Midpoint dots on mirror line
+    OBJ.forEach(function(pt,i){
+      var ip=IMG[i];
+      var mid=midPt(pt,ip);
+      var mp=toC(mid.x,mid.y);
+      ctx.fillStyle='#ffffff33';
+      ctx.beginPath(); ctx.arc(mp.x,mp.y,3,0,Math.PI*2); ctx.fill();
+    });
+
+    // Draw object triangle
+    function drawPoly(pts, fillCol, strokeCol, alpha){
+      var ps=pts.map(function(p){return toC(p.x,p.y);});
+      ctx.beginPath();
+      ctx.moveTo(ps[0].x,ps[0].y);
+      for(var i=1;i<ps.length;i++) ctx.lineTo(ps[i].x,ps[i].y);
+      ctx.closePath();
+      ctx.fillStyle=fillCol; ctx.fill();
+      ctx.strokeStyle=strokeCol; ctx.lineWidth=2.5; ctx.stroke();
+    }
+
+    drawPoly(OBJ,'#00abfa18','#00abfa');
+    drawPoly(IMG,'#ff467018','#ff4670');
+
+    // Vertex labels — object
+    ctx.font='bold 13px Courier New,monospace';
+    OBJ.forEach(function(pt,i){
+      var p=toC(pt.x,pt.y);
+      ctx.fillStyle='#00abfa';
+      ctx.textAlign='right'; ctx.textBaseline='bottom';
+      ctx.fillText(LABELS[i],p.x-6,p.y-4);
+      ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+    });
+
+    // Vertex labels — image
+    IMG.forEach(function(pt,i){
+      var p=toC(pt.x,pt.y);
+      ctx.fillStyle='#ff4670';
+      ctx.textAlign='left'; ctx.textBaseline='bottom';
+      ctx.fillText(LABELS[i]+"'",p.x+6,p.y-4);
+      ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+    });
+
+    // Control handle dots
+    [P1D, P2D].forEach(function(pt){
+      var p=toC(pt.x,pt.y);
+      ctx.fillStyle='#fff067';
+      ctx.beginPath(); ctx.arc(p.x,p.y,7,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#0d1216'; ctx.lineWidth=1.5; ctx.stroke();
+    });
+
+    // Equation display
+    document.getElementById('eq-display').innerHTML =
+      'Mirror line: <strong style="color:#fff067">' + mirrorEquationLabel() + '</strong>' +
+      '&nbsp;&nbsp;&nbsp;' +
+      'A(<span style="color:#00abfa">'+fmtN(OBJ[0].x)+','+fmtN(OBJ[0].y)+'</span>) → A\'(<span style="color:#ff4670">'+fmtN(IMG[0].x)+','+fmtN(IMG[0].y)+'</span>)';
+  }
+
+  function tick(){
+    P1D.x+=(P1.x-P1D.x)*SPRING; P1D.y+=(P1.y-P1D.y)*SPRING;
+    P2D.x+=(P2.x-P2D.x)*SPRING; P2D.y+=(P2.y-P2D.y)*SPRING;
+    draw();
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>

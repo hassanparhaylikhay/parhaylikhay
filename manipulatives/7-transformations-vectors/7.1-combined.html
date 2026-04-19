@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Combined Transformations</title>
+  <meta property="og:title" content="Combined Transformations"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="680"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:13px; color:#f0f0ee; min-height:50px; line-height:1.8; }
+    canvas { display:block; }
+    .controls { width:560px; padding:10px 4px; border-top:1px solid #1a2535; display:flex; flex-direction:column; gap:10px; }
+    .tx-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .tx-label { font-family:'Courier New',monospace; font-size:12px; color:#888780; width:28px; flex-shrink:0; }
+    .tx-select { background:#0d1f2d; border:1px solid #1e3a52; color:#b4b2a9; font-size:12px; padding:4px 6px; border-radius:3px; cursor:pointer; }
+    .param-group { display:flex; align-items:center; gap:6px; flex:1; }
+    .param-lbl { font-family:'Courier New',monospace; font-size:12px; color:#888780; }
+    .param-inp { width:52px; font-family:'Courier New',monospace; font-size:12px; background:#0d1f2d; border:1px solid #1e3a52; color:#f0f0ee; padding:3px 5px; border-radius:3px; }
+    .swap-btn { width:560px; margin:0 4px; padding:8px; background:#0d1f2d; border:1px solid #ff822c; color:#ff822c; font-size:13px; font-weight:600; cursor:pointer; border-radius:4px; }
+    .swap-btn:hover { background:#1a1200; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Combined Transformations — Order Matters!</div>
+  <div class="instruction">
+    Apply two transformations in sequence. Then hit <b style="color:#ff822c">Swap Order</b> —
+    <b style="color:#0fee89">green</b> is T₁ then T₂, <b style="color:#ff4670">pink</b> is T₂ then T₁.
+    They almost never land in the same place. This is why order matters.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+<canvas id="graph" width="560" height="340"></canvas>
+
+<div class="controls">
+  <div class="tx-row">
+    <div class="tx-label" style="color:#00abfa">T₁</div>
+    <select class="tx-select" id="t1-type">
+      <option value="reflect">Reflection</option>
+      <option value="rotate" selected>Rotation</option>
+      <option value="translate">Translation</option>
+    </select>
+    <div class="param-group" id="t1-params"></div>
+  </div>
+  <div class="tx-row">
+    <div class="tx-label" style="color:#ff822c">T₂</div>
+    <select class="tx-select" id="t2-type">
+      <option value="reflect" selected>Reflection</option>
+      <option value="rotate">Rotation</option>
+      <option value="translate">Translation</option>
+    </select>
+    <div class="param-group" id="t2-params"></div>
+  </div>
+</div>
+<button class="swap-btn" id="swap-btn">⇄ Swap Order — see what changes</button>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>transformations are NOT commutative</strong> — "reflect then rotate" gives a different result to "rotate then reflect".
+    Cambridge questions always specify the order carefully. Never swap the order unless explicitly told to.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=340;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var X_MIN=-7, X_MAX=7, Y_MIN=-4.25, Y_MAX=4.25;
+  function toC(mx,my){ return {x:(mx-X_MIN)/(X_MAX-X_MIN)*W, y:(Y_MAX-my)/(Y_MAX-Y_MIN)*H}; }
+
+  var OBJ=[{x:1,y:1},{x:3,y:1},{x:1,y:3}];
+  var LABELS=['A','B','C'];
+
+  function reflectPt(px,py,line){
+    if(line==='xaxis') return {x:px,y:-py};
+    if(line==='yaxis') return {x:-px,y:py};
+    if(line==='yx')    return {x:py,y:px};
+    if(line==='ynx')   return {x:-py,y:-px};
+    return {x:px,y:py};
+  }
+  function rotatePt(px,py,deg){
+    var th=deg*Math.PI/180;
+    return {x:px*Math.cos(th)-py*Math.sin(th), y:px*Math.sin(th)+py*Math.cos(th)};
+  }
+  function translatePt(px,py,tx,ty){ return {x:px+tx,y:py+ty}; }
+
+  function applyTx(pts, type, p){
+    return pts.map(function(pt){
+      if(type==='reflect') return reflectPt(pt.x,pt.y,p.line||'xaxis');
+      if(type==='rotate')  return rotatePt(pt.x,pt.y,parseFloat(p.angle)||90);
+      if(type==='translate') return translatePt(pt.x,pt.y,parseFloat(p.tx)||0,parseFloat(p.ty)||0);
+      return pt;
+    });
+  }
+
+  function getParams(id){
+    var type=document.getElementById(id+'-type').value;
+    var pg=document.getElementById(id+'-params');
+    var p={};
+    if(type==='reflect'){
+      var sel=pg.querySelector('select'); p.line=sel?sel.value:'xaxis';
+    } else if(type==='rotate'){
+      var inp=pg.querySelector('input'); p.angle=inp?parseFloat(inp.value)||90:90;
+    } else {
+      var inps=pg.querySelectorAll('input');
+      p.tx=inps[0]?parseFloat(inps[0].value)||0:0;
+      p.ty=inps[1]?parseFloat(inps[1].value)||0:0;
+    }
+    return p;
+  }
+
+  var swapped=false;
+
+  function buildParamUI(id, type, container){
+    container.innerHTML='';
+    if(type==='reflect'){
+      var s=document.createElement('select'); s.className='tx-select';
+      [['xaxis','y=0 (x-axis)'],['yaxis','x=0 (y-axis)'],['yx','y=x'],['ynx','y=−x']].forEach(function(opt){
+        var o=document.createElement('option'); o.value=opt[0]; o.textContent=opt[1]; s.appendChild(o);
+      });
+      s.addEventListener('change',draw); container.appendChild(s);
+    } else if(type==='rotate'){
+      var lbl=document.createElement('span'); lbl.className='param-lbl'; lbl.textContent='angle°:';
+      var inp=document.createElement('input'); inp.type='number'; inp.className='param-inp';
+      inp.value='90'; inp.min='-360'; inp.max='360';
+      inp.addEventListener('input',draw); container.appendChild(lbl); container.appendChild(inp);
+    } else {
+      var l1=document.createElement('span'); l1.className='param-lbl'; l1.textContent='tx:';
+      var i1=document.createElement('input'); i1.type='number'; i1.className='param-inp'; i1.value='2';
+      var l2=document.createElement('span'); l2.className='param-lbl'; l2.textContent='ty:';
+      var i2=document.createElement('input'); i2.type='number'; i2.className='param-inp'; i2.value='1';
+      i1.addEventListener('input',draw); i2.addEventListener('input',draw);
+      container.appendChild(l1); container.appendChild(i1);
+      container.appendChild(l2); container.appendChild(i2);
+    }
+  }
+
+  ['t1','t2'].forEach(function(id){
+    var sel=document.getElementById(id+'-type');
+    buildParamUI(id, sel.value, document.getElementById(id+'-params'));
+    sel.addEventListener('change',function(){
+      buildParamUI(id, this.value, document.getElementById(id+'-params'));
+      draw();
+    });
+  });
+
+  document.getElementById('swap-btn').addEventListener('click',function(){
+    swapped=!swapped;
+    this.textContent=swapped?'⇄ Restore Original Order':'⇄ Swap Order — see what changes';
+    draw();
+  });
+
+  function txLabel(id){
+    var type=document.getElementById(id+'-type').value;
+    var p=getParams(id);
+    if(type==='reflect') return 'reflect in '+{xaxis:'y=0',yaxis:'x=0',yx:'y=x',ynx:'y=−x'}[p.line||'xaxis'];
+    if(type==='rotate') return 'rotate '+p.angle+'°';
+    return 'translate ('+p.tx+','+p.ty+')';
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var ky=Math.ceil(Y_MIN);ky<=Y_MAX;ky++){
+      var ya=toC(X_MIN,ky),yb=toC(X_MAX,ky); ctx.moveTo(ya.x,ya.y); ctx.lineTo(yb.x,yb.y);
+    }
+    for(var kx=Math.ceil(X_MIN);kx<=X_MAX;kx++){
+      var xa=toC(kx,Y_MIN),xb=toC(kx,Y_MAX); ctx.moveTo(xa.x,xa.y); ctx.lineTo(xb.x,xb.y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    var ax0=toC(X_MIN,0),ax1=toC(X_MAX,0);
+    ctx.beginPath(); ctx.moveTo(ax0.x,ax0.y); ctx.lineTo(ax1.x,ax1.y); ctx.stroke();
+    var ay0=toC(0,Y_MIN),ay1=toC(0,Y_MAX);
+    ctx.beginPath(); ctx.moveTo(ay0.x,ay0.y); ctx.lineTo(ay1.x,ay1.y); ctx.stroke();
+
+    ctx.fillStyle='#3a5060'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var kx2=X_MIN+1;kx2<X_MAX;kx2++){
+      if(kx2===0)continue; var pp=toC(kx2,0); ctx.fillText(kx2,pp.x,pp.y+3);
+    }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var ky2=Y_MIN+1;ky2<Y_MAX;ky2++){
+      if(ky2===0)continue; var pp=toC(0,ky2); ctx.fillText(ky2,pp.x-4,pp.y);
+    }
+
+    var p1=getParams('t1'), p2=getParams('t2');
+    var t1type=document.getElementById('t1-type').value;
+    var t2type=document.getElementById('t2-type').value;
+
+    // T1 then T2
+    var mid12=applyTx(OBJ,t1type,p1);
+    var end12=applyTx(mid12,t2type,p2);
+    // T2 then T1
+    var mid21=applyTx(OBJ,t2type,p2);
+    var end21=applyTx(mid21,t1type,p1);
+
+    function drawPoly(pts,fillC,strokeC){
+      var ps=pts.map(function(p){return toC(p.x,p.y);});
+      ctx.beginPath(); ctx.moveTo(ps[0].x,ps[0].y);
+      for(var i=1;i<ps.length;i++) ctx.lineTo(ps[i].x,ps[i].y);
+      ctx.closePath();
+      ctx.fillStyle=fillC; ctx.fill();
+      ctx.strokeStyle=strokeC; ctx.lineWidth=2.5; ctx.stroke();
+    }
+
+    // Intermediate (faint)
+    drawPoly(swapped?mid21:mid12,'#ffffff08','#ffffff22');
+
+    // T1→T2 result
+    drawPoly(end12,'#0fee8918','#0fee89');
+    // T2→T1 result
+    drawPoly(end21,'#ff467018','#ff4670');
+
+    // Object
+    drawPoly(OBJ,'#00abfa15','#00abfa');
+
+    // Labels on object
+    ctx.font='bold 13px Courier New,monospace';
+    OBJ.forEach(function(pt,i){
+      var p=toC(pt.x,pt.y);
+      ctx.fillStyle='#00abfa';
+      ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+      ctx.textAlign='right'; ctx.textBaseline='bottom'; ctx.fillText(LABELS[i],p.x-5,p.y-3);
+    });
+
+    // Check if results are same
+    var same=true;
+    for(var i=0;i<end12.length;i++){
+      if(Math.abs(end12[i].x-end21[i].x)>0.05||Math.abs(end12[i].y-end21[i].y)>0.05){same=false;break;}
+    }
+
+    // Badge
+    var bcolor=same?'#fff067':'#ff4670';
+    var btext=same?'Same result here!':'Different results!';
+    ctx.fillStyle='#0d1f2d'; ctx.strokeStyle=bcolor; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.roundRect(W-170,10,160,34,5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=bcolor; ctx.font='bold 14px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(btext,W-170+80,27);
+
+    // Legend
+    ctx.font='bold 12px Courier New,monospace';
+    ctx.fillStyle='#0fee89'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.fillText('▮  T₁ then T₂',10,H-22);
+    ctx.fillStyle='#ff4670';
+    ctx.fillText('▮  T₂ then T₁',10,H-6);
+
+    var l12=txLabel('t1')+' → '+txLabel('t2');
+    var l21=txLabel('t2')+' → '+txLabel('t1');
+    document.getElementById('eq-display').innerHTML=
+      '<span style="color:#0fee89">T₁→T₂:</span> '+l12+'<br>'+
+      '<span style="color:#ff4670">T₂→T₁:</span> '+l21+
+      (same?'&nbsp;&nbsp;<span style="color:#fff067">← same result this time</span>':'&nbsp;&nbsp;<span style="color:#ff4670">← different!</span>');
+  }
+
+  draw();
+</script>
+</body>
+</html>

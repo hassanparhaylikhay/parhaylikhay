@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Rotation</title>
+  <meta property="og:title" content="Rotation"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="640"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"/>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false}]})"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:14px; color:#f0f0ee; min-height:30px; line-height:1.9; }
+    canvas { display:block; cursor:default; }
+    .sliders { width:560px; display:flex; flex-direction:column; gap:9px; padding:10px 4px; border-top:1px solid #1a2535; border-bottom:1px solid #1a2535; }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New',monospace; font-size:13px; width:120px; flex-shrink:0; }
+    input[type="range"] { flex:1; height:4px; -webkit-appearance:none; background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer; }
+    #sl-angle::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff822c; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:60px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Rotation — Centre, Angle & Arc Trails</div>
+  <div class="instruction">
+    Drag the <b style="color:#fff067">yellow dot</b> to move the centre of rotation.
+    Sweep the <b style="color:#ff822c">angle slider</b> — every vertex traces a circular arc,
+    all centred on the same point. That's the definition of rotation.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+<canvas id="graph" width="560" height="360"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#ff822c" id="lbl-angle">θ = 90°</div>
+    <input type="range" id="sl-angle" min="-360" max="360" step="1" value="90"/>
+    <div class="slider-bounds">−360° … 360°</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>always give three things for a rotation — centre (as a coordinate), angle, and direction</strong> (clockwise or anticlockwise).
+    Positive angles are anticlockwise in Cambridge mark schemes. A 90° clockwise rotation is the same as 270° anticlockwise.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=360;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var X_MIN=-7, X_MAX=7, Y_MIN=-4.5, Y_MAX=4.5;
+  function toC(mx,my){ return {x:(mx-X_MIN)/(X_MAX-X_MIN)*W, y:(Y_MAX-my)/(Y_MAX-Y_MIN)*H}; }
+  function fromC(cx,cy){ return {mx:X_MIN+(cx/W)*(X_MAX-X_MIN), my:Y_MAX-(cy/H)*(Y_MAX-Y_MIN)}; }
+
+  var OBJ=[{x:1,y:1},{x:4,y:1},{x:1,y:3}];
+  var LABELS=['A','B','C'];
+  var ARC_COLORS=['#0fee8966','#ff822c66','#ff467066'];
+  var IMG_COLOR='#ff4670';
+
+  var angleT=90, angleD=90;
+  var CX=0, CY=0;       // centre target
+  var CXD=0, CYD=0;     // centre display
+  var SPRING=0.12;
+  var draggingCentre=false;
+
+  function rotatePt(px,py,cx,cy,deg){
+    var th=deg*Math.PI/180;
+    var dx=px-cx, dy=py-cy;
+    return {x:cx+dx*Math.cos(th)-dy*Math.sin(th), y:cy+dx*Math.sin(th)+dy*Math.cos(th)};
+  }
+
+  function fmtN(v){var r=Math.round(v*10)/10; return r%1===0?r.toFixed(0):r.toFixed(1);}
+
+  function getPos(e){
+    var rect=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return {x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height)};
+  }
+  function nearPt(px,py,mx,my){
+    var p=toC(mx,my); var dx=px-p.x,dy=py-p.y;
+    return Math.sqrt(dx*dx+dy*dy)<16;
+  }
+
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e);
+    if(nearPt(p.x,p.y,CX,CY)){ draggingCentre=true; e.preventDefault(); }
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if(draggingCentre){
+      var m=fromC(p.x,p.y);
+      CX=Math.round(m.mx*2)/2; CY=Math.round(m.my*2)/2;
+    } else {
+      canvas.style.cursor=nearPt(p.x,p.y,CX,CY)?'grab':'default';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){draggingCentre=false;});
+  canvas.addEventListener('mouseleave',function(){draggingCentre=false;});
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e);
+    if(nearPt(p.x,p.y,CX,CY)){draggingCentre=true;e.preventDefault();}
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(!draggingCentre)return; e.preventDefault();
+    var p=getPos(e); var m=fromC(p.x,p.y);
+    CX=Math.round(m.mx*2)/2; CY=Math.round(m.my*2)/2;
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){draggingCentre=false;});
+
+  document.getElementById('sl-angle').oninput=function(){
+    angleT=parseFloat(this.value);
+    document.getElementById('lbl-angle').textContent='θ = '+Math.round(angleT)+'°';
+  };
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var ky=Math.ceil(Y_MIN);ky<=Y_MAX;ky++){
+      var ya=toC(X_MIN,ky),yb=toC(X_MAX,ky); ctx.moveTo(ya.x,ya.y); ctx.lineTo(yb.x,yb.y);
+    }
+    for(var kx=Math.ceil(X_MIN);kx<=X_MAX;kx++){
+      var xa=toC(kx,Y_MIN),xb=toC(kx,Y_MAX); ctx.moveTo(xa.x,xa.y); ctx.lineTo(xb.x,xb.y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    var ax0=toC(X_MIN,0),ax1=toC(X_MAX,0);
+    ctx.beginPath(); ctx.moveTo(ax0.x,ax0.y); ctx.lineTo(ax1.x,ax1.y); ctx.stroke();
+    var ay0=toC(0,Y_MIN),ay1=toC(0,Y_MAX);
+    ctx.beginPath(); ctx.moveTo(ay0.x,ay0.y); ctx.lineTo(ay1.x,ay1.y); ctx.stroke();
+
+    ctx.fillStyle='#3a5060'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var kx2=X_MIN+1;kx2<X_MAX;kx2++){
+      if(kx2===0)continue; var pp=toC(kx2,0); ctx.fillText(kx2,pp.x,pp.y+3);
+    }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var ky2=Y_MIN+1;ky2<Y_MAX;ky2++){
+      if(ky2===0)continue; var pp=toC(0,ky2); ctx.fillText(ky2,pp.x-4,pp.y);
+    }
+
+    var thRad = angleD*Math.PI/180;
+
+    // Arc trails — each vertex's circular arc from 0 to angleD
+    OBJ.forEach(function(pt,i){
+      var cpc=toC(CXD,CYD);
+      var dx=pt.x-CXD, dy=pt.y-CYD;
+      var r_math=Math.sqrt(dx*dx+dy*dy);
+      if(r_math<0.05) return;
+      var r_px=r_math*40; // 40px per unit (W/14 = 40)
+      var startAngle=Math.atan2(-(pt.y-CYD), pt.x-CXD); // canvas y is flipped
+      var endAngle=startAngle - thRad; // subtract because canvas y flips sign
+      ctx.strokeStyle=ARC_COLORS[i]; ctx.lineWidth=2;
+      ctx.beginPath();
+      if(angleD>=0){
+        ctx.arc(cpc.x,cpc.y,r_px,startAngle,endAngle,true);
+      } else {
+        ctx.arc(cpc.x,cpc.y,r_px,startAngle,endAngle,false);
+      }
+      ctx.stroke();
+
+      // Radius line to object vertex (faint)
+      var vp=toC(pt.x,pt.y);
+      ctx.strokeStyle='#ffffff15'; ctx.lineWidth=1;
+      ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(cpc.x,cpc.y); ctx.lineTo(vp.x,vp.y); ctx.stroke();
+      ctx.setLineDash([]);
+    });
+
+    // Image
+    var IMG=OBJ.map(function(pt){ return rotatePt(pt.x,pt.y,CXD,CYD,angleD); });
+
+    // Object fill
+    var ops=OBJ.map(function(p){return toC(p.x,p.y);});
+    ctx.beginPath(); ctx.moveTo(ops[0].x,ops[0].y);
+    for(var i=1;i<ops.length;i++) ctx.lineTo(ops[i].x,ops[i].y);
+    ctx.closePath();
+    ctx.fillStyle='#00abfa15'; ctx.fill();
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=2.5; ctx.stroke();
+
+    // Image fill
+    var ips=IMG.map(function(p){return toC(p.x,p.y);});
+    ctx.beginPath(); ctx.moveTo(ips[0].x,ips[0].y);
+    for(var i=1;i<ips.length;i++) ctx.lineTo(ips[i].x,ips[i].y);
+    ctx.closePath();
+    ctx.fillStyle='#ff467015'; ctx.fill();
+    ctx.strokeStyle=IMG_COLOR; ctx.lineWidth=2.5; ctx.stroke();
+
+    // Vertex dots & labels
+    ctx.font='bold 13px Courier New,monospace';
+    OBJ.forEach(function(pt,i){
+      var p=toC(pt.x,pt.y);
+      ctx.fillStyle='#00abfa';
+      ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+      ctx.textAlign='right'; ctx.textBaseline='bottom';
+      ctx.fillText(LABELS[i],p.x-5,p.y-3);
+    });
+    IMG.forEach(function(pt,i){
+      var p=toC(pt.x,pt.y);
+      ctx.fillStyle=IMG_COLOR;
+      ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+      ctx.textAlign='left'; ctx.textBaseline='bottom';
+      ctx.fillText(LABELS[i]+"'",p.x+5,p.y-3);
+    });
+
+    // Centre of rotation
+    var cp=toC(CXD,CYD);
+    ctx.fillStyle='#fff067';
+    ctx.beginPath(); ctx.arc(cp.x,cp.y,8,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#0d1216'; ctx.lineWidth=2; ctx.stroke();
+    ctx.fillStyle='#fff067'; ctx.font='bold 12px Courier New,monospace';
+    ctx.textAlign='left'; ctx.textBaseline='bottom';
+    ctx.fillText('('+fmtN(CXD)+','+fmtN(CYD)+')',cp.x+10,cp.y-4);
+
+    // Equation bar
+    var dir=angleD>=0?'anticlockwise':'clockwise';
+    var absDeg=Math.abs(Math.round(angleD));
+    document.getElementById('eq-display').innerHTML=
+      'Rotation <strong style="color:#ff822c">'+Math.round(angleD)+'°</strong> '+dir+
+      ' about (<span style="color:#fff067">'+fmtN(CXD)+', '+fmtN(CYD)+'</span>)' +
+      '&nbsp;&nbsp;A(<span style="color:#00abfa">'+fmtN(OBJ[0].x)+','+fmtN(OBJ[0].y)+'</span>) → A\'(<span style="color:#ff4670">'+fmtN(IMG[0].x)+','+fmtN(IMG[0].y)+'</span>)';
+  }
+
+  function tick(){
+    var diff=angleT-angleD;
+    while(diff>180) diff-=360; while(diff<-180) diff+=360;
+    angleD+=diff*SPRING;
+    CXD+=(CX-CXD)*SPRING; CYD+=(CY-CYD)*SPRING;
+    draw();
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>
