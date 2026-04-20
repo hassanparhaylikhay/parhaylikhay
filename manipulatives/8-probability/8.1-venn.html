@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Venn Diagrams & Addition Rule</title>
+  <meta property="og:title" content="Venn Diagrams"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="620"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:14px; color:#f0f0ee; min-height:52px; line-height:1.85; }
+    canvas { display:block; }
+    .sliders { width:560px; display:flex; flex-direction:column; gap:9px; padding:10px 4px; border-top:1px solid #1a2535; border-bottom:1px solid #1a2535; }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New',monospace; font-size:13px; width:130px; flex-shrink:0; }
+    input[type="range"] { flex:1; height:4px; -webkit-appearance:none; background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer; }
+    #sl-pa::-webkit-slider-thumb  { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-pb::-webkit-slider-thumb  { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#ff822c; cursor:pointer; }
+    #sl-pab::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:44px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Venn Diagrams — The Addition Rule</div>
+  <div class="instruction">
+    Slide P(A), P(B), and the overlap P(A∩B). Watch the region sizes update live.
+    The key idea: when you add P(A)+P(B), you count the intersection <b>twice</b> — so you must subtract it once.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+<canvas id="graph" width="560" height="300"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-pa">P(A) = 0.50</div>
+    <input type="range" id="sl-pa" min="0.05" max="0.90" step="0.01" value="0.50"/>
+    <div class="slider-bounds">0 … 1</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#ff822c" id="lbl-pb">P(B) = 0.40</div>
+    <input type="range" id="sl-pb" min="0.05" max="0.90" step="0.01" value="0.40"/>
+    <div class="slider-bounds">0 … 1</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#0fee89" id="lbl-pab">P(A∩B) = 0.15</div>
+    <input type="range" id="sl-pab" min="0.00" max="0.40" step="0.01" value="0.15"/>
+    <div class="slider-bounds">0 … min</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: the addition rule <strong>P(A∪B) = P(A) + P(B) − P(A∩B)</strong> is always needed when events can both happen.
+    If events are <strong>mutually exclusive</strong>, P(A∩B) = 0, so P(A∪B) = P(A) + P(B). If P(A) + P(B) > 1, they cannot be mutually exclusive.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=300;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var paT=0.50, pbT=0.40, pabT=0.15;
+  var paD=0.50, pbD=0.40, pabD=0.15;
+  var SPRING=0.12;
+
+  function fmt2(v){ return v.toFixed(2); }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var pa=paD, pb=pbD, pab=pabD;
+    // Clamp pab to valid range
+    pab=Math.max(0, Math.min(pab, Math.min(pa,pb)));
+
+    // Sample space rectangle
+    var SX=24, SY=20, SW=512, SH=220;
+    ctx.strokeStyle='#1e3a52'; ctx.lineWidth=1.5;
+    ctx.strokeRect(SX,SY,SW,SH);
+    ctx.fillStyle='#0f1c26'; ctx.fillRect(SX,SY,SW,SH);
+    ctx.fillStyle='#3a5060'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='right'; ctx.textBaseline='top';
+    ctx.fillText('S (sample space)',SX+SW-6,SY+5);
+
+    // Circle radii proportional to sqrt(p) for area
+    var BASE=75;
+    var rA=BASE*Math.sqrt(pa), rB=BASE*Math.sqrt(pb);
+
+    // Intersection distance from centres via approximate lens area
+    // We treat pab as the fraction of S that is A∩B
+    // Actual lens area computation is complex, so we map pab → d (dist between centres)
+    // For simplicity: place circles with a fixed-centre approach, overlap controlled by slider
+    // We'll compute the distance between centres so that the visual overlap looks right
+    // Approximation: d = rA + rB - 2*pab/(pa+pb) * (rA+rB)
+    // Better: just position them so pab/pa gives the right feel
+    var maxOverlap=Math.min(pa,pb);
+    var overlapFrac = (maxOverlap>0) ? pab/maxOverlap : 0; // 0=no overlap, 1=full containment
+    // d: distance between centres
+    // When overlapFrac=0: d = rA+rB (touching)
+    // When overlapFrac=1: d = |rA-rB| (containment)
+    var dTouch=rA+rB, dContain=Math.abs(rA-rB);
+    var d = dTouch - overlapFrac*(dTouch-dContain);
+    d = Math.max(dContain, Math.min(dTouch, d));
+
+    var CY = SY+SH/2;
+    var midX = SX+SW/2;
+    var CX_A = midX - d/2;
+    var CX_B = midX + d/2;
+
+    // Clip to sample space
+    ctx.save();
+    ctx.beginPath(); ctx.rect(SX,SY,SW,SH); ctx.clip();
+
+    // Draw A only (blue)
+    ctx.save();
+    ctx.beginPath(); ctx.arc(CX_A,CY,rA,0,Math.PI*2);
+    ctx.clip();
+    // Exclude B
+    ctx.fillStyle='#00abfa30'; ctx.fillRect(SX,SY,SW,SH);
+    ctx.restore();
+
+    // Draw B only (orange)
+    ctx.save();
+    ctx.beginPath(); ctx.arc(CX_B,CY,rB,0,Math.PI*2);
+    ctx.clip();
+    ctx.fillStyle='#ff822c30'; ctx.fillRect(SX,SY,SW,SH);
+    ctx.restore();
+
+    // Draw intersection (bright green)
+    if(pab>0.005){
+      ctx.save();
+      ctx.beginPath(); ctx.arc(CX_A,CY,rA,0,Math.PI*2); ctx.clip();
+      ctx.beginPath(); ctx.arc(CX_B,CY,rB,0,Math.PI*2); ctx.clip();
+      ctx.fillStyle='#0fee8945'; ctx.fillRect(SX,SY,SW,SH);
+      ctx.restore();
+    }
+
+    // Circle outlines
+    ctx.beginPath(); ctx.arc(CX_A,CY,rA,0,Math.PI*2);
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=2.5; ctx.stroke();
+    ctx.beginPath(); ctx.arc(CX_B,CY,rB,0,Math.PI*2);
+    ctx.strokeStyle='#ff822c'; ctx.lineWidth=2.5; ctx.stroke();
+
+    ctx.restore(); // unclip from sample space
+
+    // Labels inside circles
+    ctx.font='bold 16px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#00abfa';
+    ctx.fillText('A', CX_A-d*0.25, CY);
+    ctx.fillStyle='#ff822c';
+    ctx.fillText('B', CX_B+d*0.25, CY);
+
+    // Probability labels in each region
+    var pAonly=pa-pab, pBonly=pb-pab, pNeither=1-pa-pb+pab;
+    pAonly=Math.max(0,pAonly); pBonly=Math.max(0,pBonly); pNeither=Math.max(0,pNeither);
+
+    ctx.font='13px Courier New,monospace'; ctx.textAlign='center'; ctx.textBaseline='middle';
+
+    // A only label
+    ctx.fillStyle='#00abfa';
+    ctx.fillText(fmt2(pAonly), CX_A-rA*0.55, CY+rA*0.4);
+
+    // B only label
+    ctx.fillStyle='#ff822c';
+    ctx.fillText(fmt2(pBonly), CX_B+rB*0.55, CY+rB*0.4);
+
+    // Intersection label
+    if(pab>0.01){
+      ctx.fillStyle='#0fee89';
+      ctx.fillText(fmt2(pab), (CX_A+CX_B)/2, CY);
+    }
+
+    // Neither label (bottom right of box)
+    ctx.fillStyle='#888780'; ctx.font='12px Courier New,monospace';
+    ctx.textAlign='right'; ctx.textBaseline='bottom';
+    ctx.fillText('neither: '+fmt2(pNeither), SX+SW-8, SY+SH-6);
+
+    // Bar at bottom showing decomposition
+    var BAR_Y=H-46, BAR_H=18, BAR_X=24, BAR_W=512;
+    var scale=BAR_W; // 1 unit = full width
+
+    var xA=BAR_X, wA=pAonly*scale;
+    var xAB=xA+wA, wAB=pab*scale;
+    var xB=xAB+wAB, wB=pBonly*scale;
+    var xN=xB+wB, wN=Math.max(0,pNeither)*scale;
+
+    ctx.fillStyle='#00abfa55'; ctx.fillRect(xA,BAR_Y,wA,BAR_H);
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=1; ctx.strokeRect(xA,BAR_Y,wA,BAR_H);
+
+    ctx.fillStyle='#0fee8955'; ctx.fillRect(xAB,BAR_Y,wAB,BAR_H);
+    ctx.strokeStyle='#0fee89'; ctx.lineWidth=1; ctx.strokeRect(xAB,BAR_Y,wAB,BAR_H);
+
+    ctx.fillStyle='#ff822c55'; ctx.fillRect(xB,BAR_Y,wB,BAR_H);
+    ctx.strokeStyle='#ff822c'; ctx.lineWidth=1; ctx.strokeRect(xB,BAR_Y,wB,BAR_H);
+
+    ctx.fillStyle='#33445560'; ctx.fillRect(xN,BAR_Y,wN,BAR_H);
+
+    ctx.fillStyle='#888780'; ctx.font='11px Courier New,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    ctx.fillText('A only', xA+wA/2, BAR_Y+BAR_H+3);
+    if(wAB>30){ ctx.fillStyle='#0fee89'; ctx.fillText('A∩B', xAB+wAB/2, BAR_Y+BAR_H+3); }
+    if(wB>30){ ctx.fillStyle='#888780'; ctx.fillText('B only', xB+wB/2, BAR_Y+BAR_H+3); }
+
+    // Equation
+    var paub=pa+pb-pab;
+    document.getElementById('eq-display').innerHTML=
+      'P(A∪B) = P(A) + P(B) − P(A∩B) = <span style="color:#00abfa">'+fmt2(pa)+'</span> + <span style="color:#ff822c">'+fmt2(pb)+'</span> − <span style="color:#0fee89">'+fmt2(pab)+'</span> = <strong style="color:#fff067">'+fmt2(paub)+'</strong>' +
+      '<br>P(A only) = '+fmt2(pAonly)+'&nbsp;&nbsp; P(B only) = '+fmt2(pBonly)+'&nbsp;&nbsp; P(neither) = '+fmt2(Math.max(0,pNeither));
+  }
+
+  document.getElementById('sl-pa').oninput=function(){
+    paT=parseFloat(this.value);
+    // Clamp pab
+    var maxPab=Math.min(paT,pbT);
+    if(pabT>maxPab){ pabT=maxPab; document.getElementById('sl-pab').value=pabT; document.getElementById('lbl-pab').textContent='P(A∩B) = '+pabT.toFixed(2); }
+    document.getElementById('lbl-pa').textContent='P(A) = '+paT.toFixed(2);
+  };
+  document.getElementById('sl-pb').oninput=function(){
+    pbT=parseFloat(this.value);
+    var maxPab=Math.min(paT,pbT);
+    if(pabT>maxPab){ pabT=maxPab; document.getElementById('sl-pab').value=pabT; document.getElementById('lbl-pab').textContent='P(A∩B) = '+pabT.toFixed(2); }
+    document.getElementById('lbl-pb').textContent='P(B) = '+pbT.toFixed(2);
+  };
+  document.getElementById('sl-pab').oninput=function(){
+    var maxPab=Math.min(paT,pbT);
+    pabT=Math.min(parseFloat(this.value),maxPab);
+    this.value=pabT;
+    document.getElementById('lbl-pab').textContent='P(A∩B) = '+pabT.toFixed(2);
+  };
+
+  function tick(){
+    paD+=(paT-paD)*SPRING; pbD+=(pbT-pbD)*SPRING; pabD+=(pabT-pabD)*SPRING;
+    draw();
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>

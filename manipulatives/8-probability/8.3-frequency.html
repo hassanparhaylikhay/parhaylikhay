@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Relative Frequency</title>
+  <meta property="og:title" content="Relative Frequency"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="640"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:14px; color:#f0f0ee; min-height:32px; line-height:1.9; }
+    canvas { display:block; }
+    .sliders { width:560px; display:flex; flex-direction:column; gap:9px; padding:10px 4px; border-top:1px solid #1a2535; }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New',monospace; font-size:13px; width:160px; flex-shrink:0; }
+    input[type="range"] { flex:1; height:4px; -webkit-appearance:none; background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer; }
+    #sl-p::-webkit-slider-thumb { -webkit-appearance:none; width:15px; height:15px; border-radius:50%; background:#fff067; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:44px; text-align:right; flex-shrink:0; }
+    .btn-row { width:560px; display:flex; gap:8px; padding:8px 4px; border-bottom:1px solid #1a2535; }
+    .btn { flex:1; padding:8px; background:#0d1f2d; border:1px solid #1e3a52; color:#b4b2a9; font-size:13px; border-radius:4px; cursor:pointer; font-family:'Courier New',monospace; }
+    .btn:hover { border-color:#00abfa; color:#00abfa; }
+    .btn-reset { border-color:#ff4670; color:#ff4670; }
+    .btn-reset:hover { background:#1a0010; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Relative Frequency — Does It Converge?</div>
+  <div class="instruction">
+    Set a true probability and flip the coin. Early on it's chaotic — but as <b>n</b> grows,
+    the relative frequency settles toward the <b style="color:#fff067">theoretical value</b>.
+    That's the whole point of probability: it's a long-run prediction, not a guarantee for 10 flips.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display">Press a button to start flipping.</div>
+<canvas id="graph" width="560" height="300"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#fff067" id="lbl-p">True P(heads) = 0.50</div>
+    <input type="range" id="sl-p" min="0.05" max="0.95" step="0.01" value="0.50"/>
+    <div class="slider-bounds">0 … 1</div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn" id="btn-1">Flip ×1</button>
+  <button class="btn" id="btn-10">Flip ×10</button>
+  <button class="btn" id="btn-50">Flip ×50</button>
+  <button class="btn" id="btn-200">Flip ×200</button>
+  <button class="btn btn-reset" id="btn-reset">Reset</button>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>relative frequency = number of successes ÷ total trials</strong>.
+    It's not the same as theoretical probability — it's an <em>estimate</em> based on experiment.
+    The more trials you run, the closer relative frequency gets to the true probability.
+    Cambridge questions often ask you to explain why more trials give a better estimate.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=300;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var pTrue=0.50;
+  var history=[]; // each entry: {n, heads, relFreq}
+  var MAX_SHOW=500;
+
+  function flip(n){
+    for(var i=0;i<n;i++){
+      var prevHeads=(history.length>0)?history[history.length-1].heads:0;
+      var prevN=(history.length>0)?history[history.length-1].n:0;
+      var isHead=Math.random()<pTrue;
+      var newHeads=prevHeads+(isHead?1:0);
+      var newN=prevN+1;
+      history.push({n:newN, heads:newHeads, relFreq:newHeads/newN});
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var PAD_L=46, PAD_R=16, PAD_T=20, PAD_B=30;
+    var gW=W-PAD_L-PAD_R, gH=H-PAD_T-PAD_B;
+
+    // Grid lines at 0.1 intervals
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var y=0;y<=10;y++){
+      var gy=PAD_T+gH*(1-y/10);
+      ctx.moveTo(PAD_L,gy); ctx.lineTo(PAD_L+gW,gy);
+    }
+    ctx.stroke();
+
+    // Y axis
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(PAD_L,PAD_T); ctx.lineTo(PAD_L,PAD_T+gH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD_L,PAD_T+gH); ctx.lineTo(PAD_L+gW,PAD_T+gH); ctx.stroke();
+
+    // Y labels
+    ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var y2=0;y2<=10;y2+=2){
+      var gy2=PAD_T+gH*(1-y2/10);
+      ctx.fillText((y2/10).toFixed(1), PAD_L-5, gy2);
+    }
+
+    // Theoretical probability line
+    var thY=PAD_T+gH*(1-pTrue);
+    ctx.strokeStyle='#fff06799'; ctx.lineWidth=2;
+    ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(PAD_L,thY); ctx.lineTo(PAD_L+gW,thY); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#fff067'; ctx.font='bold 11px Courier New,monospace';
+    ctx.textAlign='left'; ctx.textBaseline='bottom';
+    ctx.fillText('p = '+pTrue.toFixed(2), PAD_L+4, thY-3);
+
+    if(history.length===0){
+      // Placeholder message
+      ctx.fillStyle='#3a5060'; ctx.font='14px -apple-system,sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText('Press a flip button to run the experiment', PAD_L+gW/2, PAD_T+gH/2);
+      return;
+    }
+
+    // X axis labels
+    var nMax=Math.max(history[history.length-1].n, 10);
+    ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    var xSteps=[1,5,10,20,50,100,200,500];
+    var bestStep=xSteps[xSteps.length-1];
+    for(var i=0;i<xSteps.length;i++){
+      if(nMax/xSteps[i]<8){ bestStep=xSteps[i]; break; }
+    }
+    for(var xv=0;xv<=nMax;xv+=bestStep){
+      var gx=PAD_L+gW*(xv/nMax);
+      ctx.fillText(xv, gx, PAD_T+gH+4);
+    }
+    ctx.fillText('n (trials)', PAD_L+gW/2, PAD_T+gH+16);
+
+    // Thin the history for display if too many points
+    var displayH=history;
+    if(history.length>MAX_SHOW){
+      displayH=[];
+      var step=Math.ceil(history.length/MAX_SHOW);
+      for(var i=0;i<history.length;i+=step) displayH.push(history[i]);
+      displayH.push(history[history.length-1]);
+    }
+
+    // Relative frequency line
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=2; ctx.lineJoin='round';
+    ctx.beginPath();
+    displayH.forEach(function(pt,i){
+      var gx=PAD_L+gW*(pt.n/nMax);
+      var gy=PAD_T+gH*(1-pt.relFreq);
+      i===0?ctx.moveTo(gx,gy):ctx.lineTo(gx,gy);
+    });
+    ctx.stroke();
+
+    // Last point dot
+    var last=history[history.length-1];
+    var lx=PAD_L+gW*(last.n/nMax), ly=PAD_T+gH*(1-last.relFreq);
+    var closeEnough=Math.abs(last.relFreq-pTrue)<0.03;
+    ctx.fillStyle=closeEnough?'#0fee89':'#00abfa';
+    ctx.beginPath(); ctx.arc(lx,ly,5,0,Math.PI*2); ctx.fill();
+
+    // Error band shading ±0.05 around true p
+    var bandY1=PAD_T+gH*(1-(pTrue+0.05));
+    var bandY2=PAD_T+gH*(1-(pTrue-0.05));
+    ctx.fillStyle='#fff0670a';
+    ctx.fillRect(PAD_L,Math.max(PAD_T,bandY1),gW,Math.min(gH,bandY2-bandY1+4));
+
+    // Equation bar
+    var diff=Math.abs(last.relFreq-pTrue);
+    var color=diff<0.03?'#0fee89':diff<0.1?'#fff067':'#ff822c';
+    document.getElementById('eq-display').innerHTML=
+      'n = <strong>'+last.n+'</strong>&nbsp;&nbsp;'+
+      'heads = '+last.heads+'&nbsp;&nbsp;'+
+      'rel. freq = <strong style="color:'+color+'">'+last.relFreq.toFixed(3)+'</strong>'+
+      '&nbsp;&nbsp;error from p = <span style="color:'+color+'">'+diff.toFixed(3)+'</span>';
+  }
+
+  document.getElementById('sl-p').oninput=function(){
+    pTrue=parseFloat(this.value);
+    document.getElementById('lbl-p').textContent='True P(heads) = '+pTrue.toFixed(2);
+    draw();
+  };
+
+  document.getElementById('btn-1').onclick=function(){ flip(1); draw(); };
+  document.getElementById('btn-10').onclick=function(){ flip(10); draw(); };
+  document.getElementById('btn-50').onclick=function(){ flip(50); draw(); };
+  document.getElementById('btn-200').onclick=function(){ flip(200); draw(); };
+  document.getElementById('btn-reset').onclick=function(){
+    history=[];
+    document.getElementById('eq-display').textContent='Press a button to start flipping.';
+    draw();
+  };
+
+  draw();
+</script>
+</body>
+</html>

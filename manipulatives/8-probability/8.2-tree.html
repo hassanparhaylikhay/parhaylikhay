@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Probability Tree Diagrams</title>
+  <meta property="og:title" content="Probability Tree Diagrams"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="640"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:13px; color:#f0f0ee; min-height:68px; line-height:1.8; }
+    canvas { display:block; }
+    .sliders { width:560px; display:flex; flex-direction:column; gap:9px; padding:10px 4px; border-top:1px solid #1a2535; border-bottom:1px solid #1a2535; }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New',monospace; font-size:12px; width:158px; flex-shrink:0; }
+    input[type="range"] { flex:1; height:4px; -webkit-appearance:none; background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer; }
+    #sl-pa::-webkit-slider-thumb    { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    #sl-pbga::-webkit-slider-thumb  { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#0fee89; cursor:pointer; }
+    #sl-pbgna::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#ff822c; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:44px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Probability Tree Diagrams — Multiply Along, Add Across</div>
+  <div class="instruction">
+    Set the probabilities for each branch. The end outcomes multiply along their path.
+    Notice the four end probabilities always sum to <b style="color:#fff067">1</b> — that's your check.
+    Change P(B|A) and P(B|A') separately to model <b>dependent</b> events.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+<canvas id="graph" width="560" height="310"></canvas>
+
+<div class="sliders">
+  <div class="slider-row">
+    <div class="slider-label" style="color:#00abfa" id="lbl-pa">P(A) = 0.60</div>
+    <input type="range" id="sl-pa" min="0.01" max="0.99" step="0.01" value="0.60"/>
+    <div class="slider-bounds">0 … 1</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#0fee89" id="lbl-pbga">P(B | A) = 0.70</div>
+    <input type="range" id="sl-pbga" min="0.01" max="0.99" step="0.01" value="0.70"/>
+    <div class="slider-bounds">0 … 1</div>
+  </div>
+  <div class="slider-row">
+    <div class="slider-label" style="color:#ff822c" id="lbl-pbgna">P(B | A') = 0.30</div>
+    <input type="range" id="sl-pbgna" min="0.01" max="0.99" step="0.01" value="0.30"/>
+    <div class="slider-bounds">0 … 1</div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>multiply along each branch path, then add the paths you need</strong>.
+    If P(B|A) = P(B|A'), the events are <strong>independent</strong> — the second event doesn't care what the first was.
+    Always check: your four end probabilities must add to exactly 1.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=310;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var paT=0.60, pbgaT=0.70, pbgnaT=0.30;
+  var paD=0.60, pbgaD=0.70, pbgnaD=0.30;
+  var SPRING=0.12;
+
+  function fmt(v){ return v.toFixed(2); }
+  function fmt3(v){ return v.toFixed(3); }
+
+  function drawArrow(x1,y1,x2,y2,col,lw){
+    ctx.strokeStyle=col; ctx.lineWidth=lw;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    // small tick at end
+    var dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
+    if(len<2) return;
+    var ux=dx/len,uy=dy/len,al=10,aw=5;
+    ctx.fillStyle=col;
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-al*ux+aw*uy, y2-al*uy-aw*ux);
+    ctx.lineTo(x2-al*ux-aw*uy, y2-al*uy+aw*ux);
+    ctx.closePath(); ctx.fill();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var pa=paD, pna=1-paD;
+    var pbga=pbgaD, pnbga=1-pbgaD;
+    var pbgna=pbgnaD, pnbgna=1-pbgnaD;
+
+    // Layout
+    var X0=40, X1=210, X2=390;
+    var Y_A=90, Y_NA=230;
+    var Y_AB=44, Y_ANB=140, Y_NAB=192, Y_NANB=276;
+
+    var BRANCH_COLOR='#2a4a60';
+
+    // Stage 1 branches: root → A and A'
+    drawArrow(X0,H/2, X1,Y_A,  '#00abfa', 2);
+    drawArrow(X0,H/2, X1,Y_NA, '#888780', 2);
+
+    // Stage 2 from A
+    drawArrow(X1,Y_A, X2,Y_AB,  '#0fee89', 2);
+    drawArrow(X1,Y_A, X2,Y_ANB, '#ffffff55', 2);
+
+    // Stage 2 from A'
+    drawArrow(X1,Y_NA, X2,Y_NAB,  '#ff822c', 2);
+    drawArrow(X1,Y_NA, X2,Y_NANB, '#ffffff55', 2);
+
+    // Branch probability labels (on branches)
+    ctx.font='bold 13px Courier New,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='bottom';
+
+    // P(A) on upper branch
+    ctx.fillStyle='#00abfa';
+    ctx.fillText(fmt(pa), (X0+X1)/2, (H/2+Y_A)/2-4);
+    // P(A')
+    ctx.fillStyle='#888780';
+    ctx.fillText(fmt(pna), (X0+X1)/2, (H/2+Y_NA)/2+18);
+
+    // P(B|A)
+    ctx.fillStyle='#0fee89';
+    ctx.fillText(fmt(pbga), (X1+X2)/2, (Y_A+Y_AB)/2-4);
+    // P(B'|A)
+    ctx.fillStyle='#6a8898';
+    ctx.fillText(fmt(pnbga), (X1+X2)/2, (Y_A+Y_ANB)/2+18);
+
+    // P(B|A')
+    ctx.fillStyle='#ff822c';
+    ctx.fillText(fmt(pbgna), (X1+X2)/2, (Y_NA+Y_NAB)/2-4);
+    // P(B'|A')
+    ctx.fillStyle='#6a8898';
+    ctx.fillText(fmt(pnbgna), (X1+X2)/2, (Y_NA+Y_NANB)/2+18);
+
+    // Stage 1 nodes
+    ctx.fillStyle='#fff067';
+    ctx.beginPath(); ctx.arc(X0,H/2,6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#00abfa';
+    ctx.beginPath(); ctx.arc(X1,Y_A,5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#888780';
+    ctx.beginPath(); ctx.arc(X1,Y_NA,5,0,Math.PI*2); ctx.fill();
+
+    // Stage 1 node labels
+    ctx.font='bold 14px Courier New,monospace';
+    ctx.fillStyle='#00abfa'; ctx.textAlign='right'; ctx.textBaseline='middle';
+    ctx.fillText('A', X1-10, Y_A);
+    ctx.fillStyle='#888780';
+    ctx.fillText("A'", X1-10, Y_NA);
+
+    // End outcomes — boxes
+    var outcomes=[
+      {y:Y_AB,  label:'A ∩ B',   p:pa*pbga,   col:'#0fee89'},
+      {y:Y_ANB, label:"A ∩ B'",  p:pa*pnbga,  col:'#00abfa'},
+      {y:Y_NAB, label:"A' ∩ B",  p:pna*pbgna, col:'#ff822c'},
+      {y:Y_NANB,label:"A' ∩ B'", p:pna*pnbgna,col:'#888780'}
+    ];
+
+    var total=0;
+    outcomes.forEach(function(o){ total+=o.p; });
+
+    outcomes.forEach(function(o){
+      // Box
+      ctx.fillStyle='#0d1f2d'; ctx.strokeStyle=o.col; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.roundRect(X2+6, o.y-16, 158, 32, 4);
+      ctx.fill(); ctx.stroke();
+
+      // Outcome label
+      ctx.fillStyle=o.col; ctx.font='bold 12px Courier New,monospace';
+      ctx.textAlign='left'; ctx.textBaseline='middle';
+      ctx.fillText(o.label, X2+14, o.y-2);
+
+      // Product shown
+      ctx.fillStyle='#fff067'; ctx.font='bold 13px Courier New,monospace';
+      ctx.textAlign='right'; ctx.textBaseline='middle';
+      ctx.fillText(fmt3(o.p), X2+158, o.y);
+    });
+
+    // Sum check
+    var sumColor=Math.abs(total-1)<0.001?'#0fee89':'#ff4670';
+    ctx.fillStyle='#0d1f2d'; ctx.strokeStyle=sumColor; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.roundRect(X2+6, H-32, 158, 24, 4); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=sumColor; ctx.font='bold 12px Courier New,monospace';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('Sum = '+fmt3(total), X2+85, H-20);
+
+    // Independence check
+    var pB_marginal=pa*pbga+pna*pbgna;
+    var isIndep=(Math.abs(pbgaD-pbgnaD)<0.02);
+
+    document.getElementById('eq-display').innerHTML=
+      'P(A∩B) = P(A)×P(B|A) = '+fmt(pa)+'×'+fmt(pbga)+' = <strong style="color:#0fee89">'+fmt3(pa*pbga)+'</strong>'+
+      '&nbsp;&nbsp;&nbsp;P(A\'∩B) = '+fmt(pna)+'×'+fmt(pbgna)+' = <strong style="color:#ff822c">'+fmt3(pna*pbgna)+'</strong>'+
+      '<br>P(B) = P(A∩B)+P(A\'∩B) = <strong style="color:#fff067">'+fmt3(pB_marginal)+'</strong>'+
+      (isIndep
+        ? '&nbsp;&nbsp;<span style="color:#0fee89">✓ P(B|A) = P(B|A\') — events are <strong>independent</strong></span>'
+        : '&nbsp;&nbsp;<span style="color:#ff822c">P(B|A) ≠ P(B|A\') — events are <strong>dependent</strong></span>');
+  }
+
+  document.getElementById('sl-pa').oninput=function(){
+    paT=parseFloat(this.value);
+    document.getElementById('lbl-pa').textContent='P(A) = '+paT.toFixed(2);
+  };
+  document.getElementById('sl-pbga').oninput=function(){
+    pbgaT=parseFloat(this.value);
+    document.getElementById('lbl-pbga').textContent='P(B | A) = '+pbgaT.toFixed(2);
+  };
+  document.getElementById('sl-pbgna').oninput=function(){
+    pbgnaT=parseFloat(this.value);
+    document.getElementById('lbl-pbgna').textContent='P(B | A\') = '+pbgnaT.toFixed(2);
+  };
+
+  function tick(){
+    paD+=(paT-paD)*SPRING;
+    pbgaD+=(pbgaT-pbgaD)*SPRING;
+    pbgnaD+=(pbgnaT-pbgnaD)*SPRING;
+    draw();
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>
