@@ -3,144 +3,352 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Parhaylikhay — Cambridge O-Level Maths Widgets</title>
+  <title>Parhaylikhay — Cambridge O-Level Maths</title>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    html, body { background:#0d1216; color:#b4b2a9; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; min-height:100vh; }
-    .page { max-width:700px; margin:0 auto; padding:32px 16px 48px; }
-    .logo { color:#00abfa; font-size:22px; font-weight:700; letter-spacing:-0.5px; margin-bottom:4px; }
-    .tagline { color:#3a5060; font-size:13px; margin-bottom:32px; }
-    .unit { margin-bottom:28px; }
-    .unit-title { font-size:13px; font-weight:600; color:#3a5060; text-transform:uppercase; letter-spacing:0.06em; border-bottom:1px solid #1a2535; padding-bottom:6px; margin-bottom:10px; }
-    .unit-title span { color:#00abfa; margin-right:6px; }
-    .widget-grid { display:flex; flex-direction:column; gap:6px; }
-    a.widget-link {
-      display:flex; align-items:center; gap:12px;
-      padding:10px 14px; border-radius:5px;
-      background:#0d1f2d; border:1px solid #1a2535;
-      text-decoration:none; transition:border-color 0.15s, background 0.15s;
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: #0d1216;
+      color: #b4b2a9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
     }
-    a.widget-link:hover { border-color:#00abfa; background:#001828; }
-    .widget-num { font-family:'Courier New',monospace; font-size:11px; color:#3a5060; width:28px; flex-shrink:0; }
-    .widget-name { font-size:13px; color:#d0cec6; flex:1; }
-    .widget-tag { font-size:11px; padding:2px 7px; border-radius:10px; background:#112030; color:#6a8898; flex-shrink:0; }
-    .section-tip { font-size:12px; color:#3a5060; margin-bottom:10px; }
+
+    .page { max-width: 1080px; margin: 0 auto; padding: 40px 20px 60px; }
+
+    /* ── Header ── */
+    header { margin-bottom: 44px; }
+    .logo { font-size: 26px; font-weight: 700; color: #00abfa; letter-spacing: -0.5px; margin-bottom: 5px; }
+    .tagline { font-size: 13px; color: #3a5060; }
+
+    /* ── Unit section ── */
+    .unit { margin-bottom: 40px; }
+    .unit-header {
+      display: flex; align-items: baseline; gap: 10px;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #1a2535;
+    }
+    .unit-num { font-size: 11px; font-weight: 600; font-family: 'Courier New', monospace; color: #3a5060; }
+    .unit-title { font-size: 15px; font-weight: 600; color: #d0cec6; }
+    .unit-count { font-size: 11px; color: #2a3a48; margin-left: auto; }
+
+    /* ── Card grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+    }
+
+    /* ── Card ── */
+    a.card {
+      display: flex; flex-direction: column;
+      background: #0b1824;
+      border: 1px solid #1a2e40;
+      border-radius: 8px;
+      text-decoration: none;
+      overflow: hidden;
+      transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
+    }
+    a.card:hover {
+      transform: translateY(-3px);
+    }
+
+    .thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      display: block;
+      flex-shrink: 0;
+    }
+    .thumb svg { width: 100%; height: 100%; display: block; }
+
+    .card-body { padding: 10px 11px 11px; }
+    .card-name { font-size: 12px; color: #c8c6be; line-height: 1.4; font-weight: 500; }
   </style>
 </head>
 <body>
 <div class="page">
-  <div class="logo">Parhaylikhay</div>
-  <div class="tagline">Cambridge O-Level Maths · Interactive Manipulatives · 54 widgets</div>
 
-  <p class="section-tip">Click any widget to open it. Right-click → Copy link to embed in Circle.so via Iframely.</p>
+  <header>
+    <div class="logo">Parhaylikhay</div>
+    <div class="tagline">Cambridge O-Level Maths · 54 interactive manipulatives</div>
+  </header>
 
-  <div class="unit">
-    <div class="unit-title"><span>1</span>Number</div>
-    <div class="widget-grid">
-      <a class="widget-link" href="manipulatives/1-number/1.1-types-of-number.html" target="_blank"><span class="widget-num">1.1</span><span class="widget-name">Types of Number — primes, squares, HCF, LCM</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.2-sets.html" target="_blank"><span class="widget-num">1.2</span><span class="widget-name">Sets &amp; Venn Diagrams</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.3-powers-and-roots.html" target="_blank"><span class="widget-num">1.3</span><span class="widget-name">Powers &amp; Roots</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.4-fractions-decimals-percentages.html" target="_blank"><span class="widget-num">1.4</span><span class="widget-name">Fractions, Decimals &amp; Percentages</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.5-ordering.html" target="_blank"><span class="widget-num">1.5</span><span class="widget-name">Ordering Numbers</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.7-indices.html" target="_blank"><span class="widget-num">1.7</span><span class="widget-name">Indices &amp; Laws of Indices</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.8-standard-form.html" target="_blank"><span class="widget-num">1.8</span><span class="widget-name">Standard Form</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.9-estimation.html" target="_blank"><span class="widget-num">1.9</span><span class="widget-name">Estimation &amp; Rounding</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.10-limits-of-accuracy.html" target="_blank"><span class="widget-num">1.10</span><span class="widget-name">Limits of Accuracy</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.11-ratio-proportion.html" target="_blank"><span class="widget-num">1.11</span><span class="widget-name">Ratio &amp; Proportion</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.12-rates.html" target="_blank"><span class="widget-num">1.12</span><span class="widget-name">Rates — Speed, Density, Pressure</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.13-percentages.html" target="_blank"><span class="widget-num">1.13</span><span class="widget-name">Percentage Calculations</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.15-time.html" target="_blank"><span class="widget-num">1.15</span><span class="widget-name">Time &amp; Clocks</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.17-exponential-growth-decay.html" target="_blank"><span class="widget-num">1.17</span><span class="widget-name">Exponential Growth &amp; Decay</span><span class="widget-tag">Number</span></a>
-      <a class="widget-link" href="manipulatives/1-number/1.18-surds.html" target="_blank"><span class="widget-num">1.18</span><span class="widget-name">Surds</span><span class="widget-tag">Number</span></a>
-    </div>
-  </div>
-
-  <div class="unit">
-    <div class="unit-title"><span>2</span>Algebra &amp; Graphs</div>
-    <div class="widget-grid">
-      <a class="widget-link" href="manipulatives/2-algebra-graphs/2.1-substitution.html" target="_blank"><span class="widget-num">2.1</span><span class="widget-name">Substitution &amp; Expressions</span><span class="widget-tag">Algebra</span></a>
-      <a class="widget-link" href="manipulatives/2-algebra-graphs/2.2-expanding-brackets.html" target="_blank"><span class="widget-num">2.2</span><span class="widget-name">Expanding &amp; Factorising</span><span class="widget-tag">Algebra</span></a>
-      <a class="widget-link" href="manipulatives/2-algebra-graphs/2.5-equations.html" target="_blank"><span class="widget-num">2.5</span><span class="widget-name">Solving Equations</span><span class="widget-tag">Algebra</span></a>
-      <a class="widget-link" href="manipulatives/2-algebra-graphs/2.6-inequalities.html" target="_blank"><span class="widget-num">2.6</span><span class="widget-name">Inequalities</span><span class="widget-tag">Algebra</span></a>
-      <a class="widget-link" href="manipulatives/2-algebra-graphs/2.7-sequences.html" target="_blank"><span class="widget-num">2.7</span><span class="widget-name">Sequences &amp; nth Term</span><span class="widget-tag">Algebra</span></a>
-      <a class="widget-link" href="manipulatives/2-algebra-graphs/2.8-proportion.html" target="_blank"><span class="widget-num">2.8</span><span class="widget-name">Direct &amp; Inverse Proportion</span><span class="widget-tag">Algebra</span></a>
-      <a class="widget-link" href="manipulatives/2-algebra-graphs/2.9-distance-time.html" target="_blank"><span class="widget-num">2.9</span><span class="widget-name">Distance–Time &amp; Speed–Time Graphs</span><span class="widget-tag">Graphs</span></a>
-      <a class="widget-link" href="manipulatives/2-algebra-graphs/2.10-graph-sketching.html" target="_blank"><span class="widget-num">2.10</span><span class="widget-name">Graph Sketching — all curve families</span><span class="widget-tag">Graphs</span></a>
-      <a class="widget-link" href="manipulatives/2-algebra-graphs/2.12-functions.html" target="_blank"><span class="widget-num">2.12</span><span class="widget-name">Functions — f(x), fg(x), f⁻¹(x)</span><span class="widget-tag">Algebra</span></a>
-    </div>
-  </div>
-
-  <div class="unit">
-    <div class="unit-title"><span>3</span>Coordinate Geometry</div>
-    <div class="widget-grid">
-      <a class="widget-link" href="manipulatives/3-coordinate-geometry/3.1-gradient.html" target="_blank"><span class="widget-num">3.1</span><span class="widget-name">Gradient</span><span class="widget-tag">Coord Geo</span></a>
-      <a class="widget-link" href="manipulatives/3-coordinate-geometry/3.2-straight-line.html" target="_blank"><span class="widget-num">3.2</span><span class="widget-name">Straight-Line Equation y = mx + c</span><span class="widget-tag">Coord Geo</span></a>
-      <a class="widget-link" href="manipulatives/3-coordinate-geometry/3.3-midpoint-distance.html" target="_blank"><span class="widget-num">3.3</span><span class="widget-name">Midpoint &amp; Distance</span><span class="widget-tag">Coord Geo</span></a>
-      <a class="widget-link" href="manipulatives/3-coordinate-geometry/3.4-parallel-perpendicular.html" target="_blank"><span class="widget-num">3.4</span><span class="widget-name">Parallel &amp; Perpendicular Lines</span><span class="widget-tag">Coord Geo</span></a>
-    </div>
-  </div>
-
-  <div class="unit">
-    <div class="unit-title"><span>4</span>Geometry</div>
-    <div class="widget-grid">
-      <a class="widget-link" href="manipulatives/4-geometry/4.3-bearings.html" target="_blank"><span class="widget-num">4.3</span><span class="widget-name">Bearings &amp; Scale Drawings</span><span class="widget-tag">Geometry</span></a>
-      <a class="widget-link" href="manipulatives/4-geometry/4.4-similarity.html" target="_blank"><span class="widget-num">4.4</span><span class="widget-name">Similarity — lengths, areas, volumes</span><span class="widget-tag">Geometry</span></a>
-      <a class="widget-link" href="manipulatives/4-geometry/4.6-parallel-lines.html" target="_blank"><span class="widget-num">4.6</span><span class="widget-name">Angles &amp; Parallel Lines</span><span class="widget-tag">Geometry</span></a>
-      <a class="widget-link" href="manipulatives/4-geometry/4.7-circle-theorems.html" target="_blank"><span class="widget-num">4.7</span><span class="widget-name">Circle Theorems</span><span class="widget-tag">Geometry</span></a>
-    </div>
-  </div>
-
-  <div class="unit">
-    <div class="unit-title"><span>5</span>Mensuration</div>
-    <div class="widget-grid">
-      <a class="widget-link" href="manipulatives/5-mensuration/5.2-area-shapes.html" target="_blank"><span class="widget-num">5.2</span><span class="widget-name">Area — Parallelogram &amp; Trapezium Proof</span><span class="widget-tag">Mensuration</span></a>
-      <a class="widget-link" href="manipulatives/5-mensuration/5.3-circle-sector.html" target="_blank"><span class="widget-num">5.3</span><span class="widget-name">Circle — Arc Length &amp; Sector Area</span><span class="widget-tag">Mensuration</span></a>
-      <a class="widget-link" href="manipulatives/5-mensuration/5.4-cylinder-net.html" target="_blank"><span class="widget-num">5.4</span><span class="widget-name">Cylinder — Unrolling the Net</span><span class="widget-tag">Mensuration</span></a>
-      <a class="widget-link" href="manipulatives/5-mensuration/5.4-cone-sphere.html" target="_blank"><span class="widget-num">5.4</span><span class="widget-name">Cone, Sphere &amp; Cylinder — 1:2:3 Volume Ratio</span><span class="widget-tag">Mensuration</span></a>
-    </div>
-  </div>
-
-  <div class="unit">
-    <div class="unit-title"><span>6</span>Trigonometry</div>
-    <div class="widget-grid">
-      <a class="widget-link" href="manipulatives/6-trigonometry/6.0-unit-circle.html" target="_blank"><span class="widget-num">6.0</span><span class="widget-name">Unit Circle — sin, cos, tan live</span><span class="widget-tag">Trig</span></a>
-      <a class="widget-link" href="manipulatives/6-trigonometry/6.1-right-triangle.html" target="_blank"><span class="widget-num">6.1</span><span class="widget-name">Right-Angled Triangle — SOH-CAH-TOA</span><span class="widget-tag">Trig</span></a>
-      <a class="widget-link" href="manipulatives/6-trigonometry/6.1-pythagoras.html" target="_blank"><span class="widget-num">6.1</span><span class="widget-name">Pythagoras' Theorem — Area Proof</span><span class="widget-tag">Trig</span></a>
-      <a class="widget-link" href="manipulatives/6-trigonometry/6.2-sine-rule.html" target="_blank"><span class="widget-num">6.2</span><span class="widget-name">Sine Rule &amp; Circumscribed Circle</span><span class="widget-tag">Trig</span></a>
-      <a class="widget-link" href="manipulatives/6-trigonometry/6.2-ambiguous-case.html" target="_blank"><span class="widget-num">6.2</span><span class="widget-name">The Ambiguous Case (SSA)</span><span class="widget-tag">Trig</span></a>
-      <a class="widget-link" href="manipulatives/6-trigonometry/6.3-elevation.html" target="_blank"><span class="widget-num">6.3</span><span class="widget-name">Angles of Elevation &amp; Depression</span><span class="widget-tag">Trig</span></a>
-    </div>
-  </div>
-
-  <div class="unit">
-    <div class="unit-title"><span>7</span>Transformations &amp; Vectors</div>
-    <div class="widget-grid">
-      <a class="widget-link" href="manipulatives/7-transformations-vectors/7.1-reflection.html" target="_blank"><span class="widget-num">7.1</span><span class="widget-name">Reflection — Draggable Mirror Line</span><span class="widget-tag">Transform</span></a>
-      <a class="widget-link" href="manipulatives/7-transformations-vectors/7.1-rotation.html" target="_blank"><span class="widget-num">7.1</span><span class="widget-name">Rotation — Arc Trails</span><span class="widget-tag">Transform</span></a>
-      <a class="widget-link" href="manipulatives/7-transformations-vectors/7.1-enlargement.html" target="_blank"><span class="widget-num">7.1</span><span class="widget-name">Enlargement — Rays from Centre</span><span class="widget-tag">Transform</span></a>
-      <a class="widget-link" href="manipulatives/7-transformations-vectors/7.1-combined.html" target="_blank"><span class="widget-num">7.1</span><span class="widget-name">Combined Transformations — Order Matters</span><span class="widget-tag">Transform</span></a>
-      <a class="widget-link" href="manipulatives/7-transformations-vectors/7.2-vectors.html" target="_blank"><span class="widget-num">7.2</span><span class="widget-name">Vectors — Head-to-Tail Addition</span><span class="widget-tag">Vectors</span></a>
-    </div>
-  </div>
-
-  <div class="unit">
-    <div class="unit-title"><span>8</span>Probability</div>
-    <div class="widget-grid">
-      <a class="widget-link" href="manipulatives/8-probability/8.1-venn.html" target="_blank"><span class="widget-num">8.1</span><span class="widget-name">Venn Diagrams &amp; Addition Rule</span><span class="widget-tag">Probability</span></a>
-      <a class="widget-link" href="manipulatives/8-probability/8.2-tree.html" target="_blank"><span class="widget-num">8.2</span><span class="widget-name">Tree Diagrams — Multiply Along, Add Across</span><span class="widget-tag">Probability</span></a>
-      <a class="widget-link" href="manipulatives/8-probability/8.3-frequency.html" target="_blank"><span class="widget-num">8.3</span><span class="widget-name">Relative Frequency — Convergence Experiment</span><span class="widget-tag">Probability</span></a>
-    </div>
-  </div>
-
-  <div class="unit">
-    <div class="unit-title"><span>9</span>Statistics</div>
-    <div class="widget-grid">
-      <a class="widget-link" href="manipulatives/9-statistics/9.1-histogram.html" target="_blank"><span class="widget-num">9.1</span><span class="widget-name">Histograms — Frequency Density vs Frequency</span><span class="widget-tag">Statistics</span></a>
-      <a class="widget-link" href="manipulatives/9-statistics/9.3-cumfreq.html" target="_blank"><span class="widget-num">9.3</span><span class="widget-name">Cumulative Frequency — Median &amp; Quartiles</span><span class="widget-tag">Statistics</span></a>
-      <a class="widget-link" href="manipulatives/9-statistics/9.4-scatter.html" target="_blank"><span class="widget-num">9.4</span><span class="widget-name">Scatter Diagrams — Line of Best Fit</span><span class="widget-tag">Statistics</span></a>
-    </div>
-  </div>
+  <div id="root"></div>
 
 </div>
+<script>
+  var BASE = 'https://hassanparhaylikhay.github.io/parhaylikhay/manipulatives/';
+
+  // SVG thumbnail markup per unit (viewBox="0 0 200 112")
+  var THUMBS = {
+
+    1: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="112" fill="#080f18"/>
+      <circle cx="100" cy="56" r="44" fill="none" stroke="#00abfa18" stroke-width="1"/>
+      <circle cx="100" cy="56" r="28" fill="none" stroke="#00abfa28" stroke-width="1"/>
+      <text x="42" y="44" fill="#00abfa" font-size="22" font-family="monospace" font-weight="700" opacity=".9">2</text>
+      <text x="75" y="82" fill="#00abfa" font-size="17" font-family="monospace" opacity=".6">3</text>
+      <text x="116" y="38" fill="#00abfa" font-size="14" font-family="monospace" opacity=".75">7</text>
+      <text x="130" y="72" fill="#00abfa" font-size="18" font-family="monospace" opacity=".5">5</text>
+      <text x="54" y="66" fill="#00abfa" font-size="13" font-family="monospace" opacity=".4">11</text>
+      <text x="93" y="52" fill="#00abfa" font-size="11" font-family="monospace" opacity=".3">13</text>
+    </svg>`,
+
+    2: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="112" fill="#080f18"/>
+      <line x1="0" y1="56" x2="200" y2="56" stroke="#0fee8918" stroke-width="1"/>
+      <line x1="100" y1="0" x2="100" y2="112" stroke="#0fee8918" stroke-width="1"/>
+      <line x1="0" y1="28" x2="200" y2="28" stroke="#0fee890c" stroke-width="0.8"/>
+      <line x1="0" y1="84" x2="200" y2="84" stroke="#0fee890c" stroke-width="0.8"/>
+      <line x1="50" y1="0" x2="50" y2="112" stroke="#0fee890c" stroke-width="0.8"/>
+      <line x1="150" y1="0" x2="150" y2="112" stroke="#0fee890c" stroke-width="0.8"/>
+      <path d="M 18 100 C 50 100 80 8 100 8 C 120 8 150 100 182 100" fill="none" stroke="#0fee89" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="100" cy="8" r="3.5" fill="#0fee89"/>
+    </svg>`,
+
+    3: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="112" fill="#080f18"/>
+      <line x1="0" y1="28" x2="200" y2="28" stroke="#ff822c10" stroke-width="0.8"/>
+      <line x1="0" y1="56" x2="200" y2="56" stroke="#ff822c18" stroke-width="1"/>
+      <line x1="0" y1="84" x2="200" y2="84" stroke="#ff822c10" stroke-width="0.8"/>
+      <line x1="50"  y1="0" x2="50"  y2="112" stroke="#ff822c10" stroke-width="0.8"/>
+      <line x1="100" y1="0" x2="100" y2="112" stroke="#ff822c18" stroke-width="1"/>
+      <line x1="150" y1="0" x2="150" y2="112" stroke="#ff822c10" stroke-width="0.8"/>
+      <line x1="20" y1="95" x2="180" y2="17" stroke="#ff822c" stroke-width="2.5"/>
+      <circle cx="100" cy="56" r="5" fill="#ff822c"/>
+      <circle cx="60"  cy="76" r="3" fill="#ff822c88"/>
+      <circle cx="140" cy="36" r="3" fill="#ff822c88"/>
+    </svg>`,
+
+    4: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="112" fill="#080f18"/>
+      <circle cx="100" cy="52" r="44" fill="none" stroke="#ff467022" stroke-width="1"/>
+      <polygon points="100,10 34,98 166,98" fill="#ff467010" stroke="#ff4670" stroke-width="2"/>
+      <circle cx="100" cy="68" r="22" fill="none" stroke="#ff467055" stroke-width="1.5"/>
+      <circle cx="100" cy="52" r="2.5" fill="#ff4670"/>
+    </svg>`,
+
+    5: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="112" fill="#080f18"/>
+      <ellipse cx="58" cy="28" rx="26" ry="9" fill="none" stroke="#fff067" stroke-width="1.5"/>
+      <ellipse cx="58" cy="82" rx="26" ry="9" fill="none" stroke="#fff067" stroke-width="1.5"/>
+      <line x1="32" y1="28" x2="32" y2="82" stroke="#fff067" stroke-width="1.5"/>
+      <line x1="84" y1="28" x2="84" y2="82" stroke="#fff067" stroke-width="1.5"/>
+      <circle cx="148" cy="56" r="32" fill="none" stroke="#fff06788" stroke-width="1.5"/>
+      <ellipse cx="148" cy="56" rx="32" ry="10" fill="none" stroke="#fff06740" stroke-width="1"/>
+      <ellipse cx="148" cy="56" rx="10" ry="32" fill="none" stroke="#fff06722" stroke-width="0.8"/>
+    </svg>`,
+
+    6: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="112" fill="#080f18"/>
+      <circle cx="72" cy="56" r="42" fill="none" stroke="#00abfa20" stroke-width="1"/>
+      <line x1="30" y1="56" x2="114" y2="56" stroke="#00abfa25" stroke-width="1"/>
+      <line x1="72" y1="14" x2="72" y2="98" stroke="#00abfa25" stroke-width="1"/>
+      <line x1="72" y1="56" x2="102" y2="27" stroke="#00abfa" stroke-width="2"/>
+      <line x1="102" y1="27" x2="102" y2="56" stroke="#0fee89" stroke-width="2"/>
+      <line x1="72"  y1="56" x2="102" y2="56" stroke="#ff822c" stroke-width="2"/>
+      <circle cx="102" cy="27" r="4" fill="#00abfa"/>
+      <path d="M 125 56 Q 138 30 151 56 Q 164 82 177 56 Q 190 30 200 45" fill="none" stroke="#00abfa99" stroke-width="1.5"/>
+    </svg>`,
+
+    7: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="112" fill="#080f18"/>
+      <line x1="100" y1="4" x2="100" y2="108" stroke="#ffffff18" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <polygon points="78,18 40,92 88,92" fill="#00abfa12" stroke="#00abfa" stroke-width="2"/>
+      <polygon points="122,18 160,92 112,92" fill="#ff467012" stroke="#ff4670" stroke-width="2"/>
+      <line x1="78" y1="18" x2="122" y2="18" stroke="#ffffff15" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="40" y1="92" x2="160" y2="92" stroke="#ffffff15" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="88" y1="92" x2="112" y2="92" stroke="#ffffff15" stroke-width="1" stroke-dasharray="3,3"/>
+    </svg>`,
+
+    8: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="112" fill="#080f18"/>
+      <circle cx="28" cy="56" r="5" fill="#0fee89"/>
+      <line x1="33" y1="50" x2="88" y2="24" stroke="#0fee89" stroke-width="1.5"/>
+      <line x1="33" y1="62" x2="88" y2="88" stroke="#0fee8966" stroke-width="1.5"/>
+      <circle cx="88" cy="24" r="4" fill="#0fee89"/>
+      <circle cx="88" cy="88" r="4" fill="#0fee8966"/>
+      <line x1="92" y1="20" x2="150" y2="10" stroke="#0fee89" stroke-width="1.5"/>
+      <line x1="92" y1="28" x2="150" y2="40" stroke="#0fee8980" stroke-width="1.5"/>
+      <line x1="92" y1="84" x2="150" y2="72" stroke="#0fee8966" stroke-width="1.5"/>
+      <line x1="92" y1="92" x2="150" y2="102" stroke="#0fee8944" stroke-width="1.5"/>
+      <circle cx="150" cy="10"  r="3" fill="#0fee89"/>
+      <circle cx="150" cy="40"  r="3" fill="#0fee8988"/>
+      <circle cx="150" cy="72"  r="3" fill="#0fee8966"/>
+      <circle cx="150" cy="102" r="3" fill="#0fee8944"/>
+    </svg>`,
+
+    9: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
+      <rect width="200" height="112" fill="#080f18"/>
+      <line x1="28" y1="98" x2="185" y2="98" stroke="#ff467030" stroke-width="1"/>
+      <line x1="28" y1="10"  x2="28"  y2="98" stroke="#ff467030" stroke-width="1"/>
+      <rect x="38" y="60" width="22" height="38" fill="#ff467025" stroke="#ff467066" stroke-width="1"/>
+      <rect x="66" y="38" width="22" height="60" fill="#ff467035" stroke="#ff467080" stroke-width="1"/>
+      <rect x="94" y="48" width="22" height="50" fill="#ff467030" stroke="#ff467070" stroke-width="1"/>
+      <rect x="122" y="70" width="22" height="28" fill="#ff467020" stroke="#ff467055" stroke-width="1"/>
+      <rect x="150" y="80" width="22" height="18" fill="#ff467018" stroke="#ff467044" stroke-width="1"/>
+      <circle cx="49"  cy="52" r="2.5" fill="#ff4670aa"/>
+      <circle cx="77"  cy="30" r="2.5" fill="#ff4670aa"/>
+      <circle cx="105" cy="40" r="2.5" fill="#ff4670aa"/>
+      <circle cx="133" cy="62" r="2.5" fill="#ff4670aa"/>
+      <circle cx="161" cy="72" r="2.5" fill="#ff4670aa"/>
+    </svg>`,
+  };
+
+  var UNIT_COLORS = {1:'#00abfa',2:'#0fee89',3:'#ff822c',4:'#ff4670',5:'#fff067',6:'#00abfa',7:'#ff822c',8:'#0fee89',9:'#ff4670'};
+
+  var UNITS = [
+    {
+      num:1, title:'Number',
+      widgets:[
+        ['1-number/1.1-types-of-number.html',       'Types of Number'],
+        ['1-number/1.2-sets.html',                   'Sets & Venn Diagrams'],
+        ['1-number/1.3-powers-and-roots.html',        'Powers & Roots'],
+        ['1-number/1.4-fractions-decimals-percentages.html', 'Fractions, Decimals & %'],
+        ['1-number/1.5-ordering.html',                'Ordering Numbers'],
+        ['1-number/1.7-indices.html',                 'Indices'],
+        ['1-number/1.8-standard-form.html',           'Standard Form'],
+        ['1-number/1.9-estimation.html',              'Estimation & Rounding'],
+        ['1-number/1.10-limits-of-accuracy.html',     'Limits of Accuracy'],
+        ['1-number/1.11-ratio-proportion.html',       'Ratio & Proportion'],
+        ['1-number/1.12-rates.html',                  'Rates'],
+        ['1-number/1.13-percentages.html',            'Percentages'],
+        ['1-number/1.15-time.html',                   'Time'],
+        ['1-number/1.17-exponential-growth-decay.html','Exponential Growth & Decay'],
+        ['1-number/1.18-surds.html',                  'Surds'],
+      ]
+    },
+    {
+      num:2, title:'Algebra & Graphs',
+      widgets:[
+        ['2-algebra-graphs/2.1-substitution.html',    'Substitution'],
+        ['2-algebra-graphs/2.2-expanding-brackets.html','Expanding & Factorising'],
+        ['2-algebra-graphs/2.5-equations.html',        'Solving Equations'],
+        ['2-algebra-graphs/2.6-inequalities.html',     'Inequalities'],
+        ['2-algebra-graphs/2.7-sequences.html',        'Sequences & nth Term'],
+        ['2-algebra-graphs/2.8-proportion.html',       'Direct & Inverse Proportion'],
+        ['2-algebra-graphs/2.9-distance-time.html',    'Distance–Time Graphs'],
+        ['2-algebra-graphs/2.10-graph-sketching.html', 'Graph Sketching'],
+        ['2-algebra-graphs/2.12-functions.html',       'Functions f(x), fg(x), f⁻¹(x)'],
+      ]
+    },
+    {
+      num:3, title:'Coordinate Geometry',
+      widgets:[
+        ['3-coordinate-geometry/3.1-gradient.html',            'Gradient'],
+        ['3-coordinate-geometry/3.2-straight-line.html',       'Straight-Line y = mx + c'],
+        ['3-coordinate-geometry/3.3-midpoint-distance.html',   'Midpoint & Distance'],
+        ['3-coordinate-geometry/3.4-parallel-perpendicular.html','Parallel & Perpendicular'],
+      ]
+    },
+    {
+      num:4, title:'Geometry',
+      widgets:[
+        ['4-geometry/4.3-bearings.html',        'Bearings'],
+        ['4-geometry/4.4-similarity.html',       'Similarity'],
+        ['4-geometry/4.6-parallel-lines.html',   'Angles & Parallel Lines'],
+        ['4-geometry/4.7-circle-theorems.html',  'Circle Theorems'],
+      ]
+    },
+    {
+      num:5, title:'Mensuration',
+      widgets:[
+        ['5-mensuration/5.2-area-shapes.html',    'Area — Parallelogram & Trapezium'],
+        ['5-mensuration/5.3-circle-sector.html',  'Arc Length & Sector Area'],
+        ['5-mensuration/5.4-cylinder-net.html',   'Cylinder Net'],
+        ['5-mensuration/5.4-cone-sphere.html',    'Cone, Sphere & Cylinder'],
+      ]
+    },
+    {
+      num:6, title:'Trigonometry',
+      widgets:[
+        ['6-trigonometry/6.0-unit-circle.html',     'Unit Circle'],
+        ['6-trigonometry/6.1-right-triangle.html',  'SOH-CAH-TOA'],
+        ['6-trigonometry/6.1-pythagoras.html',       'Pythagoras — Area Proof'],
+        ['6-trigonometry/6.2-sine-rule.html',        'Sine Rule'],
+        ['6-trigonometry/6.2-ambiguous-case.html',   'Ambiguous Case (SSA)'],
+        ['6-trigonometry/6.3-elevation.html',        'Elevation & Depression'],
+      ]
+    },
+    {
+      num:7, title:'Transformations & Vectors',
+      widgets:[
+        ['7-transformations-vectors/7.1-reflection.html',  'Reflection'],
+        ['7-transformations-vectors/7.1-rotation.html',    'Rotation'],
+        ['7-transformations-vectors/7.1-enlargement.html', 'Enlargement'],
+        ['7-transformations-vectors/7.1-combined.html',    'Combined Transformations'],
+        ['7-transformations-vectors/7.2-vectors.html',     'Vectors'],
+      ]
+    },
+    {
+      num:8, title:'Probability',
+      widgets:[
+        ['8-probability/8.1-venn.html',      'Venn Diagrams & Addition Rule'],
+        ['8-probability/8.2-tree.html',       'Tree Diagrams'],
+        ['8-probability/8.3-frequency.html',  'Relative Frequency'],
+      ]
+    },
+    {
+      num:9, title:'Statistics',
+      widgets:[
+        ['9-statistics/9.1-histogram.html', 'Histograms & Frequency Density'],
+        ['9-statistics/9.3-cumfreq.html',   'Cumulative Frequency'],
+        ['9-statistics/9.4-scatter.html',   'Scatter Diagrams'],
+      ]
+    },
+  ];
+
+  var root = document.getElementById('root');
+
+  UNITS.forEach(function(unit) {
+    var color = UNIT_COLORS[unit.num];
+    var thumb = THUMBS[unit.num];
+
+    var section = document.createElement('div');
+    section.className = 'unit';
+
+    section.innerHTML =
+      '<div class="unit-header">' +
+        '<span class="unit-num">UNIT ' + unit.num + '</span>' +
+        '<span class="unit-title" style="color:' + color + '">' + unit.title + '</span>' +
+        '<span class="unit-count">' + unit.widgets.length + ' widgets</span>' +
+      '</div>' +
+      '<div class="grid" id="grid-' + unit.num + '"></div>';
+
+    root.appendChild(section);
+
+    var grid = section.querySelector('.grid');
+
+    unit.widgets.forEach(function(w) {
+      var slug = w[0], name = w[1];
+      var url = BASE + slug;
+
+      var card = document.createElement('a');
+      card.className = 'card';
+      card.href = url;
+      card.target = '_blank';
+      card.rel = 'noopener';
+      card.style.setProperty('--c', color);
+
+      card.innerHTML =
+        '<div class="thumb">' + thumb + '</div>' +
+        '<div class="card-body"><div class="card-name">' + name + '</div></div>';
+
+      // Hover border glow via inline style on mouseenter/leave
+      card.addEventListener('mouseenter', function() {
+        this.style.borderColor = color;
+        this.style.boxShadow = '0 0 0 1px ' + color + '44, 0 8px 24px #00000055';
+      });
+      card.addEventListener('mouseleave', function() {
+        this.style.borderColor = '';
+        this.style.boxShadow = '';
+      });
+
+      grid.appendChild(card);
+    });
+  });
+</script>
 </body>
 </html>
