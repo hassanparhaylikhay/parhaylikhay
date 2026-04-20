@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Cumulative Frequency</title>
+  <meta property="og:title" content="Cumulative Frequency"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="660"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:13px; color:#f0f0ee; min-height:50px; line-height:1.8; }
+    canvas { display:block; cursor:default; }
+    .sliders { width:560px; display:flex; flex-direction:column; gap:8px; padding:8px 4px; border-top:1px solid #1a2535; border-bottom:1px solid #1a2535; }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New',monospace; font-size:12px; width:130px; flex-shrink:0; color:#b4b2a9; }
+    input[type="range"] { flex:1; height:4px; -webkit-appearance:none; background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:50px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Cumulative Frequency — Median & Quartiles from the S-Curve</div>
+  <div class="instruction">
+    Adjust each class's frequency. The S-curve updates live.
+    Horizontal lines at n/4, n/2, 3n/4 automatically read off <b style="color:#00abfa">Q1</b>,
+    <b style="color:#fff067">median</b>, and <b style="color:#ff822c">Q3</b> from the curve.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+<canvas id="graph" width="560" height="320"></canvas>
+
+<div class="sliders" id="slider-container"></div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: plot cumulative frequency at the <strong>upper class boundary</strong>, not the midpoint.
+    Read off the value for n/2 to get the <strong>median</strong>. IQR = Q3 − Q1.
+    Always start your curve from (lower boundary of first class, 0).
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=320;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var classes=[
+    {label:'0–10',  low:0,  high:10},
+    {label:'10–20', low:10, high:20},
+    {label:'20–30', low:20, high:30},
+    {label:'30–40', low:30, high:40},
+    {label:'40–50', low:40, high:50},
+    {label:'50–60', low:50, high:60}
+  ];
+  var freqs=[4, 10, 18, 12, 8, 4];
+  var freqsD=freqs.slice();
+  var SPRING=0.13;
+
+  var sliderContainer=document.getElementById('slider-container');
+  classes.forEach(function(cl,i){
+    var row=document.createElement('div'); row.className='slider-row';
+    var lbl=document.createElement('div'); lbl.className='slider-label';
+    lbl.id='lbl-f'+i;
+    lbl.textContent=cl.label+': f = '+freqs[i];
+    var sl=document.createElement('input'); sl.type='range'; sl.min=1; sl.max=30; sl.step=1; sl.value=freqs[i];
+    sl.addEventListener('input',function(){
+      freqs[i]=parseInt(this.value);
+      lbl.textContent=cl.label+': f = '+freqs[i];
+    });
+    var bnd=document.createElement('div'); bnd.className='slider-bounds'; bnd.textContent='1…30';
+    row.appendChild(lbl); row.appendChild(sl); row.appendChild(bnd);
+    sliderContainer.appendChild(row);
+  });
+
+  // Catmull-Rom smooth curve through points
+  function drawSmooth(pts){
+    if(pts.length<2) return;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for(var i=0;i<pts.length-1;i++){
+      var p0=pts[Math.max(0,i-1)];
+      var p1=pts[i];
+      var p2=pts[i+1];
+      var p3=pts[Math.min(pts.length-1,i+2)];
+      // Catmull-Rom to Bezier
+      var cp1x=p1.x+(p2.x-p0.x)/6;
+      var cp1y=p1.y+(p2.y-p0.y)/6;
+      var cp2x=p2.x-(p3.x-p1.x)/6;
+      var cp2y=p2.y-(p3.y-p1.y)/6;
+      ctx.bezierCurveTo(cp1x,cp1y,cp2x,cp2y,p2.x,p2.y);
+    }
+    ctx.stroke();
+  }
+
+  // Interpolate y on piecewise-linear for given x (cumFreq value)
+  function interpX(pts, targetY){
+    for(var i=1;i<pts.length;i++){
+      var p0=pts[i-1], p1=pts[i];
+      if(targetY>=p0.cf && targetY<=p1.cf){
+        var t=(targetY-p0.cf)/(p1.cf-p0.cf);
+        return p0.xval+t*(p1.xval-p0.xval);
+      }
+    }
+    return null;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var PAD_L=50, PAD_R=16, PAD_T=20, PAD_B=36;
+    var gW=W-PAD_L-PAD_R, gH=H-PAD_T-PAD_B;
+
+    var xMin=0, xMax=60;
+    var cumFreqs=[0];
+    for(var i=0;i<freqsD.length;i++) cumFreqs.push(cumFreqs[i]+freqsD[i]);
+    var n=cumFreqs[cumFreqs.length-1];
+    var yMax=Math.ceil(n/10)*10;
+
+    function mapX(v){ return PAD_L+gW*(v-xMin)/(xMax-xMin); }
+    function mapY(v){ return PAD_T+gH*(1-v/yMax); }
+
+    // Grid
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    var yStep=yMax<=40?5:yMax<=80?10:20;
+    for(var yv=0;yv<=yMax;yv+=yStep){
+      ctx.moveTo(PAD_L,mapY(yv)); ctx.lineTo(PAD_L+gW,mapY(yv));
+    }
+    for(var xv=0;xv<=xMax;xv+=10){
+      ctx.moveTo(mapX(xv),PAD_T); ctx.lineTo(mapX(xv),PAD_T+gH);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(PAD_L,PAD_T); ctx.lineTo(PAD_L,PAD_T+gH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD_L,PAD_T+gH); ctx.lineTo(PAD_L+gW,PAD_T+gH); ctx.stroke();
+
+    // Y label
+    ctx.save();
+    ctx.translate(14,PAD_T+gH/2); ctx.rotate(-Math.PI/2);
+    ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('Cumulative frequency', 0, 0);
+    ctx.restore();
+
+    // Y ticks
+    ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var yv2=0;yv2<=yMax;yv2+=yStep){
+      ctx.fillText(Math.round(yv2), PAD_L-5, mapY(yv2));
+    }
+
+    // X ticks
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var xv2=0;xv2<=xMax;xv2+=10){
+      ctx.fillText(xv2, mapX(xv2), PAD_T+gH+5);
+    }
+
+    // Build points array: (lower bound of first class, 0) then upper boundary, cumFreq
+    var pts=[{x:mapX(classes[0].low), y:mapY(0), xval:classes[0].low, cf:0}];
+    classes.forEach(function(cl,i){
+      pts.push({x:mapX(cl.high), y:mapY(cumFreqs[i+1]), xval:cl.high, cf:cumFreqs[i+1]});
+    });
+
+    // Shaded area under curve
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, mapY(0));
+    // Use smooth curve for fill too
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for(var ii=0;ii<pts.length-1;ii++){
+      var pp0=pts[Math.max(0,ii-1)];
+      var pp1=pts[ii];
+      var pp2=pts[ii+1];
+      var pp3=pts[Math.min(pts.length-1,ii+2)];
+      ctx.bezierCurveTo(
+        pp1.x+(pp2.x-pp0.x)/6, pp1.y+(pp2.y-pp0.y)/6,
+        pp2.x-(pp3.x-pp1.x)/6, pp2.y-(pp3.y-pp1.y)/6,
+        pp2.x, pp2.y
+      );
+    }
+    ctx.lineTo(pts[pts.length-1].x, mapY(0));
+    ctx.closePath();
+    ctx.fillStyle='#00abfa08'; ctx.fill();
+    ctx.restore();
+
+    // Curve
+    ctx.strokeStyle='#00abfa'; ctx.lineWidth=2.5;
+    drawSmooth(pts);
+
+    // Dot at each cumulative frequency point
+    pts.forEach(function(p,i){
+      ctx.fillStyle=i===0?'#3a5060':'#00abfa';
+      ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+    });
+
+    // Quartile lines
+    var quartileData=[
+      {frac:0.25, color:'#00abfa', label:'Q1'},
+      {frac:0.5,  color:'#fff067', label:'Median'},
+      {frac:0.75, color:'#ff822c', label:'Q3'}
+    ];
+    var results={};
+    quartileData.forEach(function(q){
+      var cfVal=n*q.frac;
+      var xVal=interpX(pts.map(function(p){ return {cf:p.cf, xval:p.xval}; }), cfVal);
+      if(xVal===null) return;
+
+      var qY=mapY(cfVal), qX=mapX(xVal);
+
+      // Horizontal dashed line from y-axis to curve
+      ctx.strokeStyle=q.color; ctx.lineWidth=1.5; ctx.setLineDash([5,4]);
+      ctx.beginPath(); ctx.moveTo(PAD_L,qY); ctx.lineTo(qX,qY); ctx.stroke();
+      // Vertical dashed line from curve down to x-axis
+      ctx.beginPath(); ctx.moveTo(qX,qY); ctx.lineTo(qX,PAD_T+gH); ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Dot on curve
+      ctx.fillStyle=q.color;
+      ctx.beginPath(); ctx.arc(qX,qY,5,0,Math.PI*2); ctx.fill();
+
+      // Y-axis label
+      ctx.fillStyle=q.color; ctx.font='bold 11px Courier New,monospace';
+      ctx.textAlign='right'; ctx.textBaseline='middle';
+      ctx.fillText(Math.round(cfVal), PAD_L-4, qY);
+
+      // X-axis label
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText(q.label+'='+xVal.toFixed(1), qX, PAD_T+gH+5);
+
+      results[q.label]=xVal;
+    });
+
+    var iqr=results['Q3']-results['Q1'];
+    document.getElementById('eq-display').innerHTML=
+      'n = <strong>'+Math.round(n)+'</strong>&nbsp;&nbsp;'+
+      'Q1 = <span style="color:#00abfa">'+results['Q1'].toFixed(1)+'</span>&nbsp;&nbsp;'+
+      'Median = <span style="color:#fff067">'+results['Median'].toFixed(1)+'</span>&nbsp;&nbsp;'+
+      'Q3 = <span style="color:#ff822c">'+results['Q3'].toFixed(1)+'</span>'+
+      '<br>IQR = Q3 − Q1 = <strong style="color:#fff067">'+iqr.toFixed(1)+'</strong>'+
+      '&nbsp;&nbsp; Range ≈ '+xMin+' to '+xMax;
+  }
+
+  function tick(){
+    var any=false;
+    for(var i=0;i<freqs.length;i++){
+      var nv=freqsD[i]+(freqs[i]-freqsD[i])*SPRING;
+      if(Math.abs(nv-freqsD[i])>0.01) any=true;
+      freqsD[i]=nv;
+    }
+    draw();
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Scatter Diagrams & Line of Best Fit</title>
+  <meta property="og:title" content="Scatter Diagrams"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="640"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:13px; color:#f0f0ee; min-height:50px; line-height:1.85; }
+    canvas { display:block; cursor:default; }
+    .btn-row { width:560px; display:flex; gap:8px; padding:8px 4px; border-top:1px solid #1a2535; border-bottom:1px solid #1a2535; }
+    .mode-btn { flex:1; padding:7px; background:#0d1f2d; border:1px solid #1e3a52; color:#b4b2a9; font-size:12px; border-radius:4px; cursor:pointer; }
+    .mode-btn.active { border-color:#00abfa; background:#001f35; color:#00abfa; font-weight:600; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Scatter Diagrams — Line of Best Fit Always Through (x̄, ȳ)</div>
+  <div class="instruction">
+    Drag any point to reshape the scatter. The <b style="color:#fff067">line of best fit</b> adjusts instantly
+    and always passes through the <b style="color:#ff4670">mean point (x̄, ȳ)</b>.
+    Load a preset to see different correlation types.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+<canvas id="graph" width="560" height="340"></canvas>
+
+<div class="btn-row">
+  <button class="mode-btn active" id="btn-pos">Positive</button>
+  <button class="mode-btn" id="btn-neg">Negative</button>
+  <button class="mode-btn" id="btn-none">No correlation</button>
+  <button class="mode-btn" id="btn-strong">Strong positive</button>
+</div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: the line of best fit <strong>must pass through the mean point (x̄, ȳ)</strong> — this is always tested.
+    Draw it so roughly equal numbers of points are above and below.
+    Use it to predict: substitute your x-value into the line equation, or read off the graph.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=340;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  var PAD_L=46, PAD_R=20, PAD_T=18, PAD_B=36;
+  var gW=W-PAD_L-PAD_R, gH=H-PAD_T-PAD_B;
+  var X_MIN=0, X_MAX=10, Y_MIN=0, Y_MAX=10;
+
+  function toC(mx,my){ return {x:PAD_L+gW*(mx-X_MIN)/(X_MAX-X_MIN), y:PAD_T+gH*(1-(my-Y_MIN)/(Y_MAX-Y_MIN))}; }
+  function fromC(cx,cy){ return {mx:X_MIN+(cx-PAD_L)/gW*(X_MAX-X_MIN), my:Y_MIN+(1-(cy-PAD_T)/gH)*(Y_MAX-Y_MIN)}; }
+
+  var PRESETS={
+    pos:  [{x:1.5,y:2},{x:2,y:3.5},{x:3,y:3},{x:4,y:5},{x:5,y:4.5},{x:6,y:6},{x:7,y:7.5},{x:8,y:7},{x:8.5,y:8.5}],
+    neg:  [{x:1,y:8.5},{x:2,y:8},{x:3,y:7},{x:4,y:6.5},{x:5,y:5},{x:6,y:4.5},{x:7,y:3},{x:8,y:2.5},{x:9,y:1.5}],
+    none: [{x:1,y:3},{x:2,y:7},{x:3,y:2},{x:4,y:8},{x:5,y:4},{x:6,y:6},{x:7,y:1.5},{x:8,y:7.5},{x:9,y:3.5}],
+    strong:[{x:1,y:1.2},{x:2,y:2.1},{x:3,y:3.0},{x:4,y:4.2},{x:5,y:4.9},{x:6,y:6.1},{x:7,y:7.0},{x:8,y:7.8},{x:9,y:9.1}]
+  };
+
+  var pts=PRESETS.pos.map(function(p){return {x:p.x,y:p.y};});
+  var ptsD=pts.map(function(p){return {x:p.x,y:p.y};});
+  var SPRING=0.14;
+
+  var dragging=-1;
+  var HIT=18;
+
+  function getPos(e){
+    var rect=canvas.getBoundingClientRect();
+    var cx=e.touches?e.touches[0].clientX:e.clientX;
+    var cy=e.touches?e.touches[0].clientY:e.clientY;
+    return {x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height)};
+  }
+  function nearPt(px,py,idx){
+    var p=toC(ptsD[idx].x,ptsD[idx].y);
+    var dx=px-p.x,dy=py-p.y;
+    return Math.sqrt(dx*dx+dy*dy)<HIT;
+  }
+  function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+
+  canvas.addEventListener('mousedown',function(e){
+    var p=getPos(e);
+    for(var i=0;i<pts.length;i++){
+      if(nearPt(p.x,p.y,i)){ dragging=i; e.preventDefault(); return; }
+    }
+  });
+  canvas.addEventListener('mousemove',function(e){
+    var p=getPos(e);
+    if(dragging>=0){
+      var m=fromC(p.x,p.y);
+      pts[dragging].x=clamp(Math.round(m.mx*4)/4, X_MIN+0.1, X_MAX-0.1);
+      pts[dragging].y=clamp(Math.round(m.my*4)/4, Y_MIN+0.1, Y_MAX-0.1);
+    } else {
+      var any=pts.some(function(_,i){ return nearPt(p.x,p.y,i); });
+      canvas.style.cursor=any?'grab':'default';
+    }
+  });
+  canvas.addEventListener('mouseup',function(){dragging=-1;});
+  canvas.addEventListener('mouseleave',function(){dragging=-1;});
+  canvas.addEventListener('touchstart',function(e){
+    var p=getPos(e);
+    for(var i=0;i<pts.length;i++){
+      if(nearPt(p.x,p.y,i)){ dragging=i; e.preventDefault(); return; }
+    }
+  },{passive:false});
+  canvas.addEventListener('touchmove',function(e){
+    if(dragging<0)return; e.preventDefault();
+    var p=getPos(e); var m=fromC(p.x,p.y);
+    pts[dragging].x=clamp(Math.round(m.mx*4)/4, X_MIN+0.1, X_MAX-0.1);
+    pts[dragging].y=clamp(Math.round(m.my*4)/4, Y_MIN+0.1, Y_MAX-0.1);
+  },{passive:false});
+  canvas.addEventListener('touchend',function(){dragging=-1;});
+
+  var presetBtns=['btn-pos','btn-neg','btn-none','btn-strong'];
+  presetBtns.forEach(function(id){
+    document.getElementById(id).addEventListener('click',function(){
+      var key=id.replace('btn-','');
+      pts=PRESETS[key].map(function(p){return {x:p.x,y:p.y};});
+      document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('active');});
+      this.classList.add('active');
+    });
+  });
+
+  function regression(pts){
+    var n=pts.length;
+    var sx=0,sy=0,sxx=0,sxy=0,syy=0;
+    pts.forEach(function(p){ sx+=p.x; sy+=p.y; sxx+=p.x*p.x; sxy+=p.x*p.y; syy+=p.y*p.y; });
+    var mx=sx/n, my=sy/n;
+    var Sxx=sxx-n*mx*mx, Sxy=sxy-n*mx*my, Syy=syy-n*my*my;
+    var b=Sxy/Sxx;
+    var a=my-b*mx;
+    var r=(Sxx===0||Syy===0)?0:Sxy/Math.sqrt(Sxx*Syy);
+    return {a:a,b:b,mx:mx,my:my,r:r};
+  }
+
+  function corrLabel(r){
+    var a=Math.abs(r);
+    if(a>0.85) return r>0?'strong positive':'strong negative';
+    if(a>0.5)  return r>0?'moderate positive':'moderate negative';
+    if(a>0.2)  return r>0?'weak positive':'weak negative';
+    return 'no correlation';
+  }
+  function corrColor(r){
+    var a=Math.abs(r);
+    if(a>0.85) return '#0fee89';
+    if(a>0.5)  return '#fff067';
+    return '#ff822c';
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var ky=Y_MIN;ky<=Y_MAX;ky++){
+      var p0=toC(X_MIN,ky),p1=toC(X_MAX,ky); ctx.moveTo(p0.x,p0.y); ctx.lineTo(p1.x,p1.y);
+    }
+    for(var kx=X_MIN;kx<=X_MAX;kx++){
+      var p0=toC(kx,Y_MIN),p1=toC(kx,Y_MAX); ctx.moveTo(p0.x,p0.y); ctx.lineTo(p1.x,p1.y);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    var a0=toC(X_MIN,Y_MIN),a1=toC(X_MAX,Y_MIN);
+    ctx.beginPath(); ctx.moveTo(a0.x,a0.y); ctx.lineTo(a1.x,a1.y); ctx.stroke();
+    var b0=toC(X_MIN,Y_MIN),b1=toC(X_MIN,Y_MAX);
+    ctx.beginPath(); ctx.moveTo(b0.x,b0.y); ctx.lineTo(b1.x,b1.y); ctx.stroke();
+
+    ctx.fillStyle='#3a5060'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='top';
+    for(var kx2=X_MIN;kx2<=X_MAX;kx2+=2){
+      var pp=toC(kx2,Y_MIN); ctx.fillText(kx2,pp.x,pp.y+4);
+    }
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var ky2=Y_MIN;ky2<=Y_MAX;ky2+=2){
+      var pp=toC(X_MIN,ky2); ctx.fillText(ky2,pp.x-4,pp.y);
+    }
+
+    var reg=regression(ptsD);
+
+    // Line of best fit
+    var x0=X_MIN, x1=X_MAX;
+    var y0=reg.a+reg.b*x0, y1=reg.a+reg.b*x1;
+    // Clamp to visible area
+    var lp0=toC(x0,y0), lp1=toC(x1,y1);
+    ctx.strokeStyle='#fff06799'; ctx.lineWidth=2.5;
+    ctx.setLineDash([8,5]);
+    ctx.beginPath(); ctx.moveTo(lp0.x,lp0.y); ctx.lineTo(lp1.x,lp1.y); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Mean point
+    var mp=toC(reg.mx,reg.my);
+    ctx.fillStyle='#ff4670';
+    ctx.beginPath(); ctx.arc(mp.x,mp.y,8,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#ff467088'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(mp.x,mp.y,14,0,Math.PI*2); ctx.stroke();
+    ctx.fillStyle='#ff4670'; ctx.font='bold 11px Courier New,monospace';
+    ctx.textAlign='left'; ctx.textBaseline='bottom';
+    ctx.fillText('(x̄,ȳ)=('+reg.mx.toFixed(1)+','+reg.my.toFixed(1)+')',mp.x+12,mp.y-4);
+
+    // Data points
+    ptsD.forEach(function(p,i){
+      var cp=toC(p.x,p.y);
+      var isActive=(i===dragging);
+      if(isActive){
+        ctx.fillStyle='#ffffff22';
+        ctx.beginPath(); ctx.arc(cp.x,cp.y,14,0,Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle='#00abfa';
+      ctx.beginPath(); ctx.arc(cp.x,cp.y,5,0,Math.PI*2); ctx.fill();
+    });
+
+    // Correlation badge
+    var col=corrColor(reg.r);
+    ctx.fillStyle='#0d1f2d'; ctx.strokeStyle=col; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.roundRect(W-170,PAD_T,160,34,5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=col; ctx.font='bold 13px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(corrLabel(reg.r), W-170+80, PAD_T+17);
+
+    var bSign=reg.b>=0?'+':'-';
+    document.getElementById('eq-display').innerHTML=
+      'ŷ = <strong style="color:#fff067">'+reg.b.toFixed(2)+'</strong>x '+bSign+' '+Math.abs(reg.a).toFixed(2)+
+      '&nbsp;&nbsp; passes through <span style="color:#ff4670">('+reg.mx.toFixed(1)+', '+reg.my.toFixed(1)+')</span>'+
+      '<br>r = <strong style="color:'+corrColor(reg.r)+'">'+reg.r.toFixed(3)+'</strong>'+
+      '&nbsp;&nbsp;→&nbsp;<span style="color:'+corrColor(reg.r)+'">'+corrLabel(reg.r)+'</span>'+
+      '&nbsp;&nbsp; n = '+ptsD.length+' points';
+  }
+
+  function tick(){
+    ptsD.forEach(function(p,i){
+      p.x+=(pts[i].x-p.x)*SPRING;
+      p.y+=(pts[i].y-p.y)*SPRING;
+    });
+    draw();
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>

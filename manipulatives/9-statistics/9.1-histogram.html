@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Parhaylikhay · Histograms & Frequency Density</title>
+  <meta property="og:title" content="Histograms"/>
+  <meta property="og:type" content="video.other"/>
+  <meta property="og:video:type" content="text/html"/>
+  <meta property="og:video:width" content="600"/>
+  <meta property="og:video:height" content="680"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { background:#0d1216; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; }
+    .header { width:560px; padding:14px 4px 6px; }
+    .title { color:#00abfa; font-size:15px; font-weight:600; margin-bottom:4px; }
+    .instruction { color:#b4b2a9; font-size:13px; line-height:1.5; }
+    .equation-bar { width:560px; padding:6px 4px; font-family:'Courier New',monospace; font-size:13px; color:#f0f0ee; min-height:32px; line-height:1.8; }
+    canvas { display:block; }
+    .toggle-row { width:560px; display:flex; gap:8px; padding:8px 4px; border-top:1px solid #1a2535; }
+    .mode-btn { flex:1; padding:7px; background:#0d1f2d; border:1px solid #1e3a52; color:#b4b2a9; font-size:13px; border-radius:4px; cursor:pointer; }
+    .mode-btn.active { border-color:#ff4670; background:#1a001a; color:#ff4670; font-weight:600; }
+    .mode-btn.correct.active { border-color:#0fee89; background:#001a0a; color:#0fee89; }
+    .sliders { width:560px; display:flex; flex-direction:column; gap:8px; padding:8px 4px; border-bottom:1px solid #1a2535; }
+    .slider-row { display:flex; align-items:center; gap:10px; }
+    .slider-label { font-family:'Courier New',monospace; font-size:12px; width:150px; flex-shrink:0; color:#b4b2a9; }
+    input[type="range"] { flex:1; height:4px; -webkit-appearance:none; background:#1e2e3e; border-radius:2px; outline:none; cursor:pointer; }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#00abfa; cursor:pointer; }
+    .slider-bounds { color:#3a4a5a; font-size:11px; width:50px; text-align:right; flex-shrink:0; }
+    .footer { width:560px; padding:8px 4px 14px; }
+    .tip { color:#0fee89; font-size:13px; line-height:1.7; }
+    .tip strong { font-weight:600; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">Histograms — Why Frequency Density?</div>
+  <div class="instruction">
+    These classes have <b>unequal widths</b>. Toggle between "frequency" and "frequency density" as the y-axis.
+    Watch which bar looks tallest — and why that's misleading when class widths differ.
+    Area = frequency. Always.
+  </div>
+</div>
+
+<div class="equation-bar" id="eq-display"></div>
+<canvas id="graph" width="560" height="300"></canvas>
+
+<div class="toggle-row">
+  <button class="mode-btn" id="btn-freq">Height = Frequency (wrong for unequal widths)</button>
+  <button class="mode-btn correct active" id="btn-fd">Height = Freq. Density ✓ (Cambridge)</button>
+</div>
+
+<div class="sliders" id="slider-container"></div>
+
+<div class="footer">
+  <div class="tip">
+    Cambridge tip: <strong>frequency density = frequency ÷ class width</strong>.
+    In a histogram, it's the <strong>area</strong> of each bar (not the height) that equals the frequency.
+    For equal class widths the distinction doesn't matter — but Cambridge always uses unequal widths to test this.
+  </div>
+</div>
+
+<script>
+  var canvas = document.getElementById('graph');
+  var ctx = canvas.getContext('2d');
+  var W=560, H=300;
+  var DPR = window.devicePixelRatio||1;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.scale(DPR,DPR);
+
+  // Fixed classes: unequal widths
+  var classes=[
+    {label:'0–10',   low:0,  high:10,  width:10},
+    {label:'10–20',  low:10, high:20,  width:10},
+    {label:'20–30',  low:20, high:30,  width:10},
+    {label:'30–50',  low:30, high:50,  width:20},
+    {label:'50–80',  low:50, high:80,  width:30}
+  ];
+  var freqs=[8, 14, 20, 24, 12]; // initial frequencies
+  var freqsD=freqs.slice();
+  var SPRING=0.13;
+  var showFD=true; // true = frequency density (correct)
+
+  // Build sliders
+  var sliderContainer=document.getElementById('slider-container');
+  classes.forEach(function(cl,i){
+    var row=document.createElement('div'); row.className='slider-row';
+    var lbl=document.createElement('div'); lbl.className='slider-label';
+    lbl.id='lbl-'+i;
+    lbl.textContent=cl.label+' (w='+cl.width+'): f='+freqs[i];
+    var sl=document.createElement('input'); sl.type='range'; sl.min=1; sl.max=40; sl.step=1; sl.value=freqs[i];
+    sl.addEventListener('input',function(){
+      freqs[i]=parseInt(this.value);
+      lbl.textContent=cl.label+' (w='+cl.width+'): f='+freqs[i];
+    });
+    var bnd=document.createElement('div'); bnd.className='slider-bounds'; bnd.textContent='1…40';
+    row.appendChild(lbl); row.appendChild(sl); row.appendChild(bnd);
+    sliderContainer.appendChild(row);
+  });
+
+  document.getElementById('btn-freq').addEventListener('click',function(){
+    showFD=false;
+    this.classList.add('active'); document.getElementById('btn-fd').classList.remove('active');
+  });
+  document.getElementById('btn-fd').addEventListener('click',function(){
+    showFD=true;
+    this.classList.add('active'); document.getElementById('btn-freq').classList.remove('active');
+  });
+
+  var BAR_COLORS=['#00abfa','#0fee89','#ff822c','#ff4670','#fff067'];
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1216'; ctx.fillRect(0,0,W,H);
+
+    var PAD_L=48, PAD_R=16, PAD_T=20, PAD_B=44;
+    var gW=W-PAD_L-PAD_R, gH=H-PAD_T-PAD_B;
+
+    // Compute heights for each bar
+    var heights=classes.map(function(cl,i){
+      return showFD ? freqsD[i]/cl.width : freqsD[i];
+    });
+    var maxH=Math.max.apply(null,heights)*1.1;
+    var xMin=0, xMax=80;
+
+    // Grid lines
+    ctx.strokeStyle='#111f2c'; ctx.lineWidth=0.8;
+    ctx.beginPath();
+    for(var g=0;g<=5;g++){
+      var gy=PAD_T+gH*(1-g/5);
+      ctx.moveTo(PAD_L,gy); ctx.lineTo(PAD_L+gW,gy);
+    }
+    ctx.stroke();
+
+    // Axes
+    ctx.strokeStyle='#3a5060'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(PAD_L,PAD_T); ctx.lineTo(PAD_L,PAD_T+gH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD_L,PAD_T+gH); ctx.lineTo(PAD_L+gW,PAD_T+gH); ctx.stroke();
+
+    // Y-axis label
+    ctx.save();
+    ctx.translate(14, PAD_T+gH/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(showFD?'Frequency density':'Frequency',0,0);
+    ctx.restore();
+
+    // Y ticks
+    ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system,sans-serif';
+    ctx.textAlign='right'; ctx.textBaseline='middle';
+    for(var g2=0;g2<=5;g2++){
+      var gy2=PAD_T+gH*(1-g2/5);
+      var yv=(maxH*g2/5);
+      ctx.fillText(yv.toFixed(yv<10?1:0), PAD_L-5, gy2);
+    }
+
+    // Bars
+    function mapX(v){ return PAD_L+gW*(v-xMin)/(xMax-xMin); }
+    function mapY(h){ return PAD_T+gH*(1-h/maxH); }
+
+    classes.forEach(function(cl,i){
+      var x1=mapX(cl.low), x2=mapX(cl.high);
+      var bW=x2-x1, bH=gH*(heights[i]/maxH);
+      var col=BAR_COLORS[i];
+
+      ctx.fillStyle=col+'30';
+      ctx.fillRect(x1, PAD_T+gH-bH, bW, bH);
+      ctx.strokeStyle=col; ctx.lineWidth=2;
+      ctx.strokeRect(x1, PAD_T+gH-bH, bW, bH);
+
+      // FD value label inside bar
+      if(bH>18){
+        ctx.fillStyle=col; ctx.font='bold 12px Courier New,monospace';
+        ctx.textAlign='center'; ctx.textBaseline='top';
+        ctx.fillText(heights[i].toFixed(1), (x1+x2)/2, PAD_T+gH-bH+4);
+      }
+
+      // X label
+      ctx.fillStyle='#6a8898'; ctx.font='11px -apple-system,sans-serif';
+      ctx.textAlign='center'; ctx.textBaseline='top';
+      ctx.fillText(cl.label, (x1+x2)/2, PAD_T+gH+5);
+
+      // Frequency annotation (area)
+      ctx.fillStyle=col+'cc'; ctx.font='10px Courier New,monospace';
+      ctx.textAlign='center'; ctx.textBaseline='bottom';
+      ctx.fillText('f='+Math.round(freqsD[i]), (x1+x2)/2, PAD_T+gH-bH-2);
+    });
+
+    // Mode-class callout
+    var maxFDi=heights.indexOf(Math.max.apply(null,heights));
+    var modeHint=showFD
+      ? 'Tallest bar = modal class: '+classes[maxFDi].label
+      : '⚠ Tallest bar here is NOT the modal class when widths differ';
+    ctx.fillStyle=showFD?'#0fee89':'#ff4670';
+    ctx.font='bold 12px Courier New,monospace';
+    ctx.textAlign='right'; ctx.textBaseline='top';
+    ctx.fillText(modeHint, W-PAD_R, PAD_T+2);
+
+    // Equation bar
+    var fdRow=classes.map(function(cl,i){
+      return '<span style="color:'+BAR_COLORS[i]+'">'+cl.label+': '+freqsD[i].toFixed(0)+'÷'+cl.width+'='+((freqsD[i]/cl.width).toFixed(1))+'</span>';
+    }).join('&nbsp; ');
+    document.getElementById('eq-display').innerHTML=
+      showFD
+      ? 'Freq density = freq ÷ class width: '+fdRow
+      : '<span style="color:#ff4670">⚠ Using frequency as height — misleading for unequal class widths!</span>';
+  }
+
+  function tick(){
+    var changed=false;
+    freqsD=freqsD.map(function(v,i){
+      var nv=v+(freqs[i]-v)*SPRING;
+      if(Math.abs(nv-v)>0.01) changed=true;
+      return nv;
+    });
+    draw();
+    requestAnimationFrame(tick);
+  }
+  tick();
+</script>
+</body>
+</html>
