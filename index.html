@@ -6,309 +6,238 @@
   <title>Parhaylikhay — Cambridge O-Level Maths</title>
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
-
-    body {
-      background: #0d1216;
-      color: #b4b2a9;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      min-height: 100vh;
-    }
-
-    .page { max-width: 1080px; margin: 0 auto; padding: 40px 20px 60px; }
-
-    /* ── Header ── */
-    header { margin-bottom: 44px; }
-    .logo { font-size: 26px; font-weight: 700; color: #00abfa; letter-spacing: -0.5px; margin-bottom: 5px; }
-    .tagline { font-size: 13px; color: #3a5060; }
-
-    /* ── Unit section ── */
-    .unit { margin-bottom: 40px; }
-    .unit-header {
-      display: flex; align-items: baseline; gap: 10px;
-      margin-bottom: 14px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #1a2535;
-    }
-    .unit-num { font-size: 11px; font-weight: 600; font-family: 'Courier New', monospace; color: #3a5060; }
-    .unit-title { font-size: 15px; font-weight: 600; color: #d0cec6; }
-    .unit-count { font-size: 11px; color: #2a3a48; margin-left: auto; }
-
-    /* ── Card grid ── */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-      gap: 10px;
-    }
-
-    /* ── Card ── */
-    a.card {
-      display: flex; flex-direction: column;
-      background: #0b1824;
-      border: 1px solid #1a2e40;
-      border-radius: 8px;
-      text-decoration: none;
-      overflow: hidden;
-      transition: border-color 0.18s, transform 0.18s, box-shadow 0.18s;
-    }
-    a.card:hover {
-      transform: translateY(-3px);
-    }
-
-    .thumb {
-      width: 100%;
-      aspect-ratio: 16/9;
-      overflow: hidden;
-      display: block;
-      flex-shrink: 0;
-    }
-    .thumb svg { width: 100%; height: 100%; display: block; }
-
-    .card-body { padding: 10px 11px 11px; }
-    .card-name { font-size: 12px; color: #c8c6be; line-height: 1.4; font-weight: 500; }
+    body { background:#0d1216; color:#b4b2a9; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; min-height:100vh; }
+    .page { max-width:1080px; margin:0 auto; padding:40px 20px 60px; }
+    header { margin-bottom:44px; }
+    .logo { font-size:26px; font-weight:700; color:#00abfa; letter-spacing:-0.5px; margin-bottom:5px; }
+    .tagline { font-size:13px; color:#3a5060; }
+    .unit { margin-bottom:40px; }
+    .unit-header { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #1a2535; }
+    .unit-num { font-size:11px; font-weight:600; font-family:'Courier New',monospace; color:#3a5060; }
+    .unit-title { font-size:15px; font-weight:600; color:#d0cec6; }
+    .unit-count { font-size:11px; color:#2a3a48; margin-left:auto; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:10px; }
+    a.card { display:flex; flex-direction:column; background:#0b1824; border:1px solid #1a2e40; border-radius:8px; text-decoration:none; overflow:hidden; transition:border-color 0.18s,transform 0.18s,box-shadow 0.18s; }
+    a.card:hover { transform:translateY(-3px); }
+    .thumb { width:100%; aspect-ratio:16/9; overflow:hidden; display:block; flex-shrink:0; }
+    .thumb svg { width:100%; height:100%; display:block; }
+    .card-body { padding:10px 11px 11px; }
+    .card-name { font-size:12px; color:#c8c6be; line-height:1.4; font-weight:500; }
   </style>
 </head>
 <body>
 <div class="page">
-
   <header>
     <div class="logo">Parhaylikhay</div>
     <div class="tagline">Cambridge O-Level Maths · 54 interactive manipulatives</div>
   </header>
-
   <div id="root"></div>
-
 </div>
 <script>
   var BASE = 'https://hassanparhaylikhay.github.io/parhaylikhay/manipulatives/';
 
-  // SVG thumbnail markup per unit (viewBox="0 0 200 112")
   var THUMBS = {
 
-    1: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="112" fill="#080f18"/>
-      <circle cx="100" cy="56" r="44" fill="none" stroke="#00abfa18" stroke-width="1"/>
-      <circle cx="100" cy="56" r="28" fill="none" stroke="#00abfa28" stroke-width="1"/>
-      <text x="42" y="44" fill="#00abfa" font-size="22" font-family="monospace" font-weight="700" opacity=".9">2</text>
-      <text x="75" y="82" fill="#00abfa" font-size="17" font-family="monospace" opacity=".6">3</text>
-      <text x="116" y="38" fill="#00abfa" font-size="14" font-family="monospace" opacity=".75">7</text>
-      <text x="130" y="72" fill="#00abfa" font-size="18" font-family="monospace" opacity=".5">5</text>
-      <text x="54" y="66" fill="#00abfa" font-size="13" font-family="monospace" opacity=".4">11</text>
-      <text x="93" y="52" fill="#00abfa" font-size="11" font-family="monospace" opacity=".3">13</text>
-    </svg>`,
+/* ── Unit 1 ── */
+'1-number/1.1-types-of-number.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><ellipse cx="100" cy="58" rx="88" ry="44" fill="none" stroke="#00abfa18" stroke-width="1"/><ellipse cx="100" cy="58" rx="66" ry="33" fill="none" stroke="#00abfa28" stroke-width="1"/><ellipse cx="100" cy="58" rx="44" ry="22" fill="none" stroke="#00abfa50" stroke-width="1.5"/><ellipse cx="100" cy="58" rx="22" ry="11" fill="none" stroke="#00abfa88" stroke-width="1.5"/><text x="16" y="62" fill="#00abfa44" font-size="11" font-family="monospace">ℝ</text><text x="38" y="62" fill="#00abfa66" font-size="11" font-family="monospace">ℚ</text><text x="62" y="62" fill="#00abfa99" font-size="11" font-family="monospace">ℤ</text><text x="92" y="64" fill="#00abfa" font-size="14" font-family="monospace" font-weight="700">ℕ</text><text x="64" y="22" fill="#00abfa88" font-size="10" font-family="monospace">2, 3, 5, 7…</text></svg>`,
 
-    2: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="112" fill="#080f18"/>
-      <line x1="0" y1="56" x2="200" y2="56" stroke="#0fee8918" stroke-width="1"/>
-      <line x1="100" y1="0" x2="100" y2="112" stroke="#0fee8918" stroke-width="1"/>
-      <line x1="0" y1="28" x2="200" y2="28" stroke="#0fee890c" stroke-width="0.8"/>
-      <line x1="0" y1="84" x2="200" y2="84" stroke="#0fee890c" stroke-width="0.8"/>
-      <line x1="50" y1="0" x2="50" y2="112" stroke="#0fee890c" stroke-width="0.8"/>
-      <line x1="150" y1="0" x2="150" y2="112" stroke="#0fee890c" stroke-width="0.8"/>
-      <path d="M 18 100 C 50 100 80 8 100 8 C 120 8 150 100 182 100" fill="none" stroke="#0fee89" stroke-width="2.5" stroke-linejoin="round"/>
-      <circle cx="100" cy="8" r="3.5" fill="#0fee89"/>
-    </svg>`,
+'1-number/1.2-sets.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><rect x="10" y="10" width="180" height="92" rx="4" fill="none" stroke="#00abfa22" stroke-width="1"/><circle cx="82" cy="56" r="34" fill="#00abfa08" stroke="#00abfa" stroke-width="2"/><circle cx="118" cy="56" r="34" fill="#00abfa08" stroke="#00abfa66" stroke-width="2"/><text x="58" y="52" fill="#00abfacc" font-size="14" font-family="monospace" font-weight="700">A</text><text x="128" y="52" fill="#00abfa88" font-size="14" font-family="monospace" font-weight="700">B</text><text x="100" y="60" fill="#00abfa" font-size="9" font-family="monospace" text-anchor="middle">A∩B</text><text x="10" y="108" fill="#00abfa44" font-size="9" font-family="monospace">ξ</text></svg>`,
 
-    3: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="112" fill="#080f18"/>
-      <line x1="0" y1="28" x2="200" y2="28" stroke="#ff822c10" stroke-width="0.8"/>
-      <line x1="0" y1="56" x2="200" y2="56" stroke="#ff822c18" stroke-width="1"/>
-      <line x1="0" y1="84" x2="200" y2="84" stroke="#ff822c10" stroke-width="0.8"/>
-      <line x1="50"  y1="0" x2="50"  y2="112" stroke="#ff822c10" stroke-width="0.8"/>
-      <line x1="100" y1="0" x2="100" y2="112" stroke="#ff822c18" stroke-width="1"/>
-      <line x1="150" y1="0" x2="150" y2="112" stroke="#ff822c10" stroke-width="0.8"/>
-      <line x1="20" y1="95" x2="180" y2="17" stroke="#ff822c" stroke-width="2.5"/>
-      <circle cx="100" cy="56" r="5" fill="#ff822c"/>
-      <circle cx="60"  cy="76" r="3" fill="#ff822c88"/>
-      <circle cx="140" cy="36" r="3" fill="#ff822c88"/>
-    </svg>`,
+'1-number/1.3-powers-and-roots.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><text x="22" y="74" fill="#00abfa" font-size="44" font-family="monospace" font-weight="700">x</text><text x="64" y="44" fill="#00abfa" font-size="24" font-family="monospace" font-weight="700">3</text><text x="86" y="74" fill="#00abfa44" font-size="32" font-family="monospace">=</text><text x="120" y="54" fill="#00abfa99" font-size="11" font-family="monospace">3</text><text x="126" y="62" fill="#00abfa88" font-size="22" font-family="monospace">√x</text></svg>`,
 
-    4: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="112" fill="#080f18"/>
-      <circle cx="100" cy="52" r="44" fill="none" stroke="#ff467022" stroke-width="1"/>
-      <polygon points="100,10 34,98 166,98" fill="#ff467010" stroke="#ff4670" stroke-width="2"/>
-      <circle cx="100" cy="68" r="22" fill="none" stroke="#ff467055" stroke-width="1.5"/>
-      <circle cx="100" cy="52" r="2.5" fill="#ff4670"/>
-    </svg>`,
+'1-number/1.4-fractions-decimals-percentages.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><text x="30" y="50" fill="#00abfa" font-size="22" font-family="monospace" font-weight="700">3</text><line x1="22" y1="58" x2="60" y2="58" stroke="#00abfa" stroke-width="2.5"/><text x="30" y="82" fill="#00abfacc" font-size="22" font-family="monospace" font-weight="700">4</text><text x="68" y="68" fill="#00abfa44" font-size="20" font-family="monospace">=</text><text x="94" y="68" fill="#00abfacc" font-size="18" font-family="monospace">0.75</text><text x="152" y="68" fill="#00abfa99" font-size="16" font-family="monospace">75%</text></svg>`,
 
-    5: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="112" fill="#080f18"/>
-      <ellipse cx="58" cy="28" rx="26" ry="9" fill="none" stroke="#fff067" stroke-width="1.5"/>
-      <ellipse cx="58" cy="82" rx="26" ry="9" fill="none" stroke="#fff067" stroke-width="1.5"/>
-      <line x1="32" y1="28" x2="32" y2="82" stroke="#fff067" stroke-width="1.5"/>
-      <line x1="84" y1="28" x2="84" y2="82" stroke="#fff067" stroke-width="1.5"/>
-      <circle cx="148" cy="56" r="32" fill="none" stroke="#fff06788" stroke-width="1.5"/>
-      <ellipse cx="148" cy="56" rx="32" ry="10" fill="none" stroke="#fff06740" stroke-width="1"/>
-      <ellipse cx="148" cy="56" rx="10" ry="32" fill="none" stroke="#fff06722" stroke-width="0.8"/>
-    </svg>`,
+'1-number/1.5-ordering.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="18" y1="56" x2="182" y2="56" stroke="#00abfa55" stroke-width="2"/><line x1="176" y1="49" x2="182" y2="56" stroke="#00abfa55" stroke-width="2"/><line x1="176" y1="63" x2="182" y2="56" stroke="#00abfa55" stroke-width="2"/><circle cx="42" cy="56" r="5" fill="#00abfa"/><circle cx="80" cy="56" r="5" fill="#00abfa"/><circle cx="118" cy="56" r="5" fill="#00abfa"/><circle cx="158" cy="56" r="5" fill="#00abfa"/><text x="34" y="42" fill="#00abfacc" font-size="10" font-family="monospace">-3</text><text x="76" y="42" fill="#00abfacc" font-size="10" font-family="monospace">0</text><text x="114" y="42" fill="#00abfacc" font-size="10" font-family="monospace">½</text><text x="152" y="42" fill="#00abfacc" font-size="10" font-family="monospace">√2</text><text x="100" y="80" fill="#00abfa44" font-size="10" font-family="monospace" text-anchor="middle">&lt; &lt; &lt;</text></svg>`,
 
-    6: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="112" fill="#080f18"/>
-      <circle cx="72" cy="56" r="42" fill="none" stroke="#00abfa20" stroke-width="1"/>
-      <line x1="30" y1="56" x2="114" y2="56" stroke="#00abfa25" stroke-width="1"/>
-      <line x1="72" y1="14" x2="72" y2="98" stroke="#00abfa25" stroke-width="1"/>
-      <line x1="72" y1="56" x2="102" y2="27" stroke="#00abfa" stroke-width="2"/>
-      <line x1="102" y1="27" x2="102" y2="56" stroke="#0fee89" stroke-width="2"/>
-      <line x1="72"  y1="56" x2="102" y2="56" stroke="#ff822c" stroke-width="2"/>
-      <circle cx="102" cy="27" r="4" fill="#00abfa"/>
-      <path d="M 125 56 Q 138 30 151 56 Q 164 82 177 56 Q 190 30 200 45" fill="none" stroke="#00abfa99" stroke-width="1.5"/>
-    </svg>`,
+'1-number/1.7-indices.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><text x="26" y="72" fill="#00abfa" font-size="34" font-family="monospace" font-weight="700">aᵐ</text><text x="88" y="62" fill="#00abfa44" font-size="20" font-family="monospace">×</text><text x="106" y="72" fill="#00abfa" font-size="34" font-family="monospace" font-weight="700">aⁿ</text><line x1="26" y1="80" x2="174" y2="80" stroke="#00abfa33" stroke-width="1"/><text x="100" y="100" fill="#00abfa88" font-size="14" font-family="monospace" text-anchor="middle">= aᵐ⁺ⁿ</text></svg>`,
 
-    7: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="112" fill="#080f18"/>
-      <line x1="100" y1="4" x2="100" y2="108" stroke="#ffffff18" stroke-width="1.5" stroke-dasharray="5,4"/>
-      <polygon points="78,18 40,92 88,92" fill="#00abfa12" stroke="#00abfa" stroke-width="2"/>
-      <polygon points="122,18 160,92 112,92" fill="#ff467012" stroke="#ff4670" stroke-width="2"/>
-      <line x1="78" y1="18" x2="122" y2="18" stroke="#ffffff15" stroke-width="1" stroke-dasharray="3,3"/>
-      <line x1="40" y1="92" x2="160" y2="92" stroke="#ffffff15" stroke-width="1" stroke-dasharray="3,3"/>
-      <line x1="88" y1="92" x2="112" y2="92" stroke="#ffffff15" stroke-width="1" stroke-dasharray="3,3"/>
-    </svg>`,
+'1-number/1.8-standard-form.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><text x="100" y="52" fill="#00abfa" font-size="20" font-family="monospace" font-weight="700" text-anchor="middle">3.2 × 10</text><text x="163" y="34" fill="#00abfa" font-size="16" font-family="monospace" font-weight="700">4</text><line x1="28" y1="66" x2="172" y2="66" stroke="#00abfa22" stroke-width="1"/><text x="100" y="86" fill="#00abfa55" font-size="13" font-family="monospace" text-anchor="middle">= 32 000</text></svg>`,
 
-    8: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="112" fill="#080f18"/>
-      <circle cx="28" cy="56" r="5" fill="#0fee89"/>
-      <line x1="33" y1="50" x2="88" y2="24" stroke="#0fee89" stroke-width="1.5"/>
-      <line x1="33" y1="62" x2="88" y2="88" stroke="#0fee8966" stroke-width="1.5"/>
-      <circle cx="88" cy="24" r="4" fill="#0fee89"/>
-      <circle cx="88" cy="88" r="4" fill="#0fee8966"/>
-      <line x1="92" y1="20" x2="150" y2="10" stroke="#0fee89" stroke-width="1.5"/>
-      <line x1="92" y1="28" x2="150" y2="40" stroke="#0fee8980" stroke-width="1.5"/>
-      <line x1="92" y1="84" x2="150" y2="72" stroke="#0fee8966" stroke-width="1.5"/>
-      <line x1="92" y1="92" x2="150" y2="102" stroke="#0fee8944" stroke-width="1.5"/>
-      <circle cx="150" cy="10"  r="3" fill="#0fee89"/>
-      <circle cx="150" cy="40"  r="3" fill="#0fee8988"/>
-      <circle cx="150" cy="72"  r="3" fill="#0fee8966"/>
-      <circle cx="150" cy="102" r="3" fill="#0fee8944"/>
-    </svg>`,
+'1-number/1.9-estimation.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><text x="28" y="50" fill="#00abfa88" font-size="15" font-family="monospace">48.7 ÷ 5.2</text><text x="80" y="78" fill="#00abfa44" font-size="22" font-family="monospace">≈</text><text x="108" y="78" fill="#00abfa" font-size="22" font-family="monospace" font-weight="700">10</text><text x="28" y="96" fill="#00abfa33" font-size="11" font-family="monospace">→ 50 ÷ 5 = 10</text></svg>`,
 
-    9: `<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg">
-      <rect width="200" height="112" fill="#080f18"/>
-      <line x1="28" y1="98" x2="185" y2="98" stroke="#ff467030" stroke-width="1"/>
-      <line x1="28" y1="10"  x2="28"  y2="98" stroke="#ff467030" stroke-width="1"/>
-      <rect x="38" y="60" width="22" height="38" fill="#ff467025" stroke="#ff467066" stroke-width="1"/>
-      <rect x="66" y="38" width="22" height="60" fill="#ff467035" stroke="#ff467080" stroke-width="1"/>
-      <rect x="94" y="48" width="22" height="50" fill="#ff467030" stroke="#ff467070" stroke-width="1"/>
-      <rect x="122" y="70" width="22" height="28" fill="#ff467020" stroke="#ff467055" stroke-width="1"/>
-      <rect x="150" y="80" width="22" height="18" fill="#ff467018" stroke="#ff467044" stroke-width="1"/>
-      <circle cx="49"  cy="52" r="2.5" fill="#ff4670aa"/>
-      <circle cx="77"  cy="30" r="2.5" fill="#ff4670aa"/>
-      <circle cx="105" cy="40" r="2.5" fill="#ff4670aa"/>
-      <circle cx="133" cy="62" r="2.5" fill="#ff4670aa"/>
-      <circle cx="161" cy="72" r="2.5" fill="#ff4670aa"/>
-    </svg>`,
+'1-number/1.10-limits-of-accuracy.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="18" y1="56" x2="182" y2="56" stroke="#00abfa33" stroke-width="1.5"/><line x1="60" y1="42" x2="60" y2="70" stroke="#00abfa" stroke-width="2.5"/><line x1="140" y1="42" x2="140" y2="70" stroke="#00abfa" stroke-width="2.5"/><line x1="60" y1="56" x2="140" y2="56" stroke="#00abfa" stroke-width="3.5"/><circle cx="100" cy="56" r="5" fill="#00abfa"/><text x="50" y="36" fill="#00abfacc" font-size="10" font-family="monospace">7.5</text><text x="131" y="36" fill="#00abfacc" font-size="10" font-family="monospace">8.5</text><text x="100" y="88" fill="#00abfa88" font-size="11" font-family="monospace" text-anchor="middle">x = 8 (1 s.f.)</text></svg>`,
+
+'1-number/1.11-ratio-proportion.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><rect x="14" y="44" width="60" height="32" fill="#00abfa18" stroke="#00abfa" stroke-width="2"/><rect x="96" y="28" width="90" height="56" fill="#00abfa0c" stroke="#00abfa88" stroke-width="1.5"/><text x="44" y="64" fill="#00abfacc" font-size="11" font-family="monospace" text-anchor="middle">2</text><text x="141" y="60" fill="#00abfa88" font-size="11" font-family="monospace" text-anchor="middle">3</text><text x="100" y="20" fill="#00abfa66" font-size="11" font-family="monospace" text-anchor="middle">ratio 2 : 3</text></svg>`,
+
+'1-number/1.12-rates.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><polygon points="100,16 36,92 164,92" fill="#00abfa08" stroke="#00abfa" stroke-width="2"/><line x1="100" y1="16" x2="100" y2="92" stroke="#00abfa44" stroke-width="1.5" stroke-dasharray="4,3"/><text x="100" y="12" fill="#00abfacc" font-size="13" font-family="monospace" text-anchor="middle">D</text><text x="38" y="106" fill="#00abfacc" font-size="13" font-family="monospace">S</text><text x="156" y="106" fill="#00abfacc" font-size="13" font-family="monospace">T</text></svg>`,
+
+'1-number/1.13-percentages.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="100" cy="54" r="40" fill="none" stroke="#00abfa22" stroke-width="9"/><circle cx="100" cy="54" r="40" fill="none" stroke="#00abfa" stroke-width="9" stroke-dasharray="176 251" stroke-dashoffset="63" stroke-linecap="round" transform="rotate(-90 100 54)"/><text x="100" y="60" fill="#00abfa" font-size="20" font-family="monospace" font-weight="700" text-anchor="middle">70%</text></svg>`,
+
+'1-number/1.15-time.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="100" cy="56" r="42" fill="none" stroke="#00abfa55" stroke-width="2"/><line x1="100" y1="56" x2="100" y2="22" stroke="#00abfa" stroke-width="2.5" stroke-linecap="round"/><line x1="100" y1="56" x2="128" y2="70" stroke="#00abfacc" stroke-width="2" stroke-linecap="round"/><circle cx="100" cy="56" r="3" fill="#00abfa"/><circle cx="100" cy="16" r="2" fill="#00abfa66"/><circle cx="140" cy="56" r="2" fill="#00abfa66"/><circle cx="100" cy="96" r="2" fill="#00abfa66"/><circle cx="60" cy="56" r="2" fill="#00abfa66"/></svg>`,
+
+'1-number/1.17-exponential-growth-decay.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="22" y1="8" x2="22" y2="96" stroke="#00abfa33" stroke-width="1.5"/><line x1="22" y1="96" x2="190" y2="96" stroke="#00abfa33" stroke-width="1.5"/><path d="M 26 92 C 50 88 80 68 100 48 C 120 28 145 14 182 8" fill="none" stroke="#00abfa" stroke-width="2.5"/><path d="M 26 16 C 60 16 92 18 114 40 C 136 62 156 82 182 90" fill="none" stroke="#00abfa55" stroke-width="2" stroke-dasharray="5,3"/><text x="152" y="18" fill="#00abfacc" font-size="9" font-family="monospace">growth</text><text x="154" y="82" fill="#00abfa66" font-size="9" font-family="monospace">decay</text></svg>`,
+
+'1-number/1.18-surds.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><polygon points="76,22 76,90 152,90" fill="#00abfa08" stroke="#00abfa" stroke-width="2"/><rect x="76" y="74" width="16" height="16" fill="none" stroke="#00abfa66" stroke-width="1.5"/><text x="76" y="108" fill="#00abfacc" font-size="10" font-family="monospace" text-anchor="middle">1</text><text x="152" y="108" fill="#00abfacc" font-size="10" font-family="monospace" text-anchor="middle">1</text><text x="108" y="46" fill="#00abfa" font-size="16" font-family="monospace" font-weight="700">√2</text><text x="28" y="56" fill="#00abfa55" font-size="11" font-family="monospace">√2 =</text><text x="28" y="72" fill="#00abfa88" font-size="11" font-family="monospace">1.414…</text></svg>`,
+
+/* ── Unit 2 ── */
+'2-algebra-graphs/2.1-substitution.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><rect x="10" y="38" width="72" height="36" rx="4" fill="#0fee8910" stroke="#0fee8955" stroke-width="1.5"/><text x="46" y="61" fill="#0fee89" font-size="14" font-family="monospace" font-weight="700" text-anchor="middle">2x+3</text><line x1="84" y1="56" x2="112" y2="56" stroke="#0fee8966" stroke-width="2"/><line x1="106" y1="50" x2="112" y2="56" stroke="#0fee8966" stroke-width="2"/><line x1="106" y1="62" x2="112" y2="56" stroke="#0fee8966" stroke-width="2"/><text x="94" y="44" fill="#0fee8955" font-size="9" font-family="monospace" text-anchor="middle">x=4</text><rect x="114" y="38" width="72" height="36" rx="4" fill="#0fee8918" stroke="#0fee89" stroke-width="1.5"/><text x="150" y="61" fill="#0fee89" font-size="18" font-family="monospace" font-weight="700" text-anchor="middle">11</text></svg>`,
+
+'2-algebra-graphs/2.2-expanding-brackets.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><rect x="22" y="18" width="82" height="76" fill="#0fee8906" stroke="#0fee8933" stroke-width="1"/><rect x="22" y="18" width="50" height="46" fill="#0fee8918" stroke="#0fee8966" stroke-width="1.5"/><rect x="72" y="18" width="32" height="46" fill="#0fee890e" stroke="#0fee8944" stroke-width="1"/><rect x="22" y="64" width="50" height="30" fill="#0fee890e" stroke="#0fee8944" stroke-width="1"/><rect x="72" y="64" width="32" height="30" fill="#0fee8908" stroke="#0fee8933" stroke-width="1"/><text x="47" y="44" fill="#0fee89" font-size="13" font-family="monospace" text-anchor="middle">a²</text><text x="88" y="44" fill="#0fee8988" font-size="13" font-family="monospace" text-anchor="middle">ab</text><text x="47" y="82" fill="#0fee8988" font-size="13" font-family="monospace" text-anchor="middle">ab</text><text x="88" y="82" fill="#0fee8966" font-size="13" font-family="monospace" text-anchor="middle">b²</text><text x="144" y="50" fill="#0fee89cc" font-size="12" font-family="monospace" text-anchor="middle">(a+b)²</text><text x="144" y="68" fill="#0fee8966" font-size="10" font-family="monospace" text-anchor="middle">= a²+2ab+b²</text></svg>`,
+
+'2-algebra-graphs/2.5-equations.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="100" y1="14" x2="100" y2="92" stroke="#0fee8933" stroke-width="1.5"/><rect x="16" y="50" width="62" height="34" rx="3" fill="#0fee8910" stroke="#0fee89" stroke-width="2"/><rect x="122" y="50" width="62" height="34" rx="3" fill="#0fee8910" stroke="#0fee8988" stroke-width="2"/><line x1="8" y1="68" x2="192" y2="68" stroke="#0fee8944" stroke-width="2.5"/><text x="47" y="72" fill="#0fee89" font-size="13" font-family="monospace" text-anchor="middle">3x+1</text><text x="153" y="72" fill="#0fee8988" font-size="13" font-family="monospace" text-anchor="middle">10</text><text x="100" y="36" fill="#0fee8966" font-size="9" font-family="monospace" text-anchor="middle">balance both sides</text></svg>`,
+
+'2-algebra-graphs/2.6-inequalities.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="18" y1="56" x2="182" y2="56" stroke="#0fee8933" stroke-width="1.5"/><line x1="176" y1="49" x2="182" y2="56" stroke="#0fee8933" stroke-width="1.5"/><line x1="176" y1="63" x2="182" y2="56" stroke="#0fee8933" stroke-width="1.5"/><line x1="78" y1="56" x2="158" y2="56" stroke="#0fee89" stroke-width="4" stroke-linecap="round"/><circle cx="78" cy="56" r="7" fill="#0fee89"/><circle cx="158" cy="56" r="7" fill="none" stroke="#0fee89" stroke-width="2.5"/><text x="78" y="38" fill="#0fee89" font-size="11" font-family="monospace" text-anchor="middle">−1</text><text x="158" y="38" fill="#0fee8988" font-size="11" font-family="monospace" text-anchor="middle">3</text><text x="100" y="84" fill="#0fee8966" font-size="11" font-family="monospace" text-anchor="middle">−1 ≤ x &lt; 3</text></svg>`,
+
+'2-algebra-graphs/2.7-sequences.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="24" cy="70" r="7" fill="#0fee89"/><circle cx="58" cy="70" r="7" fill="#0fee89"/><circle cx="58" cy="44" r="7" fill="#0fee89"/><circle cx="92" cy="70" r="7" fill="#0fee89"/><circle cx="92" cy="44" r="7" fill="#0fee89"/><circle cx="92" cy="18" r="7" fill="#0fee89"/><circle cx="126" cy="70" r="7" fill="#0fee8966"/><circle cx="126" cy="44" r="7" fill="#0fee8966"/><circle cx="126" cy="18" r="7" fill="#0fee8966"/><circle cx="160" cy="70" r="7" fill="#0fee8933"/><text x="24" y="94" fill="#0fee8999" font-size="10" font-family="monospace" text-anchor="middle">1</text><text x="58" y="94" fill="#0fee8999" font-size="10" font-family="monospace" text-anchor="middle">3</text><text x="92" y="94" fill="#0fee8999" font-size="10" font-family="monospace" text-anchor="middle">6</text><text x="126" y="94" fill="#0fee8966" font-size="10" font-family="monospace" text-anchor="middle">10</text><text x="160" y="94" fill="#0fee8933" font-size="10" font-family="monospace" text-anchor="middle">…</text></svg>`,
+
+'2-algebra-graphs/2.8-proportion.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="18" y1="96" x2="96" y2="96" stroke="#0fee8922" stroke-width="1"/><line x1="18" y1="10" x2="18" y2="96" stroke="#0fee8922" stroke-width="1"/><line x1="20" y1="92" x2="90" y2="20" stroke="#0fee89" stroke-width="2.5"/><text x="72" y="18" fill="#0fee89cc" font-size="9" font-family="monospace">y∝x</text><line x1="108" y1="96" x2="188" y2="96" stroke="#0fee8922" stroke-width="1"/><line x1="108" y1="10" x2="108" y2="96" stroke="#0fee8922" stroke-width="1"/><path d="M 112 16 C 120 24 130 44 140 60 C 150 74 164 84 186 90" fill="none" stroke="#0fee8966" stroke-width="2.5"/><text x="150" y="16" fill="#0fee8866" font-size="9" font-family="monospace">y∝1/x</text></svg>`,
+
+'2-algebra-graphs/2.9-distance-time.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="22" y1="10" x2="22" y2="96" stroke="#0fee8933" stroke-width="1.5"/><line x1="22" y1="96" x2="188" y2="96" stroke="#0fee8933" stroke-width="1.5"/><text x="10" y="14" fill="#0fee8888" font-size="9" font-family="monospace">d</text><text x="188" y="104" fill="#0fee8888" font-size="9" font-family="monospace">t</text><polyline points="24,90 66,48 106,48 148,18" fill="none" stroke="#0fee89" stroke-width="2.5" stroke-linejoin="round"/><circle cx="66" cy="48" r="3" fill="#0fee8988"/><circle cx="106" cy="48" r="3" fill="#0fee8966"/><text x="72" y="44" fill="#0fee8866" font-size="9" font-family="monospace">rest</text></svg>`,
+
+'2-algebra-graphs/2.10-graph-sketching.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="8" y1="56" x2="94" y2="56" stroke="#0fee8814" stroke-width="0.8"/><line x1="51" y1="8" x2="51" y2="100" stroke="#0fee8814" stroke-width="0.8"/><path d="M 10 90 C 30 90 44 12 51 12 C 58 12 72 90 90 90" fill="none" stroke="#0fee89" stroke-width="2"/><text x="51" y="108" fill="#0fee8866" font-size="8" font-family="monospace" text-anchor="middle">y=x²</text><line x1="108" y1="56" x2="192" y2="56" stroke="#0fee8814" stroke-width="0.8"/><line x1="150" y1="8" x2="150" y2="100" stroke="#0fee8814" stroke-width="0.8"/><path d="M 112 90 C 126 90 136 66 150 56 C 164 46 172 18 188 10" fill="none" stroke="#0fee8966" stroke-width="2"/><text x="150" y="108" fill="#0fee8866" font-size="8" font-family="monospace" text-anchor="middle">y=x³</text></svg>`,
+
+'2-algebra-graphs/2.12-functions.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><rect x="10" y="44" width="36" height="24" rx="3" fill="#0fee8910" stroke="#0fee8966" stroke-width="1.5"/><rect x="82" y="32" width="36" height="48" rx="3" fill="#0fee8918" stroke="#0fee89" stroke-width="1.5"/><rect x="154" y="44" width="36" height="24" rx="3" fill="#0fee8910" stroke="#0fee8966" stroke-width="1.5"/><line x1="46" y1="56" x2="80" y2="56" stroke="#0fee8966" stroke-width="1.5"/><line x1="74" y1="50" x2="80" y2="56" stroke="#0fee8966" stroke-width="1.5"/><line x1="74" y1="62" x2="80" y2="56" stroke="#0fee8966" stroke-width="1.5"/><line x1="118" y1="56" x2="152" y2="56" stroke="#0fee8966" stroke-width="1.5"/><line x1="146" y1="50" x2="152" y2="56" stroke="#0fee8966" stroke-width="1.5"/><line x1="146" y1="62" x2="152" y2="56" stroke="#0fee8966" stroke-width="1.5"/><text x="28" y="60" fill="#0fee89cc" font-size="11" font-family="monospace" text-anchor="middle">x</text><text x="100" y="52" fill="#0fee89" font-size="12" font-family="monospace" text-anchor="middle">f</text><text x="100" y="68" fill="#0fee8966" font-size="10" font-family="monospace" text-anchor="middle">g</text><text x="172" y="60" fill="#0fee89cc" font-size="11" font-family="monospace" text-anchor="middle">y</text></svg>`,
+
+/* ── Unit 3 ── */
+'3-coordinate-geometry/3.1-gradient.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="20" y1="94" x2="182" y2="94" stroke="#ff822c22" stroke-width="1"/><line x1="20" y1="10" x2="20" y2="94" stroke="#ff822c22" stroke-width="1"/><line x1="34" y1="82" x2="168" y2="18" stroke="#ff822c" stroke-width="2.5"/><line x1="100" y1="50" x2="168" y2="50" stroke="#ff822c66" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="168" y1="50" x2="168" y2="18" stroke="#ff822c88" stroke-width="1.5" stroke-dasharray="4,3"/><text x="128" y="46" fill="#ff822ccc" font-size="10" font-family="monospace">run</text><text x="170" y="36" fill="#ff822c" font-size="10" font-family="monospace">rise</text><text x="34" y="16" fill="#ff822c88" font-size="10" font-family="monospace">m = rise/run</text></svg>`,
+
+'3-coordinate-geometry/3.2-straight-line.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="18" y1="94" x2="182" y2="94" stroke="#ff822c22" stroke-width="1"/><line x1="18" y1="10" x2="18" y2="94" stroke="#ff822c22" stroke-width="1"/><line x1="26" y1="80" x2="174" y2="22" stroke="#ff822c" stroke-width="2.5"/><circle cx="18" cy="84" r="5" fill="#ff822c"/><text x="22" y="80" fill="#ff822ccc" font-size="9" font-family="monospace">c</text><text x="80" y="28" fill="#ff822ccc" font-size="12" font-family="monospace">y = mx + c</text></svg>`,
+
+'3-coordinate-geometry/3.3-midpoint-distance.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="38" cy="82" r="5" fill="#ff822c"/><circle cx="162" cy="28" r="5" fill="#ff822c"/><circle cx="100" cy="55" r="5" fill="#ff822ccc"/><line x1="38" y1="82" x2="162" y2="28" stroke="#ff822c" stroke-width="2"/><line x1="38" y1="82" x2="162" y2="82" stroke="#ff822c44" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="162" y1="28" x2="162" y2="82" stroke="#ff822c44" stroke-width="1.5" stroke-dasharray="4,3"/><text x="28" y="96" fill="#ff822ccc" font-size="9" font-family="monospace">A</text><text x="163" y="24" fill="#ff822ccc" font-size="9" font-family="monospace">B</text><text x="104" y="50" fill="#ff822c" font-size="9" font-family="monospace">M</text><text x="76" y="102" fill="#ff822c66" font-size="8" font-family="monospace">d = √(Δx²+Δy²)</text></svg>`,
+
+'3-coordinate-geometry/3.4-parallel-perpendicular.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="18" y1="78" x2="178" y2="38" stroke="#ff822c" stroke-width="2.5"/><line x1="18" y1="98" x2="178" y2="58" stroke="#ff822c66" stroke-width="2" stroke-dasharray="5,3"/><line x1="58" y1="8" x2="108" y2="100" stroke="#ff822caa" stroke-width="2"/><rect x="70" y="57" width="9" height="9" fill="none" stroke="#ff822ccc" stroke-width="1.5"/><text x="130" y="32" fill="#ff822ccc" font-size="9" font-family="monospace">m₁ = m₂</text><text x="116" y="86" fill="#ff822c88" font-size="9" font-family="monospace">m₁×m₂ = −1</text></svg>`,
+
+/* ── Unit 4 ── */
+'4-geometry/4.3-bearings.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="80" cy="60" r="42" fill="none" stroke="#ff467020" stroke-width="1"/><line x1="80" y1="16" x2="80" y2="104" stroke="#ff467033" stroke-width="1" stroke-dasharray="3,3"/><line x1="36" y1="60" x2="124" y2="60" stroke="#ff467022" stroke-width="1" stroke-dasharray="3,3"/><line x1="80" y1="60" x2="112" y2="22" stroke="#ff4670" stroke-width="2.5"/><line x1="106" y1="22" x2="112" y2="22" stroke="#ff4670" stroke-width="2.5"/><line x1="112" y1="22" x2="112" y2="28" stroke="#ff4670" stroke-width="2.5"/><path d="M 80 26 A 34 34 0 0 1 98 35" fill="none" stroke="#ff4670" stroke-width="2"/><text x="80" y="11" fill="#ff4670cc" font-size="11" font-family="monospace" text-anchor="middle">N</text><text x="106" y="22" fill="#ff4670" font-size="10" font-family="monospace">055°</text><circle cx="80" cy="60" r="3" fill="#ff4670"/></svg>`,
+
+'4-geometry/4.4-similarity.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><polygon points="18,92 48,30 78,92" fill="#ff467010" stroke="#ff4670" stroke-width="2"/><polygon points="96,92 144,4 192,92" fill="#ff46700c" stroke="#ff467066" stroke-width="1.5"/><text x="48" y="108" fill="#ff4670cc" font-size="9" font-family="monospace" text-anchor="middle">k=1</text><text x="144" y="108" fill="#ff467088" font-size="9" font-family="monospace" text-anchor="middle">k=1.5</text><text x="86" y="52" fill="#ff4670" font-size="11" font-family="monospace">∼</text></svg>`,
+
+'4-geometry/4.6-parallel-lines.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="10" y1="34" x2="190" y2="34" stroke="#ff4670" stroke-width="2"/><line x1="10" y1="76" x2="190" y2="76" stroke="#ff467088" stroke-width="2"/><line x1="58" y1="6" x2="118" y2="106" stroke="#ff4670cc" stroke-width="2"/><path d="M 70 34 A 12 12 0 0 0 84 34" fill="none" stroke="#ff4670" stroke-width="2"/><path d="M 82 76 A 12 12 0 0 0 96 76" fill="none" stroke="#ff4670" stroke-width="2"/><text x="134" y="28" fill="#ff4670cc" font-size="9" font-family="monospace">alt. =</text><text x="140" y="70" fill="#ff4670cc" font-size="9" font-family="monospace">corr. =</text></svg>`,
+
+'4-geometry/4.7-circle-theorems.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="100" cy="56" r="46" fill="none" stroke="#ff467033" stroke-width="1.5"/><circle cx="100" cy="56" r="3" fill="#ff4670"/><line x1="100" y1="56" x2="62" y2="18" stroke="#ff4670" stroke-width="2"/><line x1="100" y1="56" x2="142" y2="18" stroke="#ff4670" stroke-width="2"/><line x1="62" y1="18" x2="88" y2="100" stroke="#ff467066" stroke-width="1.5"/><line x1="142" y1="18" x2="88" y2="100" stroke="#ff467066" stroke-width="1.5"/><text x="82" y="12" fill="#ff4670cc" font-size="10" font-family="monospace">2θ</text><text x="84" y="108" fill="#ff467099" font-size="10" font-family="monospace">θ</text></svg>`,
+
+/* ── Unit 5 ── */
+'5-mensuration/5.2-area-shapes.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><polygon points="28,84 78,30 172,30 122,84" fill="#fff06710" stroke="#fff067" stroke-width="2"/><line x1="78" y1="30" x2="78" y2="84" stroke="#fff06766" stroke-width="1.5" stroke-dasharray="4,3"/><text x="58" y="62" fill="#fff067cc" font-size="11" font-family="monospace">h</text><text x="100" y="24" fill="#fff06788" font-size="9" font-family="monospace" text-anchor="middle">b</text><text x="100" y="98" fill="#fff06788" font-size="9" font-family="monospace" text-anchor="middle">a</text><text x="148" y="62" fill="#fff067" font-size="10" font-family="monospace">½(a+b)h</text></svg>`,
+
+'5-mensuration/5.3-circle-sector.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="100" cy="58" r="46" fill="none" stroke="#fff06733" stroke-width="1"/><path d="M 100 58 L 100 12 A 46 46 0 0 1 142 81 Z" fill="#fff06715" stroke="#fff067" stroke-width="2"/><circle cx="100" cy="58" r="3" fill="#fff067"/><text x="106" y="36" fill="#fff067cc" font-size="10" font-family="monospace">r</text><text x="112" y="54" fill="#fff067" font-size="10" font-family="monospace">θ</text><text x="26" y="70" fill="#fff06688" font-size="8" font-family="monospace">arc = rθ</text><text x="26" y="82" fill="#fff06666" font-size="8" font-family="monospace">area = ½r²θ</text></svg>`,
+
+'5-mensuration/5.4-cylinder-net.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><ellipse cx="50" cy="26" rx="22" ry="8" fill="#fff06710" stroke="#fff067" stroke-width="1.5"/><ellipse cx="50" cy="82" rx="22" ry="8" fill="#fff06710" stroke="#fff06766" stroke-width="1.5"/><line x1="28" y1="26" x2="28" y2="82" stroke="#fff067" stroke-width="1.5"/><line x1="72" y1="26" x2="72" y2="82" stroke="#fff067" stroke-width="1.5"/><rect x="88" y="26" width="92" height="56" fill="#fff0670c" stroke="#fff06788" stroke-width="1.5"/><text x="134" y="44" fill="#fff067cc" font-size="9" font-family="monospace" text-anchor="middle">2πr</text><text x="78" y="58" fill="#fff067cc" font-size="9" font-family="monospace">h</text></svg>`,
+
+'5-mensuration/5.4-cone-sphere.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><polygon points="50,14 18,92 82,92" fill="#fff0670c" stroke="#fff067" stroke-width="1.5"/><ellipse cx="50" cy="92" rx="32" ry="8" fill="#fff0670c" stroke="#fff06755" stroke-width="1"/><circle cx="148" cy="58" r="38" fill="#fff0670a" stroke="#fff067aa" stroke-width="1.5"/><line x1="148" y1="58" x2="182" y2="58" stroke="#fff06788" stroke-width="1.5" stroke-dasharray="3,3"/><text x="160" y="54" fill="#fff06799" font-size="10" font-family="monospace">r</text></svg>`,
+
+/* ── Unit 6 ── */
+'6-trigonometry/6.0-unit-circle.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="66" cy="56" r="42" fill="none" stroke="#00abfa33" stroke-width="1.5"/><line x1="24" y1="56" x2="108" y2="56" stroke="#00abfa22" stroke-width="1"/><line x1="66" y1="14" x2="66" y2="98" stroke="#00abfa22" stroke-width="1"/><line x1="66" y1="56" x2="96" y2="26" stroke="#00abfa" stroke-width="2"/><line x1="96" y1="26" x2="96" y2="56" stroke="#0fee89" stroke-width="2"/><line x1="66" y1="56" x2="96" y2="56" stroke="#ff822c" stroke-width="2"/><circle cx="96" cy="26" r="3.5" fill="#00abfa"/><path d="M 126 56 Q 135 30 148 56 Q 161 82 174 56 Q 187 30 198 44" fill="none" stroke="#00abfa88" stroke-width="1.5"/></svg>`,
+
+'6-trigonometry/6.1-right-triangle.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><polygon points="28,92 28,18 154,92" fill="#00abfa08" stroke="#00abfa" stroke-width="2"/><rect x="28" y="76" width="16" height="16" fill="none" stroke="#00abfa66" stroke-width="1.5"/><text x="10" y="58" fill="#0fee89" font-size="9" font-family="monospace">Opp</text><text x="74" y="108" fill="#ff822c" font-size="9" font-family="monospace">Adj</text><text x="84" y="48" fill="#00abfa" font-size="9" font-family="monospace">Hyp</text><text x="40" y="85" fill="#00abfacc" font-size="10" font-family="monospace">θ</text></svg>`,
+
+'6-trigonometry/6.1-pythagoras.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><polygon points="70,84 70,28 118,84" fill="#00abfa08" stroke="#00abfa" stroke-width="2"/><rect x="70" y="68" width="16" height="16" fill="none" stroke="#00abfa55" stroke-width="1"/><rect x="20" y="28" width="50" height="56" fill="#00abfa0c" stroke="#0fee8966" stroke-width="1.5"/><rect x="70" y="84" width="48" height="26" fill="#00abfa0c" stroke="#ff822c66" stroke-width="1.5"/><rect x="118" y="22" width="62" height="72" fill="#00abfa08" stroke="#00abfa88" stroke-width="1.5"/><text x="45" y="60" fill="#0fee89cc" font-size="11" font-family="monospace" text-anchor="middle">a²</text><text x="94" y="100" fill="#ff822ccc" font-size="11" font-family="monospace" text-anchor="middle">b²</text><text x="149" y="62" fill="#00abfacc" font-size="11" font-family="monospace" text-anchor="middle">c²</text></svg>`,
+
+'6-trigonometry/6.2-sine-rule.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="100" cy="52" r="42" fill="none" stroke="#00abfa18" stroke-width="1"/><polygon points="58,92 100,8 158,82" fill="#00abfa08" stroke="#00abfa" stroke-width="2"/><circle cx="58" cy="92" r="3" fill="#00abfa66"/><circle cx="100" cy="8" r="3" fill="#00abfa66"/><circle cx="158" cy="82" r="3" fill="#00abfa66"/><text x="46" y="104" fill="#00abfacc" font-size="9" font-family="monospace">A</text><text x="97" y="6" fill="#00abfacc" font-size="9" font-family="monospace">B</text><text x="160" y="90" fill="#00abfacc" font-size="9" font-family="monospace">C</text><text x="56" y="72" fill="#00abfa66" font-size="8" font-family="monospace">a/sinA = b/sinB</text></svg>`,
+
+'6-trigonometry/6.2-ambiguous-case.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><polygon points="18,90 78,18 118,90" fill="#00abfa08" stroke="#00abfa" stroke-width="2"/><polygon points="18,90 78,18 162,90" fill="#00abfa05" stroke="#00abfa55" stroke-width="1.5" stroke-dasharray="5,3"/><line x1="78" y1="18" x2="78" y2="90" stroke="#00abfa33" stroke-width="1" stroke-dasharray="3,3"/><circle cx="18" cy="90" r="3" fill="#00abfa"/><circle cx="78" cy="18" r="3" fill="#00abfacc"/><circle cx="118" cy="90" r="3" fill="#00abfa"/><circle cx="162" cy="90" r="3" fill="#00abfa66"/><text x="88" y="106" fill="#00abfa88" font-size="8" font-family="monospace">two possible triangles</text></svg>`,
+
+'6-trigonometry/6.3-elevation.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><rect x="142" y="16" width="20" height="76" fill="#00abfa10" stroke="#00abfa66" stroke-width="1.5"/><rect x="138" y="10" width="28" height="10" fill="#00abfa10" stroke="#00abfa55" stroke-width="1"/><line x1="18" y1="92" x2="182" y2="92" stroke="#00abfa33" stroke-width="1.5"/><line x1="18" y1="92" x2="142" y2="16" stroke="#00abfa" stroke-width="2"/><path d="M 34 92 A 16 16 0 0 0 28 76" fill="none" stroke="#00abfa" stroke-width="2"/><text x="40" y="84" fill="#00abfacc" font-size="10" font-family="monospace">θ</text><line x1="18" y1="92" x2="142" y2="92" stroke="#00abfa33" stroke-width="1" stroke-dasharray="4,3"/></svg>`,
+
+/* ── Unit 7 ── */
+'7-transformations-vectors/7.1-reflection.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="100" y1="4" x2="100" y2="108" stroke="#ffffff22" stroke-width="1.5" stroke-dasharray="5,4"/><polygon points="28,22 62,22 44,72" fill="#ff822c18" stroke="#ff822c" stroke-width="2"/><polygon points="172,22 138,22 156,72" fill="#ff822c0c" stroke="#ff822c66" stroke-width="1.5"/><line x1="44" y1="72" x2="156" y2="72" stroke="#ff822c22" stroke-width="1" stroke-dasharray="3,3"/><line x1="28" y1="22" x2="172" y2="22" stroke="#ff822c22" stroke-width="1" stroke-dasharray="3,3"/></svg>`,
+
+'7-transformations-vectors/7.1-rotation.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="100" cy="60" r="3.5" fill="#ff822c"/><polygon points="58,18 92,18 74,52" fill="#ff822c18" stroke="#ff822c" stroke-width="2"/><polygon points="140,62 140,96 106,78" fill="#ff822c0c" stroke="#ff822c66" stroke-width="1.5"/><path d="M 78 26 A 46 46 0 0 1 132 70" fill="none" stroke="#ff822c88" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="126" y1="64" x2="132" y2="70" stroke="#ff822c88" stroke-width="1.5"/><line x1="132" y1="62" x2="132" y2="70" stroke="#ff822c88" stroke-width="1.5"/></svg>`,
+
+'7-transformations-vectors/7.1-enlargement.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="28" cy="92" r="3.5" fill="#ff822c"/><polygon points="58,74 72,50 86,74" fill="#ff822c18" stroke="#ff822c" stroke-width="2"/><polygon points="98,60 128,18 158,60" fill="#ff822c0c" stroke="#ff822c66" stroke-width="1.5"/><line x1="28" y1="92" x2="62" y2="72" stroke="#ff822c33" stroke-width="1" stroke-dasharray="3,3"/><line x1="28" y1="92" x2="102" y2="58" stroke="#ff822c22" stroke-width="1" stroke-dasharray="3,3"/><line x1="28" y1="92" x2="86" y2="72" stroke="#ff822c33" stroke-width="1" stroke-dasharray="3,3"/><line x1="28" y1="92" x2="162" y2="58" stroke="#ff822c22" stroke-width="1" stroke-dasharray="3,3"/><text x="32" y="88" fill="#ff822c" font-size="8" font-family="monospace">C</text></svg>`,
+
+'7-transformations-vectors/7.1-combined.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><polygon points="88,18 112,18 100,42" fill="#ff822c18" stroke="#ff822c88" stroke-width="1.5"/><polygon points="28,84 58,52 78,84" fill="#0fee8915" stroke="#0fee89" stroke-width="2"/><polygon points="138,52 168,52 153,84" fill="#ff467015" stroke="#ff4670" stroke-width="2"/><line x1="100" y1="42" x2="64" y2="60" stroke="#0fee8955" stroke-width="1" stroke-dasharray="3,2"/><line x1="100" y1="42" x2="150" y2="58" stroke="#ff467055" stroke-width="1" stroke-dasharray="3,2"/><text x="42" y="46" fill="#0fee8988" font-size="8" font-family="monospace">T1→T2</text><text x="136" y="46" fill="#ff467088" font-size="8" font-family="monospace">T2→T1</text></svg>`,
+
+'7-transformations-vectors/7.2-vectors.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="28" y1="84" x2="100" y2="28" stroke="#ff822c" stroke-width="2.5"/><line x1="94" y1="28" x2="100" y2="28" stroke="#ff822c" stroke-width="2.5"/><line x1="100" y1="28" x2="172" y2="84" stroke="#00abfa" stroke-width="2.5"/><line x1="166" y1="84" x2="172" y2="84" stroke="#00abfa" stroke-width="2.5"/><line x1="28" y1="84" x2="172" y2="84" stroke="#0fee89" stroke-width="2.5"/><line x1="166" y1="78" x2="172" y2="84" stroke="#0fee89" stroke-width="2.5"/><line x1="166" y1="90" x2="172" y2="84" stroke="#0fee89" stroke-width="2.5"/><text x="54" y="48" fill="#ff822ccc" font-size="11" font-family="monospace">a</text><text x="140" y="48" fill="#00abfacc" font-size="11" font-family="monospace">b</text><text x="92" y="100" fill="#0fee89cc" font-size="11" font-family="monospace">a+b</text></svg>`,
+
+/* ── Unit 8 ── */
+'8-probability/8.1-venn.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><rect x="10" y="10" width="180" height="92" rx="4" fill="none" stroke="#0fee8918" stroke-width="1"/><circle cx="82" cy="56" r="34" fill="#0fee8908" stroke="#0fee89" stroke-width="2"/><circle cx="118" cy="56" r="34" fill="#0fee8908" stroke="#0fee8966" stroke-width="2"/><text x="58" y="48" fill="#0fee89cc" font-size="12" font-family="monospace">A</text><text x="128" y="48" fill="#0fee8888" font-size="12" font-family="monospace">B</text><text x="100" y="60" fill="#0fee89" font-size="8" font-family="monospace" text-anchor="middle">A∩B</text><text x="26" y="80" fill="#0fee8844" font-size="8" font-family="monospace">P(A)</text><text x="153" y="80" fill="#0fee8844" font-size="8" font-family="monospace">P(B)</text></svg>`,
+
+'8-probability/8.2-tree.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><circle cx="28" cy="56" r="5" fill="#0fee89"/><line x1="33" y1="50" x2="88" y2="24" stroke="#0fee89" stroke-width="1.5"/><line x1="33" y1="62" x2="88" y2="88" stroke="#0fee8966" stroke-width="1.5"/><circle cx="88" cy="24" r="4" fill="#0fee89"/><circle cx="88" cy="88" r="4" fill="#0fee8966"/><line x1="92" y1="20" x2="150" y2="10" stroke="#0fee89" stroke-width="1.5"/><line x1="92" y1="28" x2="150" y2="40" stroke="#0fee8980" stroke-width="1.5"/><line x1="92" y1="84" x2="150" y2="72" stroke="#0fee8966" stroke-width="1.5"/><line x1="92" y1="92" x2="150" y2="102" stroke="#0fee8944" stroke-width="1.5"/><circle cx="150" cy="10" r="3" fill="#0fee89"/><circle cx="150" cy="40" r="3" fill="#0fee8988"/><circle cx="150" cy="72" r="3" fill="#0fee8966"/><circle cx="150" cy="102" r="3" fill="#0fee8944"/><text x="52" y="30" fill="#0fee8888" font-size="8" font-family="monospace">p</text><text x="52" y="82" fill="#0fee8866" font-size="8" font-family="monospace">1−p</text></svg>`,
+
+'8-probability/8.3-frequency.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="18" y1="96" x2="186" y2="96" stroke="#0fee8922" stroke-width="1"/><line x1="18" y1="10" x2="18" y2="96" stroke="#0fee8922" stroke-width="1"/><line x1="18" y1="52" x2="186" y2="52" stroke="#fff06755" stroke-width="1.5" stroke-dasharray="6,4"/><polyline points="18,88 46,72 72,44 94,64 116,50 138,54 158,52 180,53" fill="none" stroke="#0fee89" stroke-width="2"/><text x="150" y="46" fill="#fff067cc" font-size="8" font-family="monospace">p=0.5</text><text x="100" y="110" fill="#0fee8866" font-size="8" font-family="monospace" text-anchor="middle">trials →</text></svg>`,
+
+/* ── Unit 9 ── */
+'9-statistics/9.1-histogram.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="22" y1="96" x2="186" y2="96" stroke="#ff467030" stroke-width="1"/><line x1="22" y1="10" x2="22" y2="96" stroke="#ff467030" stroke-width="1"/><rect x="26" y="58" width="22" height="38" fill="#ff467025" stroke="#ff467066" stroke-width="1.5"/><rect x="48" y="30" width="22" height="66" fill="#ff467035" stroke="#ff467080" stroke-width="1.5"/><rect x="70" y="44" width="22" height="52" fill="#ff467030" stroke="#ff467070" stroke-width="1.5"/><rect x="92" y="62" width="44" height="34" fill="#ff467020" stroke="#ff467055" stroke-width="1.5"/><rect x="136" y="74" width="44" height="22" fill="#ff467018" stroke="#ff467044" stroke-width="1.5"/><text x="100" y="110" fill="#ff467066" font-size="8" font-family="monospace" text-anchor="middle">freq. density</text></svg>`,
+
+'9-statistics/9.3-cumfreq.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="22" y1="96" x2="180" y2="96" stroke="#ff467022" stroke-width="1"/><line x1="22" y1="10" x2="22" y2="96" stroke="#ff467022" stroke-width="1"/><path d="M 26 94 C 50 92 70 78 90 56 C 110 34 130 18 170 10" fill="none" stroke="#ff4670" stroke-width="2.5"/><line x1="22" y1="52" x2="90" y2="52" stroke="#fff067" stroke-width="1.5" stroke-dasharray="4,3"/><line x1="90" y1="52" x2="90" y2="96" stroke="#fff067" stroke-width="1.5" stroke-dasharray="4,3"/><circle cx="90" cy="52" r="4" fill="#fff067"/><text x="92" y="46" fill="#fff067cc" font-size="8" font-family="monospace">median</text></svg>`,
+
+'9-statistics/9.4-scatter.html':`<svg viewBox="0 0 200 112" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="112" fill="#080f18"/><line x1="22" y1="96" x2="180" y2="96" stroke="#ff467022" stroke-width="1"/><line x1="22" y1="10" x2="22" y2="96" stroke="#ff467022" stroke-width="1"/><circle cx="38" cy="86" r="3" fill="#00abfa"/><circle cx="56" cy="76" r="3" fill="#00abfa"/><circle cx="72" cy="66" r="3" fill="#00abfa"/><circle cx="90" cy="58" r="3" fill="#00abfa"/><circle cx="108" cy="46" r="3" fill="#00abfa"/><circle cx="124" cy="36" r="3" fill="#00abfa"/><circle cx="142" cy="26" r="3" fill="#00abfa"/><circle cx="160" cy="18" r="3" fill="#00abfa"/><line x1="32" y1="92" x2="168" y2="14" stroke="#fff067aa" stroke-width="2" stroke-dasharray="6,4"/><circle cx="100" cy="52" r="5" fill="#ff4670"/><text x="112" y="50" fill="#ff467099" font-size="7" font-family="monospace">(x̄,ȳ)</text></svg>`,
+
   };
 
   var UNIT_COLORS = {1:'#00abfa',2:'#0fee89',3:'#ff822c',4:'#ff4670',5:'#fff067',6:'#00abfa',7:'#ff822c',8:'#0fee89',9:'#ff4670'};
 
   var UNITS = [
-    {
-      num:1, title:'Number',
-      widgets:[
-        ['1-number/1.1-types-of-number.html',       'Types of Number'],
-        ['1-number/1.2-sets.html',                   'Sets & Venn Diagrams'],
-        ['1-number/1.3-powers-and-roots.html',        'Powers & Roots'],
-        ['1-number/1.4-fractions-decimals-percentages.html', 'Fractions, Decimals & %'],
-        ['1-number/1.5-ordering.html',                'Ordering Numbers'],
-        ['1-number/1.7-indices.html',                 'Indices'],
-        ['1-number/1.8-standard-form.html',           'Standard Form'],
-        ['1-number/1.9-estimation.html',              'Estimation & Rounding'],
-        ['1-number/1.10-limits-of-accuracy.html',     'Limits of Accuracy'],
-        ['1-number/1.11-ratio-proportion.html',       'Ratio & Proportion'],
-        ['1-number/1.12-rates.html',                  'Rates'],
-        ['1-number/1.13-percentages.html',            'Percentages'],
-        ['1-number/1.15-time.html',                   'Time'],
-        ['1-number/1.17-exponential-growth-decay.html','Exponential Growth & Decay'],
-        ['1-number/1.18-surds.html',                  'Surds'],
-      ]
-    },
-    {
-      num:2, title:'Algebra & Graphs',
-      widgets:[
-        ['2-algebra-graphs/2.1-substitution.html',    'Substitution'],
-        ['2-algebra-graphs/2.2-expanding-brackets.html','Expanding & Factorising'],
-        ['2-algebra-graphs/2.5-equations.html',        'Solving Equations'],
-        ['2-algebra-graphs/2.6-inequalities.html',     'Inequalities'],
-        ['2-algebra-graphs/2.7-sequences.html',        'Sequences & nth Term'],
-        ['2-algebra-graphs/2.8-proportion.html',       'Direct & Inverse Proportion'],
-        ['2-algebra-graphs/2.9-distance-time.html',    'Distance–Time Graphs'],
-        ['2-algebra-graphs/2.10-graph-sketching.html', 'Graph Sketching'],
-        ['2-algebra-graphs/2.12-functions.html',       'Functions f(x), fg(x), f⁻¹(x)'],
-      ]
-    },
-    {
-      num:3, title:'Coordinate Geometry',
-      widgets:[
-        ['3-coordinate-geometry/3.1-gradient.html',            'Gradient'],
-        ['3-coordinate-geometry/3.2-straight-line.html',       'Straight-Line y = mx + c'],
-        ['3-coordinate-geometry/3.3-midpoint-distance.html',   'Midpoint & Distance'],
-        ['3-coordinate-geometry/3.4-parallel-perpendicular.html','Parallel & Perpendicular'],
-      ]
-    },
-    {
-      num:4, title:'Geometry',
-      widgets:[
-        ['4-geometry/4.3-bearings.html',        'Bearings'],
-        ['4-geometry/4.4-similarity.html',       'Similarity'],
-        ['4-geometry/4.6-parallel-lines.html',   'Angles & Parallel Lines'],
-        ['4-geometry/4.7-circle-theorems.html',  'Circle Theorems'],
-      ]
-    },
-    {
-      num:5, title:'Mensuration',
-      widgets:[
-        ['5-mensuration/5.2-area-shapes.html',    'Area — Parallelogram & Trapezium'],
-        ['5-mensuration/5.3-circle-sector.html',  'Arc Length & Sector Area'],
-        ['5-mensuration/5.4-cylinder-net.html',   'Cylinder Net'],
-        ['5-mensuration/5.4-cone-sphere.html',    'Cone, Sphere & Cylinder'],
-      ]
-    },
-    {
-      num:6, title:'Trigonometry',
-      widgets:[
-        ['6-trigonometry/6.0-unit-circle.html',     'Unit Circle'],
-        ['6-trigonometry/6.1-right-triangle.html',  'SOH-CAH-TOA'],
-        ['6-trigonometry/6.1-pythagoras.html',       'Pythagoras — Area Proof'],
-        ['6-trigonometry/6.2-sine-rule.html',        'Sine Rule'],
-        ['6-trigonometry/6.2-ambiguous-case.html',   'Ambiguous Case (SSA)'],
-        ['6-trigonometry/6.3-elevation.html',        'Elevation & Depression'],
-      ]
-    },
-    {
-      num:7, title:'Transformations & Vectors',
-      widgets:[
-        ['7-transformations-vectors/7.1-reflection.html',  'Reflection'],
-        ['7-transformations-vectors/7.1-rotation.html',    'Rotation'],
-        ['7-transformations-vectors/7.1-enlargement.html', 'Enlargement'],
-        ['7-transformations-vectors/7.1-combined.html',    'Combined Transformations'],
-        ['7-transformations-vectors/7.2-vectors.html',     'Vectors'],
-      ]
-    },
-    {
-      num:8, title:'Probability',
-      widgets:[
-        ['8-probability/8.1-venn.html',      'Venn Diagrams & Addition Rule'],
-        ['8-probability/8.2-tree.html',       'Tree Diagrams'],
-        ['8-probability/8.3-frequency.html',  'Relative Frequency'],
-      ]
-    },
-    {
-      num:9, title:'Statistics',
-      widgets:[
-        ['9-statistics/9.1-histogram.html', 'Histograms & Frequency Density'],
-        ['9-statistics/9.3-cumfreq.html',   'Cumulative Frequency'],
-        ['9-statistics/9.4-scatter.html',   'Scatter Diagrams'],
-      ]
-    },
+    { num:1, title:'Number', widgets:[
+      ['1-number/1.1-types-of-number.html',       'Types of Number'],
+      ['1-number/1.2-sets.html',                   'Sets & Venn Diagrams'],
+      ['1-number/1.3-powers-and-roots.html',        'Powers & Roots'],
+      ['1-number/1.4-fractions-decimals-percentages.html','Fractions, Decimals & %'],
+      ['1-number/1.5-ordering.html',                'Ordering Numbers'],
+      ['1-number/1.7-indices.html',                 'Indices'],
+      ['1-number/1.8-standard-form.html',           'Standard Form'],
+      ['1-number/1.9-estimation.html',              'Estimation & Rounding'],
+      ['1-number/1.10-limits-of-accuracy.html',     'Limits of Accuracy'],
+      ['1-number/1.11-ratio-proportion.html',       'Ratio & Proportion'],
+      ['1-number/1.12-rates.html',                  'Rates'],
+      ['1-number/1.13-percentages.html',            'Percentages'],
+      ['1-number/1.15-time.html',                   'Time'],
+      ['1-number/1.17-exponential-growth-decay.html','Exponential Growth & Decay'],
+      ['1-number/1.18-surds.html',                  'Surds'],
+    ]},
+    { num:2, title:'Algebra & Graphs', widgets:[
+      ['2-algebra-graphs/2.1-substitution.html',    'Substitution'],
+      ['2-algebra-graphs/2.2-expanding-brackets.html','Expanding & Factorising'],
+      ['2-algebra-graphs/2.5-equations.html',        'Solving Equations'],
+      ['2-algebra-graphs/2.6-inequalities.html',     'Inequalities'],
+      ['2-algebra-graphs/2.7-sequences.html',        'Sequences & nth Term'],
+      ['2-algebra-graphs/2.8-proportion.html',       'Direct & Inverse Proportion'],
+      ['2-algebra-graphs/2.9-distance-time.html',    'Distance–Time Graphs'],
+      ['2-algebra-graphs/2.10-graph-sketching.html', 'Graph Sketching'],
+      ['2-algebra-graphs/2.12-functions.html',       'Functions f(x), fg(x), f⁻¹(x)'],
+    ]},
+    { num:3, title:'Coordinate Geometry', widgets:[
+      ['3-coordinate-geometry/3.1-gradient.html',            'Gradient'],
+      ['3-coordinate-geometry/3.2-straight-line.html',       'Straight-Line y = mx + c'],
+      ['3-coordinate-geometry/3.3-midpoint-distance.html',   'Midpoint & Distance'],
+      ['3-coordinate-geometry/3.4-parallel-perpendicular.html','Parallel & Perpendicular'],
+    ]},
+    { num:4, title:'Geometry', widgets:[
+      ['4-geometry/4.3-bearings.html',        'Bearings'],
+      ['4-geometry/4.4-similarity.html',       'Similarity'],
+      ['4-geometry/4.6-parallel-lines.html',   'Angles & Parallel Lines'],
+      ['4-geometry/4.7-circle-theorems.html',  'Circle Theorems'],
+    ]},
+    { num:5, title:'Mensuration', widgets:[
+      ['5-mensuration/5.2-area-shapes.html',    'Area — Parallelogram & Trapezium'],
+      ['5-mensuration/5.3-circle-sector.html',  'Arc Length & Sector Area'],
+      ['5-mensuration/5.4-cylinder-net.html',   'Cylinder Net'],
+      ['5-mensuration/5.4-cone-sphere.html',    'Cone, Sphere & Cylinder'],
+    ]},
+    { num:6, title:'Trigonometry', widgets:[
+      ['6-trigonometry/6.0-unit-circle.html',     'Unit Circle'],
+      ['6-trigonometry/6.1-right-triangle.html',  'SOH-CAH-TOA'],
+      ['6-trigonometry/6.1-pythagoras.html',       'Pythagoras — Area Proof'],
+      ['6-trigonometry/6.2-sine-rule.html',        'Sine Rule'],
+      ['6-trigonometry/6.2-ambiguous-case.html',   'Ambiguous Case (SSA)'],
+      ['6-trigonometry/6.3-elevation.html',        'Elevation & Depression'],
+    ]},
+    { num:7, title:'Transformations & Vectors', widgets:[
+      ['7-transformations-vectors/7.1-reflection.html',  'Reflection'],
+      ['7-transformations-vectors/7.1-rotation.html',    'Rotation'],
+      ['7-transformations-vectors/7.1-enlargement.html', 'Enlargement'],
+      ['7-transformations-vectors/7.1-combined.html',    'Combined Transformations'],
+      ['7-transformations-vectors/7.2-vectors.html',     'Vectors'],
+    ]},
+    { num:8, title:'Probability', widgets:[
+      ['8-probability/8.1-venn.html',      'Venn Diagrams & Addition Rule'],
+      ['8-probability/8.2-tree.html',       'Tree Diagrams'],
+      ['8-probability/8.3-frequency.html',  'Relative Frequency'],
+    ]},
+    { num:9, title:'Statistics', widgets:[
+      ['9-statistics/9.1-histogram.html', 'Histograms & Frequency Density'],
+      ['9-statistics/9.3-cumfreq.html',   'Cumulative Frequency'],
+      ['9-statistics/9.4-scatter.html',   'Scatter Diagrams'],
+    ]},
   ];
 
   var root = document.getElementById('root');
 
   UNITS.forEach(function(unit) {
     var color = UNIT_COLORS[unit.num];
-    var thumb = THUMBS[unit.num];
 
     var section = document.createElement('div');
     section.className = 'unit';
-
     section.innerHTML =
       '<div class="unit-header">' +
         '<span class="unit-num">UNIT ' + unit.num + '</span>' +
@@ -318,25 +247,22 @@
       '<div class="grid" id="grid-' + unit.num + '"></div>';
 
     root.appendChild(section);
-
     var grid = section.querySelector('.grid');
 
     unit.widgets.forEach(function(w) {
       var slug = w[0], name = w[1];
-      var url = BASE + slug;
+      var thumb = THUMBS[slug] || '';
 
       var card = document.createElement('a');
       card.className = 'card';
-      card.href = url;
+      card.href = BASE + slug;
       card.target = '_blank';
       card.rel = 'noopener';
-      card.style.setProperty('--c', color);
 
       card.innerHTML =
         '<div class="thumb">' + thumb + '</div>' +
         '<div class="card-body"><div class="card-name">' + name + '</div></div>';
 
-      // Hover border glow via inline style on mouseenter/leave
       card.addEventListener('mouseenter', function() {
         this.style.borderColor = color;
         this.style.boxShadow = '0 0 0 1px ' + color + '44, 0 8px 24px #00000055';
