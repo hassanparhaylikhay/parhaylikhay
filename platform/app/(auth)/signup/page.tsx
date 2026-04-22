@@ -3,8 +3,10 @@
 import Link from "next/link"
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
+  const router = useRouter()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -17,7 +19,7 @@ export default function SignupPage() {
     setError(null)
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { emailRedirectTo: `${window.location.origin}/api/auth/confirm` },
@@ -26,7 +28,12 @@ export default function SignupPage() {
     if (error) {
       setError(error.message)
       setLoading(false)
+    } else if (data.session) {
+      // Email confirmation is off — session created immediately
+      router.push("/dashboard")
+      router.refresh()
     } else {
+      // Email confirmation is on — ask user to check inbox
       setDone(true)
     }
   }
