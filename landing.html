@@ -144,7 +144,7 @@
       z-index: 10;
       text-align: center;
       display: flex; flex-direction: column; align-items: center;
-      padding: 120px 24px 100px;
+      padding: 90px 24px 160px;
       width: 100%;
       max-width: 860px;
     }
@@ -178,9 +178,9 @@
     }
 
     h1.hero-headline {
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Geist', system-ui, sans-serif;
       font-weight: 800;
-      font-size: clamp(52px, 8.5vw, 100px);
+      font-size: clamp(44px, 7.2vw, 86px);
       line-height: 0.94;
       letter-spacing: -3.8px;
       color: var(--bright);
@@ -1134,11 +1134,11 @@
     var initialized = false;
 
     var nodeDefs = [
-      {fx: 0.09, fy: 0.18, color: '#00abfa', label: 'M1'},
-      {fx: 0.91, fy: 0.18, color: '#0fee89', label: 'A1'},
-      {fx: 0.50, fy: 0.08, color: '#fff067', label: 'B1'},
-      {fx: 0.09, fy: 0.82, color: '#ff822c', label: 'ECF'},
-      {fx: 0.91, fy: 0.82, color: '#ff4670', label: 'SC'},
+      {fx: 0.07, fy: 0.18, color: '#00abfa', label: 'M1'},
+      {fx: 0.93, fy: 0.18, color: '#0fee89', label: 'A1'},
+      {fx: 0.50, fy: 0.90, color: '#fff067', label: 'B1'},
+      {fx: 0.06, fy: 0.76, color: '#ff822c', label: 'ECF'},
+      {fx: 0.94, fy: 0.76, color: '#ff4670', label: 'SC'},
     ];
     var nodes = nodeDefs.map(function(d) {
       return {x: 0, y: 0, color: d.color, label: d.label, fx: d.fx, fy: d.fy};
@@ -1251,6 +1251,32 @@
       ctx.globalAlpha = 1; ctx.textAlign = 'left';
     }
 
+    function bezierLineIntersect(p0x, p0y, cx, cy, p1x, p1y, lx1, ly1, lx2, ly2) {
+      var dx = lx2 - lx1, dy = ly2 - ly1;
+      var axt = 2*(cx - p0x), bxt = p0x - 2*cx + p1x;
+      var ayt = 2*(cy - p0y), byt = p0y - 2*cy + p1y;
+      var c0 = -dy*(p0x - lx1) + dx*(p0y - ly1);
+      var c1 = -dy*axt + dx*ayt;
+      var c2 = -dy*bxt + dx*byt;
+      var pts = [];
+      if (Math.abs(c2) < 1e-8) {
+        if (Math.abs(c1) > 1e-8) { var tt = -c0/c1; if (tt>=0&&tt<=1) pts.push(tt); }
+      } else {
+        var disc = c1*c1 - 4*c2*c0;
+        if (disc >= 0) {
+          var sq = Math.sqrt(disc);
+          var t1 = (-c1-sq)/(2*c2), t2 = (-c1+sq)/(2*c2);
+          if (t1>=0&&t1<=1) pts.push(t1);
+          if (t2>=0&&t2<=1&&Math.abs(t2-t1)>1e-6) pts.push(t2);
+        }
+      }
+      return pts.map(function(tt) {
+        var mt = 1-tt;
+        return { x: mt*mt*p0x + 2*tt*mt*cx + tt*tt*p1x,
+                 y: mt*mt*p0y + 2*tt*mt*cy + tt*tt*p1y };
+      });
+    }
+
     function draw() {
       ctx.clearRect(0, 0, W, H);
       ctx.fillStyle = '#07090d'; ctx.fillRect(0, 0, W, H);
@@ -1265,9 +1291,8 @@
       for (var lj = gs; lj < H; lj += gs) {
         ctx.beginPath(); ctx.moveTo(0, lj); ctx.lineTo(W, lj); ctx.stroke();
       }
-      /* slightly brighter centre cross */
+      /* slightly brighter centre horizontal */
       ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-      ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(0, H/2); ctx.lineTo(W, H/2); ctx.stroke();
 
       var n = nodes;
@@ -1299,8 +1324,30 @@
       /* vertex marker at n[2] (yellow) */
       var vx = n[2].x, vy = n[2].y;
       ctx.strokeStyle = 'rgba(255,240,103,0.3)'; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
-      ctx.beginPath(); ctx.moveTo(vx, vy + 12); ctx.lineTo(vx, vy + 36); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(vx, vy - 12); ctx.lineTo(vx, vy - 36); ctx.stroke();
       ctx.setLineDash([]);
+
+      /* ── Intersection points of parabola with the x-axis line ── */
+      var ixPts = bezierLineIntersect(n[0].x, n[0].y, cpx, cpy, n[1].x, n[1].y,
+                                       n[3].x, n[3].y, n[4].x, n[4].y);
+      var ixLabels = ['x₁', 'x₂'];
+      ixPts.forEach(function(pt, ii) {
+        /* glow halo */
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, 13, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(15,238,137,0.10)'; ctx.fill();
+        /* dot */
+        ctx.shadowColor = '#0fee89'; ctx.shadowBlur = 16;
+        ctx.fillStyle = '#0fee89';
+        ctx.beginPath(); ctx.arc(pt.x, pt.y, 5.5, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+        /* label above the dot */
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = '#0fee89';
+        ctx.font = '500 10px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(ixLabels[ii], pt.x, pt.y - 14);
+        ctx.globalAlpha = 1; ctx.textAlign = 'left';
+      });
 
       /* ── Circle: centre n[3](orange), passes through n[4](pink) ── */
       var cr = Math.hypot(n[4].x - n[3].x, n[4].y - n[3].y);
