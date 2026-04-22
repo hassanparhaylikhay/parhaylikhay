@@ -59,10 +59,8 @@ export default function SignupPage() {
       <div className="w-full max-w-[400px]">
 
         {/* Logo */}
-        <Link href="/" className="flex justify-center mb-10 no-underline">
-          <span style={{ fontFamily: "var(--font-geist-sans), sans-serif", fontWeight: 800, fontSize: 20, color: "#fff", letterSpacing: "-0.5px" }}>
-            Parhay<span style={{ color: "#fff067" }}>likhay</span><span style={{ color: "#0fee89" }}>.</span>
-          </span>
+        <Link href="/" className="flex justify-center mb-10">
+          <img src="/PL-LOGO.png" alt="Parhaylikhay" height={30} style={{ height: 30 }} />
         </Link>
 
         <div className="rounded-xl border border-[#141e2a] bg-[#0b1118] p-8">
