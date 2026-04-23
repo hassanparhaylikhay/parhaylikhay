@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { redirect, notFound } from "next/navigation"
 import { UNITS } from "../../data"
 import Sidebar from "./sidebar"
-import SignOutButton from "../../../../sign-out-button"
+import SignOutButton from "../../../sign-out-button"
 
 export default async function LessonLayout({
   children,
