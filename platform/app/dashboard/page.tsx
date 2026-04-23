@@ -1,54 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import Link from "next/link"
+import { UNITS } from "./maths/data"
 import SignOutButton from "./sign-out-button"
-
-const UNITS = [
-  {
-    n: "01",
-    title: "Number",
-    topics: ["Types of number", "Sets & Venn diagrams", "Fractions & decimals", "Ratio & proportion", "Rates", "Percentages", "Time", "Money"],
-  },
-  {
-    n: "02",
-    title: "Algebra and Graphs",
-    topics: ["Algebraic manipulation", "Equations & inequalities", "Indices & surds", "Sequences", "Functions", "Graphs of functions", "Graphical methods"],
-  },
-  {
-    n: "03",
-    title: "Coordinate Geometry",
-    topics: ["Gradient", "Straight-line equations", "Midpoint & distance", "Parallel & perpendicular lines"],
-  },
-  {
-    n: "04",
-    title: "Geometry",
-    topics: ["Geometrical terms", "Constructions", "Scale drawings & bearings", "Similarity", "Symmetry", "Angles", "Circle theorems I", "Circle theorems II"],
-  },
-  {
-    n: "05",
-    title: "Mensuration",
-    topics: ["Perimeter & area", "Surface area & volume"],
-  },
-  {
-    n: "06",
-    title: "Trigonometry",
-    topics: ["Right-angled triangles", "Non-right-angled triangles", "Elevation, depression & 3D"],
-  },
-  {
-    n: "07",
-    title: "Transformations and Vectors",
-    topics: ["Transformations", "Vectors"],
-  },
-  {
-    n: "08",
-    title: "Probability",
-    topics: ["Basic probability", "Combined events", "Relative frequency"],
-  },
-  {
-    n: "09",
-    title: "Statistics",
-    topics: ["Data collection & display", "Averages & spread", "Cumulative frequency", "Correlation"],
-  },
-]
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -96,18 +50,19 @@ export default async function DashboardPage() {
 
           <div className="rounded-xl border border-[#141e2a] overflow-hidden">
             {UNITS.map((unit, i) => (
-              <div
-                key={unit.n}
-                className={`flex items-start gap-5 px-6 py-5 hover:bg-[#0b1118] transition-colors cursor-pointer group${i < UNITS.length - 1 ? " border-b border-[#141e2a]" : ""}`}
+              <Link
+                key={unit.slug}
+                href={`/dashboard/maths/${unit.slug}`}
+                className={`flex items-start gap-5 px-6 py-5 hover:bg-[#0b1118] transition-colors group${i < UNITS.length - 1 ? " border-b border-[#141e2a]" : ""}`}
               >
-                <span className="text-[12px] font-mono text-[#3a4a5a] pt-0.5 w-5 shrink-0">{unit.n}</span>
+                <span className="text-[12px] font-mono text-[#3a4a5a] pt-0.5 w-5 shrink-0">{unit.slug}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-3 mb-1.5">
                     <h3 className="text-[15px] font-semibold text-[#f0eeea]">{unit.title}</h3>
                     <span className="text-[11px] font-mono text-[#3a4a5a] shrink-0">{unit.topics.length} topics</span>
                   </div>
                   <p className="text-[13px] text-[#7a7875] leading-relaxed">
-                    {unit.topics.join(" · ")}
+                    {unit.topics.map(t => t.title).join(" · ")}
                   </p>
                 </div>
                 <svg
@@ -116,7 +71,7 @@ export default async function DashboardPage() {
                 >
                   <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-              </div>
+              </Link>
             ))}
           </div>
         </section>
