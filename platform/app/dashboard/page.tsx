@@ -1,38 +1,149 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import SignOutButton from "./sign-out-button"
+
+const UNITS = [
+  {
+    n: "01",
+    title: "Number",
+    topics: ["Types of number", "Sets & Venn diagrams", "Fractions & decimals", "Ratio & proportion", "Rates", "Percentages", "Time", "Money"],
+  },
+  {
+    n: "02",
+    title: "Algebra and Graphs",
+    topics: ["Algebraic manipulation", "Equations & inequalities", "Indices & surds", "Sequences", "Functions", "Graphs of functions", "Graphical methods"],
+  },
+  {
+    n: "03",
+    title: "Coordinate Geometry",
+    topics: ["Gradient", "Straight-line equations", "Midpoint & distance", "Parallel & perpendicular lines"],
+  },
+  {
+    n: "04",
+    title: "Geometry",
+    topics: ["Geometrical terms", "Constructions", "Scale drawings & bearings", "Similarity", "Symmetry", "Angles", "Circle theorems I", "Circle theorems II"],
+  },
+  {
+    n: "05",
+    title: "Mensuration",
+    topics: ["Perimeter & area", "Surface area & volume"],
+  },
+  {
+    n: "06",
+    title: "Trigonometry",
+    topics: ["Right-angled triangles", "Non-right-angled triangles", "Elevation, depression & 3D"],
+  },
+  {
+    n: "07",
+    title: "Transformations and Vectors",
+    topics: ["Transformations", "Vectors"],
+  },
+  {
+    n: "08",
+    title: "Probability",
+    topics: ["Basic probability", "Combined events", "Relative frequency"],
+  },
+  {
+    n: "09",
+    title: "Statistics",
+    topics: ["Data collection & display", "Averages & spread", "Cumulative frequency", "Correlation"],
+  },
+]
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-
   if (!user) redirect("/login")
 
-  return (
-    <div className="min-h-screen px-6 py-16 max-w-[1080px] mx-auto">
-      <div className="mb-12">
-        <p className="text-[11px] font-mono tracking-[2.5px] uppercase text-[#fff067] mb-3">Dashboard</p>
-        <h1 className="text-[32px] font-bold text-[#f0eeea] tracking-tight">
-          Welcome back{user.email ? `, ${user.email.split("@")[0]}` : ""}.
-        </h1>
-        <p className="text-[#7a7875] mt-2">Your courses and progress will appear here.</p>
-      </div>
+  const name = user.email?.split("@")[0] ?? "there"
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[
-          { title: "Maths — Full Course", unit: "9 units · 54 tools", color: "#00abfa", status: "Coming soon" },
-          { title: "Physics — Full Course", unit: "Cambridge 5054", color: "#ff822c", status: "Coming soon" },
-          { title: "Past Papers", unit: "2015–2025 · Worked solutions", color: "#0fee89", status: "Coming soon" },
-        ].map(({ title, unit, color, status }) => (
-          <div key={title} className="rounded-xl border border-[#141e2a] bg-[#0b1118] p-6 flex flex-col gap-3">
-            <div className="w-2 h-2 rounded-full" style={{ background: color }} />
-            <h3 className="text-[16px] font-semibold text-[#f0eeea]">{title}</h3>
-            <p className="text-[13px] text-[#7a7875]">{unit}</p>
-            <span className="mt-auto inline-block text-[11px] font-mono text-[#3a4a5a] border border-[#141e2a] rounded px-2 py-1 self-start">
-              {status}
-            </span>
+  return (
+    <div className="min-h-screen bg-[#07090d]">
+
+      {/* Nav */}
+      <nav className="sticky top-0 z-50 border-b border-[#141e2a] bg-[#07090d]/90 backdrop-blur-md">
+        <div className="max-w-[1080px] mx-auto px-6 h-14 flex items-center justify-between">
+          <a href="/">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/PL-LOGO.png" alt="Parhaylikhay" style={{ height: 26 }} />
+          </a>
+          <div className="flex items-center gap-5">
+            <span className="hidden sm:block text-[12px] font-mono text-[#3a4a5a]">{user.email}</span>
+            <SignOutButton />
           </div>
-        ))}
-      </div>
+        </div>
+      </nav>
+
+      {/* Main */}
+      <main className="max-w-[1080px] mx-auto px-6 py-14">
+
+        {/* Header */}
+        <div className="mb-12">
+          <p className="text-[11px] font-mono tracking-[2.5px] uppercase text-[#fff067] mb-3">My learning</p>
+          <h1 className="text-[28px] font-bold text-[#f0eeea] tracking-tight">
+            Welcome back, {name}.
+          </h1>
+          <p className="text-[14px] text-[#7a7875] mt-1.5">Pick up where you left off.</p>
+        </div>
+
+        {/* Maths course */}
+        <section className="mb-14">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#00abfa]" />
+            <h2 className="text-[14px] font-semibold text-[#f0eeea]">Cambridge 4024 — Mathematics</h2>
+            <span className="text-[10px] font-mono text-[#3a4a5a] border border-[#141e2a] rounded px-2 py-0.5 tracking-wider">O-LEVEL</span>
+          </div>
+
+          <div className="rounded-xl border border-[#141e2a] overflow-hidden">
+            {UNITS.map((unit, i) => (
+              <div
+                key={unit.n}
+                className={`flex items-start gap-5 px-6 py-5 hover:bg-[#0b1118] transition-colors cursor-pointer group${i < UNITS.length - 1 ? " border-b border-[#141e2a]" : ""}`}
+              >
+                <span className="text-[12px] font-mono text-[#3a4a5a] pt-0.5 w-5 shrink-0">{unit.n}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-3 mb-1.5">
+                    <h3 className="text-[15px] font-semibold text-[#f0eeea]">{unit.title}</h3>
+                    <span className="text-[11px] font-mono text-[#3a4a5a] shrink-0">{unit.topics.length} topics</span>
+                  </div>
+                  <p className="text-[13px] text-[#7a7875] leading-relaxed">
+                    {unit.topics.join(" · ")}
+                  </p>
+                </div>
+                <svg
+                  className="w-4 h-4 text-[#3a4a5a] group-hover:text-[#00abfa] transition-colors mt-0.5 shrink-0"
+                  fill="none" viewBox="0 0 16 16"
+                >
+                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Coming soon */}
+        <section>
+          <p className="text-[11px] font-mono tracking-[2.5px] uppercase text-[#3a4a5a] mb-5">Coming soon</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {[
+              { title: "Physics", sub: "Cambridge 5054 — O-Level", color: "#ff822c" },
+              { title: "Past Papers", sub: "2015–2025 · Worked solutions", color: "#0fee89" },
+            ].map(({ title, sub, color }) => (
+              <div
+                key={title}
+                className="rounded-xl border border-[#141e2a] bg-[#0b1118] px-6 py-5 flex items-center gap-4 opacity-40 select-none"
+              >
+                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
+                <div>
+                  <p className="text-[14px] font-semibold text-[#f0eeea]">{title}</p>
+                  <p className="text-[12px] text-[#7a7875] mt-0.5">{sub}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+      </main>
     </div>
   )
 }
