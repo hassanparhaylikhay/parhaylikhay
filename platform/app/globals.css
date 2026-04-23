@@ -118,14 +118,63 @@
   background-size: 28px 28px;
 }
 
-/* Lesson body prose styles — dark theme, tuned for readability */
+/* ─────────────────────────────────────────────────────
+   Lesson body — dark-theme prose with brand-coded roles
+   ───────────────────────────────────────────────────── */
+
 .lesson-prose {
   color: #c8c6be;
-  font-size: 15.5px;
-  line-height: 1.75;
+  font-size: 15px;
+  line-height: 1.65;
   letter-spacing: 0.1px;
 }
-.lesson-prose > * + * { margin-top: 18px; }
+.lesson-prose > * + * { margin-top: 14px; }
+
+/* Section headings (H2) — big numbered kicker, colored dash, bold title */
+.lesson-prose .section-h2 {
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid #141e2a;
+}
+.lesson-prose > .section-h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.lesson-prose .section-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.lesson-prose .section-num {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: #3a4a5a;
+}
+.lesson-prose .section-dash {
+  width: 28px;
+  height: 2.5px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.lesson-prose .section-eyebrow {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 2.5px;
+  color: #3a4a5a;
+}
+.lesson-prose .section-title {
+  color: #f0eeea;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 4px 0 16px;
+  line-height: 1.2;
+}
 .lesson-prose h2 {
   color: #f0eeea;
   font-size: 22px;
@@ -135,15 +184,66 @@
   margin-bottom: 14px;
   line-height: 1.25;
 }
-.lesson-prose h2:first-child { margin-top: 0; }
+
+/* Example H3 — blue numbered pill + title */
+.lesson-prose .example-h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-top: 32px;
+  margin-bottom: 14px;
+  padding-top: 20px;
+  border-top: 1px dashed #141e2a;
+}
+.lesson-prose .example-h3:first-of-type { padding-top: 0; border-top: 0; }
+.lesson-prose .example-num {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #00abfa;
+  background: rgba(0, 171, 250, 0.10);
+  border: 1px solid rgba(0, 171, 250, 0.28);
+  border-radius: 4px;
+  padding: 3px 8px;
+  letter-spacing: 1.5px;
+  flex-shrink: 0;
+}
+.lesson-prose .example-titles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px;
+}
+.lesson-prose .example-h3 h3 {
+  margin: 0;
+  font-size: 17px;
+  color: #f0eeea;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+.lesson-prose .example-flavour {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  color: #7a7875;
+  letter-spacing: 0.5px;
+  text-transform: lowercase;
+  border: 1px solid #141e2a;
+  padding: 1px 7px;
+  border-radius: 3px;
+}
+
 .lesson-prose h3 {
   color: #f0eeea;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
-  margin-top: 30px;
+  margin-top: 28px;
   margin-bottom: 10px;
   letter-spacing: -0.2px;
 }
+
+/* Body text */
 .lesson-prose p { color: #c8c6be; }
 .lesson-prose strong { color: #f0eeea; font-weight: 600; }
 .lesson-prose em { font-style: italic; color: #c8c6be; }
@@ -155,38 +255,129 @@
   border-radius: 4px;
   padding: 1px 5px;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 13px;
+  font-size: 12.5px;
   color: #fff067;
 }
-.lesson-prose ul, .lesson-prose ol {
-  padding-left: 22px;
-}
+.lesson-prose ul,
+.lesson-prose ol { padding-left: 22px; }
 .lesson-prose li { margin-top: 6px; color: #c8c6be; }
 .lesson-prose li::marker { color: #3a4a5a; }
-.lesson-prose blockquote {
-  border-left: 2px solid #fff067;
-  background: #fff06708;
-  padding: 14px 18px;
-  margin: 22px 0;
-  border-radius: 0 6px 6px 0;
-}
-.lesson-prose blockquote p { color: #c8c6be; margin: 0; }
-.lesson-prose blockquote strong { color: #fff067; }
 .lesson-prose hr {
   border: 0;
   border-top: 1px solid #141e2a;
   margin: 32px 0;
 }
 
-/* KaTeX overrides — match text color and sizing */
+/* Examiner tip blockquote — yellow */
+.lesson-prose blockquote {
+  border-left: 2.5px solid #fff067;
+  background: rgba(255, 240, 103, 0.05);
+  padding: 14px 18px;
+  margin: 22px 0;
+  border-radius: 0 6px 6px 0;
+  position: relative;
+}
+.lesson-prose blockquote p { color: #c8c6be; margin: 0; }
+.lesson-prose blockquote strong { color: #fff067; }
+
+/* ─── Inline role pills — colour-coded marks ─── */
+.lesson-prose .mark-pill {
+  display: inline;
+  padding: 2px 8px 3px;
+  border-radius: 4px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11.5px;
+  line-height: 1.6;
+  letter-spacing: 0.1px;
+  border: 1px solid transparent;
+  white-space: normal;
+  margin: 0 1px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+.lesson-prose .mark-pill b {
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-right: 2px;
+}
+.lesson-prose .mark-pill.mark-m {
+  color: #00abfa;
+  background: rgba(0, 171, 250, 0.08);
+  border-color: rgba(0, 171, 250, 0.28);
+}
+.lesson-prose .mark-pill.mark-b {
+  color: #fff067;
+  background: rgba(255, 240, 103, 0.08);
+  border-color: rgba(255, 240, 103, 0.28);
+}
+.lesson-prose .mark-pill.mark-a {
+  color: #0fee89;
+  background: rgba(15, 238, 137, 0.08);
+  border-color: rgba(15, 238, 137, 0.28);
+}
+
+/* "Working" chip — prefix to the working-out paragraph */
+.lesson-prose .working-chip {
+  display: inline-block;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: #0fee89;
+  background: rgba(15, 238, 137, 0.10);
+  border: 1px solid rgba(15, 238, 137, 0.32);
+  border-radius: 3px;
+  padding: 2px 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-right: 10px;
+  vertical-align: baseline;
+}
+
+/* Full marks chip — appears at end of worked example */
+.lesson-prose .full-marks-chip {
+  display: inline-block;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: #f0eeea;
+  background: #0b1118;
+  border: 1px solid #141e2a;
+  border-left: 2.5px solid #fff067;
+  border-radius: 0 4px 4px 0;
+  padding: 3px 10px;
+  letter-spacing: 0.5px;
+}
+
+/* Past paper reference — subtle monospace tint */
+.lesson-prose .paper-ref {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  color: #c8c6be;
+  background: #0b1118;
+  border: 1px solid #141e2a;
+  border-radius: 3px;
+  padding: 1px 5px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+/* ─── KaTeX overrides ─── */
 .lesson-prose .katex { color: #f0eeea; font-size: 1em; }
 .lesson-prose .katex-display {
-  margin: 20px 0;
-  padding: 14px 10px;
+  margin: 18px 0;
+  padding: 10px 6px;
   overflow-x: auto;
   overflow-y: hidden;
 }
 .lesson-prose .katex-display > .katex { font-size: 1.1em; }
+/* Style KaTeX's \boxed{...} as a brand-themed answer box */
+.lesson-prose .katex .boxed {
+  border-color: #00abfa !important;
+  color: #f0eeea;
+  padding: 3px 10px !important;
+  border-radius: 4px !important;
+  background: rgba(0, 171, 250, 0.06);
+}
 
 /* Fade-up scroll animation */
 .fade-up {

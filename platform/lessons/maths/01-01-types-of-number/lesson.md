@@ -123,35 +123,27 @@ Full marks $= 2$. This is w25_22 Q14(a), exactly as written on the 2025 paper.
 
 ### Example 5 — the hard case that catches students out
 
-Write the recurring decimal $0.\overline{14}$ as a fraction in its simplest form.
+Write the recurring decimal $0.1\overline{4}$ (the $4$ recurs, the $1$ does not) as a fraction in its simplest form.
 
-**Working.** Let $x = 0.141414\ldots$.
+**Working.** Let $x = 0.1444\ldots$.
 
-Two digits repeat, so multiply by $100$:
+Only one digit recurs, but there is a non-recurring digit before it — so we need **two** multiplications to align the recurring tails. Multiply by $10$ (to move the non-recurring $1$ past the decimal point), and again by $100$ (to shift one full period of the recurring block):
 
-$100x = 14.141414\ldots$
+$10x = 1.444\ldots$
 
-Subtract the original equation:
+$100x = 14.444\ldots$
 
-$100x - x = 14.141414\ldots - 0.141414\ldots$
+Now subtract — the recurring tails cancel perfectly:
 
-$99x = 14$ **[M1 for the algebraic setup — the recurring tails cancel]**
+$100x - 10x = 14.444\ldots - 1.444\ldots$
 
-Hmm — the denominator should be $99$, not $90$. Let me check.
-
-Looking at the w25_11 Q18 answer of $\tfrac{13}{90}$ tells us the original decimal is actually $0.1\overline{4}$ (only the $4$ recurs, not "$14$"). So:
-
-Let $x = 0.1444\ldots$. Multiply by $10$: $10x = 1.444\ldots$. Multiply by $100$: $100x = 14.444\ldots$.
-
-Subtract: $100x - 10x = 14.444\ldots - 1.444\ldots$
-
-$90x = 13$ **[M1 — this is the mark scheme's key setup: $14.444 - 1.444 = 13$ with denominator $90$]**
+$90x = 13$ **[M1 for the algebraic setup — the key insight Cambridge rewards]**
 
 $x = \boxed{\dfrac{13}{90}}$. **[A1 — answer]**
 
-Full marks $= 2$.
+Full marks $= 2$. This is exactly the mark scheme for w25_11 Q18.
 
-> **Examiner tip:** Read the dot notation carefully. $0.\overline{14}$ (both digits recur) and $0.1\overline{4}$ (only the $4$ recurs) are different numbers with different fraction forms. Miss this and the whole question goes wrong.
+> **Examiner tip:** Read the dot notation carefully. $0.\overline{14}$ (both digits recur, answer $\tfrac{14}{99}$) and $0.1\overline{4}$ (only the $4$ recurs, answer $\tfrac{13}{90}$) are different numbers. Miss this and the whole question goes wrong.
 
 ## How Cambridge marks this
 
