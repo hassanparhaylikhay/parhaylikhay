@@ -118,6 +118,76 @@
   background-size: 28px 28px;
 }
 
+/* Lesson body prose styles — dark theme, tuned for readability */
+.lesson-prose {
+  color: #c8c6be;
+  font-size: 15.5px;
+  line-height: 1.75;
+  letter-spacing: 0.1px;
+}
+.lesson-prose > * + * { margin-top: 18px; }
+.lesson-prose h2 {
+  color: #f0eeea;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-top: 44px;
+  margin-bottom: 14px;
+  line-height: 1.25;
+}
+.lesson-prose h2:first-child { margin-top: 0; }
+.lesson-prose h3 {
+  color: #f0eeea;
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  letter-spacing: -0.2px;
+}
+.lesson-prose p { color: #c8c6be; }
+.lesson-prose strong { color: #f0eeea; font-weight: 600; }
+.lesson-prose em { font-style: italic; color: #c8c6be; }
+.lesson-prose a { color: #00abfa; text-decoration: none; }
+.lesson-prose a:hover { text-decoration: underline; }
+.lesson-prose code {
+  background: #0b1118;
+  border: 1px solid #141e2a;
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 13px;
+  color: #fff067;
+}
+.lesson-prose ul, .lesson-prose ol {
+  padding-left: 22px;
+}
+.lesson-prose li { margin-top: 6px; color: #c8c6be; }
+.lesson-prose li::marker { color: #3a4a5a; }
+.lesson-prose blockquote {
+  border-left: 2px solid #fff067;
+  background: #fff06708;
+  padding: 14px 18px;
+  margin: 22px 0;
+  border-radius: 0 6px 6px 0;
+}
+.lesson-prose blockquote p { color: #c8c6be; margin: 0; }
+.lesson-prose blockquote strong { color: #fff067; }
+.lesson-prose hr {
+  border: 0;
+  border-top: 1px solid #141e2a;
+  margin: 32px 0;
+}
+
+/* KaTeX overrides — match text color and sizing */
+.lesson-prose .katex { color: #f0eeea; font-size: 1em; }
+.lesson-prose .katex-display {
+  margin: 20px 0;
+  padding: 14px 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.lesson-prose .katex-display > .katex { font-size: 1.1em; }
+
 /* Fade-up scroll animation */
 .fade-up {
   opacity: 0;

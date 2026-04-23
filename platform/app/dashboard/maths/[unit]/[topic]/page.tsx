@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { UNITS, getPrevNext } from "../../data"
+import { loadLesson } from "@/lib/lesson-loader"
+import LessonBody from "./lesson-body"
 
 export default async function LessonPage({
   params,
@@ -14,6 +16,7 @@ export default async function LessonPage({
   if (!topic) notFound()
 
   const { prev, next } = getPrevNext(unitSlug, topicSlug)
+  const lesson = await loadLesson(unitSlug, topicSlug)
 
   return (
     <main className="max-w-[760px] mx-auto px-8 py-12">
@@ -28,27 +31,44 @@ export default async function LessonPage({
       </div>
 
       {/* Header */}
-      <div className="mb-12">
+      <div className="mb-10">
         <p className="text-[11px] font-mono tracking-[2.5px] uppercase text-[#00abfa] mb-3">{topic.code}</p>
-        <h1 className="text-[26px] font-bold text-[#f0eeea] tracking-tight leading-tight">{topic.title}</h1>
+        <h1 className="text-[30px] font-bold text-[#f0eeea] tracking-tight leading-tight">{topic.title}</h1>
       </div>
 
-      {/* Content placeholder */}
-      <div className="rounded-xl border border-[#141e2a] bg-[#0b1118] px-8 py-14 flex flex-col items-center text-center gap-4 mb-16">
-        <div className="w-10 h-10 rounded-full border border-[#141e2a] flex items-center justify-center">
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
-            <path d="M12 6v6m0 4h.01M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"
-              stroke="#3a4a5a" strokeWidth="1.5" strokeLinecap="round"/>
-          </svg>
+      {/* Body: rendered markdown OR placeholder */}
+      {lesson ? (
+        <>
+          <LessonBody markdown={lesson.body} />
+
+          {lesson.widget && (
+            <div className="mt-12 rounded-xl border border-[#141e2a] overflow-hidden bg-[#07090d]">
+              <iframe
+                src={lesson.widget}
+                className="w-full block"
+                style={{ height: 640, border: 0 }}
+                title={`${topic.title} — interactive`}
+              />
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="rounded-xl border border-[#141e2a] bg-[#0b1118] px-8 py-14 flex flex-col items-center text-center gap-4">
+          <div className="w-10 h-10 rounded-full border border-[#141e2a] flex items-center justify-center">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+              <path d="M12 6v6m0 4h.01M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10z"
+                stroke="#3a4a5a" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <p className="text-[14px] text-[#7a7875]">This lesson is being built.</p>
+          <p className="text-[12px] text-[#3a4a5a] max-w-sm leading-relaxed">
+            Interactive tools, worked examples, and mark-scheme annotations are coming for this topic.
+          </p>
         </div>
-        <p className="text-[14px] text-[#7a7875]">This lesson is being built.</p>
-        <p className="text-[12px] text-[#3a4a5a] max-w-sm leading-relaxed">
-          Interactive tools, worked examples, and mark-scheme annotations are coming for this topic.
-        </p>
-      </div>
+      )}
 
       {/* Prev / Next */}
-      <div className="flex justify-between items-start pt-6 border-t border-[#141e2a]">
+      <div className="flex justify-between items-start pt-8 mt-16 border-t border-[#141e2a]">
         {prev ? (
           <Link
             href={`/dashboard/maths/${prev.unitSlug}/${prev.topicSlug}`}
