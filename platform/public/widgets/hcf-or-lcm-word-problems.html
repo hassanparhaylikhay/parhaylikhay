@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>HCF or LCM? Word Problems</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:620px; margin:0 auto; }
+
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .step-pill { font-family:'Geist Mono',monospace; font-size:10.5px; color:#7a7875; letter-spacing:1.5px; text-transform:uppercase; }
+  .step-pill b { color:#f0eeea; }
+
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:24px 24px 20px; }
+
+  .q-label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#3a4a5a; margin-bottom:12px; }
+  .q-text { font-size:15px; color:#f0eeea; line-height:1.55; margin-bottom:18px; }
+  .q-text b { color:#fff067; }
+  .q-nums { margin-top:10px; padding:10px 14px; background:#07090d; border:1px solid #141e2a; border-radius:6px; font-family:'Geist Mono',monospace; font-size:13px; color:#c8c6be; }
+
+  .phase-prompt { font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:1.5px; text-transform:uppercase; color:#7a7875; margin:14px 0 8px; }
+
+  .opts { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px; margin:8px 0 4px; }
+  .opt {
+    appearance:none; cursor:pointer; font-family:inherit; font-size:14px; font-weight:600;
+    background:#07090d; border:1px solid #141e2a; border-radius:8px;
+    padding:16px 12px; color:#c8c6be;
+    transition:border-color .12s, background .12s, color .12s;
+  }
+  .opt:hover:not(:disabled) { border-color:#2a3a4a; color:#f0eeea; }
+  .opt:disabled { cursor:default; }
+  .opt.correct { background:rgba(15,238,137,0.1); border-color:#0fee89aa; color:#0fee89; }
+  .opt.wrong { background:rgba(255,70,112,0.1); border-color:#ff4670aa; color:#ff4670; }
+  .opt-label { display:block; font-size:11px; color:#7a7875; font-weight:500; margin-bottom:4px; letter-spacing:1px; text-transform:uppercase; }
+  .opt.correct .opt-label { color:#0fee89; }
+  .opt.wrong .opt-label { color:#ff4670; }
+
+  .answer-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:8px 0 4px; }
+  .answer-row input {
+    appearance:none; width:100px; height:38px; text-align:center;
+    font-family:'Geist Mono',monospace; font-size:16px; font-weight:600;
+    background:#07090d; border:1px solid rgba(0,171,250,0.5); border-radius:6px;
+    color:#00abfa; outline:none;
+  }
+  .answer-row input:focus { border-color:#00abfa; box-shadow:0 0 0 3px rgba(0,171,250,0.12); }
+  .answer-row input.wrong { border-color:#ff4670; color:#ff4670; box-shadow:0 0 0 3px rgba(255,70,112,0.1); }
+  .answer-row .unit { font-family:'Geist Mono',monospace; font-size:12px; color:#7a7875; }
+  .answer-row .btn-check {
+    appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600;
+    padding:8px 14px; border-radius:5px; border:0; background:#00abfa; color:#07090d;
+  }
+
+  .reveal { margin-top:16px; padding-top:16px; border-top:1px solid #141e2a; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; margin-bottom:12px; }
+  .reveal-explain b { color:#fff067; }
+  .reveal-explain .hcf { color:#0fee89; font-family:'Geist Mono',monospace; font-weight:600; }
+  .reveal-explain .lcm { color:#fff067; font-family:'Geist Mono',monospace; font-weight:600; }
+
+  .controls { display:flex; gap:8px; margin-top:10px; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">WORD PROBLEMS · HCF OR LCM?</span>
+    <span class="step-pill"><b id="step-num">1</b>/<span id="step-total">5</span></span>
+  </div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+"use strict";
+
+function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+function lcm(a, b) { return (a * b) / gcd(a, b); }
+
+// Each problem: { text, nums [a,b], type: "HCF"|"LCM", explain (why this op), unit }
+var PROBLEMS = [
+  {
+    text: "Two lights flash at a port: a green light every <b>8 seconds</b>, a red light every <b>12 seconds</b>. They flash together now. When do they <b>next flash together</b>?",
+    nums: [8, 12],
+    type: "LCM",
+    unit: "seconds",
+    explain: "The keyword <b>\"next together\"</b> = LCM. Count up in 8s and 12s until you hit a common multiple.",
+  },
+  {
+    text: "A rectangular floor is <b>120 cm</b> by <b>180 cm</b>. You want to cover it exactly with <b>identical square tiles</b>, no cutting. What's the <b>largest</b> tile that works?",
+    nums: [120, 180],
+    type: "HCF",
+    unit: "cm",
+    explain: "The keyword <b>\"largest that fits both dimensions\"</b> = HCF. The tile side must divide both 120 and 180 exactly.",
+  },
+  {
+    text: "Two piles of biscuits have <b>24</b> and <b>36</b> biscuits. You want to split them into <b>equal-sized bags</b> so each pile splits whole. What's the <b>largest bag size</b> possible?",
+    nums: [24, 36],
+    type: "HCF",
+    unit: "biscuits",
+    explain: "The keyword <b>\"largest equal group dividing both piles\"</b> = HCF.",
+  },
+  {
+    text: "Buses leave a station every <b>15 minutes</b> on route A and every <b>20 minutes</b> on route B. They both leave together at 09:00. When do they <b>next leave together</b>?",
+    nums: [15, 20],
+    type: "LCM",
+    unit: "minutes",
+    explain: "The keyword <b>\"next leave together\"</b> = LCM. Need the smallest number of minutes that is a multiple of both 15 and 20.",
+  },
+  {
+    text: "Runners A and B jog a circular track. A laps every <b>40 seconds</b>, B every <b>60 seconds</b>. They start together at the line. When do they <b>next meet at the start</b>?",
+    nums: [40, 60],
+    type: "LCM",
+    unit: "seconds",
+    explain: "The keyword <b>\"next meet at the start\"</b> = LCM. Find the first time after 0 when both complete whole laps.",
+  },
+];
+
+var state = { idx: 0, score: 0, phase: "classify", locked: false };
+
+var cardEl = document.getElementById("card");
+var stepNumEl = document.getElementById("step-num");
+var stepTotalEl = document.getElementById("step-total");
+stepTotalEl.textContent = PROBLEMS.length;
+
+function current() { return PROBLEMS[state.idx]; }
+function correctAnswer() {
+  var p = current();
+  return p.type === "HCF" ? gcd(p.nums[0], p.nums[1]) : lcm(p.nums[0], p.nums[1]);
+}
+
+function renderCard() {
+  if (state.idx >= PROBLEMS.length) { renderDone(); return; }
+  var p = current();
+  stepNumEl.textContent = state.idx + 1;
+  state.phase = "classify";
+  state.locked = false;
+
+  cardEl.innerHTML =
+    '<p class="q-label">Read the problem</p>' +
+    '<p class="q-text">' + p.text + '</p>' +
+    '<div class="q-nums">Numbers: <b style="color:#f0eeea">' + p.nums[0] + '</b> and <b style="color:#f0eeea">' + p.nums[1] + '</b></div>' +
+    '<p class="phase-prompt">STEP 1 — What do you need to find?</p>' +
+    '<div class="opts">' +
+      '<button class="opt" data-a="HCF"><span class="opt-label">Option A</span>HCF (Highest Common Factor)</button>' +
+      '<button class="opt" data-a="LCM"><span class="opt-label">Option B</span>LCM (Lowest Common Multiple)</button>' +
+    '</div>' +
+    '<div id="reveal-slot"></div>';
+
+  cardEl.querySelectorAll(".opt").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      if (state.locked) return;
+      classifyPick(btn.getAttribute("data-a"));
+    });
+  });
+  reportHeight();
+}
+
+function classifyPick(ans) {
+  state.locked = true;
+  var p = current();
+  var correct = (ans === p.type);
+  cardEl.querySelectorAll(".opt").forEach(function(btn) {
+    btn.disabled = true;
+    var a = btn.getAttribute("data-a");
+    if (a === p.type) btn.classList.add("correct");
+    else if (a === ans) btn.classList.add("wrong");
+  });
+  if (correct) state.score += 0.5; // half-mark for right classification
+
+  var slot = document.getElementById("reveal-slot");
+  slot.innerHTML =
+    '<div class="reveal ' + (correct ? "ok" : "bad") + '">' +
+      '<p class="reveal-line">' + (correct ? "✓ CORRECT — IT'S " + p.type : "✗ NOT QUITE — IT'S " + p.type) + '</p>' +
+      '<p class="reveal-explain">' + p.explain + '</p>' +
+      '<p class="phase-prompt" style="margin-top:8px">STEP 2 — Compute the ' + p.type + '</p>' +
+      '<div class="answer-row">' +
+        '<input type="text" inputmode="numeric" maxlength="6" id="ans-input" placeholder="?"/>' +
+        '<span class="unit">' + p.unit + '</span>' +
+        '<button class="btn-check" id="check-btn">Check</button>' +
+      '</div>' +
+    '</div>';
+
+  state.phase = "compute";
+  state.locked = false;
+  var inp = document.getElementById("ans-input");
+  inp.addEventListener("input", function() { inp.classList.remove("wrong"); });
+  inp.addEventListener("keydown", function(e) { if (e.key === "Enter") submitCompute(inp); });
+  document.getElementById("check-btn").addEventListener("click", function() { submitCompute(inp); });
+  inp.focus({ preventScroll: true });
+  reportHeight();
+}
+
+function submitCompute(inp) {
+  if (state.locked) return;
+  var raw = inp.value.trim();
+  if (!/^\d+$/.test(raw)) { inp.classList.add("wrong"); return; }
+  var typed = parseInt(raw, 10);
+  var p = current();
+  var expected = correctAnswer();
+  if (typed !== expected) {
+    inp.classList.add("wrong");
+    return;
+  }
+  state.locked = true;
+  state.score += 0.5;
+  var hcfV = gcd(p.nums[0], p.nums[1]);
+  var lcmV = lcm(p.nums[0], p.nums[1]);
+
+  var slot = document.getElementById("reveal-slot");
+  slot.innerHTML +=
+    '<div class="reveal ok" style="margin-top:10px">' +
+      '<p class="reveal-line">✓ ' + expected + ' ' + p.unit + ' — CORRECT</p>' +
+      '<p class="reveal-explain">For reference: <span class="hcf">HCF(' + p.nums[0] + ', ' + p.nums[1] + ') = ' + hcfV + '</span> · <span class="lcm">LCM(' + p.nums[0] + ', ' + p.nums[1] + ') = ' + lcmV + '</span></p>' +
+      '<div class="controls"><button class="btn primary" id="next-btn">' + (state.idx < PROBLEMS.length - 1 ? "Next problem →" : "See result") + '</button></div>' +
+    '</div>';
+  document.getElementById("next-btn").addEventListener("click", function() {
+    state.idx++;
+    renderCard();
+  });
+  reportHeight();
+}
+
+function renderDone() {
+  var max = PROBLEMS.length;
+  var pctScore = state.score; // out of PROBLEMS.length (1 per problem, 0.5 classify + 0.5 compute)
+  var pct = Math.round((pctScore / max) * 100);
+  var msg = pct === 100 ? "Every problem classified AND computed right." :
+            pct >= 80 ? "Strong. Keywords → operation mapping is landing." :
+            pct >= 50 ? "Mixed. Re-read the keyword table in the section above." :
+            "Review the section — the keyword-to-operation mapping is the whole skill here.";
+  cardEl.innerHTML =
+    '<div class="done-card">' +
+      '<span class="kicker">SCORE</span>' +
+      '<p class="big">' + pctScore + '<span class="total"> / ' + max + '</span></p>' +
+      '<p class="sub">' + pct + '% · 0.5 mark for picking HCF/LCM, 0.5 for the number</p>' +
+      '<p class="msg">' + msg + '</p>' +
+      '<div class="controls" style="justify-content:center;margin-top:14px"><button class="btn primary" id="retry-btn">Retry</button></div>' +
+    '</div>';
+  document.getElementById("retry-btn").addEventListener("click", function() {
+    state = { idx: 0, score: 0, phase: "classify", locked: false };
+    renderCard();
+  });
+  stepNumEl.textContent = max;
+  reportHeight();
+}
+
+renderCard();
+
+// Auto-resize
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

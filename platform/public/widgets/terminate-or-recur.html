@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Terminate, Recur, or Irrational?</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:620px; margin:0 auto; }
+
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .step-pill { font-family:'Geist Mono',monospace; font-size:10.5px; color:#7a7875; letter-spacing:1.5px; text-transform:uppercase; }
+  .step-pill b { color:#f0eeea; }
+
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:24px 24px 20px; }
+
+  .q-label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#3a4a5a; margin-bottom:12px; }
+  .q-expr { font-size:40px; font-weight:600; color:#f0eeea; margin:10px 0 20px; text-align:center; font-family:'Geist Mono',monospace; }
+  .q-expr .katex { font-size:1em; }
+
+  .opts { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin:12px 0 4px; }
+  @media (max-width:560px) { .opts { grid-template-columns:1fr; } }
+  .opt {
+    appearance:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600;
+    background:#07090d; border:1px solid #141e2a; border-radius:8px;
+    padding:14px 10px; color:#c8c6be;
+    transition:border-color .12s, background .12s, color .12s;
+  }
+  .opt:hover:not(:disabled) { border-color:#2a3a4a; color:#f0eeea; }
+  .opt:disabled { cursor:default; }
+  .opt.correct { background:rgba(15,238,137,0.1); border-color:#0fee89aa; color:#0fee89; }
+  .opt.wrong { background:rgba(255,70,112,0.1); border-color:#ff4670aa; color:#ff4670; }
+
+  .reveal { margin-top:16px; padding-top:16px; border-top:1px solid #141e2a; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; margin-bottom:12px; }
+  .reveal-explain b { color:#fff067; }
+
+  .controls { display:flex; gap:8px; margin-top:10px; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">CLASSIFY · TERMINATE / RECUR / IRRATIONAL</span>
+    <span class="step-pill"><b id="step-num">1</b>/<span id="step-total">7</span></span>
+  </div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+"use strict";
+
+// Each card: { tex, answer: "T"|"R"|"I", why }
+// T = terminates (rational, stops); R = recurs (rational, repeats); I = irrational
+var CARDS = [
+  { tex: "\\dfrac{7}{20}",  answer: "T",
+    why: "Denominator 20 = 2² × 5. Primes only 2 and 5, so the decimal <b>terminates</b>. (7/20 = 0.35)" },
+  { tex: "\\dfrac{1}{6}",   answer: "R",
+    why: "Denominator 6 = 2 × 3. The prime 3 forces the decimal to <b>recur</b>. (1/6 = 0.1666…)" },
+  { tex: "\\sqrt{2}",       answer: "I",
+    why: "2 is not a perfect square, so √2 is <b>irrational</b> — no finite or recurring pattern. (≈ 1.4142…)" },
+  { tex: "\\dfrac{3}{8}",   answer: "T",
+    why: "Denominator 8 = 2³. Primes only 2 and 5, so the decimal <b>terminates</b>. (3/8 = 0.375)" },
+  { tex: "\\sqrt{49}",      answer: "T",
+    why: "Trap! √49 = 7 — a whole number, which <b>terminates</b>. A root is only irrational when the number inside is not a perfect square." },
+  { tex: "\\dfrac{5}{11}",  answer: "R",
+    why: "Denominator 11 is a prime other than 2 or 5, so the decimal <b>recurs</b>. (5/11 = 0.4545…)" },
+  { tex: "\\pi",            answer: "I",
+    why: "π is the classic <b>irrational</b> — decimal goes on forever without repeating." },
+];
+
+var LABELS = { T: "Terminates", R: "Recurs", I: "Irrational" };
+
+var state = { idx: 0, score: 0, locked: false };
+
+var cardEl = document.getElementById("card");
+var stepNumEl = document.getElementById("step-num");
+var stepTotalEl = document.getElementById("step-total");
+stepTotalEl.textContent = CARDS.length;
+
+function renderCard() {
+  if (state.idx >= CARDS.length) { renderDone(); return; }
+  var c = CARDS[state.idx];
+  stepNumEl.textContent = state.idx + 1;
+  state.locked = false;
+  cardEl.innerHTML =
+    '<p class="q-label">Classify this number</p>' +
+    '<div class="q-expr" id="q-expr"></div>' +
+    '<div class="opts">' +
+      '<button class="opt" data-a="T">Terminates</button>' +
+      '<button class="opt" data-a="R">Recurs</button>' +
+      '<button class="opt" data-a="I">Irrational</button>' +
+    '</div>' +
+    '<div id="reveal-slot"></div>';
+
+  var exprEl = document.getElementById("q-expr");
+  if (typeof katex !== "undefined") {
+    try { katex.render(c.tex, exprEl, { throwOnError: false }); }
+    catch (_) { exprEl.textContent = c.tex; }
+  } else {
+    // KaTeX not loaded yet — retry shortly.
+    exprEl.textContent = "…";
+    var waits = 0;
+    var timer = setInterval(function() {
+      waits++;
+      if (typeof katex !== "undefined") {
+        clearInterval(timer);
+        try { katex.render(c.tex, exprEl, { throwOnError: false }); } catch (_) {}
+      } else if (waits > 40) { clearInterval(timer); exprEl.textContent = c.tex; }
+    }, 50);
+  }
+
+  cardEl.querySelectorAll(".opt").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      if (state.locked) return;
+      pick(btn.getAttribute("data-a"));
+    });
+  });
+  reportHeight();
+}
+
+function pick(ans) {
+  state.locked = true;
+  var c = CARDS[state.idx];
+  var correct = (ans === c.answer);
+  if (correct) state.score++;
+  cardEl.querySelectorAll(".opt").forEach(function(btn) {
+    btn.disabled = true;
+    var a = btn.getAttribute("data-a");
+    if (a === c.answer) btn.classList.add("correct");
+    else if (a === ans) btn.classList.add("wrong");
+  });
+  var slot = document.getElementById("reveal-slot");
+  slot.innerHTML =
+    '<div class="reveal ' + (correct ? "ok" : "bad") + '">' +
+      '<p class="reveal-line">' + (correct ? "✓ CORRECT" : "✗ NOT QUITE — " + LABELS[c.answer].toUpperCase()) + '</p>' +
+      '<p class="reveal-explain">' + c.why + '</p>' +
+      '<div class="controls">' +
+        '<button class="btn primary" id="next-btn">' + (state.idx < CARDS.length - 1 ? "Next →" : "See result") + '</button>' +
+      '</div>' +
+    '</div>';
+  document.getElementById("next-btn").addEventListener("click", function() {
+    state.idx++;
+    renderCard();
+  });
+  reportHeight();
+}
+
+function renderDone() {
+  var pct = Math.round((state.score / CARDS.length) * 100);
+  var msg = pct === 100 ? "Perfect — every classification right." :
+            pct >= 80 ? "Strong — the denominator-prime rule is locked in." :
+            pct >= 50 ? "Good start — review the rule and retry." :
+            "Review the section and try again.";
+  cardEl.innerHTML =
+    '<div class="done-card">' +
+      '<span class="kicker">SCORE</span>' +
+      '<p class="big">' + state.score + '<span class="total"> / ' + CARDS.length + '</span></p>' +
+      '<p class="sub">' + pct + '%</p>' +
+      '<p class="msg">' + msg + '</p>' +
+      '<div class="controls" style="justify-content:center;margin-top:14px"><button class="btn primary" id="retry-btn">Retry</button></div>' +
+    '</div>';
+  document.getElementById("retry-btn").addEventListener("click", function() {
+    state = { idx: 0, score: 0, locked: false };
+    renderCard();
+  });
+  stepNumEl.textContent = CARDS.length;
+  reportHeight();
+}
+
+renderCard();
+
+// Auto-resize
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
