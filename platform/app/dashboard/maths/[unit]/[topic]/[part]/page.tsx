@@ -57,16 +57,16 @@ export default async function PartPage({
         <>
           <LessonBody markdown={lesson.body} />
 
-          {lesson.checks && lesson.checks.length > 0 && (
-            <InlineCheck checks={lesson.checks} />
-          )}
-
           {lesson.widget && (
             <WidgetFrame
               src={lesson.widget}
               title={`${part.title} interactive`}
               initialHeight={lesson.widgetHeight ?? 640}
             />
+          )}
+
+          {lesson.checks && lesson.checks.length > 0 && (
+            <InlineCheck checks={lesson.checks} />
           )}
         </>
       ) : (
