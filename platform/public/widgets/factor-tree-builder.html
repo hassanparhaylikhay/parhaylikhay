@@ -452,6 +452,10 @@ function paint() {
   // Overlay HTML inputs on visible prime slots only.
   var svgEl = holder.querySelector("svg");
   requestAnimationFrame(function() {
+    // A later paint() may have replaced the SVG before this rAF fired.
+    // In that case svgEl is detached; getBoundingClientRect returns zeros,
+    // scale becomes 0, and inputs end up positioned at (0,0). Bail out.
+    if (!svgEl.isConnected) return;
     var svgRect = svgEl.getBoundingClientRect();
     var holderRect = holder.getBoundingClientRect();
     var scaleX = svgRect.width / W;
@@ -480,14 +484,14 @@ function paint() {
 
       (function(slotNode, el) {
         el.addEventListener("input", function() {
-          state.studentPrimes[slotNode.primeIdx] = el.value.trim();
+          var v = el.value.trim();
+          state.studentPrimes[slotNode.primeIdx] = v;
           slotNode._wrong = false;
           el.classList.remove("wrong");
-          // Auto-commit the moment the typed value matches the expected prime,
-          // so the right-side composite (the quotient) appears without the
-          // student having to Enter/tab out.
-          var typed = parseInt(el.value, 10);
-          if (!isNaN(typed) && typed === slotNode.expected) {
+          // Every prime in our tree targets is a single digit (2, 3, 5, 7),
+          // so as soon as a digit is typed we can commit — right or wrong —
+          // and give instant visual feedback.
+          if (v.length >= 1 && /^\d+$/.test(v)) {
             submit();
           }
         });
@@ -495,7 +499,10 @@ function paint() {
           if (e.key === "Enter") submit();
         });
         el.addEventListener("blur", function() {
-          // Commit on blur IF there's a value typed
+          // Skip blurs that fire because the element was just detached by a
+          // paint() — those lead to a second submit/paint, and the first
+          // paint's pending rAF then plants a stray input at (0,0).
+          if (!el.isConnected) return;
           if (el.value.trim()) submit();
         });
       })(nd, inp);
