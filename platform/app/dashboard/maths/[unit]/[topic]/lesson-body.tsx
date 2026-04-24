@@ -18,6 +18,27 @@ import "katex/dist/katex.min.css"
 function preprocess(md: string): string {
   let out = md
 
+  // Worked-example card: wrap everything from "## Worked example [N][: TITLE]"
+  // through "Full marks $= N$." in a bordered container with its own header
+  // pill and footer chip. Runs first so the "Full marks" inside becomes the
+  // card foot and doesn't leak to the standalone chip transform below.
+  out = out.replace(
+    /^## Worked example(?: *(\d+))?([^\n]*)\n([\s\S]*?)^Full marks \$= (\d+)\$\.\s*/gm,
+    (_m, num: string | undefined, rest: string, body: string, marks: string) => {
+      const n = (num || "1").padStart(2, "0")
+      const title = rest.replace(/^[:\s—\-–]+/, "").trim()
+      const titleHtml = title ? `<span class="we-card-title">${title}</span>` : ""
+      const marksLabel = marks === "1" ? "mark" : "marks"
+      return (
+        `<div class="we-card">\n\n` +
+        `<div class="we-card-head"><span class="we-card-num">EX ${n}</span>${titleHtml}<span class="we-card-marks">${marks} ${marksLabel}</span></div>\n\n` +
+        `${body.trim()}\n\n` +
+        `<div class="we-card-foot">Full marks · ${marks}</div>\n\n` +
+        `</div>\n\n`
+      )
+    },
+  )
+
   // [M1 for xyz], [B2 for ...], [A1 — both correct] → mark pills
   // Letter classes: M → blue, B → yellow, A → green
   out = out.replace(
@@ -32,13 +53,13 @@ function preprocess(md: string): string {
   // **Working.** → a small green chip preceding the paragraph
   out = out.replace(/\*\*Working\.\*\*/g, '<span class="working-chip">Working</span>')
 
-  // Full marks = N at the start of a line → accent chip
+  // Any stray Full marks = N at the start of a line (outside a WE card) → chip
   out = out.replace(
     /^Full marks \$= (\d+)\$\.(\s*)/gm,
     (_, n: string) => `<span class="full-marks-chip">Full marks · ${n}</span>\n\n`,
   )
 
-  // Past paper references: s25_13, w25_22, s24_21, etc. → monospace tint
+  // Past paper references: s25_13, w25_22, s24_21, etc. → red monospace tint
   // Match e.g. "s25_13 Q11" or just "w25_22 Q14(a)" — but only when clearly a paper code
   out = out.replace(
     /\b([sw]\d{2}_\d{2})(\s+Q\d+(?:\([a-z](?:\)\([ivx]+\))?\))?)?/g,
