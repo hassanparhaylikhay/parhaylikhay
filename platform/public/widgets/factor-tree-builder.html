@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Factor Tree Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body {
+    background:#07090d;
+    color:#c8c6be;
+    font-family:'Geist','Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  body { padding:22px 18px 26px; min-height:100vh; }
+  .wrap { max-width:640px; margin:0 auto; }
+
+  .head {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:16px;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .label {
+    font-family:'Geist Mono',monospace;
+    font-size:10px; letter-spacing:2px; text-transform:uppercase;
+    color:#fff067;
+  }
+  .target-picker {
+    display:flex; gap:6px; align-items:center;
+    font-family:'Geist Mono',monospace;
+    font-size:11px; color:#7a7875;
+  }
+  .target-picker select {
+    appearance:none;
+    background:#0b1118;
+    border:1px solid #141e2a;
+    color:#f0eeea;
+    font-family:inherit; font-size:12px;
+    padding:5px 22px 5px 10px;
+    border-radius:5px;
+    cursor:pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 8px center;
+  }
+
+  .card {
+    background:#0b1118;
+    border:1px solid #141e2a;
+    border-radius:12px;
+    padding:22px 20px 20px;
+  }
+
+  .prompt {
+    font-size:13.5px;
+    color:#c8c6be;
+    line-height:1.55;
+    margin-bottom:6px;
+  }
+  .prompt b { color:#f0eeea; }
+  .hint {
+    font-size:12px;
+    color:#7a7875;
+    margin-bottom:18px;
+    line-height:1.55;
+    display:flex; gap:18px; flex-wrap:wrap;
+  }
+  .hint .swatch {
+    display:inline-block;
+    width:10px; height:10px;
+    border-radius:2px;
+    margin-right:5px;
+    vertical-align:middle;
+    border:1px solid;
+  }
+  .hint .sw-prime {
+    background:rgba(15,238,137,0.15);
+    border-color:rgba(15,238,137,0.55);
+    border-style:dashed;
+  }
+  .hint .sw-comp {
+    background:#07090d;
+    border-color:#141e2a;
+  }
+
+  .svg-holder {
+    position:relative;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding: 4px 0;
+  }
+  svg.ft-svg {
+    display:block;
+    width:100%;
+    max-width:100%;
+    height:auto;
+  }
+
+  .node-rect.comp  { fill:#07090d; stroke:#141e2a; }
+  .node-rect.prime-empty  { fill:#07090d; stroke:rgba(15,238,137,0.4); stroke-dasharray:3 3; }
+  .node-rect.prime-right  { fill:rgba(15,238,137,0.08); stroke:rgba(15,238,137,0.55); }
+  .node-text.comp { fill:#f0eeea; font-weight:600; font-size:13px; font-family:inherit; }
+  .node-text.prime { fill:#0fee89; font-weight:600; font-size:13px; font-family:inherit; }
+
+  .prime-input {
+    position:absolute;
+    width:46px; height:24px;
+    background:#07090d;
+    border:1px solid rgba(15,238,137,0.5);
+    border-radius:5px;
+    color:#0fee89;
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    text-align:center;
+    outline:none;
+    transition:border-color .12s;
+    padding:0;
+  }
+  .prime-input:focus {
+    border-color:#0fee89;
+    box-shadow:0 0 0 3px rgba(15,238,137,0.12);
+  }
+  .prime-input.wrong {
+    border-color:rgba(255,70,112,0.7);
+    color:#ff4670;
+    box-shadow:0 0 0 3px rgba(255,70,112,0.12);
+  }
+  .prime-input.correct {
+    background:rgba(15,238,137,0.08);
+    border-color:rgba(15,238,137,0.65);
+  }
+
+  .controls {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px solid #141e2a;
+  }
+  .controls .progress {
+    font-family:'Geist Mono',monospace;
+    font-size:11px;
+    color:#7a7875;
+  }
+  .controls .progress b { color:#f0eeea; }
+  .controls .btns { display:flex; gap:8px; }
+
+  button.btn {
+    appearance:none;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:600;
+    padding:8px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    letter-spacing:0.1px;
+    transition:opacity .15s, border-color .15s, background .15s;
+    border:1px solid transparent;
+  }
+  button.btn.primary {
+    background:#00abfa; color:#07090d; border-color:#00abfa;
+  }
+  button.btn.primary:hover { opacity:0.88; }
+  button.btn.primary:disabled {
+    background:#141e2a; color:#3a4a5a; border-color:#141e2a; cursor:not-allowed;
+  }
+  button.btn.ghost {
+    background:transparent; color:#7a7875; border-color:#141e2a;
+  }
+  button.btn.ghost:hover { color:#c8c6be; border-color:#2a3a4a; }
+
+  .result {
+    margin-top:16px;
+    padding:14px 16px;
+    border-radius:8px;
+    border:1px solid transparent;
+    font-size:13px;
+    line-height:1.55;
+    display:none;
+  }
+  .result.ok {
+    display:block;
+    color:#0fee89;
+    background:rgba(15,238,137,0.06);
+    border-color:rgba(15,238,137,0.3);
+  }
+  .result.bad {
+    display:block;
+    color:#ff4670;
+    background:rgba(255,70,112,0.06);
+    border-color:rgba(255,70,112,0.3);
+  }
+  .result-line { font-weight:600; margin-bottom:4px; }
+  .result-detail { color:#c8c6be; font-size:12.5px; }
+  .result-final {
+    margin-top:8px;
+    font-family:'Geist Mono',monospace;
+    color:#f0eeea;
+    font-size:13.5px;
+  }
+  .result-final b { color:#fff067; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">Factor tree builder</span>
+    <div class="target-picker">
+      <span>Build tree for:</span>
+      <select id="target">
+        <option value="84">84</option>
+        <option value="72">72</option>
+        <option value="120">120</option>
+        <option value="90">90</option>
+        <option value="150">150</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="prompt">
+      Split each composite by dividing by the smallest prime that fits. Type the prime into each <b style="color:#0fee89">green dashed box</b>. The composite on the right is the number left over.
+    </p>
+    <p class="hint">
+      <span><span class="swatch sw-prime"></span>you enter · prime</span>
+      <span><span class="swatch sw-comp"></span>shown · composite or final prime</span>
+    </p>
+
+    <div class="svg-holder" id="svg-holder"></div>
+
+    <div class="controls">
+      <span class="progress">Primes filled: <b id="progress">0 / 0</b></span>
+      <div class="btns">
+        <button class="btn ghost" id="reset">Reset</button>
+        <button class="btn primary" id="check" disabled>Check my tree</button>
+      </div>
+    </div>
+
+    <div class="result" id="result"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* Each target specifies the ordered primes the student "peels off" going
+   top-to-bottom. The student types those primes into the dashed boxes. */
+var TREES = {
+  "84":  { primes: [2, 2, 3, 7],   indexForm: "2² × 3 × 7" },
+  "72":  { primes: [2, 2, 2, 3, 3], indexForm: "2³ × 3²" },
+  "120": { primes: [2, 2, 2, 3, 5], indexForm: "2³ × 3 × 5" },
+  "90":  { primes: [2, 3, 3, 5],   indexForm: "2 × 3² × 5" },
+  "150": { primes: [2, 3, 5, 5],   indexForm: "2 × 3 × 5²" },
+};
+
+var holder   = document.getElementById("svg-holder");
+var targetSel= document.getElementById("target");
+var checkBtn = document.getElementById("check");
+var resetBtn = document.getElementById("reset");
+var progEl   = document.getElementById("progress");
+var resultEl = document.getElementById("result");
+
+var state = null;
+
+function render() {
+  var target = targetSel.value;
+  var spec = TREES[target];
+  var primes = spec.primes;
+  var N = primes.length;
+
+  // Geometry
+  var step     = 54;   // x/y shift between rows
+  var halfW    = 28;
+  var halfH    = 14;
+  var padding  = 40;
+  var rowGap   = 56;
+
+  // Layout: top composite centred horizontally; each subsequent row
+  // offsets ONE STEP to the right. Leftmost element is the first prime
+  // (at topX - step). Rightmost is the last prime (at topX + (N-1)*step).
+  var totalSpan = N * step;                          // leftmost center → rightmost center
+  var svgWidth  = Math.max(420, totalSpan + 2 * (halfW + padding));
+  var leftmostX = (svgWidth - totalSpan) / 2 + halfW; // leftmost prime center
+  var topX      = leftmostX + step;
+  var topY      = 20;
+  var svgHeight = topY + (N - 1) * rowGap + halfH + 14;
+
+  // Build list of nodes:
+  //   node 0 = top composite
+  //   for i in 0..N-2:
+  //     leftPrime at (topX - step + i*step , topY + (i+1)*rowGap)  ← dashed slot
+  //     rightNode at (topX + step + i*step , topY + (i+1)*rowGap)  ← composite OR final prime
+  //   Plus the final prime slot also needs a value eventually (it's the right node of last row, already a prime)
+  // BUT: the LEFT prime slots total N-1, and the LAST right node is the Nth prime.
+  // The student fills N prime slots: the N-1 left primes + the 1 final right prime.
+
+  var nodes = [];
+  nodes.push({ kind: "top", x: topX, y: topY, val: target });
+
+  var currentVal = parseInt(target, 10);
+  var currentX = topX;
+  var currentY = topY;
+
+  for (var i = 0; i < N - 1; i++) {
+    var p = primes[i];
+    var remaining = currentVal / p;
+    var nextY = currentY + rowGap;
+    var primeX = currentX - step;
+    var rightX = currentX + step;
+    var isLastSplit = (i === N - 2);
+
+    // left: prime slot (student types)
+    nodes.push({
+      kind: "prime-slot", x: primeX, y: nextY,
+      expected: p, primeIdx: i,
+    });
+    // right: either a composite (shown) or the final prime slot (student types)
+    if (isLastSplit) {
+      nodes.push({
+        kind: "prime-slot", x: rightX, y: nextY,
+        expected: primes[N - 1], primeIdx: N - 1,
+      });
+    } else {
+      nodes.push({ kind: "comp", x: rightX, y: nextY, val: remaining });
+    }
+
+    currentVal = remaining;
+    currentX = rightX;
+    currentY = nextY;
+  }
+
+  state = {
+    nodes: nodes,
+    primes: primes,
+    target: target,
+    indexForm: spec.indexForm,
+    studentPrimes: primes.map(function() { return ""; }),
+    svgWidth: svgWidth,
+    svgHeight: svgHeight,
+    completed: false,
+  };
+
+  resultEl.className = "result";
+  resultEl.innerHTML = "";
+  paint();
+}
+
+function paint() {
+  var nodes = state.nodes;
+  var svgWidth = state.svgWidth;
+  var svgHeight = state.svgHeight;
+  var halfW = 28, halfH = 14;
+
+  var parts = [];
+  parts.push('<svg viewBox="0 0 ' + svgWidth + ' ' + svgHeight + '" xmlns="http://www.w3.org/2000/svg" class="ft-svg">');
+
+  // Branch lines: top and each composite have two children = next two nodes
+  parts.push('<g stroke="#3a4a5a" stroke-width="1.5" fill="none">');
+  for (var i = 0; i < nodes.length; i++) {
+    var n = nodes[i];
+    if (n.kind === "top" || n.kind === "comp") {
+      var L = nodes[i + 1], R = nodes[i + 2];
+      if (L && R) {
+        parts.push('<line x1="' + n.x + '" y1="' + (n.y + halfH) + '" x2="' + L.x + '" y2="' + (L.y - halfH) + '"/>');
+        parts.push('<line x1="' + n.x + '" y1="' + (n.y + halfH) + '" x2="' + R.x + '" y2="' + (R.y - halfH) + '"/>');
+      }
+    }
+  }
+  parts.push('</g>');
+
+  // Nodes
+  for (var j = 0; j < nodes.length; j++) {
+    var nd = nodes[j];
+    var rx = nd.x - halfW, ry = nd.y - halfH;
+    if (nd.kind === "top" || nd.kind === "comp") {
+      parts.push('<rect class="node-rect comp" x="' + rx + '" y="' + ry + '" width="' + (halfW * 2) + '" height="' + (halfH * 2) + '" rx="6"/>');
+      parts.push('<text class="node-text comp" x="' + nd.x + '" y="' + (nd.y + 5) + '" text-anchor="middle">' + nd.val + '</text>');
+    } else {
+      // prime slot — render placeholder rect; HTML input will overlay
+      parts.push('<rect class="node-rect prime-empty" x="' + rx + '" y="' + ry + '" width="' + (halfW * 2) + '" height="' + (halfH * 2) + '" rx="6"/>');
+    }
+  }
+
+  parts.push('</svg>');
+  holder.innerHTML = parts.join("");
+
+  // Overlay HTML inputs on each prime slot.
+  var svgEl = holder.querySelector("svg");
+  requestAnimationFrame(function() {
+    var svgRect = svgEl.getBoundingClientRect();
+    var holderRect = holder.getBoundingClientRect();
+    var scaleX = svgRect.width / svgWidth;
+    var scaleY = svgRect.height / svgHeight;
+
+    nodes.forEach(function(nd) {
+      if (nd.kind !== "prime-slot") return;
+      var inp = document.createElement("input");
+      inp.type = "text";
+      inp.inputMode = "numeric";
+      inp.maxLength = 3;
+      inp.className = "prime-input";
+      inp.dataset.primeIdx = nd.primeIdx;
+      inp.placeholder = "?";
+      inp.value = state.studentPrimes[nd.primeIdx] || "";
+      inp.style.left = ((nd.x - 23) * scaleX + (svgRect.left - holderRect.left)) + "px";
+      inp.style.top  = ((nd.y - 12) * scaleY + (svgRect.top  - holderRect.top )) + "px";
+      if (state.completed) inp.readOnly = true;
+      holder.appendChild(inp);
+
+      inp.addEventListener("input", function() {
+        state.studentPrimes[nd.primeIdx] = inp.value.trim();
+        inp.classList.remove("wrong");
+        updateProgress();
+      });
+      inp.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          var next = findNextInput(nd.primeIdx);
+          if (next) next.focus();
+          else if (!checkBtn.disabled) checkBtn.click();
+        }
+      });
+    });
+
+    // Focus first empty prime slot
+    var inputs = Array.from(holder.querySelectorAll(".prime-input"));
+    inputs.sort(function(a, b) { return +a.dataset.primeIdx - +b.dataset.primeIdx; });
+    for (var k = 0; k < inputs.length; k++) {
+      if (!inputs[k].value) { inputs[k].focus(); break; }
+    }
+    updateProgress();
+  });
+}
+
+function findNextInput(currentIdx) {
+  var inputs = holder.querySelectorAll(".prime-input");
+  for (var i = 0; i < inputs.length; i++) {
+    if (+inputs[i].dataset.primeIdx === currentIdx + 1) return inputs[i];
+  }
+  return null;
+}
+
+function updateProgress() {
+  var filled = state.studentPrimes.filter(function(v) { return v !== ""; }).length;
+  progEl.textContent = filled + " / " + state.studentPrimes.length;
+  checkBtn.disabled = filled !== state.studentPrimes.length || state.completed;
+}
+
+function check() {
+  var expected = state.primes;
+  var allRight = true;
+  var inputs = holder.querySelectorAll(".prime-input");
+  var wrongCount = 0;
+
+  inputs.forEach(function(el) {
+    var idx = +el.dataset.primeIdx;
+    var got = parseInt(state.studentPrimes[idx], 10);
+    if (got !== expected[idx]) {
+      el.classList.add("wrong");
+      el.classList.remove("correct");
+      allRight = false;
+      wrongCount++;
+    } else {
+      el.classList.remove("wrong");
+      el.classList.add("correct");
+    }
+  });
+
+  if (allRight) {
+    state.completed = true;
+    inputs.forEach(function(el) { el.readOnly = true; });
+    resultEl.className = "result ok";
+    resultEl.innerHTML =
+      '<p class="result-line">✓ Your tree is correct.</p>' +
+      '<p class="result-detail">Read the primes from the green boxes and group the repeats into powers:</p>' +
+      '<p class="result-final"><b>' + state.target + '</b> = ' + state.primes.join(" × ") + ' = <b>' + state.indexForm + '</b></p>';
+    checkBtn.disabled = true;
+  } else {
+    resultEl.className = "result bad";
+    var msg = wrongCount === 1
+      ? "One prime is wrong — the red box shows which. Check that the composite above it divides exactly by your number."
+      : wrongCount + " primes are wrong — the red boxes show which. Check that each composite above divides exactly by the number you entered.";
+    resultEl.innerHTML =
+      '<p class="result-line">✗ Not quite.</p>' +
+      '<p class="result-detail">' + msg + ' Start by dividing by the smallest prime that fits (2, then 3, then 5, then 7).</p>';
+  }
+}
+
+targetSel.addEventListener("change", render);
+checkBtn.addEventListener("click", check);
+resetBtn.addEventListener("click", render);
+
+render();
+
+// Re-layout inputs on resize (SVG scaling changes)
+var layoutTimer = null;
+window.addEventListener("resize", function() {
+  if (layoutTimer) clearTimeout(layoutTimer);
+  layoutTimer = setTimeout(function() {
+    // Strip old inputs and re-paint — cheaper than recomputing positions
+    paint();
+  }, 80);
+});
+</script>
+</body>
+</html>

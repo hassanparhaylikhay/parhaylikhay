@@ -21,6 +21,7 @@ export type Lesson = {
   body: string
   checks?: Check[]
   widget?: string
+  widgetHeight?: number
 }
 
 // Map of "{unit}-{topic}" → lesson folder under /lessons/maths
@@ -31,8 +32,10 @@ const LESSON_FOLDERS: Record<string, string> = {
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
 // For single-page lessons, use '_' for the part component. For multi-part
 // topics, the widget attaches to a specific part (typically 'review').
-const WIDGETS: Record<string, string> = {
-  "01-01-review": "/widgets/types-of-number-quiz.html",
+type WidgetSpec = { url: string; height: number }
+const WIDGETS: Record<string, WidgetSpec> = {
+  "01-01-p4":     { url: "/widgets/factor-tree-builder.html",  height: 560 },
+  "01-01-review": { url: "/widgets/types-of-number-quiz.html", height: 680 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {
@@ -58,7 +61,8 @@ export async function loadLesson(unitSlug: string, topicSlug: string): Promise<L
   const lesson = await readMarkdown(folder, "lesson.md")
   if (!lesson) return null
 
-  lesson.widget = WIDGETS[`${key}-_`]
+  const w = WIDGETS[`${key}-_`]
+  if (w) { lesson.widget = w.url; lesson.widgetHeight = w.height }
   return lesson
 }
 
@@ -74,6 +78,7 @@ export async function loadLessonPart(
   const lesson = await readMarkdown(folder, `${partSlug}.md`)
   if (!lesson) return null
 
-  lesson.widget = WIDGETS[`${key}-${partSlug}`]
+  const w = WIDGETS[`${key}-${partSlug}`]
+  if (w) { lesson.widget = w.url; lesson.widgetHeight = w.height }
   return lesson
 }

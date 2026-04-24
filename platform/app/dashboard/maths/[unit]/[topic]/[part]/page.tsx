@@ -65,7 +65,7 @@ export default async function PartPage({
               <iframe
                 src={lesson.widget}
                 className="w-full block"
-                style={{ height: 680, border: 0 }}
+                style={{ height: lesson.widgetHeight ?? 640, border: 0 }}
                 title={`${part.title} — interactive`}
               />
             </div>

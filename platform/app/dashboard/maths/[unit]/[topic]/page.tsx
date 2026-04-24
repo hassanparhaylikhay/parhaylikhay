@@ -98,7 +98,7 @@ export default async function TopicPage({
           <LessonBody markdown={lesson.body} />
           {lesson.widget && (
             <div className="mt-12 rounded-xl border border-[#141e2a] overflow-hidden bg-[#07090d]">
-              <iframe src={lesson.widget} className="w-full block" style={{ height: 640, border: 0 }} title={`${topic.title} — interactive`} />
+              <iframe src={lesson.widget} className="w-full block" style={{ height: lesson.widgetHeight ?? 640, border: 0 }} title={`${topic.title} — interactive`} />
             </div>
           )}
         </>
