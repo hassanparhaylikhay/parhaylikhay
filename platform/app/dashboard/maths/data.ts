@@ -26,6 +26,7 @@ export const UNITS: Unit[] = [
       {
         slug: "01", code: "1.1", title: "Types of number",
         parts: [
+          { slug: "p0",     label: "P0", title: "Reading numbers and reciprocals" },
           { slug: "p1",     label: "P1", title: "The number families" },
           { slug: "p2",     label: "P2", title: "Terminating, recurring, irrational" },
           { slug: "p3",     label: "P3", title: "Special number shapes" },
