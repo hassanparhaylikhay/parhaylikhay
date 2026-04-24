@@ -75,24 +75,29 @@
   .number .frac .num { border-bottom:2px solid currentColor; padding:0 8px 2px; }
   .number .frac .den { padding:4px 8px 0; }
 
-  .number .sqrt {
+  .sqrt {
     display:inline-flex; align-items:stretch; gap:0;
+    line-height:1;
   }
-  .number .sqrt::before {
+  .sqrt::before {
     content:'√';
     font-weight:500;
     margin-right:-2px;
   }
-  .number .sqrt .radicand {
-    border-top:2.5px solid currentColor;
-    padding:3px 2px 0 6px;
+  .sqrt .radicand {
+    border-top:2px solid currentColor;
+    padding:2px 2px 0 5px;
+    line-height:1;
   }
+  .number .sqrt .radicand { border-top-width:2.5px; padding:3px 2px 0 6px; }
 
-  .number .overline {
-    border-top:2.5px solid currentColor;
-    padding-top:3px;
+  .overline {
+    border-top:2px solid currentColor;
+    padding-top:1px;
     display:inline-block;
+    line-height:1;
   }
+  .number .overline { border-top-width:2.5px; padding-top:3px; }
 
   .number .exp {
     font-size:28px;
@@ -279,21 +284,21 @@ var QUESTIONS = [
   },
   {
     display: '<span class="sqrt"><span class="radicand">169</span></span>',
-    eval: '√169 = 13',
+    eval: '<span class="sqrt"><span class="radicand">169</span></span> = 13',
     asks: 'Is this <b>irrational</b>?',
     choices: ['Rational', 'Irrational'],
     correct: 0,
-    good: 'Correct. √169 = 13, a whole number. Rational.',
-    bad: 'Trap. √169 evaluates to 13, which is an integer — definitely rational. Always evaluate the square root first before deciding.'
+    good: 'Correct. <span class="sqrt"><span class="radicand">169</span></span> = 13, a whole number. Rational.',
+    bad: 'Trap. <span class="sqrt"><span class="radicand">169</span></span> is 13, which is an integer — definitely rational. Always evaluate the square root first before deciding.'
   },
   {
     display: '<span class="sqrt"><span class="radicand">8</span></span>',
-    eval: '√8 = 2√2 ≈ 2.828...',
+    eval: '<span class="sqrt"><span class="radicand">8</span></span> = 2<span class="sqrt"><span class="radicand">2</span></span> ≈ 2.828...',
     asks: 'Is this <b>irrational</b>?',
     choices: ['Rational', 'Irrational'],
     correct: 1,
-    good: 'Correct. 8 is not a perfect square, so √8 cannot be written as a fraction. Irrational.',
-    bad: '√8 = 2√2. Since 8 is not a perfect square, √8 has a non-terminating, non-repeating decimal. It is irrational.'
+    good: 'Correct. 8 is not a perfect square, so <span class="sqrt"><span class="radicand">8</span></span> cannot be written as a fraction. Irrational.',
+    bad: '<span class="sqrt"><span class="radicand">8</span></span> = 2<span class="sqrt"><span class="radicand">2</span></span>. Since 8 is not a perfect square, it has a non-terminating, non-repeating decimal. It is irrational.'
   },
   {
     display: '1',
@@ -369,12 +374,12 @@ var QUESTIONS = [
   },
   {
     display: '<span class="sqrt"><span class="radicand">0.25</span></span>',
-    eval: '√0.25 = 0.5 = 1/2',
+    eval: '<span class="sqrt"><span class="radicand">0.25</span></span> = 0.5 = 1/2',
     asks: 'Is this <b>irrational</b>?',
     choices: ['Rational', 'Irrational'],
     correct: 0,
-    good: 'Correct. √0.25 = 0.5 = 1/2 — a rational number.',
-    bad: 'Check: 0.5 × 0.5 = 0.25. So √0.25 = 0.5 = 1/2. That is rational — do not let the root fool you.'
+    good: 'Correct. <span class="sqrt"><span class="radicand">0.25</span></span> = 0.5 = 1/2 — a rational number.',
+    bad: 'Check: 0.5 × 0.5 = 0.25. So <span class="sqrt"><span class="radicand">0.25</span></span> = 0.5 = 1/2. That is rational — do not let the root fool you.'
   }
 ];
 

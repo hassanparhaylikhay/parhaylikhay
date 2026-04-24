@@ -119,6 +119,39 @@
 }
 
 /* ─────────────────────────────────────────────────────
+   Math notation helpers — usable in raw HTML anywhere
+   (for contexts where KaTeX isn't available)
+   ───────────────────────────────────────────────────── */
+
+/* Overline (for recurring-decimal notation, e.g. 0.<span class="overline">3</span>) */
+.overline {
+  border-top: 2px solid currentColor;
+  padding-top: 1px;
+  display: inline-block;
+  line-height: 1;
+}
+
+/* Proper square root: <span class="sqrt"><span class="radicand">169</span></span> */
+.sqrt {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0;
+  line-height: 1;
+}
+.sqrt::before {
+  content: '√';
+  font-weight: 500;
+  margin-right: -2px;
+  font-size: 1.05em;
+  line-height: 1.2;
+}
+.sqrt .radicand {
+  border-top: 2px solid currentColor;
+  padding: 2px 3px 0 5px;
+  line-height: 1;
+}
+
+/* ─────────────────────────────────────────────────────
    Lesson body — dark-theme prose with brand-coded roles
    ───────────────────────────────────────────────────── */
 
@@ -527,43 +560,18 @@
   font-weight: 600;
 }
 
-/* ── Factor tree (Part 4) ── */
+/* ── Factor tree (Part 4, SVG) ── */
 .diagram.factor-tree {
-  padding: 24px 14px 16px;
-  font-size: 13px;
+  padding: 20px 14px 16px;
   text-align: center;
 }
-.diagram .ft-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 4px;
-  position: relative;
-}
-.diagram .ft-node {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 46px;
-  height: 32px;
-  padding: 0 10px;
-  border-radius: 6px;
-  background: #07090d;
-  border: 1px solid #141e2a;
-  color: #f0eeea;
-  font-weight: 600;
-  font-size: 13px;
-}
-.diagram .ft-node.prime { color: #0fee89; border-color: #0fee8944; background: #0fee8908; }
-.diagram .ft-node.composite { color: #c8c6be; }
-.diagram .ft-branches {
-  display: flex;
-  gap: 32px;
-  justify-content: center;
-  color: #3a4a5a;
-  font-size: 14px;
-  margin: 2px 0;
+.diagram .ft-svg {
+  display: block;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 440px;
+  height: auto;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 .diagram .ft-result {
   margin-top: 12px;

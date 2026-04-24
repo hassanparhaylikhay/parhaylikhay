@@ -1,7 +1,25 @@
 "use client"
 
 import { useState } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkMath from "remark-math"
+import rehypeKatex from "rehype-katex"
+import rehypeRaw from "rehype-raw"
 import type { Check } from "@/lib/lesson-loader"
+
+// Inline renderer: KaTeX for $...$ and raw HTML (for our .sqrt / .overline helpers)
+// Strips paragraph wrapping so it flows as a single line.
+function Inline({ text }: { text: string }) {
+  return (
+    <ReactMarkdown
+      remarkPlugins={[remarkMath]}
+      rehypePlugins={[rehypeRaw, rehypeKatex]}
+      components={{ p: ({ children }) => <>{children}</> }}
+    >
+      {text}
+    </ReactMarkdown>
+  )
+}
 
 export default function InlineCheck({ checks }: { checks: Check[] }) {
   const [idx, setIdx] = useState(0)
@@ -56,7 +74,9 @@ export default function InlineCheck({ checks }: { checks: Check[] }) {
         <span className="check-progress">{idx + 1} / {checks.length}</span>
       </div>
 
-      <p className="check-question">{q.q}</p>
+      <div className="check-question">
+        <Inline text={q.q} />
+      </div>
 
       <div className="check-options">
         {q.options.map((opt, i) => {
@@ -73,7 +93,7 @@ export default function InlineCheck({ checks }: { checks: Check[] }) {
               onClick={() => pick(i)}
               disabled={chosen !== null}
             >
-              {opt}
+              <Inline text={opt} />
             </button>
           )
         })}
@@ -84,7 +104,11 @@ export default function InlineCheck({ checks }: { checks: Check[] }) {
           <p className="check-feedback-line">
             {isRight ? "✓ Correct." : "✗ Not quite."}
           </p>
-          {q.explain && <p className="check-explain">{q.explain}</p>}
+          {q.explain && (
+            <div className="check-explain">
+              <Inline text={q.explain} />
+            </div>
+          )}
           <button className="check-next" onClick={next}>
             {idx + 1 >= checks.length ? "Finish check" : "Next"}
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
