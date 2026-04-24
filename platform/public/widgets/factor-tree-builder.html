@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Factor Tree Builder</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <style>
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body {
@@ -203,12 +205,11 @@
   .result-line { font-weight:600; margin-bottom:4px; }
   .result-detail { color:#c8c6be; font-size:12.5px; }
   .result-final {
-    margin-top:8px;
-    font-family:'Geist Mono',monospace;
+    margin-top:10px;
     color:#f0eeea;
-    font-size:13.5px;
+    font-size:14px;
   }
-  .result-final b { color:#fff067; }
+  .result-final .katex { color:#f0eeea; }
 
   .status-line {
     font-size:12.5px;
@@ -268,11 +269,11 @@
 /* For each target: the ordered primes the student peels off top-to-bottom.
    The composite below each row = the number left over after the split. */
 var TREES = {
-  "84":  { primes: [2, 2, 3, 7],   indexForm: "2² × 3 × 7" },
-  "72":  { primes: [2, 2, 2, 3, 3], indexForm: "2³ × 3²" },
-  "120": { primes: [2, 2, 2, 3, 5], indexForm: "2³ × 3 × 5" },
-  "90":  { primes: [2, 3, 3, 5],   indexForm: "2 × 3² × 5" },
-  "150": { primes: [2, 3, 5, 5],   indexForm: "2 × 3 × 5²" }
+  "84":  { primes: [2, 2, 3, 7],    indexForm: "2^2 \\times 3 \\times 7" },
+  "72":  { primes: [2, 2, 2, 3, 3], indexForm: "2^3 \\times 3^2" },
+  "120": { primes: [2, 2, 2, 3, 5], indexForm: "2^3 \\times 3 \\times 5" },
+  "90":  { primes: [2, 3, 3, 5],    indexForm: "2 \\times 3^2 \\times 5" },
+  "150": { primes: [2, 3, 5, 5],    indexForm: "2 \\times 3 \\times 5^2" }
 };
 
 var holder   = document.getElementById("svg-holder");
@@ -560,10 +561,22 @@ function submit() {
 
     if (state.completed) {
       resultEl.className = "result ok";
+      var primesTex = state.primes.join(" \\times ");
       resultEl.innerHTML =
         '<p class="result-line">✓ Your tree is correct.</p>' +
         '<p class="result-detail">Read the primes from the green boxes and group the repeats into powers:</p>' +
-        '<p class="result-final"><b>' + state.target + '</b> = ' + state.primes.join(" × ") + ' = <b>' + state.indexForm + '</b></p>';
+        '<p class="result-final" id="final-math">' +
+          '\\(' + state.target + ' = ' + primesTex + ' = ' + state.indexForm + '\\)' +
+        '</p>';
+      if (typeof katex !== 'undefined') {
+        var mathEl = document.getElementById('final-math');
+        if (mathEl) {
+          var tex = state.target + ' = ' + primesTex + ' = ' + state.indexForm;
+          try {
+            katex.render(tex, mathEl, { throwOnError: false, strict: false });
+          } catch (_) {}
+        }
+      }
     }
   } else {
     // Wrong. Flag without advancing.
@@ -598,18 +611,36 @@ resetBtn.addEventListener("click", build);
 build();
 
 /* ────────────────────────────────────────
-   Auto-resize the hosting iframe via postMessage so there's no inner scrollbar.
+   Auto-resize the hosting iframe via postMessage.
+   Measure the .wrap element, not document.body, so the iframe's height
+   doesn't feed back into the measurement and cause unbounded growth.
    ──────────────────────────────────────── */
+var lastReported = 0;
+var reportScheduled = false;
 function reportHeight() {
-  var h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
-  if (window.parent !== window) {
-    window.parent.postMessage({ type: 'pl-widget-resize', height: h }, '*');
-  }
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector('.wrap');
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'pl-widget-resize', height: h }, '*');
+    }
+  });
 }
-var resizeObserver = new ResizeObserver(function() { reportHeight(); });
-resizeObserver.observe(document.body);
+var wrapEl = document.querySelector('.wrap');
+if (wrapEl) {
+  var ro = new ResizeObserver(reportHeight);
+  ro.observe(wrapEl);
+}
 window.addEventListener('load', reportHeight);
-window.addEventListener('resize', reportHeight);
 </script>
 </body>
 </html>
