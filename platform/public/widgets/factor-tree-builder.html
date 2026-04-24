@@ -495,9 +495,11 @@ function paint() {
     });
 
     // Focus the active prime slot (the leftmost uncommitted on the current row)
+    // preventScroll stops the parent page from auto-scrolling to the iframe
+    // on initial render.
     var inputs = Array.from(holder.querySelectorAll(".prime-input"));
     var active = inputs.find(function(el) { return !el.readOnly; });
-    if (active) active.focus();
+    if (active) active.focus({ preventScroll: true });
 
     updateProgress();
     reportHeight();
