@@ -3,6 +3,7 @@ import Link from "next/link"
 import { UNITS, getPrevNext, urlFor } from "../../data"
 import { loadLesson } from "@/lib/lesson-loader"
 import LessonBody from "./lesson-body"
+import WidgetFrame from "./widget-frame"
 
 export default async function TopicPage({
   params,
@@ -97,9 +98,11 @@ export default async function TopicPage({
         <>
           <LessonBody markdown={lesson.body} />
           {lesson.widget && (
-            <div className="mt-12 rounded-xl border border-[#141e2a] overflow-hidden bg-[#07090d]">
-              <iframe src={lesson.widget} className="w-full block" style={{ height: lesson.widgetHeight ?? 640, border: 0 }} title={`${topic.title} — interactive`} />
-            </div>
+            <WidgetFrame
+              src={lesson.widget}
+              title={`${topic.title} interactive`}
+              initialHeight={lesson.widgetHeight ?? 640}
+            />
           )}
         </>
       ) : (

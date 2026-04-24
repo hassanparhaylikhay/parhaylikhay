@@ -4,6 +4,7 @@ import { UNITS, getPrevNext, urlFor } from "../../../data"
 import { loadLessonPart } from "@/lib/lesson-loader"
 import LessonBody from "../lesson-body"
 import InlineCheck from "../inline-check"
+import WidgetFrame from "../widget-frame"
 
 export default async function PartPage({
   params,
@@ -61,14 +62,11 @@ export default async function PartPage({
           )}
 
           {lesson.widget && (
-            <div className="mt-12 rounded-xl border border-[#141e2a] overflow-hidden bg-[#07090d]">
-              <iframe
-                src={lesson.widget}
-                className="w-full block"
-                style={{ height: lesson.widgetHeight ?? 640, border: 0 }}
-                title={`${part.title} — interactive`}
-              />
-            </div>
+            <WidgetFrame
+              src={lesson.widget}
+              title={`${part.title} interactive`}
+              initialHeight={lesson.widgetHeight ?? 640}
+            />
           )}
         </>
       ) : (

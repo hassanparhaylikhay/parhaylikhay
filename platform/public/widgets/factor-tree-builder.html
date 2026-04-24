@@ -12,8 +12,9 @@
     color:#c8c6be;
     font-family:'Geist','Inter',system-ui,sans-serif;
     -webkit-font-smoothing:antialiased;
+    overflow:hidden;
   }
-  body { padding:22px 18px 26px; min-height:100vh; }
+  body { padding:22px 18px 26px; }
   .wrap { max-width:640px; margin:0 auto; }
 
   .head {
@@ -63,7 +64,7 @@
   .hint {
     font-size:12px;
     color:#7a7875;
-    margin-bottom:18px;
+    margin-bottom:16px;
     line-height:1.55;
     display:flex; gap:18px; flex-wrap:wrap;
   }
@@ -84,6 +85,11 @@
     background:#07090d;
     border-color:#141e2a;
   }
+  .hint .sw-hidden {
+    background:transparent;
+    border-color:#3a4a5a;
+    border-style:dotted;
+  }
 
   .svg-holder {
     position:relative;
@@ -95,15 +101,22 @@
   svg.ft-svg {
     display:block;
     width:100%;
-    max-width:100%;
+    max-width:460px;
     height:auto;
   }
 
-  .node-rect.comp  { fill:#07090d; stroke:#141e2a; }
-  .node-rect.prime-empty  { fill:#07090d; stroke:rgba(15,238,137,0.4); stroke-dasharray:3 3; }
-  .node-rect.prime-right  { fill:rgba(15,238,137,0.08); stroke:rgba(15,238,137,0.55); }
-  .node-text.comp { fill:#f0eeea; font-weight:600; font-size:13px; font-family:inherit; }
-  .node-text.prime { fill:#0fee89; font-weight:600; font-size:13px; font-family:inherit; }
+  /* SVG node styles, driven by classes */
+  rect.ft-comp       { fill:#07090d; stroke:#141e2a; stroke-width:1; }
+  rect.ft-hidden     { fill:transparent; stroke:#3a4a5a; stroke-width:1; stroke-dasharray:2 3; }
+  rect.ft-prime-slot { fill:#07090d; stroke:rgba(15,238,137,0.4); stroke-width:1.2; stroke-dasharray:3 3; }
+  rect.ft-prime-done { fill:rgba(15,238,137,0.08); stroke:rgba(15,238,137,0.6); stroke-width:1.2; }
+  rect.ft-prime-wrong{ fill:rgba(255,70,112,0.08); stroke:rgba(255,70,112,0.7); stroke-width:1.2; }
+  text.ft-text-comp  { fill:#f0eeea; font-weight:600; font-size:13px; font-family:inherit; }
+  text.ft-text-prime { fill:#0fee89; font-weight:600; font-size:13px; font-family:inherit; }
+  text.ft-text-q     { fill:#3a4a5a; font-weight:500; font-size:14px; font-family:inherit; }
+
+  line.ft-branch        { stroke:#3a4a5a; stroke-width:1.5; }
+  line.ft-branch-hidden { stroke:#1a2332; stroke-width:1.5; stroke-dasharray:2 3; }
 
   .prime-input {
     position:absolute;
@@ -117,7 +130,7 @@
     font-weight:600;
     text-align:center;
     outline:none;
-    transition:border-color .12s;
+    transition:border-color .12s, box-shadow .12s;
     padding:0;
   }
   .prime-input:focus {
@@ -129,9 +142,10 @@
     color:#ff4670;
     box-shadow:0 0 0 3px rgba(255,70,112,0.12);
   }
-  .prime-input.correct {
+  .prime-input.done {
     background:rgba(15,238,137,0.08);
     border-color:rgba(15,238,137,0.65);
+    cursor:default;
   }
 
   .controls {
@@ -166,13 +180,6 @@
     transition:opacity .15s, border-color .15s, background .15s;
     border:1px solid transparent;
   }
-  button.btn.primary {
-    background:#00abfa; color:#07090d; border-color:#00abfa;
-  }
-  button.btn.primary:hover { opacity:0.88; }
-  button.btn.primary:disabled {
-    background:#141e2a; color:#3a4a5a; border-color:#141e2a; cursor:not-allowed;
-  }
   button.btn.ghost {
     background:transparent; color:#7a7875; border-color:#141e2a;
   }
@@ -193,12 +200,6 @@
     background:rgba(15,238,137,0.06);
     border-color:rgba(15,238,137,0.3);
   }
-  .result.bad {
-    display:block;
-    color:#ff4670;
-    background:rgba(255,70,112,0.06);
-    border-color:rgba(255,70,112,0.3);
-  }
   .result-line { font-weight:600; margin-bottom:4px; }
   .result-detail { color:#c8c6be; font-size:12.5px; }
   .result-final {
@@ -208,6 +209,16 @@
     font-size:13.5px;
   }
   .result-final b { color:#fff067; }
+
+  .status-line {
+    font-size:12.5px;
+    color:#7a7875;
+    margin-top:14px;
+    min-height:18px;
+    line-height:1.5;
+  }
+  .status-line.bad { color:#ff4670; }
+  .status-line.ok  { color:#0fee89; }
 </style>
 </head>
 <body>
@@ -228,20 +239,22 @@
 
   <div class="card">
     <p class="prompt">
-      Split each composite by dividing by the smallest prime that fits. Type the prime into each <b style="color:#0fee89">green dashed box</b>. The composite on the right is the number left over.
+      Type the smallest prime that divides the top number into the <b style="color:#0fee89">green box</b>. The result on the right will reveal itself and the next row will unlock.
     </p>
     <p class="hint">
-      <span><span class="swatch sw-prime"></span>you enter · prime</span>
-      <span><span class="swatch sw-comp"></span>shown · composite or final prime</span>
+      <span><span class="swatch sw-prime"></span>you type</span>
+      <span><span class="swatch sw-comp"></span>revealed</span>
+      <span><span class="swatch sw-hidden"></span>hidden until you fill the row above</span>
     </p>
 
     <div class="svg-holder" id="svg-holder"></div>
+
+    <p class="status-line" id="status">&nbsp;</p>
 
     <div class="controls">
       <span class="progress">Primes filled: <b id="progress">0 / 0</b></span>
       <div class="btns">
         <button class="btn ghost" id="reset">Reset</button>
-        <button class="btn primary" id="check" disabled>Check my tree</button>
       </div>
     </div>
 
@@ -252,63 +265,52 @@
 <script>
 "use strict";
 
-/* Each target specifies the ordered primes the student "peels off" going
-   top-to-bottom. The student types those primes into the dashed boxes. */
+/* For each target: the ordered primes the student peels off top-to-bottom.
+   The composite below each row = the number left over after the split. */
 var TREES = {
   "84":  { primes: [2, 2, 3, 7],   indexForm: "2² × 3 × 7" },
   "72":  { primes: [2, 2, 2, 3, 3], indexForm: "2³ × 3²" },
   "120": { primes: [2, 2, 2, 3, 5], indexForm: "2³ × 3 × 5" },
   "90":  { primes: [2, 3, 3, 5],   indexForm: "2 × 3² × 5" },
-  "150": { primes: [2, 3, 5, 5],   indexForm: "2 × 3 × 5²" },
+  "150": { primes: [2, 3, 5, 5],   indexForm: "2 × 3 × 5²" }
 };
 
 var holder   = document.getElementById("svg-holder");
 var targetSel= document.getElementById("target");
-var checkBtn = document.getElementById("check");
 var resetBtn = document.getElementById("reset");
 var progEl   = document.getElementById("progress");
 var resultEl = document.getElementById("result");
+var statusEl = document.getElementById("status");
 
 var state = null;
 
-function render() {
+function setStatus(msg, cls) {
+  statusEl.className = "status-line" + (cls ? " " + cls : "");
+  statusEl.textContent = msg || " ";
+}
+
+function build() {
   var target = targetSel.value;
   var spec = TREES[target];
   var primes = spec.primes;
   var N = primes.length;
 
   // Geometry
-  var step     = 54;   // x/y shift between rows
-  var halfW    = 28;
-  var halfH    = 14;
-  var padding  = 40;
-  var rowGap   = 56;
-
-  // Layout: top composite centred horizontally; each subsequent row
-  // offsets ONE STEP to the right. Leftmost element is the first prime
-  // (at topX - step). Rightmost is the last prime (at topX + (N-1)*step).
-  var totalSpan = N * step;                          // leftmost center → rightmost center
-  var svgWidth  = Math.max(420, totalSpan + 2 * (halfW + padding));
-  var leftmostX = (svgWidth - totalSpan) / 2 + halfW; // leftmost prime center
-  var topX      = leftmostX + step;
-  var topY      = 20;
+  var step = 54, halfW = 28, halfH = 14, rowGap = 56;
+  var totalSpan = N * step;
+  var svgWidth = Math.max(420, totalSpan + 2 * (halfW + 40));
+  var leftmost = (svgWidth - totalSpan) / 2 + halfW;
+  var topX = leftmost + step;
+  var topY = 20;
   var svgHeight = topY + (N - 1) * rowGap + halfH + 14;
 
-  // Build list of nodes:
-  //   node 0 = top composite
-  //   for i in 0..N-2:
-  //     leftPrime at (topX - step + i*step , topY + (i+1)*rowGap)  ← dashed slot
-  //     rightNode at (topX + step + i*step , topY + (i+1)*rowGap)  ← composite OR final prime
-  //   Plus the final prime slot also needs a value eventually (it's the right node of last row, already a prime)
-  // BUT: the LEFT prime slots total N-1, and the LAST right node is the Nth prime.
-  // The student fills N prime slots: the N-1 left primes + the 1 final right prime.
-
-  var nodes = [];
-  nodes.push({ kind: "top", x: topX, y: topY, val: target });
-
-  var currentVal = parseInt(target, 10);
-  var currentX = topX;
-  var currentY = topY;
+  // Build node layout. Same linear/peel layout as before.
+  // Each row i (i = 0..N-2) peels primes[i] off the current composite,
+  // leaving remaining = currentVal / primes[i] on the right.
+  // The final right node is primes[N-1] itself (a prime).
+  var nodes = [{ id: 0, kind: "top", x: topX, y: topY, val: target }];
+  var currentVal = +target;
+  var currentX = topX, currentY = topY;
 
   for (var i = 0; i < N - 1; i++) {
     var p = primes[i];
@@ -316,23 +318,31 @@ function render() {
     var nextY = currentY + rowGap;
     var primeX = currentX - step;
     var rightX = currentX + step;
-    var isLastSplit = (i === N - 2);
+    var lastSplit = (i === N - 2);
 
-    // left: prime slot (student types)
+    // left = prime slot (always, for all rows)
     nodes.push({
-      kind: "prime-slot", x: primeX, y: nextY,
-      expected: p, primeIdx: i,
+      id: nodes.length, kind: "prime-slot",
+      x: primeX, y: nextY,
+      primeIdx: i, expected: p,
+      row: i
     });
-    // right: either a composite (shown) or the final prime slot (student types)
-    if (isLastSplit) {
+    // right = composite on non-final rows, prime on final row
+    if (lastSplit) {
       nodes.push({
-        kind: "prime-slot", x: rightX, y: nextY,
-        expected: primes[N - 1], primeIdx: N - 1,
+        id: nodes.length, kind: "prime-slot",
+        x: rightX, y: nextY,
+        primeIdx: N - 1, expected: primes[N - 1],
+        row: i
       });
     } else {
-      nodes.push({ kind: "comp", x: rightX, y: nextY, val: remaining });
+      nodes.push({
+        id: nodes.length, kind: "comp",
+        x: rightX, y: nextY,
+        val: remaining,
+        row: i
+      });
     }
-
     currentVal = remaining;
     currentX = rightX;
     currentY = nextY;
@@ -344,171 +354,262 @@ function render() {
     target: target,
     indexForm: spec.indexForm,
     studentPrimes: primes.map(function() { return ""; }),
-    svgWidth: svgWidth,
-    svgHeight: svgHeight,
+    revealedRow: 0, // rows fully completed (row = 0..N-2). row 0 = first split.
     completed: false,
+    svgWidth: svgWidth, svgHeight: svgHeight
   };
 
   resultEl.className = "result";
   resultEl.innerHTML = "";
+  setStatus("", "");
   paint();
 }
 
 function paint() {
   var nodes = state.nodes;
-  var svgWidth = state.svgWidth;
-  var svgHeight = state.svgHeight;
   var halfW = 28, halfH = 14;
+  var W = state.svgWidth, H = state.svgHeight;
+  var N = state.primes.length;
 
   var parts = [];
-  parts.push('<svg viewBox="0 0 ' + svgWidth + ' ' + svgHeight + '" xmlns="http://www.w3.org/2000/svg" class="ft-svg">');
+  parts.push('<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg" class="ft-svg">');
 
-  // Branch lines: top and each composite have two children = next two nodes
-  parts.push('<g stroke="#3a4a5a" stroke-width="1.5" fill="none">');
+  // Branch lines. A row is visible if its index <= revealedRow (that is, all rows up to the next uncompleted one are drawn).
+  parts.push('<g fill="none">');
   for (var i = 0; i < nodes.length; i++) {
     var n = nodes[i];
-    if (n.kind === "top" || n.kind === "comp") {
-      var L = nodes[i + 1], R = nodes[i + 2];
-      if (L && R) {
-        parts.push('<line x1="' + n.x + '" y1="' + (n.y + halfH) + '" x2="' + L.x + '" y2="' + (L.y - halfH) + '"/>');
-        parts.push('<line x1="' + n.x + '" y1="' + (n.y + halfH) + '" x2="' + R.x + '" y2="' + (R.y - halfH) + '"/>');
-      }
-    }
+    if (n.kind !== "top" && n.kind !== "comp") continue;
+    var L = nodes[i + 1], R = nodes[i + 2];
+    if (!L || !R) continue;
+    var childRow = L.row; // same row as R
+    var visible = childRow <= state.revealedRow;
+    var cls = visible ? "ft-branch" : "ft-branch-hidden";
+    parts.push('<line class="' + cls + '" x1="' + n.x + '" y1="' + (n.y + halfH) + '" x2="' + L.x + '" y2="' + (L.y - halfH) + '"/>');
+    parts.push('<line class="' + cls + '" x1="' + n.x + '" y1="' + (n.y + halfH) + '" x2="' + R.x + '" y2="' + (R.y - halfH) + '"/>');
   }
   parts.push('</g>');
 
-  // Nodes
+  // Nodes. Each node is visible according to its row:
+  //   - top (row undefined): always visible
+  //   - row <= revealedRow: visible (row 0 is the FIRST split row)
+  //   - composite on row revealedRow is visible after that row is completed (but for row == revealedRow the right composite IS the next active target; revealed as soon as the prime above is correct)
+  // Row revealedRow is the ACTIVE row. Its prime slots are visible; its right-side composite is hidden until the prime is answered, then revealed and revealedRow increments.
+  //
+  // Simplification: we track `state.revealedRow` = the row number whose prime HAS NOT YET been answered. Rows < revealedRow are fully complete (prime input green, right composite revealed). Row == revealedRow has: the prime slot is ACTIVE (editable); the right composite is HIDDEN until the prime is answered, at which point we advance revealedRow.
   for (var j = 0; j < nodes.length; j++) {
     var nd = nodes[j];
     var rx = nd.x - halfW, ry = nd.y - halfH;
-    if (nd.kind === "top" || nd.kind === "comp") {
-      parts.push('<rect class="node-rect comp" x="' + rx + '" y="' + ry + '" width="' + (halfW * 2) + '" height="' + (halfH * 2) + '" rx="6"/>');
-      parts.push('<text class="node-text comp" x="' + nd.x + '" y="' + (nd.y + 5) + '" text-anchor="middle">' + nd.val + '</text>');
-    } else {
-      // prime slot — render placeholder rect; HTML input will overlay
-      parts.push('<rect class="node-rect prime-empty" x="' + rx + '" y="' + ry + '" width="' + (halfW * 2) + '" height="' + (halfH * 2) + '" rx="6"/>');
+
+    if (nd.kind === "top") {
+      parts.push('<rect class="ft-comp" x="' + rx + '" y="' + ry + '" width="' + (halfW * 2) + '" height="' + (halfH * 2) + '" rx="6"/>');
+      parts.push('<text class="ft-text-comp" x="' + nd.x + '" y="' + (nd.y + 5) + '" text-anchor="middle">' + nd.val + '</text>');
+      continue;
+    }
+
+    if (nd.kind === "comp") {
+      // Right-side composite. Visible if its row < revealedRow (i.e. the prime above it has been answered).
+      if (nd.row < state.revealedRow) {
+        parts.push('<rect class="ft-comp" x="' + rx + '" y="' + ry + '" width="' + (halfW * 2) + '" height="' + (halfH * 2) + '" rx="6"/>');
+        parts.push('<text class="ft-text-comp" x="' + nd.x + '" y="' + (nd.y + 5) + '" text-anchor="middle">' + nd.val + '</text>');
+      } else {
+        parts.push('<rect class="ft-hidden" x="' + rx + '" y="' + ry + '" width="' + (halfW * 2) + '" height="' + (halfH * 2) + '" rx="6"/>');
+        parts.push('<text class="ft-text-q" x="' + nd.x + '" y="' + (nd.y + 5) + '" text-anchor="middle">?</text>');
+      }
+      continue;
+    }
+
+    if (nd.kind === "prime-slot") {
+      // Prime inputs: LEFT prime of row R is visible when R <= revealedRow.
+      //               RIGHT prime (only on final row, row = N-2) is visible when its row < revealedRow
+      //                 (i.e. after the left prime on that row is correct).
+      var isLeftSide = (nd.primeIdx === nd.row);
+      var visible;
+      if (isLeftSide) {
+        // left prime of row R visible when row <= revealedRow
+        visible = nd.row <= state.revealedRow;
+      } else {
+        // right prime of the final row visible only after the left is correct
+        visible = nd.row < state.revealedRow;
+      }
+      if (visible) {
+        // render as dashed green placeholder; HTML input will overlay
+        var studentVal = state.studentPrimes[nd.primeIdx];
+        var wrong = !!nd._wrong;
+        var cls = wrong ? "ft-prime-wrong" : (studentVal && +studentVal === nd.expected ? "ft-prime-done" : "ft-prime-slot");
+        parts.push('<rect class="' + cls + '" data-slot="' + nd.primeIdx + '" x="' + rx + '" y="' + ry + '" width="' + (halfW * 2) + '" height="' + (halfH * 2) + '" rx="6"/>');
+      } else {
+        parts.push('<rect class="ft-hidden" x="' + rx + '" y="' + ry + '" width="' + (halfW * 2) + '" height="' + (halfH * 2) + '" rx="6"/>');
+        parts.push('<text class="ft-text-q" x="' + nd.x + '" y="' + (nd.y + 5) + '" text-anchor="middle">?</text>');
+      }
+      continue;
     }
   }
 
   parts.push('</svg>');
   holder.innerHTML = parts.join("");
 
-  // Overlay HTML inputs on each prime slot.
+  // Overlay HTML inputs on visible prime slots only.
   var svgEl = holder.querySelector("svg");
   requestAnimationFrame(function() {
     var svgRect = svgEl.getBoundingClientRect();
     var holderRect = holder.getBoundingClientRect();
-    var scaleX = svgRect.width / svgWidth;
-    var scaleY = svgRect.height / svgHeight;
+    var scaleX = svgRect.width / W;
+    var scaleY = svgRect.height / H;
 
     nodes.forEach(function(nd) {
       if (nd.kind !== "prime-slot") return;
+      var isLeftSide = (nd.primeIdx === nd.row);
+      var visible = isLeftSide ? nd.row <= state.revealedRow : nd.row < state.revealedRow;
+      if (!visible) return;
+
       var inp = document.createElement("input");
       inp.type = "text";
       inp.inputMode = "numeric";
       inp.maxLength = 3;
       inp.className = "prime-input";
-      inp.dataset.primeIdx = nd.primeIdx;
+      var studentVal = state.studentPrimes[nd.primeIdx];
+      inp.value = studentVal || "";
       inp.placeholder = "?";
-      inp.value = state.studentPrimes[nd.primeIdx] || "";
+      var isDone = studentVal && +studentVal === nd.expected;
+      if (isDone) { inp.classList.add("done"); inp.readOnly = true; }
+      if (nd._wrong && !isDone) inp.classList.add("wrong");
       inp.style.left = ((nd.x - 23) * scaleX + (svgRect.left - holderRect.left)) + "px";
       inp.style.top  = ((nd.y - 12) * scaleY + (svgRect.top  - holderRect.top )) + "px";
-      if (state.completed) inp.readOnly = true;
       holder.appendChild(inp);
 
-      inp.addEventListener("input", function() {
-        state.studentPrimes[nd.primeIdx] = inp.value.trim();
-        inp.classList.remove("wrong");
-        updateProgress();
-      });
-      inp.addEventListener("keydown", function(e) {
-        if (e.key === "Enter") {
-          var next = findNextInput(nd.primeIdx);
-          if (next) next.focus();
-          else if (!checkBtn.disabled) checkBtn.click();
-        }
-      });
+      (function(slotNode, el) {
+        el.addEventListener("input", function() {
+          state.studentPrimes[slotNode.primeIdx] = el.value.trim();
+          slotNode._wrong = false;
+          el.classList.remove("wrong");
+        });
+        el.addEventListener("keydown", function(e) {
+          if (e.key === "Enter") submit();
+        });
+        el.addEventListener("blur", function() {
+          // Commit on blur IF there's a value typed
+          if (el.value.trim()) submit();
+        });
+      })(nd, inp);
     });
 
-    // Focus first empty prime slot
+    // Focus the active prime slot (the leftmost uncommitted on the current row)
     var inputs = Array.from(holder.querySelectorAll(".prime-input"));
-    inputs.sort(function(a, b) { return +a.dataset.primeIdx - +b.dataset.primeIdx; });
-    for (var k = 0; k < inputs.length; k++) {
-      if (!inputs[k].value) { inputs[k].focus(); break; }
-    }
+    var active = inputs.find(function(el) { return !el.readOnly; });
+    if (active) active.focus();
+
     updateProgress();
+    reportHeight();
   });
 }
 
-function findNextInput(currentIdx) {
-  var inputs = holder.querySelectorAll(".prime-input");
-  for (var i = 0; i < inputs.length; i++) {
-    if (+inputs[i].dataset.primeIdx === currentIdx + 1) return inputs[i];
+function findActiveSlotNode() {
+  // Active slot: if on row < N-2 (intermediate rows), it's the LEFT prime of revealedRow.
+  //              if on row N-2 (last row), it's whichever of the two primes is not done.
+  var N = state.primes.length;
+  var r = state.revealedRow;
+  if (r > N - 2) return null; // all rows done
+
+  // Left prime first
+  var leftNode = state.nodes.find(function(n) {
+    return n.kind === "prime-slot" && n.row === r && n.primeIdx === r;
+  });
+  if (leftNode && !(state.studentPrimes[leftNode.primeIdx] && +state.studentPrimes[leftNode.primeIdx] === leftNode.expected)) {
+    return leftNode;
+  }
+  // Right prime (only on final row)
+  if (r === N - 2) {
+    var rightNode = state.nodes.find(function(n) {
+      return n.kind === "prime-slot" && n.row === r && n.primeIdx === N - 1;
+    });
+    if (rightNode && !(state.studentPrimes[rightNode.primeIdx] && +state.studentPrimes[rightNode.primeIdx] === rightNode.expected)) {
+      return rightNode;
+    }
   }
   return null;
 }
 
-function updateProgress() {
-  var filled = state.studentPrimes.filter(function(v) { return v !== ""; }).length;
-  progEl.textContent = filled + " / " + state.studentPrimes.length;
-  checkBtn.disabled = filled !== state.studentPrimes.length || state.completed;
-}
+function submit() {
+  var slot = findActiveSlotNode();
+  if (!slot) return;
+  var raw = state.studentPrimes[slot.primeIdx];
+  if (!raw) return;
+  var got = parseInt(raw, 10);
+  var N = state.primes.length;
 
-function check() {
-  var expected = state.primes;
-  var allRight = true;
-  var inputs = holder.querySelectorAll(".prime-input");
-  var wrongCount = 0;
-
-  inputs.forEach(function(el) {
-    var idx = +el.dataset.primeIdx;
-    var got = parseInt(state.studentPrimes[idx], 10);
-    if (got !== expected[idx]) {
-      el.classList.add("wrong");
-      el.classList.remove("correct");
-      allRight = false;
-      wrongCount++;
+  if (got === slot.expected) {
+    // Correct. If this is a left prime on the final row, also activate the right prime of same row.
+    // Otherwise this completes the current row.
+    var isLeftSide = (slot.primeIdx === slot.row);
+    if (slot.row === N - 2 && isLeftSide) {
+      // Final row's left prime just correct. The right prime on same row becomes active:
+      // advance revealedRow so the right prime is visible, but that's the same as "row < revealedRow" check.
+      state.revealedRow = slot.row + 1;
+    } else if (slot.row === N - 2 && !isLeftSide) {
+      // Final row's right prime just correct -> tree complete.
+      state.revealedRow = N; // beyond end
+      state.completed = true;
     } else {
-      el.classList.remove("wrong");
-      el.classList.add("correct");
+      // Intermediate row's left prime just correct -> advance to next row.
+      state.revealedRow = slot.row + 1;
     }
-  });
 
-  if (allRight) {
-    state.completed = true;
-    inputs.forEach(function(el) { el.readOnly = true; });
-    resultEl.className = "result ok";
-    resultEl.innerHTML =
-      '<p class="result-line">✓ Your tree is correct.</p>' +
-      '<p class="result-detail">Read the primes from the green boxes and group the repeats into powers:</p>' +
-      '<p class="result-final"><b>' + state.target + '</b> = ' + state.primes.join(" × ") + ' = <b>' + state.indexForm + '</b></p>';
-    checkBtn.disabled = true;
+    slot._wrong = false;
+    setStatus("Correct. " + (state.completed ? "Tree complete." : "Next row unlocked."), "ok");
+    paint();
+
+    if (state.completed) {
+      resultEl.className = "result ok";
+      resultEl.innerHTML =
+        '<p class="result-line">✓ Your tree is correct.</p>' +
+        '<p class="result-detail">Read the primes from the green boxes and group the repeats into powers:</p>' +
+        '<p class="result-final"><b>' + state.target + '</b> = ' + state.primes.join(" × ") + ' = <b>' + state.indexForm + '</b></p>';
+    }
   } else {
-    resultEl.className = "result bad";
-    var msg = wrongCount === 1
-      ? "One prime is wrong — the red box shows which. Check that the composite above it divides exactly by your number."
-      : wrongCount + " primes are wrong — the red boxes show which. Check that each composite above divides exactly by the number you entered.";
-    resultEl.innerHTML =
-      '<p class="result-line">✗ Not quite.</p>' +
-      '<p class="result-detail">' + msg + ' Start by dividing by the smallest prime that fits (2, then 3, then 5, then 7).</p>';
+    // Wrong. Flag without advancing.
+    slot._wrong = true;
+    setStatus("Not a factor of " + getCurrentComposite(slot) + ". Try the smallest prime that divides it.", "bad");
+    paint();
   }
 }
 
-targetSel.addEventListener("change", render);
-checkBtn.addEventListener("click", check);
-resetBtn.addEventListener("click", render);
+function getCurrentComposite(slot) {
+  // The composite the student is splitting at this slot.
+  // For row R left prime: composite is nodes[2*R] (the right composite of the previous row, or the top).
+  // For row R right prime (final row): composite is also nodes[2*R] since the split is of that composite into two primes.
+  // But really the composite being split at row R is the parent of the pair.
+  // In our layout: row 0's parent is the top. Row R's parent is nodes[2*R]. Confirmed by construction.
+  var r = slot.row;
+  var parent = state.nodes[2 * r];
+  return parent ? parent.val : state.target;
+}
 
-render();
+function updateProgress() {
+  var N = state.primes.length;
+  var done = state.studentPrimes.filter(function(v, i) {
+    return v && +v === state.primes[i];
+  }).length;
+  progEl.textContent = done + " / " + N;
+}
 
-// Re-layout inputs on resize (SVG scaling changes)
-var layoutTimer = null;
-window.addEventListener("resize", function() {
-  if (layoutTimer) clearTimeout(layoutTimer);
-  layoutTimer = setTimeout(function() {
-    // Strip old inputs and re-paint — cheaper than recomputing positions
-    paint();
-  }, 80);
-});
+targetSel.addEventListener("change", build);
+resetBtn.addEventListener("click", build);
+
+build();
+
+/* ────────────────────────────────────────
+   Auto-resize the hosting iframe via postMessage so there's no inner scrollbar.
+   ──────────────────────────────────────── */
+function reportHeight() {
+  var h = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'pl-widget-resize', height: h }, '*');
+  }
+}
+var resizeObserver = new ResizeObserver(function() { reportHeight(); });
+resizeObserver.observe(document.body);
+window.addEventListener('load', reportHeight);
+window.addEventListener('resize', reportHeight);
 </script>
 </body>
 </html>
