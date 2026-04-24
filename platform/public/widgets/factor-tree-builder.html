@@ -483,6 +483,13 @@ function paint() {
           state.studentPrimes[slotNode.primeIdx] = el.value.trim();
           slotNode._wrong = false;
           el.classList.remove("wrong");
+          // Auto-commit the moment the typed value matches the expected prime,
+          // so the right-side composite (the quotient) appears without the
+          // student having to Enter/tab out.
+          var typed = parseInt(el.value, 10);
+          if (!isNaN(typed) && typed === slotNode.expected) {
+            submit();
+          }
         });
         el.addEventListener("keydown", function(e) {
           if (e.key === "Enter") submit();
