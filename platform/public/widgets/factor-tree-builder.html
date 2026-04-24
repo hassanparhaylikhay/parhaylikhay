@@ -514,27 +514,24 @@ function paint() {
 }
 
 function findActiveSlotNode() {
-  // Active slot: if on row < N-2 (intermediate rows), it's the LEFT prime of revealedRow.
-  //              if on row N-2 (last row), it's whichever of the two primes is not done.
+  // revealedRow is the single source of truth:
+  //   0..N-2      → left prime of that row is active
+  //   N-1         → right prime of final row (row N-2) is active
+  //                 (submit() bumps revealedRow to N-1 after the left prime on
+  //                 the final row is correct, leaving only the right to answer)
+  //   >= N        → tree complete
   var N = state.primes.length;
   var r = state.revealedRow;
-  if (r > N - 2) return null; // all rows done
 
-  // Left prime first
-  var leftNode = state.nodes.find(function(n) {
-    return n.kind === "prime-slot" && n.row === r && n.primeIdx === r;
-  });
-  if (leftNode && !(state.studentPrimes[leftNode.primeIdx] && +state.studentPrimes[leftNode.primeIdx] === leftNode.expected)) {
-    return leftNode;
+  if (r <= N - 2) {
+    return state.nodes.find(function(n) {
+      return n.kind === "prime-slot" && n.row === r && n.primeIdx === r;
+    }) || null;
   }
-  // Right prime (only on final row)
-  if (r === N - 2) {
-    var rightNode = state.nodes.find(function(n) {
-      return n.kind === "prime-slot" && n.row === r && n.primeIdx === N - 1;
-    });
-    if (rightNode && !(state.studentPrimes[rightNode.primeIdx] && +state.studentPrimes[rightNode.primeIdx] === rightNode.expected)) {
-      return rightNode;
-    }
+  if (r === N - 1) {
+    return state.nodes.find(function(n) {
+      return n.kind === "prime-slot" && n.row === N - 2 && n.primeIdx === N - 1;
+    }) || null;
   }
   return null;
 }
