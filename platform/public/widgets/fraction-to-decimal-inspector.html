@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Fraction-to-Decimal Inspector</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:640px; margin:0 auto; }
+
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .target-picker { display:flex; gap:6px; align-items:center; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .target-picker select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:5px 22px 5px 10px; border-radius:5px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:22px 20px 20px; }
+  .prompt { font-size:13.5px; color:#c8c6be; margin-bottom:12px; }
+  .prompt b { color:#0fee89; font-weight:600; }
+
+  .trace { margin:16px 0 12px; padding:14px 16px; background:#07090d; border:1px solid #141e2a; border-radius:8px; font-family:'Geist Mono',monospace; font-size:14px; color:#c8c6be; line-height:1.7; }
+  .trace-row { display:flex; gap:16px; align-items:baseline; padding:3px 0; }
+  .trace-row .lhs { color:#7a7875; width:72px; text-align:right; font-size:11px; letter-spacing:1px; text-transform:uppercase; flex-shrink:0; }
+  .trace-row .rhs { color:#f0eeea; letter-spacing:.5px; }
+  .trace-row.rep .rhs b { color:#ff4670; }
+  .trace-row.new .rhs b { color:#00abfa; }
+  .trace-row.term .rhs b { color:#0fee89; }
+
+  .step-ask { margin-top:16px; padding:14px 16px; background:rgba(0,171,250,0.06); border:1px solid rgba(0,171,250,0.28); border-radius:8px; }
+  .step-ask-q { font-size:13.5px; color:#f0eeea; margin-bottom:10px; }
+  .step-ask-q .math { font-family:'Geist Mono',monospace; color:#00abfa; font-size:14px; }
+  .step-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .step-row input {
+    appearance:none; width:56px; height:34px; text-align:center;
+    font-family:'Geist Mono',monospace; font-size:16px; font-weight:600;
+    background:#07090d; border:1px solid rgba(0,171,250,0.5); border-radius:6px;
+    color:#00abfa; outline:none;
+  }
+  .step-row input:focus { border-color:#00abfa; box-shadow:0 0 0 3px rgba(0,171,250,0.12); }
+  .step-row input.wrong { border-color:#ff4670; color:#ff4670; box-shadow:0 0 0 3px rgba(255,70,112,0.1); }
+
+  .decimal-view { margin:14px 0 6px; font-family:'Geist Mono',monospace; font-size:20px; color:#f0eeea; letter-spacing:1px; text-align:center; }
+  .decimal-view .bar { border-top:2px solid #0fee89; color:#0fee89; padding:0 2px; }
+
+  .status { min-height:18px; font-size:12.5px; margin:10px 0 4px; font-family:'Geist Mono',monospace; color:#7a7875; }
+  .status.ok { color:#0fee89; }
+  .status.bad { color:#ff4670; }
+
+  .controls { display:flex; gap:8px; margin-top:12px; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+  .btn.primary:disabled { opacity:.4; cursor:default; }
+  .btn.ghost { background:transparent; color:#7a7875; border-color:#141e2a; }
+  .btn.ghost:hover { color:#f0eeea; border-color:#2a3a4a; }
+
+  .result-card { margin-top:14px; padding:16px 18px; border:1px solid rgba(15,238,137,0.35); background:rgba(15,238,137,0.06); border-radius:10px; text-align:center; }
+  .result-card.rec { border-color:rgba(255,70,112,0.35); background:rgba(255,70,112,0.05); }
+  .result-card .kicker { font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; }
+  .result-card.term .kicker { color:#0fee89; }
+  .result-card.rec .kicker { color:#ff4670; }
+  .result-card .final { font-size:22px; font-weight:600; color:#f0eeea; margin-top:8px; font-family:'Geist Mono',monospace; }
+  .result-card .detail { font-size:12.5px; color:#7a7875; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">LONG DIVISION · STEP BY STEP</span>
+    <div class="target-picker">
+      <span>fraction:</span>
+      <select id="frac">
+        <option value="1/4">1 / 4</option>
+        <option value="1/3" selected>1 / 3</option>
+        <option value="1/6">1 / 6</option>
+        <option value="2/11">2 / 11</option>
+        <option value="3/7">3 / 7</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="prompt" id="prompt">Find <b>1/3</b> as a decimal by long division. At each step, type the next digit of the quotient.</p>
+
+    <div class="trace" id="trace"></div>
+
+    <div id="ask-slot"></div>
+
+    <div class="decimal-view" id="decimal">0.</div>
+
+    <p class="status" id="status">&nbsp;</p>
+
+    <div class="controls">
+      <button class="btn ghost" id="reset">Reset</button>
+    </div>
+
+    <div id="result-slot"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var traceEl = document.getElementById("trace");
+var askSlot = document.getElementById("ask-slot");
+var decimalEl = document.getElementById("decimal");
+var statusEl = document.getElementById("status");
+var resultSlot = document.getElementById("result-slot");
+var fracSel = document.getElementById("frac");
+var resetBtn = document.getElementById("reset");
+var promptEl = document.getElementById("prompt");
+
+var state = null;
+
+function setStatus(msg, cls) {
+  statusEl.className = "status" + (cls ? " " + cls : "");
+  statusEl.textContent = msg || " ";
+}
+
+function build() {
+  var parts = fracSel.value.split("/").map(Number);
+  var N = parts[0], D = parts[1];
+  state = {
+    N: N, D: D,
+    steps: [],               // each: { dividend, q, r, remainderBefore }
+    seenRem: [N],            // remainderBefore history, index 0 = initial
+    done: false,
+    terminated: false,
+    recStartStep: -1,        // 0-based step index where recurrence begins
+  };
+  promptEl.innerHTML = "Find <b>" + N + "/" + D + "</b> as a decimal by long division. At each step, type the next digit of the quotient.";
+  decimalEl.textContent = "0.";
+  resultSlot.innerHTML = "";
+  setStatus("", "");
+  renderTrace();
+  renderAsk();
+  reportHeight();
+}
+
+function renderTrace() {
+  var rows = state.steps.map(function(s, i) {
+    return (
+      '<div class="trace-row new"><span class="lhs">Step ' + (i + 1) + '</span>' +
+      '<span class="rhs">' + s.dividend + ' ÷ ' + state.D + ' = <b>' + s.q + '</b>  remainder <b>' + s.r + '</b></span></div>'
+    );
+  });
+  traceEl.innerHTML = rows.join("") || '<div class="trace-row"><span class="lhs">Start</span><span class="rhs">' + state.N + ' ÷ ' + state.D + ' = 0 remainder ' + state.N + ' → shift decimal, bring down a zero.</span></div>';
+}
+
+function renderAsk() {
+  if (state.done) { askSlot.innerHTML = ""; return; }
+  var r = state.seenRem[state.seenRem.length - 1]; // remainder before next step
+  var dividend = r * 10;
+
+  askSlot.innerHTML =
+    '<div class="step-ask">' +
+      '<p class="step-ask-q">Step ' + (state.steps.length + 1) + '. Bring down a zero → dividend = <span class="math">' + dividend + '</span>. What is <span class="math">' + dividend + ' ÷ ' + state.D + '</span> (whole-number part)?</p>' +
+      '<div class="step-row">' +
+        '<input type="text" inputmode="numeric" maxlength="2" id="q-input" placeholder="?"/>' +
+        '<span style="font-family:Geist Mono,monospace;font-size:12px;color:#7a7875">digit of quotient</span>' +
+      '</div>' +
+    '</div>';
+
+  var inp = document.getElementById("q-input");
+  inp.addEventListener("input", function() {
+    inp.classList.remove("wrong");
+    var v = inp.value.trim();
+    if (!/^\d+$/.test(v)) return;
+    var typed = parseInt(v, 10);
+    var correct = Math.floor((r * 10) / state.D);
+    if (typed === correct) { commitStep(correct); }
+  });
+  inp.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      var v = inp.value.trim();
+      if (!/^\d+$/.test(v)) { setStatus("Type a digit.", "bad"); return; }
+      var typed = parseInt(v, 10);
+      var correct = Math.floor((r * 10) / state.D);
+      if (typed === correct) commitStep(correct);
+      else { inp.classList.add("wrong"); setStatus("Not quite. How many whole " + state.D + "s fit into " + (r * 10) + "?", "bad"); }
+    }
+  });
+  inp.focus({ preventScroll: true });
+}
+
+function commitStep(q) {
+  var r = state.seenRem[state.seenRem.length - 1];
+  var newRem = (r * 10) - q * state.D;
+  state.steps.push({ dividend: r * 10, q: q, r: newRem });
+
+  // Update running decimal
+  decimalEl.innerHTML = "0." + state.steps.map(function(s) { return s.q; }).join("");
+
+  // Check for termination
+  if (newRem === 0) {
+    state.done = true;
+    state.terminated = true;
+    setStatus("Remainder 0 — the decimal terminates.", "ok");
+    renderTrace();
+    // Add terminating flag to last row
+    var lastRow = traceEl.querySelectorAll(".trace-row");
+    if (lastRow.length) lastRow[lastRow.length - 1].classList.add("term");
+    renderAsk();
+    showTerminated();
+    reportHeight();
+    return;
+  }
+
+  // Check for recurrence: has newRem been seen before as a remainderBefore?
+  var seenIdx = state.seenRem.indexOf(newRem);
+  state.seenRem.push(newRem);
+  renderTrace();
+
+  if (seenIdx >= 0) {
+    // The digits from seenIdx (0-based step count before) onward form the block.
+    // seenIdx = 0 → block starts at step 1; seenIdx = k → block starts at step k+1.
+    // Current step is state.steps.length; block spans steps [seenIdx+1 .. current].
+    state.done = true;
+    state.recStartStep = seenIdx; // 0-based index into steps[] where block begins
+    // Mark trace rows
+    var rows = traceEl.querySelectorAll(".trace-row");
+    if (rows[rows.length - 1]) rows[rows.length - 1].classList.add("rep");
+    setStatus("Remainder " + newRem + " has appeared before — the digits from here repeat forever.", "ok");
+    renderAsk();
+    showRecurring();
+    reportHeight();
+    return;
+  }
+
+  setStatus("Correct. Next step →", "ok");
+  renderAsk();
+  reportHeight();
+}
+
+function buildDecimalHtml(digits, recStart) {
+  // recStart = index in digits where the recurring block begins (inclusive)
+  if (recStart < 0) return "0." + digits.join("");
+  var pre = digits.slice(0, recStart).join("");
+  var rec = digits.slice(recStart).join("");
+  return '0.' + pre + '<span class="bar">' + rec + '</span>';
+}
+
+function showTerminated() {
+  var digits = state.steps.map(function(s) { return s.q; });
+  resultSlot.innerHTML =
+    '<div class="result-card term">' +
+      '<p class="kicker">TERMINATING · RATIONAL</p>' +
+      '<p class="final">' + state.N + ' / ' + state.D + ' = 0.' + digits.join("") + '</p>' +
+      '<p class="detail">The remainder hit 0 after ' + digits.length + ' digits, so the decimal stops cleanly.</p>' +
+    '</div>';
+}
+
+function showRecurring() {
+  var digits = state.steps.map(function(s) { return s.q; });
+  resultSlot.innerHTML =
+    '<div class="result-card rec">' +
+      '<p class="kicker">RECURRING · STILL RATIONAL</p>' +
+      '<p class="final">' + state.N + ' / ' + state.D + ' = ' + buildDecimalHtml(digits, state.recStartStep) + '</p>' +
+      '<p class="detail">Highlighted digits repeat forever. Every recurring decimal can still be written as a fraction of integers.</p>' +
+    '</div>';
+  decimalEl.innerHTML = buildDecimalHtml(digits, state.recStartStep);
+}
+
+fracSel.addEventListener("change", build);
+resetBtn.addEventListener("click", build);
+
+build();
+
+// Auto-resize
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

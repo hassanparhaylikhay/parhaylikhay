@@ -34,8 +34,11 @@ const LESSON_FOLDERS: Record<string, string> = {
 // topics, the widget attaches to a specific part (typically 'review').
 type WidgetSpec = { url: string; height: number }
 const WIDGETS: Record<string, WidgetSpec> = {
-  "01-01-p4":     { url: "/widgets/factor-tree-builder.html",  height: 560 },
-  "01-01-review": { url: "/widgets/types-of-number-quiz.html", height: 680 },
+  "01-01-p2":     { url: "/widgets/fraction-to-decimal-inspector.html", height: 640 },
+  "01-01-p3":     { url: "/widgets/shape-classifier-grid.html",         height: 760 },
+  "01-01-p4":     { url: "/widgets/factor-tree-builder.html",           height: 560 },
+  "01-01-p5":     { url: "/widgets/venn-hcf-lcm-builder.html",          height: 700 },
+  "01-01-review": { url: "/widgets/types-of-number-quiz.html",          height: 680 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {

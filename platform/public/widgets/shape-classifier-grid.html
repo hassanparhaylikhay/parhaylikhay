@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Shape Classifier Grid</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:640px; margin:0 auto; }
+
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .step-pill { font-family:'Geist Mono',monospace; font-size:10.5px; color:#7a7875; letter-spacing:1.5px; text-transform:uppercase; }
+  .step-pill b { color:#f0eeea; }
+
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:22px 20px 20px; }
+  .prompt { font-size:14px; color:#f0eeea; margin-bottom:8px; font-weight:500; }
+  .prompt b { color:#ff822c; font-weight:600; }
+  .hint { font-size:12px; color:#7a7875; margin-bottom:16px; }
+
+  .grid { display:grid; grid-template-columns:repeat(10,1fr); gap:4px; margin:0 auto; max-width:500px; }
+  .cell {
+    aspect-ratio:1;
+    background:#07090d; border:1px solid #141e2a;
+    border-radius:4px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Geist Mono',monospace; font-size:11px;
+    color:#7a7875; cursor:pointer;
+    transition:background .12s, border-color .12s, color .12s, transform .08s;
+  }
+  .cell:hover { border-color:#2a3a4a; color:#c8c6be; }
+  .cell.picked { background:rgba(0,171,250,0.14); border-color:#00abfa99; color:#00abfa; font-weight:600; }
+  .cell.correct { background:rgba(15,238,137,0.15); border-color:#0fee89aa; color:#0fee89; font-weight:600; }
+  .cell.wrong { background:rgba(255,70,112,0.15); border-color:#ff4670aa; color:#ff4670; font-weight:600; }
+  .cell.missed { background:rgba(255,130,44,0.12); border-color:#ff822c88; color:#ff822c; font-weight:600; }
+  .cell.locked { cursor:default; }
+
+  .status { min-height:18px; font-size:12.5px; margin:14px 0 8px; font-family:'Geist Mono',monospace; color:#7a7875; }
+  .status.ok { color:#0fee89; }
+  .status.bad { color:#ff4670; }
+
+  .controls { display:flex; gap:8px; align-items:center; margin-top:12px; flex-wrap:wrap; }
+  .progress { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .progress b { color:#f0eeea; }
+  .btns { margin-left:auto; display:flex; gap:8px; }
+  .btn {
+    appearance:none; cursor:pointer; font-family:inherit;
+    font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px;
+    border:1px solid transparent; letter-spacing:.1px;
+    transition:opacity .12s, background .12s;
+  }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+  .btn.primary:disabled { opacity:.35; cursor:default; }
+  .btn.ghost { background:transparent; color:#7a7875; border-color:#141e2a; }
+  .btn.ghost:hover { color:#f0eeea; border-color:#2a3a4a; }
+
+  .done-card {
+    background:rgba(15,238,137,0.05);
+    border:1px solid rgba(15,238,137,0.3);
+    border-radius:10px;
+    padding:18px 18px 16px;
+    margin-top:14px;
+    text-align:center;
+  }
+  .done-card p { color:#0fee89; font-weight:600; font-size:14px; }
+  .done-card .sub { color:#7a7875; font-weight:400; font-size:12px; margin-top:4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">GUIDED · 5 CHALLENGES</span>
+    <span class="step-pill">CHALLENGE <b id="step-num">1</b>/5</span>
+  </div>
+
+  <div class="card">
+    <p class="prompt" id="prompt">Click every <b>square number</b> from 1 to 100.</p>
+    <p class="hint" id="hint">A square number is n × n. Find all 10.</p>
+
+    <div class="grid" id="grid"></div>
+
+    <p class="status" id="status">&nbsp;</p>
+
+    <div class="controls">
+      <span class="progress">Picked: <b id="picked-count">0</b> / <b id="target-count">10</b></span>
+      <div class="btns">
+        <button class="btn ghost" id="clear">Clear</button>
+        <button class="btn primary" id="check">Check</button>
+      </div>
+    </div>
+
+    <div id="done-slot"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+function isPrime(n) {
+  if (n < 2) return false;
+  if (n < 4) return true;
+  if (n % 2 === 0) return false;
+  for (var i = 3; i * i <= n; i += 2) if (n % i === 0) return false;
+  return true;
+}
+function isSquare(n) { var r = Math.sqrt(n); return r === Math.floor(r); }
+function isCube(n) { var r = Math.cbrt(n); return Math.abs(r - Math.round(r)) < 1e-9; }
+function isTriangular(n) { var k = (Math.sqrt(8 * n + 1) - 1) / 2; return Math.abs(k - Math.round(k)) < 1e-9; }
+
+function setFromRange(max, pred) {
+  var s = new Set();
+  for (var i = 1; i <= max; i++) if (pred(i)) s.add(i);
+  return s;
+}
+
+var CHALLENGES = [
+  {
+    title: "Click every <b>square number</b> from 1 to 100.",
+    hint: "A square number is n × n. Find all 10.",
+    target: setFromRange(100, isSquare),
+  },
+  {
+    title: "Click every <b>cube number</b> from 1 to 100.",
+    hint: "A cube is n × n × n. There are only 4 up to 100.",
+    target: setFromRange(100, isCube),
+  },
+  {
+    title: "Click every <b>triangular number</b> from 1 to 100.",
+    hint: "Triangulars: 1, 1+2, 1+2+3, …. Hint: T_n = n(n+1)/2.",
+    target: setFromRange(100, isTriangular),
+  },
+  {
+    title: "Click every <b>prime number</b> up to 30.",
+    hint: "A prime has exactly two factors: 1 and itself. Remember 1 is NOT prime.",
+    target: setFromRange(30, isPrime),
+  },
+  {
+    title: "Click numbers that are <b>both square AND triangular</b> (1 to 100).",
+    hint: "Very rare! Only two exist in this range.",
+    target: setFromRange(100, function(n) { return isSquare(n) && isTriangular(n); }),
+  },
+];
+
+var gridEl = document.getElementById("grid");
+var promptEl = document.getElementById("prompt");
+var hintEl = document.getElementById("hint");
+var statusEl = document.getElementById("status");
+var pickedCountEl = document.getElementById("picked-count");
+var targetCountEl = document.getElementById("target-count");
+var stepNumEl = document.getElementById("step-num");
+var checkBtn = document.getElementById("check");
+var clearBtn = document.getElementById("clear");
+var doneSlot = document.getElementById("done-slot");
+
+var state = { step: 0, picked: new Set(), locked: false };
+
+function buildGrid() {
+  var parts = [];
+  for (var i = 1; i <= 100; i++) {
+    parts.push('<div class="cell" data-n="' + i + '">' + i + '</div>');
+  }
+  gridEl.innerHTML = parts.join("");
+  gridEl.querySelectorAll(".cell").forEach(function(el) {
+    el.addEventListener("click", function() {
+      if (state.locked) return;
+      var n = +el.getAttribute("data-n");
+      if (state.picked.has(n)) {
+        state.picked.delete(n);
+        el.classList.remove("picked");
+      } else {
+        state.picked.add(n);
+        el.classList.add("picked");
+      }
+      pickedCountEl.textContent = state.picked.size;
+    });
+  });
+}
+
+function loadStep(idx) {
+  var c = CHALLENGES[idx];
+  promptEl.innerHTML = c.title;
+  hintEl.textContent = c.hint;
+  stepNumEl.textContent = idx + 1;
+  targetCountEl.textContent = c.target.size;
+  state.picked = new Set();
+  state.locked = false;
+  statusEl.textContent = " ";
+  statusEl.className = "status";
+  pickedCountEl.textContent = 0;
+  doneSlot.innerHTML = "";
+  checkBtn.textContent = "Check";
+  gridEl.querySelectorAll(".cell").forEach(function(el) {
+    el.classList.remove("picked", "correct", "wrong", "missed", "locked");
+  });
+  reportHeight();
+}
+
+function checkAnswers() {
+  var c = CHALLENGES[state.step];
+  var missed = [], wrong = [];
+  c.target.forEach(function(n) { if (!state.picked.has(n)) missed.push(n); });
+  state.picked.forEach(function(n) { if (!c.target.has(n)) wrong.push(n); });
+
+  state.locked = true;
+  gridEl.querySelectorAll(".cell").forEach(function(el) {
+    var n = +el.getAttribute("data-n");
+    el.classList.remove("picked");
+    el.classList.add("locked");
+    if (c.target.has(n) && state.picked.has(n)) el.classList.add("correct");
+    else if (!c.target.has(n) && state.picked.has(n)) el.classList.add("wrong");
+    else if (c.target.has(n) && !state.picked.has(n)) el.classList.add("missed");
+  });
+
+  if (missed.length === 0 && wrong.length === 0) {
+    statusEl.textContent = "✓ Perfect.";
+    statusEl.className = "status ok";
+    checkBtn.textContent = state.step < CHALLENGES.length - 1 ? "Next challenge →" : "Finish";
+  } else {
+    var msg = [];
+    if (wrong.length) msg.push(wrong.length + " wrong (red)");
+    if (missed.length) msg.push(missed.length + " missed (orange)");
+    statusEl.textContent = msg.join(", ") + ". Review, then retry.";
+    statusEl.className = "status bad";
+    checkBtn.textContent = "Retry";
+  }
+  reportHeight();
+}
+
+function onCheck() {
+  if (checkBtn.textContent === "Retry") {
+    loadStep(state.step);
+    return;
+  }
+  if (checkBtn.textContent.indexOf("Next") === 0) {
+    state.step++;
+    loadStep(state.step);
+    return;
+  }
+  if (checkBtn.textContent === "Finish") {
+    showDone();
+    return;
+  }
+  if (state.picked.size === 0) {
+    statusEl.textContent = "Click some cells first.";
+    statusEl.className = "status bad";
+    return;
+  }
+  checkAnswers();
+}
+
+function showDone() {
+  doneSlot.innerHTML =
+    '<div class="done-card"><p>All 5 challenges complete.</p>' +
+    '<p class="sub">Squares · cubes · triangulars · primes · square-&-triangular overlap — all identified.</p></div>';
+  checkBtn.disabled = true;
+  checkBtn.textContent = "Complete";
+  reportHeight();
+}
+
+function onClear() {
+  if (state.locked) { loadStep(state.step); return; }
+  state.picked = new Set();
+  pickedCountEl.textContent = 0;
+  gridEl.querySelectorAll(".cell").forEach(function(el) { el.classList.remove("picked"); });
+  statusEl.textContent = " ";
+  statusEl.className = "status";
+}
+
+checkBtn.addEventListener("click", onCheck);
+clearBtn.addEventListener("click", onClear);
+
+buildGrid();
+loadStep(0);
+
+// Auto-resize — measure .wrap, not body.
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
