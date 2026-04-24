@@ -26,12 +26,17 @@ function preprocess(md: string): string {
     /^## Worked example(?: *(\d+))?([^\n]*)\n([\s\S]*?)^Full marks \$= (\d+)\$\.\s*/gm,
     (_m, num: string | undefined, rest: string, body: string, marks: string) => {
       const n = (num || "1").padStart(2, "0")
-      const title = rest.replace(/^[:\s—\-–]+/, "").trim()
-      const titleHtml = title ? `<span class="we-card-title">${title}</span>` : ""
+      // Reconstruct the full original heading text, e.g.
+      //   "Worked example 1: HCF and LCM of 12 and 18"
+      const headingText =
+        (num ? `Worked example ${num}` : "Worked example") + (rest || "")
       const marksLabel = marks === "1" ? "mark" : "marks"
       return (
         `<div class="we-card">\n\n` +
-        `<div class="we-card-head"><span class="we-card-num">EX ${n}</span>${titleHtml}<span class="we-card-marks">${marks} ${marksLabel}</span></div>\n\n` +
+        `<div class="we-card-head">` +
+          `<div class="we-card-meta"><span class="we-card-num">EX ${n}</span><span class="we-card-marks">${marks} ${marksLabel}</span></div>` +
+          `<p class="we-card-heading">${headingText}</p>` +
+        `</div>\n\n` +
         `${body.trim()}\n\n` +
         `<div class="we-card-foot">Full marks · ${marks}</div>\n\n` +
         `</div>\n\n`
@@ -79,9 +84,9 @@ const SECTION_META: Record<string, SectionMeta> = {
   "Why this matters":                { num: "01", color: "#fff067" },
   "The core idea":                   { num: "02", color: "#00abfa" },
   "The mathematics":                 { num: "03", color: "#00abfa" },
-  "Worked examples":                 { num: "04", color: "#0fee89" },
+  "Worked examples":                 { num: "04", color: "#ff822c" },
   "How Cambridge marks this":        { num: "05", color: "#ff4670" },
-  "Common mistakes and exam traps":  { num: "06", color: "#ff822c" },
+  "Common mistakes and exam traps":  { num: "06", color: "#ff4670" },
   "Try it yourself":                 { num: "07", color: "#00abfa" },
   "Quick summary":                   { num: "08", color: "#fff067" },
 }

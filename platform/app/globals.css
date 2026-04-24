@@ -266,6 +266,20 @@
   border: 0;
   border-top: 1px solid #141e2a;
   margin: 32px 0;
+  position: relative;
+  overflow: visible;
+}
+.lesson-prose hr::after {
+  content: "";
+  position: absolute;
+  top: -3.5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff4670;
+  box-shadow: 0 0 8px rgba(255, 70, 112, 0.45);
 }
 
 /* Examiner tip blockquote — yellow */
@@ -366,7 +380,7 @@
   margin: 36px 0;
   background: #0b1118;
   border: 1px solid #141e2a;
-  border-left: 2.5px solid #0fee89;
+  border-left: 2.5px solid #ff822c;
   border-radius: 4px 8px 8px 4px;
   padding: 22px 24px 22px;
 }
@@ -374,13 +388,15 @@
 .lesson-prose .we-card > *:first-child { margin-top: 0; }
 .lesson-prose .we-card > *:last-child { margin-bottom: 0; }
 .lesson-prose .we-card-head {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
   margin-bottom: 18px !important;
   padding-bottom: 14px;
   border-bottom: 1px solid #141e2a;
-  flex-wrap: wrap;
+}
+.lesson-prose .we-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 .lesson-prose .we-card-num {
   display: inline-flex;
@@ -388,29 +404,29 @@
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 10.5px;
   font-weight: 600;
-  color: #0fee89;
-  background: rgba(15, 238, 137, 0.10);
-  border: 1px solid rgba(15, 238, 137, 0.32);
+  color: #ff822c;
+  background: rgba(255, 130, 44, 0.10);
+  border: 1px solid rgba(255, 130, 44, 0.35);
   border-radius: 4px;
   padding: 3px 8px;
   letter-spacing: 1.8px;
   flex-shrink: 0;
 }
-.lesson-prose .we-card-title {
-  font-size: 18px;
-  color: #f0eeea;
-  font-weight: 600;
-  letter-spacing: -0.2px;
-  flex: 1 1 auto;
-  min-width: 180px;
-}
 .lesson-prose .we-card-marks {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 11px;
+  font-size: 10.5px;
   color: #7a7875;
-  letter-spacing: 1.2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
   margin-left: auto;
+}
+.lesson-prose .we-card-heading {
+  margin: 0 !important;
+  font-size: 19px;
+  font-weight: 600;
+  color: #f0eeea;
+  letter-spacing: -0.2px;
+  line-height: 1.3;
 }
 .lesson-prose .we-card-foot {
   display: inline-block;
@@ -421,7 +437,7 @@
   color: #f0eeea;
   background: #07090d;
   border: 1px solid #141e2a;
-  border-left: 2.5px solid #fff067;
+  border-left: 2.5px solid #ff4670;
   border-radius: 0 4px 4px 0;
   padding: 5px 12px;
   letter-spacing: 0.6px;
