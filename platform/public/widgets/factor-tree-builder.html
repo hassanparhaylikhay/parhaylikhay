@@ -285,6 +285,16 @@ var statusEl = document.getElementById("status");
 
 var state = null;
 
+function isPrime(n) {
+  if (!Number.isInteger(n) || n < 2) return false;
+  if (n < 4) return true;
+  if (n % 2 === 0) return false;
+  for (var i = 3; i * i <= n; i += 2) {
+    if (n % i === 0) return false;
+  }
+  return true;
+}
+
 function setStatus(msg, cls) {
   statusEl.className = "status-line" + (cls ? " " + cls : "");
   statusEl.textContent = msg || " ";
@@ -592,9 +602,18 @@ function submit() {
       }
     }
   } else {
-    // Wrong. Flag without advancing.
+    // Wrong. Figure out WHY so the feedback is accurate.
     slot._wrong = true;
-    setStatus("Not a factor of " + getCurrentComposite(slot) + ". Try the smallest prime that divides it.", "bad");
+    var composite = getCurrentComposite(slot);
+    var msg;
+    if (!isPrime(got)) {
+      msg = got + " isn't a prime — each green box must be a prime number.";
+    } else if (composite % got !== 0) {
+      msg = got + " isn't a factor of " + composite + ". Try a prime that divides it exactly.";
+    } else {
+      msg = got + " is a factor of " + composite + ", but not the smallest prime. Start with the smallest prime that divides.";
+    }
+    setStatus(msg, "bad");
     paint();
   }
 }
