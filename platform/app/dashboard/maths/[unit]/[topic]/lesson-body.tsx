@@ -6,6 +6,7 @@ import remarkMath from "remark-math"
 import remarkGfm from "remark-gfm"
 import rehypeKatex from "rehype-katex"
 import rehypeRaw from "rehype-raw"
+import katex from "katex"
 import "katex/dist/katex.min.css"
 
 // ─────────────────────────────────────────────────────────────
@@ -110,11 +111,65 @@ const components: Components = {
   },
 }
 
+// ─────────────────────────────────────────────────────────────
+// Post-render KaTeX pass — renders \(...\) and \[...\] delimiters
+// that appear inside raw HTML diagrams (remark-math only sees
+// markdown text nodes, not content inside raw HTML blocks).
+// ─────────────────────────────────────────────────────────────
+
+function renderMathInNode(root: HTMLElement) {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const p = node.parentElement
+      if (!p) return NodeFilter.FILTER_REJECT
+      // Skip nodes already rendered by KaTeX (or inside code/script/style)
+      if (p.closest(".katex, code, pre, script, style")) return NodeFilter.FILTER_REJECT
+      return /\\[([]/.test(node.nodeValue || "") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+    },
+  })
+
+  const targets: Text[] = []
+  let n: Node | null
+  while ((n = walker.nextNode())) targets.push(n as Text)
+
+  const re = /\\\(([\s\S]+?)\\\)|\\\[([\s\S]+?)\\\]/g
+  for (const textNode of targets) {
+    const text = textNode.nodeValue || ""
+    re.lastIndex = 0
+    if (!re.test(text)) continue
+    re.lastIndex = 0
+
+    const frag = document.createDocumentFragment()
+    let last = 0
+    let m: RegExpExecArray | null
+    while ((m = re.exec(text))) {
+      if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)))
+      const tex = m[1] ?? m[2]
+      const display = m[2] !== undefined
+      const span = document.createElement("span")
+      try {
+        katex.render(tex, span, { displayMode: display, throwOnError: false, output: "html" })
+      } catch {
+        span.textContent = m[0]
+      }
+      frag.appendChild(span)
+      last = m.index + m[0].length
+    }
+    if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)))
+    textNode.parentNode?.replaceChild(frag, textNode)
+  }
+}
+
 export default function LessonBody({ markdown }: { markdown: string }) {
   const processed = React.useMemo(() => preprocess(markdown), [markdown])
+  const rootRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (rootRef.current) renderMathInNode(rootRef.current)
+  }, [processed])
 
   return (
-    <div className="lesson-prose">
+    <div className="lesson-prose" ref={rootRef}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeRaw, rehypeKatex]}

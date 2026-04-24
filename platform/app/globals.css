@@ -119,40 +119,6 @@
 }
 
 /* ─────────────────────────────────────────────────────
-   Math notation helpers — usable in raw HTML anywhere.
-   Namespaced with pl- prefix so they don't collide with
-   KaTeX's internal .sqrt / .overline class names.
-   ───────────────────────────────────────────────────── */
-
-/* Overline (for recurring-decimal notation, e.g. 0.<span class="pl-bar">3</span>) */
-.pl-bar {
-  border-top: 2px solid currentColor;
-  padding-top: 1px;
-  display: inline-block;
-  line-height: 1;
-}
-
-/* Proper square root: <span class="pl-sqrt"><span class="pl-rad">169</span></span> */
-.pl-sqrt {
-  display: inline-flex;
-  align-items: stretch;
-  gap: 0;
-  line-height: 1;
-}
-.pl-sqrt::before {
-  content: '√';
-  font-weight: 500;
-  margin-right: -2px;
-  font-size: 1.05em;
-  line-height: 1.2;
-}
-.pl-sqrt .pl-rad {
-  border-top: 2px solid currentColor;
-  padding: 2px 3px 0 5px;
-  line-height: 1;
-}
-
-/* ─────────────────────────────────────────────────────
    Lesson body — dark-theme prose with brand-coded roles
    ───────────────────────────────────────────────────── */
 
