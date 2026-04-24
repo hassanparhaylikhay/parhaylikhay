@@ -1,7 +1,15 @@
+export type Part = {
+  slug: string          // "p1", "p2", ..., "review"
+  label: string         // "P1", "P2", ..., "R"
+  title: string
+  isReview?: boolean
+}
+
 export type Topic = {
   slug: string
   code: string
   title: string
+  parts?: Part[]        // when present, topic is multi-part
 }
 
 export type Unit = {
@@ -15,7 +23,18 @@ export const UNITS: Unit[] = [
   {
     slug: "01", title: "Number", color: "#00abfa",
     topics: [
-      { slug: "01", code: "1.1", title: "Types of number" },
+      {
+        slug: "01", code: "1.1", title: "Types of number",
+        parts: [
+          { slug: "p1",     label: "P1", title: "The number families" },
+          { slug: "p2",     label: "P2", title: "Terminating, recurring, irrational" },
+          { slug: "p3",     label: "P3", title: "Special number shapes" },
+          { slug: "p4",     label: "P4", title: "Prime factorisation" },
+          { slug: "p5",     label: "P5", title: "HCF and LCM" },
+          { slug: "p6",     label: "P6", title: "Recurring decimals as fractions" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "02", code: "1.2", title: "Sets & Venn diagrams" },
       { slug: "03", code: "1.3", title: "Fractions, decimals & percentages" },
       { slug: "04", code: "1.4", title: "Ratio & proportion" },
@@ -100,14 +119,49 @@ export const UNITS: Unit[] = [
   },
 ]
 
-const ALL_TOPICS = UNITS.flatMap(u =>
-  u.topics.map(t => ({ unitSlug: u.slug, unitTitle: u.title, topicSlug: t.slug, code: t.code, title: t.title }))
+// A "stop" = one navigable page in the course. A part if the topic has parts;
+// otherwise the topic itself.
+type Stop = {
+  unitSlug: string
+  unitTitle: string
+  topicSlug: string
+  topicCode: string
+  topicTitle: string
+  partSlug: string | null
+  partTitle: string | null
+}
+
+const ALL_STOPS: Stop[] = UNITS.flatMap(u =>
+  u.topics.flatMap<Stop>(t => {
+    if (t.parts && t.parts.length > 0) {
+      return t.parts.map<Stop>(p => ({
+        unitSlug: u.slug, unitTitle: u.title,
+        topicSlug: t.slug, topicCode: t.code, topicTitle: t.title,
+        partSlug: p.slug, partTitle: p.title,
+      }))
+    }
+    return [{
+      unitSlug: u.slug, unitTitle: u.title,
+      topicSlug: t.slug, topicCode: t.code, topicTitle: t.title,
+      partSlug: null, partTitle: null,
+    }]
+  })
 )
 
-export function getPrevNext(unitSlug: string, topicSlug: string) {
-  const idx = ALL_TOPICS.findIndex(t => t.unitSlug === unitSlug && t.topicSlug === topicSlug)
+export function getPrevNext(unitSlug: string, topicSlug: string, partSlug: string | null = null) {
+  const idx = ALL_STOPS.findIndex(s =>
+    s.unitSlug === unitSlug &&
+    s.topicSlug === topicSlug &&
+    s.partSlug === partSlug
+  )
+  if (idx === -1) return { prev: null, next: null }
   return {
-    prev: idx > 0 ? ALL_TOPICS[idx - 1] : null,
-    next: idx < ALL_TOPICS.length - 1 ? ALL_TOPICS[idx + 1] : null,
+    prev: idx > 0 ? ALL_STOPS[idx - 1] : null,
+    next: idx < ALL_STOPS.length - 1 ? ALL_STOPS[idx + 1] : null,
   }
+}
+
+export function urlFor(s: Stop): string {
+  const base = `/dashboard/maths/${s.unitSlug}/${s.topicSlug}`
+  return s.partSlug ? `${base}/${s.partSlug}` : base
 }

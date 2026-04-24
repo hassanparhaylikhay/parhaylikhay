@@ -379,6 +379,425 @@
   background: rgba(0, 171, 250, 0.06);
 }
 
+/* ─────────────────────────────────────────────────────
+   Diagrams — reusable inline HTML patterns
+   ───────────────────────────────────────────────────── */
+
+.diagram {
+  background: #0b1118;
+  border: 1px solid #141e2a;
+  border-radius: 10px;
+  padding: 22px 20px;
+  margin: 22px 0;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 13px;
+  color: #c8c6be;
+  position: relative;
+  overflow-x: auto;
+}
+.diagram .diagram-caption {
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #3a4a5a;
+  margin-bottom: 14px;
+}
+
+/* ── Nested sets (Part 1) ── */
+.diagram.nested-sets {
+  padding: 28px 22px;
+}
+.diagram .ring {
+  border: 1.5px solid currentColor;
+  border-radius: 14px;
+  padding: 20px 18px 18px;
+  position: relative;
+  margin-top: 8px;
+}
+.diagram .ring + .ring-examples,
+.diagram .ring-examples + .ring { margin-top: 10px; }
+.diagram .ring-label {
+  position: absolute;
+  top: -11px; left: 14px;
+  background: #0b1118;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.diagram .ring-examples {
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 13px;
+  color: #7a7875;
+  padding: 4px 4px 0;
+}
+.diagram .ring.r  { color: #ff822c; }
+.diagram .ring.q  { color: #fff067; }
+.diagram .ring.z  { color: #0fee89; }
+.diagram .ring.n  { color: #00abfa; }
+.diagram .ring-inner-text {
+  color: #c8c6be;
+  font-family: var(--font-geist-sans), sans-serif;
+}
+.diagram .irr-tag {
+  display: inline-block;
+  margin-top: 10px;
+  color: #ff4670;
+  border: 1px dashed #ff467055;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.diagram .irr-tag b { font-weight: 600; color: #ff4670; margin-right: 6px; }
+
+/* ── Decimal types (Part 2) ── */
+.diagram.decimal-types {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+@media (min-width: 560px) {
+  .diagram.decimal-types { grid-template-columns: repeat(3, 1fr); }
+}
+.diagram .dtype {
+  border: 1px solid #141e2a;
+  background: #07090d;
+  border-radius: 8px;
+  padding: 14px 14px;
+}
+.diagram .dtype-kicker {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.diagram .dtype.terminate .dtype-kicker { color: #0fee89; }
+.diagram .dtype.recur     .dtype-kicker { color: #fff067; }
+.diagram .dtype.irr       .dtype-kicker { color: #ff4670; }
+.diagram .dtype-examples {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 13.5px;
+  color: #f0eeea;
+  line-height: 1.8;
+}
+.diagram .dtype-desc {
+  font-family: var(--font-geist-sans), sans-serif;
+  font-size: 12px;
+  color: #7a7875;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* ── Dot patterns (Part 3) ── */
+.diagram.dot-pattern {
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: flex-end;
+}
+.diagram .shape {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.diagram .shape-dots {
+  display: grid;
+  gap: 4px;
+}
+.diagram .dot {
+  width: 8px; height: 8px;
+  background: #00abfa;
+  border-radius: 50%;
+  box-shadow: 0 0 4px #00abfa66;
+}
+.diagram .shape.triangular .dot { background: #fff067; box-shadow: 0 0 4px #fff06766; }
+.diagram .shape.square .dot { background: #0fee89; box-shadow: 0 0 4px #0fee8966; }
+.diagram .shape-label {
+  font-size: 11px;
+  color: #7a7875;
+  letter-spacing: 0.5px;
+}
+.diagram .shape-value {
+  font-size: 14px;
+  color: #f0eeea;
+  font-weight: 600;
+}
+
+/* ── Factor tree (Part 4) ── */
+.diagram.factor-tree {
+  padding: 24px 14px 16px;
+  font-size: 13px;
+  text-align: center;
+}
+.diagram .ft-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 4px;
+  position: relative;
+}
+.diagram .ft-node {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: #07090d;
+  border: 1px solid #141e2a;
+  color: #f0eeea;
+  font-weight: 600;
+  font-size: 13px;
+}
+.diagram .ft-node.prime { color: #0fee89; border-color: #0fee8944; background: #0fee8908; }
+.diagram .ft-node.composite { color: #c8c6be; }
+.diagram .ft-branches {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  color: #3a4a5a;
+  font-size: 14px;
+  margin: 2px 0;
+}
+.diagram .ft-result {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #f0eeea;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+.diagram .ft-result b { color: #fff067; }
+
+/* ── Prime grid for HCF/LCM (Part 5) ── */
+.diagram.prime-grid {
+  padding: 18px 14px;
+}
+.diagram .pg-table {
+  display: grid;
+  font-size: 13px;
+}
+.diagram .pg-table > div {
+  padding: 8px 10px;
+  border-bottom: 1px solid #141e2a;
+  display: flex;
+  align-items: center;
+}
+.diagram .pg-head {
+  color: #3a4a5a;
+  font-size: 10.5px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.diagram .pg-label {
+  color: #7a7875;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+.diagram .pg-cell {
+  color: #f0eeea;
+  justify-content: center;
+}
+.diagram .pg-hcf { color: #0fee89; font-weight: 600; }
+.diagram .pg-lcm { color: #fff067; font-weight: 600; }
+.diagram .pg-hcf-row,
+.diagram .pg-lcm-row {
+  border-top: 1px dashed #141e2a;
+}
+.diagram .pg-result {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: #07090d;
+  border: 1px solid #141e2a;
+  border-radius: 6px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 13px;
+  color: #c8c6be;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.diagram .pg-result .hcf { color: #0fee89; }
+.diagram .pg-result .lcm { color: #fff067; }
+
+/* ── Aligned decimal subtraction (Part 6) ── */
+.diagram.aligned-subtract {
+  text-align: left;
+  padding: 22px 24px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 15px;
+  color: #c8c6be;
+  line-height: 1.9;
+}
+.diagram.aligned-subtract .row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  white-space: pre;
+}
+.diagram.aligned-subtract .row .lhs {
+  color: #fff067;
+  width: 66px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.diagram.aligned-subtract .row .eq { color: #3a4a5a; }
+.diagram.aligned-subtract .row .rhs { color: #f0eeea; letter-spacing: 1px; }
+.diagram.aligned-subtract .row.result { border-top: 1px solid #141e2a; padding-top: 8px; margin-top: 8px; }
+.diagram.aligned-subtract .row.result .rhs { color: #0fee89; font-weight: 600; }
+
+/* ─────────────────────────────────────────────────────
+   Inline check card
+   ───────────────────────────────────────────────────── */
+
+.check-card {
+  margin-top: 32px;
+  background: #0b1118;
+  border: 1px solid #141e2a;
+  border-radius: 12px;
+  padding: 22px 22px 20px;
+}
+.check-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.check-kicker {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #fff067;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.check-progress {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  color: #7a7875;
+}
+.check-question {
+  font-size: 15px;
+  color: #f0eeea;
+  margin-bottom: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+.check-options {
+  display: grid;
+  gap: 8px;
+}
+.check-option {
+  appearance: none;
+  background: #07090d;
+  border: 1px solid #141e2a;
+  border-radius: 8px;
+  padding: 11px 14px;
+  color: #c8c6be;
+  font-family: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.check-option:hover:not(:disabled) {
+  border-color: #2a3a4a;
+  background: #0b1118;
+}
+.check-option:disabled { cursor: default; }
+.check-option.correct {
+  border-color: #0fee8966;
+  background: rgba(15, 238, 137, 0.08);
+  color: #0fee89;
+}
+.check-option.wrong {
+  border-color: #ff467066;
+  background: rgba(255, 70, 112, 0.08);
+  color: #ff4670;
+}
+.check-feedback {
+  border-top: 1px solid #141e2a;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+.check-feedback.ok .check-feedback-line  { color: #0fee89; }
+.check-feedback.bad .check-feedback-line { color: #ff4670; }
+.check-feedback-line {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+.check-explain {
+  font-size: 13.5px;
+  color: #c8c6be;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+.check-next {
+  appearance: none;
+  background: #00abfa;
+  border: none;
+  color: #07090d;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: 0.1px;
+  transition: opacity 0.15s;
+}
+.check-next:hover { opacity: 0.88; }
+
+.check-done {
+  text-align: center;
+  padding: 28px 22px;
+}
+.check-done .check-kicker {
+  color: #0fee89;
+  display: block;
+  margin-bottom: 6px;
+}
+.check-result {
+  font-size: 34px;
+  font-weight: 700;
+  color: #f0eeea;
+  letter-spacing: -1px;
+  margin-bottom: 6px;
+}
+.check-result-total {
+  font-size: 22px;
+  color: #3a4a5a;
+  font-weight: 500;
+}
+.check-result-msg {
+  color: #7a7875;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+.check-retry {
+  appearance: none;
+  background: transparent;
+  border: 1px solid #141e2a;
+  color: #c8c6be;
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.check-retry:hover { border-color: #2a3a4a; color: #f0eeea; }
+
 /* Fade-up scroll animation */
 .fade-up {
   opacity: 0;

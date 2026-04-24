@@ -1,19 +1,22 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useState } from "react"
 import { UNITS } from "../../data"
 
-export default function Sidebar({
-  currentUnitSlug,
-  currentTopicSlug,
-}: {
-  currentUnitSlug: string
-  currentTopicSlug: string
-}) {
+export default function Sidebar() {
+  const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const sidebarContent = (
+  // Parse /dashboard/maths/[unit]/[topic]/[part?]
+  const segs = pathname.split("/").filter(Boolean)
+  const mathsIdx = segs.indexOf("maths")
+  const currentUnitSlug  = mathsIdx >= 0 ? segs[mathsIdx + 1] ?? null : null
+  const currentTopicSlug = mathsIdx >= 0 ? segs[mathsIdx + 2] ?? null : null
+  const currentPartSlug  = mathsIdx >= 0 ? segs[mathsIdx + 3] ?? null : null
+
+  const content = (
     <nav className="py-4">
       <Link
         href="/dashboard"
@@ -32,43 +35,89 @@ export default function Sidebar({
       <div className="mt-2">
         {UNITS.map(unit => {
           const isCurrentUnit = unit.slug === currentUnitSlug
+
+          if (!isCurrentUnit) {
+            return (
+              <Link
+                key={unit.slug}
+                href={`/dashboard/maths/${unit.slug}/${unit.topics[0].slug}`}
+                className="flex items-center gap-2.5 px-4 py-2 text-[12px] text-[#3a4a5a] hover:text-[#7a7875] hover:bg-[#0b1118] transition-colors"
+                onClick={() => setMobileOpen(false)}
+              >
+                <span className="font-mono text-[10px] w-5 shrink-0">{unit.slug}</span>
+                <span>{unit.title}</span>
+              </Link>
+            )
+          }
+
+          // Current unit — expand
           return (
-            <div key={unit.slug}>
-              {isCurrentUnit ? (
-                <div className="py-1">
-                  <div className="flex items-center gap-2 px-4 py-1.5">
-                    <span className="text-[10px] font-mono text-[#3a4a5a] w-5 shrink-0">{unit.slug}</span>
-                    <span className="text-[12px] font-semibold text-[#f0eeea]">{unit.title}</span>
-                  </div>
-                  <div className="ml-9 mr-3 mt-0.5 flex flex-col gap-0.5">
-                    {unit.topics.map(topic => {
-                      const isActive = topic.slug === currentTopicSlug
-                      return (
-                        <Link
-                          key={topic.slug}
-                          href={`/dashboard/maths/${unit.slug}/${topic.slug}`}
-                          className={`flex items-center gap-2 px-2 py-1.5 rounded text-[12px] transition-colors ${
-                            isActive
-                              ? "text-[#00abfa] bg-[#00abfa12]"
+            <div key={unit.slug} className="py-1">
+              <div className="flex items-center gap-2 px-4 py-1.5">
+                <span className="text-[10px] font-mono text-[#3a4a5a] w-5 shrink-0">{unit.slug}</span>
+                <span className="text-[12px] font-semibold text-[#f0eeea]">{unit.title}</span>
+              </div>
+
+              <div className="ml-9 mr-3 mt-0.5 flex flex-col gap-0.5">
+                {unit.topics.map(topic => {
+                  const isCurrentTopic = topic.slug === currentTopicSlug
+
+                  if (!isCurrentTopic) {
+                    return (
+                      <Link
+                        key={topic.slug}
+                        href={`/dashboard/maths/${unit.slug}/${topic.slug}`}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded text-[12px] text-[#7a7875] hover:text-[#c8c6be] hover:bg-[#0b1118] transition-colors"
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <span className="font-mono text-[10px] shrink-0 w-6 opacity-60">{topic.code}</span>
+                        <span className="leading-snug">{topic.title}</span>
+                      </Link>
+                    )
+                  }
+
+                  // Current topic
+                  const topicRowActive = !currentPartSlug
+                  const topicRowCls = topicRowActive
+                    ? "text-[#00abfa] bg-[#00abfa12]"
+                    : "text-[#f0eeea] hover:bg-[#0b1118]"
+
+                  return (
+                    <div key={topic.slug}>
+                      <Link
+                        href={`/dashboard/maths/${unit.slug}/${topic.slug}`}
+                        className={`flex items-center gap-2 px-2 py-1.5 rounded text-[12px] transition-colors ${topicRowCls}`}
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <span className="font-mono text-[10px] shrink-0 w-6 opacity-60">{topic.code}</span>
+                        <span className="leading-snug font-semibold">{topic.title}</span>
+                      </Link>
+
+                      {topic.parts && topic.parts.length > 0 && (
+                        <div className="ml-7 mt-0.5 mb-1 flex flex-col gap-0.5 border-l border-[#141e2a] pl-2">
+                          {topic.parts.map(part => {
+                            const isActive = part.slug === currentPartSlug
+                            const activeCls = isActive
+                              ? (part.isReview ? "text-[#0fee89] bg-[#0fee8912]" : "text-[#00abfa] bg-[#00abfa12]")
                               : "text-[#7a7875] hover:text-[#c8c6be] hover:bg-[#0b1118]"
-                          }`}
-                        >
-                          <span className="font-mono text-[10px] shrink-0 w-6 opacity-60">{topic.code}</span>
-                          <span className="leading-snug">{topic.title}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-              ) : (
-                <Link
-                  href={`/dashboard/maths/${unit.slug}/${unit.topics[0].slug}`}
-                  className="flex items-center gap-2.5 px-4 py-2 text-[12px] text-[#3a4a5a] hover:text-[#7a7875] hover:bg-[#0b1118] transition-colors"
-                >
-                  <span className="font-mono text-[10px] w-5 shrink-0">{unit.slug}</span>
-                  <span>{unit.title}</span>
-                </Link>
-              )}
+                            return (
+                              <Link
+                                key={part.slug}
+                                href={`/dashboard/maths/${unit.slug}/${topic.slug}/${part.slug}`}
+                                className={`flex items-center gap-2 px-2 py-1.5 rounded text-[11.5px] transition-colors ${activeCls}`}
+                                onClick={() => setMobileOpen(false)}
+                              >
+                                <span className="font-mono text-[9.5px] shrink-0 w-4 opacity-70">{part.label}</span>
+                                <span className="leading-snug">{part.title}</span>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )
         })}
@@ -78,12 +127,10 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Desktop sidebar */}
       <aside className="hidden md:block w-64 shrink-0 border-r border-[#141e2a] sticky top-14 h-[calc(100vh-56px)] overflow-y-auto">
-        {sidebarContent}
+        {content}
       </aside>
 
-      {/* Mobile: toggle button + collapsible drawer */}
       <div className="md:hidden">
         <button
           onClick={() => setMobileOpen(o => !o)}
@@ -104,7 +151,7 @@ export default function Sidebar({
         {mobileOpen && (
           <div className="fixed inset-0 z-40 flex">
             <div className="w-72 bg-[#07090d] border-r border-[#141e2a] overflow-y-auto">
-              {sidebarContent}
+              {content}
             </div>
             <div className="flex-1 bg-black/50" onClick={() => setMobileOpen(false)} />
           </div>

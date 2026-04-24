@@ -19,6 +19,7 @@ export default async function LessonLayout({
   const unit = UNITS.find(u => u.slug === unitSlug)
   if (!unit) notFound()
   if (!unit.topics.find(t => t.slug === topicSlug)) notFound()
+  void unitSlug; void topicSlug;
 
   return (
     <div className="min-h-screen bg-[#07090d]">
@@ -39,7 +40,7 @@ export default async function LessonLayout({
 
       {/* Sidebar + content */}
       <div className="flex">
-        <Sidebar currentUnitSlug={unitSlug} currentTopicSlug={topicSlug} />
+        <Sidebar />
         <div className="flex-1 min-w-0">
           {children}
         </div>
