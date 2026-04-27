@@ -14,7 +14,7 @@ checks:
     correct: 2
     explain: 'Always fill the deepest overlap first ($A \cap B \cap C$ for 3-sets). Then subtract from the two-way overlaps, then from the singles. Going in any other order causes double-counting.'
   - q: 'What does the universal set $\xi$ mean in a Sets question?'
-    options: ["The set $\\{1, 2, 3, \\ldots\\}$", "The intersection of all sets", "The "world" of elements being considered for that question", "Always the empty set"]
+    options: ["The set $\\{1, 2, 3, \\ldots\\}$", "The intersection of all sets", "The pool of elements being considered for that question", "Always the empty set"]
     correct: 2
     explain: '$\xi$ is whatever Cambridge defines at the top of the question. It''s the pool of elements all subsets are drawn from.'
   - q: 'If $A = \{1, 2, 3\}$ and $B = \{3, 4, 5\}$, what is $A \cap B$?'
@@ -27,11 +27,11 @@ checks:
     explain: 'Cricket only = $22 - 8 = 14$. Hockey only = $18 - 8 = 10$. Both = 8. Inside total = $14 + 10 + 8 = 32$. Neither = $40 - 32 = 8$.'
 ---
 
-## What you should be able to do
+You've now seen everything Cambridge tests in 1.2. This part pulls it together. Use the checklist below to spot any gaps, then run through the mixed quiz at the end.
 
-By the end of 1.2, you should comfortably:
+## The skills you should have
 
-- **Read and write set notation** ($\in$, $\notin$, $n(A)$, $\emptyset$, $\xi$, $\subseteq$, $\nsubseteq$, $\cup$, $\cap$, complement $A'$).
+- **Read and write set notation**: $\in$, $\notin$, $n(A)$, $\emptyset$, $\xi$, $\subseteq$, $\nsubseteq$, $\cup$, $\cap$, complement $A'$.
 - **Translate between roster and set-builder forms.**
 - **Find $A \cup B$, $A \cap B$, $A'$** for given sets in a universal set.
 - **Shade the region** on a 2-set or 3-set Venn diagram for any combination of $\cup$, $\cap$, and complement.
