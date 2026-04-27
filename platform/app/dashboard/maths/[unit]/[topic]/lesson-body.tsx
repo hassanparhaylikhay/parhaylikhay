@@ -44,6 +44,18 @@ function preprocess(md: string): string {
     },
   )
 
+  // **Step N: title.** at start of paragraph → numbered chip + bold title.
+  // Inside worked examples this gives each step a small orange numbered
+  // circle so the working flow is visually scannable.
+  out = out.replace(
+    /\*\*Step\s+(\d+)[:.]\s+([^*]+?)\*\*/g,
+    (_full, n: string, title: string) =>
+      `<span class="we-step-num">${n}</span><b>${title.trim()}</b>`,
+  )
+
+  // **Answer:** ... → green ANSWER chip preceding the line
+  out = out.replace(/\*\*Answer:\*\*/g, '<span class="answer-chip">Answer</span>')
+
   // [M1 for xyz], [B2 for ...], [A1 — both correct] → mark pills
   // Letter classes: M → blue, B → yellow, A → green
   out = out.replace(

@@ -480,6 +480,45 @@
   letter-spacing: 0.6px;
 }
 
+/* Numbered step circle inside a WE card */
+.lesson-prose .we-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 130, 44, 0.12);
+  border: 1px solid rgba(255, 130, 44, 0.45);
+  color: #ff822c;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: 10px;
+  line-height: 1;
+  vertical-align: -3px;
+}
+.lesson-prose .we-step-num + b {
+  color: #f0eeea;
+}
+
+/* Answer chip — small green ANSWER label preceding the result line */
+.lesson-prose .answer-chip {
+  display: inline-block;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: #0fee89;
+  background: rgba(15, 238, 137, 0.10);
+  border: 1px solid rgba(15, 238, 137, 0.32);
+  border-radius: 3px;
+  padding: 3px 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-right: 10px;
+  vertical-align: 1px;
+}
+
 /* ─── Red-accent "trap" / warning callout ─── */
 .lesson-prose .trap-callout {
   margin: 22px 0;
