@@ -31,6 +31,7 @@ const LESSON_FOLDERS: Record<string, string> = {
   "01-03": "01-03-powers-and-roots",
   "01-04": "01-04-fractions-decimals-percentages",
   "01-05": "01-05-ordering",
+  "01-06": "01-06-four-operations",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
@@ -50,6 +51,9 @@ const WIDGETS: Record<string, WidgetSpec> = {
   "01-04-p2":     { url: "/widgets/fdp-converter.html",                 height: 480 },
   "01-04-p3":     { url: "/widgets/fdp-converter.html",                 height: 480 },
   "01-05-p2":     { url: "/widgets/ordering-trainer.html",              height: 540 },
+  "01-06-p1":     { url: "/widgets/four-ops-trainer.html",              height: 460 },
+  "01-06-p2":     { url: "/widgets/four-ops-trainer.html",              height: 460 },
+  "01-06-p4":     { url: "/widgets/four-ops-trainer.html",              height: 460 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {

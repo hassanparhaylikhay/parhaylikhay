@@ -73,7 +73,16 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "06", code: "1.6",  title: "The four operations" },
+      {
+        slug: "06", code: "1.6", title: "The four operations",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Integers and negatives" },
+          { slug: "p2",     label: "P2", title: "Fractions: + − × ÷" },
+          { slug: "p3",     label: "P3", title: "Decimals: + − × ÷" },
+          { slug: "p4",     label: "P4", title: "Order of operations (BIDMAS)" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "07", code: "1.7",  title: "Indices I" },
       { slug: "08", code: "1.8",  title: "Standard form" },
       { slug: "09", code: "1.9",  title: "Estimation" },
