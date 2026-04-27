@@ -55,7 +55,16 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "04", code: "1.4",  title: "Fractions, decimals and percentages" },
+      {
+        slug: "04", code: "1.4", title: "Fractions, decimals and percentages",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Proper, improper, mixed; simplifying" },
+          { slug: "p2",     label: "P2", title: "Fractions ↔ decimals" },
+          { slug: "p3",     label: "P3", title: "Percentages as a third form" },
+          { slug: "p4",     label: "P4", title: "Recurring decimals" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "05", code: "1.5",  title: "Ordering" },
       { slug: "06", code: "1.6",  title: "The four operations" },
       { slug: "07", code: "1.7",  title: "Indices I" },
