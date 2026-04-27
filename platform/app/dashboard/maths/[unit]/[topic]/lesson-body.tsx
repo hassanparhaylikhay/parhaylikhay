@@ -18,6 +18,15 @@ import "katex/dist/katex.min.css"
 function preprocess(md: string): string {
   let out = md
 
+  // Common-mistakes list: wrap the bullets after a "## Common mistakes" or
+  // "## Common mistakes and exam traps" heading in a .mistake-list container.
+  // CSS then renders each <li> as a red-accent card with a ✗ marker.
+  out = out.replace(
+    /^(## Common mistakes(?: and exam traps)?\n\n)((?:- [^\n]+\n?)+)/gm,
+    (_m, heading: string, bullets: string) =>
+      `${heading}<div class="mistake-list">\n\n${bullets}\n</div>\n\n`,
+  )
+
   // Worked-example card: wrap everything from "## Worked example [N][: TITLE]"
   // through "Full marks $= N$." in a bordered container with its own header
   // pill and footer chip. Runs first so the "Full marks" inside becomes the
@@ -99,6 +108,7 @@ const SECTION_META: Record<string, SectionMeta> = {
   "Worked examples":                 { num: "04", color: "#ff822c" },
   "How Cambridge marks this":        { num: "05", color: "#ff4670" },
   "Common mistakes and exam traps":  { num: "06", color: "#ff4670" },
+  "Common mistakes":                 { num: "06", color: "#ff4670" },
   "Try it yourself":                 { num: "07", color: "#00abfa" },
   "Quick summary":                   { num: "08", color: "#fff067" },
 }
