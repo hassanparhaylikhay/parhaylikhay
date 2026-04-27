@@ -110,6 +110,22 @@
     @apply bg-[#07090d] text-[#c8c6be] overflow-x-hidden;
     font-family: var(--font-geist-sans), system-ui, sans-serif;
   }
+
+  /* Branded scrollbars — replace the OS-default white track with dark
+     on-brand colours. Webkit (Chrome/Safari/Edge) + Firefox both covered. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2a3a4a #0b1118;
+  }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-track { background: #0b1118; }
+  *::-webkit-scrollbar-thumb {
+    background: #2a3a4a;
+    border-radius: 4px;
+    border: 2px solid #0b1118;
+  }
+  *::-webkit-scrollbar-thumb:hover { background: #3a4a5a; }
+  *::-webkit-scrollbar-corner { background: #0b1118; }
 }
 
 /* Dot grid utility */
