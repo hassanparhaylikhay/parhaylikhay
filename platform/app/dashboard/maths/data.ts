@@ -46,7 +46,15 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "03", code: "1.3",  title: "Powers and roots" },
+      {
+        slug: "03", code: "1.3", title: "Powers and roots",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Squares and square roots" },
+          { slug: "p2",     label: "P2", title: "Cubes and cube roots" },
+          { slug: "p3",     label: "P3", title: "Other powers, other roots" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "04", code: "1.4",  title: "Fractions, decimals and percentages" },
       { slug: "05", code: "1.5",  title: "Ordering" },
       { slug: "06", code: "1.6",  title: "The four operations" },
