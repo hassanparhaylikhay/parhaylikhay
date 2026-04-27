@@ -138,8 +138,12 @@ function buildSvg() {
     '<rect class="ring-box" x="6" y="6" width="308" height="188" fill="none"/>',
     // Region paths in z-order: "none" lowest, then a/b/ab on top so clicks land on whichever circle area is clicked.
     '<rect class="region" data-region="none" x="6" y="6" width="308" height="188" mask="url(#mask-outside-2set)"/>',
-    '<path class="region" data-region="a"  d="M 170 55 A 68 68 0 1 1 170 165 A 68 68 0 0 0 170 55 Z"/>',
-    '<path class="region" data-region="b"  d="M 170 55 A 68 68 0 1 0 170 165 A 68 68 0 0 1 170 55 Z"/>',
+    // Note: with these arc-flag combinations, the d-strings end up enclosing the
+    // OPPOSITE crescents — the path drawn from "right-large-B + right-small-A"
+    // actually bounds the b-only crescent on the right, etc. We label the paths
+    // by the visible region they enclose, not by the arcs that draw them.
+    '<path class="region" data-region="b"  d="M 170 55 A 68 68 0 1 1 170 165 A 68 68 0 0 0 170 55 Z"/>',
+    '<path class="region" data-region="a"  d="M 170 55 A 68 68 0 1 0 170 165 A 68 68 0 0 1 170 55 Z"/>',
     '<path class="region" data-region="ab" d="M 170 55 A 68 68 0 0 0 170 165 A 68 68 0 0 0 170 55 Z"/>',
     // Decorative rings on top
     '<circle class="ring ring-a" cx="130" cy="110" r="68"/>',
