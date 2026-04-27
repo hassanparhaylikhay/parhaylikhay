@@ -65,7 +65,14 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "05", code: "1.5",  title: "Ordering" },
+      {
+        slug: "05", code: "1.5", title: "Ordering",
+        parts: [
+          { slug: "p1",     label: "P1", title: "The six comparison symbols" },
+          { slug: "p2",     label: "P2", title: "Ordering quantities" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "06", code: "1.6",  title: "The four operations" },
       { slug: "07", code: "1.7",  title: "Indices I" },
       { slug: "08", code: "1.8",  title: "Standard form" },
