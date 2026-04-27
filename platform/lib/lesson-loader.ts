@@ -27,6 +27,7 @@ export type Lesson = {
 // Map of "{unit}-{topic}" → lesson folder under /lessons/maths
 const LESSON_FOLDERS: Record<string, string> = {
   "01-01": "01-01-types-of-number",
+  "01-02": "01-02-sets",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
@@ -39,6 +40,7 @@ const WIDGETS: Record<string, WidgetSpec> = {
   "01-01-p5":     { url: "/widgets/factor-tree-builder.html",           height: 560 },
   "01-01-p6":     { url: "/widgets/hcf-or-lcm-word-problems.html",      height: 640 },
   "01-01-review": { url: "/widgets/types-of-number-quiz.html",          height: 680 },
+  "01-02-p3":     { url: "/widgets/venn-shader.html",                   height: 700 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {

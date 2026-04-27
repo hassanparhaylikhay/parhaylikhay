@@ -36,7 +36,16 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "02", code: "1.2",  title: "Sets" },
+      {
+        slug: "02", code: "1.2", title: "Sets",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Notation and subsets" },
+          { slug: "p2",     label: "P2", title: "Union, intersection, complement" },
+          { slug: "p3",     label: "P3", title: "Venn diagrams: shading" },
+          { slug: "p4",     label: "P4", title: "Venn word problems" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "03", code: "1.3",  title: "Powers and roots" },
       { slug: "04", code: "1.4",  title: "Fractions, decimals and percentages" },
       { slug: "05", code: "1.5",  title: "Ordering" },

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Venn Shader</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:620px; margin:0 auto; }
+
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .step-pill { font-family:'Geist Mono',monospace; font-size:10.5px; color:#7a7875; letter-spacing:1.5px; text-transform:uppercase; }
+  .step-pill b { color:#f0eeea; }
+
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:22px 22px 20px; }
+
+  .prompt { font-size:13px; color:#7a7875; margin-bottom:8px; }
+  .expr { font-size:24px; color:#f0eeea; margin:6px 0 12px; text-align:center; min-height:38px; }
+  .expr .katex { font-size:1em; }
+
+  svg.venn { display:block; margin:0 auto; width:100%; max-width:480px; height:auto; cursor:pointer; user-select:none; }
+  svg.venn .region {
+    fill:transparent;
+    transition:fill .12s;
+  }
+  svg.venn .region:hover { fill:rgba(0,171,250,0.10); }
+  svg.venn .region.picked { fill:rgba(0,171,250,0.32); }
+  svg.venn .region.correct { fill:rgba(15,238,137,0.32); }
+  svg.venn .region.wrong { fill:rgba(255,70,112,0.32); }
+  svg.venn .region.missed { fill:rgba(255,130,44,0.32); }
+  svg.venn .region.locked { cursor:default; }
+  svg.venn .region.locked:hover { fill:inherit; }
+  svg.venn .ring { fill:none; stroke-width:1.8; pointer-events:none; }
+  svg.venn .ring-a { stroke:#00abfa; }
+  svg.venn .ring-b { stroke:#fff067; }
+  svg.venn .ring-box { stroke:#3a4a5a; stroke-width:1.2; pointer-events:none; }
+  svg.venn .lbl { font-family:'Geist',sans-serif; font-weight:700; font-size:14px; pointer-events:none; }
+  svg.venn .lbl-a { fill:#00abfa; }
+  svg.venn .lbl-b { fill:#fff067; }
+  svg.venn .universe-lbl { font-family:'Geist Mono',monospace; font-size:11px; fill:#7a7875; letter-spacing:1.5px; pointer-events:none; }
+
+  .status { min-height:18px; font-size:12.5px; margin:10px 0 4px; font-family:'Geist Mono',monospace; color:#7a7875; }
+  .status.ok { color:#0fee89; }
+  .status.bad { color:#ff4670; }
+
+  .controls { display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+  .progress { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .progress b { color:#f0eeea; }
+  .btns { margin-left:auto; display:flex; gap:8px; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+  .btn.primary:disabled { opacity:.35; cursor:default; }
+  .btn.ghost { background:transparent; color:#7a7875; border-color:#141e2a; }
+  .btn.ghost:hover { color:#f0eeea; border-color:#2a3a4a; }
+
+  .reveal { margin-top:14px; padding-top:14px; border-top:1px solid #141e2a; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; }
+  .reveal-explain b { color:#fff067; }
+
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">VENN SHADER · CLICK THE REGIONS</span>
+    <span class="step-pill"><b id="step-num">1</b>/<span id="step-total">6</span></span>
+  </div>
+  <div class="card" id="card"></div>
+</div>
+
+<script>
+"use strict";
+
+/*
+  2-set Venn region IDs:
+    "a"    : in A only        (A ∩ B')
+    "ab"   : in both          (A ∩ B)
+    "b"    : in B only        (A' ∩ B)
+    "none" : in neither       ((A ∪ B)')
+
+  Geometry: A center (130, 110), B center (210, 110), radius 68.
+  Intersection points: top (170, 55), bottom (170, 165).
+*/
+
+var CARDS = [
+  { expr: "A \\cap B",       regions: ["ab"],
+    why: 'In $A$ AND in $B$ — the lens-shaped overlap only.' },
+  { expr: "A \\cup B",       regions: ["a", "ab", "b"],
+    why: 'In $A$ OR in $B$ — both circles entirely, including the overlap.' },
+  { expr: "A'",              regions: ["b", "none"],
+    why: 'Everything NOT in $A$. That is the part of $B$ outside $A$, plus the corner of $\\xi$ outside both circles.' },
+  { expr: "(A \\cup B)'",    regions: ["none"],
+    why: '$A \\cup B$ is both circles. Its complement is everything outside both, i.e. only the corner of $\\xi$.' },
+  { expr: "A \\cap B'",      regions: ["a"],
+    why: 'In $A$ AND not in $B$ — only the $A$-only crescent.' },
+  { expr: "A' \\cup B",      regions: ["ab", "b", "none"],
+    why: 'Not in $A$ OR in $B$. Everything outside $A$ qualifies, plus everything in $B$ (including the overlap).' },
+];
+
+var state = { idx: 0, score: 0, picked: null, locked: false };
+
+var cardEl = document.getElementById("card");
+var stepNumEl = document.getElementById("step-num");
+var stepTotalEl = document.getElementById("step-total");
+stepTotalEl.textContent = CARDS.length;
+
+function buildSvg() {
+  // 4 region paths for the 2-set Venn:
+  // a-only: large arc of A (left side) then small arc of B back through the lens
+  // b-only: large arc of B (right side) then small arc of A back through the lens
+  // ab (lens): small arc of A then small arc of B
+  // none: rect minus both circles, via mask
+  return [
+    '<defs>',
+      '<mask id="mask-outside-2set">',
+        '<rect x="6" y="6" width="308" height="188" fill="white"/>',
+        '<circle cx="130" cy="110" r="68" fill="black"/>',
+        '<circle cx="210" cy="110" r="68" fill="black"/>',
+      '</mask>',
+    '</defs>',
+    // ξ outline
+    '<rect class="ring-box" x="6" y="6" width="308" height="188" fill="none"/>',
+    // Region paths in z-order: "none" lowest, then a/b/ab on top so clicks land on whichever circle area is clicked.
+    '<rect class="region" data-region="none" x="6" y="6" width="308" height="188" mask="url(#mask-outside-2set)"/>',
+    '<path class="region" data-region="a"  d="M 170 55 A 68 68 0 1 1 170 165 A 68 68 0 0 0 170 55 Z"/>',
+    '<path class="region" data-region="b"  d="M 170 55 A 68 68 0 1 0 170 165 A 68 68 0 0 1 170 55 Z"/>',
+    '<path class="region" data-region="ab" d="M 170 55 A 68 68 0 0 1 170 165 A 68 68 0 0 0 170 55 Z"/>',
+    // Decorative rings on top
+    '<circle class="ring ring-a" cx="130" cy="110" r="68"/>',
+    '<circle class="ring ring-b" cx="210" cy="110" r="68"/>',
+    // Labels
+    '<text class="lbl lbl-a" x="84" y="50" text-anchor="middle">A</text>',
+    '<text class="lbl lbl-b" x="256" y="50" text-anchor="middle">B</text>',
+    '<text class="universe-lbl" x="306" y="22" text-anchor="end">ξ</text>',
+  ].join("");
+}
+
+function renderCard() {
+  if (state.idx >= CARDS.length) { renderDone(); return; }
+  var c = CARDS[state.idx];
+  stepNumEl.textContent = state.idx + 1;
+  state.picked = new Set();
+  state.locked = false;
+
+  cardEl.innerHTML =
+    '<p class="prompt">Click every region that matches the expression below.</p>' +
+    '<div class="expr" id="expr"></div>' +
+    '<svg class="venn" viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg">' + buildSvg() + '</svg>' +
+    '<p class="status" id="status">&nbsp;</p>' +
+    '<div class="controls">' +
+      '<span class="progress">Picked: <b id="picked-count">0</b> / <b id="target-count">' + c.regions.length + '</b></span>' +
+      '<div class="btns">' +
+        '<button class="btn ghost" id="clear-btn">Clear</button>' +
+        '<button class="btn primary" id="check-btn">Check</button>' +
+      '</div>' +
+    '</div>' +
+    '<div id="reveal-slot"></div>';
+
+  // Render expression with KaTeX
+  var exprEl = document.getElementById("expr");
+  function tryRender() {
+    if (typeof katex !== "undefined") {
+      try { katex.render(c.expr, exprEl, { throwOnError: false }); }
+      catch (e) { exprEl.textContent = c.expr; }
+    } else { setTimeout(tryRender, 50); }
+  }
+  tryRender();
+
+  // Wire region clicks
+  cardEl.querySelectorAll(".region").forEach(function(el) {
+    el.addEventListener("click", function() {
+      if (state.locked) return;
+      var r = el.getAttribute("data-region");
+      if (state.picked.has(r)) {
+        state.picked.delete(r);
+        el.classList.remove("picked");
+      } else {
+        state.picked.add(r);
+        el.classList.add("picked");
+      }
+      document.getElementById("picked-count").textContent = state.picked.size;
+    });
+  });
+
+  document.getElementById("check-btn").addEventListener("click", checkOrAdvance);
+  document.getElementById("clear-btn").addEventListener("click", clearPicks);
+
+  reportHeight();
+}
+
+function clearPicks() {
+  if (state.locked) return;
+  state.picked = new Set();
+  cardEl.querySelectorAll(".region").forEach(function(el) { el.classList.remove("picked"); });
+  document.getElementById("picked-count").textContent = 0;
+  setStatus("", "");
+}
+
+function setStatus(msg, cls) {
+  var el = document.getElementById("status");
+  if (!el) return;
+  el.className = "status" + (cls ? " " + cls : "");
+  el.textContent = msg || " ";
+}
+
+function checkOrAdvance() {
+  var btn = document.getElementById("check-btn");
+  var label = btn.textContent;
+
+  if (label === "Retry") { renderCard(); return; }
+  if (label.indexOf("Next") === 0) { state.idx++; renderCard(); return; }
+  if (label === "Finish") { renderDone(); return; }
+
+  if (state.picked.size === 0) {
+    setStatus("Click at least one region.", "bad");
+    return;
+  }
+
+  state.locked = true;
+  var c = CARDS[state.idx];
+  var target = new Set(c.regions);
+
+  var allCorrect = true;
+  cardEl.querySelectorAll(".region").forEach(function(el) {
+    var r = el.getAttribute("data-region");
+    el.classList.add("locked");
+    el.classList.remove("picked");
+    if (target.has(r) && state.picked.has(r)) el.classList.add("correct");
+    else if (!target.has(r) && state.picked.has(r)) { el.classList.add("wrong"); allCorrect = false; }
+    else if (target.has(r) && !state.picked.has(r)) { el.classList.add("missed"); allCorrect = false; }
+  });
+
+  if (allCorrect) state.score++;
+
+  var slot = document.getElementById("reveal-slot");
+  slot.innerHTML =
+    '<div class="reveal ' + (allCorrect ? "ok" : "bad") + '">' +
+      '<p class="reveal-line">' + (allCorrect ? "✓ CORRECT" : "✗ NOT QUITE") + '</p>' +
+      '<p class="reveal-explain" id="reveal-explain"></p>' +
+    '</div>';
+  var explainEl = document.getElementById("reveal-explain");
+  // Replace $...$ with rendered KaTeX spans, leave plain text otherwise.
+  explainEl.innerHTML = c.why.replace(/\$([^$]+)\$/g, function(_m, tex) {
+    if (typeof katex === "undefined") return tex;
+    var span = document.createElement("span");
+    try { katex.render(tex, span, { throwOnError: false }); return span.outerHTML; }
+    catch (e) { return tex; }
+  });
+
+  btn.textContent = state.idx < CARDS.length - 1 ? "Next →" : "Finish";
+  reportHeight();
+}
+
+function renderDone() {
+  var pct = Math.round((state.score / CARDS.length) * 100);
+  var msg = pct === 100 ? "Perfect. Every region read correctly." :
+            pct >= 80 ? "Strong. The region-by-region method is landing." :
+            pct >= 50 ? "Decent. Re-read which region matches each expression." :
+            "Review the diagram in the section above and try again.";
+  cardEl.innerHTML =
+    '<div class="done-card">' +
+      '<span class="kicker">SCORE</span>' +
+      '<p class="big">' + state.score + '<span class="total"> / ' + CARDS.length + '</span></p>' +
+      '<p class="sub">' + pct + '%</p>' +
+      '<p class="msg">' + msg + '</p>' +
+      '<div class="controls" style="justify-content:center;margin-top:14px"><button class="btn primary" id="retry-btn">Retry</button></div>' +
+    '</div>';
+  document.getElementById("retry-btn").addEventListener("click", function() {
+    state = { idx: 0, score: 0, picked: null, locked: false };
+    renderCard();
+  });
+  stepNumEl.textContent = CARDS.length;
+  reportHeight();
+}
+
+renderCard();
+
+// Auto-resize via postMessage
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
