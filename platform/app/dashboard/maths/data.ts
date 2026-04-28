@@ -111,7 +111,15 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "10", code: "1.10", title: "Limits of accuracy" },
+      {
+        slug: "10", code: "1.10", title: "Limits of accuracy",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Upper and lower bounds" },
+          { slug: "p2",     label: "P2", title: "Bounds for sums and differences" },
+          { slug: "p3",     label: "P3", title: "Bounds for products and quotients" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "11", code: "1.11", title: "Ratio and proportion" },
       { slug: "12", code: "1.12", title: "Rates" },
       { slug: "13", code: "1.13", title: "Percentages" },
