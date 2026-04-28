@@ -156,7 +156,15 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "15", code: "1.15", title: "Time" },
+      {
+        slug: "15", code: "1.15", title: "Time",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Time units and conversion" },
+          { slug: "p2",     label: "P2", title: "12-hour and 24-hour clocks" },
+          { slug: "p3",     label: "P3", title: "Timetables and time zones" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "16", code: "1.16", title: "Money" },
       { slug: "17", code: "1.17", title: "Exponential growth and decay" },
       { slug: "18", code: "1.18", title: "Surds" },
