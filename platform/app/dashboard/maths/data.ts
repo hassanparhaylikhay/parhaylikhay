@@ -102,7 +102,15 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "09", code: "1.9",  title: "Estimation" },
+      {
+        slug: "09", code: "1.9", title: "Estimation",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Rounding to decimal places" },
+          { slug: "p2",     label: "P2", title: "Significant figures" },
+          { slug: "p3",     label: "P3", title: "Estimating calculations" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "10", code: "1.10", title: "Limits of accuracy" },
       { slug: "11", code: "1.11", title: "Ratio and proportion" },
       { slug: "12", code: "1.12", title: "Rates" },
