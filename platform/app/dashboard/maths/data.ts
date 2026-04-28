@@ -83,7 +83,16 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "07", code: "1.7",  title: "Indices I" },
+      {
+        slug: "07", code: "1.7", title: "Indices I",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Powers and the three rules" },
+          { slug: "p2",     label: "P2", title: "Zero and negative indices" },
+          { slug: "p3",     label: "P3", title: "Fractional indices and roots" },
+          { slug: "p4",     label: "P4", title: "Combining the rules" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "08", code: "1.8",  title: "Standard form" },
       { slug: "09", code: "1.9",  title: "Estimation" },
       { slug: "10", code: "1.10", title: "Limits of accuracy" },
