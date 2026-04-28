@@ -129,7 +129,15 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "12", code: "1.12", title: "Rates" },
+      {
+        slug: "12", code: "1.12", title: "Rates",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Common rates" },
+          { slug: "p2",     label: "P2", title: "Speed, distance, and time" },
+          { slug: "p3",     label: "P3", title: "Density and other compound rates" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "13", code: "1.13", title: "Percentages" },
       { slug: "14", code: "1.14", title: "Using a calculator" },
       { slug: "15", code: "1.15", title: "Time" },
