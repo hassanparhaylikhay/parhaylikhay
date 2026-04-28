@@ -93,7 +93,15 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "08", code: "1.8",  title: "Standard form" },
+      {
+        slug: "08", code: "1.8", title: "Standard form",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Writing numbers in standard form" },
+          { slug: "p2",     label: "P2", title: "Converting back to ordinary form" },
+          { slug: "p3",     label: "P3", title: "Calculating with standard form" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "09", code: "1.9",  title: "Estimation" },
       { slug: "10", code: "1.10", title: "Limits of accuracy" },
       { slug: "11", code: "1.11", title: "Ratio and proportion" },

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Standard Form Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:600px; margin:0 auto; }
+
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .target-picker { display:flex; gap:6px; align-items:center; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .target-picker select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:5px 22px 5px 10px; border-radius:5px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:24px 24px 22px; }
+
+  .q-label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#3a4a5a; margin-bottom:12px; text-align:center; }
+  .q-expr { font-size:30px; color:#f0eeea; margin:8px 0 22px; text-align:center; min-height:48px; }
+  .q-expr .katex { font-size:1em; }
+
+  .answer-row { display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+  .answer-row .pair { display:flex; align-items:center; gap:6px; }
+  .answer-row .pair .x10 { font-family:'Geist Mono',monospace; font-size:14px; color:#7a7875; }
+  .answer-row input {
+    appearance:none; height:42px; text-align:center;
+    font-family:'Geist Mono',monospace; font-size:18px; font-weight:600;
+    background:#07090d; border:1px solid rgba(0,171,250,0.5); border-radius:8px;
+    color:#00abfa; outline:none;
+  }
+  .answer-row input.A { width:90px; }
+  .answer-row input.n { width:64px; }
+  .answer-row input.full { width:200px; }
+  .answer-row input:focus { border-color:#00abfa; box-shadow:0 0 0 3px rgba(0,171,250,0.12); }
+  .answer-row input.wrong { border-color:#ff4670; color:#ff4670; box-shadow:0 0 0 3px rgba(255,70,112,0.1); }
+  .answer-row input.correct { border-color:#0fee89; color:#0fee89; box-shadow:0 0 0 3px rgba(15,238,137,0.1); }
+  .answer-row .btn-check {
+    appearance:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600;
+    padding:10px 16px; border-radius:6px; border:0; background:#00abfa; color:#07090d;
+  }
+  .hint-line { text-align:center; font-family:'Geist Mono',monospace; font-size:10.5px; color:#3a4a5a; margin-top:8px; letter-spacing:0.5px; }
+
+  .reveal { margin-top:18px; padding-top:14px; border-top:1px solid #141e2a; text-align:center; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; margin-bottom:12px; }
+
+  .controls { display:flex; gap:8px; margin-top:6px; justify-content:center; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+
+  .progress-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .progress-row .right { color:#0fee89; }
+  .progress-row .wrong { color:#ff4670; }
+
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label" id="mode-label">STANDARD FORM · 8 QUESTIONS</span>
+    <div class="target-picker">
+      <span>topic:</span>
+      <select id="topic">
+        <option value="to-standard">ordinary &rarr; standard</option>
+        <option value="to-ordinary">standard &rarr; ordinary</option>
+        <option value="calc">calculations</option>
+        <option value="mixed" selected>mixed</option>
+      </select>
+    </div>
+  </div>
+  <div class="card" id="card"></div>
+  <div class="progress-row">
+    <span><b id="step-num">1</b>/<span id="step-total">8</span></span>
+    <span><span class="right">&#10003; <b id="right-count">0</b></span> &nbsp; <span class="wrong">&#10007; <b id="wrong-count">0</b></span></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// Format an ordinary number, padding with grouping spaces every 3 digits.
+function fmtOrdinary(num) {
+  if (num === 0) return "0";
+  var s;
+  if (Math.abs(num) >= 1) {
+    s = String(num);
+    // group integer part with thin spaces
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, "\\,");
+    return parts.join(".");
+  }
+  // small number: use toFixed with enough precision
+  // count needed places
+  var abs = Math.abs(num);
+  var places = 0;
+  var t = abs;
+  while (t < 1) { t *= 10; places++; }
+  // add a couple more for the actual digits
+  var digits = String(Math.round(abs * Math.pow(10, places + 6))).replace(/0+$/, "");
+  if (digits === "") digits = "0";
+  s = "0." + "0".repeat(places - 1) + digits;
+  return (num < 0 ? "-" : "") + s;
+}
+
+// Format A x 10^n in KaTeX
+function sfTex(A, n) {
+  var aStr = String(A);
+  // strip trailing zeros after decimal, but keep at least the integer digit
+  if (aStr.indexOf(".") > -1) aStr = aStr.replace(/0+$/, "").replace(/\.$/, "");
+  return aStr + " \\times 10^{" + n + "}";
+}
+
+// Pretty-print an ordinary number to KaTeX (with thin-space grouping)
+function ordTex(num) {
+  return fmtOrdinary(num);
+}
+
+// Parse user-entered A: accept "5.2", "5", "9.0", etc.
+function parseA(s) {
+  s = s.trim();
+  if (!/^-?\d+(\.\d+)?$/.test(s)) return null;
+  return parseFloat(s);
+}
+function parseN(s) {
+  s = s.trim();
+  if (!/^-?\d+$/.test(s)) return null;
+  return parseInt(s, 10);
+}
+
+// Generate a random A and n with bias for nice numbers.
+function genAN(opts) {
+  opts = opts || {};
+  var A;
+  // Pick A as a 1-3 digit decimal between 1 and 10 (exclusive)
+  if (Math.random() < 0.4) {
+    A = rand(1, 9); // single digit
+  } else if (Math.random() < 0.5) {
+    A = rand(10, 99) / 10; // one decimal place
+  } else {
+    A = rand(100, 999) / 100; // two decimal places
+  }
+  // n: avoid 0 (boring); in -8 to 8
+  var nMin = opts.nMin == null ? -7 : opts.nMin;
+  var nMax = opts.nMax == null ? 8 : opts.nMax;
+  var n;
+  do { n = rand(nMin, nMax); } while (n === 0);
+  return { A: A, n: n };
+}
+
+function ANtoOrdinary(A, n) {
+  // Use string manipulation to avoid float quirks for large/small powers
+  var aStr = String(A);
+  var sign = "";
+  if (aStr[0] === "-") { sign = "-"; aStr = aStr.slice(1); }
+  var dot = aStr.indexOf(".");
+  var intPart, fracPart;
+  if (dot === -1) { intPart = aStr; fracPart = ""; }
+  else { intPart = aStr.slice(0, dot); fracPart = aStr.slice(dot + 1); }
+  // Combine and shift
+  var digits = intPart + fracPart;
+  var newDot = intPart.length + n;
+  var result;
+  if (newDot >= digits.length) {
+    result = digits + "0".repeat(newDot - digits.length);
+  } else if (newDot <= 0) {
+    result = "0." + "0".repeat(-newDot) + digits;
+    // strip trailing zeros (after decimal)
+    result = result.replace(/0+$/, "").replace(/\.$/, "");
+  } else {
+    result = digits.slice(0, newDot) + "." + digits.slice(newDot);
+    result = result.replace(/0+$/, "").replace(/\.$/, "");
+  }
+  return sign + result;
+}
+
+function ordinaryToAN(numStr) {
+  // numStr like "0.0072" or "4300" — return canonical {A, n}
+  var s = numStr.trim();
+  var sign = "";
+  if (s[0] === "-") { sign = "-"; s = s.slice(1); }
+  s = s.replace(/[\s,]/g, "");
+  var dot = s.indexOf(".");
+  var intPart, fracPart;
+  if (dot === -1) { intPart = s; fracPart = ""; }
+  else { intPart = s.slice(0, dot); fracPart = s.slice(dot + 1); }
+  var digits = (intPart + fracPart).replace(/^0+/, "");
+  if (digits === "") return { A: 0, n: 0 };
+  // position of first non-zero digit relative to original decimal point
+  var firstNonZero = (intPart + fracPart).search(/[1-9]/);
+  if (firstNonZero === -1) return { A: 0, n: 0 };
+  var n;
+  if (dot === -1) {
+    // integer
+    n = intPart.length - firstNonZero - 1;
+  } else {
+    if (firstNonZero < intPart.length) {
+      n = intPart.length - firstNonZero - 1;
+    } else {
+      n = -(firstNonZero - intPart.length + 1);
+    }
+  }
+  // Build A
+  var aStr = digits.replace(/0+$/, "");
+  if (aStr.length === 1) var A = parseFloat(aStr);
+  else A = parseFloat(aStr[0] + "." + aStr.slice(1));
+  return { sign: sign, A: A, n: n };
+}
+
+// =========================================================================
+// QUESTION GENERATORS
+// =========================================================================
+
+function genToStandard() {
+  var an = genAN({ nMin: -6, nMax: 7 });
+  var ordinary = ANtoOrdinary(an.A, an.n);
+  return {
+    type: "to-standard",
+    tex: ordTex(ordinary),
+    answer: an.A + " \\times 10^{" + an.n + "}",
+    rawA: an.A,
+    rawN: an.n,
+    check: function(aStr, nStr) {
+      var a = parseA(aStr); var n = parseN(nStr);
+      if (a == null || n == null) return false;
+      // accept any equivalent (a,n) where the value matches AND a is in [1,10)
+      if (!(a >= 1 && a < 10)) return false;
+      // compare values via ANtoOrdinary
+      return ANtoOrdinary(a, n) === ANtoOrdinary(an.A, an.n);
+    },
+    why: "Place the decimal after the first non-zero digit (that's A). Count places moved: left $\\to$ positive index, right $\\to$ negative. A must satisfy $1 \\le A < 10$.",
+    hint: "format: A then n, with 1 ≤ A < 10",
+    inputMode: "AN"
+  };
+}
+
+function genToOrdinary() {
+  var an = genAN({ nMin: -5, nMax: 6 });
+  var ordinary = ANtoOrdinary(an.A, an.n);
+  return {
+    type: "to-ordinary",
+    tex: sfTex(an.A, an.n),
+    answer: ordinary,
+    check: function(s) {
+      var clean = s.trim().replace(/[\s,]/g, "");
+      var target = ordinary.replace(/[\s,]/g, "");
+      return clean === target;
+    },
+    why: "Positive index: move the decimal RIGHT n places. Negative index: move LEFT |n| places. Pad with zeros where needed.",
+    hint: "type the ordinary decimal (no spaces or commas)",
+    inputMode: "single"
+  };
+}
+
+function genCalc() {
+  var op = pick(["mul", "div", "add"]);
+  var A1, n1, A2, n2;
+  if (op === "mul" || op === "div") {
+    // Pick small integer A's so the product/quotient is clean
+    A1 = rand(2, 9); A2 = rand(2, 9);
+    n1 = rand(-5, 7); n2 = rand(-5, 7);
+    if (op === "div") {
+      // ensure A1 is a multiple of A2 for clean integer
+      A1 = A2 * rand(1, 5);
+    }
+    var qTex = "(" + A1 + " \\times 10^{" + n1 + "}) " + (op === "mul" ? "\\times" : "\\div") + " (" + A2 + " \\times 10^{" + n2 + "})";
+    var rA, rN;
+    if (op === "mul") { rA = A1 * A2; rN = n1 + n2; }
+    else { rA = A1 / A2; rN = n1 - n2; }
+    // normalise
+    while (rA >= 10) { rA = rA / 10; rN++; }
+    while (rA > 0 && rA < 1) { rA = rA * 10; rN--; }
+    return {
+      type: "calc",
+      tex: qTex,
+      answer: rA + " \\times 10^{" + rN + "}",
+      rawA: rA,
+      rawN: rN,
+      check: function(aStr, nStr) {
+        var a = parseA(aStr); var n = parseN(nStr);
+        if (a == null || n == null) return false;
+        if (!(a >= 1 && a < 10)) return false;
+        return ANtoOrdinary(a, n) === ANtoOrdinary(rA, rN);
+      },
+      why: op === "mul"
+        ? "Multiply A's, add indices. Then re-normalise so $1 \\le A < 10$."
+        : "Divide A's, subtract indices. Then re-normalise so $1 \\le A < 10$.",
+      hint: "format: A then n, with 1 ≤ A < 10",
+      inputMode: "AN"
+    };
+  } else {
+    // addition: pick same-index pair OR adjacent indices
+    A1 = rand(1, 7); A2 = rand(1, 7);
+    n1 = rand(-3, 6);
+    if (Math.random() < 0.5) {
+      n2 = n1; // same
+    } else {
+      n2 = n1 - 1; // one less
+    }
+    // result
+    var sum;
+    if (n2 === n1) sum = { A: A1 + A2, n: n1 };
+    else sum = { A: A1 + A2 / 10, n: n1 };
+    while (sum.A >= 10) { sum.A = sum.A / 10; sum.n++; }
+    while (sum.A > 0 && sum.A < 1) { sum.A = sum.A * 10; sum.n--; }
+    return {
+      type: "calc",
+      tex: "(" + A1 + " \\times 10^{" + n1 + "}) + (" + A2 + " \\times 10^{" + n2 + "})",
+      answer: sum.A + " \\times 10^{" + sum.n + "}",
+      rawA: sum.A,
+      rawN: sum.n,
+      check: function(aStr, nStr) {
+        var a = parseA(aStr); var n = parseN(nStr);
+        if (a == null || n == null) return false;
+        if (!(a >= 1 && a < 10)) return false;
+        return ANtoOrdinary(a, n) === ANtoOrdinary(sum.A, sum.n);
+      },
+      why: "Same index: add the A's directly. Different indices: rewrite one term so both share an index, then add. Final form must have $1 \\le A < 10$.",
+      hint: "format: A then n, with 1 ≤ A < 10",
+      inputMode: "AN"
+    };
+  }
+}
+
+// =========================================================================
+// PIPELINE
+// =========================================================================
+
+function genQuestion(topic) {
+  if (topic === "to-standard") return genToStandard();
+  if (topic === "to-ordinary") return genToOrdinary();
+  if (topic === "calc") return genCalc();
+  return [genToStandard, genToOrdinary, genCalc][Math.floor(Math.random() * 3)]();
+}
+
+function buildSet(topic, n) {
+  var out = [];
+  for (var i = 0; i < n; i++) out.push(genQuestion(topic));
+  return out;
+}
+
+var state = { idx: 0, right: 0, wrong: 0, set: [], locked: false };
+
+var cardEl = document.getElementById("card");
+var topicSel = document.getElementById("topic");
+var stepNumEl = document.getElementById("step-num");
+var rightCountEl = document.getElementById("right-count");
+var wrongCountEl = document.getElementById("wrong-count");
+
+topicSel.addEventListener("change", reset);
+
+function reset() {
+  state = { idx: 0, right: 0, wrong: 0, locked: false, set: buildSet(topicSel.value, 8) };
+  rightCountEl.textContent = 0;
+  wrongCountEl.textContent = 0;
+  document.getElementById("step-total").textContent = state.set.length;
+  renderQ();
+}
+
+function renderQ() {
+  if (state.idx >= state.set.length) { renderDone(); return; }
+  var q = state.set[state.idx];
+  stepNumEl.textContent = state.idx + 1;
+  state.locked = false;
+
+  var inputHTML = q.inputMode === "AN"
+    ? '<div class="pair"><input type="text" id="ansA" class="A" placeholder="A"/><span class="x10">&times; 10^</span><input type="text" id="ansN" class="n" placeholder="n"/></div>'
+    : '<input type="text" id="ans" class="full" placeholder="?"/>';
+
+  var labelText = q.type === "to-standard" ? "Write in standard form"
+                : q.type === "to-ordinary" ? "Write as an ordinary decimal"
+                : "Compute, give in standard form";
+
+  cardEl.innerHTML =
+    '<p class="q-label">' + labelText + '</p>' +
+    '<div class="q-expr" id="expr"></div>' +
+    '<div class="answer-row">' +
+      inputHTML +
+      '<button class="btn-check" id="check">Check</button>' +
+    '</div>' +
+    '<p class="hint-line">' + q.hint + '</p>' +
+    '<div id="reveal-slot"></div>';
+
+  var exprEl = document.getElementById("expr");
+  function tryRender() {
+    if (typeof katex !== "undefined") {
+      try { katex.render(q.tex, exprEl, { throwOnError: false }); } catch (e) { exprEl.textContent = q.tex; }
+    } else { setTimeout(tryRender, 50); }
+  }
+  tryRender();
+
+  var firstInp;
+  if (q.inputMode === "AN") {
+    var inA = document.getElementById("ansA");
+    var inN = document.getElementById("ansN");
+    [inA, inN].forEach(function(el) {
+      el.addEventListener("input", function() { el.classList.remove("wrong"); });
+      el.addEventListener("keydown", function(e) { if (e.key === "Enter") submit(); });
+    });
+    firstInp = inA;
+  } else {
+    var inS = document.getElementById("ans");
+    inS.addEventListener("input", function() { inS.classList.remove("wrong"); });
+    inS.addEventListener("keydown", function(e) { if (e.key === "Enter") submit(); });
+    firstInp = inS;
+  }
+  document.getElementById("check").addEventListener("click", function() { submit(); });
+  if (firstInp) firstInp.focus({ preventScroll: true });
+
+  reportHeight();
+}
+
+function submit() {
+  if (state.locked) {
+    state.idx++;
+    renderQ();
+    return;
+  }
+  var q = state.set[state.idx];
+  var correct, allInputs;
+  if (q.inputMode === "AN") {
+    var aStr = document.getElementById("ansA").value;
+    var nStr = document.getElementById("ansN").value;
+    if (!aStr.trim() || !nStr.trim()) {
+      if (!aStr.trim()) document.getElementById("ansA").classList.add("wrong");
+      if (!nStr.trim()) document.getElementById("ansN").classList.add("wrong");
+      return;
+    }
+    try { correct = q.check(aStr, nStr); } catch (e) { correct = false; }
+    allInputs = [document.getElementById("ansA"), document.getElementById("ansN")];
+  } else {
+    var inp = document.getElementById("ans");
+    var raw = inp.value;
+    if (!raw.trim()) { inp.classList.add("wrong"); return; }
+    try { correct = q.check(raw); } catch (e) { correct = false; }
+    allInputs = [inp];
+  }
+  state.locked = true;
+
+  if (correct) state.right++; else state.wrong++;
+  rightCountEl.textContent = state.right;
+  wrongCountEl.textContent = state.wrong;
+
+  allInputs.forEach(function(el) {
+    el.classList.remove("wrong");
+    el.classList.add(correct ? "correct" : "wrong");
+    el.disabled = true;
+  });
+
+  var slot = document.getElementById("reveal-slot");
+  var answerLine;
+  if (correct) {
+    answerLine = "&#10003; CORRECT";
+  } else {
+    answerLine = "&#10007; ANSWER: <span id='ans-rev'></span>";
+  }
+  slot.innerHTML =
+    '<div class="reveal ' + (correct ? "ok" : "bad") + '">' +
+      '<p class="reveal-line">' + answerLine + '</p>' +
+      '<p class="reveal-explain" id="why-line"></p>' +
+      '<div class="controls"><button class="btn primary" id="next">' + (state.idx < state.set.length - 1 ? "Next →" : "See result") + '</button></div>' +
+    '</div>';
+  if (!correct) {
+    var ansRevEl = document.getElementById("ans-rev");
+    if (typeof katex !== "undefined") {
+      try { katex.render(q.answer, ansRevEl, { throwOnError: false }); } catch (e) { ansRevEl.textContent = q.answer; }
+    } else { ansRevEl.textContent = q.answer; }
+  }
+  // Render why with KaTeX if present
+  var whyEl = document.getElementById("why-line");
+  whyEl.innerHTML = q.why;
+  if (typeof renderMathInElement !== "undefined") {
+    try { renderMathInElement(whyEl, { delimiters: [{ left: "$", right: "$", display: false }], throwOnError: false }); } catch (e) {}
+  }
+
+  document.getElementById("next").addEventListener("click", function() {
+    state.idx++;
+    renderQ();
+  });
+  reportHeight();
+}
+
+function renderDone() {
+  var total = state.set.length;
+  var pct = Math.round((state.right / total) * 100);
+  var msg = pct === 100 ? "Perfect — every form clean."
+          : pct >= 80 ? "Strong. Standard form is landing."
+          : pct >= 50 ? "Decent. Re-run a single mode from the dropdown to focus."
+          : "More drill needed. Pick one mode and grind it.";
+  cardEl.innerHTML =
+    '<div class="done-card">' +
+      '<span class="kicker">SCORE</span>' +
+      '<p class="big">' + state.right + '<span class="total"> / ' + total + '</span></p>' +
+      '<p class="sub">' + pct + '%</p>' +
+      '<p class="msg">' + msg + '</p>' +
+      '<div class="controls" style="justify-content:center;margin-top:14px"><button class="btn primary" id="retry">Retry</button></div>' +
+    '</div>';
+  document.getElementById("retry").addEventListener("click", reset);
+  stepNumEl.textContent = total;
+  reportHeight();
+}
+
+reset();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
