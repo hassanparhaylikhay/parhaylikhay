@@ -36,6 +36,7 @@ const LESSON_FOLDERS: Record<string, string> = {
   "01-08": "01-08-standard-form",
   "01-09": "01-09-estimation",
   "01-10": "01-10-limits-of-accuracy",
+  "01-11": "01-11-ratio-and-proportion",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
