@@ -138,7 +138,16 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "13", code: "1.13", title: "Percentages" },
+      {
+        slug: "13", code: "1.13", title: "Percentages",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Basic percentages" },
+          { slug: "p2",     label: "P2", title: "Percentage increase and decrease" },
+          { slug: "p3",     label: "P3", title: "Compound interest and repeated change" },
+          { slug: "p4",     label: "P4", title: "Reverse percentages" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "14", code: "1.14", title: "Using a calculator" },
       { slug: "15", code: "1.15", title: "Time" },
       { slug: "16", code: "1.16", title: "Money" },
