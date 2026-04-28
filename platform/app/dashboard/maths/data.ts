@@ -165,7 +165,14 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "16", code: "1.16", title: "Money" },
+      {
+        slug: "16", code: "1.16", title: "Money",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Money arithmetic" },
+          { slug: "p2",     label: "P2", title: "Currency conversion" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "17", code: "1.17", title: "Exponential growth and decay" },
       { slug: "18", code: "1.18", title: "Surds" },
     ],
