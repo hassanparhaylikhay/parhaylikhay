@@ -29,20 +29,18 @@ function preprocess(md: string): string {
 
   // Worked-example card.
   //
-  // Each `**[X1 ...; X2 ...]**` annotation already sits on the right line —
-  // typically the answer line, sometimes mid-working. We process annotations
-  // line-by-line and apply this rule:
+  // Authors typically bundle every M1/B1/A1 code at the end of the answer
+  // line, e.g. `**[B1 for X; B1 for Y; A1 for Z]**`. We want them
+  // distributed visually across the steps that earn them.
   //
-  //   * A and B codes ALWAYS stay on the line they were authored on.
-  //     B = independent answer mark. A = accuracy answer mark. Neither
-  //     belongs on a method step; both belong with the answer.
-  //
-  //   * M codes are method marks and naturally belong on the step that
-  //     does the corresponding method work. If the annotation contains M
-  //     codes AND there are unfilled `**Step N:` lines BEFORE the
-  //     annotation, those M codes get pulled out and attached to those
-  //     steps in order. Remaining M codes (no step left) stay on the
-  //     home line.
+  // Distribution rule (per annotation):
+  //   * LAST code → the line the annotation was on (typically the answer).
+  //     This is almost always the A1 / final-answer mark, but if the
+  //     annotation is just `[B1]` for a 1-mark single-part question, the
+  //     B1 stays on its home line — exactly where the user wrote it.
+  //   * Earlier codes → step lines BEFORE the annotation, in source order
+  //     (B1#1 → Step 1, B1#2 → Step 2, …). If there are more codes than
+  //     steps, the extras pile up on the home line beside the last code.
   //
   // The mark-cluster regex later prepends each line's codes as a
   // float-right cluster, so the marks visually align with the line that
@@ -59,21 +57,20 @@ function preprocess(md: string): string {
       const lineMarks: Record<number, string[]> = {}
       const annotationRe = /\*\*\s*((?:\[(?:M|B|A)\d(?:[^\]]*)\]\s*)+)\*\*/
 
-      // First, find all step lines and remember a cursor per scan position.
-      // We use a single cursor that advances as we consume steps.
+      // Find all step lines, in order.
       const stepLineIdx: number[] = []
       lines.forEach((line, i) => {
         if (/^\*\*Step\s+\d+/.test(line)) stepLineIdx.push(i)
       })
       let stepCursor = 0
 
-      // Process each line that contains an annotation in source order.
+      // Process each annotation in source order.
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i]
         const match = line.match(annotationRe)
         if (!match) continue
 
-        // Parse codes (with their per-code letter) from the annotation.
+        // Parse codes from the annotation.
         const brackets = [...match[1].matchAll(/\[((?:M|B|A)\d)([^\]]*)\]/g)]
         const codes: string[] = []
         for (const [, firstCode, firstRest] of brackets) {
@@ -88,25 +85,29 @@ function preprocess(md: string): string {
         // Strip the annotation from this line; we'll re-attach codes below.
         lines[i] = line.replace(annotationRe, "").replace(/\s+$/, "").replace(/\s+(?=[.!?])/g, "")
 
-        // Route each code:
-        //   - M code: attach to the next step BEFORE this line, if any.
-        //   - A or B code: stay on this line.
-        for (const code of codes) {
-          const letter = code[0]
-          let target = i
-          if (letter === "M") {
-            // Find the next available step at index < i
-            while (stepCursor < stepLineIdx.length && stepLineIdx[stepCursor] >= i) {
-              stepCursor++
-            }
-            if (stepCursor < stepLineIdx.length) {
-              target = stepLineIdx[stepCursor]
-              stepCursor++
-            }
+        // Distribute: LAST code stays on the home line; earlier codes flow
+        // to step lines BEFORE this line, one per step in source order.
+        // If there are more codes than steps, extras pile up on home.
+        const homeIdx = i
+        const lastCode = codes[codes.length - 1]
+        const earlier = codes.slice(0, -1)
+
+        for (const code of earlier) {
+          // Find the next available step strictly before the home line.
+          while (stepCursor < stepLineIdx.length && stepLineIdx[stepCursor] >= homeIdx) {
+            stepCursor++
+          }
+          let target = homeIdx
+          if (stepCursor < stepLineIdx.length) {
+            target = stepLineIdx[stepCursor]
+            stepCursor++
           }
           if (!lineMarks[target]) lineMarks[target] = []
           lineMarks[target].push(code)
         }
+        // Last code → home line (typically the answer).
+        if (!lineMarks[homeIdx]) lineMarks[homeIdx] = []
+        lineMarks[homeIdx].push(lastCode)
       }
 
       // Re-insert codes as ONE **[code1] [code2] ...** annotation per line.
@@ -144,14 +145,9 @@ function preprocess(md: string): string {
       `<span class="we-step-num">${n}</span><b>${title.trim()}</b>`,
   )
 
-  // **Answer:** → wrap the rest of the line in a .we-answer span so the
-  // KaTeX \boxed{X} inside renders green via descendant CSS. The "ANSWER"
-  // word and its old pill are gone — the green box IS the answer indicator.
-  out = out.replace(
-    /^([^\n]*?)\*\*Answer:\*\*\s*([^\n]*)$/gm,
-    (_, before: string, after: string) =>
-      `${before}<span class="we-answer">${after}</span>`,
-  )
+  // **Answer:** → strip. The boxed value that follows is itself the
+  // answer indicator (rendered green via the global .boxed style).
+  out = out.replace(/\*\*Answer:\*\*\s*/g, "")
 
   // **Working.** → green WORKING pill
   out = out.replace(
@@ -295,14 +291,6 @@ export default function LessonBody({ markdown }: { markdown: string }) {
   React.useEffect(() => {
     if (!rootRef.current) return
     renderMathInNode(rootRef.current)
-    // Tag every \boxed{X} that lives inside an answer wrapper so CSS can
-    // recolour it green. The descendant selector .we-answer .boxed is
-    // unreliable in some pipelines because rehype splits the span and the
-    // math into separate subtrees; tagging the .boxed element directly
-    // guarantees the green styling lands.
-    rootRef.current.querySelectorAll(".we-answer .boxed").forEach(el => {
-      el.classList.add("we-answer-box")
-    })
   }, [processed])
 
   return (

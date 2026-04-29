@@ -535,24 +535,16 @@
   overflow-y: hidden;
 }
 .lesson-prose .katex-display > .katex { font-size: 1.18em; }
-/* Style KaTeX's \boxed{...} as a brand-themed answer box (default = blue). */
+/* KaTeX's \boxed{...} renders in PL Green. In lesson prose the boxed
+   macro is reserved for final answers (and sub-answers in multi-part
+   worked examples), so a single style covers every case. The boxed
+   value IS the answer indicator. */
 .lesson-prose .katex .boxed {
-  border-color: #00abfa !important;
-  color: #f0eeea;
+  border-color: #0fee89 !important;
+  color: #0fee89 !important;
   padding: 3px 10px !important;
   border-radius: 4px !important;
-  background: rgba(0, 171, 250, 0.06);
-}
-/* The boxed answer at the end of a worked example renders green —
-   that single visual cue replaces the old "ANSWER" pill. The
-   `.we-answer-box` class is added at runtime by the LessonBody post-
-   render pass to every `.boxed` inside a `.we-answer` wrapper, which
-   sidesteps any specificity / pipeline quirks with descendant
-   selectors. */
-.lesson-prose .katex .boxed.we-answer-box {
-  border-color: #0fee89 !important;
   background: rgba(15, 238, 137, 0.10) !important;
-  color: #0fee89 !important;
 }
 
 /* ─────────────────────────────────────────────────────
