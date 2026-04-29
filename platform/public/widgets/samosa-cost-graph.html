@@ -183,44 +183,47 @@ var tipx = document.getElementById("tipx");
 var tipy = document.getElementById("tipy");
 
 // ---------- animated cursor ----------
-// targetX: the discretely-snapped value (nearest 0.5) the user is "pointing at"
-// currentX: the continuously-animated value used to draw the cursor/dot/tooltip
-// On every input we update targetX and re-launch the tween from the current
-// displayed position, easing toward the new target with an ease-out curve.
-// Tooltip text reflects targetX immediately (snap value), so the readout
-// number is always trustworthy. The visual cursor glides into place.
-var targetX = 3, currentX = 3;
-var tweenStart = 0, tweenFrom = 3, tweenDur = 220, rafId = null;
+// Exponential pursuit. `targetX` is the snapped value (nearest 0.5) the user
+// is currently pointing at. A rAF loop pulls `currentX` toward `targetX` by
+// a fixed fraction every frame: SMOOTH = 0.40, so each frame closes 40% of
+// the remaining gap. ~5 frames to reach 92% of target, ~10 frames to 99% —
+// fast enough to feel attached to the mouse, smooth enough to glide between
+// snap points. No fixed duration, so rapid mousemove updates always pursue
+// the latest target without "tween restart" lurches.
+var targetX = 3, currentX = 3, rafId = null;
+var SMOOTH = 0.40;
 
-function easeOutExpo(t) { return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+function ensureAnim() {
+  if (rafId !== null) return;
+  rafId = requestAnimationFrame(animFrame);
+}
 
-function tick(now) {
-  var t = Math.min(1, (now - tweenStart) / tweenDur);
-  var eased = easeOutExpo(t);
-  currentX = tweenFrom + (targetX - tweenFrom) * eased;
+function animFrame() {
+  var diff = targetX - currentX;
+  if (Math.abs(diff) < 0.003) {
+    currentX = targetX;
+    draw();
+    rafId = null;
+    return;
+  }
+  currentX += diff * SMOOTH;
   draw();
-  if (t >= 1) { currentX = targetX; draw(); rafId = null; return; }
-  rafId = requestAnimationFrame(tick);
+  rafId = requestAnimationFrame(animFrame);
 }
 
 function setTarget(rawX, opts) {
   var snapped = Math.max(0, Math.min(X_MAX, Math.round(rawX * 2) / 2));
-  if (snapped === targetX && rafId === null && (!opts || !opts.force)) {
-    // already there and idle — just redraw (e.g., for a resize)
-    draw();
-    return;
-  }
-  targetX = snapped;
   if (opts && opts.snap) {
-    // skip the tween — used for first-paint and resize
-    currentX = targetX;
+    // first-paint or resize — skip animation
+    targetX = snapped;
+    currentX = snapped;
     if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
     draw();
     return;
   }
-  tweenFrom = currentX;
-  tweenStart = performance.now();
-  if (rafId === null) rafId = requestAnimationFrame(tick);
+  if (snapped === targetX) return; // mouse stayed in same snap region — no work
+  targetX = snapped;
+  ensureAnim();
 }
 
 function draw() {
