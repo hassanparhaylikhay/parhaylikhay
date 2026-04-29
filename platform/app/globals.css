@@ -377,17 +377,19 @@
   background: rgba(15, 238, 137, 0.08);
   border-color: rgba(15, 238, 137, 0.30);
 }
+/* Mark-scheme pill — compact, BLUE, code-only (M1, B1, A1). */
 .pill-semantic--mark {
+  color: #00abfa;
+  background: rgba(0, 171, 250, 0.08);
+  border-color: rgba(0, 171, 250, 0.32);
   font-size: 10.5px;
-  letter-spacing: 0.8px;
-  text-transform: none;
-  padding: 3px 7px;
-  margin: 2px 4px 2px 0;
-}
-.pill-semantic--mark b {
   font-weight: 700;
-  margin-right: 4px;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
+  text-transform: none;
+  padding: 2px 8px;
+  margin: 0 0 0 6px;
+  min-width: 28px;
+  justify-content: center;
 }
 .pill-semantic--warning {
   color: #ff4670;
@@ -395,21 +397,21 @@
   border-color: rgba(255, 70, 112, 0.32);
 }
 
-/* Mark-pill cluster — right-aligned block following an answer line.
-   Pulls trailing M1/A1/B1 annotations out of the prose flow so the
-   answer text reads cleanly. Inside a worked-example card it floats
-   the marks against the right edge. */
+/* Mark-pill cluster — sits flush to the right edge of its line.
+   Outside a worked example, lives below the answer text inline-right.
+   Inside a worked example, floats off into the card's right margin so
+   the answer text reads cleanly without mark codes crowding the prose. */
 .lesson-prose .we-marks {
-  display: block;
-  margin-top: 8px;
-  text-align: right;
+  display: inline-flex;
+  gap: 6px;
+  vertical-align: 1px;
+  margin-left: 8px;
 }
-/* When the marks fit on the same line as a short answer, allow them
-   to sit inline-right via a wrapper. */
+/* Inside a WE card, push the cluster to the right edge of the line. */
 .lesson-prose .we-card .we-marks {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px dashed #1a2632;
+  float: right;
+  margin-left: 16px;
+  margin-top: 0;
 }
 
 /* ─── Worked example card ─── */
@@ -509,14 +511,14 @@
 .lesson-prose .trap-callout li { margin-top: 4px; }
 
 /* ─── KaTeX overrides ─── */
-.lesson-prose .katex { color: #f0eeea; font-size: 1em; }
+.lesson-prose .katex { color: #f0eeea; font-size: 1.08em; }
 .lesson-prose .katex-display {
   margin: 18px 0;
   padding: 10px 6px;
   overflow-x: auto;
   overflow-y: hidden;
 }
-.lesson-prose .katex-display > .katex { font-size: 1.1em; }
+.lesson-prose .katex-display > .katex { font-size: 1.18em; }
 /* Style KaTeX's \boxed{...} as a brand-themed answer box */
 .lesson-prose .katex .boxed {
   border-color: #00abfa !important;

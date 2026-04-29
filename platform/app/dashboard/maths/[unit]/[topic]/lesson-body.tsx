@@ -71,29 +71,29 @@ function preprocess(md: string): string {
     '<span class="pill-semantic pill-semantic--success">WORKING</span>',
   )
 
-  // Mark-scheme annotations like [M1 for ...], [B1], [B1 for X; A1 for Y]
-  // become a right-aligned cluster of unified green pills. Multiple codes
-  // separated by ";" inside one bracket each become their own pill.
+  // Mark-scheme annotations: **[M1 for ...]**, **[B1]**, **[B1 ...; A1 ...]**.
+  // Match the bold markers strictly (directly adjacent to [ and ]) so we
+  // don't accidentally consume `**` from neighbouring bold prose.
+  // Output: a compact right-aligned cluster of code-only pills (M1/B1/A1).
+  // The prose around the cluster explains what each mark is for; we don't
+  // duplicate that text inside the pill.
   out = out.replace(
-    /(?:\s*\[(?:(?:M|B|A)\d)(?:[^\]]*)\])+/g,
-    (full) => {
-      const brackets = [...full.matchAll(/\[((?:M|B|A)\d)([^\]]*)\]/g)]
-      const pills: string[] = []
+    /\*\*\s*((?:\[(?:M|B|A)\d(?:[^\]]*)\]\s*)+)\*\*/g,
+    (_full, group: string) => {
+      const brackets = [...group.matchAll(/\[((?:M|B|A)\d)([^\]]*)\]/g)]
+      const codes: string[] = []
       for (const [, firstCode, firstRest] of brackets) {
-        // Split inside the bracket on ";" — each fragment may start with its
-        // own M1/B1/A1 code, otherwise it continues the previous code.
         const parts = (firstCode + firstRest).split(/\s*;\s*/)
         for (const part of parts) {
-          const m = part.match(/^((?:M|B|A)\d)\b\s*(.*)$/)
-          if (!m) continue
-          const code = m[1]
-          const body = m[2].trim()
-          pills.push(
-            `<span class="pill-semantic pill-semantic--mark"><b>${code}</b>${body ? ` ${body}` : ""}</span>`,
-          )
+          const m = part.match(/^((?:M|B|A)\d)\b/)
+          if (m) codes.push(m[1])
         }
       }
-      return ` <span class="we-marks">${pills.join("")}</span>`
+      if (codes.length === 0) return _full
+      const pills = codes
+        .map(c => `<span class="pill-semantic pill-semantic--mark">${c}</span>`)
+        .join("")
+      return `<span class="we-marks">${pills}</span>`
     },
   )
 
