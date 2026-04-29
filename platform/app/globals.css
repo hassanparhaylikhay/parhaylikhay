@@ -396,6 +396,11 @@
   background: rgba(255, 70, 112, 0.07);
   border-color: rgba(255, 70, 112, 0.32);
 }
+.pill-semantic--info {
+  color: #00abfa;
+  background: rgba(0, 171, 250, 0.08);
+  border-color: rgba(0, 171, 250, 0.32);
+}
 
 /* Mark-pill cluster — sits to the right of its working line.
    Each step's cluster lives at the start of its paragraph (DOM order)
@@ -530,13 +535,27 @@
   overflow-y: hidden;
 }
 .lesson-prose .katex-display > .katex { font-size: 1.18em; }
-/* Style KaTeX's \boxed{...} as a brand-themed answer box */
+/* Style KaTeX's \boxed{...} as a brand-themed answer box (default = blue). */
 .lesson-prose .katex .boxed {
   border-color: #00abfa !important;
   color: #f0eeea;
   padding: 3px 10px !important;
   border-radius: 4px !important;
   background: rgba(0, 171, 250, 0.06);
+}
+/* When the boxed value sits in an answer paragraph, recolour it green —
+   that single visual cue replaces the old "ANSWER" pill. */
+.lesson-prose p:has(.we-answer-mark) .katex .boxed {
+  border-color: #0fee89 !important;
+  background: rgba(15, 238, 137, 0.08);
+  color: #0fee89;
+}
+/* Hidden marker — purely a CSS hook, never visible. */
+.lesson-prose .we-answer-mark {
+  display: inline;
+  width: 0;
+  height: 0;
+  font-size: 0;
 }
 
 /* ─────────────────────────────────────────────────────

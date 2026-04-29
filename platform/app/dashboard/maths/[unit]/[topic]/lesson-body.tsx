@@ -27,25 +27,97 @@ function preprocess(md: string): string {
       `${heading}<div class="mistake-list">\n\n${bullets}\n</div>\n\n`,
   )
 
-  // Worked-example card: wrap everything from "## Worked example [N][: TITLE]"
-  // through "Full marks $= N$." in a bordered container with its own header
-  // pill and footer chip. Runs first so the "Full marks" inside becomes the
-  // card foot and doesn't leak to the standalone chip transform below.
+  // Worked-example card. Captures everything from "## Worked example [N][: TITLE]"
+  // through "Full marks $= N$." and:
+  //   1. Pulls all M1/B1/A1 codes out of the body (whichever line they were on).
+  //   2. Distributes them across the step/answer paragraphs in canonical order:
+  //        M and B codes → step paragraphs in order
+  //        A codes       → the answer line
+  //   3. Re-inserts each code as **[code]** at the end of its target line. The
+  //      mark-cluster regex below picks them up and prepends to each line so
+  //      the float-right CSS aligns each code with its working.
+  // Runs first so the "Full marks" inside becomes the card foot.
   out = out.replace(
     /^## Worked example(?: *(\d+))?([^\n]*)\n([\s\S]*?)^Full marks \$= (\d+)\$\.\s*/gm,
     (_m, num: string | undefined, rest: string, body: string, marks: string) => {
       const n = (num || "1").padStart(2, "0")
       const headingText =
         (num ? `Worked example ${num}` : "Worked example") + (rest || "")
-      const marksLabel = marks === "1" ? "mark" : "marks"
+      const marksLabel = marks === "1" ? "MARK" : "MARKS"
+
+      // 1. Extract all codes from any **[...]** annotations in the body.
+      const allCodes: string[] = []
+      const bracketRe = /\*\*\s*((?:\[(?:M|B|A)\d(?:[^\]]*)\]\s*)+)\*\*/g
+      let cleanBody = body.replace(bracketRe, (_match: string, group: string) => {
+        const brackets = [...group.matchAll(/\[((?:M|B|A)\d)([^\]]*)\]/g)]
+        for (const [, firstCode, firstRest] of brackets) {
+          const parts = (firstCode + firstRest).split(/\s*;\s*/)
+          for (const part of parts) {
+            const cm = part.match(/^((?:M|B|A)\d)\b/)
+            if (cm) allCodes.push(cm[1])
+          }
+        }
+        return ""
+      })
+      // Tidy: collapse trailing whitespace/full-stops left by stripping, and
+      // collapse any blank "annotation-only" paragraphs.
+      cleanBody = cleanBody
+        .replace(/[ \t]+(\.|\?|!)\s*$/gm, "$1")
+        .replace(/[ \t]+$/gm, "")
+        .replace(/\n[ \t]*\n[ \t]*\n+/g, "\n\n")
+
+      // 2. Find anchor lines.
+      const lines = cleanBody.split("\n")
+      const stepIdx: number[] = []
+      let answerIdx = -1
+      lines.forEach((line, i) => {
+        if (/^\*\*Step\s+\d+/.test(line)) stepIdx.push(i)
+        if (/^\*\*Answer:/.test(line)) answerIdx = i
+      })
+
+      // 3. Distribute codes: M and B → steps in order; A → answer.
+      const lineMarks: Record<number, string[]> = {}
+      let stepCursor = 0
+      for (const code of allCodes) {
+        const letter = code[0]
+        let target = -1
+        if (letter === "A" && answerIdx >= 0) {
+          target = answerIdx
+        } else if (letter === "M" || letter === "B") {
+          if (stepIdx[stepCursor] !== undefined) {
+            target = stepIdx[stepCursor]
+            stepCursor++
+          } else if (answerIdx >= 0) {
+            target = answerIdx
+          } else if (stepIdx.length > 0) {
+            target = stepIdx[stepIdx.length - 1]
+          }
+        } else if (answerIdx >= 0) {
+          target = answerIdx
+        }
+        if (target >= 0) {
+          if (!lineMarks[target]) lineMarks[target] = []
+          lineMarks[target].push(code)
+        }
+      }
+
+      // 4. Re-insert as **[code]** at the end of each anchor line.
+      const newLines = lines.map((line, i) => {
+        const codes = lineMarks[i]
+        if (!codes) return line
+        const annotation = codes.map(c => `**[${c}]**`).join(" ")
+        return line + " " + annotation
+      })
+      cleanBody = newLines.join("\n")
+
       return (
         `<div class="we-card">\n\n` +
         `<div class="we-card-head">` +
-          `<div class="we-card-meta"><span class="pill-status pill-status--ex">EX ${n}</span><span class="pill-status pill-status--marks">${marks} ${marksLabel.toUpperCase()}</span></div>` +
+          `<div class="we-card-meta"><span class="pill-status pill-status--ex">EX ${n}</span><span class="pill-status pill-status--marks">${marks} ${marksLabel}</span></div>` +
           `<p class="we-card-heading">${headingText}</p>` +
         `</div>\n\n` +
-        `${body.trim()}\n\n` +
-        `<div class="we-card-foot"><span class="pill-semantic pill-semantic--success">Full marks · ${marks}</span></div>\n\n` +
+        `${cleanBody.trim()}\n\n` +
+        `<div class="we-card-foot"><span class="pill-semantic pill-semantic--info">Full marks · ${marks}</span></div>\n\n` +
         `</div>\n\n`
       )
     },
@@ -59,10 +131,12 @@ function preprocess(md: string): string {
       `<span class="we-step-num">${n}</span><b>${title.trim()}</b>`,
   )
 
-  // **Answer:** ... → green ANSWER pill (semantic / success)
+  // **Answer:** → invisible marker. The "ANSWER" word and its pill are gone.
+  // CSS uses :has(.we-answer-mark) on the surrounding paragraph to style the
+  // KaTeX \boxed{...} that follows in green, so the answer reads itself.
   out = out.replace(
-    /\*\*Answer:\*\*/g,
-    '<span class="pill-semantic pill-semantic--success">ANSWER</span>',
+    /\*\*Answer:\*\*\s*/g,
+    '<span class="we-answer-mark"></span>',
   )
 
   // **Working.** → green WORKING pill
