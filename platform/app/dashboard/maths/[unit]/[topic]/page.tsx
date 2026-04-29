@@ -33,7 +33,7 @@ export default async function TopicPage({
           <p className="text-[11px] font-mono tracking-[2.5px] uppercase text-[#00abfa] mb-3">{topic.code}</p>
           <h1 className="text-[30px] font-bold text-[#f0eeea] tracking-tight leading-tight">{topic.title}</h1>
           <p className="text-[14px] text-[#7a7875] mt-3 max-w-[600px] leading-relaxed">
-            This topic is split into {topic.parts.filter(p => !p.isReview).length} short parts plus a review. Work through them in order — each part has a quick check at the end.
+            This topic is split into {topic.parts.filter(p => !p.isReview).length} short parts plus a review. Work through them in order. Each part has a quick check at the end.
           </p>
         </div>
 

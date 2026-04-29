@@ -44,7 +44,7 @@ export default async function DashboardPage() {
         <section className="mb-14">
           <div className="flex items-center gap-3 mb-5">
             <div className="w-1.5 h-1.5 rounded-full bg-[#00abfa]" />
-            <h2 className="text-[14px] font-semibold text-[#f0eeea]">Cambridge 4024 — Mathematics</h2>
+            <h2 className="text-[14px] font-semibold text-[#f0eeea]">Cambridge 4024 Mathematics</h2>
             <span className="text-[10px] font-mono text-[#3a4a5a] border border-[#141e2a] rounded px-2 py-0.5 tracking-wider">O-LEVEL</span>
           </div>
 
@@ -81,7 +81,7 @@ export default async function DashboardPage() {
           <p className="text-[11px] font-mono tracking-[2.5px] uppercase text-[#3a4a5a] mb-5">Coming soon</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
-              { title: "Physics", sub: "Cambridge 5054 — O-Level", color: "#ff822c" },
+              { title: "Physics", sub: "Cambridge 5054 O-Level", color: "#ff822c" },
               { title: "Past Papers", sub: "2015–2025 · Worked solutions", color: "#0fee89" },
             ].map(({ title, sub, color }) => (
               <div
