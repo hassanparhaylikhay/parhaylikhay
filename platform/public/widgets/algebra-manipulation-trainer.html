@@ -222,68 +222,32 @@ function buildSumTex(parts) {
 }
 
 function genLikeTerms() {
-  var pattern = pick(["xy", "xx2"]);
-  var ax1, ax2, ay1, ay2, terms, sx, sy, ans;
-  if (pattern === "xy") {
-    ax1 = rand(2, 7); ax2 = rand(-7, -1);
-    ay1 = rand(2, 7); ay2 = rand(-7, -1);
-    sx = ax1 + ax2; sy = ay1 + ay2;
-    terms = shuffle([
-      { c: ax1, lex: "x" }, { c: ay1, lex: "y" },
-      { c: ax2, lex: "x" }, { c: ay2, lex: "y" }
-    ]);
-    var ansParts = [];
-    if (sx !== 0) ansParts.push({ c: sx, lex: "x" });
-    if (sy !== 0) ansParts.push({ c: sy, lex: "y" });
-    ans = buildSumTex(ansParts);
-    return {
-      type: "text",
-      promptHTML: "Simplify by combining like terms.",
-      tex: buildSumTex(terms),
-      check: function(s) { return checkPoly(s, ans, ans); },
-      answer: ans,
-      hint: "format: e.g. 3x + 5y or 2x - 3y",
-      why: "Group $x$-terms and $y$-terms separately, then combine coefficients."
-    };
-  } else {
-    // mix x and x²
-    var bx1 = rand(1, 5), bx2 = rand(-5, -1);
-    var bxx1 = rand(1, 5), bxx2 = rand(-5, -1);
-    sx = bx1 + bx2;
-    var sxx = bxx1 + bxx2;
-    terms = shuffle([
-      { c: bxx1, lex: "x2" }, { c: bx1, lex: "x" },
-      { c: bxx2, lex: "x2" }, { c: bx2, lex: "x" }
-    ]);
-    function txTerm(c, lex) {
-      var L = lex === "x2" ? "x^2" : lex;
-      if (c === 1) return L;
-      if (c === -1) return "-" + L;
-      return c + L;
-    }
-    function txSum(parts) {
-      var s = "";
-      for (var i = 0; i < parts.length; i++) {
-        var p = parts[i];
-        if (i === 0) s += txTerm(p.c, p.lex);
-        else if (p.c < 0) s += " - " + txTerm(-p.c, p.lex);
-        else s += " + " + txTerm(p.c, p.lex);
-      }
-      return s;
-    }
-    var ansParts = [];
-    if (sxx !== 0) ansParts.push({ c: sxx, lex: "x2" });
-    if (sx !== 0) ansParts.push({ c: sx, lex: "x" });
-    return {
-      type: "text",
-      promptHTML: "Simplify by combining like terms.",
-      tex: txSum(terms),
-      check: function(s) { return checkPoly(s, "", txSum(ansParts)); },
-      answer: txSum(ansParts),
-      hint: "format: e.g. 3x^2 + 5x or 2x^2 - 3x",
-      why: "$x^2$ and $x$ are different powers, so they don't combine. Group them separately."
-    };
-  }
+  // Linear-only mode (two letters, no powers): keeps the answer easy to type.
+  var ax1 = rand(2, 7), ax2 = rand(-7, -1);
+  var ay1 = rand(2, 7), ay2 = rand(-7, -1);
+  var sx = ax1 + ax2, sy = ay1 + ay2;
+  if (sx === 0) sx = 1;
+  if (sy === 0) sy = 1;
+  // recompute ax1 / ay1 to ensure non-zero sums
+  ax1 = sx - ax2;
+  ay1 = sy - ay2;
+  var terms = shuffle([
+    { c: ax1, lex: "x" }, { c: ay1, lex: "y" },
+    { c: ax2, lex: "x" }, { c: ay2, lex: "y" }
+  ]);
+  var ansParts = [];
+  if (sx !== 0) ansParts.push({ c: sx, lex: "x" });
+  if (sy !== 0) ansParts.push({ c: sy, lex: "y" });
+  var ans = buildSumTex(ansParts);
+  return {
+    type: "text",
+    promptHTML: "Simplify by combining like terms.",
+    tex: buildSumTex(terms),
+    check: function(s) { return checkPoly(s, ans, ans); },
+    answer: ans,
+    hint: "format: e.g. 3x + 5y or 2x - 3y",
+    why: "Group x-terms and y-terms separately, then combine coefficients. Different letters never combine."
+  };
 }
 
 // =========================================================================
@@ -324,11 +288,9 @@ function genExpandSingle() {
 function genExpandDouble() {
   var p = pick([rand(1, 6), -rand(1, 6)]);
   var q = pick([rand(1, 6), -rand(1, 6)]);
-  // Coefficient of x in each bracket (sometimes 1, sometimes more for variety)
-  var aCoef = pick([1, 1, 1, 2, 3]);
-  var bCoef = pick([1, 1, 1, 2]);
-  // (aCoef·x + p)(bCoef·x + q)
-  // = aCoef·bCoef·x^2 + (aCoef·q + bCoef·p)·x + p·q
+  if (p === q) q = q + 1;
+  var aCoef = pick([1, 1, 1, 2]);
+  var bCoef = 1;
   var x2 = aCoef * bCoef;
   var x1 = aCoef * q + bCoef * p;
   var x0 = p * q;
@@ -350,13 +312,24 @@ function genExpandDouble() {
     if (s === "") s = "0";
     return s;
   }
+  var correct = expTex(x2, x1, x0);
+  // Distractors: forgot middle term, wrong-sign middle, dropped sign on constant
+  var distractor1 = expTex(x2, 0, x0);
+  var distractor2 = expTex(x2, -x1, x0);
+  var distractor3 = expTex(x2, x1, -x0);
+  // dedupe in case any collision
+  var opts = [correct];
+  [distractor1, distractor2, distractor3].forEach(function(d) {
+    if (opts.indexOf(d) === -1) opts.push(d);
+  });
+  while (opts.length < 4) opts.push(expTex(x2, x1 + opts.length, x0));
+  var optsShuffled = shuffle(opts);
   return {
-    type: "text",
+    type: "mc",
     promptHTML: "Expand and simplify.",
     tex: brTex(aCoef, p) + brTex(bCoef, q),
-    check: function(s) { return checkPoly(s, "", expTex(x2, x1, x0)); },
-    answer: expTex(x2, x1, x0),
-    hint: "format: e.g. x^2 + 5x + 6",
+    options: optsShuffled,
+    correctIdx: optsShuffled.indexOf(correct),
     why: "Each term in the first bracket meets each term in the second (FOIL: 4 products), then combine like terms."
   };
 }
@@ -543,6 +516,31 @@ function tryRender(target, tex) {
   }
 }
 
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// renderMixed splits a string by $...$ delimiters and renders the math
+// segments via katex.renderToString while leaving prose as escaped text.
+// Used for the reveal-line / why text where authors mix prose with math.
+function renderMixed(target, text) {
+  if (typeof katex === "undefined") {
+    setTimeout(function() { renderMixed(target, text); }, 50);
+    return;
+  }
+  var parts = text.split("$");
+  var html = "";
+  parts.forEach(function(part, i) {
+    if (i % 2 === 0) {
+      html += escapeHtml(part);
+    } else {
+      try { html += katex.renderToString(part, { throwOnError: false }); }
+      catch (e) { html += escapeHtml(part); }
+    }
+  });
+  target.innerHTML = html;
+}
+
 function renderQ() {
   if (state.idx >= state.set.length) { renderDone(); return; }
   var q = state.set[state.idx];
@@ -604,7 +602,7 @@ function showReveal(correct, q) {
       '<p class="reveal-explain" id="why"></p>' +
       '<div class="controls"><button class="btn primary" id="next">' + (state.idx < state.set.length - 1 ? "Next →" : "See result") + '</button></div>' +
     '</div>';
-  tryRender(document.getElementById("why"), q.why);
+  renderMixed(document.getElementById("why"), q.why);
   document.getElementById("next").addEventListener("click", function() { state.idx++; renderQ(); });
   reportHeight();
 }

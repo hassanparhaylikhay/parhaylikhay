@@ -342,6 +342,28 @@ function tryRender(target, tex) {
   }
 }
 
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function renderMixed(target, text) {
+  if (typeof katex === "undefined") {
+    setTimeout(function() { renderMixed(target, text); }, 50);
+    return;
+  }
+  var parts = text.split("$");
+  var html = "";
+  parts.forEach(function(part, i) {
+    if (i % 2 === 0) {
+      html += escapeHtml(part);
+    } else {
+      try { html += katex.renderToString(part, { throwOnError: false }); }
+      catch (e) { html += escapeHtml(part); }
+    }
+  });
+  target.innerHTML = html;
+}
+
 function renderQ() {
   if (state.idx >= state.set.length) { renderDone(); return; }
   var q = state.set[state.idx];
@@ -409,7 +431,7 @@ function showReveal(correct, q) {
       '<p class="reveal-explain" id="why"></p>' +
       '<div class="controls"><button class="btn primary" id="next">' + (state.idx < state.set.length - 1 ? "Next →" : "See result") + '</button></div>' +
     '</div>';
-  tryRender(document.getElementById("why"), q.why);
+  renderMixed(document.getElementById("why"), q.why);
   document.getElementById("next").addEventListener("click", function() {
     state.idx++;
     renderQ();
