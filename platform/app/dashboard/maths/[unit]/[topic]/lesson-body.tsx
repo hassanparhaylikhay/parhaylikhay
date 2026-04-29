@@ -290,7 +290,16 @@ export default function LessonBody({ markdown }: { markdown: string }) {
   const rootRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
-    if (rootRef.current) renderMathInNode(rootRef.current)
+    if (!rootRef.current) return
+    renderMathInNode(rootRef.current)
+    // Tag every \boxed{X} that lives inside an answer wrapper so CSS can
+    // recolour it green. The descendant selector .we-answer .boxed is
+    // unreliable in some pipelines because rehype splits the span and the
+    // math into separate subtrees; tagging the .boxed element directly
+    // guarantees the green styling lands.
+    rootRef.current.querySelectorAll(".we-answer .boxed").forEach(el => {
+      el.classList.add("we-answer-box")
+    })
   }, [processed])
 
   return (

@@ -543,14 +543,16 @@
   border-radius: 4px !important;
   background: rgba(0, 171, 250, 0.06);
 }
-/* When the boxed value sits inside a .we-answer wrapper, recolour it
-   green — that single visual cue replaces the old "ANSWER" pill. The
-   span only wraps the answer line content (after "Answer:") so any
-   \boxed{X} inside is the final answer.  */
-.lesson-prose .we-answer .katex .boxed {
+/* The boxed answer at the end of a worked example renders green —
+   that single visual cue replaces the old "ANSWER" pill. The
+   `.we-answer-box` class is added at runtime by the LessonBody post-
+   render pass to every `.boxed` inside a `.we-answer` wrapper, which
+   sidesteps any specificity / pipeline quirks with descendant
+   selectors. */
+.lesson-prose .katex .boxed.we-answer-box {
   border-color: #0fee89 !important;
-  background: rgba(15, 238, 137, 0.08);
-  color: #0fee89;
+  background: rgba(15, 238, 137, 0.10) !important;
+  color: #0fee89 !important;
 }
 
 /* ─────────────────────────────────────────────────────
