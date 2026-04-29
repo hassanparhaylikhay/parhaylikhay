@@ -543,19 +543,14 @@
   border-radius: 4px !important;
   background: rgba(0, 171, 250, 0.06);
 }
-/* When the boxed value sits in an answer paragraph, recolour it green —
-   that single visual cue replaces the old "ANSWER" pill. */
-.lesson-prose p:has(.we-answer-mark) .katex .boxed {
+/* When the boxed value sits inside a .we-answer wrapper, recolour it
+   green — that single visual cue replaces the old "ANSWER" pill. The
+   span only wraps the answer line content (after "Answer:") so any
+   \boxed{X} inside is the final answer.  */
+.lesson-prose .we-answer .katex .boxed {
   border-color: #0fee89 !important;
   background: rgba(15, 238, 137, 0.08);
   color: #0fee89;
-}
-/* Hidden marker — purely a CSS hook, never visible. */
-.lesson-prose .we-answer-mark {
-  display: inline;
-  width: 0;
-  height: 0;
-  font-size: 0;
 }
 
 /* ─────────────────────────────────────────────────────

@@ -27,16 +27,26 @@ function preprocess(md: string): string {
       `${heading}<div class="mistake-list">\n\n${bullets}\n</div>\n\n`,
   )
 
-  // Worked-example card. Captures everything from "## Worked example [N][: TITLE]"
-  // through "Full marks $= N$." and:
-  //   1. Pulls all M1/B1/A1 codes out of the body (whichever line they were on).
-  //   2. Distributes them across the step/answer paragraphs in canonical order:
-  //        M and B codes → step paragraphs in order
-  //        A codes       → the answer line
-  //   3. Re-inserts each code as **[code]** at the end of its target line. The
-  //      mark-cluster regex below picks them up and prepends to each line so
-  //      the float-right CSS aligns each code with its working.
-  // Runs first so the "Full marks" inside becomes the card foot.
+  // Worked-example card.
+  //
+  // Each `**[X1 ...; X2 ...]**` annotation already sits on the right line —
+  // typically the answer line, sometimes mid-working. We process annotations
+  // line-by-line and apply this rule:
+  //
+  //   * A and B codes ALWAYS stay on the line they were authored on.
+  //     B = independent answer mark. A = accuracy answer mark. Neither
+  //     belongs on a method step; both belong with the answer.
+  //
+  //   * M codes are method marks and naturally belong on the step that
+  //     does the corresponding method work. If the annotation contains M
+  //     codes AND there are unfilled `**Step N:` lines BEFORE the
+  //     annotation, those M codes get pulled out and attached to those
+  //     steps in order. Remaining M codes (no step left) stay on the
+  //     home line.
+  //
+  // The mark-cluster regex later prepends each line's codes as a
+  // float-right cluster, so the marks visually align with the line that
+  // earned them.
   out = out.replace(
     /^## Worked example(?: *(\d+))?([^\n]*)\n([\s\S]*?)^Full marks \$= (\d+)\$\.\s*/gm,
     (_m, num: string | undefined, rest: string, body: string, marks: string) => {
@@ -45,70 +55,70 @@ function preprocess(md: string): string {
         (num ? `Worked example ${num}` : "Worked example") + (rest || "")
       const marksLabel = marks === "1" ? "MARK" : "MARKS"
 
-      // 1. Extract all codes from any **[...]** annotations in the body.
-      const allCodes: string[] = []
-      const bracketRe = /\*\*\s*((?:\[(?:M|B|A)\d(?:[^\]]*)\]\s*)+)\*\*/g
-      let cleanBody = body.replace(bracketRe, (_match: string, group: string) => {
-        const brackets = [...group.matchAll(/\[((?:M|B|A)\d)([^\]]*)\]/g)]
+      const lines = body.split("\n")
+      const lineMarks: Record<number, string[]> = {}
+      const annotationRe = /\*\*\s*((?:\[(?:M|B|A)\d(?:[^\]]*)\]\s*)+)\*\*/
+
+      // First, find all step lines and remember a cursor per scan position.
+      // We use a single cursor that advances as we consume steps.
+      const stepLineIdx: number[] = []
+      lines.forEach((line, i) => {
+        if (/^\*\*Step\s+\d+/.test(line)) stepLineIdx.push(i)
+      })
+      let stepCursor = 0
+
+      // Process each line that contains an annotation in source order.
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i]
+        const match = line.match(annotationRe)
+        if (!match) continue
+
+        // Parse codes (with their per-code letter) from the annotation.
+        const brackets = [...match[1].matchAll(/\[((?:M|B|A)\d)([^\]]*)\]/g)]
+        const codes: string[] = []
         for (const [, firstCode, firstRest] of brackets) {
           const parts = (firstCode + firstRest).split(/\s*;\s*/)
           for (const part of parts) {
             const cm = part.match(/^((?:M|B|A)\d)\b/)
-            if (cm) allCodes.push(cm[1])
+            if (cm) codes.push(cm[1])
           }
         }
-        return ""
-      })
-      // Tidy: collapse trailing whitespace/full-stops left by stripping, and
-      // collapse any blank "annotation-only" paragraphs.
-      cleanBody = cleanBody
-        .replace(/[ \t]+(\.|\?|!)\s*$/gm, "$1")
-        .replace(/[ \t]+$/gm, "")
-        .replace(/\n[ \t]*\n[ \t]*\n+/g, "\n\n")
+        if (codes.length === 0) continue
 
-      // 2. Find anchor lines.
-      const lines = cleanBody.split("\n")
-      const stepIdx: number[] = []
-      let answerIdx = -1
-      lines.forEach((line, i) => {
-        if (/^\*\*Step\s+\d+/.test(line)) stepIdx.push(i)
-        if (/^\*\*Answer:/.test(line)) answerIdx = i
-      })
+        // Strip the annotation from this line; we'll re-attach codes below.
+        lines[i] = line.replace(annotationRe, "").replace(/\s+$/, "").replace(/\s+(?=[.!?])/g, "")
 
-      // 3. Distribute codes: M and B → steps in order; A → answer.
-      const lineMarks: Record<number, string[]> = {}
-      let stepCursor = 0
-      for (const code of allCodes) {
-        const letter = code[0]
-        let target = -1
-        if (letter === "A" && answerIdx >= 0) {
-          target = answerIdx
-        } else if (letter === "M" || letter === "B") {
-          if (stepIdx[stepCursor] !== undefined) {
-            target = stepIdx[stepCursor]
-            stepCursor++
-          } else if (answerIdx >= 0) {
-            target = answerIdx
-          } else if (stepIdx.length > 0) {
-            target = stepIdx[stepIdx.length - 1]
+        // Route each code:
+        //   - M code: attach to the next step BEFORE this line, if any.
+        //   - A or B code: stay on this line.
+        for (const code of codes) {
+          const letter = code[0]
+          let target = i
+          if (letter === "M") {
+            // Find the next available step at index < i
+            while (stepCursor < stepLineIdx.length && stepLineIdx[stepCursor] >= i) {
+              stepCursor++
+            }
+            if (stepCursor < stepLineIdx.length) {
+              target = stepLineIdx[stepCursor]
+              stepCursor++
+            }
           }
-        } else if (answerIdx >= 0) {
-          target = answerIdx
-        }
-        if (target >= 0) {
           if (!lineMarks[target]) lineMarks[target] = []
           lineMarks[target].push(code)
         }
       }
 
-      // 4. Re-insert as **[code]** at the end of each anchor line.
+      // Re-insert codes as **[code]** at the end of each target line.
       const newLines = lines.map((line, i) => {
         const codes = lineMarks[i]
         if (!codes) return line
         const annotation = codes.map(c => `**[${c}]**`).join(" ")
-        return line + " " + annotation
+        return line.replace(/\s+$/, "") + " " + annotation
       })
-      cleanBody = newLines.join("\n")
+      const cleanBody = newLines
+        .join("\n")
+        .replace(/\n[ \t]*\n[ \t]*\n+/g, "\n\n")
 
       return (
         `<div class="we-card">\n\n` +
@@ -131,12 +141,13 @@ function preprocess(md: string): string {
       `<span class="we-step-num">${n}</span><b>${title.trim()}</b>`,
   )
 
-  // **Answer:** → invisible marker. The "ANSWER" word and its pill are gone.
-  // CSS uses :has(.we-answer-mark) on the surrounding paragraph to style the
-  // KaTeX \boxed{...} that follows in green, so the answer reads itself.
+  // **Answer:** → wrap the rest of the line in a .we-answer span so the
+  // KaTeX \boxed{X} inside renders green via descendant CSS. The "ANSWER"
+  // word and its old pill are gone — the green box IS the answer indicator.
   out = out.replace(
-    /\*\*Answer:\*\*\s*/g,
-    '<span class="we-answer-mark"></span>',
+    /^([^\n]*?)\*\*Answer:\*\*\s*([^\n]*)$/gm,
+    (_, before: string, after: string) =>
+      `${before}<span class="we-answer">${after}</span>`,
   )
 
   // **Working.** → green WORKING pill
