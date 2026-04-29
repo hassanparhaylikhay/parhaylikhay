@@ -184,74 +184,96 @@ var tip = document.getElementById("tip");
 var tipx = document.getElementById("tipx");
 var tipy = document.getElementById("tipy");
 
-// Default position: snap to x = 3 (illustrative)
-function showAt(x) {
-  // Round to nearest 0.5 for a clean teaching value
-  x = Math.max(0, Math.min(X_MAX, x));
-  var xRound = Math.round(x * 2) / 2;
-  var y = P * xRound;
-  var px = xToPx(xRound);
-  var py = yToPx(y);
+// ---------- animated cursor ----------
+// targetX: the discretely-snapped value (nearest 0.5) the user is "pointing at"
+// currentX: the continuously-animated value used to draw the cursor/dot/tooltip
+// On every input we update targetX and re-launch the tween from the current
+// displayed position, easing toward the new target with an ease-out curve.
+// Tooltip text reflects targetX immediately (snap value), so the readout
+// number is always trustworthy. The visual cursor glides into place.
+var targetX = 3, currentX = 3;
+var tweenStart = 0, tweenFrom = 3, tweenDur = 220, rafId = null;
 
+function easeOutExpo(t) { return t >= 1 ? 1 : 1 - Math.pow(2, -10 * t); }
+
+function tick(now) {
+  var t = Math.min(1, (now - tweenStart) / tweenDur);
+  var eased = easeOutExpo(t);
+  currentX = tweenFrom + (targetX - tweenFrom) * eased;
+  draw();
+  if (t >= 1) { currentX = targetX; draw(); rafId = null; return; }
+  rafId = requestAnimationFrame(tick);
+}
+
+function setTarget(rawX, opts) {
+  var snapped = Math.max(0, Math.min(X_MAX, Math.round(rawX * 2) / 2));
+  if (snapped === targetX && rafId === null && (!opts || !opts.force)) {
+    // already there and idle — just redraw (e.g., for a resize)
+    draw();
+    return;
+  }
+  targetX = snapped;
+  if (opts && opts.snap) {
+    // skip the tween — used for first-paint and resize
+    currentX = targetX;
+    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+    draw();
+    return;
+  }
+  tweenFrom = currentX;
+  tweenStart = performance.now();
+  if (rafId === null) rafId = requestAnimationFrame(tick);
+}
+
+function draw() {
+  var px = xToPx(currentX);
+  var py = yToPx(P * currentX);
   vline.setAttribute("x1", px); vline.setAttribute("x2", px);
   cdot.setAttribute("cx", px); cdot.setAttribute("cy", py);
   vline.classList.add("on");
   cdot.classList.add("on");
 
-  tipx.textContent = (xRound % 1 === 0) ? String(xRound) : xRound.toFixed(1);
-  tipy.textContent = "Rs. " + y;
+  // tooltip text reflects the snapped target (numbers don't lag)
+  tipx.textContent = (targetX % 1 === 0) ? String(targetX) : targetX.toFixed(1);
+  tipy.textContent = "Rs. " + (P * targetX);
 
-  // Position tooltip in screen coords. Need to convert SVG (px,py) into the
-  // wrapping div's CSS coordinates.
+  // tooltip box follows the animated cursor in screen coords
   var rect = svg.getBoundingClientRect();
-  var vbW = 480, vbH = 260;
-  var sx = rect.width / vbW, sy = rect.height / vbH;
-  var screenPx = px * sx;
-  var screenPy = py * sy;
-  tip.style.left = (screenPx) + "px";
-  tip.style.top  = (screenPy - 8) + "px";
+  var sx = rect.width / 480;
+  var sy = rect.height / 260;
+  tip.style.left = (px * sx) + "px";
+  tip.style.top  = (py * sy - 8) + "px";
   tip.classList.add("on");
-}
-
-function clear() {
-  vline.classList.remove("on");
-  cdot.classList.remove("on");
-  tip.classList.remove("on");
 }
 
 function fromEvent(e) {
   var rect = svg.getBoundingClientRect();
   var clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
   if (clientX === undefined) return null;
-  var vbW = 480;
-  var x = ((clientX - rect.left) / rect.width) * vbW;
+  var x = ((clientX - rect.left) / rect.width) * 480;
   return pxToX(x);
 }
 
 hit.addEventListener("mousemove", function(e) {
   var x = fromEvent(e);
-  if (x !== null) showAt(x);
+  if (x !== null) setTarget(x);
 });
-hit.addEventListener("mouseleave", function() {
-  // keep last reading visible? leave persistent for clarity
-  // showing default (x=3) on leave
-  showAt(3);
-});
+hit.addEventListener("mouseleave", function() { setTarget(3); });
 hit.addEventListener("touchmove", function(e) {
   e.preventDefault();
   var x = fromEvent(e);
-  if (x !== null) showAt(x);
+  if (x !== null) setTarget(x);
 }, { passive: false });
 hit.addEventListener("touchstart", function(e) {
   var x = fromEvent(e);
-  if (x !== null) showAt(x);
+  if (x !== null) setTarget(x);
 });
 
-// initial reading
-showAt(3);
+// first paint — snap to default without a tween
+setTarget(3, { snap: true });
 
-// resize handler — tooltip needs to recompute on viewport change
-window.addEventListener("resize", function() { showAt(3); });
+// re-position tooltip on viewport changes (no animation needed)
+window.addEventListener("resize", function() { draw(); });
 
 // auto-resize parent iframe via postMessage
 var lastReported = 0, reportScheduled = false;
