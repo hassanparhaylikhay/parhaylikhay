@@ -195,18 +195,120 @@ export const UNITS: Unit[] = [
   {
     slug: "02", title: "Algebra and graphs", color: "#fff067",
     topics: [
-      { slug: "01", code: "2.1",  title: "Introduction to algebra" },
-      { slug: "02", code: "2.2",  title: "Algebraic manipulation" },
-      { slug: "03", code: "2.3",  title: "Algebraic fractions" },
-      { slug: "04", code: "2.4",  title: "Indices II" },
-      { slug: "05", code: "2.5",  title: "Equations" },
-      { slug: "06", code: "2.6",  title: "Inequalities" },
-      { slug: "07", code: "2.7",  title: "Sequences" },
-      { slug: "08", code: "2.8",  title: "Proportion" },
-      { slug: "09", code: "2.9",  title: "Graphs in practical situations" },
-      { slug: "10", code: "2.10", title: "Graphs of functions" },
-      { slug: "11", code: "2.11", title: "Sketching curves" },
-      { slug: "12", code: "2.12", title: "Functions" },
+      {
+        slug: "01", code: "2.1", title: "Introduction to algebra",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Letters and conventions" },
+          { slug: "p2",     label: "P2", title: "Substitution into expressions" },
+          { slug: "p3",     label: "P3", title: "Substitution into formulas" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "02", code: "2.2", title: "Algebraic manipulation",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Like terms and simplifying" },
+          { slug: "p2",     label: "P2", title: "Expanding brackets" },
+          { slug: "p3",     label: "P3", title: "Factorising: common factors and grouping" },
+          { slug: "p4",     label: "P4", title: "Factorising quadratics" },
+          { slug: "p5",     label: "P5", title: "Completing the square" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "03", code: "2.3", title: "Algebraic fractions",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Adding and subtracting" },
+          { slug: "p2",     label: "P2", title: "Multiplying and dividing" },
+          { slug: "p3",     label: "P3", title: "Simplifying rational expressions" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "04", code: "2.4", title: "Indices II",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Index rules with algebra" },
+          { slug: "p2",     label: "P2", title: "Index equations" },
+          { slug: "p3",     label: "P3", title: "Combined index work" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "05", code: "2.5", title: "Equations",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Linear equations" },
+          { slug: "p2",     label: "P2", title: "Fractional equations" },
+          { slug: "p3",     label: "P3", title: "Simultaneous equations" },
+          { slug: "p4",     label: "P4", title: "Quadratic equations" },
+          { slug: "p5",     label: "P5", title: "Changing the subject" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "06", code: "2.6", title: "Inequalities",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Linear inequalities and the number line" },
+          { slug: "p2",     label: "P2", title: "Compound inequalities" },
+          { slug: "p3",     label: "P3", title: "Inequalities in two variables (regions)" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "07", code: "2.7", title: "Sequences",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Patterns and term-to-term rules" },
+          { slug: "p2",     label: "P2", title: "Linear sequences and the nth term" },
+          { slug: "p3",     label: "P3", title: "Quadratic and cubic sequences" },
+          { slug: "p4",     label: "P4", title: "Special sequences" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "08", code: "2.8", title: "Proportion",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Direct proportion" },
+          { slug: "p2",     label: "P2", title: "Inverse proportion" },
+          { slug: "p3",     label: "P3", title: "Solving proportion problems" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "09", code: "2.9", title: "Graphs in practical situations",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Distance-time graphs" },
+          { slug: "p2",     label: "P2", title: "Speed-time graphs" },
+          { slug: "p3",     label: "P3", title: "Conversion and other practical graphs" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "10", code: "2.10", title: "Graphs of functions",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Tables of values and plotting" },
+          { slug: "p2",     label: "P2", title: "Linear, quadratic, cubic graphs" },
+          { slug: "p3",     label: "P3", title: "Reciprocal and exponential graphs" },
+          { slug: "p4",     label: "P4", title: "Solving equations graphically" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "11", code: "2.11", title: "Sketching curves",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Sketching linear and quadratic curves" },
+          { slug: "p2",     label: "P2", title: "Sketching cubics and reciprocals" },
+          { slug: "p3",     label: "P3", title: "Sketching exponentials" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "12", code: "2.12", title: "Functions",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Function notation, domain, range" },
+          { slug: "p2",     label: "P2", title: "Inverse functions" },
+          { slug: "p3",     label: "P3", title: "Composite functions" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
     ],
   },
   {

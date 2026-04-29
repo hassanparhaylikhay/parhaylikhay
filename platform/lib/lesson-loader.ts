@@ -44,6 +44,18 @@ const LESSON_FOLDERS: Record<string, string> = {
   "01-16": "01-16-money",
   "01-17": "01-17-exponential-growth-and-decay",
   "01-18": "01-18-surds",
+  "02-01": "02-01-introduction-to-algebra",
+  "02-02": "02-02-algebraic-manipulation",
+  "02-03": "02-03-algebraic-fractions",
+  "02-04": "02-04-indices-ii",
+  "02-05": "02-05-equations",
+  "02-06": "02-06-inequalities",
+  "02-07": "02-07-sequences",
+  "02-08": "02-08-proportion",
+  "02-09": "02-09-graphs-in-practical-situations",
+  "02-10": "02-10-graphs-of-functions",
+  "02-11": "02-11-sketching-curves",
+  "02-12": "02-12-functions",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
