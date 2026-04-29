@@ -448,23 +448,41 @@ function genCompleteSquare() {
   var c = pick([0, rand(1, 9), -rand(1, 9)]);
   var h = b / 2;
   var k = c - h * h;
-  var origTex = "x^2 " + (b < 0 ? "- " + (-b) : "+ " + b) + "x" + (c === 0 ? "" : (c < 0 ? " - " + (-c) : " + " + c));
-  var fTex;
-  if (k === 0) {
-    fTex = "(x " + (h < 0 ? "- " + (-h) : "+ " + h) + ")^2";
-  } else {
-    fTex = "(x " + (h < 0 ? "- " + (-h) : "+ " + h) + ")^2 " + (k < 0 ? "- " + (-k) : "+ " + k);
+  function fmt(hv, kv) {
+    var bracket = "(x " + (hv < 0 ? "- " + (-hv) : "+ " + hv) + ")^2";
+    if (kv === 0) return bracket;
+    return bracket + " " + (kv < 0 ? "- " + (-kv) : "+ " + kv);
   }
-  var distractor1 = "(x " + (h < 0 ? "- " + (-h) : "+ " + h) + ")^2 " + (k > 0 ? "+ " + k : "- " + (-k)) + " · wrong sign";
-  var distractor2 = "(x " + (b < 0 ? "- " + (-b) : "+ " + b) + ")^2 " + (k < 0 ? "- " + (-k) : "+ " + k);
-  var distractor3 = "(x " + (h < 0 ? "+ " + (-h) : "- " + h) + ")^2 " + (k < 0 ? "- " + (-k) : "+ " + k);
+  var origTex = "x^2 " + (b < 0 ? "- " + (-b) : "+ " + b) + "x" +
+                (c === 0 ? "" : (c < 0 ? " - " + (-c) : " + " + c));
+  var correct = fmt(h, k);
+  // Distractor strategies: flipped k sign, forgot to halve, flipped h sign,
+  // forgot to subtract (kept original c). Dedupe against the correct value.
+  var candidates = [
+    fmt(h, -k),    // wrong sign on k
+    fmt(b, k),     // forgot to halve
+    fmt(-h, k),    // wrong sign on h
+    fmt(h, c)      // forgot the subtract step
+  ];
+  var opts = [correct];
+  candidates.forEach(function(d) {
+    if (opts.indexOf(d) === -1 && opts.length < 4) opts.push(d);
+  });
+  // Pad if we collided down to fewer than 4
+  var pad = 1;
+  while (opts.length < 4) {
+    var alt = fmt(h, k + pad);
+    if (opts.indexOf(alt) === -1) opts.push(alt);
+    pad++;
+  }
+  var optsShuffled = shuffle(opts);
   return {
     type: "mc",
     promptHTML: "Complete the square.",
     tex: origTex,
-    options: shuffle([fTex, distractor1, distractor2, distractor3]),
-    correctIdx: 0,
-    why: "Halve $b$ to get $" + h + "$. Square it: $" + h * h + "$. Adjust the constant: $" + c + " - " + h * h + " = " + k + "$."
+    options: optsShuffled,
+    correctIdx: optsShuffled.indexOf(correct),
+    why: "Halve b to get " + h + ". Square it: " + h * h + ". Adjust the constant: " + c + " - " + h * h + " = " + k + "."
   };
 }
 
