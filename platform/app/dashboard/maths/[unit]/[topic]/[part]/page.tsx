@@ -44,7 +44,7 @@ export default async function PartPage({
       {/* Header */}
       <div className="mb-10">
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-[10px] font-mono tracking-[2.5px] uppercase text-[#00abfa] bg-[#00abfa12] border border-[#00abfa44] rounded px-2 py-0.5">
+          <span className="pill-status pill-status--part">
             {part.isReview ? "REVIEW" : `PART ${partNumber} OF ${partsTotal - 1}`}
           </span>
           <span className="text-[11px] font-mono text-[#3a4a5a]">{topic.code} · {topic.title}</span>

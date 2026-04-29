@@ -20,7 +20,7 @@ function preprocess(md: string): string {
 
   // Common-mistakes list: wrap the bullets after a "## Common mistakes" or
   // "## Common mistakes and exam traps" heading in a .mistake-list container.
-  // CSS then renders each <li> as a red-accent card with a ✗ marker.
+  // CSS renders each <li> with a pink left border (no icon).
   out = out.replace(
     /^(## Common mistakes(?: and exam traps)?\n\n)((?:- [^\n]+\n?)+)/gm,
     (_m, heading: string, bullets: string) =>
@@ -35,85 +35,90 @@ function preprocess(md: string): string {
     /^## Worked example(?: *(\d+))?([^\n]*)\n([\s\S]*?)^Full marks \$= (\d+)\$\.\s*/gm,
     (_m, num: string | undefined, rest: string, body: string, marks: string) => {
       const n = (num || "1").padStart(2, "0")
-      // Reconstruct the full original heading text, e.g.
-      //   "Worked example 1: HCF and LCM of 12 and 18"
       const headingText =
         (num ? `Worked example ${num}` : "Worked example") + (rest || "")
       const marksLabel = marks === "1" ? "mark" : "marks"
       return (
         `<div class="we-card">\n\n` +
         `<div class="we-card-head">` +
-          `<div class="we-card-meta"><span class="we-card-num">EX ${n}</span><span class="we-card-marks">${marks} ${marksLabel}</span></div>` +
+          `<div class="we-card-meta"><span class="pill-status pill-status--ex">EX ${n}</span><span class="pill-status pill-status--marks">${marks} ${marksLabel.toUpperCase()}</span></div>` +
           `<p class="we-card-heading">${headingText}</p>` +
         `</div>\n\n` +
         `${body.trim()}\n\n` +
-        `<div class="we-card-foot">Full marks · ${marks}</div>\n\n` +
+        `<div class="we-card-foot"><span class="pill-semantic pill-semantic--success">Full marks · ${marks}</span></div>\n\n` +
         `</div>\n\n`
       )
     },
   )
 
   // **Step N: title.** at start of paragraph → numbered chip + bold title.
-  // Inside worked examples this gives each step a small orange numbered
-  // circle so the working flow is visually scannable.
+  // Step numbers are BLUE (methodical / scaffolding meaning).
   out = out.replace(
     /\*\*Step\s+(\d+)[:.]\s+([^*]+?)\*\*/g,
     (_full, n: string, title: string) =>
       `<span class="we-step-num">${n}</span><b>${title.trim()}</b>`,
   )
 
-  // **Answer:** ... → green ANSWER chip preceding the line
-  out = out.replace(/\*\*Answer:\*\*/g, '<span class="answer-chip">Answer</span>')
-
-  // [M1 for xyz], [B2 for ...], [A1 — both correct] → mark pills
-  // Letter classes: M → blue, B → yellow, A → green
+  // **Answer:** ... → green ANSWER pill (semantic / success)
   out = out.replace(
-    /\[((?:M|B|A)\d)(\s+[^\]]+)?\]/g,
-    (_full, code: string, rest: string | undefined) => {
-      const letter = code[0].toLowerCase() // m | b | a
-      const body = rest ? rest.trim() : ""
-      return `<span class="mark-pill mark-${letter}"><b>${code}</b>${body ? ` ${body}` : ""}</span>`
-    },
+    /\*\*Answer:\*\*/g,
+    '<span class="pill-semantic pill-semantic--success">ANSWER</span>',
   )
 
-  // **Working.** → a small green chip preceding the paragraph
-  out = out.replace(/\*\*Working\.\*\*/g, '<span class="working-chip">Working</span>')
+  // **Working.** → green WORKING pill
+  out = out.replace(
+    /\*\*Working\.\*\*/g,
+    '<span class="pill-semantic pill-semantic--success">WORKING</span>',
+  )
+
+  // Mark-scheme annotations like [M1 for ...], [B1], [B1 for X; A1 for Y]
+  // become a right-aligned cluster of unified green pills. Multiple codes
+  // separated by ";" inside one bracket each become their own pill.
+  out = out.replace(
+    /(?:\s*\[(?:(?:M|B|A)\d)(?:[^\]]*)\])+/g,
+    (full) => {
+      const brackets = [...full.matchAll(/\[((?:M|B|A)\d)([^\]]*)\]/g)]
+      const pills: string[] = []
+      for (const [, firstCode, firstRest] of brackets) {
+        // Split inside the bracket on ";" — each fragment may start with its
+        // own M1/B1/A1 code, otherwise it continues the previous code.
+        const parts = (firstCode + firstRest).split(/\s*;\s*/)
+        for (const part of parts) {
+          const m = part.match(/^((?:M|B|A)\d)\b\s*(.*)$/)
+          if (!m) continue
+          const code = m[1]
+          const body = m[2].trim()
+          pills.push(
+            `<span class="pill-semantic pill-semantic--mark"><b>${code}</b>${body ? ` ${body}` : ""}</span>`,
+          )
+        }
+      }
+      return ` <span class="we-marks">${pills.join("")}</span>`
+    },
+  )
 
   // Any stray Full marks = N at the start of a line (outside a WE card) → chip
   out = out.replace(
     /^Full marks \$= (\d+)\$\.(\s*)/gm,
-    (_, n: string) => `<span class="full-marks-chip">Full marks · ${n}</span>\n\n`,
+    (_, n: string) =>
+      `<span class="pill-semantic pill-semantic--success">Full marks · ${n}</span>\n\n`,
   )
 
-  // Past paper references: s25_13, w25_22, s24_21, etc. → red monospace tint
-  // Match e.g. "s25_13 Q11" or just "w25_22 Q14(a)" — but only when clearly a paper code
+  // Past paper references: s25_13, w25_22, s24_21, etc. → status pill (paper)
   out = out.replace(
     /\b([sw]\d{2}_\d{2})(\s+Q\d+(?:\([a-z](?:\)\([ivx]+\))?\))?)?/g,
     (_full, code: string, ref: string | undefined) =>
-      `<span class="paper-ref">${code}${ref || ""}</span>`,
+      `<span class="pill-status pill-status--paper">${code}${ref || ""}</span>`,
   )
 
   return out
 }
 
 // ─────────────────────────────────────────────────────────────
-// Section header metadata — maps H2 text to section number and colour.
+// Section headers — H2 renders plain (visual separation comes from
+// CSS: thin divider 64px above + 24px below before content).
 // ─────────────────────────────────────────────────────────────
 
-type SectionMeta = { num: string; color: string }
-const SECTION_META: Record<string, SectionMeta> = {
-  "Why this matters":                { num: "01", color: "#fff067" },
-  "The core idea":                   { num: "02", color: "#00abfa" },
-  "The mathematics":                 { num: "03", color: "#00abfa" },
-  "Worked examples":                 { num: "04", color: "#ff822c" },
-  "How Cambridge marks this":        { num: "05", color: "#ff4670" },
-  "Common mistakes and exam traps":  { num: "06", color: "#ff4670" },
-  "Common mistakes":                 { num: "06", color: "#ff4670" },
-  "Try it yourself":                 { num: "07", color: "#00abfa" },
-  "Quick summary":                   { num: "08", color: "#fff067" },
-}
-
-// Extract plain text from ReactMarkdown's children prop (may be nodes)
 function toText(children: React.ReactNode): string {
   return React.Children.toArray(children)
     .map(c => (typeof c === "string" ? c : typeof c === "number" ? String(c) : ""))
@@ -122,22 +127,6 @@ function toText(children: React.ReactNode): string {
 }
 
 const components: Components = {
-  h2({ children }) {
-    const text = toText(children)
-    const meta = SECTION_META[text]
-    if (!meta) return <h2>{children}</h2>
-    return (
-      <div className="section-h2">
-        <div className="section-kicker">
-          <span className="section-num">{meta.num}</span>
-          <span className="section-dash" style={{ background: meta.color }} />
-          <span className="section-eyebrow">SECTION</span>
-        </div>
-        <h2 className="section-title">{text}</h2>
-      </div>
-    )
-  },
-
   h3({ children }) {
     const text = toText(children)
     const m = text.match(/^Example\s+(\d+)\s*[—\-–]\s*(.+?)(?:\s*\((.+)\))?$/)
@@ -145,7 +134,7 @@ const components: Components = {
       const [, num, title, flavour] = m
       return (
         <div className="example-h3">
-          <span className="example-num">EX {num.padStart(2, "0")}</span>
+          <span className="pill-status pill-status--ex">EX {num.padStart(2, "0")}</span>
           <div className="example-titles">
             <h3>{title}</h3>
             {flavour && <span className="example-flavour">{flavour}</span>}
@@ -153,8 +142,6 @@ const components: Components = {
         </div>
       )
     }
-    // "Mistake 1: ..." pattern in the Common mistakes section (it's h3 material
-    // even though we authored it as bold paragraphs). Keep normal h3 otherwise.
     return <h3>{children}</h3>
   },
 }

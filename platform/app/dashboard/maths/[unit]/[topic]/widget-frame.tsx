@@ -28,7 +28,7 @@ export default function WidgetFrame({
   }, [])
 
   return (
-    <div className="mt-12 rounded-xl border border-[#141e2a] overflow-hidden bg-[#07090d]">
+    <div className="my-8 rounded-xl border border-[#141e2a] overflow-hidden bg-[#07090d]">
       <iframe
         ref={ref}
         src={src}

@@ -136,6 +136,14 @@
 
 /* ─────────────────────────────────────────────────────
    Lesson body — dark-theme prose with brand-coded roles
+
+   Vertical spacing scale (single source of truth):
+   - Paragraph rhythm:           14px between adjacent prose elements
+   - H3 (sub-heading):           36px above, 12px below
+   - H2 (major heading):         64px above, divider line, 28px below
+   - Callout / diagram / table:  28px above, 28px below
+   - Worked example card:        40px above, 40px below
+   - Widget / iframe block:      32px above, 32px below
    ───────────────────────────────────────────────────── */
 
 .lesson-prose {
@@ -146,86 +154,47 @@
 }
 .lesson-prose > * + * { margin-top: 14px; }
 
-/* Section headings (H2) — big numbered kicker, colored dash, bold title */
-.lesson-prose .section-h2 {
-  margin-top: 56px;
-  padding-top: 28px;
-  border-top: 1px solid #141e2a;
-}
-.lesson-prose > .section-h2:first-child {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: 0;
-}
-.lesson-prose .section-kicker {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-.lesson-prose .section-num {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 2px;
-  color: #3a4a5a;
-}
-.lesson-prose .section-dash {
-  width: 28px;
-  height: 2.5px;
-  border-radius: 2px;
-  display: inline-block;
-}
-.lesson-prose .section-eyebrow {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 2.5px;
-  color: #3a4a5a;
-}
-.lesson-prose .section-title {
+/* H2 (major section heading) — thin divider 64px above the heading.
+   No kicker, no number, no eyebrow. The heading itself is the anchor. */
+.lesson-prose h2 {
   color: #f0eeea;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.5px;
-  margin: 4px 0 16px;
   line-height: 1.2;
+  margin-top: 48px;
+  margin-bottom: 28px;
+  padding-top: 64px;
+  border-top: 1px solid #2a2a28;
 }
-.lesson-prose h2 {
-  color: #f0eeea;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  margin-top: 44px;
-  margin-bottom: 14px;
-  line-height: 1.25;
+/* First H2 in the body has no preceding section, so no divider. */
+.lesson-prose > h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
 }
 
-/* Example H3 — blue numbered pill + title */
+/* H3 (sub-heading) — 36px above, 12px below */
+.lesson-prose h3 {
+  color: #f0eeea;
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 36px;
+  margin-bottom: 12px;
+  letter-spacing: -0.2px;
+}
+
+/* Example H3 — pill + title row */
 .lesson-prose .example-h3 {
   display: flex;
   align-items: baseline;
   gap: 14px;
-  margin-top: 32px;
-  margin-bottom: 14px;
+  margin-top: 36px;
+  margin-bottom: 12px;
   padding-top: 20px;
   border-top: 1px dashed #141e2a;
 }
 .lesson-prose .example-h3:first-of-type { padding-top: 0; border-top: 0; }
-.lesson-prose .example-num {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #00abfa;
-  background: rgba(0, 171, 250, 0.10);
-  border: 1px solid rgba(0, 171, 250, 0.28);
-  border-radius: 4px;
-  padding: 3px 8px;
-  letter-spacing: 1.5px;
-  flex-shrink: 0;
-}
 .lesson-prose .example-titles {
   display: flex;
   flex-wrap: wrap;
@@ -238,6 +207,8 @@
   color: #f0eeea;
   font-weight: 600;
   letter-spacing: -0.2px;
+  border: 0;
+  padding: 0;
 }
 .lesson-prose .example-flavour {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
@@ -248,15 +219,6 @@
   border: 1px solid #141e2a;
   padding: 1px 7px;
   border-radius: 3px;
-}
-
-.lesson-prose h3 {
-  color: #f0eeea;
-  font-size: 18px;
-  font-weight: 600;
-  margin-top: 28px;
-  margin-bottom: 10px;
-  letter-spacing: -0.2px;
 }
 
 /* Body text */
@@ -280,7 +242,7 @@
 .lesson-prose li::marker { color: #3a4a5a; }
 .lesson-prose table {
   width: 100%;
-  margin: 22px 0;
+  margin: 28px 0;
   border-collapse: separate;
   border-spacing: 0;
   background: #0b1118;
@@ -317,8 +279,8 @@
 
 .lesson-prose hr {
   border: 0;
-  border-top: 1px solid #141e2a;
-  margin: 32px 0;
+  border-top: 1px solid #2a2a28;
+  margin: 36px 0;
   position: relative;
   overflow: visible;
 }
@@ -335,143 +297,143 @@
   box-shadow: 0 0 8px rgba(255, 70, 112, 0.45);
 }
 
-/* Examiner tip blockquote — yellow */
+/* Examiner tip / "see also" / "prerequisite" blockquote — yellow accent */
 .lesson-prose blockquote {
   border-left: 2.5px solid #fff067;
   background: rgba(255, 240, 103, 0.05);
-  padding: 14px 18px;
-  margin: 22px 0;
+  padding: 16px 20px;
+  margin: 28px 0;
   border-radius: 0 6px 6px 0;
   position: relative;
 }
 .lesson-prose blockquote p { color: #c8c6be; margin: 0; }
 .lesson-prose blockquote strong { color: #fff067; }
 
-/* ─── Inline role pills — colour-coded marks ─── */
-.lesson-prose .mark-pill {
-  display: inline;
-  padding: 2px 8px 3px;
-  border-radius: 4px;
+/* ─────────────────────────────────────────────────────
+   PILL PRIMITIVES — two reusable shapes used everywhere.
+
+   .pill-status   — neutral, monospace, dark background.
+                    Used for navigation status (PART 1 OF 3),
+                    exercise numbers (EX 01), mark counts (3 MARKS),
+                    paper references (s24_22 Q14).
+                    Variants set the accent colour without changing shape.
+
+   .pill-semantic — meaning-bearing. Always green for success/positive
+                    (ANSWER, B1/M1/A1, Full marks, Working).
+                    Red variant available for warnings.
+   ───────────────────────────────────────────────────── */
+
+.pill-status,
+.pill-semantic {
+  display: inline-flex;
+  align-items: center;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 11.5px;
-  line-height: 1.6;
-  letter-spacing: 0.1px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  border-radius: 4px;
+  padding: 3px 8px;
+  line-height: 1.4;
   border: 1px solid transparent;
-  white-space: normal;
-  margin: 0 1px;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
+  white-space: nowrap;
+  vertical-align: 1px;
 }
-.lesson-prose .mark-pill b {
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-right: 2px;
+
+/* Status pill — neutral by default */
+.pill-status {
+  color: #7a7875;
+  background: #07090d;
+  border-color: #2a2a28;
 }
-.lesson-prose .mark-pill.mark-m {
+.pill-status--part {
   color: #00abfa;
-  background: rgba(0, 171, 250, 0.08);
-  border-color: rgba(0, 171, 250, 0.28);
+  background: rgba(0, 171, 250, 0.07);
+  border-color: rgba(0, 171, 250, 0.32);
 }
-.lesson-prose .mark-pill.mark-b {
+.pill-status--ex {
   color: #fff067;
-  background: rgba(255, 240, 103, 0.08);
-  border-color: rgba(255, 240, 103, 0.28);
+  background: rgba(255, 240, 103, 0.07);
+  border-color: rgba(255, 240, 103, 0.32);
 }
-.lesson-prose .mark-pill.mark-a {
+.pill-status--marks {
+  color: #7a7875;
+  letter-spacing: 1.5px;
+  margin-left: auto;
+}
+.pill-status--paper {
+  color: #ff4670;
+  background: rgba(255, 70, 112, 0.06);
+  border-color: rgba(255, 70, 112, 0.28);
+  text-transform: none;
+  letter-spacing: 0.3px;
+  font-size: 12px;
+}
+
+/* Semantic pill — green by default (success / answer / mark scheme) */
+.pill-semantic,
+.pill-semantic--success {
   color: #0fee89;
   background: rgba(15, 238, 137, 0.08);
-  border-color: rgba(15, 238, 137, 0.28);
+  border-color: rgba(15, 238, 137, 0.30);
 }
-
-/* "Working" chip — prefix to the working-out paragraph */
-.lesson-prose .working-chip {
-  display: inline-block;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 600;
-  color: #0fee89;
-  background: rgba(15, 238, 137, 0.10);
-  border: 1px solid rgba(15, 238, 137, 0.32);
-  border-radius: 3px;
-  padding: 2px 8px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-right: 10px;
-  vertical-align: baseline;
+.pill-semantic--mark {
+  font-size: 10.5px;
+  letter-spacing: 0.8px;
+  text-transform: none;
+  padding: 3px 7px;
+  margin: 2px 4px 2px 0;
 }
-
-/* Full marks chip — appears at end of worked example */
-.lesson-prose .full-marks-chip {
-  display: inline-block;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 600;
-  color: #f0eeea;
-  background: #0b1118;
-  border: 1px solid #141e2a;
-  border-left: 2.5px solid #fff067;
-  border-radius: 0 4px 4px 0;
-  padding: 3px 10px;
-  letter-spacing: 0.5px;
+.pill-semantic--mark b {
+  font-weight: 700;
+  margin-right: 4px;
+  letter-spacing: 1px;
 }
-
-/* Past paper reference — red monospace tint, signals "from a real exam" */
-.lesson-prose .paper-ref {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 12px;
+.pill-semantic--warning {
   color: #ff4670;
   background: rgba(255, 70, 112, 0.07);
-  border: 1px solid rgba(255, 70, 112, 0.28);
-  border-radius: 3px;
-  padding: 1px 5px;
-  letter-spacing: 0.2px;
-  white-space: nowrap;
+  border-color: rgba(255, 70, 112, 0.32);
+}
+
+/* Mark-pill cluster — right-aligned block following an answer line.
+   Pulls trailing M1/A1/B1 annotations out of the prose flow so the
+   answer text reads cleanly. Inside a worked-example card it floats
+   the marks against the right edge. */
+.lesson-prose .we-marks {
+  display: block;
+  margin-top: 8px;
+  text-align: right;
+}
+/* When the marks fit on the same line as a short answer, allow them
+   to sit inline-right via a wrapper. */
+.lesson-prose .we-card .we-marks {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed #1a2632;
 }
 
 /* ─── Worked example card ─── */
 .lesson-prose .we-card {
-  margin: 36px 0;
+  margin: 40px 0;
   background: #0b1118;
   border: 1px solid #141e2a;
-  border-left: 2.5px solid #ff822c;
+  border-left: 2.5px solid #fff067;          /* PL Yellow sideline */
   border-radius: 4px 8px 8px 4px;
-  padding: 22px 24px 22px;
+  padding: 24px 26px;
 }
 .lesson-prose .we-card > * + * { margin-top: 14px; }
 .lesson-prose .we-card > *:first-child { margin-top: 0; }
 .lesson-prose .we-card > *:last-child { margin-bottom: 0; }
 .lesson-prose .we-card-head {
-  margin-bottom: 18px !important;
-  padding-bottom: 14px;
+  margin-bottom: 20px !important;
+  padding-bottom: 16px;
   border-bottom: 1px solid #141e2a;
 }
 .lesson-prose .we-card-meta {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 8px;
-}
-.lesson-prose .we-card-num {
-  display: inline-flex;
-  align-items: center;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #ff822c;
-  background: rgba(255, 130, 44, 0.10);
-  border: 1px solid rgba(255, 130, 44, 0.35);
-  border-radius: 4px;
-  padding: 3px 8px;
-  letter-spacing: 1.8px;
-  flex-shrink: 0;
-}
-.lesson-prose .we-card-marks {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 10.5px;
-  color: #7a7875;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-left: auto;
+  margin-bottom: 10px;
 }
 .lesson-prose .we-card-heading {
   margin: 0 !important;
@@ -482,21 +444,10 @@
   line-height: 1.3;
 }
 .lesson-prose .we-card-foot {
-  display: inline-block;
-  margin-top: 20px !important;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 600;
-  color: #f0eeea;
-  background: #07090d;
-  border: 1px solid #141e2a;
-  border-left: 2.5px solid #ff4670;
-  border-radius: 0 4px 4px 0;
-  padding: 5px 12px;
-  letter-spacing: 0.6px;
+  margin-top: 22px !important;
 }
 
-/* Numbered step circle inside a WE card */
+/* Numbered step circle inside a WE card — BLUE for methodical scaffolding */
 .lesson-prose .we-step-num {
   display: inline-flex;
   align-items: center;
@@ -504,9 +455,9 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: rgba(255, 130, 44, 0.12);
-  border: 1px solid rgba(255, 130, 44, 0.45);
-  color: #ff822c;
+  background: rgba(0, 171, 250, 0.10);
+  border: 1px solid rgba(0, 171, 250, 0.40);
+  color: #00abfa;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 11px;
   font-weight: 700;
@@ -514,66 +465,36 @@
   line-height: 1;
   vertical-align: -3px;
 }
-.lesson-prose .we-step-num + b {
-  color: #f0eeea;
-}
+.lesson-prose .we-step-num + b { color: #f0eeea; }
 
-/* Answer chip — small green ANSWER label preceding the result line */
-.lesson-prose .answer-chip {
-  display: inline-block;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 10px;
-  font-weight: 700;
-  color: #0fee89;
-  background: rgba(15, 238, 137, 0.10);
-  border: 1px solid rgba(15, 238, 137, 0.32);
-  border-radius: 3px;
-  padding: 3px 8px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-right: 10px;
-  vertical-align: 1px;
+/* ─── Common-mistakes list — pink left border, no icon (cleaner) ─── */
+.lesson-prose .mistake-list {
+  margin-top: 20px;
 }
-
-/* ─── Common-mistakes list — each bullet renders as a red-accent card ─── */
 .lesson-prose .mistake-list ul {
   list-style: none;
   padding-left: 0;
-  margin-top: 14px;
+  margin-top: 0;
 }
 .lesson-prose .mistake-list ul li {
   position: relative;
   margin: 10px 0 0;
-  padding: 13px 16px 13px 44px;
-  background: rgba(255, 70, 112, 0.05);
-  border: 1px solid rgba(255, 70, 112, 0.22);
+  padding: 14px 18px;
+  background: rgba(255, 70, 112, 0.04);
+  border: 1px solid rgba(255, 70, 112, 0.20);
   border-left: 2.5px solid #ff4670;
   border-radius: 0 6px 6px 0;
   color: #c8c6be;
   line-height: 1.55;
 }
-.lesson-prose .mistake-list ul li::before {
-  content: "✗";
-  position: absolute;
-  left: 16px;
-  top: 12px;
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #ff4670;
-  font-weight: 700;
-  font-size: 13px;
-  line-height: 1;
-}
+.lesson-prose .mistake-list ul li::before { content: none; }
 .lesson-prose .mistake-list ul li::marker { content: none; }
 .lesson-prose .mistake-list ul li strong { color: #fff067; }
 
 /* ─── Red-accent "trap" / warning callout ─── */
 .lesson-prose .trap-callout {
-  margin: 22px 0;
-  padding: 14px 18px;
+  margin: 28px 0;
+  padding: 16px 20px;
   background: rgba(255, 70, 112, 0.05);
   border: 1px solid rgba(255, 70, 112, 0.22);
   border-left: 2.5px solid #ff4670;
@@ -614,7 +535,7 @@
   border: 1px solid #141e2a;
   border-radius: 10px;
   padding: 22px 20px;
-  margin: 22px 0;
+  margin: 28px 0;
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-size: 14.5px;
   color: #c8c6be;
