@@ -109,12 +109,15 @@ function preprocess(md: string): string {
         }
       }
 
-      // Re-insert codes as **[code]** at the end of each target line.
+      // Re-insert codes as ONE **[code1] [code2] ...** annotation per line.
+      // Single bold pair so the mark-cluster regex below picks up all codes
+      // in one match — otherwise only the first pair becomes a pill cluster
+      // and the rest leak as literal text.
       const newLines = lines.map((line, i) => {
         const codes = lineMarks[i]
         if (!codes) return line
-        const annotation = codes.map(c => `**[${c}]**`).join(" ")
-        return line.replace(/\s+$/, "") + " " + annotation
+        const annotation = " **" + codes.map(c => `[${c}]`).join(" ") + "**"
+        return line.replace(/\s+$/, "") + annotation
       })
       const cleanBody = newLines
         .join("\n")
