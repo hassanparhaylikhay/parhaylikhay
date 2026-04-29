@@ -33,7 +33,7 @@ You've now seen the three pillars of time: unit conversion, clock formats, and t
 
 - **Conversions** between seconds, minutes, hours, days, weeks, months, years.
 - **12-hour and 24-hour clock** conversion in both directions.
-- **Elapsed time** using the chunk method (or the two-chunk method across midnight).
+- **Elapsed time** by breaking the gap into pieces at round hours (and splitting at midnight if it crosses).
 - **Adding a duration** to a start time, with carry from minutes to hours.
 - **Time zones**: ahead = add, behind = subtract; watch for date crossing.
 
@@ -43,7 +43,7 @@ You've now seen the three pillars of time: unit conversion, clock formats, and t
 |---|---|---|
 | "Convert $X$ h $Y$ min to min" | 1 | B1 for the answer |
 | "Write $X.YY$ p.m. in 24-h" | 1 | B1 for the right hour |
-| "Time from $A$ to $B$" | 1–2 | M1 for chunks, A1 for total |
+| "Time from $A$ to $B$" | 1–2 | M1 for the pieces, A1 for total |
 | "When does the bus arrive after $X$ h $Y$ min" | 2 | M1 for adding, A1 for the carry |
 | "Local time after a flight" | 2–3 | M1 for arrival in start zone, M1 for the offset, A1 for the date if needed |
 

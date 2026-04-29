@@ -34,7 +34,7 @@ You've now seen the three skills in this topic: simplifying ratios, dividing a q
 - **Simplifying** ratios using the HCF, including ratios with decimals, fractions, or different units.
 - **Dividing** a quantity by adding the parts, finding one part, then multiplying for each share.
 - **Working backwards** from a single share to the total.
-- **Proportional reasoning** with the unitary method (find one unit, multiply).
+- **Proportional reasoning** by finding the value of one unit, then multiplying.
 - **Map scales** including converting cm to m or km.
 - **Best value** by comparing cost per unit.
 

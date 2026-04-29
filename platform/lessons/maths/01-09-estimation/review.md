@@ -4,15 +4,15 @@ checks:
   - q: 'Round $0.039\,75$ to $3$ decimal places.'
     options: ["$0.040$", "$0.039$", "$0.04$", "$0.039\\,8$"]
     correct: 0
-    explain: 'Cut at 3 d.p.: $0.039\,|\,75$. Decider $= 7$ ($\ge 5$). Round up the $9$, which carries: $0.039 \to 0.040$. Keep the trailing zero.'
+    explain: 'Cut at 3 d.p.: $0.039\,|\,75$. The next digit is $7$ ($\ge 5$). Round up the $9$, which carries: $0.039 \to 0.040$. Keep the trailing zero.'
   - q: 'Round $7\,398$ to $2$ significant figures.'
     options: ["$7\\,300$", "$7\\,400$", "$74$", "$7\\,000$"]
     correct: 1
-    explain: 'Cut at 2 s.f.: $73\,|\,98$. Decider $= 9$ ($\ge 5$). Round up: $73 \to 74$. Pad: $7\,400$.'
+    explain: 'Cut at 2 s.f.: $73\,|\,98$. The next digit is $9$ ($\ge 5$). Round up: $73 \to 74$. Add zeros to keep the size: $7\,400$.'
   - q: 'Round $0.000\,508\,3$ to $2$ s.f.'
     options: ["$0.000\\,5$", "$0.000\\,51$", "$0.000\\,50$", "$0.000\\,508$"]
     correct: 1
-    explain: '1st s.f. is $5$, 2nd is $0$. Cut: $0.000\,50\,|\,83$. Decider $= 8$ ($\ge 5$). Round up: $0.00050 \to 0.00051$.'
+    explain: '1st s.f. is $5$, 2nd is $0$. Cut: $0.000\,50\,|\,83$. The next digit is $8$ ($\ge 5$). Round up: $0.00050 \to 0.00051$.'
   - q: 'Estimate $\dfrac{38.7 \times 4.21}{1.97}$ by rounding to $1$ s.f.'
     options: ["$\\approx 60$", "$\\approx 80$", "$\\approx 160$", "$\\approx 200$"]
     correct: 1
@@ -31,8 +31,8 @@ You've now covered the three rounding contexts Cambridge tests: decimal places, 
 
 ## The skills you should have
 
-- **Decimal places**: count digits after the decimal point; decider rule.
-- **Significant figures**: count from the first non-zero digit; pad with zeros for size.
+- **Decimal places**: count digits after the decimal point; check the next digit and round up or down.
+- **Significant figures**: count from the first non-zero digit; add zeros for size.
 - **Carrying** when rounding up causes a $9$ to become $10$.
 - **Estimation**: round every input to $1$ s.f., compute, give answer with $\approx$.
 - **Sensible accuracy**: don't claim more precision than the source data provides.

@@ -34,7 +34,7 @@ The Number topic rewards **visible method** above almost everything else. Across
 - **Rational = can be written as a fraction.** Terminating decimals and recurring decimals are rational; $\pi$, $e$, and square roots of non-squares are irrational.
 - **Every number has one and only one prime factorisation.** Use a factor tree, write in index form, primes from smallest to largest.
 - **HCF takes the lowest powers of common primes. LCM takes the highest powers of all primes.** HC**F**ew, LC**M**ore.
-- **Recurring decimal → fraction** by multiplying to shift the recurring tail, then subtracting to cancel it. Show the algebra. Cambridge wants to see $10x$, $100x$, $90x = 13$.
+- **Recurring decimal → fraction** by multiplying so the repeating digits line up, then subtracting so they cancel. Show the algebra. Cambridge wants to see $10x$, $100x$, $90x = 13$.
 
 ## Full practice quiz
 

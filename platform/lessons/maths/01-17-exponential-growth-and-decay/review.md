@@ -35,7 +35,7 @@ You've now covered exponential growth and decay across the main contexts: invest
 - **Apply the formula** in one step, not period by period.
 - **Use the right multiplier**: $1 + \tfrac{r}{100}$ for growth, $1 - \tfrac{r}{100}$ for decay.
 - **Doubling and half-life** problems: count the periods first, then use $A = P \times d^N$ where $d$ is the multiplier per period.
-- **"After how long?" questions**: try whole-number $T$ values until the inequality flips.
+- **"After how long?" questions**: try whole-number $T$ values until the result first crosses the target.
 
 ## Marking patterns
 
