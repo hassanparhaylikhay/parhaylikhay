@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Algebra Manipulation Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:600px; margin:0 auto; }
+
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .target-picker { display:flex; gap:6px; align-items:center; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .target-picker select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:5px 22px 5px 10px; border-radius:5px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:24px 24px 22px; }
+
+  .q-label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#3a4a5a; margin-bottom:12px; text-align:center; }
+  .q-prompt { font-size:14.5px; color:#c8c6be; text-align:center; margin-bottom:8px; line-height:1.5; }
+  .q-prompt .katex { font-size:1.05em; color:#f0eeea; }
+  .q-expr { font-size:28px; color:#f0eeea; margin:6px 0 16px; text-align:center; min-height:40px; }
+  .q-expr .katex { font-size:1em; }
+
+  .answer-row { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+  .answer-row input {
+    appearance:none; width:200px; height:42px; text-align:center;
+    font-family:'Geist Mono',monospace; font-size:16px; font-weight:600;
+    background:#07090d; border:1px solid rgba(0,171,250,0.5); border-radius:8px;
+    color:#00abfa; outline:none;
+  }
+  .answer-row input:focus { border-color:#00abfa; box-shadow:0 0 0 3px rgba(0,171,250,0.12); }
+  .answer-row input.wrong { border-color:#ff4670; color:#ff4670; box-shadow:0 0 0 3px rgba(255,70,112,0.1); }
+  .answer-row input.correct { border-color:#0fee89; color:#0fee89; box-shadow:0 0 0 3px rgba(15,238,137,0.1); }
+  .answer-row .btn-check {
+    appearance:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600;
+    padding:10px 16px; border-radius:6px; border:0; background:#00abfa; color:#07090d;
+  }
+
+  .options { display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .opt {
+    appearance:none; background:#07090d; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:14px; padding:11px 14px; border-radius:7px;
+    text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px;
+  }
+  .opt:hover:not(:disabled) { border-color:#3a4a5a; }
+  .opt .opt-letter { font-family:'Geist Mono',monospace; color:#3a4a5a; font-size:11px; min-width:14px; }
+  .opt .opt-text { flex:1; }
+  .opt .opt-text .katex { font-size:1em; }
+  .opt.right { border-color:#0fee89; background:rgba(15,238,137,0.07); color:#0fee89; }
+  .opt.right .opt-letter { color:#0fee89; }
+  .opt.wrong { border-color:#ff4670; background:rgba(255,70,112,0.06); color:#ff4670; }
+  .opt.wrong .opt-letter { color:#ff4670; }
+  .opt.dim { opacity:0.45; }
+  .opt:disabled { cursor:default; }
+
+  .hint-line { text-align:center; font-family:'Geist Mono',monospace; font-size:10.5px; color:#3a4a5a; margin-top:8px; letter-spacing:0.5px; }
+
+  .reveal { margin-top:18px; padding-top:14px; border-top:1px solid #141e2a; text-align:center; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; margin:6px auto 12px; max-width:480px; }
+  .reveal-explain .katex { font-size:1em; color:#f0eeea; }
+
+  .controls { display:flex; gap:8px; margin-top:6px; justify-content:center; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+
+  .progress-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .progress-row .right { color:#0fee89; }
+  .progress-row .wrong { color:#ff4670; }
+
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label" id="mode-label">MANIPULATION TRAINER · 8 QUESTIONS</span>
+    <div class="target-picker">
+      <span>topic:</span>
+      <select id="topic">
+        <option value="like-terms">like terms</option>
+        <option value="expand-single">expand · single</option>
+        <option value="expand-double">expand · double</option>
+        <option value="factor-common">factor · common</option>
+        <option value="factor-quad">factor · quadratic</option>
+        <option value="complete-square">complete the square</option>
+        <option value="mixed" selected>mixed</option>
+      </select>
+    </div>
+  </div>
+  <div class="card" id="card"></div>
+  <div class="progress-row">
+    <span><b id="step-num">1</b>/<span id="step-total">8</span></span>
+    <span><span class="right">✓ <b id="right-count">0</b></span> &nbsp; <span class="wrong">✗ <b id="wrong-count">0</b></span></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  arr = arr.slice();
+  for (var i = arr.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+  }
+  return arr;
+}
+
+// =========================================================================
+// Helpers for parsing user-typed algebra
+// =========================================================================
+
+// Permissive parser for expressions in x and/or y up to degree 3.
+// Strips whitespace and ^ caret. Returns map from monomial-key to coefficient,
+// where monomial keys are "x", "y", "xy", "x2", "x3", "x2y", "" (constant), etc.
+// On failure returns null.
+function parsePoly(s) {
+  s = s.replace(/\s+/g, "").replace(/\*/g, "").toLowerCase();
+  if (s === "") return null;
+  // normalise ^ chars
+  s = s.replace(/\^/g, "");
+  // ensure leading sign for tokenisation
+  if (s[0] !== "+" && s[0] !== "-") s = "+" + s;
+
+  var terms = {};
+  var pos = 0;
+  while (pos < s.length) {
+    // sign
+    var sign = 1;
+    if (s[pos] === "+") { pos++; }
+    else if (s[pos] === "-") { sign = -1; pos++; }
+    // coefficient (possibly absent)
+    var numStart = pos;
+    while (pos < s.length && /[0-9.]/.test(s[pos])) pos++;
+    var numStr = s.substring(numStart, pos);
+    var coef = numStr === "" ? 1 : parseFloat(numStr);
+    if (isNaN(coef)) return null;
+    // letters with optional digit-power
+    var letters = "";
+    var px = 0, py = 0;
+    while (pos < s.length && /[a-z]/.test(s[pos])) {
+      var letter = s[pos]; pos++;
+      // power digit (single digit only — fine for degree up to 9)
+      var p = 1;
+      if (pos < s.length && /[0-9]/.test(s[pos])) {
+        p = parseInt(s[pos], 10);
+        pos++;
+      }
+      if (letter === "x") px += p;
+      else if (letter === "y") py += p;
+      else return null;
+    }
+    // build key
+    var key = "";
+    if (px > 0) key += "x" + (px > 1 ? px : "");
+    if (py > 0) key += "y" + (py > 1 ? py : "");
+    // accumulate
+    terms[key] = (terms[key] || 0) + sign * coef;
+  }
+  return terms;
+}
+
+function polyEq(a, b) {
+  if (!a || !b) return false;
+  for (var k in a) if (Math.abs(a[k] - (b[k] || 0)) > 1e-9) return false;
+  for (var k in b) if (Math.abs(b[k] - (a[k] || 0)) > 1e-9) return false;
+  return true;
+}
+
+function checkPoly(student, expectedTex, expectedExpanded) {
+  var u = parsePoly(student);
+  if (!u) return false;
+  var e = parsePoly(expectedExpanded);
+  return polyEq(u, e);
+}
+
+// =========================================================================
+// LIKE-TERMS
+// =========================================================================
+
+function termText(c, lex) {
+  if (c === 0) return "";
+  if (lex === "") return String(c);
+  if (c === 1) return lex;
+  if (c === -1) return "-" + lex;
+  return c + lex;
+}
+
+function buildSumTex(parts) {
+  var s = "";
+  for (var i = 0; i < parts.length; i++) {
+    var p = parts[i];
+    if (i === 0) {
+      s += termText(p.c, p.lex);
+    } else {
+      if (p.c < 0) s += " - " + termText(-p.c, p.lex);
+      else s += " + " + termText(p.c, p.lex);
+    }
+  }
+  return s;
+}
+
+function genLikeTerms() {
+  var pattern = pick(["xy", "xx2"]);
+  var ax1, ax2, ay1, ay2, terms, sx, sy, ans;
+  if (pattern === "xy") {
+    ax1 = rand(2, 7); ax2 = rand(-7, -1);
+    ay1 = rand(2, 7); ay2 = rand(-7, -1);
+    sx = ax1 + ax2; sy = ay1 + ay2;
+    terms = shuffle([
+      { c: ax1, lex: "x" }, { c: ay1, lex: "y" },
+      { c: ax2, lex: "x" }, { c: ay2, lex: "y" }
+    ]);
+    var ansParts = [];
+    if (sx !== 0) ansParts.push({ c: sx, lex: "x" });
+    if (sy !== 0) ansParts.push({ c: sy, lex: "y" });
+    ans = buildSumTex(ansParts);
+    return {
+      type: "text",
+      promptHTML: "Simplify by combining like terms.",
+      tex: buildSumTex(terms),
+      check: function(s) { return checkPoly(s, ans, ans); },
+      answer: ans,
+      hint: "format: e.g. 3x + 5y or 2x - 3y",
+      why: "Group $x$-terms and $y$-terms separately, then combine coefficients."
+    };
+  } else {
+    // mix x and x²
+    var bx1 = rand(1, 5), bx2 = rand(-5, -1);
+    var bxx1 = rand(1, 5), bxx2 = rand(-5, -1);
+    sx = bx1 + bx2;
+    var sxx = bxx1 + bxx2;
+    terms = shuffle([
+      { c: bxx1, lex: "x2" }, { c: bx1, lex: "x" },
+      { c: bxx2, lex: "x2" }, { c: bx2, lex: "x" }
+    ]);
+    function txTerm(c, lex) {
+      var L = lex === "x2" ? "x^2" : lex;
+      if (c === 1) return L;
+      if (c === -1) return "-" + L;
+      return c + L;
+    }
+    function txSum(parts) {
+      var s = "";
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+        if (i === 0) s += txTerm(p.c, p.lex);
+        else if (p.c < 0) s += " - " + txTerm(-p.c, p.lex);
+        else s += " + " + txTerm(p.c, p.lex);
+      }
+      return s;
+    }
+    var ansParts = [];
+    if (sxx !== 0) ansParts.push({ c: sxx, lex: "x2" });
+    if (sx !== 0) ansParts.push({ c: sx, lex: "x" });
+    return {
+      type: "text",
+      promptHTML: "Simplify by combining like terms.",
+      tex: txSum(terms),
+      check: function(s) { return checkPoly(s, "", txSum(ansParts)); },
+      answer: txSum(ansParts),
+      hint: "format: e.g. 3x^2 + 5x or 2x^2 - 3x",
+      why: "$x^2$ and $x$ are different powers, so they don't combine. Group them separately."
+    };
+  }
+}
+
+// =========================================================================
+// EXPAND · SINGLE BRACKET
+// =========================================================================
+
+function genExpandSingle() {
+  var k = pick([2, 3, 4, 5, -2, -3, -4]);
+  var a = rand(2, 7);
+  var b = pick([rand(2, 9), -rand(2, 9)]);
+  var hasX = pick([true, false]);
+  var insideTex, expandedTex, expandedKey;
+  if (hasX) {
+    insideTex = a + "x" + (b < 0 ? " - " + (-b) : " + " + b);
+    var ka = k * a, kb = k * b;
+    expandedTex = ka + "x" + (kb < 0 ? " - " + (-kb) : " + " + kb);
+  } else {
+    // p1-style with letter inside
+    insideTex = "x" + (b < 0 ? " - " + (-b) : " + " + b);
+    var ka = k, kb = k * b;
+    expandedTex = (ka === 1 ? "" : ka === -1 ? "-" : ka) + "x" + (kb < 0 ? " - " + (-kb) : " + " + kb);
+  }
+  return {
+    type: "text",
+    promptHTML: "Expand.",
+    tex: k + "(" + insideTex + ")",
+    check: function(s) { return checkPoly(s, "", expandedTex); },
+    answer: expandedTex,
+    hint: "format: e.g. 6x + 15 or -2x + 8",
+    why: "Distribute the multiplier through every term inside the bracket. Watch the sign."
+  };
+}
+
+// =========================================================================
+// EXPAND · DOUBLE BRACKET
+// =========================================================================
+
+function genExpandDouble() {
+  var p = pick([rand(1, 6), -rand(1, 6)]);
+  var q = pick([rand(1, 6), -rand(1, 6)]);
+  // Coefficient of x in each bracket (sometimes 1, sometimes more for variety)
+  var aCoef = pick([1, 1, 1, 2, 3]);
+  var bCoef = pick([1, 1, 1, 2]);
+  // (aCoef·x + p)(bCoef·x + q)
+  // = aCoef·bCoef·x^2 + (aCoef·q + bCoef·p)·x + p·q
+  var x2 = aCoef * bCoef;
+  var x1 = aCoef * q + bCoef * p;
+  var x0 = p * q;
+  function brTex(coef, c) {
+    var part1 = coef === 1 ? "x" : coef + "x";
+    var part2 = c < 0 ? " - " + (-c) : " + " + c;
+    return "(" + part1 + part2 + ")";
+  }
+  function expTex(a2, a1, a0) {
+    var s = "";
+    if (a2 !== 0) s += (a2 === 1 ? "" : a2 === -1 ? "-" : a2) + "x^2";
+    if (a1 !== 0) {
+      var t = (a1 === 1 || a1 === -1) ? "x" : Math.abs(a1) + "x";
+      s += (s ? (a1 < 0 ? " - " : " + ") : (a1 < 0 ? "-" : "")) + t;
+    }
+    if (a0 !== 0) {
+      s += (s ? (a0 < 0 ? " - " : " + ") : (a0 < 0 ? "-" : "")) + Math.abs(a0);
+    }
+    if (s === "") s = "0";
+    return s;
+  }
+  return {
+    type: "text",
+    promptHTML: "Expand and simplify.",
+    tex: brTex(aCoef, p) + brTex(bCoef, q),
+    check: function(s) { return checkPoly(s, "", expTex(x2, x1, x0)); },
+    answer: expTex(x2, x1, x0),
+    hint: "format: e.g. x^2 + 5x + 6",
+    why: "Each term in the first bracket meets each term in the second (FOIL: 4 products), then combine like terms."
+  };
+}
+
+// =========================================================================
+// FACTOR · COMMON FACTOR
+// =========================================================================
+
+function genFactorCommon() {
+  var pattern = pick(["num-only", "letter", "dots", "perfect"]);
+  if (pattern === "num-only") {
+    var k = pick([2, 3, 4, 5, 6]);
+    var p = rand(2, 8), q = rand(2, 8);
+    var origTex = (k * p) + "x + " + (k * q);
+    var fTex = k + "(" + p + "x + " + q + ")";
+    return {
+      type: "mc",
+      promptHTML: "Factorise fully.",
+      tex: origTex,
+      options: shuffle([
+        fTex,
+        (k * p) + "(x + " + q / p + ")", // bogus
+        k + "(" + (p) + "x + " + (k * q) + ")", // bogus
+        k + "(" + p + "x + " + q + " + 0)"
+      ]),
+      correctIdx: 0,
+      why: "The HCF of " + (k * p) + " and " + (k * q) + " is " + k + ". Factor it out."
+    };
+  } else if (pattern === "letter") {
+    var k = pick([3, 5]);
+    var origTex = (k) + "x^2 + " + (2 * k) + "xy";
+    var fTex = k + "x(x + 2y)";
+    return {
+      type: "mc",
+      promptHTML: "Factorise fully.",
+      tex: origTex,
+      options: shuffle([
+        fTex,
+        k + "(x^2 + 2xy)",
+        "x(" + k + "x + " + (2 * k) + "y)",
+        (k * 2) + "x(x + y)"
+      ]),
+      correctIdx: 0,
+      why: "Both terms share " + k + " and an $x$. Pull both out: $" + k + "x(x + 2y)$."
+    };
+  } else if (pattern === "dots") {
+    var n = pick([3, 4, 5, 6, 7, 8]);
+    var origTex = "x^2 - " + (n * n);
+    var fTex = "(x - " + n + ")(x + " + n + ")";
+    return {
+      type: "mc",
+      promptHTML: "Factorise.",
+      tex: origTex,
+      options: shuffle([
+        fTex,
+        "(x - " + n + ")^2",
+        "(x + " + n + ")^2",
+        "(x - " + (n * n) + ")(x + 1)"
+      ]),
+      correctIdx: 0,
+      why: "Difference of two squares: $a^2 - b^2 = (a - b)(a + b)$."
+    };
+  } else {
+    // perfect square x^2 + 2nx + n^2
+    var n = pick([2, 3, 4, 5, 6]);
+    var origTex = "x^2 + " + (2 * n) + "x + " + (n * n);
+    var fTex = "(x + " + n + ")^2";
+    return {
+      type: "mc",
+      promptHTML: "Factorise.",
+      tex: origTex,
+      options: shuffle([
+        fTex,
+        "(x + " + n + ")(x - " + n + ")",
+        "(x + " + (2 * n) + ")(x + " + n + ")",
+        "x(x + " + (2 * n) + ") + " + (n * n)
+      ]),
+      correctIdx: 0,
+      why: "Perfect square pattern: $a^2 + 2ab + b^2 = (a + b)^2$."
+    };
+  }
+}
+
+// =========================================================================
+// FACTOR · QUADRATIC
+// =========================================================================
+
+function genFactorQuad() {
+  var p = pick([rand(2, 6), -rand(2, 6)]);
+  var q = pick([rand(2, 6), -rand(2, 6)]);
+  if (p === q) q = q + 1;
+  var b = p + q;
+  var c = p * q;
+  var origTex = "x^2 " + (b < 0 ? "- " + (-b) : "+ " + b) + "x " + (c < 0 ? "- " + (-c) : "+ " + c);
+  var fTex = "(x " + (p < 0 ? "- " + (-p) : "+ " + p) + ")(x " + (q < 0 ? "- " + (-q) : "+ " + q) + ")";
+  // distractors: swap signs / shuffle pair
+  var distractor1 = "(x " + (p < 0 ? "+ " + (-p) : "- " + p) + ")(x " + (q < 0 ? "+ " + (-q) : "- " + q) + ")";
+  var distractor2 = "(x + " + Math.abs(b) + ")(x + " + Math.abs(c) + ")";
+  return {
+    type: "mc",
+    promptHTML: "Factorise.",
+    tex: origTex,
+    options: shuffle([fTex, distractor1, distractor2, "Cannot factorise"]),
+    correctIdx: 0,
+    why: "Find two numbers multiplying to " + c + " and adding to " + b + ": $" + p + "$ and $" + q + "$."
+  };
+}
+
+// =========================================================================
+// COMPLETE THE SQUARE
+// =========================================================================
+
+function genCompleteSquare() {
+  var b = pick([rand(2, 8), -rand(2, 8)]);
+  if (b % 2 !== 0) b = b + (b > 0 ? 1 : -1);
+  var c = pick([0, rand(1, 9), -rand(1, 9)]);
+  var h = b / 2;
+  var k = c - h * h;
+  var origTex = "x^2 " + (b < 0 ? "- " + (-b) : "+ " + b) + "x" + (c === 0 ? "" : (c < 0 ? " - " + (-c) : " + " + c));
+  var fTex;
+  if (k === 0) {
+    fTex = "(x " + (h < 0 ? "- " + (-h) : "+ " + h) + ")^2";
+  } else {
+    fTex = "(x " + (h < 0 ? "- " + (-h) : "+ " + h) + ")^2 " + (k < 0 ? "- " + (-k) : "+ " + k);
+  }
+  var distractor1 = "(x " + (h < 0 ? "- " + (-h) : "+ " + h) + ")^2 " + (k > 0 ? "+ " + k : "- " + (-k)) + " · wrong sign";
+  var distractor2 = "(x " + (b < 0 ? "- " + (-b) : "+ " + b) + ")^2 " + (k < 0 ? "- " + (-k) : "+ " + k);
+  var distractor3 = "(x " + (h < 0 ? "+ " + (-h) : "- " + h) + ")^2 " + (k < 0 ? "- " + (-k) : "+ " + k);
+  return {
+    type: "mc",
+    promptHTML: "Complete the square.",
+    tex: origTex,
+    options: shuffle([fTex, distractor1, distractor2, distractor3]),
+    correctIdx: 0,
+    why: "Halve $b$ to get $" + h + "$. Square it: $" + h * h + "$. Adjust the constant: $" + c + " - " + h * h + " = " + k + "$."
+  };
+}
+
+// =========================================================================
+// PIPELINE
+// =========================================================================
+
+function genQuestion(topic) {
+  if (topic === "like-terms")     return genLikeTerms();
+  if (topic === "expand-single")  return genExpandSingle();
+  if (topic === "expand-double")  return genExpandDouble();
+  if (topic === "factor-common")  return genFactorCommon();
+  if (topic === "factor-quad")    return genFactorQuad();
+  if (topic === "complete-square") return genCompleteSquare();
+  // mixed
+  var bag = [genLikeTerms, genExpandSingle, genExpandDouble, genFactorCommon, genFactorQuad, genCompleteSquare];
+  return bag[Math.floor(Math.random() * bag.length)]();
+}
+
+function buildSet(topic, n) {
+  var out = [];
+  for (var i = 0; i < n; i++) out.push(genQuestion(topic));
+  return out;
+}
+
+var state = { idx: 0, right: 0, wrong: 0, set: [], locked: false };
+
+var cardEl = document.getElementById("card");
+var topicSel = document.getElementById("topic");
+var stepNumEl = document.getElementById("step-num");
+var rightCountEl = document.getElementById("right-count");
+var wrongCountEl = document.getElementById("wrong-count");
+
+topicSel.addEventListener("change", reset);
+
+function reset() {
+  state = { idx: 0, right: 0, wrong: 0, locked: false, set: buildSet(topicSel.value, 8) };
+  rightCountEl.textContent = 0;
+  wrongCountEl.textContent = 0;
+  document.getElementById("step-total").textContent = state.set.length;
+  renderQ();
+}
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); } catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+function renderQ() {
+  if (state.idx >= state.set.length) { renderDone(); return; }
+  var q = state.set[state.idx];
+  stepNumEl.textContent = state.idx + 1;
+  state.locked = false;
+
+  var inner = '<p class="q-label">QUESTION</p>' +
+              '<p class="q-prompt">' + q.promptHTML + '</p>' +
+              '<div class="q-expr" id="expr"></div>';
+  if (q.type === "mc") {
+    inner += '<div class="options" id="opts"></div>';
+  } else {
+    inner += '<div class="answer-row">' +
+              '<input type="text" id="ans" placeholder="?"/>' +
+              '<button class="btn-check" id="check">Check</button>' +
+            '</div>' +
+            '<p class="hint-line">' + q.hint + '</p>';
+  }
+  inner += '<div id="reveal-slot"></div>';
+  cardEl.innerHTML = inner;
+
+  tryRender(document.getElementById("expr"), q.tex);
+
+  if (q.type === "mc") {
+    var optsEl = document.getElementById("opts");
+    q.options.forEach(function(opt, i) {
+      var btn = document.createElement("button");
+      btn.className = "opt";
+      btn.dataset.idx = i;
+      btn.innerHTML = '<span class="opt-letter">' + String.fromCharCode(65 + i) + '</span>' +
+                      '<span class="opt-text" id="opt-text-' + i + '"></span>';
+      btn.addEventListener("click", function() { submitMC(i); });
+      optsEl.appendChild(btn);
+      tryRender(document.getElementById("opt-text-" + i), opt);
+    });
+  } else {
+    var inp = document.getElementById("ans");
+    inp.addEventListener("input", function() { inp.classList.remove("wrong"); });
+    inp.addEventListener("keydown", function(e) { if (e.key === "Enter") submitText(inp); });
+    document.getElementById("check").addEventListener("click", function() { submitText(inp); });
+    inp.focus({ preventScroll: true });
+  }
+  reportHeight();
+}
+
+function finishCorrectness(correct) {
+  if (state.locked) return;
+  state.locked = true;
+  if (correct) state.right++; else state.wrong++;
+  rightCountEl.textContent = state.right;
+  wrongCountEl.textContent = state.wrong;
+}
+
+function showReveal(correct, q) {
+  var slot = document.getElementById("reveal-slot");
+  slot.innerHTML =
+    '<div class="reveal ' + (correct ? "ok" : "bad") + '">' +
+      '<p class="reveal-line">' + (correct ? "✓ CORRECT" : "✗ ANSWER: " + (q.type === "mc" ? String.fromCharCode(65 + q.correctIdx) : q.answer)) + '</p>' +
+      '<p class="reveal-explain" id="why"></p>' +
+      '<div class="controls"><button class="btn primary" id="next">' + (state.idx < state.set.length - 1 ? "Next →" : "See result") + '</button></div>' +
+    '</div>';
+  tryRender(document.getElementById("why"), q.why);
+  document.getElementById("next").addEventListener("click", function() { state.idx++; renderQ(); });
+  reportHeight();
+}
+
+function submitMC(idx) {
+  if (state.locked) return;
+  var q = state.set[state.idx];
+  var correct = idx === q.correctIdx;
+  finishCorrectness(correct);
+  var btns = document.querySelectorAll(".opt");
+  btns.forEach(function(b, i) {
+    b.disabled = true;
+    if (i === q.correctIdx) b.classList.add("right");
+    else if (i === idx) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  showReveal(correct, q);
+}
+
+function submitText(inp) {
+  if (state.locked) { state.idx++; renderQ(); return; }
+  var raw = inp.value;
+  if (!raw.trim()) { inp.classList.add("wrong"); return; }
+  var q = state.set[state.idx];
+  var correct;
+  try { correct = q.check(raw); } catch (e) { correct = false; }
+  finishCorrectness(correct);
+  inp.classList.remove("wrong");
+  inp.classList.add(correct ? "correct" : "wrong");
+  inp.disabled = true;
+  showReveal(correct, q);
+}
+
+function renderDone() {
+  var total = state.set.length;
+  var pct = Math.round((state.right / total) * 100);
+  var msg = pct === 100 ? "Perfect. Manipulation rules are sharp." :
+            pct >= 80 ? "Strong. Watch the sign-traps and you're set." :
+            pct >= 50 ? "Decent. Run a single-mode round on whichever felt shaky." :
+            "More drill needed. Pick one mode from the dropdown.";
+  cardEl.innerHTML =
+    '<div class="done-card">' +
+      '<span class="kicker">SCORE</span>' +
+      '<p class="big">' + state.right + '<span class="total"> / ' + total + '</span></p>' +
+      '<p class="sub">' + pct + '%</p>' +
+      '<p class="msg">' + msg + '</p>' +
+      '<div class="controls" style="justify-content:center;margin-top:14px"><button class="btn primary" id="retry">Retry</button></div>' +
+    '</div>';
+  document.getElementById("retry").addEventListener("click", reset);
+  stepNumEl.textContent = total;
+  reportHeight();
+}
+
+reset();
+
+// auto-resize
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
