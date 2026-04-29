@@ -291,6 +291,15 @@ export default function LessonBody({ markdown }: { markdown: string }) {
   React.useEffect(() => {
     if (!rootRef.current) return
     renderMathInNode(rootRef.current)
+    // KaTeX renders \boxed{X} as a `.fbox` border element + the content
+    // X positioned alongside it inside a `.vlist`. Neither inherits a
+    // class we can use directly. Walk every `.fbox` and tag its closest
+    // `.katex` ancestor so CSS can colour the whole boxed expression
+    // green (border, text, background).
+    rootRef.current.querySelectorAll(".katex .fbox").forEach(fbox => {
+      const katex = fbox.closest(".katex")
+      if (katex) katex.classList.add("has-boxed-answer")
+    })
   }, [processed])
 
   return (

@@ -535,15 +535,19 @@
   overflow-y: hidden;
 }
 .lesson-prose .katex-display > .katex { font-size: 1.18em; }
-/* KaTeX's \boxed{...} renders in PL Green. In lesson prose the boxed
-   macro is reserved for final answers (and sub-answers in multi-part
-   worked examples), so a single style covers every case. The boxed
-   value IS the answer indicator. */
-.lesson-prose .katex .boxed {
-  border-color: #0fee89 !important;
+/* KaTeX's \boxed{X} compiles to \fbox{X}, which renders as a `.fbox`
+   border element next to a sibling that holds the content X. Neither
+   has a `.boxed` class. We tag the enclosing `.katex` with
+   `.has-boxed-answer` at runtime (LessonBody useEffect), then this
+   rule colours the whole boxed expression green. The `*` selector
+   ensures the inner text content also goes green; the .fbox-specific
+   rule handles the border + background. */
+.lesson-prose .katex.has-boxed-answer,
+.lesson-prose .katex.has-boxed-answer * {
   color: #0fee89 !important;
-  padding: 3px 10px !important;
-  border-radius: 4px !important;
+}
+.lesson-prose .katex.has-boxed-answer .fbox {
+  border-color: #0fee89 !important;
   background: rgba(15, 238, 137, 0.10) !important;
 }
 
