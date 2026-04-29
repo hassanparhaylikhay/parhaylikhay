@@ -77,7 +77,19 @@ async function readMarkdown(folder: string, file: string): Promise<Lesson | null
   const filepath = path.join(process.cwd(), "lessons", "maths", folder, file)
   try {
     const raw = await readFile(filepath, "utf8")
-    const parsed = matter(raw)
+    let parsed
+    try {
+      parsed = matter(raw)
+    } catch (err) {
+      // YAML frontmatter parse failure — typically an unknown backslash
+      // escape in a double-quoted string (\, \l \g etc. need to be doubled).
+      // Log loudly so the bad file is obvious in dev/build logs instead of
+      // silently rendering "This part is being written".
+      console.error(
+        `[lesson-loader] YAML parse failed for ${filepath}:\n  ${(err as Error).message}`,
+      )
+      return null
+    }
     return {
       meta: parsed.data as LessonMeta,
       body: parsed.content,
