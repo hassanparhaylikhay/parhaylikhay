@@ -181,7 +181,15 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "18", code: "1.18", title: "Surds" },
+      {
+        slug: "18", code: "1.18", title: "Surds",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Simplifying surds" },
+          { slug: "p2",     label: "P2", title: "Operations with surds" },
+          { slug: "p3",     label: "P3", title: "Rationalising the denominator" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
     ],
   },
   {

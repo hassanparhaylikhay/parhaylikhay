@@ -43,6 +43,7 @@ const LESSON_FOLDERS: Record<string, string> = {
   "01-15": "01-15-time",
   "01-16": "01-16-money",
   "01-17": "01-17-exponential-growth-and-decay",
+  "01-18": "01-18-surds",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
