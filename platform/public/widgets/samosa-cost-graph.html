@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Samosa Cost Graph</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <style>
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
@@ -15,11 +17,9 @@
     background:#0b1118;
     padding:14px 16px 16px;
   }
-  .head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px; gap:10px; }
-  .label { font-family:'Geist Mono',monospace; font-size:9.5px; letter-spacing:2px; text-transform:uppercase; color:#7a7875; }
-  .formula { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; }
-  .formula .x { color:#00abfa; font-weight:600; }
-  .formula .y { color:#0fee89; font-weight:600; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; gap:10px; min-height:22px; }
+  .formula { font-size:14px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
 
   svg { display:block; width:100%; height:auto; touch-action:none; user-select:none; }
 
@@ -51,8 +51,7 @@
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
-    <span class="label">SAMOSA COST · INTERACTIVE</span>
-    <span class="formula">cost = <span class="x">x</span> × p<span style="color:#7a7875">,</span> p = 50</span>
+    <span class="formula" id="formula"></span>
   </div>
 
   <div style="position:relative">
@@ -95,6 +94,20 @@
 
 <script>
 "use strict";
+
+// ---------- formula in KaTeX ----------
+function renderFormula() {
+  var el = document.getElementById("formula");
+  if (!el) return;
+  var tex = "\\text{cost} = \\textcolor{#fff067}{p} \\cdot \\textcolor{#00abfa}{x}, \\quad \\textcolor{#fff067}{p} = 50";
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, el, { throwOnError: false }); }
+    catch (e) { el.textContent = "cost = p · x,  p = 50"; }
+  } else {
+    setTimeout(renderFormula, 50);
+  }
+}
+renderFormula();
 
 // ---------- coordinate model ----------
 // SVG viewBox is 0..480 wide, 0..260 tall.
