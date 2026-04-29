@@ -30,18 +30,16 @@
   .line-plot { stroke:#fff067; stroke-width:2; fill:none; stroke-linecap:round; pointer-events:none; }
   .integer-dot { fill:#fff067; stroke:none; pointer-events:none; }
 
-  .cursor-line { stroke:#00abfa; stroke-width:1.2; stroke-dasharray:3 3; opacity:0; transition:opacity 0.15s; pointer-events:none; }
-  .cursor-dot { fill:#0fee89; stroke:#0b1118; stroke-width:2; opacity:0; transition:opacity 0.15s; pointer-events:none; }
-  .cursor-line.on, .cursor-dot.on { opacity:1; }
+  .cursor-line { stroke:#00abfa; stroke-width:1.2; stroke-dasharray:3 3; pointer-events:none; }
+  .cursor-dot { fill:#0fee89; stroke:#0b1118; stroke-width:2; pointer-events:none; }
 
   .tooltip {
-    position:absolute; pointer-events:none; opacity:0; transition:opacity 0.15s;
+    position:absolute; pointer-events:none;
     background:#07090d; border:1px solid #2a3a4a; border-radius:6px;
     padding:6px 10px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#f0eeea;
     white-space:nowrap; transform:translate(-50%, -100%);
     box-shadow:0 4px 12px rgba(0,0,0,0.4);
   }
-  .tooltip.on { opacity:1; }
   .tooltip .tip-x { color:#00abfa; font-weight:600; }
   .tooltip .tip-y { color:#0fee89; font-weight:600; }
 
@@ -230,8 +228,6 @@ function draw() {
   var py = yToPx(P * currentX);
   vline.setAttribute("x1", px); vline.setAttribute("x2", px);
   cdot.setAttribute("cx", px); cdot.setAttribute("cy", py);
-  vline.classList.add("on");
-  cdot.classList.add("on");
 
   // tooltip text reflects the snapped target (numbers don't lag)
   tipx.textContent = (targetX % 1 === 0) ? String(targetX) : targetX.toFixed(1);
@@ -239,11 +235,11 @@ function draw() {
 
   // tooltip box follows the animated cursor in screen coords
   var rect = svg.getBoundingClientRect();
+  if (rect.width === 0) return; // SVG not laid out yet — skip
   var sx = rect.width / 480;
   var sy = rect.height / 260;
   tip.style.left = (px * sx) + "px";
   tip.style.top  = (py * sy - 8) + "px";
-  tip.classList.add("on");
 }
 
 function fromEvent(e) {
@@ -258,7 +254,9 @@ hit.addEventListener("mousemove", function(e) {
   var x = fromEvent(e);
   if (x !== null) setTarget(x);
 });
-hit.addEventListener("mouseleave", function() { setTarget(3); });
+// Cursor stays at last position when mouse leaves — no snap-back. Returning
+// to a default value mid-interaction caused flicker when sibling SVG events
+// overlapped the hit region during fast moves.
 hit.addEventListener("touchmove", function(e) {
   e.preventDefault();
   var x = fromEvent(e);
