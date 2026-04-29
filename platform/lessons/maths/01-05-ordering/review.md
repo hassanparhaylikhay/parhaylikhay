@@ -4,15 +4,15 @@ checks:
   - q: 'Which symbol means "is less than or equal to"?'
     options: ["$\\lt$", "$\\gt$", "$\\le$", "$\\ge$"]
     correct: 2
-    explain: '$\le$ is "less than or equal to". The bar adds the "or equal to" part to a strict $\\lt$.'
-  - q: 'True or false: $-9 \\gt -2$.'
+    explain: '$\le$ is "less than or equal to". The bar adds the "or equal to" part to a strict $\lt$.'
+  - q: 'True or false: $-9 \gt -2$.'
     options: ["True", "False"]
     correct: 1
-    explain: '$-9$ sits to the LEFT of $-2$ on the number line, so $-9$ is the SMALLER value. The correct statement is $-9 \\lt -2$.'
+    explain: '$-9$ sits to the LEFT of $-2$ on the number line, so $-9$ is the SMALLER value. The correct statement is $-9 \lt -2$.'
   - q: 'Order from smallest to largest: $\tfrac{1}{4}, \;0.3, \;28\%$.'
     options: ["$\\tfrac{1}{4}, 28\\%, 0.3$", "$28\\%, \\tfrac{1}{4}, 0.3$", "$0.3, 28\\%, \\tfrac{1}{4}$", "$\\tfrac{1}{4}, 0.3, 28\\%$"]
     correct: 0
-    explain: 'As decimals: $\tfrac{1}{4} = 0.25$, $0.3 = 0.3$, $28\% = 0.28$. Order: $0.25 \\lt 0.28 \\lt 0.3$, so $\tfrac{1}{4}, 28\%, 0.3$.'
+    explain: 'As decimals: $\tfrac{1}{4} = 0.25$, $0.3 = 0.3$, $28\% = 0.28$. Order: $0.25 \lt 0.28 \lt 0.3$, so $\tfrac{1}{4}, 28\%, 0.3$.'
   - q: 'Which is the largest? $\sqrt{40}, \;6, \;\tfrac{19}{3}$'
     options: ["$\\sqrt{40}$", "$6$", "$\\tfrac{19}{3}$", "All equal"]
     correct: 2
