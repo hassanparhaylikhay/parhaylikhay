@@ -27,11 +27,11 @@
   .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
   .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
   .axis-title { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:1.5px; fill:#7a7875; text-transform:uppercase; }
-  .line-plot { stroke:#fff067; stroke-width:2; fill:none; stroke-linecap:round; }
-  .integer-dot { fill:#fff067; stroke:none; }
+  .line-plot { stroke:#fff067; stroke-width:2; fill:none; stroke-linecap:round; pointer-events:none; }
+  .integer-dot { fill:#fff067; stroke:none; pointer-events:none; }
 
-  .cursor-line { stroke:#00abfa; stroke-width:1.2; stroke-dasharray:3 3; opacity:0; transition:opacity 0.15s; }
-  .cursor-dot { fill:#0fee89; stroke:#0b1118; stroke-width:2; opacity:0; transition:opacity 0.15s; }
+  .cursor-line { stroke:#00abfa; stroke-width:1.2; stroke-dasharray:3 3; opacity:0; transition:opacity 0.15s; pointer-events:none; }
+  .cursor-dot { fill:#0fee89; stroke:#0b1118; stroke-width:2; opacity:0; transition:opacity 0.15s; pointer-events:none; }
   .cursor-line.on, .cursor-dot.on { opacity:1; }
 
   .tooltip {
