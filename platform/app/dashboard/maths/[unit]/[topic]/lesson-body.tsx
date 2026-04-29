@@ -72,14 +72,16 @@ function preprocess(md: string): string {
   )
 
   // Mark-scheme annotations: **[M1 for ...]**, **[B1]**, **[B1 ...; A1 ...]**.
-  // Match the bold markers strictly (directly adjacent to [ and ]) so we
-  // don't accidentally consume `**` from neighbouring bold prose.
-  // Output: a compact right-aligned cluster of code-only pills (M1/B1/A1).
-  // The prose around the cluster explains what each mark is for; we don't
-  // duplicate that text inside the pill.
+  // Strip the bracketed annotation from wherever it sits in the paragraph,
+  // and PREPEND a compact mark cluster to the start of that paragraph.
+  // Inside a worked-example card the cluster is float:right, so each step's
+  // marks sit at the right edge of that step's line — vertically aligned
+  // with the corresponding working below.
+  // Operates per-line (one paragraph per line in our markdown), so each
+  // step gets its own correctly-placed cluster.
   out = out.replace(
-    /\*\*\s*((?:\[(?:M|B|A)\d(?:[^\]]*)\]\s*)+)\*\*/g,
-    (_full, group: string) => {
+    /^([^\n]*?)\*\*\s*((?:\[(?:M|B|A)\d(?:[^\]]*)\]\s*)+)\*\*([^\n]*)$/gm,
+    (full, before: string, group: string, after: string) => {
       const brackets = [...group.matchAll(/\[((?:M|B|A)\d)([^\]]*)\]/g)]
       const codes: string[] = []
       for (const [, firstCode, firstRest] of brackets) {
@@ -89,11 +91,14 @@ function preprocess(md: string): string {
           if (m) codes.push(m[1])
         }
       }
-      if (codes.length === 0) return _full
+      if (codes.length === 0) return full
       const pills = codes
         .map(c => `<span class="pill-semantic pill-semantic--mark">${c}</span>`)
         .join("")
-      return `<span class="we-marks">${pills}</span>`
+      // Prepend cluster, then the rest of the line with the bracket gone.
+      // Trim a trailing space left over from joining `before` + `after`.
+      const rest = (before + after).replace(/\s+$/, "")
+      return `<span class="we-marks">${pills}</span>${rest}`
     },
   )
 

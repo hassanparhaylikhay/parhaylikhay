@@ -397,21 +397,32 @@
   border-color: rgba(255, 70, 112, 0.32);
 }
 
-/* Mark-pill cluster — sits flush to the right edge of its line.
-   Outside a worked example, lives below the answer text inline-right.
-   Inside a worked example, floats off into the card's right margin so
-   the answer text reads cleanly without mark codes crowding the prose. */
+/* Mark-pill cluster — sits to the right of its working line.
+   Each step's cluster lives at the start of its paragraph (DOM order)
+   but floats right, so the working text fills the left and the marks
+   sit on the right edge — vertically aligned with that step's prose.
+   Multiple steps in a worked example produce a clean vertical column
+   of marks at the right edge of the card. */
 .lesson-prose .we-marks {
   display: inline-flex;
   gap: 6px;
   vertical-align: 1px;
   margin-left: 8px;
 }
-/* Inside a WE card, push the cluster to the right edge of the line. */
+/* Inside a WE card, float each cluster to the right edge of its line. */
 .lesson-prose .we-card .we-marks {
   float: right;
-  margin-left: 16px;
-  margin-top: 0;
+  margin: 4px 0 4px 16px;
+  /* Pull slightly into the card's right padding so the marks sit close
+     to the visual right edge without touching it. */
+  margin-right: -4px;
+}
+/* Each paragraph in a WE card establishes its own block formatting
+   context (display:flow-root) so a floated mark cluster is contained
+   within the same paragraph — it won't bleed into the next step's
+   prose, and each step's marks sit beside its own working. */
+.lesson-prose .we-card p {
+  display: flow-root;
 }
 
 /* ─── Worked example card ─── */
