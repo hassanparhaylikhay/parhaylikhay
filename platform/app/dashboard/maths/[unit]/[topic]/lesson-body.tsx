@@ -302,6 +302,26 @@ export default function LessonBody({ markdown }: { markdown: string }) {
     })
   }, [processed])
 
+  // Inline iframes (samosa-cost-graph, etc.) embedded directly in the
+  // markdown body post a `pl-widget-resize` message when their content
+  // height changes. Match the message back to its source iframe and
+  // update the height attribute so the iframe shrink-wraps its content
+  // at every viewport width.
+  React.useEffect(() => {
+    function handler(e: MessageEvent) {
+      if (!rootRef.current) return
+      const data = e.data as { type?: string; height?: number } | null
+      if (!data || data.type !== "pl-widget-resize" || typeof data.height !== "number") return
+      rootRef.current.querySelectorAll<HTMLIFrameElement>("iframe").forEach(frame => {
+        if (frame.contentWindow === e.source) {
+          frame.style.height = data.height + "px"
+        }
+      })
+    }
+    window.addEventListener("message", handler)
+    return () => window.removeEventListener("message", handler)
+  }, [])
+
   return (
     <div className="lesson-prose" ref={rootRef}>
       <ReactMarkdown

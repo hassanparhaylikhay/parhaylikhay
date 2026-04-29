@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Samosa Cost Graph</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:16px 18px 18px; }
+  .wrap {
+    max-width:520px; margin:0 auto;
+    border:1px solid #141e2a; border-radius:10px;
+    background:#0b1118;
+    padding:14px 16px 16px;
+  }
+  .head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px; gap:10px; }
+  .label { font-family:'Geist Mono',monospace; font-size:9.5px; letter-spacing:2px; text-transform:uppercase; color:#7a7875; }
+  .formula { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; }
+  .formula .x { color:#00abfa; font-weight:600; }
+  .formula .y { color:#0fee89; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; touch-action:none; user-select:none; }
+
+  .axis-line { stroke:#3a4a5a; stroke-width:1; }
+  .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
+  .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
+  .axis-title { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:1.5px; fill:#7a7875; text-transform:uppercase; }
+  .line-plot { stroke:#fff067; stroke-width:2; fill:none; stroke-linecap:round; }
+  .integer-dot { fill:#fff067; stroke:none; }
+
+  .cursor-line { stroke:#00abfa; stroke-width:1.2; stroke-dasharray:3 3; opacity:0; transition:opacity 0.15s; }
+  .cursor-dot { fill:#0fee89; stroke:#0b1118; stroke-width:2; opacity:0; transition:opacity 0.15s; }
+  .cursor-line.on, .cursor-dot.on { opacity:1; }
+
+  .tooltip {
+    position:absolute; pointer-events:none; opacity:0; transition:opacity 0.15s;
+    background:#07090d; border:1px solid #2a3a4a; border-radius:6px;
+    padding:6px 10px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#f0eeea;
+    white-space:nowrap; transform:translate(-50%, -100%);
+    box-shadow:0 4px 12px rgba(0,0,0,0.4);
+  }
+  .tooltip.on { opacity:1; }
+  .tooltip .tip-x { color:#00abfa; font-weight:600; }
+  .tooltip .tip-y { color:#0fee89; font-weight:600; }
+
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="label">SAMOSA COST · INTERACTIVE</span>
+    <span class="formula">cost = <span class="x">x</span> × p<span style="color:#7a7875">,</span> p = 50</span>
+  </div>
+
+  <div style="position:relative">
+    <svg viewBox="0 0 480 260" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+      <!-- grid lines -->
+      <g id="grid"></g>
+
+      <!-- axis lines -->
+      <line class="axis-line" x1="58" y1="220" x2="448" y2="220"/>
+      <line class="axis-line" x1="58" y1="20" x2="58" y2="220"/>
+
+      <!-- axis ticks and labels -->
+      <g id="ticks"></g>
+
+      <!-- axis titles -->
+      <text class="axis-title" x="253" y="252" text-anchor="middle">samosas (x)</text>
+      <text class="axis-title" x="14" y="120" text-anchor="middle" transform="rotate(-90 14 120)">cost (rupees)</text>
+
+      <!-- the line y = 50x  (x from 0 to 6, y from 0 to 300) -->
+      <line class="line-plot" x1="58" y1="220" x2="448" y2="20"/>
+
+      <!-- integer dots at x = 0..6 -->
+      <g id="dots"></g>
+
+      <!-- hover overlay (transparent rect captures mouse/touch) -->
+      <rect id="hit" x="58" y="20" width="390" height="200" fill="transparent"/>
+
+      <!-- cursor visualisation (drawn last so it sits on top) -->
+      <line id="vline" class="cursor-line" x1="0" y1="20" x2="0" y2="220"/>
+      <circle id="cdot" class="cursor-dot" cx="0" cy="0" r="5"/>
+    </svg>
+
+    <div id="tip" class="tooltip">
+      <span class="tip-x" id="tipx"></span> samosas × Rs. 50 = <span class="tip-y" id="tipy"></span>
+    </div>
+  </div>
+
+  <p class="footer">hover or tap the graph to see the cost for that many samosas</p>
+</div>
+
+<script>
+"use strict";
+
+// ---------- coordinate model ----------
+// SVG viewBox is 0..480 wide, 0..260 tall.
+// Plot area: x from 58 (left) to 448 (right), y from 220 (bottom) to 20 (top).
+// Domain:  x = 0..6 samosas
+// Range:   cost = 0..300 rupees (since y = 50x and x_max = 6)
+// p (price per samosa) = 50.
+var P = 50;
+var X_MAX = 6;
+var Y_MAX = 300;
+var PX_LEFT = 58, PX_RIGHT = 448, PX_TOP = 20, PX_BOT = 220;
+
+function xToPx(x) { return PX_LEFT + (x / X_MAX) * (PX_RIGHT - PX_LEFT); }
+function yToPx(y) { return PX_BOT - (y / Y_MAX) * (PX_BOT - PX_TOP); }
+function pxToX(px) { return ((px - PX_LEFT) / (PX_RIGHT - PX_LEFT)) * X_MAX; }
+
+// ---------- axis ticks & grid ----------
+(function buildAxes() {
+  var g = document.getElementById("grid");
+  var t = document.getElementById("ticks");
+  var dotsG = document.getElementById("dots");
+
+  // x ticks 0..6
+  for (var x = 0; x <= X_MAX; x++) {
+    var px = xToPx(x);
+    // grid
+    if (x > 0) {
+      var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      gl.setAttribute("class", "grid-line");
+      gl.setAttribute("x1", px); gl.setAttribute("x2", px);
+      gl.setAttribute("y1", PX_TOP); gl.setAttribute("y2", PX_BOT);
+      g.appendChild(gl);
+    }
+    // tick label
+    var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tl.setAttribute("class", "axis-tick-label");
+    tl.setAttribute("x", px); tl.setAttribute("y", PX_BOT + 14);
+    tl.setAttribute("text-anchor", "middle");
+    tl.textContent = x;
+    t.appendChild(tl);
+    // integer dot on the line
+    var dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    dot.setAttribute("class", "integer-dot");
+    dot.setAttribute("cx", px); dot.setAttribute("cy", yToPx(P * x));
+    dot.setAttribute("r", 3);
+    dotsG.appendChild(dot);
+  }
+
+  // y ticks 0..300 step 50
+  for (var y = 0; y <= Y_MAX; y += 50) {
+    var py = yToPx(y);
+    if (y > 0) {
+      var gly = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      gly.setAttribute("class", "grid-line");
+      gly.setAttribute("x1", PX_LEFT); gly.setAttribute("x2", PX_RIGHT);
+      gly.setAttribute("y1", py); gly.setAttribute("y2", py);
+      g.appendChild(gly);
+    }
+    var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tly.setAttribute("class", "axis-tick-label");
+    tly.setAttribute("x", PX_LEFT - 6); tly.setAttribute("y", py + 3);
+    tly.setAttribute("text-anchor", "end");
+    tly.textContent = y;
+    t.appendChild(tly);
+  }
+})();
+
+// ---------- hover/touch interaction ----------
+var svg = document.getElementById("svg");
+var hit = document.getElementById("hit");
+var vline = document.getElementById("vline");
+var cdot = document.getElementById("cdot");
+var tip = document.getElementById("tip");
+var tipx = document.getElementById("tipx");
+var tipy = document.getElementById("tipy");
+
+// Default position: snap to x = 3 (illustrative)
+function showAt(x) {
+  // Round to nearest 0.5 for a clean teaching value
+  x = Math.max(0, Math.min(X_MAX, x));
+  var xRound = Math.round(x * 2) / 2;
+  var y = P * xRound;
+  var px = xToPx(xRound);
+  var py = yToPx(y);
+
+  vline.setAttribute("x1", px); vline.setAttribute("x2", px);
+  cdot.setAttribute("cx", px); cdot.setAttribute("cy", py);
+  vline.classList.add("on");
+  cdot.classList.add("on");
+
+  tipx.textContent = (xRound % 1 === 0) ? String(xRound) : xRound.toFixed(1);
+  tipy.textContent = "Rs. " + y;
+
+  // Position tooltip in screen coords. Need to convert SVG (px,py) into the
+  // wrapping div's CSS coordinates.
+  var rect = svg.getBoundingClientRect();
+  var vbW = 480, vbH = 260;
+  var sx = rect.width / vbW, sy = rect.height / vbH;
+  var screenPx = px * sx;
+  var screenPy = py * sy;
+  tip.style.left = (screenPx) + "px";
+  tip.style.top  = (screenPy - 8) + "px";
+  tip.classList.add("on");
+}
+
+function clear() {
+  vline.classList.remove("on");
+  cdot.classList.remove("on");
+  tip.classList.remove("on");
+}
+
+function fromEvent(e) {
+  var rect = svg.getBoundingClientRect();
+  var clientX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+  if (clientX === undefined) return null;
+  var vbW = 480;
+  var x = ((clientX - rect.left) / rect.width) * vbW;
+  return pxToX(x);
+}
+
+hit.addEventListener("mousemove", function(e) {
+  var x = fromEvent(e);
+  if (x !== null) showAt(x);
+});
+hit.addEventListener("mouseleave", function() {
+  // keep last reading visible? leave persistent for clarity
+  // showing default (x=3) on leave
+  showAt(3);
+});
+hit.addEventListener("touchmove", function(e) {
+  e.preventDefault();
+  var x = fromEvent(e);
+  if (x !== null) showAt(x);
+}, { passive: false });
+hit.addEventListener("touchstart", function(e) {
+  var x = fromEvent(e);
+  if (x !== null) showAt(x);
+});
+
+// initial reading
+showAt(3);
+
+// resize handler — tooltip needs to recompute on viewport change
+window.addEventListener("resize", function() { showAt(3); });
+
+// auto-resize parent iframe via postMessage
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
