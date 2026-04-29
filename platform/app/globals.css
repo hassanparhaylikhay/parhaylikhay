@@ -250,11 +250,11 @@
   padding-left: 4px;
 }
 .lesson-prose li::marker {
-  color: #00abfa;
+  color: #f0eeea;
   font-size: 0.9em;
 }
 /* Nested lists step down to a less prominent marker so the hierarchy reads
-   without two equal-weight blue dots. */
+   without two equal-weight white dots. */
 .lesson-prose li li::marker { color: #7a7875; }
 .lesson-prose table {
   width: 100%;
