@@ -173,7 +173,14 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "17", code: "1.17", title: "Exponential growth and decay" },
+      {
+        slug: "17", code: "1.17", title: "Exponential growth and decay",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Exponential growth" },
+          { slug: "p2",     label: "P2", title: "Exponential decay" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "18", code: "1.18", title: "Surds" },
     ],
   },
