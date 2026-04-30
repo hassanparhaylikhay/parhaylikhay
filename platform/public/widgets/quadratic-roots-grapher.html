@@ -24,7 +24,7 @@
   .slider-row input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
   .slider-row .val { min-width:30px; text-align:right; color:#f0eeea; font-weight:600; }
 
-  svg { display:block; width:100%; height:auto; user-select:none; }
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
 
   .axis-line { stroke:#3a4a5a; stroke-width:1; }
   .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
@@ -60,11 +60,18 @@
   </div>
 
   <svg viewBox="0 0 360 360" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <defs>
+      <clipPath id="plot-clip">
+        <rect x="30" y="30" width="300" height="300"/>
+      </clipPath>
+    </defs>
     <g id="grid"></g>
     <line class="axis-line" id="xAxis"/>
     <line class="axis-line" id="yAxis"/>
     <g id="ticks"></g>
-    <path class="parabola" id="parabolaPath"/>
+    <g clip-path="url(#plot-clip)">
+      <path class="parabola" id="parabolaPath"/>
+    </g>
     <circle class="root-dot" id="root1" r="5" style="display:none"/>
     <circle class="root-dot" id="root2" r="5" style="display:none"/>
     <circle class="vertex-dot" id="vertex" r="4" style="display:none"/>

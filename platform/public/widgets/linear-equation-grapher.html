@@ -23,7 +23,7 @@
   .controls input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:#00abfa; cursor:pointer; border:0; }
   .controls .val { min-width:32px; text-align:right; color:#00abfa; font-weight:600; }
 
-  svg { display:block; width:100%; height:auto; user-select:none; }
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
 
   .axis-line { stroke:#3a4a5a; stroke-width:1; }
   .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
@@ -81,14 +81,14 @@
       <line class="legend-line" x1="200" y1="22" x2="220" y2="22" stroke="#fff067"/>
       <text x="225" y="25" font-family="Geist Mono,monospace" font-size="10" fill="#fff067">LHS = 2x + 1</text>
       <line class="legend-line" x1="200" y1="38" x2="220" y2="38" stroke="#0fee89" stroke-dasharray="3 2"/>
-      <text x="225" y="41" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89">RHS = 5</text>
+      <text x="225" y="41" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89">RHS = 3</text>
     </g>
   </svg>
 
   <div class="readout">
     <span class="item"><span class="lbl">LHS:</span> <span class="lhs-val" id="lhsVal">1.0</span></span>
-    <span class="item"><span class="lbl">RHS:</span> <span class="rhs-val" id="rhsVal">5</span></span>
-    <span class="item"><span class="lbl">gap:</span> <span class="gap-val" id="gapVal">-4.0</span></span>
+    <span class="item"><span class="lbl">RHS:</span> <span class="rhs-val" id="rhsVal">3</span></span>
+    <span class="item"><span class="lbl">gap:</span> <span class="gap-val" id="gapVal">-2.0</span></span>
   </div>
 
   <p class="footer">drag x. when LHS meets RHS, the equation is solved.</p>
@@ -107,7 +107,7 @@ function tryRender(target, tex) {
 }
 
 (function () {
-  tryRender(document.getElementById("formula"), "2x + 1 = 5 \\;\\Rightarrow\\; x = ?");
+  tryRender(document.getElementById("formula"), "2x + 1 = 3 \\;\\Rightarrow\\; x = ?");
 })();
 
 // =========================================================================
@@ -172,8 +172,8 @@ function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_
   }
 })();
 
-// Equation constants: y = 2x + 1, RHS = 5
-var A = 2, B = 1, RHS = 5;
+// Equation constants: y = 2x + 1, RHS = 3
+var A = 2, B = 1, RHS = 3;
 var lhsLine = document.getElementById("lhsLine");
 lhsLine.setAttribute("x1", xPx(XMIN));
 lhsLine.setAttribute("y1", yPx(A * XMIN + B));
