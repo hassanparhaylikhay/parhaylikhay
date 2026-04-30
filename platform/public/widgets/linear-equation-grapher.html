@@ -11,7 +11,7 @@
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:16px 18px 18px; }
-  .wrap { max-width:520px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .wrap { max-width:480px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
   .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; gap:10px; min-height:22px; }
   .formula { font-size:14px; color:#f0eeea; }
   .formula .katex { font-size:1em; }
@@ -21,7 +21,7 @@
   .controls input[type=range] { flex:1; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
   .controls input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#00abfa; cursor:pointer; border:0; }
   .controls input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:#00abfa; cursor:pointer; border:0; }
-  .controls .val { min-width:30px; text-align:right; color:#00abfa; font-weight:600; }
+  .controls .val { min-width:32px; text-align:right; color:#00abfa; font-weight:600; }
 
   svg { display:block; width:100%; height:auto; user-select:none; }
 
@@ -33,6 +33,7 @@
   .x-marker { stroke:#00abfa; stroke-width:1.4; stroke-dasharray:3 3; }
   .lhs-dot { fill:#fff067; stroke:#0b1118; stroke-width:2; }
   .rhs-dot { fill:#0fee89; stroke:#0b1118; stroke-width:2; }
+  .legend-line { stroke-width:2; fill:none; }
 
   .readout {
     margin-top:10px; padding:10px 12px;
@@ -58,17 +59,15 @@
 
   <div class="controls">
     <span class="name">x</span>
-    <input type="range" id="sx" min="-2" max="6" value="0" step="0.1"/>
+    <input type="range" id="sx" min="-2" max="5" value="0" step="0.1"/>
     <span class="val" id="vx">0.0</span>
   </div>
 
-  <svg viewBox="0 0 480 240" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+  <svg viewBox="0 0 320 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
     <g id="grid"></g>
-    <line class="axis-line" x1="40" y1="200" x2="460" y2="200"/>
-    <line class="axis-line" x1="40" y1="20" x2="40" y2="200"/>
+    <line class="axis-line" id="xAxis"/>
+    <line class="axis-line" id="yAxis"/>
     <g id="ticks"></g>
-
-    <text x="250" y="232" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">x</text>
 
     <line class="lhs-line" id="lhsLine"/>
     <line class="rhs-line" id="rhsLine"/>
@@ -77,14 +76,19 @@
     <circle class="lhs-dot" id="lhsDot" r="5"/>
     <circle class="rhs-dot" id="rhsDot" r="5"/>
 
-    <text id="legendL" x="450" y="40" font-family="Geist Mono,monospace" font-size="10" fill="#fff067" text-anchor="end">LHS = 3x + 4</text>
-    <text id="legendR" x="450" y="55" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89" text-anchor="end">RHS = 10</text>
+    <!-- legend -->
+    <g>
+      <line class="legend-line" x1="200" y1="22" x2="220" y2="22" stroke="#fff067"/>
+      <text x="225" y="25" font-family="Geist Mono,monospace" font-size="10" fill="#fff067">LHS = 2x + 1</text>
+      <line class="legend-line" x1="200" y1="38" x2="220" y2="38" stroke="#0fee89" stroke-dasharray="3 2"/>
+      <text x="225" y="41" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89">RHS = 5</text>
+    </g>
   </svg>
 
   <div class="readout">
-    <span class="item"><span class="lbl">LHS:</span> <span class="lhs-val" id="lhsVal">4.0</span></span>
-    <span class="item"><span class="lbl">RHS:</span> <span class="rhs-val" id="rhsVal">10</span></span>
-    <span class="item"><span class="lbl">gap:</span> <span class="gap-val" id="gapVal">6.0</span></span>
+    <span class="item"><span class="lbl">LHS:</span> <span class="lhs-val" id="lhsVal">1.0</span></span>
+    <span class="item"><span class="lbl">RHS:</span> <span class="rhs-val" id="rhsVal">5</span></span>
+    <span class="item"><span class="lbl">gap:</span> <span class="gap-val" id="gapVal">-4.0</span></span>
   </div>
 
   <p class="footer">drag x. when LHS meets RHS, the equation is solved.</p>
@@ -103,35 +107,52 @@ function tryRender(target, tex) {
 }
 
 (function () {
-  tryRender(document.getElementById("formula"), "3x + 4 = 10 \\;\\Rightarrow\\; x = ?");
+  tryRender(document.getElementById("formula"), "2x + 1 = 5 \\;\\Rightarrow\\; x = ?");
 })();
 
-// Coordinate model
-// Plot region: x in [-2, 6], y in [-5, 25]. SVG: x: 40..460, y: 200..20
-var XMIN = -2, XMAX = 6, YMIN = -5, YMAX = 25;
-var PX_LEFT = 40, PX_RIGHT = 460, PX_TOP = 20, PX_BOT = 200;
-function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
-function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TOP); }
+// =========================================================================
+// COORDINATE MODEL — square plot, equal pixel-per-math-unit on both axes
+// Equation: 2x + 1 = 5, solution x = 2, both lines meet at y = 5
+// =========================================================================
+var XMIN = -2, XMAX = 5, YMIN = -2, YMAX = 5;       // 7 × 7 math units
+var PX_LEFT = 30, PX_RIGHT = 310;                    // 280 px wide
+var PX_TOP  = 20, PX_BOT   = 300;                    // 280 px tall
+// 280 / 7 = 40 px per math unit on BOTH axes
 
-// Build axis ticks and gridlines
+function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
+function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_TOP);  }
+
 (function buildAxes() {
   var g = document.getElementById("grid");
   var t = document.getElementById("ticks");
+  var x0 = xPx(0), y0 = yPx(0);
+  document.getElementById("xAxis").setAttribute("x1", PX_LEFT);
+  document.getElementById("xAxis").setAttribute("x2", PX_RIGHT);
+  document.getElementById("xAxis").setAttribute("y1", y0);
+  document.getElementById("xAxis").setAttribute("y2", y0);
+  document.getElementById("yAxis").setAttribute("x1", x0);
+  document.getElementById("yAxis").setAttribute("x2", x0);
+  document.getElementById("yAxis").setAttribute("y1", PX_TOP);
+  document.getElementById("yAxis").setAttribute("y2", PX_BOT);
   for (var x = XMIN; x <= XMAX; x++) {
     var px = xPx(x);
-    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("class", "grid-line");
-    line.setAttribute("x1", px); line.setAttribute("x2", px);
-    line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
-    g.appendChild(line);
-    var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    tl.setAttribute("class", "axis-tick-label");
-    tl.setAttribute("x", px); tl.setAttribute("y", PX_BOT + 14);
-    tl.setAttribute("text-anchor", "middle");
-    tl.textContent = x;
-    t.appendChild(tl);
+    if (x !== 0) {
+      var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("class", "grid-line");
+      line.setAttribute("x1", px); line.setAttribute("x2", px);
+      line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
+      g.appendChild(line);
+    }
+    if (x !== 0) {
+      var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tl.setAttribute("class", "axis-tick-label");
+      tl.setAttribute("x", px); tl.setAttribute("y", y0 + 14);
+      tl.setAttribute("text-anchor", "middle");
+      tl.textContent = x;
+      t.appendChild(tl);
+    }
   }
-  for (var y = YMIN; y <= YMAX; y += 5) {
+  for (var y = YMIN; y <= YMAX; y++) {
     var py = yPx(y);
     if (y !== 0) {
       var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -140,17 +161,19 @@ function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TO
       gl.setAttribute("y1", py); gl.setAttribute("y2", py);
       g.appendChild(gl);
     }
-    var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    tly.setAttribute("class", "axis-tick-label");
-    tly.setAttribute("x", PX_LEFT - 6); tly.setAttribute("y", py + 3);
-    tly.setAttribute("text-anchor", "end");
-    tly.textContent = y;
-    t.appendChild(tly);
+    if (y !== 0) {
+      var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tly.setAttribute("class", "axis-tick-label");
+      tly.setAttribute("x", x0 - 6); tly.setAttribute("y", py + 3);
+      tly.setAttribute("text-anchor", "end");
+      tly.textContent = y;
+      t.appendChild(tly);
+    }
   }
 })();
 
-// Draw fixed lines: LHS = 3x + 4, RHS = 10
-var A = 3, B = 4, RHS = 10;
+// Equation constants: y = 2x + 1, RHS = 5
+var A = 2, B = 1, RHS = 5;
 var lhsLine = document.getElementById("lhsLine");
 lhsLine.setAttribute("x1", xPx(XMIN));
 lhsLine.setAttribute("y1", yPx(A * XMIN + B));
@@ -163,24 +186,19 @@ rhsLine.setAttribute("y1", yPx(RHS));
 rhsLine.setAttribute("x2", xPx(XMAX));
 rhsLine.setAttribute("y2", yPx(RHS));
 
-// Animation state
-var targetX = 0, currentX = 0, rafId = null;
-var SMOOTH = 0.40;
+// Spring animation
+var targetX = 0, displayX = 0;
+var SPRING = 0.20;
 
-function ensureAnim() { if (rafId !== null) return; rafId = requestAnimationFrame(animFrame); }
-function animFrame() {
-  var diff = targetX - currentX;
-  if (Math.abs(diff) < 0.003) {
-    currentX = targetX; draw(); rafId = null; return;
-  }
-  currentX += diff * SMOOTH;
+function tick() {
+  displayX += (targetX - displayX) * SPRING;
   draw();
-  rafId = requestAnimationFrame(animFrame);
+  requestAnimationFrame(tick);
 }
 
 function draw() {
-  var lhsVal = A * currentX + B;
-  var px = xPx(currentX);
+  var lhsVal = A * displayX + B;
+  var px = xPx(displayX);
   var py1 = yPx(lhsVal);
   var py2 = yPx(RHS);
   document.getElementById("xMarker").setAttribute("x1", px);
@@ -192,9 +210,11 @@ function draw() {
   document.getElementById("rhsDot").setAttribute("cx", px);
   document.getElementById("rhsDot").setAttribute("cy", py2);
 
-  document.getElementById("lhsVal").textContent = lhsVal.toFixed(1);
+  // readouts use TARGET so numbers don't lag
+  var targetLhs = A * targetX + B;
+  document.getElementById("lhsVal").textContent = targetLhs.toFixed(1);
   document.getElementById("rhsVal").textContent = RHS;
-  var gap = lhsVal - RHS;
+  var gap = targetLhs - RHS;
   var gapEl = document.getElementById("gapVal");
   gapEl.textContent = (gap >= 0 ? "+" : "") + gap.toFixed(1);
   if (Math.abs(gap) < 0.05) gapEl.classList.add("zero");
@@ -204,9 +224,8 @@ function draw() {
 document.getElementById("sx").addEventListener("input", function(e) {
   targetX = parseFloat(e.target.value);
   document.getElementById("vx").textContent = targetX.toFixed(1);
-  ensureAnim();
 });
-draw();
+tick();
 
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {

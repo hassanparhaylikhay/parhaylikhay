@@ -11,7 +11,7 @@
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:16px 18px 18px; }
-  .wrap { max-width:540px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .wrap { max-width:480px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
   .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; gap:14px; min-height:22px; flex-wrap:wrap; }
   .formula-line { font-size:13px; }
   .formula-line .katex { font-size:1em; }
@@ -59,13 +59,13 @@
   </div>
 
   <div class="controls">
-    <div class="slider-row l1"><span class="name">m₁</span><input type="range" id="m1" min="-3" max="3" value="2" step="0.5"/><span class="val" id="vm1">2</span></div>
-    <div class="slider-row l1"><span class="name">c₁</span><input type="range" id="c1" min="-5" max="5" value="-1" step="1"/><span class="val" id="vc1">-1</span></div>
-    <div class="slider-row l2"><span class="name">m₂</span><input type="range" id="m2" min="-3" max="3" value="-1" step="0.5"/><span class="val" id="vm2">-1</span></div>
-    <div class="slider-row l2"><span class="name">c₂</span><input type="range" id="c2" min="-5" max="5" value="5" step="1"/><span class="val" id="vc2">5</span></div>
+    <div class="slider-row l1"><span class="name">m₁</span><input type="range" id="m1" min="-3" max="3" value="2" step="0.1"/><span class="val" id="vm1">2</span></div>
+    <div class="slider-row l1"><span class="name">c₁</span><input type="range" id="c1" min="-5" max="5" value="-1" step="0.1"/><span class="val" id="vc1">-1</span></div>
+    <div class="slider-row l2"><span class="name">m₂</span><input type="range" id="m2" min="-3" max="3" value="-1" step="0.1"/><span class="val" id="vm2">-1</span></div>
+    <div class="slider-row l2"><span class="name">c₂</span><input type="range" id="c2" min="-5" max="5" value="5" step="0.1"/><span class="val" id="vc2">5</span></div>
   </div>
 
-  <svg viewBox="0 0 480 260" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+  <svg viewBox="0 0 360 360" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
     <g id="grid"></g>
     <line class="axis-line" id="xAxis"/>
     <line class="axis-line" id="yAxis"/>
@@ -76,7 +76,7 @@
   </svg>
 
   <div class="readout" id="readout"></div>
-  <p class="footer">drag the m/c sliders to change each line. blue dot = solution.</p>
+  <p class="footer">drag m or c to change each line. blue dot = solution.</p>
 </div>
 
 <script>
@@ -91,11 +91,17 @@ function tryRender(target, tex) {
   }
 }
 
-// Coordinate model
-var XMIN = -6, XMAX = 6, YMIN = -6, YMAX = 6;
-var PX_LEFT = 30, PX_RIGHT = 450, PX_TOP = 20, PX_BOT = 230;
+// =========================================================================
+// COORDINATE MODEL — square plot with EQUAL pixel-per-unit on both axes.
+// Without this the slopes lie to the student.
+// =========================================================================
+var XMIN = -6, XMAX = 6, YMIN = -6, YMAX = 6;   // 12 × 12 math units
+var PX_LEFT = 30, PX_RIGHT = 330;               // plot box: 300 px wide
+var PX_TOP  = 30, PX_BOT   = 330;               // plot box: 300 px tall
+// 300 / 12 = 25 px per math unit, on BOTH axes.
+
 function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
-function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TOP); }
+function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_TOP);  }
 
 (function buildAxes() {
   var g = document.getElementById("grid");
@@ -118,12 +124,14 @@ function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TO
       line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
       g.appendChild(line);
     }
-    var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    tl.setAttribute("class", "axis-tick-label");
-    tl.setAttribute("x", px); tl.setAttribute("y", y0 + 14);
-    tl.setAttribute("text-anchor", "middle");
-    if (x !== 0) tl.textContent = x;
-    t.appendChild(tl);
+    if (x !== 0 && x % 2 === 0) {
+      var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tl.setAttribute("class", "axis-tick-label");
+      tl.setAttribute("x", px); tl.setAttribute("y", y0 + 14);
+      tl.setAttribute("text-anchor", "middle");
+      tl.textContent = x;
+      t.appendChild(tl);
+    }
   }
   for (var y = YMIN; y <= YMAX; y++) {
     var py = yPx(y);
@@ -134,85 +142,159 @@ function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TO
       gl.setAttribute("y1", py); gl.setAttribute("y2", py);
       g.appendChild(gl);
     }
-    var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    tly.setAttribute("class", "axis-tick-label");
-    tly.setAttribute("x", x0 - 6); tly.setAttribute("y", py + 3);
-    tly.setAttribute("text-anchor", "end");
-    if (y !== 0) tly.textContent = y;
-    t.appendChild(tly);
+    if (y !== 0 && y % 2 === 0) {
+      var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tly.setAttribute("class", "axis-tick-label");
+      tly.setAttribute("x", x0 - 6); tly.setAttribute("y", py + 3);
+      tly.setAttribute("text-anchor", "end");
+      tly.textContent = y;
+      t.appendChild(tly);
+    }
   }
 })();
 
-function clipLine(m, c) {
-  // y = mx + c, find segment crossing the visible plot
-  // use x = XMIN..XMAX
-  return { x1: XMIN, y1: m * XMIN + c, x2: XMAX, y2: m * XMAX + c };
+function clipLineToPlot(m, c) {
+  // Find the segment of y = mx + c that fits inside the visible plot box.
+  // For each side of the box, compute the intersection (if any), then keep
+  // the two that fall inside the y range.
+  var pts = [];
+  // Left edge: x = XMIN
+  var yL = m * XMIN + c;
+  if (yL >= YMIN && yL <= YMAX) pts.push({ x: XMIN, y: yL });
+  // Right edge: x = XMAX
+  var yR = m * XMAX + c;
+  if (yR >= YMIN && yR <= YMAX) pts.push({ x: XMAX, y: yR });
+  // Bottom edge: y = YMIN
+  if (m !== 0) {
+    var xB = (YMIN - c) / m;
+    if (xB > XMIN && xB < XMAX) pts.push({ x: xB, y: YMIN });
+  }
+  // Top edge: y = YMAX
+  if (m !== 0) {
+    var xT = (YMAX - c) / m;
+    if (xT > XMIN && xT < XMAX) pts.push({ x: xT, y: YMAX });
+  }
+  if (pts.length < 2) return null;
+  // dedupe and pick first two
+  return { x1: pts[0].x, y1: pts[0].y, x2: pts[1].x, y2: pts[1].y };
 }
 
 function fmtCoef(c) {
-  if (c === 0) return "";
-  return (c < 0 ? " - " : " + ") + Math.abs(c);
+  if (Math.abs(c) < 0.05) return "";
+  var rounded = Math.round(c * 10) / 10;
+  return (rounded < 0 ? " - " : " + ") + Math.abs(rounded);
 }
 
 function fmtSlope(m) {
-  if (m === 0) return "0";
-  if (m === 1) return "x";
-  if (m === -1) return "-x";
-  return m + "x";
+  if (Math.abs(m) < 0.05) return "0";
+  var rounded = Math.round(m * 10) / 10;
+  if (rounded === 1) return "x";
+  if (rounded === -1) return "-x";
+  return rounded + "x";
 }
 
-function update() {
-  var m1 = parseFloat(document.getElementById("m1").value);
-  var c1 = parseFloat(document.getElementById("c1").value);
-  var m2 = parseFloat(document.getElementById("m2").value);
-  var c2 = parseFloat(document.getElementById("c2").value);
-  document.getElementById("vm1").textContent = m1;
-  document.getElementById("vc1").textContent = c1;
-  document.getElementById("vm2").textContent = m2;
-  document.getElementById("vc2").textContent = c2;
+// =========================================================================
+// SPRING ANIMATION — target vs display split
+// =========================================================================
+// Target values are set instantly by sliders. Display values spring toward
+// the targets each rAF frame. draw() always reads the display values.
+var targetM1 = 2, targetC1 = -1, targetM2 = -1, targetC2 = 5;
+var displayM1 = targetM1, displayC1 = targetC1;
+var displayM2 = targetM2, displayC2 = targetC2;
+var SPRING = 0.20;
 
-  // formulas in head
-  tryRender(document.getElementById("formula1"), "y = " + fmtSlope(m1) + fmtCoef(c1));
-  tryRender(document.getElementById("formula2"), "y = " + fmtSlope(m2) + fmtCoef(c2));
+function tick() {
+  displayM1 += (targetM1 - displayM1) * SPRING;
+  displayC1 += (targetC1 - displayC1) * SPRING;
+  displayM2 += (targetM2 - displayM2) * SPRING;
+  displayC2 += (targetC2 - displayC2) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
 
-  // draw line 1
-  var s1 = clipLine(m1, c1);
-  document.getElementById("L1").setAttribute("x1", xPx(s1.x1));
-  document.getElementById("L1").setAttribute("y1", yPx(s1.y1));
-  document.getElementById("L1").setAttribute("x2", xPx(s1.x2));
-  document.getElementById("L1").setAttribute("y2", yPx(s1.y2));
-  // draw line 2
-  var s2 = clipLine(m2, c2);
-  document.getElementById("L2").setAttribute("x1", xPx(s2.x1));
-  document.getElementById("L2").setAttribute("y1", yPx(s2.y1));
-  document.getElementById("L2").setAttribute("x2", xPx(s2.x2));
-  document.getElementById("L2").setAttribute("y2", yPx(s2.y2));
+function draw() {
+  // Head formulas — show the TARGET values (snap to slider step).
+  tryRender(document.getElementById("formula1"), "y = " + fmtSlope(targetM1) + fmtCoef(targetC1));
+  tryRender(document.getElementById("formula2"), "y = " + fmtSlope(targetM2) + fmtCoef(targetC2));
 
-  // intersection
+  // Lines — use DISPLAY values for smooth motion.
+  var s1 = clipLineToPlot(displayM1, displayC1);
+  if (s1) {
+    var L1 = document.getElementById("L1");
+    L1.style.display = "";
+    L1.setAttribute("x1", xPx(s1.x1));
+    L1.setAttribute("y1", yPx(s1.y1));
+    L1.setAttribute("x2", xPx(s1.x2));
+    L1.setAttribute("y2", yPx(s1.y2));
+  } else {
+    document.getElementById("L1").style.display = "none";
+  }
+  var s2 = clipLineToPlot(displayM2, displayC2);
+  if (s2) {
+    var L2 = document.getElementById("L2");
+    L2.style.display = "";
+    L2.setAttribute("x1", xPx(s2.x1));
+    L2.setAttribute("y1", yPx(s2.y1));
+    L2.setAttribute("x2", xPx(s2.x2));
+    L2.setAttribute("y2", yPx(s2.y2));
+  } else {
+    document.getElementById("L2").style.display = "none";
+  }
+
+  // Intersection — based on TARGET values so the readout snaps to the
+  // student's choice (numbers don't lag the line motion).
   var readout = document.getElementById("readout");
   var dot = document.getElementById("ixDot");
-  if (m1 === m2) {
+  var dm = targetM1 - targetM2;
+  if (Math.abs(dm) < 0.001) {
     dot.style.display = "none";
-    if (c1 === c2) readout.innerHTML = '<span class="infinite">SAME LINE · infinitely many solutions</span>';
-    else readout.innerHTML = '<span class="none">PARALLEL · no solution</span>';
+    if (Math.abs(targetC1 - targetC2) < 0.001) {
+      readout.innerHTML = '<span class="infinite">SAME LINE · infinitely many solutions</span>';
+    } else {
+      readout.innerHTML = '<span class="none">PARALLEL · no solution</span>';
+    }
     return;
   }
-  var xi = (c2 - c1) / (m1 - m2);
-  var yi = m1 * xi + c1;
-  if (xi >= XMIN && xi <= XMAX && yi >= YMIN && yi <= YMAX) {
+  var xi = (targetC2 - targetC1) / dm;
+  var yi = targetM1 * xi + targetC1;
+  // Position the dot using display values for smooth motion when sliders
+  // animate; clamp to plot bounds for visual safety.
+  var dxi = (displayC2 - displayC1) / (displayM1 - displayM2 || 0.0001);
+  var dyi = displayM1 * dxi + displayC1;
+  if (dxi >= XMIN && dxi <= XMAX && dyi >= YMIN && dyi <= YMAX) {
     dot.style.display = "";
-    dot.setAttribute("cx", xPx(xi));
-    dot.setAttribute("cy", yPx(yi));
+    dot.setAttribute("cx", xPx(dxi));
+    dot.setAttribute("cy", yPx(dyi));
   } else {
     dot.style.display = "none";
   }
   readout.innerHTML = '<span class="ok">SOLUTION:</span> x = ' + xi.toFixed(2) + ', y = ' + yi.toFixed(2);
 }
 
-["m1","c1","m2","c2"].forEach(function(id) {
-  document.getElementById(id).addEventListener("input", update);
+// Slider wiring — update TARGET only. tick() handles drawing.
+function fmtSliderVal(v) {
+  var r = Math.round(v * 10) / 10;
+  return (r === Math.floor(r)) ? r.toFixed(0) : r.toFixed(1);
+}
+document.getElementById("m1").addEventListener("input", function(e) {
+  targetM1 = parseFloat(e.target.value);
+  document.getElementById("vm1").textContent = fmtSliderVal(targetM1);
 });
-update();
+document.getElementById("c1").addEventListener("input", function(e) {
+  targetC1 = parseFloat(e.target.value);
+  document.getElementById("vc1").textContent = fmtSliderVal(targetC1);
+});
+document.getElementById("m2").addEventListener("input", function(e) {
+  targetM2 = parseFloat(e.target.value);
+  document.getElementById("vm2").textContent = fmtSliderVal(targetM2);
+});
+document.getElementById("c2").addEventListener("input", function(e) {
+  targetC2 = parseFloat(e.target.value);
+  document.getElementById("vc2").textContent = fmtSliderVal(targetC2);
+});
+
+// kick off the animation loop
+tick();
 
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {

@@ -11,7 +11,7 @@
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:16px 18px 18px; }
-  .wrap { max-width:540px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .wrap { max-width:480px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
   .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
   .formula { font-size:14px; color:#f0eeea; }
   .formula .katex { font-size:1em; }
@@ -22,7 +22,7 @@
   .slider-row input[type=range] { flex:1; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
   .slider-row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
   .slider-row input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
-  .slider-row .val { min-width:24px; text-align:right; color:#f0eeea; font-weight:600; }
+  .slider-row .val { min-width:30px; text-align:right; color:#f0eeea; font-weight:600; }
 
   svg { display:block; width:100%; height:auto; user-select:none; }
 
@@ -54,12 +54,12 @@
   </div>
 
   <div class="controls">
-    <div class="slider-row"><span class="name">a</span><input type="range" id="sa" min="-2" max="3" value="1" step="1"/><span class="val" id="va">1</span></div>
-    <div class="slider-row"><span class="name">b</span><input type="range" id="sb" min="-6" max="6" value="-2" step="1"/><span class="val" id="vb">-2</span></div>
-    <div class="slider-row"><span class="name">c</span><input type="range" id="sc" min="-8" max="8" value="-3" step="1"/><span class="val" id="vc">-3</span></div>
+    <div class="slider-row"><span class="name">a</span><input type="range" id="sa" min="-2" max="3" value="1" step="0.1"/><span class="val" id="va">1.0</span></div>
+    <div class="slider-row"><span class="name">b</span><input type="range" id="sb" min="-6" max="6" value="-2" step="0.1"/><span class="val" id="vb">-2.0</span></div>
+    <div class="slider-row"><span class="name">c</span><input type="range" id="sc" min="-8" max="8" value="-3" step="0.1"/><span class="val" id="vc">-3.0</span></div>
   </div>
 
-  <svg viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+  <svg viewBox="0 0 360 360" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
     <g id="grid"></g>
     <line class="axis-line" id="xAxis"/>
     <line class="axis-line" id="yAxis"/>
@@ -89,10 +89,14 @@ function tryRender(target, tex) {
   }
 }
 
-var XMIN = -6, XMAX = 6, YMIN = -10, YMAX = 12;
-var PX_LEFT = 30, PX_RIGHT = 450, PX_TOP = 20, PX_BOT = 240;
+// =========================================================================
+// COORDINATE MODEL — square plot with EQUAL pixel-per-math-unit on both axes.
+// =========================================================================
+var XMIN = -6, XMAX = 6, YMIN = -6, YMAX = 6;     // 12 × 12
+var PX_LEFT = 30, PX_RIGHT = 330;                 // 300 wide
+var PX_TOP  = 30, PX_BOT   = 330;                 // 300 tall
 function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
-function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TOP); }
+function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_TOP);  }
 
 (function buildAxes() {
   var g = document.getElementById("grid");
@@ -115,14 +119,16 @@ function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TO
       line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
       g.appendChild(line);
     }
-    var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    tl.setAttribute("class", "axis-tick-label");
-    tl.setAttribute("x", px); tl.setAttribute("y", y0 + 14);
-    tl.setAttribute("text-anchor", "middle");
-    if (x !== 0) tl.textContent = x;
-    t.appendChild(tl);
+    if (x !== 0 && x % 2 === 0) {
+      var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tl.setAttribute("class", "axis-tick-label");
+      tl.setAttribute("x", px); tl.setAttribute("y", y0 + 14);
+      tl.setAttribute("text-anchor", "middle");
+      tl.textContent = x;
+      t.appendChild(tl);
+    }
   }
-  for (var y = YMIN; y <= YMAX; y += 2) {
+  for (var y = YMIN; y <= YMAX; y++) {
     var py = yPx(y);
     if (y !== 0) {
       var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -131,105 +137,147 @@ function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TO
       gl.setAttribute("y1", py); gl.setAttribute("y2", py);
       g.appendChild(gl);
     }
-    var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    tly.setAttribute("class", "axis-tick-label");
-    tly.setAttribute("x", x0 - 6); tly.setAttribute("y", py + 3);
-    tly.setAttribute("text-anchor", "end");
-    if (y !== 0) tly.textContent = y;
-    t.appendChild(tly);
+    if (y !== 0 && y % 2 === 0) {
+      var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tly.setAttribute("class", "axis-tick-label");
+      tly.setAttribute("x", x0 - 6); tly.setAttribute("y", py + 3);
+      tly.setAttribute("text-anchor", "end");
+      tly.textContent = y;
+      t.appendChild(tly);
+    }
   }
 })();
 
-function fmtTerm(c, suf) {
-  if (c === 0) return "";
-  if (c === 1 && suf !== "") return suf;
-  if (c === -1 && suf !== "") return "-" + suf;
-  return c + suf;
+function fmtNum(v) {
+  var r = Math.round(v * 10) / 10;
+  if (r === Math.floor(r)) return r.toFixed(0);
+  return r.toFixed(1);
 }
 
-function update() {
-  var a = parseInt(document.getElementById("sa").value, 10);
-  var b = parseInt(document.getElementById("sb").value, 10);
-  var c = parseInt(document.getElementById("sc").value, 10);
-  document.getElementById("va").textContent = a;
-  document.getElementById("vb").textContent = b;
-  document.getElementById("vc").textContent = c;
+function fmtTerm(c, suf, leading) {
+  if (Math.abs(c) < 0.05) return "";
+  var rounded = Math.round(c * 10) / 10;
+  var abs = Math.abs(rounded);
+  var sign = rounded < 0 ? "-" : "+";
+  var prefix;
+  if (leading) {
+    prefix = rounded < 0 ? "-" : "";
+  } else {
+    prefix = " " + sign + " ";
+  }
+  if (suf === "") return prefix + abs;
+  if (abs === 1) return prefix + suf;
+  return prefix + abs + suf;
+}
 
-  if (a === 0) {
-    // degenerate; leave parabola hidden
-    tryRender(document.getElementById("formula"), "y = " + (b === 0 ? String(c) : (fmtTerm(b, "x") + (c < 0 ? " - " + (-c) : c > 0 ? " + " + c : ""))));
-    document.getElementById("parabolaPath").setAttribute("d", "");
+// =========================================================================
+// SPRING ANIMATION
+// =========================================================================
+var targetA = 1.0, targetB = -2.0, targetC = -3.0;
+var displayA = targetA, displayB = targetB, displayC = targetC;
+var SPRING = 0.20;
+
+function tick() {
+  displayA += (targetA - displayA) * SPRING;
+  displayB += (targetB - displayB) * SPRING;
+  displayC += (targetC - displayC) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function draw() {
+  // formula uses target values — student's text feedback is instant
+  var label = "y = ";
+  if (Math.abs(targetA) < 0.05) {
+    label += fmtTerm(targetB, "x", true) || "0";
+    label += fmtTerm(targetC, "", false);
+  } else {
+    label += fmtTerm(targetA, "x^2", true);
+    label += fmtTerm(targetB, "x", false);
+    label += fmtTerm(targetC, "", false);
+  }
+  tryRender(document.getElementById("formula"), label);
+
+  // parabola path uses display values
+  var pathEl = document.getElementById("parabolaPath");
+  if (Math.abs(displayA) < 0.05) {
+    pathEl.setAttribute("d", "");
+  } else {
+    var pts = [];
+    var STEPS = 200;
+    for (var i = 0; i <= STEPS; i++) {
+      var x = XMIN + (XMAX - XMIN) * i / STEPS;
+      var y = displayA * x * x + displayB * x + displayC;
+      if (y < YMIN - 1 || y > YMAX + 1) {
+        pts.push(null);
+        continue;
+      }
+      pts.push({ px: xPx(x), py: yPx(y) });
+    }
+    var d = "";
+    var inSeg = false;
+    pts.forEach(function(p) {
+      if (p === null) { inSeg = false; return; }
+      if (!inSeg) { d += "M " + p.px + " " + p.py + " "; inSeg = true; }
+      else { d += "L " + p.px + " " + p.py + " "; }
+    });
+    pathEl.setAttribute("d", d);
+  }
+
+  // Discriminant + readouts use TARGET values so the text reflects the
+  // student's exact slider value without animation lag.
+  var discEl = document.getElementById("discVal");
+  if (Math.abs(targetA) < 0.05) {
+    discEl.innerHTML = '<span class="disc-zero">a = 0 (not quadratic)</span>';
+    document.getElementById("rootsVal").textContent = "—";
     document.getElementById("root1").style.display = "none";
     document.getElementById("root2").style.display = "none";
     document.getElementById("vertex").style.display = "none";
-    document.getElementById("discVal").innerHTML = '<span class="disc-zero">a = 0 (not quadratic)</span>';
-    document.getElementById("rootsVal").textContent = "—";
     return;
   }
+  var disc = targetB * targetB - 4 * targetA * targetC;
+  var discRounded = Math.round(disc * 10) / 10;
+  if (disc > 0.05) discEl.innerHTML = '<span class="disc-pos">' + discRounded + ' &gt; 0 · two roots</span>';
+  else if (Math.abs(disc) <= 0.05) discEl.innerHTML = '<span class="disc-zero">' + discRounded + ' · one repeated root</span>';
+  else discEl.innerHTML = '<span class="disc-neg">' + discRounded + ' &lt; 0 · no real roots</span>';
 
-  var label = "y = " + fmtTerm(a, "x^2");
-  if (b !== 0) label += (b < 0 ? " - " + fmtTerm(-b, "x") : " + " + fmtTerm(b, "x"));
-  if (c !== 0) label += (c < 0 ? " - " + (-c) : " + " + c);
-  tryRender(document.getElementById("formula"), label);
-
-  // Build parabola path
-  var pts = [];
-  for (var i = 0; i <= 200; i++) {
-    var x = XMIN + (XMAX - XMIN) * i / 200;
-    var y = a * x * x + b * x + c;
-    if (y < YMIN - 5 || y > YMAX + 5) {
-      // clip to keep path tidy
-      pts.push(null);
-      continue;
-    }
-    pts.push({ px: xPx(x), py: yPx(y) });
-  }
-  var d = "";
-  var inSeg = false;
-  pts.forEach(function(p) {
-    if (p === null) { inSeg = false; return; }
-    if (!inSeg) { d += "M " + p.px + " " + p.py + " "; inSeg = true; }
-    else { d += "L " + p.px + " " + p.py + " "; }
-  });
-  document.getElementById("parabolaPath").setAttribute("d", d);
-
-  // discriminant
-  var disc = b * b - 4 * a * c;
-  var discEl = document.getElementById("discVal");
-  if (disc > 0) discEl.innerHTML = '<span class="disc-pos">' + disc + ' > 0 · two roots</span>';
-  else if (disc === 0) discEl.innerHTML = '<span class="disc-zero">' + disc + ' · one repeated root</span>';
-  else discEl.innerHTML = '<span class="disc-neg">' + disc + ' < 0 · no real roots</span>';
-
+  // Root markers — positioned using DISPLAY values so they glide with the
+  // parabola; readout text uses TARGET values for clean numbers.
   var r1El = document.getElementById("root1");
   var r2El = document.getElementById("root2");
   var vEl = document.getElementById("vertex");
-  if (disc < 0) {
+
+  var dDisc = displayB * displayB - 4 * displayA * displayC;
+  if (disc < -0.05) {
     r1El.style.display = "none";
     r2El.style.display = "none";
     document.getElementById("rootsVal").innerHTML = '<span class="disc-neg">none</span>';
-  } else if (disc === 0) {
-    var x0 = -b / (2 * a);
+  } else if (Math.abs(disc) <= 0.05) {
+    var x0 = -targetB / (2 * targetA);
+    var dx0 = -displayB / (2 * displayA);
     r1El.style.display = "";
-    r1El.setAttribute("cx", xPx(x0));
+    r1El.setAttribute("cx", xPx(dx0));
     r1El.setAttribute("cy", yPx(0));
     r2El.style.display = "none";
-    document.getElementById("rootsVal").textContent = "x = " + x0.toFixed(2);
+    document.getElementById("rootsVal").textContent = "x = " + fmtNum(x0);
   } else {
     var sq = Math.sqrt(disc);
-    var x1 = (-b - sq) / (2 * a);
-    var x2 = (-b + sq) / (2 * a);
+    var x1 = (-targetB - sq) / (2 * targetA);
+    var x2 = (-targetB + sq) / (2 * targetA);
+    var dSq = Math.sqrt(Math.max(0, dDisc));
+    var dx1 = (-displayB - dSq) / (2 * displayA);
+    var dx2 = (-displayB + dSq) / (2 * displayA);
     r1El.style.display = "";
-    r1El.setAttribute("cx", xPx(x1));
+    r1El.setAttribute("cx", xPx(dx1));
     r1El.setAttribute("cy", yPx(0));
     r2El.style.display = "";
-    r2El.setAttribute("cx", xPx(x2));
+    r2El.setAttribute("cx", xPx(dx2));
     r2El.setAttribute("cy", yPx(0));
-    document.getElementById("rootsVal").textContent = "x = " + x1.toFixed(2) + ", " + x2.toFixed(2);
+    document.getElementById("rootsVal").textContent = "x = " + fmtNum(x1) + ", " + fmtNum(x2);
   }
 
-  // vertex
-  var vx = -b / (2 * a);
-  var vy = a * vx * vx + b * vx + c;
+  var vx = -displayB / (2 * displayA);
+  var vy = displayA * vx * vx + displayB * vx + displayC;
   if (vy >= YMIN && vy <= YMAX && vx >= XMIN && vx <= XMAX) {
     vEl.style.display = "";
     vEl.setAttribute("cx", xPx(vx));
@@ -239,10 +287,19 @@ function update() {
   }
 }
 
-["sa","sb","sc"].forEach(function(id) {
-  document.getElementById(id).addEventListener("input", update);
+document.getElementById("sa").addEventListener("input", function(e) {
+  targetA = parseFloat(e.target.value);
+  document.getElementById("va").textContent = fmtNum(targetA);
 });
-update();
+document.getElementById("sb").addEventListener("input", function(e) {
+  targetB = parseFloat(e.target.value);
+  document.getElementById("vb").textContent = fmtNum(targetB);
+});
+document.getElementById("sc").addEventListener("input", function(e) {
+  targetC = parseFloat(e.target.value);
+  document.getElementById("vc").textContent = fmtNum(targetC);
+});
+tick();
 
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {
