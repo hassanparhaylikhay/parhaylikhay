@@ -97,6 +97,10 @@ const WIDGETS: Record<string, WidgetSpec> = {
   "02-03-p2":     { url: "/widgets/algebraic-fractions-trainer.html",   height: 560 },
   "02-03-p3":     { url: "/widgets/algebraic-fractions-trainer.html",   height: 560 },
   "02-03-review": { url: "/widgets/algebraic-fractions-trainer.html",   height: 560 },
+  "02-04-p1":     { url: "/widgets/indices-ii-trainer.html",            height: 540 },
+  "02-04-p2":     { url: "/widgets/indices-ii-trainer.html",            height: 540 },
+  "02-04-p3":     { url: "/widgets/indices-ii-trainer.html",            height: 540 },
+  "02-04-review": { url: "/widgets/indices-ii-trainer.html",            height: 540 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {
