@@ -59,29 +59,35 @@
 
   <div class="controls">
     <span class="name">x</span>
-    <input type="range" id="sx" min="-2" max="5" value="0" step="0.1"/>
+    <input type="range" id="sx" min="-3" max="4" value="0" step="0.1"/>
     <span class="val" id="vx">0.0</span>
   </div>
 
-  <svg viewBox="0 0 320 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+  <svg viewBox="0 0 480 300" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <defs>
+      <clipPath id="plot-clip">
+        <rect x="30" y="20" width="400" height="250"/>
+      </clipPath>
+    </defs>
     <g id="grid"></g>
     <line class="axis-line" id="xAxis"/>
     <line class="axis-line" id="yAxis"/>
     <g id="ticks"></g>
 
-    <line class="lhs-line" id="lhsLine"/>
-    <line class="rhs-line" id="rhsLine"/>
-
-    <line class="x-marker" id="xMarker"/>
+    <g clip-path="url(#plot-clip)">
+      <line class="lhs-line" id="lhsLine"/>
+      <line class="rhs-line" id="rhsLine"/>
+      <line class="x-marker" id="xMarker"/>
+    </g>
     <circle class="lhs-dot" id="lhsDot" r="5"/>
     <circle class="rhs-dot" id="rhsDot" r="5"/>
 
     <!-- legend -->
     <g>
-      <line class="legend-line" x1="200" y1="22" x2="220" y2="22" stroke="#fff067"/>
-      <text x="225" y="25" font-family="Geist Mono,monospace" font-size="10" fill="#fff067">LHS = 2x + 1</text>
-      <line class="legend-line" x1="200" y1="38" x2="220" y2="38" stroke="#0fee89" stroke-dasharray="3 2"/>
-      <text x="225" y="41" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89">RHS = 3</text>
+      <line class="legend-line" x1="320" y1="22" x2="340" y2="22" stroke="#fff067"/>
+      <text x="345" y="25" font-family="Geist Mono,monospace" font-size="10" fill="#fff067">LHS = 2x + 1</text>
+      <line class="legend-line" x1="320" y1="38" x2="340" y2="38" stroke="#0fee89" stroke-dasharray="3 2"/>
+      <text x="345" y="41" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89">RHS = 3</text>
     </g>
   </svg>
 
@@ -111,13 +117,15 @@ function tryRender(target, tex) {
 })();
 
 // =========================================================================
-// COORDINATE MODEL — square plot, equal pixel-per-math-unit on both axes
-// Equation: 2x + 1 = 5, solution x = 2, both lines meet at y = 5
+// COORDINATE MODEL — wider-than-tall plot, equal 30 px per math unit on both
+// axes. ViewBox 480x300, plot region 400x250, math range 16x10. Wider than
+// tall to keep the iframe height down without distorting slopes.
+// Equation: 2x + 1 = 3, solution x = 1, both lines meet at y = 3.
 // =========================================================================
-var XMIN = -2, XMAX = 5, YMIN = -2, YMAX = 5;       // 7 × 7 math units
-var PX_LEFT = 30, PX_RIGHT = 310;                    // 280 px wide
-var PX_TOP  = 20, PX_BOT   = 300;                    // 280 px tall
-// 280 / 7 = 40 px per math unit on BOTH axes
+var XMIN = -8, XMAX = 8, YMIN = -5, YMAX = 5;       // 16 × 10 math units
+var PX_LEFT = 30, PX_RIGHT = 430;                    // 400 px wide
+var PX_TOP  = 20, PX_BOT   = 270;                    // 250 px tall
+// 400 / 16 = 25 px per math unit ; 250 / 10 = 25 px per math unit
 
 function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
 function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_TOP);  }
@@ -143,7 +151,7 @@ function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_
       line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
       g.appendChild(line);
     }
-    if (x !== 0) {
+    if (x !== 0 && x % 2 === 0) {
       var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
       tl.setAttribute("class", "axis-tick-label");
       tl.setAttribute("x", px); tl.setAttribute("y", y0 + 14);
