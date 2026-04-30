@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Simultaneous Equations Grapher</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:16px 18px 18px; }
+  .wrap { max-width:540px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; gap:14px; min-height:22px; flex-wrap:wrap; }
+  .formula-line { font-size:13px; }
+  .formula-line .katex { font-size:1em; }
+  .line1 { color:#fff067; }
+  .line2 { color:#0fee89; }
+
+  .controls { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px 14px; margin-bottom:14px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .slider-row { display:flex; align-items:center; gap:8px; }
+  .slider-row .name { font-weight:600; min-width:24px; }
+  .slider-row.l1 .name { color:#fff067; }
+  .slider-row.l2 .name { color:#0fee89; }
+  .slider-row input[type=range] { flex:1; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .slider-row.l1 input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .slider-row.l2 input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#0fee89; cursor:pointer; border:0; }
+  .slider-row.l1 input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .slider-row.l2 input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#0fee89; cursor:pointer; border:0; }
+  .slider-row .val { min-width:24px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; }
+
+  .axis-line { stroke:#3a4a5a; stroke-width:1; }
+  .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
+  .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
+  .line-1 { stroke:#fff067; stroke-width:2; fill:none; }
+  .line-2 { stroke:#0fee89; stroke-width:2; fill:none; }
+  .ix-dot { fill:#00abfa; stroke:#0b1118; stroke-width:2; }
+
+  .readout {
+    margin-top:10px; padding:10px 12px;
+    background:#07090d; border:1px solid #141e2a; border-radius:6px;
+    font-family:'Geist Mono',monospace; font-size:13px; color:#f0eeea;
+    text-align:center; min-height:30px;
+  }
+  .readout .ok { color:#00abfa; }
+  .readout .none { color:#ff4670; }
+  .readout .infinite { color:#fff067; }
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula-line line1" id="formula1"></span>
+    <span class="formula-line line2" id="formula2"></span>
+  </div>
+
+  <div class="controls">
+    <div class="slider-row l1"><span class="name">m₁</span><input type="range" id="m1" min="-3" max="3" value="2" step="0.5"/><span class="val" id="vm1">2</span></div>
+    <div class="slider-row l1"><span class="name">c₁</span><input type="range" id="c1" min="-5" max="5" value="-1" step="1"/><span class="val" id="vc1">-1</span></div>
+    <div class="slider-row l2"><span class="name">m₂</span><input type="range" id="m2" min="-3" max="3" value="-1" step="0.5"/><span class="val" id="vm2">-1</span></div>
+    <div class="slider-row l2"><span class="name">c₂</span><input type="range" id="c2" min="-5" max="5" value="5" step="1"/><span class="val" id="vc2">5</span></div>
+  </div>
+
+  <svg viewBox="0 0 480 260" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <g id="grid"></g>
+    <line class="axis-line" id="xAxis"/>
+    <line class="axis-line" id="yAxis"/>
+    <g id="ticks"></g>
+    <line class="line-1" id="L1"/>
+    <line class="line-2" id="L2"/>
+    <circle class="ix-dot" id="ixDot" r="5" style="display:none"/>
+  </svg>
+
+  <div class="readout" id="readout"></div>
+  <p class="footer">drag the m/c sliders to change each line. blue dot = solution.</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+// Coordinate model
+var XMIN = -6, XMAX = 6, YMIN = -6, YMAX = 6;
+var PX_LEFT = 30, PX_RIGHT = 450, PX_TOP = 20, PX_BOT = 230;
+function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
+function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TOP); }
+
+(function buildAxes() {
+  var g = document.getElementById("grid");
+  var t = document.getElementById("ticks");
+  var x0 = xPx(0), y0 = yPx(0);
+  document.getElementById("xAxis").setAttribute("x1", PX_LEFT);
+  document.getElementById("xAxis").setAttribute("x2", PX_RIGHT);
+  document.getElementById("xAxis").setAttribute("y1", y0);
+  document.getElementById("xAxis").setAttribute("y2", y0);
+  document.getElementById("yAxis").setAttribute("x1", x0);
+  document.getElementById("yAxis").setAttribute("x2", x0);
+  document.getElementById("yAxis").setAttribute("y1", PX_TOP);
+  document.getElementById("yAxis").setAttribute("y2", PX_BOT);
+  for (var x = XMIN; x <= XMAX; x++) {
+    var px = xPx(x);
+    if (x !== 0) {
+      var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("class", "grid-line");
+      line.setAttribute("x1", px); line.setAttribute("x2", px);
+      line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
+      g.appendChild(line);
+    }
+    var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tl.setAttribute("class", "axis-tick-label");
+    tl.setAttribute("x", px); tl.setAttribute("y", y0 + 14);
+    tl.setAttribute("text-anchor", "middle");
+    if (x !== 0) tl.textContent = x;
+    t.appendChild(tl);
+  }
+  for (var y = YMIN; y <= YMAX; y++) {
+    var py = yPx(y);
+    if (y !== 0) {
+      var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      gl.setAttribute("class", "grid-line");
+      gl.setAttribute("x1", PX_LEFT); gl.setAttribute("x2", PX_RIGHT);
+      gl.setAttribute("y1", py); gl.setAttribute("y2", py);
+      g.appendChild(gl);
+    }
+    var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tly.setAttribute("class", "axis-tick-label");
+    tly.setAttribute("x", x0 - 6); tly.setAttribute("y", py + 3);
+    tly.setAttribute("text-anchor", "end");
+    if (y !== 0) tly.textContent = y;
+    t.appendChild(tly);
+  }
+})();
+
+function clipLine(m, c) {
+  // y = mx + c, find segment crossing the visible plot
+  // use x = XMIN..XMAX
+  return { x1: XMIN, y1: m * XMIN + c, x2: XMAX, y2: m * XMAX + c };
+}
+
+function fmtCoef(c) {
+  if (c === 0) return "";
+  return (c < 0 ? " - " : " + ") + Math.abs(c);
+}
+
+function fmtSlope(m) {
+  if (m === 0) return "0";
+  if (m === 1) return "x";
+  if (m === -1) return "-x";
+  return m + "x";
+}
+
+function update() {
+  var m1 = parseFloat(document.getElementById("m1").value);
+  var c1 = parseFloat(document.getElementById("c1").value);
+  var m2 = parseFloat(document.getElementById("m2").value);
+  var c2 = parseFloat(document.getElementById("c2").value);
+  document.getElementById("vm1").textContent = m1;
+  document.getElementById("vc1").textContent = c1;
+  document.getElementById("vm2").textContent = m2;
+  document.getElementById("vc2").textContent = c2;
+
+  // formulas in head
+  tryRender(document.getElementById("formula1"), "y = " + fmtSlope(m1) + fmtCoef(c1));
+  tryRender(document.getElementById("formula2"), "y = " + fmtSlope(m2) + fmtCoef(c2));
+
+  // draw line 1
+  var s1 = clipLine(m1, c1);
+  document.getElementById("L1").setAttribute("x1", xPx(s1.x1));
+  document.getElementById("L1").setAttribute("y1", yPx(s1.y1));
+  document.getElementById("L1").setAttribute("x2", xPx(s1.x2));
+  document.getElementById("L1").setAttribute("y2", yPx(s1.y2));
+  // draw line 2
+  var s2 = clipLine(m2, c2);
+  document.getElementById("L2").setAttribute("x1", xPx(s2.x1));
+  document.getElementById("L2").setAttribute("y1", yPx(s2.y1));
+  document.getElementById("L2").setAttribute("x2", xPx(s2.x2));
+  document.getElementById("L2").setAttribute("y2", yPx(s2.y2));
+
+  // intersection
+  var readout = document.getElementById("readout");
+  var dot = document.getElementById("ixDot");
+  if (m1 === m2) {
+    dot.style.display = "none";
+    if (c1 === c2) readout.innerHTML = '<span class="infinite">SAME LINE · infinitely many solutions</span>';
+    else readout.innerHTML = '<span class="none">PARALLEL · no solution</span>';
+    return;
+  }
+  var xi = (c2 - c1) / (m1 - m2);
+  var yi = m1 * xi + c1;
+  if (xi >= XMIN && xi <= XMAX && yi >= YMIN && yi <= YMAX) {
+    dot.style.display = "";
+    dot.setAttribute("cx", xPx(xi));
+    dot.setAttribute("cy", yPx(yi));
+  } else {
+    dot.style.display = "none";
+  }
+  readout.innerHTML = '<span class="ok">SOLUTION:</span> x = ' + xi.toFixed(2) + ', y = ' + yi.toFixed(2);
+}
+
+["m1","c1","m2","c2"].forEach(function(id) {
+  document.getElementById(id).addEventListener("input", update);
+});
+update();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Quadratic Roots Grapher</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:16px 18px 18px; }
+  .wrap { max-width:540px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
+  .formula { font-size:14px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px 14px; margin-bottom:14px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .slider-row { display:flex; align-items:center; gap:8px; }
+  .slider-row .name { font-weight:600; color:#fff067; min-width:14px; }
+  .slider-row input[type=range] { flex:1; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .slider-row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .slider-row input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .slider-row .val { min-width:24px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; }
+
+  .axis-line { stroke:#3a4a5a; stroke-width:1; }
+  .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
+  .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
+  .parabola { stroke:#fff067; stroke-width:2; fill:none; stroke-linejoin:round; }
+  .root-dot { fill:#0fee89; stroke:#0b1118; stroke-width:2; }
+  .vertex-dot { fill:#00abfa; stroke:#0b1118; stroke-width:2; }
+
+  .readout {
+    margin-top:10px; padding:10px 12px;
+    background:#07090d; border:1px solid #141e2a; border-radius:6px;
+    font-family:'Geist Mono',monospace; font-size:12.5px; color:#f0eeea;
+    display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px;
+  }
+  .readout .item .lbl { color:#7a7875; }
+  .readout .disc-pos { color:#0fee89; font-weight:600; }
+  .readout .disc-zero { color:#fff067; font-weight:600; }
+  .readout .disc-neg { color:#ff4670; font-weight:600; }
+  .readout .roots-val { color:#0fee89; font-weight:600; }
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="controls">
+    <div class="slider-row"><span class="name">a</span><input type="range" id="sa" min="-2" max="3" value="1" step="1"/><span class="val" id="va">1</span></div>
+    <div class="slider-row"><span class="name">b</span><input type="range" id="sb" min="-6" max="6" value="-2" step="1"/><span class="val" id="vb">-2</span></div>
+    <div class="slider-row"><span class="name">c</span><input type="range" id="sc" min="-8" max="8" value="-3" step="1"/><span class="val" id="vc">-3</span></div>
+  </div>
+
+  <svg viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <g id="grid"></g>
+    <line class="axis-line" id="xAxis"/>
+    <line class="axis-line" id="yAxis"/>
+    <g id="ticks"></g>
+    <path class="parabola" id="parabolaPath"/>
+    <circle class="root-dot" id="root1" r="5" style="display:none"/>
+    <circle class="root-dot" id="root2" r="5" style="display:none"/>
+    <circle class="vertex-dot" id="vertex" r="4" style="display:none"/>
+  </svg>
+
+  <div class="readout">
+    <span class="item"><span class="lbl">discriminant:</span> <span id="discVal">0</span></span>
+    <span class="item"><span class="lbl">roots:</span> <span class="roots-val" id="rootsVal">—</span></span>
+  </div>
+  <p class="footer">drag a, b, c. green dots = roots, blue dot = vertex.</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var XMIN = -6, XMAX = 6, YMIN = -10, YMAX = 12;
+var PX_LEFT = 30, PX_RIGHT = 450, PX_TOP = 20, PX_BOT = 240;
+function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
+function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TOP); }
+
+(function buildAxes() {
+  var g = document.getElementById("grid");
+  var t = document.getElementById("ticks");
+  var x0 = xPx(0), y0 = yPx(0);
+  document.getElementById("xAxis").setAttribute("x1", PX_LEFT);
+  document.getElementById("xAxis").setAttribute("x2", PX_RIGHT);
+  document.getElementById("xAxis").setAttribute("y1", y0);
+  document.getElementById("xAxis").setAttribute("y2", y0);
+  document.getElementById("yAxis").setAttribute("x1", x0);
+  document.getElementById("yAxis").setAttribute("x2", x0);
+  document.getElementById("yAxis").setAttribute("y1", PX_TOP);
+  document.getElementById("yAxis").setAttribute("y2", PX_BOT);
+  for (var x = XMIN; x <= XMAX; x++) {
+    var px = xPx(x);
+    if (x !== 0) {
+      var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("class", "grid-line");
+      line.setAttribute("x1", px); line.setAttribute("x2", px);
+      line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
+      g.appendChild(line);
+    }
+    var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tl.setAttribute("class", "axis-tick-label");
+    tl.setAttribute("x", px); tl.setAttribute("y", y0 + 14);
+    tl.setAttribute("text-anchor", "middle");
+    if (x !== 0) tl.textContent = x;
+    t.appendChild(tl);
+  }
+  for (var y = YMIN; y <= YMAX; y += 2) {
+    var py = yPx(y);
+    if (y !== 0) {
+      var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      gl.setAttribute("class", "grid-line");
+      gl.setAttribute("x1", PX_LEFT); gl.setAttribute("x2", PX_RIGHT);
+      gl.setAttribute("y1", py); gl.setAttribute("y2", py);
+      g.appendChild(gl);
+    }
+    var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tly.setAttribute("class", "axis-tick-label");
+    tly.setAttribute("x", x0 - 6); tly.setAttribute("y", py + 3);
+    tly.setAttribute("text-anchor", "end");
+    if (y !== 0) tly.textContent = y;
+    t.appendChild(tly);
+  }
+})();
+
+function fmtTerm(c, suf) {
+  if (c === 0) return "";
+  if (c === 1 && suf !== "") return suf;
+  if (c === -1 && suf !== "") return "-" + suf;
+  return c + suf;
+}
+
+function update() {
+  var a = parseInt(document.getElementById("sa").value, 10);
+  var b = parseInt(document.getElementById("sb").value, 10);
+  var c = parseInt(document.getElementById("sc").value, 10);
+  document.getElementById("va").textContent = a;
+  document.getElementById("vb").textContent = b;
+  document.getElementById("vc").textContent = c;
+
+  if (a === 0) {
+    // degenerate; leave parabola hidden
+    tryRender(document.getElementById("formula"), "y = " + (b === 0 ? String(c) : (fmtTerm(b, "x") + (c < 0 ? " - " + (-c) : c > 0 ? " + " + c : ""))));
+    document.getElementById("parabolaPath").setAttribute("d", "");
+    document.getElementById("root1").style.display = "none";
+    document.getElementById("root2").style.display = "none";
+    document.getElementById("vertex").style.display = "none";
+    document.getElementById("discVal").innerHTML = '<span class="disc-zero">a = 0 (not quadratic)</span>';
+    document.getElementById("rootsVal").textContent = "—";
+    return;
+  }
+
+  var label = "y = " + fmtTerm(a, "x^2");
+  if (b !== 0) label += (b < 0 ? " - " + fmtTerm(-b, "x") : " + " + fmtTerm(b, "x"));
+  if (c !== 0) label += (c < 0 ? " - " + (-c) : " + " + c);
+  tryRender(document.getElementById("formula"), label);
+
+  // Build parabola path
+  var pts = [];
+  for (var i = 0; i <= 200; i++) {
+    var x = XMIN + (XMAX - XMIN) * i / 200;
+    var y = a * x * x + b * x + c;
+    if (y < YMIN - 5 || y > YMAX + 5) {
+      // clip to keep path tidy
+      pts.push(null);
+      continue;
+    }
+    pts.push({ px: xPx(x), py: yPx(y) });
+  }
+  var d = "";
+  var inSeg = false;
+  pts.forEach(function(p) {
+    if (p === null) { inSeg = false; return; }
+    if (!inSeg) { d += "M " + p.px + " " + p.py + " "; inSeg = true; }
+    else { d += "L " + p.px + " " + p.py + " "; }
+  });
+  document.getElementById("parabolaPath").setAttribute("d", d);
+
+  // discriminant
+  var disc = b * b - 4 * a * c;
+  var discEl = document.getElementById("discVal");
+  if (disc > 0) discEl.innerHTML = '<span class="disc-pos">' + disc + ' > 0 · two roots</span>';
+  else if (disc === 0) discEl.innerHTML = '<span class="disc-zero">' + disc + ' · one repeated root</span>';
+  else discEl.innerHTML = '<span class="disc-neg">' + disc + ' < 0 · no real roots</span>';
+
+  var r1El = document.getElementById("root1");
+  var r2El = document.getElementById("root2");
+  var vEl = document.getElementById("vertex");
+  if (disc < 0) {
+    r1El.style.display = "none";
+    r2El.style.display = "none";
+    document.getElementById("rootsVal").innerHTML = '<span class="disc-neg">none</span>';
+  } else if (disc === 0) {
+    var x0 = -b / (2 * a);
+    r1El.style.display = "";
+    r1El.setAttribute("cx", xPx(x0));
+    r1El.setAttribute("cy", yPx(0));
+    r2El.style.display = "none";
+    document.getElementById("rootsVal").textContent = "x = " + x0.toFixed(2);
+  } else {
+    var sq = Math.sqrt(disc);
+    var x1 = (-b - sq) / (2 * a);
+    var x2 = (-b + sq) / (2 * a);
+    r1El.style.display = "";
+    r1El.setAttribute("cx", xPx(x1));
+    r1El.setAttribute("cy", yPx(0));
+    r2El.style.display = "";
+    r2El.setAttribute("cx", xPx(x2));
+    r2El.setAttribute("cy", yPx(0));
+    document.getElementById("rootsVal").textContent = "x = " + x1.toFixed(2) + ", " + x2.toFixed(2);
+  }
+
+  // vertex
+  var vx = -b / (2 * a);
+  var vy = a * vx * vx + b * vx + c;
+  if (vy >= YMIN && vy <= YMAX && vx >= XMIN && vx <= XMAX) {
+    vEl.style.display = "";
+    vEl.setAttribute("cx", xPx(vx));
+    vEl.setAttribute("cy", yPx(vy));
+  } else {
+    vEl.style.display = "none";
+  }
+}
+
+["sa","sb","sc"].forEach(function(id) {
+  document.getElementById(id).addEventListener("input", update);
+});
+update();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

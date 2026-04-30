@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Linear Equation Grapher</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:16px 18px 18px; }
+  .wrap { max-width:520px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; gap:10px; min-height:22px; }
+  .formula { font-size:14px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:flex; align-items:center; gap:14px; margin-bottom:14px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:12px; color:#7a7875; }
+  .controls .name { color:#fff067; font-weight:600; }
+  .controls input[type=range] { flex:1; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .controls input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#00abfa; cursor:pointer; border:0; }
+  .controls input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:#00abfa; cursor:pointer; border:0; }
+  .controls .val { min-width:30px; text-align:right; color:#00abfa; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; }
+
+  .axis-line { stroke:#3a4a5a; stroke-width:1; }
+  .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
+  .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
+  .lhs-line { stroke:#fff067; stroke-width:2; fill:none; }
+  .rhs-line { stroke:#0fee89; stroke-width:2; fill:none; stroke-dasharray:6 3; }
+  .x-marker { stroke:#00abfa; stroke-width:1.4; stroke-dasharray:3 3; }
+  .lhs-dot { fill:#fff067; stroke:#0b1118; stroke-width:2; }
+  .rhs-dot { fill:#0fee89; stroke:#0b1118; stroke-width:2; }
+
+  .readout {
+    margin-top:10px; padding:10px 12px;
+    background:#07090d; border:1px solid #141e2a; border-radius:6px;
+    font-family:'Geist Mono',monospace; font-size:13px; color:#f0eeea;
+    text-align:center; min-height:30px; display:flex; justify-content:space-around; gap:14px; flex-wrap:wrap;
+  }
+  .readout .item { display:flex; gap:6px; align-items:center; }
+  .readout .item .lbl { color:#7a7875; }
+  .readout .lhs-val { color:#fff067; font-weight:600; }
+  .readout .rhs-val { color:#0fee89; font-weight:600; }
+  .readout .gap-val.zero { color:#0fee89; }
+  .readout .gap-val { color:#fff067; font-weight:600; }
+
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="controls">
+    <span class="name">x</span>
+    <input type="range" id="sx" min="-2" max="6" value="0" step="0.1"/>
+    <span class="val" id="vx">0.0</span>
+  </div>
+
+  <svg viewBox="0 0 480 240" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <g id="grid"></g>
+    <line class="axis-line" x1="40" y1="200" x2="460" y2="200"/>
+    <line class="axis-line" x1="40" y1="20" x2="40" y2="200"/>
+    <g id="ticks"></g>
+
+    <text x="250" y="232" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">x</text>
+
+    <line class="lhs-line" id="lhsLine"/>
+    <line class="rhs-line" id="rhsLine"/>
+
+    <line class="x-marker" id="xMarker"/>
+    <circle class="lhs-dot" id="lhsDot" r="5"/>
+    <circle class="rhs-dot" id="rhsDot" r="5"/>
+
+    <text id="legendL" x="450" y="40" font-family="Geist Mono,monospace" font-size="10" fill="#fff067" text-anchor="end">LHS = 3x + 4</text>
+    <text id="legendR" x="450" y="55" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89" text-anchor="end">RHS = 10</text>
+  </svg>
+
+  <div class="readout">
+    <span class="item"><span class="lbl">LHS:</span> <span class="lhs-val" id="lhsVal">4.0</span></span>
+    <span class="item"><span class="lbl">RHS:</span> <span class="rhs-val" id="rhsVal">10</span></span>
+    <span class="item"><span class="lbl">gap:</span> <span class="gap-val" id="gapVal">6.0</span></span>
+  </div>
+
+  <p class="footer">drag x. when LHS meets RHS, the equation is solved.</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+(function () {
+  tryRender(document.getElementById("formula"), "3x + 4 = 10 \\;\\Rightarrow\\; x = ?");
+})();
+
+// Coordinate model
+// Plot region: x in [-2, 6], y in [-5, 25]. SVG: x: 40..460, y: 200..20
+var XMIN = -2, XMAX = 6, YMIN = -5, YMAX = 25;
+var PX_LEFT = 40, PX_RIGHT = 460, PX_TOP = 20, PX_BOT = 200;
+function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
+function yPx(y) { return PX_BOT - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT - PX_TOP); }
+
+// Build axis ticks and gridlines
+(function buildAxes() {
+  var g = document.getElementById("grid");
+  var t = document.getElementById("ticks");
+  for (var x = XMIN; x <= XMAX; x++) {
+    var px = xPx(x);
+    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("class", "grid-line");
+    line.setAttribute("x1", px); line.setAttribute("x2", px);
+    line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
+    g.appendChild(line);
+    var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tl.setAttribute("class", "axis-tick-label");
+    tl.setAttribute("x", px); tl.setAttribute("y", PX_BOT + 14);
+    tl.setAttribute("text-anchor", "middle");
+    tl.textContent = x;
+    t.appendChild(tl);
+  }
+  for (var y = YMIN; y <= YMAX; y += 5) {
+    var py = yPx(y);
+    if (y !== 0) {
+      var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      gl.setAttribute("class", "grid-line");
+      gl.setAttribute("x1", PX_LEFT); gl.setAttribute("x2", PX_RIGHT);
+      gl.setAttribute("y1", py); gl.setAttribute("y2", py);
+      g.appendChild(gl);
+    }
+    var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tly.setAttribute("class", "axis-tick-label");
+    tly.setAttribute("x", PX_LEFT - 6); tly.setAttribute("y", py + 3);
+    tly.setAttribute("text-anchor", "end");
+    tly.textContent = y;
+    t.appendChild(tly);
+  }
+})();
+
+// Draw fixed lines: LHS = 3x + 4, RHS = 10
+var A = 3, B = 4, RHS = 10;
+var lhsLine = document.getElementById("lhsLine");
+lhsLine.setAttribute("x1", xPx(XMIN));
+lhsLine.setAttribute("y1", yPx(A * XMIN + B));
+lhsLine.setAttribute("x2", xPx(XMAX));
+lhsLine.setAttribute("y2", yPx(A * XMAX + B));
+
+var rhsLine = document.getElementById("rhsLine");
+rhsLine.setAttribute("x1", xPx(XMIN));
+rhsLine.setAttribute("y1", yPx(RHS));
+rhsLine.setAttribute("x2", xPx(XMAX));
+rhsLine.setAttribute("y2", yPx(RHS));
+
+// Animation state
+var targetX = 0, currentX = 0, rafId = null;
+var SMOOTH = 0.40;
+
+function ensureAnim() { if (rafId !== null) return; rafId = requestAnimationFrame(animFrame); }
+function animFrame() {
+  var diff = targetX - currentX;
+  if (Math.abs(diff) < 0.003) {
+    currentX = targetX; draw(); rafId = null; return;
+  }
+  currentX += diff * SMOOTH;
+  draw();
+  rafId = requestAnimationFrame(animFrame);
+}
+
+function draw() {
+  var lhsVal = A * currentX + B;
+  var px = xPx(currentX);
+  var py1 = yPx(lhsVal);
+  var py2 = yPx(RHS);
+  document.getElementById("xMarker").setAttribute("x1", px);
+  document.getElementById("xMarker").setAttribute("x2", px);
+  document.getElementById("xMarker").setAttribute("y1", PX_TOP);
+  document.getElementById("xMarker").setAttribute("y2", PX_BOT);
+  document.getElementById("lhsDot").setAttribute("cx", px);
+  document.getElementById("lhsDot").setAttribute("cy", py1);
+  document.getElementById("rhsDot").setAttribute("cx", px);
+  document.getElementById("rhsDot").setAttribute("cy", py2);
+
+  document.getElementById("lhsVal").textContent = lhsVal.toFixed(1);
+  document.getElementById("rhsVal").textContent = RHS;
+  var gap = lhsVal - RHS;
+  var gapEl = document.getElementById("gapVal");
+  gapEl.textContent = (gap >= 0 ? "+" : "") + gap.toFixed(1);
+  if (Math.abs(gap) < 0.05) gapEl.classList.add("zero");
+  else gapEl.classList.remove("zero");
+}
+
+document.getElementById("sx").addEventListener("input", function(e) {
+  targetX = parseFloat(e.target.value);
+  document.getElementById("vx").textContent = targetX.toFixed(1);
+  ensureAnim();
+});
+draw();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
