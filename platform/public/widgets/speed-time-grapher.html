@@ -174,7 +174,7 @@ function fmtNum(v) {
 function draw() {
   tryRender(
     document.getElementById("formula"),
-    "v = u + at \\;\\;\\text{with}\\;\\; u = " + fmtNum(targetU) + ",\\; a = " + fmtNum(targetA)
+    "\\text{initial speed } u = " + fmtNum(targetU) + " \\text{ m/s},\\;\\; \\text{acceleration } a = " + fmtNum(targetA) + " \\text{ m/s}^2"
   );
 
   // v at t=0 is u; at t=5 is u + 5a (clamped)
