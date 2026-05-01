@@ -169,9 +169,9 @@ function fmtSign(v) {
 }
 function fmtA(a) { return a === 1 ? "" : (a === -1 ? "-" : String(a)); }
 
-let aVal = 2, bVal = -1;
-
-function clip(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+let targetA = 2, displayA = 2;
+let targetB = -1, displayB = -1;
+const SPRING = 0.20;
 
 function buildLine(slope, intercept) {
   // y = slope*x + intercept; need to clip endpoints to plot box.
@@ -201,48 +201,56 @@ function buildLine(slope, intercept) {
          " L " + xPx(p2.x).toFixed(2) + " " + yPx(p2.y).toFixed(2);
 }
 
-function update() {
-  // f(x) = a*x + b. Inverse: f^-1(x) = (x - b)/a (requires a != 0)
-  if (aVal === 0) {
-    document.getElementById("pathF").setAttribute("d", buildLine(0, bVal));
+function tick() {
+  displayA += (targetA - displayA) * SPRING;
+  displayB += (targetB - displayB) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function draw() {
+  // Curves animate against displayA/displayB; equations track targetA/targetB so the readout doesn't trail.
+  if (Math.abs(displayA) < 0.05) {
+    document.getElementById("pathF").setAttribute("d", buildLine(0, displayB));
     document.getElementById("pathFi").setAttribute("d", "");
-    tryRender(document.getElementById("eqF"), "f(x) = " + bVal + " \\quad \\text{(constant — no inverse)}");
+  } else {
+    const slopeF = displayA;
+    const interceptF = displayB;
+    const slopeI = 1 / displayA;
+    const interceptI = -displayB / displayA;
+    document.getElementById("pathF").setAttribute("d", buildLine(slopeF, interceptF));
+    document.getElementById("pathFi").setAttribute("d", buildLine(slopeI, interceptI));
+  }
+
+  // Render equations from target values (snap to integer immediately)
+  if (targetA === 0) {
+    tryRender(document.getElementById("eqF"), "f(x) = " + targetB + " \\quad \\text{(constant — no inverse)}");
     tryRender(document.getElementById("eqFi"), "f^{-1}(x) = \\text{undefined}");
     return;
   }
-  const slopeF = aVal;
-  const interceptF = bVal;
-  const slopeI = 1 / aVal;
-  const interceptI = -bVal / aVal;
-  document.getElementById("pathF").setAttribute("d", buildLine(slopeF, interceptF));
-  document.getElementById("pathFi").setAttribute("d", buildLine(slopeI, interceptI));
-
-  const fTex = "f(x) = " + fmtA(aVal) + "x" + fmtSign(bVal);
-  // Inverse: (x - b)/a, simplify when nice
+  const fTex = "f(x) = " + fmtA(targetA) + "x" + fmtSign(targetB);
   let fiTex;
-  if (aVal === 1) {
-    fiTex = "f^{-1}(x) = x" + fmtSign(-bVal);
-  } else if (aVal === -1) {
-    fiTex = "f^{-1}(x) = -x" + fmtSign(-bVal);
+  if (targetA === 1) {
+    fiTex = "f^{-1}(x) = x" + fmtSign(-targetB);
+  } else if (targetA === -1) {
+    fiTex = "f^{-1}(x) = -x" + fmtSign(-targetB);
   } else {
-    const numerator = "x" + fmtSign(-bVal);
-    fiTex = "f^{-1}(x) = \\dfrac{" + numerator.trim() + "}{" + aVal + "}";
+    const numerator = "x" + fmtSign(-targetB);
+    fiTex = "f^{-1}(x) = \\dfrac{" + numerator.trim() + "}{" + targetA + "}";
   }
   tryRender(document.getElementById("eqF"), fTex);
   tryRender(document.getElementById("eqFi"), fiTex);
 }
 
 document.getElementById("a").addEventListener("input", function(e) {
-  aVal = parseInt(e.target.value, 10);
-  document.getElementById("va").textContent = aVal;
-  update();
+  targetA = parseInt(e.target.value, 10);
+  document.getElementById("va").textContent = targetA;
 });
 document.getElementById("b").addEventListener("input", function(e) {
-  bVal = parseInt(e.target.value, 10);
-  document.getElementById("vb").textContent = bVal;
-  update();
+  targetB = parseInt(e.target.value, 10);
+  document.getElementById("vb").textContent = targetB;
 });
-update();
+tick();
 
 let lastReported = 0, reportScheduled = false;
 function reportHeight() {

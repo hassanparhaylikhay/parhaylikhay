@@ -222,25 +222,25 @@ function genExp() {
     var r = pick([2, 3]);
     var yval = a + b;
     return mc(
-      "The y-intercept of $y = " + a + " \\cdot " + r + "^x " + fmtSign(b) + "$ is at...",
+      "The y-intercept of $y = " + a + " \\times " + r + "^x " + fmtSign(b) + "$ is at...",
       shuffle(["$(0, " + yval + ")$", "$(0, " + a + ")$", "$(0, " + b + ")$", "$(0, " + (a*r) + ")$"]),
       "$(0, " + yval + ")$",
-      "$x = 0$: $r^0 = 1$, so $y = " + a + " \\cdot 1 " + fmtSign(b) + " = " + yval + "$."
+      "$x = 0$: $r^0 = 1$, so $y = " + a + " \\times 1 " + fmtSign(b) + " = " + yval + "$."
     );
   } else if (pattern === "asymptote") {
     var aa = pick([2, 3, 5]);
     var bb = pick([-3, -1, 2, 4]);
     var rr = pick([2, 3, "0.5"]);
     return mc(
-      "The horizontal asymptote of $y = " + aa + " \\cdot " + rr + "^x " + fmtSign(bb) + "$ is at...",
+      "The horizontal asymptote of $y = " + aa + " \\times " + rr + "^x " + fmtSign(bb) + "$ is at...",
       shuffle(["$y = " + bb + "$", "$y = 0$", "$y = " + aa + "$", "$y = " + (aa + bb) + "$"]),
       "$y = " + bb + "$",
       "Asymptote at the constant shift $b = " + bb + "$."
     );
   } else {
     var concepts = [
-      { q: "Which describes exponential GROWTH?", correct: "$y = 4 \\cdot 2^x$ (base $> 1$)", others: ["$y = 4 \\cdot 0.5^x$ (base $< 1$)", "$y = 4 \\cdot 0.3^x$", "$y = 4x$"] },
-      { q: "Which describes exponential DECAY?", correct: "$y = 5 \\cdot 0.4^x$ (base $< 1$)", others: ["$y = 5 \\cdot 2^x$", "$y = 5 \\cdot 3^x$", "$y = 5 \\cdot 4^x$"] }
+      { q: "Which describes exponential GROWTH?", correct: "$y = 4 \\times 2^x$ (base $> 1$)", others: ["$y = 4 \\times 0.5^x$ (base $< 1$)", "$y = 4 \\times 0.3^x$", "$y = 4x$"] },
+      { q: "Which describes exponential DECAY?", correct: "$y = 5 \\times 0.4^x$ (base $< 1$)", others: ["$y = 5 \\times 2^x$", "$y = 5 \\times 3^x$", "$y = 5 \\times 4^x$"] }
     ];
     var c = pick(concepts);
     return mc(c.q, shuffle([c.correct].concat(c.others)), c.correct,

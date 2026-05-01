@@ -129,7 +129,7 @@ const SHAPES = {
   exp_shifted: {
     feat: "shifted exponential",
     f: (p, x) => p.a * Math.pow(p.r, x) + p.b,
-    texFn: p => "y = " + fmt(p.a) + " \\cdot " + fmt(p.r) + "^x " + fmtSign(p.b),
+    texFn: p => "y = " + fmt(p.a) + " \\times " + fmt(p.r) + "^x " + fmtSign(p.b),
     asymptoteY: p => p.b,
     split: false, firstQuadrantOnly: false,
     range: { xMin: -3, xMax: 3, yMin: -2, yMax: 8, pxX: 60, pxY: 28 }

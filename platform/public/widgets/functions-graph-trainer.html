@@ -212,7 +212,7 @@ function genExp() {
     var x = pick([0, 1, 2]);
     var y = a * Math.pow(b, x);
     return mc(
-      "For $y = " + a + " \\cdot " + b + "^x$ at $x = " + x + "$, what is $y$?",
+      "For $y = " + a + " \\times " + b + "^x$ at $x = " + x + "$, what is $y$?",
       shuffle([y, y * b, a + b * x, a * b * x].filter(function(v, i, arr) { return arr.indexOf(v) === i; })).slice(0, 4).map(function(o) { return "$" + o + "$"; }),
       "$" + y + "$",
       "$y = " + a + " \\times " + b + "^{" + x + "} = " + a + " \\times " + Math.pow(b, x) + " = " + y + "$."
@@ -221,12 +221,12 @@ function genExp() {
     var concepts = [
       { q: "Which equation describes a decaying exponential?", correct: "$y = (1/2)^x$", others: ["$y = 2^x$", "$y = 3^x$", "$y = 5^x$"] },
       { q: "Which equation describes growth?", correct: "$y = 2^x$", others: ["$y = (1/2)^x$", "$y = (0.4)^x$", "$y = (1/3)^x$"] },
-      { q: "The $y$-intercept of $y = 5 \\cdot 2^x$ is at...", correct: "$(0, 5)$", others: ["$(0, 2)$", "$(0, 10)$", "$(0, 0)$"] },
-      { q: "The asymptote of $y = 3 \\cdot 2^x + 4$ is...", correct: "$y = 4$", others: ["$y = 0$", "$y = 3$", "$y = 7$"] }
+      { q: "The $y$-intercept of $y = 5 \\times 2^x$ is at...", correct: "$(0, 5)$", others: ["$(0, 2)$", "$(0, 10)$", "$(0, 0)$"] },
+      { q: "The asymptote of $y = 3 \\times 2^x + 4$ is...", correct: "$y = 4$", others: ["$y = 0$", "$y = 3$", "$y = 7$"] }
     ];
     var c = pick(concepts);
     return mc(c.q, shuffle([c.correct].concat(c.others)), c.correct,
-      "$y = a \\cdot b^x + c$: $y$-intercept at $(0, a + c)$, asymptote at $y = c$. $b > 1$ → growth; $b < 1$ → decay.");
+      "$y = a \\times b^x + c$: $y$-intercept at $(0, a + c)$, asymptote at $y = c$. $b > 1$ → growth; $b < 1$ → decay.");
   } else {
     var p0 = pick([50, 100, 200]);
     var t = pick([3, 4, 5]);

@@ -125,7 +125,7 @@ function genDirect() {
       "y = kx",
       shuffle([String(y2), String(y2 + x2), String(y2 - x2), String(k + x2)]),
       String(y2),
-      "$y = kx$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " \\cdot " + x2 + " = " + y2 + "$."
+      "$y = kx$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " \\times " + x2 + " = " + y2 + "$."
     );
   } else if (pattern === "sq") {
     var k = rand(2, 5);
@@ -139,7 +139,7 @@ function genDirect() {
       "y = kx^2",
       shuffle([String(y2), String(y2 + x2), String(y2 - x2), String(k * x2)]),
       String(y2),
-      "$y = kx^2$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " \\cdot " + (x2 * x2) + " = " + y2 + "$."
+      "$y = kx^2$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " \\times " + (x2 * x2) + " = " + y2 + "$."
     );
   } else {
     // sqrt
@@ -154,7 +154,7 @@ function genDirect() {
       "y = k\\sqrt{x}",
       shuffle([String(y2), String(y2 + 1), String(k + Math.sqrt(x2)), String(y2 - 1)]),
       String(y2),
-      "$y = k\\sqrt{x}$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " \\cdot \\sqrt{" + x2 + "} = " + y2 + "$."
+      "$y = k\\sqrt{x}$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " \\times \\sqrt{" + x2 + "} = " + y2 + "$."
     );
   }
 }

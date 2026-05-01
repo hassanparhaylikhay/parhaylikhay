@@ -259,9 +259,9 @@ function genSpecial() {
     var r = pick([2, 3]);
     var seq = [];
     for (var i = 0; i < 4; i++) seq.push(a * Math.pow(r, i));
-    var correct = a + " \\cdot " + r + "^{n-1}";
-    var d1 = a + " \\cdot " + r + "^n";
-    var d2 = r + " \\cdot " + a + "^{n-1}";
+    var correct = a + " \\times " + r + "^{n-1}";
+    var d1 = a + " \\times " + r + "^n";
+    var d2 = r + " \\times " + a + "^{n-1}";
     var d3 = a + "n + " + r;
     var s = shuffle([correct, d1, d2, d3]);
     return {

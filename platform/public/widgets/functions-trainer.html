@@ -240,7 +240,7 @@ function genComposite() {
       "If $f(x) = " + aa + "x$ and $g(x) = x + " + bbb + "$, find $fg(" + input2 + ")$.",
       shuffle(["$" + ans2 + "$", "$" + (ans2 + 1) + "$", "$" + (aa * input2 + bbb) + "$", "$" + (aa + input2 + bbb) + "$"]),
       "$" + ans2 + "$",
-      "$fg(" + input2 + ") = f(g(" + input2 + ")) = f(" + (input2 + bbb) + ") = " + aa + " \\cdot " + (input2 + bbb) + " = " + ans2 + "$."
+      "$fg(" + input2 + ") = f(g(" + input2 + ")) = f(" + (input2 + bbb) + ") = " + aa + " \\times " + (input2 + bbb) + " = " + ans2 + "$."
     );
   } else if (pattern === "ff") {
     var k = pick([2, 3, 4]);
