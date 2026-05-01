@@ -25,11 +25,15 @@
   .row .val { min-width:30px; text-align:right; color:#f0eeea; font-weight:600; }
 
   .table-wrap { padding:0 4px; }
+  /* 12 equal columns + a leading label column. Each TERM cell spans 2
+     columns (cols 2..13). Each 1st-diff cell spans 2 cols offset by 1
+     (cols 3..12) so it sits visually CENTRED between two terms. Each
+     2nd-diff cell offsets by 2 (cols 4..11). */
   .table-row {
-    display:grid; grid-template-columns:max-content repeat(6, 1fr); gap:6px;
+    display:grid; grid-template-columns:max-content repeat(12, 1fr); gap:6px 4px;
     margin-bottom:6px; align-items:center;
   }
-  .label { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; padding:6px 8px; }
+  .label { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; padding:6px 8px; grid-column: 1; }
   .cell {
     background:#07090d; border:1px solid #141e2a; border-radius:5px;
     padding:7px 0; text-align:center;
@@ -38,7 +42,6 @@
   .cell.terms { color:#f0eeea; border-color:#3a4a5a; }
   .cell.first { color:#fff067; border-color:rgba(255,240,103,0.32); }
   .cell.second { color:#0fee89; border-color:rgba(15,238,137,0.32); }
-  .cell.empty { background:transparent; border:none; }
 
   .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
@@ -107,31 +110,20 @@ function fmtFormula(a, b, c) {
   return "T_n = " + parts.join("");
 }
 
-function buildRow(rowId, count, values, cls) {
+function buildRow(rowId, values, cls, startCol) {
+  // startCol = the grid-column at which the FIRST cell begins. Each cell
+  // spans 2 columns. For the terms row, startCol = 2 (cells fill cols 2..13).
+  // For 1st diff, startCol = 3 (cells fill cols 3..12, centred between
+  // the term cells above). For 2nd diff, startCol = 4.
   var rowEl = document.getElementById(rowId);
-  // Clear all cells except the leading label
   while (rowEl.children.length > 1) rowEl.removeChild(rowEl.lastChild);
-  // For 1st diff and 2nd diff rows, offset cells with empty placeholders
-  // so the values sit BETWEEN the rows above. For "terms" row (count=6),
-  // there's no offset.
-  var offset = 6 - count;
-  var leadingHalf = Math.floor(offset / 2);
-  for (var i = 0; i < leadingHalf; i++) {
-    var e = document.createElement("div");
-    e.className = "cell empty";
-    rowEl.appendChild(e);
-  }
-  values.forEach(function(v) {
+  values.forEach(function(v, i) {
     var c = document.createElement("div");
     c.className = "cell " + cls;
+    c.style.gridColumn = (startCol + i * 2) + " / span 2";
     c.textContent = v;
     rowEl.appendChild(c);
   });
-  for (var j = 0; j < offset - leadingHalf; j++) {
-    var e2 = document.createElement("div");
-    e2.className = "cell empty";
-    rowEl.appendChild(e2);
-  }
 }
 
 function update() {
@@ -141,15 +133,15 @@ function update() {
   for (var n = 1; n <= 6; n++) {
     terms.push(aVal * n * n + bVal * n + cVal);
   }
-  buildRow("rowTerms", 6, terms, "terms");
+  buildRow("rowTerms", terms, "terms", 2);
 
   var firstDiffs = [];
   for (var i = 1; i < terms.length; i++) firstDiffs.push(terms[i] - terms[i - 1]);
-  buildRow("rowFirst", 5, firstDiffs, "first");
+  buildRow("rowFirst", firstDiffs, "first", 3);
 
   var secondDiffs = [];
   for (var j = 1; j < firstDiffs.length; j++) secondDiffs.push(firstDiffs[j] - firstDiffs[j - 1]);
-  buildRow("rowSecond", 4, secondDiffs, "second");
+  buildRow("rowSecond", secondDiffs, "second", 4);
 }
 
 document.getElementById("a").addEventListener("input", function(e) {

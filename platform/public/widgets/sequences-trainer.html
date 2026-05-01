@@ -86,7 +86,7 @@
         <option value="linear">nth term · linear</option>
         <option value="quadratic">nth term · quadratic</option>
         <option value="special">special</option>
-        <option value="mixed" selected>mixed</option>
+        <option value="mixed">mixed</option>
       </select>
     </div>
   </div>
@@ -383,6 +383,19 @@ var topicSel = document.getElementById("topic");
 var stepNumEl = document.getElementById("step-num");
 var rightCountEl = document.getElementById("right-count");
 var wrongCountEl = document.getElementById("wrong-count");
+
+// Read ?topic= from the iframe URL so each part of the lesson opens with the
+// matching mode preselected. The student hasn't yet covered other modes when
+// they first land on a part, so 'mixed' as a global default was wrong.
+(function setInitialTopic() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var t = params.get("topic");
+    var valid = ["next", "linear", "quadratic", "special", "mixed"];
+    if (t && valid.indexOf(t) !== -1) topicSel.value = t;
+    else topicSel.value = "mixed";
+  } catch (e) { topicSel.value = "mixed"; }
+})();
 
 topicSel.addEventListener("change", reset);
 

@@ -61,11 +61,6 @@
       <input type="range" id="d" min="-10" max="10" value="5" step="1"/>
       <span class="val" id="vd">5</span>
     </div>
-    <div class="row scrub" style="grid-column: 1 / -1; max-width:420px; margin:0 auto; width:100%">
-      <span class="name">show n =</span>
-      <input type="range" id="n" min="1" max="10" value="1" step="1"/>
-      <span class="val" id="vn">1</span>
-    </div>
   </div>
 
   <div class="terms-row" id="terms"></div>
@@ -83,10 +78,9 @@ function tryRender(target, tex) {
   }
 }
 
-var aVal = 3, dVal = 5, nHighlight = 1;
+var aVal = 3, dVal = 5;
 
 function fmtNthTerm(d, k) {
-  // Returns TeX for "T_n = dn + k" simplified
   var dn = d === 1 ? "n" : d === -1 ? "-n" : d + "n";
   var kStr = k === 0 ? "" : (k > 0 ? " + " + k : " - " + (-k));
   if (d === 0) return "T_n = " + (k === 0 ? "0" : k);
@@ -94,17 +88,14 @@ function fmtNthTerm(d, k) {
 }
 
 function update() {
-  // k = a - d so that T_1 = a
   var k = aVal - dVal;
   tryRender(document.getElementById("formula"), fmtNthTerm(dVal, k));
-
-  // Build the row of 10 term cards
   var termsEl = document.getElementById("terms");
   termsEl.innerHTML = "";
   for (var n = 1; n <= 10; n++) {
     var t = aVal + (n - 1) * dVal;
     var div = document.createElement("div");
-    div.className = "term" + (n === nHighlight ? " highlight" : "");
+    div.className = "term";
     div.innerHTML = '<span class="pos">n = ' + n + '</span>' + t;
     termsEl.appendChild(div);
   }
@@ -118,11 +109,6 @@ document.getElementById("a").addEventListener("input", function(e) {
 document.getElementById("d").addEventListener("input", function(e) {
   dVal = parseInt(e.target.value, 10);
   document.getElementById("vd").textContent = dVal;
-  update();
-});
-document.getElementById("n").addEventListener("input", function(e) {
-  nHighlight = parseInt(e.target.value, 10);
-  document.getElementById("vn").textContent = nHighlight;
   update();
 });
 update();

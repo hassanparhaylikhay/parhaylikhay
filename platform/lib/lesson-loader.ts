@@ -111,11 +111,11 @@ const WIDGETS: Record<string, WidgetSpec> = {
   "02-06-p2":     { url: "/widgets/inequalities-trainer.html",          height: 540 },
   "02-06-p3":     { url: "/widgets/inequalities-trainer.html",          height: 540 },
   "02-06-review": { url: "/widgets/inequalities-trainer.html",          height: 540 },
-  "02-07-p1":     { url: "/widgets/sequences-trainer.html",             height: 540 },
-  "02-07-p2":     { url: "/widgets/sequences-trainer.html",             height: 540 },
-  "02-07-p3":     { url: "/widgets/sequences-trainer.html",             height: 540 },
-  "02-07-p4":     { url: "/widgets/sequences-trainer.html",             height: 540 },
-  "02-07-review": { url: "/widgets/sequences-trainer.html",             height: 540 },
+  "02-07-p1":     { url: "/widgets/sequences-trainer.html?topic=next",      height: 540 },
+  "02-07-p2":     { url: "/widgets/sequences-trainer.html?topic=linear",    height: 540 },
+  "02-07-p3":     { url: "/widgets/sequences-trainer.html?topic=quadratic", height: 540 },
+  "02-07-p4":     { url: "/widgets/sequences-trainer.html?topic=special",   height: 540 },
+  "02-07-review": { url: "/widgets/sequences-trainer.html",                 height: 540 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {
