@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Speed-Time Grapher</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
+  .formula { font-size:16px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px 14px; margin-bottom:12px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:8px; min-width:0; }
+  .row .name { color:#fff067; font-weight:600; min-width:64px; }
+  .row input[type=range] { flex:1; min-width:80px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row .val { min-width:48px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+
+  .axis-line { stroke:#3a4a5a; stroke-width:1; }
+  .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
+  .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
+  .axis-title { font-family:'Geist Mono',monospace; font-size:10px; fill:#7a7875; }
+  .vt-line { stroke:#fff067; stroke-width:2.5; fill:none; stroke-linecap:round; }
+  .area-fill { fill:#0fee89; opacity:0.18; }
+
+  .readout {
+    margin-top:10px; padding:10px 12px;
+    background:#07090d; border:1px solid #141e2a; border-radius:6px;
+    font-family:'Geist Mono',monospace; font-size:13px; color:#f0eeea;
+    display:flex; justify-content:space-around; flex-wrap:wrap; gap:10px;
+  }
+  .readout .item .lbl { color:#7a7875; }
+  .readout .acc { color:#fff067; font-weight:600; }
+  .readout .dist { color:#0fee89; font-weight:600; }
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">u (m/s)</span>
+      <input type="range" id="u" min="0" max="20" value="5" step="1"/>
+      <span class="val" id="vu">5</span>
+    </div>
+    <div class="row">
+      <span class="name">a (m/s²)</span>
+      <input type="range" id="a" min="-3" max="6" value="3" step="0.5"/>
+      <span class="val" id="va">3</span>
+    </div>
+  </div>
+
+  <svg viewBox="0 0 480 300" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <defs>
+      <clipPath id="plot-clip">
+        <rect x="50" y="20" width="380" height="240"/>
+      </clipPath>
+    </defs>
+    <g id="grid"></g>
+    <line class="axis-line" id="xAxis"/>
+    <line class="axis-line" id="yAxis"/>
+    <g id="ticks"></g>
+    <text class="axis-title" x="240" y="290" text-anchor="middle">time (s)</text>
+    <text class="axis-title" x="20" y="140" text-anchor="middle" transform="rotate(-90 20 140)">speed (m/s)</text>
+
+    <g clip-path="url(#plot-clip)">
+      <polygon class="area-fill" id="areaFill"/>
+      <line class="vt-line" id="vtLine"/>
+    </g>
+  </svg>
+
+  <div class="readout">
+    <span class="item"><span class="lbl">acceleration:</span> <span class="acc" id="accVal">3 m/s²</span></span>
+    <span class="item"><span class="lbl">distance (area):</span> <span class="dist" id="distVal">62.5 m</span></span>
+  </div>
+  <p class="footer">yellow line gradient = acceleration · green shaded area = distance</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+// Coordinate model: time 0..5 s, speed 0..40 m/s
+var XMIN = 0, XMAX = 5, YMIN = 0, YMAX = 40;
+var PX_LEFT = 50, PX_RIGHT = 430;
+var PX_TOP  = 20, PX_BOT   = 260;
+function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
+function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_TOP);  }
+
+(function buildAxes() {
+  var g = document.getElementById("grid");
+  var t = document.getElementById("ticks");
+  document.getElementById("xAxis").setAttribute("x1", PX_LEFT);
+  document.getElementById("xAxis").setAttribute("x2", PX_RIGHT);
+  document.getElementById("xAxis").setAttribute("y1", yPx(0));
+  document.getElementById("xAxis").setAttribute("y2", yPx(0));
+  document.getElementById("yAxis").setAttribute("x1", xPx(0));
+  document.getElementById("yAxis").setAttribute("x2", xPx(0));
+  document.getElementById("yAxis").setAttribute("y1", PX_TOP);
+  document.getElementById("yAxis").setAttribute("y2", PX_BOT);
+  for (var x = XMIN; x <= XMAX; x++) {
+    var px = xPx(x);
+    if (x !== 0) {
+      var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("class", "grid-line");
+      line.setAttribute("x1", px); line.setAttribute("x2", px);
+      line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
+      g.appendChild(line);
+    }
+    var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tl.setAttribute("class", "axis-tick-label");
+    tl.setAttribute("x", px); tl.setAttribute("y", yPx(0) + 14);
+    tl.setAttribute("text-anchor", "middle");
+    tl.textContent = x;
+    t.appendChild(tl);
+  }
+  for (var y = 5; y <= YMAX; y += 5) {
+    var py = yPx(y);
+    if (y % 10 === 0) {
+      var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      gl.setAttribute("class", "grid-line");
+      gl.setAttribute("x1", PX_LEFT); gl.setAttribute("x2", PX_RIGHT);
+      gl.setAttribute("y1", py); gl.setAttribute("y2", py);
+      g.appendChild(gl);
+      var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tly.setAttribute("class", "axis-tick-label");
+      tly.setAttribute("x", xPx(0) - 6); tly.setAttribute("y", py + 3);
+      tly.setAttribute("text-anchor", "end");
+      tly.textContent = y;
+      t.appendChild(tly);
+    }
+  }
+})();
+
+var targetU = 5, displayU = 5;
+var targetA = 3, displayA = 3;
+var SPRING = 0.20;
+var T_END = 5;
+
+function tick() {
+  displayU += (targetU - displayU) * SPRING;
+  displayA += (targetA - displayA) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function fmtNum(v) {
+  var r = Math.round(v * 10) / 10;
+  return (r === Math.floor(r)) ? r.toFixed(0) : r.toFixed(1);
+}
+
+function draw() {
+  tryRender(
+    document.getElementById("formula"),
+    "v = u + at \\;\\;\\text{with}\\;\\; u = " + fmtNum(targetU) + ",\\; a = " + fmtNum(targetA)
+  );
+
+  // v at t=0 is u; at t=5 is u + 5a (clamped)
+  var v0 = displayU;
+  var v5 = displayU + T_END * displayA;
+  // line endpoints (clip to YMIN/YMAX visually via clipPath)
+  document.getElementById("vtLine").setAttribute("x1", xPx(0));
+  document.getElementById("vtLine").setAttribute("y1", yPx(v0));
+  document.getElementById("vtLine").setAttribute("x2", xPx(T_END));
+  document.getElementById("vtLine").setAttribute("y2", yPx(v5));
+
+  // Area fill: trapezium between line and x-axis
+  // For accuracy, also handle case where line dips below 0 — clip the polygon
+  // to y >= 0 by computing the time at which v(t) = 0 if relevant.
+  var pts = [];
+  pts.push([xPx(0), yPx(Math.max(0, v0))]);
+  if (v0 < 0 && v5 >= 0) {
+    var tCross = -v0 / displayA;
+    pts.push([xPx(tCross), yPx(0)]);
+  }
+  pts.push([xPx(T_END), yPx(Math.max(0, v5))]);
+  if (v0 >= 0 && v5 < 0) {
+    var tCross2 = -v0 / displayA;
+    pts.push([xPx(tCross2), yPx(0)]);
+  }
+  pts.push([xPx(T_END), yPx(0)]);
+  pts.push([xPx(0), yPx(0)]);
+  document.getElementById("areaFill").setAttribute(
+    "points",
+    pts.map(function(p) { return p[0] + "," + p[1]; }).join(" ")
+  );
+
+  // Readouts use TARGET values for instant feedback
+  document.getElementById("accVal").textContent = fmtNum(targetA) + " m/s²";
+  // Distance via target values (trapezium area, with floor at 0 if line dips below)
+  var tu = targetU, ta = targetA;
+  var tv5 = tu + T_END * ta;
+  var dist;
+  if (tu >= 0 && tv5 >= 0) {
+    dist = 0.5 * (tu + tv5) * T_END;
+  } else if (tu < 0 && tv5 < 0) {
+    dist = 0; // entire interval below zero — no positive area
+  } else {
+    // line crosses zero — compute positive part only
+    var tCross = -tu / ta;
+    if (tu < 0) {
+      dist = 0.5 * (T_END - tCross) * tv5;
+    } else {
+      dist = 0.5 * tCross * tu;
+    }
+  }
+  document.getElementById("distVal").textContent = fmtNum(dist) + " m";
+}
+
+document.getElementById("u").addEventListener("input", function(e) {
+  targetU = parseFloat(e.target.value);
+  document.getElementById("vu").textContent = fmtNum(targetU);
+});
+document.getElementById("a").addEventListener("input", function(e) {
+  targetA = parseFloat(e.target.value);
+  document.getElementById("va").textContent = fmtNum(targetA);
+});
+tick();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
