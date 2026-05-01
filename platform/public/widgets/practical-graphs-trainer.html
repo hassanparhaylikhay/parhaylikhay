@@ -208,7 +208,7 @@ function genConv() {
   } else {
     var concepts = [
       { q: "Most conversion graphs are straight lines through the origin because...", correct: "the conversion is direct proportion (zero of one = zero of the other)", others: ["the units are the same", "they represent acceleration", "they are parabolas"] },
-      { q: "The Celsius-to-Fahrenheit graph passes through $(0, 32)$ because...", correct: "$0°\\text{C}$ corresponds to $32°\\text{F}$ (water freezes)", others: ["Fahrenheit starts at 32", "the gradient is 32", "they are inversely proportional"] }
+      { q: "The Celsius-to-Fahrenheit graph passes through $(0, 32)$ because...", correct: "0°C corresponds to 32°F (water freezes)", others: ["Fahrenheit starts at 32", "the gradient is 32", "they are inversely proportional"] }
     ];
     var c = pick(concepts);
     return mc(c.q, shuffle([c.correct].concat(c.others)), c.correct,
