@@ -64,14 +64,22 @@ function tryRender(target, tex) {
   }
 }
 
+// Format a number for display: show integer when exact, else round to 2 decimal
+// places and strip trailing zeros (so 2.3333... → 2.33, not 2.3300000000000005).
+function fmtNum(v) {
+  if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+  return String(Math.round(v * 100) / 100);
+}
+
 // Predefined functions. Each has: f (numeric), texFn (TeX), workingFn (TeX showing substitution).
+// All numeric outputs are formatted with fmtNum to avoid IEEE 754 noise like "2.3333333333333335".
 const FUNCS = {
-  lin1:  { f: x => 3*x - 5,    tex: "3x - 5",         workingFn: x => "3(" + x + ") - 5 = " + (3*x) + " - 5 = " + (3*x - 5) },
-  lin2:  { f: x => 2*x + 9,    tex: "2x + 9",         workingFn: x => "2(" + x + ") + 9 = " + (2*x) + " + 9 = " + (2*x + 9) },
-  lin3:  { f: x => x + 4,      tex: "x + 4",          workingFn: x => "(" + x + ") + 4 = " + (x + 4) },
-  double: { f: x => 2*x,       tex: "2x",             workingFn: x => "2(" + x + ") = " + (2*x) },
-  quad1: { f: x => x*x + 1,    tex: "x^2 + 1",        workingFn: x => "(" + x + ")^2 + 1 = " + (x*x) + " + 1 = " + (x*x + 1) },
-  inv1:  { f: x => (x + 5) / 3, tex: "\\dfrac{x + 5}{3}", workingFn: x => "\\dfrac{(" + x + ") + 5}{3} = \\dfrac{" + (x + 5) + "}{3} = " + ((x + 5) / 3) }
+  lin1:  { f: x => 3*x - 5,    tex: "3x - 5",         workingFn: x => "3(" + x + ") - 5 = " + (3*x) + " - 5 = " + fmtNum(3*x - 5) },
+  lin2:  { f: x => 2*x + 9,    tex: "2x + 9",         workingFn: x => "2(" + x + ") + 9 = " + (2*x) + " + 9 = " + fmtNum(2*x + 9) },
+  lin3:  { f: x => x + 4,      tex: "x + 4",          workingFn: x => "(" + x + ") + 4 = " + fmtNum(x + 4) },
+  double: { f: x => 2*x,       tex: "2x",             workingFn: x => "2(" + x + ") = " + fmtNum(2*x) },
+  quad1: { f: x => x*x + 1,    tex: "x^2 + 1",        workingFn: x => "(" + x + ")^2 + 1 = " + (x*x) + " + 1 = " + fmtNum(x*x + 1) },
+  inv1:  { f: x => (x + 5) / 3, tex: "\\dfrac{x + 5}{3}", workingFn: x => "\\dfrac{(" + x + ") + 5}{3} = \\dfrac{" + (x + 5) + "}{3} = " + fmtNum((x + 5) / 3) }
 };
 
 const params = new URLSearchParams(window.location.search);
@@ -117,7 +125,7 @@ function buildSingle() {
   const arr1 = makeArrow();
   const ruleP = makePill("rule", "RULE: f(x) =", fn.tex);
   const arr2 = makeArrow();
-  const outP = makePill("output", "OUTPUT", String(fn.f(inputDefault)));
+  const outP = makePill("output", "OUTPUT", fmtNum(fn.f(inputDefault)));
   row.appendChild(inP.pill); row.appendChild(arr1); row.appendChild(ruleP.pill);
   row.appendChild(arr2); row.appendChild(outP.pill);
   root.appendChild(row);
@@ -136,7 +144,7 @@ function buildSingle() {
     const v = parseFloat(e.target.value);
     document.getElementById("vx").textContent = v;
     inP.val.textContent = v;
-    outP.val.textContent = fn.f(v);
+    outP.val.textContent = fmtNum(fn.f(v));
     updateWorking(v);
   });
 
@@ -159,11 +167,11 @@ function buildSeries() {
   const arr1 = makeArrow();
   const fP = makePill("rule", "f(x) =", fn.tex);
   const arr2 = makeArrow();
-  const midP = makePill("input", "f(x)", String(fn.f(inputDefault)));
+  const midP = makePill("input", "f(x)", fmtNum(fn.f(inputDefault)));
   const arr3 = makeArrow();
   const gP = makePill("rule", "g(x) =", gn.tex);
   const arr4 = makeArrow();
-  const outP = makePill("output", "OUTPUT g(f(x))", String(gn.f(fn.f(inputDefault))));
+  const outP = makePill("output", "OUTPUT g(f(x))", fmtNum(gn.f(fn.f(inputDefault))));
   row.appendChild(inP.pill); row.appendChild(arr1); row.appendChild(fP.pill);
   row.appendChild(arr2); row.appendChild(midP.pill); row.appendChild(arr3);
   row.appendChild(gP.pill); row.appendChild(arr4); row.appendChild(outP.pill);
@@ -177,7 +185,7 @@ function buildSeries() {
     const fx = fn.f(x);
     const gfx = gn.f(fx);
     tryRender(working,
-      "gf(" + x + ") = g(f(" + x + ")) = g(" + fx + ") = " + gfx
+      "gf(" + x + ") = g(f(" + x + ")) = g(" + fmtNum(fx) + ") = " + fmtNum(gfx)
     );
   }
   updateWorking(inputDefault);
@@ -187,8 +195,8 @@ function buildSeries() {
     document.getElementById("vx").textContent = v;
     const fx = fn.f(v);
     inP.val.textContent = v;
-    midP.val.textContent = fx;
-    outP.val.textContent = gn.f(fx);
+    midP.val.textContent = fmtNum(fx);
+    outP.val.textContent = fmtNum(gn.f(fx));
     updateWorking(v);
   });
 

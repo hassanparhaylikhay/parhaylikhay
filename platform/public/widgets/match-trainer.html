@@ -398,10 +398,13 @@ modes.sequence = {
     }
     slot.appendChild(row2);
   },
-  drawUser(s) {
+  drawUser(_s) {
+    // Use userState (integer step=1) directly. displayState is spring-smoothed,
+    // which would flicker fractional values like "2.347" during slider drag —
+    // wrong for discrete sequence terms.
     for (let n = 1; n <= 5; n++) {
       const el = document.getElementById("user-term-" + n);
-      if (el) el.textContent = s.a + (n - 1) * s.d;
+      if (el) el.textContent = Math.round(userState.a + (n - 1) * userState.d);
     }
   },
   isMatch(s, t) { return s.a === t.a && s.d === t.d; }
