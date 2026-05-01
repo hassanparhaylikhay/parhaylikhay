@@ -223,11 +223,10 @@ function genRegion() {
     else holds = lhs >= rhs;
     var cStr = c < 0 ? " - " + (-c) : c > 0 ? " + " + c : "";
     var ineqText = "y \\; " + sym + " \\; " + (m === 1 ? "x" : m + "x") + cStr;
-    var pointText = "(" + px + ", \\; " + py + ")";
     var correct = holds ? "Yes, satisfies the inequality" : "No, does not satisfy";
     var s = shuffle([correct, holds ? "No, does not satisfy" : "Yes, satisfies the inequality"]);
-    return mc("Does the point " + escapeHtml(katex.renderToString(pointText, { throwOnError: false })) + " satisfy this?", ineqText, s, correct,
-              "Substitute $x = " + px + "$, $y = " + py + "$: $" + lhs + " \\; " + sym + " \\; " + rhs + "$ — " + (holds ? "true" : "false") + ".");
+    return mc("Does the point (" + px + ", " + py + ") satisfy this?", ineqText, s, correct,
+              "Substitute $x = " + px + "$, $y = " + py + "$: $" + lhs + " \\; " + sym + " \\; " + rhs + "$, which is " + (holds ? "true" : "false") + ".");
   } else {
     // Asks: above or below the line
     var op = pick(["lt", "le", "gt", "ge"]);
