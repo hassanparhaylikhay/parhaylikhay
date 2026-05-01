@@ -82,17 +82,16 @@ function catmullRomPath(points) {
 // Each shape provides: TeX label (with `${a}` placeholder for formula generation),
 // f(a, x), domain bounds, and whether it has two branches (split at x=0).
 const SHAPES = {
-  lin:   { feat: "line through origin",                f: (a,x) => a*x,                       texPattern: "y = ${a}x",            domain: [-3, 3], split: false, firstQuadrantOnly: false },
-  sq:    { feat: "parabola, vertex at origin",         f: (a,x) => a*x*x,                     texPattern: "y = ${a}x^2",          domain: [-3, 3], split: false, firstQuadrantOnly: false },
-  cub:   { feat: "S-curve, inflection at origin",      f: (a,x) => a*x*x*x,                   texPattern: "y = ${a}x^3",          domain: [-3, 3], split: false, firstQuadrantOnly: false },
-  sqrt:  { feat: "x ≥ 0 only, rises and flattens",     f: (a,x) => x < 0 ? NaN : a*Math.sqrt(x), texPattern: "y = ${a}\\sqrt{x}",  domain: [0, 4],  split: false, firstQuadrantOnly: true  },
-  rec:   { feat: "two branches in Q1 and Q3",          f: (a,x) => Math.abs(x) < 0.001 ? NaN : a/x,        texPattern: "y = \\dfrac{${a}}{x}",   domain: [-4, 4], split: true,  firstQuadrantOnly: false },
-  rec2:  { feat: "two branches both above x-axis",     f: (a,x) => Math.abs(x) < 0.001 ? NaN : a/(x*x),    texPattern: "y = \\dfrac{${a}}{x^2}", domain: [-4, 4], split: true,  firstQuadrantOnly: false },
-  const: { feat: "horizontal line at y = a",           f: (a,x) => a,                         texPattern: "y = ${a}",             domain: [-3, 3], split: false, firstQuadrantOnly: false },
+  lin:   { feat: "line through origin",                f: (a,x) => a*x,                       texPattern: "y = ${a}x",            galleryTex: "y = x",                domain: [-3, 3], split: false, firstQuadrantOnly: false },
+  sq:    { feat: "parabola, vertex at origin",         f: (a,x) => a*x*x,                     texPattern: "y = ${a}x^2",          galleryTex: "y = x^2",              domain: [-3, 3], split: false, firstQuadrantOnly: false },
+  cub:   { feat: "S-curve, inflection at origin",      f: (a,x) => a*x*x*x,                   texPattern: "y = ${a}x^3",          galleryTex: "y = x^3",              domain: [-3, 3], split: false, firstQuadrantOnly: false },
+  sqrt:  { feat: "x ≥ 0 only, rises and flattens",     f: (a,x) => x < 0 ? NaN : a*Math.sqrt(x), texPattern: "y = ${a}\\sqrt{x}",  galleryTex: "y = \\sqrt{x}",        domain: [0, 4],  split: false, firstQuadrantOnly: true  },
+  rec:   { feat: "two branches in Q1 and Q3",          f: (a,x) => Math.abs(x) < 0.001 ? NaN : a/x,        texPattern: "y = \\dfrac{${a}}{x}",   galleryTex: "y = \\dfrac{1}{x}",   domain: [-4, 4], split: true,  firstQuadrantOnly: false },
+  rec2:  { feat: "two branches both above x-axis",     f: (a,x) => Math.abs(x) < 0.001 ? NaN : a/(x*x),    texPattern: "y = \\dfrac{${a}}{x^2}", galleryTex: "y = \\dfrac{1}{x^2}", domain: [-4, 4], split: true,  firstQuadrantOnly: false },
+  const: { feat: "horizontal line at y = 1",           f: (a,x) => a,                         texPattern: "y = ${a}",             galleryTex: "y = 1",                domain: [-3, 3], split: false, firstQuadrantOnly: false },
 };
 
 const SHAPE_ORDER = ["lin", "sq", "cub", "sqrt", "rec", "rec2", "const"];
-const SHAPE_NLABEL = { lin: "n = 1", sq: "n = 2", cub: "n = 3", sqrt: "n = ½", rec: "n = −1", rec2: "n = −2", const: "n = 0" };
 
 function fmtA(a) {
   const n = Math.round(a * 10) / 10;
@@ -345,9 +344,7 @@ function renderGallery() {
     eqRow.className = "eq-row";
     const eq = document.createElement("span");
     eq.className = "eq";
-    const nval = document.createElement("span");
-    nval.className = "nval"; nval.textContent = "· " + SHAPE_NLABEL[shapeId];
-    eqRow.appendChild(eq); eqRow.appendChild(nval);
+    eqRow.appendChild(eq);
     card.appendChild(eqRow);
     const svg = buildSVG(shapeId, 1, "mini");
     card.appendChild(svg);
@@ -356,7 +353,7 @@ function renderGallery() {
     feat.textContent = SHAPES[shapeId].feat;
     card.appendChild(feat);
     grid.appendChild(card);
-    tryRender(eq, SHAPES[shapeId].texPattern.replace("${a}", "a"));
+    tryRender(eq, SHAPES[shapeId].galleryTex);
   }
 }
 
