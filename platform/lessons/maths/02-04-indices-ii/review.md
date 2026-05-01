@@ -62,17 +62,17 @@ The trap markers Cambridge uses repeatedly:
 
 ## Worked example: combined rules across the lesson
 
-Simplify $\dfrac{(3x^2)^3 \cdot x^{-1}}{9x^4}$.
+Simplify $\dfrac{(3x^2)^3 \times x^{-1}}{9x^4}$.
 
 **Step 1: Apply the power to the bracket.** $(3x^2)^3 = 27 x^6$.
 
 **Step 2: Multiply on the top.**
 
-$$27 x^6 \cdot x^{-1} \;=\; 27 x^{6 - 1} \;=\; 27 x^5$$
+$$27 x^6 \times x^{-1} \;=\; 27 x^{6 - 1} \;=\; 27 x^5$$
 
 **Step 3: Divide.**
 
-$$\dfrac{27 x^5}{9 x^4} \;=\; \dfrac{27}{9} \cdot x^{5 - 4} \;=\; 3 x$$
+$$\dfrac{27 x^5}{9 x^4} \;=\; \dfrac{27}{9} \times x^{5 - 4} \;=\; 3 x$$
 
 **Answer:** $\boxed{3x}$. **[M1 for the bracket; M1 for combining indices; A1 for the result]**
 
@@ -80,7 +80,7 @@ Full marks $= 3$.
 
 ## Quick reference
 
-- $a^m \cdot a^n = a^{m+n}$
+- $a^m \times a^n = a^{m+n}$
 - $\dfrac{a^m}{a^n} = a^{m-n}$
 - $(a^m)^n = a^{mn}$
 - $a^{-n} = \dfrac{1}{a^n}$

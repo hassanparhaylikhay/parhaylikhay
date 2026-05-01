@@ -8,11 +8,11 @@ checks:
   - q: 'Expand $-3(2x - 5)$.'
     options: ["$-6x + 15$", "$-6x - 15$", "$6x - 15$", "$-6x + 5$"]
     correct: 0
-    explain: '$-3 \cdot 2x = -6x$. $-3 \cdot (-5) = +15$. Result: $-6x + 15$.'
+    explain: '$-3 \times 2x = -6x$. $-3 \times (-5) = +15$. Result: $-6x + 15$.'
   - q: 'Expand $(x - 4)(x + 2)$.'
     options: ["$x^2 - 2x - 8$", "$x^2 + 2x - 8$", "$x^2 - 6x - 8$", "$x^2 - 8$"]
     correct: 0
-    explain: '$x \cdot x + x \cdot 2 - 4 \cdot x - 4 \cdot 2 = x^2 + 2x - 4x - 8 = x^2 - 2x - 8$.'
+    explain: '$x \times x + x \times 2 - 4 \times x - 4 \times 2 = x^2 + 2x - 4x - 8 = x^2 - 2x - 8$.'
   - q: 'Factorise $4x^2 - 25$.'
     options: ["$(2x - 5)(2x + 5)$", "$(4x - 5)(x + 5)$", "$(2x - 5)^2$", "Cannot factorise"]
     correct: 0

@@ -8,11 +8,11 @@ checks:
   - q: 'Simplify $\dfrac{2}{x} - \dfrac{1}{x + 1}$.'
     options: ["$\\dfrac{1}{x(x+1)}$", "$\\dfrac{x + 2}{x(x+1)}$", "$\\dfrac{2 - x}{x(x+1)}$", "$\\dfrac{1}{2x + 1}$"]
     correct: 1
-    explain: 'Common denominator $x(x+1)$. Top: $2(x+1) - 1 \cdot x = 2x + 2 - x = x + 2$. So $\dfrac{x+2}{x(x+1)}$.'
+    explain: 'Common denominator $x(x+1)$. Top: $2(x+1) - 1 \times x = 2x + 2 - x = x + 2$. So $\dfrac{x+2}{x(x+1)}$.'
   - q: 'Simplify $\dfrac{4x}{5} \times \dfrac{15}{8x}$.'
     options: ["$\\dfrac{60x}{40x}$", "$\\dfrac{3}{2}$", "$\\dfrac{60}{40}$", "$\\dfrac{x}{2}$"]
     correct: 1
-    explain: 'Multiply: $\dfrac{4x \cdot 15}{5 \cdot 8x} = \dfrac{60x}{40x} = \dfrac{60}{40} = \dfrac{3}{2}$ after cancelling $x$ and simplifying.'
+    explain: 'Multiply: $\dfrac{4x \times 15}{5 \times 8x} = \dfrac{60x}{40x} = \dfrac{60}{40} = \dfrac{3}{2}$ after cancelling $x$ and simplifying.'
   - q: 'Simplify $\dfrac{x^2}{6} \div \dfrac{x}{3}$.'
     options: ["$\\dfrac{x^3}{18}$", "$\\dfrac{x}{2}$", "$2x$", "$\\dfrac{x^2}{2}$"]
     correct: 1
@@ -28,9 +28,9 @@ checks:
   - q: 'Simplify $\dfrac{x + 1}{x} \times \dfrac{x^2}{x + 1}$.'
     options: ["$x$", "$x^2$", "$\\dfrac{x^2 + x}{x^2 + x}$", "$1$"]
     correct: 0
-    explain: '$\dfrac{(x+1) \cdot x^2}{x \cdot (x+1)}$. Cancel $(x + 1)$ and one $x$: $\dfrac{x^2}{x} = x$.'
+    explain: '$\dfrac{(x+1) \times x^2}{x \times (x+1)}$. Cancel $(x + 1)$ and one $x$: $\dfrac{x^2}{x} = x$.'
   - q: 'Simplify $\dfrac{x}{2} + \dfrac{x - 1}{4} - \dfrac{x}{8}$.'
-    options: ["$\\dfrac{5x - 2}{8}$", "$\\dfrac{4x + (x - 1) \\cdot 2 - x}{8}$", "$\\dfrac{x}{8}$", "$\\dfrac{x - 1}{4}$"]
+    options: ["$\\dfrac{5x - 2}{8}$", "$\\dfrac{4x + (x - 1) \\times 2 - x}{8}$", "$\\dfrac{x}{8}$", "$\\dfrac{x - 1}{4}$"]
     correct: 0
     explain: 'Common denominator $8$: $\dfrac{4x}{8} + \dfrac{2(x - 1)}{8} - \dfrac{x}{8} = \dfrac{4x + 2x - 2 - x}{8} = \dfrac{5x - 2}{8}$.'
 ---

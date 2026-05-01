@@ -8,23 +8,23 @@ checks:
   - q: '$y \propto x^2$. When $x = 4$, $y = 48$. Find $y$ when $x = 6$.'
     options: ["$108$", "$72$", "$144$", "$96$"]
     correct: 0
-    explain: '$y = kx^2$. $48 = 16k$ → $k = 3$. At $x = 6$: $y = 3 \cdot 36 = 108$.'
+    explain: '$y = kx^2$. $48 = 16k$ → $k = 3$. At $x = 6$: $y = 3 \times 36 = 108$.'
   - q: '$y$ is inversely proportional to $x$. When $x = 6$, $y = 5$. Find $y$ when $x = 15$.'
     options: ["$y = 2$", "$y = 25$", "$y = \\dfrac{2}{3}$", "$y = 30$"]
     correct: 0
-    explain: '$y = k/x$. $5 = k/6$ → $k = 30$. At $x = 15$: $y = 30/15 = 2$.'
+    explain: '$y = \dfrac{k}{x}$. $5 = \dfrac{k}{6}$ → $k = 30$. At $x = 15$: $y = \dfrac{30}{15} = 2$.'
   - q: '$y \propto \dfrac{1}{x^2}$. When $x = 3$, $y = 4$. Find $y$ when $x = 6$.'
     options: ["$y = 1$", "$y = 2$", "$y = 8$", "$y = 16$"]
     correct: 0
-    explain: '$y = k/x^2$. $4 = k/9$ → $k = 36$. At $x = 6$: $y = 36/36 = 1$.'
+    explain: '$y = \dfrac{k}{x^2}$. $4 = \dfrac{k}{9}$ → $k = 36$. At $x = 6$: $y = \dfrac{36}{36} = 1$.'
   - q: 'For $y \propto x^2$, when $x$ triples, $y$ becomes...'
-    options: ["$3y$", "$9y$", "$y/3$", "$y/9$"]
+    options: ["$3y$", "$9y$", "$\\dfrac{y}{3}$", "$\\dfrac{y}{9}$"]
     correct: 1
     explain: '$y = kx^2$. New $x = 3x$, new $y = k(3x)^2 = 9 k x^2 = 9y$.'
   - q: 'For $y \propto \dfrac{1}{x}$, when $x$ doubles, $y$ becomes...'
-    options: ["$2y$", "$4y$", "$y/2$", "$y/4$"]
+    options: ["$2y$", "$4y$", "$\\dfrac{y}{2}$", "$\\dfrac{y}{4}$"]
     correct: 2
-    explain: '$y = k/x$. New $x = 2x$, new $y = k/(2x) = y/2$. Halves.'
+    explain: '$y = \dfrac{k}{x}$. New $x = 2x$, new $y = \dfrac{k}{2x} = \dfrac{y}{2}$. Halves.'
   - q: 'A graph of $y$ vs $x$ shows a straight line through the origin. The relationship is...'
     options: ["direct proportion", "inverse proportion", "neither", "both"]
     correct: 0
@@ -42,7 +42,7 @@ If you've worked through P1 to P3 you can:
 - Translate "$y$ is proportional to $x$" (and its variants) into the right algebraic equation.
 - Find the **constant of proportionality** $k$ from one given pair.
 - Use the equation to find any other unknown.
-- Handle direct, inverse, and powered/root variants ($x^2$, $x^3$, $\sqrt{x}$, $1/x^2$).
+- Handle direct, inverse, and powered/root variants ($x^2$, $x^3$, $\sqrt{x}$, $\dfrac{1}{x^2}$).
 - Predict how $y$ scales when $x$ doubles (or any factor) for any of the forms.
 - Recognise direct proportion's straight-line-through-origin graph and inverse proportion's hyperbola.
 
@@ -57,7 +57,7 @@ This sub-topic is heavily tested on Paper 2:
 
 The trap markers Cambridge uses repeatedly:
 
-- "Inversely proportional to $x^2$" → $k/x^2$, not $1/(kx^2)$.
+- "Inversely proportional to $x^2$" → $\dfrac{k}{x^2}$, not $\dfrac{1}{kx^2}$.
 - "Proportional to the square of $x$" → $kx^2$, not $\sqrt{kx}$.
 - Graphs: a straight line that does NOT pass through the origin is NOT direct proportion ($y = mx + c$ with $c \ne 0$).
 
@@ -88,7 +88,7 @@ Full marks $= 5$.
 ## Quick reference
 
 - **Direct**: $y = kx^n$. Graph through origin.
-- **Inverse**: $y = k/x^n$. Hyperbola, both axes as asymptotes.
+- **Inverse**: $y = \dfrac{k}{x^n}$. Hyperbola, both axes as asymptotes.
 - **The recipe**: write equation → find $k$ → use it.
 - **Scaling**: doubling $x$ multiplies $y$ by $2^n$ (direct) or divides by $2^n$ (inverse).
 

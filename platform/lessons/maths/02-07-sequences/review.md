@@ -16,7 +16,7 @@ checks:
   - q: 'The 6th term of the geometric sequence $5, 10, 20, 40, \dots$ is...'
     options: ["$80$", "$160$", "$200$", "$320$"]
     correct: 1
-    explain: '$a = 5$, $r = 2$. $T_6 = 5 \cdot 2^{6-1} = 5 \cdot 32 = 160$.'
+    explain: '$a = 5$, $r = 2$. $T_6 = 5 \times 2^{6-1} = 5 \times 32 = 160$.'
   - q: 'In a Fibonacci-like sequence $1, 4, 5, 9, 14, \dots$, the next term is...'
     options: ["$23$", "$19$", "$28$", "$20$"]
     correct: 0
@@ -24,7 +24,7 @@ checks:
   - q: 'The 12th triangular number is...'
     options: ["$66$", "$72$", "$78$", "$90$"]
     correct: 2
-    explain: '$T_n = \dfrac{n(n+1)}{2}$. $T_{12} = \dfrac{12 \cdot 13}{2} = 78$.'
+    explain: '$T_n = \dfrac{n(n+1)}{2}$. $T_{12} = \dfrac{12 \times 13}{2} = 78$.'
   - q: 'A linear sequence has nth term $4n - 1$. Which position has the term $99$?'
     options: ["$n = 25$", "$n = 24$", "$n = 26$", "$n = 100$"]
     correct: 0

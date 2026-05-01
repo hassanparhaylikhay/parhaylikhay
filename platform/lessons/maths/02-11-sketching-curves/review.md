@@ -21,14 +21,14 @@ checks:
     options: ["$x = 2, y = 4$", "$x = -2, y = 4$", "$x = 2, y = -4$", "$x = 0, y = 0$"]
     correct: 0
     explain: 'Vertical asymptote where denominator = 0, so $x = 2$. Horizontal asymptote at the constant shift, $y = 4$.'
-  - q: 'For $y = 5 \cdot 0.8^x + 2$, the asymptote is at...'
+  - q: 'For $y = 5 \times 0.8^x + 2$, the asymptote is at...'
     options: ["$y = 0$", "$y = 2$", "$y = 5$", "$y = 0.8$"]
     correct: 1
     explain: 'The shift $b = 2$ moves the horizontal asymptote from $y = 0$ to $y = 2$.'
-  - q: 'For $y = 3 \cdot 2^x$, as $x \to -\infty$, $y$ tends to...'
+  - q: 'For $y = 3 \times 2^x$, as $x \to -\infty$, $y$ tends to...'
     options: ["$\\infty$", "$-\\infty$", "$0$", "$3$"]
     correct: 2
-    explain: '$2^x \to 0$ as $x \to -\infty$, so $y = 3 \cdot 2^x \to 0$.'
+    explain: '$2^x \to 0$ as $x \to -\infty$, so $y = 3 \times 2^x \to 0$.'
   - q: 'A quadratic $y = ax^2 + bx + c$ has no real roots when...'
     options: ["$b^2 - 4ac > 0$", "$b^2 - 4ac = 0$", "$b^2 - 4ac < 0$", "$a = 0$"]
     correct: 2
@@ -42,8 +42,8 @@ If you've worked through P1 to P3 you can:
 - Sketch a linear graph from two intercepts.
 - Sketch a quadratic showing shape, y-intercept, x-intercepts (or "no real roots"), and turning point via completing the square.
 - Sketch a cubic from factored form, identifying roots (including repeated roots that touch the axis), and the y-intercept.
-- Sketch a reciprocal $y = a/x + b$ with the asymptotes $x = 0$ and $y = b$ and the single x-intercept.
-- Sketch an exponential $y = a \cdot r^x + b$ identifying the y-intercept $(0, a+b)$, the horizontal asymptote $y = b$, and growth vs decay from $r$.
+- Sketch a reciprocal $y = \dfrac{a}{x} + b$ with the asymptotes $x = 0$ and $y = b$ and the single x-intercept.
+- Sketch an exponential $y = a \times r^x + b$ identifying the y-intercept $(0, a+b)$, the horizontal asymptote $y = b$, and growth vs decay from $r$.
 
 ## Marking patterns at a glance
 
@@ -84,8 +84,8 @@ Full marks $= 4$.
 - **Linear**: two intercepts, ruler.
 - **Quadratic**: shape from sign of $a$; y-intercept = $c$; x-intercepts by factoring/formula; turning point by completing the square.
 - **Cubic** (factored): roots from each bracket; repeated root → touches; y-intercept by multiplying constants.
-- **Reciprocal** $a/x + b$: asymptotes $x = 0$ and $y = b$; one x-intercept.
-- **Exponential** $a \cdot r^x + b$: y-intercept $(0, a + b)$; asymptote $y = b$; $r > 1$ growth, $r < 1$ decay.
+- **Reciprocal** $\dfrac{a}{x} + b$: asymptotes $x = 0$ and $y = b$; one x-intercept.
+- **Exponential** $a \times r^x + b$: y-intercept $(0, a + b)$; asymptote $y = b$; $r > 1$ growth, $r < 1$ decay.
 
 ## Your turn: full quiz
 

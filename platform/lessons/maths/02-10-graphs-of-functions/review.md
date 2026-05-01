@@ -9,14 +9,14 @@ checks:
     options: ["use a ruler between consecutive points", "join with a single smooth curve", "use dashed lines", "leave them disconnected"]
     correct: 1
     explain: '"Smooth curve" — never a ruler. Cambridge mark scheme awards a separate B1 for smoothness.'
-  - q: 'The graph of $y = a/x$ (with $a > 0$) has branches in...'
+  - q: 'The graph of $y = \dfrac{a}{x}$ (with $a > 0$) has branches in...'
     options: ["all four quadrants", "Q1 and Q2", "Q1 and Q3", "Q2 and Q4"]
     correct: 2
     explain: 'When $x > 0$, $y > 0$ (Q1). When $x < 0$, $y < 0$ (Q3). Diagonal branches.'
-  - q: 'For $y = 3 \cdot 2^x$ at $x = 0$, what is $y$?'
+  - q: 'For $y = 3 \times 2^x$ at $x = 0$, what is $y$?'
     options: ["$0$", "$2$", "$3$", "$6$"]
     correct: 2
-    explain: '$2^0 = 1$, so $y = 3 \times 1 = 3$. The $y$-intercept is always at $a$ for $y = a \cdot b^x$.'
+    explain: '$2^0 = 1$, so $y = 3 \times 1 = 3$. The $y$-intercept is always at $a$ for $y = a \times b^x$.'
   - q: 'A graph of $y = x^2 - 2x - 3$ is drawn. The roots of $x^2 - 2x - 3 = 0$ are read from where the curve crosses...'
     options: ["the $y$-axis", "the line $y = x$", "the $x$-axis", "the origin"]
     correct: 2
@@ -28,7 +28,7 @@ checks:
   - q: 'A tangent at a point on $y = x^2$ passes through $(1, -1)$ and $(3, 7)$. The gradient at that point is...'
     options: ["$2$", "$4$", "$6$", "$8$"]
     correct: 1
-    explain: 'Gradient = $(7 - (-1)) / (3 - 1) = 8/2 = 4$.'
+    explain: 'Gradient = $(7 - (-1)) / (3 - 1) = \dfrac{8}{2} = 4$.'
   - q: 'On a distance-time graph that curves, the speed at a single moment is read from the...'
     options: ["chord between two points", "tangent at that point", "$y$-intercept", "horizontal line at $y = 0$"]
     correct: 1
@@ -41,7 +41,7 @@ If you've worked through P1 to P5 you can:
 
 - Build a table of values for a polynomial, plot the points correctly, and join with a single smooth curve.
 - Recognise the shapes of $y = ax^n$ for $n = -2, -1, -\frac{1}{2}, \frac{1}{2}, 1, 2, 3$, and know their asymptotes.
-- Sketch and interpret exponential growth and decay graphs $y = a \cdot b^x + c$.
+- Sketch and interpret exponential growth and decay graphs $y = a \times b^x + c$.
 - Read the roots of $f(x) = 0$ from where the curve crosses the $x$-axis.
 - Solve $f(x) = k$ by drawing a horizontal line $y = k$.
 - Solve a different equation $g(x) = 0$ by rearranging it into "curve = line" form, drawing the line, and reading intersections.

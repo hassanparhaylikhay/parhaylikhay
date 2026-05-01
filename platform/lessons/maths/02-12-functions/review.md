@@ -73,13 +73,13 @@ $f(x) = 2x - 1$ and $g(x) = \dfrac{x + 4}{3}$.
 
 (d) Show that $f(f^{-1}(x)) = x$.
 
-**Step 1 (a).** $f(5) = 2(5) - 1 = 9$. $g(2) = (2 + 4)/3 = 6/3 = 2$.
+**Step 1 (a).** $f(5) = 2(5) - 1 = 9$. $g(2) = \dfrac{2 + 4}{3} = \dfrac{6}{3} = 2$.
 
 **Step 2 (b).** Set $y = 2x - 1$. Swap: $x = 2y - 1$. Solve: $2y = x + 1$, so $y = \dfrac{x + 1}{2}$. So $f^{-1}(x) = \dfrac{x + 1}{2}$.
 
-**Step 3 (c).** $fg(x) = f(g(x)) = f\!\left(\dfrac{x + 4}{3}\right) = 2 \cdot \dfrac{x + 4}{3} - 1 = \dfrac{2x + 8}{3} - 1 = \dfrac{2x + 8 - 3}{3} = \dfrac{2x + 5}{3}$.
+**Step 3 (c).** $fg(x) = f(g(x)) = f\!\left(\dfrac{x + 4}{3}\right) = 2 \times \dfrac{x + 4}{3} - 1 = \dfrac{2x + 8}{3} - 1 = \dfrac{2x + 8 - 3}{3} = \dfrac{2x + 5}{3}$.
 
-**Step 4 (d).** $f(f^{-1}(x)) = f\!\left(\dfrac{x + 1}{2}\right) = 2 \cdot \dfrac{x + 1}{2} - 1 = (x + 1) - 1 = x$. ✓
+**Step 4 (d).** $f(f^{-1}(x)) = f\!\left(\dfrac{x + 1}{2}\right) = 2 \times \dfrac{x + 1}{2} - 1 = (x + 1) - 1 = x$. ✓
 
 **Answer:** **(a)** $f(5) = 9$, $g(2) = 2$. **(b)** $f^{-1}(x) = \dfrac{x + 1}{2}$. **(c)** $fg(x) = \dfrac{2x + 5}{3}$. **(d)** Verified. **[B1 each for (a); M1A1 for (b); M1A1 for (c); B1 for (d)]**
 
