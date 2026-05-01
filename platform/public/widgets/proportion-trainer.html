@@ -182,12 +182,27 @@ function genInverse() {
       "$y = k/x$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " / " + x2 + " = " + y2 + "$."
     );
   } else {
-    // 1/x²
-    var k = pick([36, 100, 144, 196]);
-    var x1 = pick([2, 3]);
+    // 1/x² — curated combos where both y1 and y2 are integers.
+    // Each entry guarantees k % x1² === 0 AND k % x2² === 0.
+    var combos = [
+      { k: 36,  x1: 2, x2: 3 },   // y1 = 9,  y2 = 4
+      { k: 36,  x1: 2, x2: 6 },   // y1 = 9,  y2 = 1
+      { k: 36,  x1: 3, x2: 6 },   // y1 = 4,  y2 = 1
+      { k: 36,  x1: 3, x2: 2 },   // y1 = 4,  y2 = 9
+      { k: 36,  x1: 6, x2: 3 },   // y1 = 1,  y2 = 4
+      { k: 100, x1: 2, x2: 5 },   // y1 = 25, y2 = 4
+      { k: 100, x1: 5, x2: 2 },   // y1 = 4,  y2 = 25
+      { k: 144, x1: 2, x2: 3 },   // y1 = 36, y2 = 16
+      { k: 144, x1: 2, x2: 4 },   // y1 = 36, y2 = 9
+      { k: 144, x1: 2, x2: 6 },   // y1 = 36, y2 = 4
+      { k: 144, x1: 3, x2: 4 },   // y1 = 16, y2 = 9
+      { k: 144, x1: 3, x2: 6 },   // y1 = 16, y2 = 4
+      { k: 144, x1: 4, x2: 6 },   // y1 = 9,  y2 = 4
+      { k: 144, x1: 4, x2: 3 }    // y1 = 9,  y2 = 16
+    ];
+    var c = pick(combos);
+    var k = c.k, x1 = c.x1, x2 = c.x2;
     var y1 = k / (x1 * x1);
-    var x2 = pick([2, 3, 4, 6]);
-    while (x2 === x1 || (k % (x2 * x2)) !== 0) x2 = pick([2, 3, 4, 6]);
     var y2 = k / (x2 * x2);
     return mc(
       "y is inversely proportional to x². When x = " + x1 + ", y = " + y1 + ". Find y when x = " + x2 + ".",
