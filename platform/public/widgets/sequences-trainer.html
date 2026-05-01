@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sequences Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:696px; margin:0 auto; }
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .target-picker { display:flex; gap:6px; align-items:center; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .target-picker select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:5px 22px 5px 10px; border-radius:5px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:24px 24px 22px; }
+  .q-label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#3a4a5a; margin-bottom:12px; text-align:center; }
+  .q-prompt { font-size:14.5px; color:#c8c6be; text-align:center; margin-bottom:8px; line-height:1.5; }
+  .q-expr { font-size:24px; color:#f0eeea; margin:6px 0 16px; text-align:center; min-height:34px; }
+  .q-expr .katex { font-size:1em; }
+  .answer-row { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+  .answer-row input {
+    appearance:none; width:160px; height:42px; text-align:center;
+    font-family:'Geist Mono',monospace; font-size:18px; font-weight:600;
+    background:#07090d; border:1px solid rgba(0,171,250,0.5); border-radius:8px;
+    color:#00abfa; outline:none;
+  }
+  .answer-row input:focus { border-color:#00abfa; box-shadow:0 0 0 3px rgba(0,171,250,0.12); }
+  .answer-row input.wrong { border-color:#ff4670; color:#ff4670; box-shadow:0 0 0 3px rgba(255,70,112,0.1); }
+  .answer-row input.correct { border-color:#0fee89; color:#0fee89; box-shadow:0 0 0 3px rgba(15,238,137,0.1); }
+  .answer-row .btn-check { appearance:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; padding:10px 16px; border-radius:6px; border:0; background:#00abfa; color:#07090d; }
+  .options { display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .opt {
+    appearance:none; background:#07090d; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:14px; padding:11px 14px; border-radius:7px;
+    text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px;
+  }
+  .opt:hover:not(:disabled) { border-color:#3a4a5a; }
+  .opt .opt-letter { font-family:'Geist Mono',monospace; color:#3a4a5a; font-size:11px; min-width:14px; }
+  .opt .opt-text { flex:1; }
+  .opt .opt-text .katex { font-size:1em; }
+  .opt.right { border-color:#0fee89; background:rgba(15,238,137,0.07); color:#0fee89; }
+  .opt.right .opt-letter { color:#0fee89; }
+  .opt.wrong { border-color:#ff4670; background:rgba(255,70,112,0.06); color:#ff4670; }
+  .opt.wrong .opt-letter { color:#ff4670; }
+  .opt.dim { opacity:0.45; }
+  .opt:disabled { cursor:default; }
+  .hint-line { text-align:center; font-family:'Geist Mono',monospace; font-size:10.5px; color:#3a4a5a; margin-top:8px; letter-spacing:0.5px; }
+  .reveal { margin-top:18px; padding-top:14px; border-top:1px solid #141e2a; text-align:center; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; margin:6px auto 12px; max-width:480px; }
+  .reveal-explain .katex { font-size:1em; color:#f0eeea; }
+  .controls { display:flex; gap:8px; margin-top:6px; justify-content:center; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+  .progress-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .progress-row .right { color:#0fee89; }
+  .progress-row .wrong { color:#ff4670; }
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">SEQUENCES TRAINER · 8 QUESTIONS</span>
+    <div class="target-picker">
+      <span>topic:</span>
+      <select id="topic">
+        <option value="next">next term</option>
+        <option value="linear">nth term · linear</option>
+        <option value="quadratic">nth term · quadratic</option>
+        <option value="special">special</option>
+        <option value="mixed" selected>mixed</option>
+      </select>
+    </div>
+  </div>
+  <div class="card" id="card"></div>
+  <div class="progress-row">
+    <span><b id="step-num">1</b>/<span id="step-total">8</span></span>
+    <span><span class="right">✓ <b id="right-count">0</b></span> &nbsp; <span class="wrong">✗ <b id="wrong-count">0</b></span></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  arr = arr.slice();
+  for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+  return arr;
+}
+function escapeHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function renderMixed(target, text) {
+  if (typeof katex === "undefined") { setTimeout(function() { renderMixed(target, text); }, 50); return; }
+  var parts = text.split("$");
+  var html = "";
+  parts.forEach(function(part, i) {
+    if (i % 2 === 0) html += escapeHtml(part);
+    else { try { html += katex.renderToString(part, { throwOnError: false }); } catch (e) { html += escapeHtml(part); } }
+  });
+  target.innerHTML = html;
+}
+
+// =========================================================================
+// NEXT TERM — text input (numeric)
+// =========================================================================
+
+function genNext() {
+  var pattern = pick(["linear", "linear", "geometric", "fibonacci"]);
+  if (pattern === "linear") {
+    var a = rand(1, 6), d = pick([rand(1, 6), -rand(1, 6)]);
+    var seq = [];
+    for (var i = 0; i < 4; i++) seq.push(a + i * d);
+    var ans = a + 4 * d;
+    return text(
+      "Find the next term.",
+      seq.join(", \\; ") + ", \\; \\dots",
+      String(ans),
+      "type an integer",
+      "Common difference is " + d + ". Add it to the last term: " + seq[3] + (d < 0 ? " - " + (-d) : " + " + d) + " = " + ans + "."
+    );
+  } else if (pattern === "geometric") {
+    var a = pick([2, 3, 4, 5]);
+    var r = pick([2, 3]);
+    var seq = [];
+    for (var i = 0; i < 4; i++) seq.push(a * Math.pow(r, i));
+    var ans = a * Math.pow(r, 4);
+    return text(
+      "Find the next term.",
+      seq.join(", \\; ") + ", \\; \\dots",
+      String(ans),
+      "type an integer",
+      "Geometric: each term is multiplied by " + r + ". Last term × " + r + " = " + ans + "."
+    );
+  } else {
+    // Fibonacci-like with custom start
+    var t1 = rand(1, 5), t2 = rand(2, 6);
+    if (t2 <= t1) t2 = t1 + 1;
+    var seq = [t1, t2];
+    while (seq.length < 4) seq.push(seq[seq.length - 1] + seq[seq.length - 2]);
+    var ans = seq[3] + seq[2];
+    return text(
+      "Find the next term (Fibonacci-like).",
+      seq.join(", \\; ") + ", \\; \\dots",
+      String(ans),
+      "each term = sum of previous two",
+      "Fibonacci-like: $" + seq[2] + " + " + seq[3] + " = " + ans + "$."
+    );
+  }
+}
+
+// =========================================================================
+// LINEAR NTH TERM — multiple choice
+// =========================================================================
+
+function genLinearNth() {
+  var d = pick([2, 3, 4, 5, -3, -4]);
+  var a = rand(1, 9);
+  // T_n = dn + (a - d)
+  var k = a - d;
+  var seq = [];
+  for (var i = 0; i < 4; i++) seq.push(a + i * d);
+  function fmtFormula(coefD, coefK) {
+    var s = "T_n = ";
+    if (coefD === 1) s += "n";
+    else if (coefD === -1) s += "-n";
+    else s += coefD + "n";
+    if (coefK !== 0) s += (coefK < 0 ? " - " + (-coefK) : " + " + coefK);
+    return s;
+  }
+  var correct = fmtFormula(d, k);
+  var d1 = fmtFormula(d, k + 1);
+  var d2 = fmtFormula(d, a);
+  var d3 = fmtFormula(-d, k);
+  var s = shuffle([correct, d1, d2, d3]);
+  return {
+    type: "mc",
+    promptHTML: "Find the nth term.",
+    tex: seq.join(", \\; ") + ", \\; \\dots",
+    options: s,
+    correctIdx: s.indexOf(correct),
+    why: "Common difference $" + d + "$, first term $" + a + "$. So $T_n = " + d + "n + k$ at $n=1$ gives $" + d + " + k = " + a + "$, so $k = " + k + "$."
+  };
+}
+
+// =========================================================================
+// QUADRATIC NTH TERM — multiple choice
+// =========================================================================
+
+function genQuadraticNth() {
+  // T_n = an² + bn + c with a ∈ {1, 2}, small b and c
+  var aQ = pick([1, 1, 1, 2]);
+  var b = rand(-2, 3);
+  var c = rand(-2, 4);
+  var seq = [];
+  for (var n = 1; n <= 5; n++) seq.push(aQ * n * n + b * n + c);
+  function fmtFormula(a2, b2, c2) {
+    var parts = [];
+    if (a2 !== 0) {
+      if (a2 === 1) parts.push("n^2");
+      else if (a2 === -1) parts.push("-n^2");
+      else parts.push(a2 + "n^2");
+    }
+    if (b2 !== 0) {
+      var bnTerm;
+      if (Math.abs(b2) === 1) bnTerm = "n";
+      else bnTerm = Math.abs(b2) + "n";
+      if (parts.length === 0) parts.push((b2 < 0 ? "-" : "") + bnTerm);
+      else parts.push((b2 < 0 ? " - " : " + ") + bnTerm);
+    }
+    if (c2 !== 0) {
+      if (parts.length === 0) parts.push(String(c2));
+      else parts.push((c2 < 0 ? " - " : " + ") + Math.abs(c2));
+    }
+    if (parts.length === 0) parts.push("0");
+    return "T_n = " + parts.join("");
+  }
+  var correct = fmtFormula(aQ, b, c);
+  var d1 = fmtFormula(aQ, b + 1, c);
+  var d2 = fmtFormula(aQ + 1, b, c);
+  var d3 = fmtFormula(aQ, b, c + 1);
+  var s = shuffle([correct, d1, d2, d3]);
+  return {
+    type: "mc",
+    promptHTML: "Find the nth term (quadratic).",
+    tex: seq.join(", \\; ") + ", \\; \\dots",
+    options: s,
+    correctIdx: s.indexOf(correct),
+    why: "Second difference is $" + (2 * aQ) + "$, so $a = " + aQ + "$. Solve for $b$ and $c$ using $T_1$ and $T_2$."
+  };
+}
+
+// =========================================================================
+// SPECIAL — multiple choice
+// =========================================================================
+
+function genSpecial() {
+  var pattern = pick(["geometric-nth", "classify", "triangular", "specific"]);
+  if (pattern === "geometric-nth") {
+    var a = pick([2, 3, 5]);
+    var r = pick([2, 3]);
+    var seq = [];
+    for (var i = 0; i < 4; i++) seq.push(a * Math.pow(r, i));
+    var correct = a + " \\cdot " + r + "^{n-1}";
+    var d1 = a + " \\cdot " + r + "^n";
+    var d2 = r + " \\cdot " + a + "^{n-1}";
+    var d3 = a + "n + " + r;
+    var s = shuffle([correct, d1, d2, d3]);
+    return {
+      type: "mc",
+      promptHTML: "Find the nth term of this geometric sequence.",
+      tex: seq.join(", \\; ") + ", \\; \\dots",
+      options: s,
+      correctIdx: s.indexOf(correct),
+      why: "First term $" + a + "$, common ratio $" + r + "$. Geometric formula: $T_n = a r^{n-1}$."
+    };
+  } else if (pattern === "classify") {
+    var bank = [
+      { tex: "1, 4, 9, 16, 25, \\dots", correct: "quadratic", others: ["linear", "geometric", "Fibonacci-like"] },
+      { tex: "3, 6, 12, 24, 48, \\dots", correct: "geometric", others: ["linear", "quadratic", "Fibonacci-like"] },
+      { tex: "5, 8, 11, 14, 17, \\dots", correct: "linear", others: ["quadratic", "geometric", "Fibonacci-like"] },
+      { tex: "1, 1, 2, 3, 5, 8, \\dots", correct: "Fibonacci-like", others: ["linear", "quadratic", "geometric"] },
+      { tex: "2, 8, 18, 32, 50, \\dots", correct: "quadratic", others: ["linear", "geometric", "Fibonacci-like"] },
+      { tex: "1, 2, 4, 8, 16, \\dots", correct: "geometric", others: ["linear", "quadratic", "Fibonacci-like"] }
+    ];
+    var p = pick(bank);
+    var s = shuffle([p.correct].concat(p.others));
+    return {
+      type: "mc",
+      promptHTML: "Classify the sequence.",
+      tex: p.tex,
+      options: s,
+      correctIdx: s.indexOf(p.correct),
+      why: p.correct === "linear" ? "Constant first difference."
+         : p.correct === "geometric" ? "Constant ratio between consecutive terms."
+         : p.correct === "quadratic" ? "Constant SECOND difference."
+         : "Each term is the sum of the previous two."
+    };
+  } else if (pattern === "triangular") {
+    var n = rand(5, 12);
+    var ans = n * (n + 1) / 2;
+    var correct = String(ans);
+    var d1 = String(ans + 1);
+    var d2 = String(n * n);
+    var d3 = String(2 * n);
+    var s = shuffle([correct, d1, d2, d3]);
+    return {
+      type: "mc",
+      promptHTML: "Find the " + n + "th triangular number.",
+      tex: "T_n = \\dfrac{n(n+1)}{2}",
+      options: s,
+      correctIdx: s.indexOf(correct),
+      why: "$\\dfrac{" + n + " \\times " + (n + 1) + "}{2} = " + ans + "$."
+    };
+  } else {
+    // Substitute into a given nth term
+    var aF = pick([1, 2, 3]);
+    var bF = pick([0, 1, 2, -1]);
+    var nQ = rand(3, 8);
+    var formulaTex;
+    if (aF === 1 && bF === 0) formulaTex = "T_n = n^2";
+    else if (aF === 1) formulaTex = "T_n = n^2 + " + bF + "n";
+    else formulaTex = "T_n = " + aF + "n^2";
+    var ans = aF * nQ * nQ + bF * nQ;
+    var correct = String(ans);
+    var d1 = String(ans + nQ);
+    var d2 = String(aF * nQ + bF);
+    var d3 = String(ans + 1);
+    var s = shuffle([correct, d1, d2, d3]);
+    return {
+      type: "mc",
+      promptHTML: "Find the " + nQ + "th term using this formula.",
+      tex: formulaTex,
+      options: s,
+      correctIdx: s.indexOf(correct),
+      why: "Substitute $n = " + nQ + "$ into the formula and evaluate."
+    };
+  }
+}
+
+// =========================================================================
+// HELPERS
+// =========================================================================
+
+function text(prompt, tex, ans, hint, why) {
+  return {
+    type: "text",
+    promptHTML: prompt,
+    tex: tex,
+    answer: ans,
+    check: function(s) {
+      s = s.trim();
+      if (s === ans) return true;
+      var n = parseFloat(s);
+      if (!isNaN(n) && /^-?\d+(\.\d+)?$/.test(s)) return String(n) === ans;
+      return false;
+    },
+    hint: hint,
+    why: why
+  };
+}
+
+// =========================================================================
+// PIPELINE
+// =========================================================================
+
+function genQuestion(topic) {
+  if (topic === "next")      return genNext();
+  if (topic === "linear")    return genLinearNth();
+  if (topic === "quadratic") return genQuadraticNth();
+  if (topic === "special")   return genSpecial();
+  var bag = [genNext, genLinearNth, genLinearNth, genQuadraticNth, genSpecial, genSpecial];
+  return bag[Math.floor(Math.random() * bag.length)]();
+}
+
+function buildSet(topic, n) {
+  var out = [];
+  for (var i = 0; i < n; i++) out.push(genQuestion(topic));
+  return out;
+}
+
+var state = { idx: 0, right: 0, wrong: 0, set: [], locked: false };
+var cardEl = document.getElementById("card");
+var topicSel = document.getElementById("topic");
+var stepNumEl = document.getElementById("step-num");
+var rightCountEl = document.getElementById("right-count");
+var wrongCountEl = document.getElementById("wrong-count");
+
+topicSel.addEventListener("change", reset);
+
+function reset() {
+  state = { idx: 0, right: 0, wrong: 0, locked: false, set: buildSet(topicSel.value, 8) };
+  rightCountEl.textContent = 0; wrongCountEl.textContent = 0;
+  document.getElementById("step-total").textContent = state.set.length;
+  renderQ();
+}
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); } catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+function renderQ() {
+  if (state.idx >= state.set.length) { renderDone(); return; }
+  var q = state.set[state.idx];
+  stepNumEl.textContent = state.idx + 1;
+  state.locked = false;
+  var inner = '<p class="q-label">QUESTION</p>' +
+              '<p class="q-prompt">' + q.promptHTML + '</p>' +
+              '<div class="q-expr" id="expr"></div>';
+  if (q.type === "mc") {
+    inner += '<div class="options" id="opts"></div>';
+  } else {
+    inner += '<div class="answer-row"><input type="text" id="ans" placeholder="?"/><button class="btn-check" id="check">Check</button></div>' +
+             '<p class="hint-line">' + q.hint + '</p>';
+  }
+  inner += '<div id="reveal-slot"></div>';
+  cardEl.innerHTML = inner;
+  tryRender(document.getElementById("expr"), q.tex);
+  if (q.type === "mc") {
+    var optsEl = document.getElementById("opts");
+    q.options.forEach(function(opt, i) {
+      var btn = document.createElement("button");
+      btn.className = "opt"; btn.dataset.idx = i;
+      btn.innerHTML = '<span class="opt-letter">' + String.fromCharCode(65 + i) + '</span><span class="opt-text" id="opt-text-' + i + '"></span>';
+      btn.addEventListener("click", function() { submitMC(i); });
+      optsEl.appendChild(btn);
+      var optTextEl = document.getElementById("opt-text-" + i);
+      if (/^[a-zA-Z\s\-]+$/.test(opt) && opt.indexOf("\\") === -1) optTextEl.textContent = opt;
+      else tryRender(optTextEl, opt);
+    });
+  } else {
+    var inp = document.getElementById("ans");
+    inp.addEventListener("input", function() { inp.classList.remove("wrong"); });
+    inp.addEventListener("keydown", function(e) { if (e.key === "Enter") submitText(inp); });
+    document.getElementById("check").addEventListener("click", function() { submitText(inp); });
+    inp.focus({ preventScroll: true });
+  }
+  reportHeight();
+}
+
+function finishCorrectness(correct) {
+  if (state.locked) return;
+  state.locked = true;
+  if (correct) state.right++; else state.wrong++;
+  rightCountEl.textContent = state.right; wrongCountEl.textContent = state.wrong;
+}
+
+function showReveal(correct, q) {
+  var slot = document.getElementById("reveal-slot");
+  slot.innerHTML =
+    '<div class="reveal ' + (correct ? "ok" : "bad") + '">' +
+      '<p class="reveal-line">' + (correct ? "✓ CORRECT" : "✗ ANSWER: " + (q.type === "mc" ? String.fromCharCode(65 + q.correctIdx) : q.answer)) + '</p>' +
+      '<p class="reveal-explain" id="why"></p>' +
+      '<div class="controls"><button class="btn primary" id="next">' + (state.idx < state.set.length - 1 ? "Next →" : "See result") + '</button></div>' +
+    '</div>';
+  renderMixed(document.getElementById("why"), q.why);
+  document.getElementById("next").addEventListener("click", function() { state.idx++; renderQ(); });
+  reportHeight();
+}
+
+function submitMC(idx) {
+  if (state.locked) return;
+  var q = state.set[state.idx];
+  var correct = idx === q.correctIdx;
+  finishCorrectness(correct);
+  var btns = document.querySelectorAll(".opt");
+  btns.forEach(function(b, i) {
+    b.disabled = true;
+    if (i === q.correctIdx) b.classList.add("right");
+    else if (i === idx) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  showReveal(correct, q);
+}
+
+function submitText(inp) {
+  if (state.locked) { state.idx++; renderQ(); return; }
+  var raw = inp.value;
+  if (!raw.trim()) { inp.classList.add("wrong"); return; }
+  var q = state.set[state.idx];
+  var correct;
+  try { correct = q.check(raw); } catch (e) { correct = false; }
+  finishCorrectness(correct);
+  inp.classList.remove("wrong");
+  inp.classList.add(correct ? "correct" : "wrong");
+  inp.disabled = true;
+  showReveal(correct, q);
+}
+
+function renderDone() {
+  var total = state.set.length;
+  var pct = Math.round((state.right / total) * 100);
+  var msg = pct === 100 ? "Perfect. Sequence patterns are sharp." :
+            pct >= 80 ? "Strong. Watch the off-by-one in geometric formula." :
+            pct >= 50 ? "Decent. Drill 'quadratic' for the recipe." :
+            "More drill needed. Pick one mode from the dropdown.";
+  cardEl.innerHTML =
+    '<div class="done-card"><span class="kicker">SCORE</span>' +
+    '<p class="big">' + state.right + '<span class="total"> / ' + total + '</span></p>' +
+    '<p class="sub">' + pct + '%</p>' +
+    '<p class="msg">' + msg + '</p>' +
+    '<div class="controls" style="justify-content:center;margin-top:14px"><button class="btn primary" id="retry">Retry</button></div></div>';
+  document.getElementById("retry").addEventListener("click", reset);
+  stepNumEl.textContent = total;
+  reportHeight();
+}
+
+reset();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

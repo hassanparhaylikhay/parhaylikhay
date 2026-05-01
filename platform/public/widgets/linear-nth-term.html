@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Linear nth-Term Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
+  .formula { font-size:16px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px 14px; margin-bottom:12px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:8px; min-width:0; }
+  .row .name { color:#fff067; font-weight:600; min-width:74px; }
+  .row input[type=range] { flex:1; min-width:80px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row .val { min-width:30px; text-align:right; color:#f0eeea; font-weight:600; }
+  .row.scrub .name { color:#00abfa; }
+  .row.scrub input[type=range]::-webkit-slider-thumb { background:#00abfa; }
+  .row.scrub input[type=range]::-moz-range-thumb { background:#00abfa; }
+  .row.scrub .val { color:#00abfa; }
+
+  .terms-row {
+    display:flex; gap:6px; justify-content:center; margin-top:6px; flex-wrap:wrap;
+  }
+  .term {
+    background:#07090d; border:1px solid #141e2a; border-radius:6px;
+    padding:8px 10px; min-width:48px; text-align:center;
+    font-family:'Geist Mono',monospace; font-size:13px; color:#f0eeea;
+    transition:all 0.15s;
+  }
+  .term .pos { display:block; font-size:9px; color:#7a7875; margin-bottom:2px; letter-spacing:0.5px; }
+  .term.highlight {
+    border-color:#00abfa; background:rgba(0,171,250,0.08); color:#00abfa;
+  }
+  .term.highlight .pos { color:#00abfa; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">first term</span>
+      <input type="range" id="a" min="-10" max="20" value="3" step="1"/>
+      <span class="val" id="va">3</span>
+    </div>
+    <div class="row">
+      <span class="name">common diff</span>
+      <input type="range" id="d" min="-10" max="10" value="5" step="1"/>
+      <span class="val" id="vd">5</span>
+    </div>
+    <div class="row scrub" style="grid-column: 1 / -1; max-width:420px; margin:0 auto; width:100%">
+      <span class="name">show n =</span>
+      <input type="range" id="n" min="1" max="10" value="1" step="1"/>
+      <span class="val" id="vn">1</span>
+    </div>
+  </div>
+
+  <div class="terms-row" id="terms"></div>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var aVal = 3, dVal = 5, nHighlight = 1;
+
+function fmtNthTerm(d, k) {
+  // Returns TeX for "T_n = dn + k" simplified
+  var dn = d === 1 ? "n" : d === -1 ? "-n" : d + "n";
+  var kStr = k === 0 ? "" : (k > 0 ? " + " + k : " - " + (-k));
+  if (d === 0) return "T_n = " + (k === 0 ? "0" : k);
+  return "T_n = " + dn + kStr;
+}
+
+function update() {
+  // k = a - d so that T_1 = a
+  var k = aVal - dVal;
+  tryRender(document.getElementById("formula"), fmtNthTerm(dVal, k));
+
+  // Build the row of 10 term cards
+  var termsEl = document.getElementById("terms");
+  termsEl.innerHTML = "";
+  for (var n = 1; n <= 10; n++) {
+    var t = aVal + (n - 1) * dVal;
+    var div = document.createElement("div");
+    div.className = "term" + (n === nHighlight ? " highlight" : "");
+    div.innerHTML = '<span class="pos">n = ' + n + '</span>' + t;
+    termsEl.appendChild(div);
+  }
+}
+
+document.getElementById("a").addEventListener("input", function(e) {
+  aVal = parseInt(e.target.value, 10);
+  document.getElementById("va").textContent = aVal;
+  update();
+});
+document.getElementById("d").addEventListener("input", function(e) {
+  dVal = parseInt(e.target.value, 10);
+  document.getElementById("vd").textContent = dVal;
+  update();
+});
+document.getElementById("n").addEventListener("input", function(e) {
+  nHighlight = parseInt(e.target.value, 10);
+  document.getElementById("vn").textContent = nHighlight;
+  update();
+});
+update();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
