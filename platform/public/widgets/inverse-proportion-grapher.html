@@ -147,34 +147,42 @@ function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_
 })();
 
 var form = "x";
-var kVal = 20;
+// Spring split: slider updates targetK, rAF tick eases displayK toward it.
+var targetK = 20, displayK = 20;
+var SPRING = 0.20;
 
-function fn(x) {
-  if (x < 0.05) return Infinity; // vertical asymptote
-  if (form === "x")  return kVal / x;
-  if (form === "x2") return kVal / (x * x);
+function fnAt(x, k) {
+  if (x < 0.05) return Infinity;
+  if (form === "x")  return k / x;
+  if (form === "x2") return k / (x * x);
   return 0;
 }
 
-function fmtFormula() {
-  if (form === "x")  return "y = \\dfrac{" + kVal + "}{x}";
-  if (form === "x2") return "y = \\dfrac{" + kVal + "}{x^2}";
+function fmtFormula(k) {
+  // Round so the readout doesn't flicker mid-spring
+  var rk = Math.round(k);
+  if (form === "x")  return "y = \\dfrac{" + rk + "}{x}";
+  if (form === "x2") return "y = \\dfrac{" + rk + "}{x^2}";
   return "y";
 }
 
-function update() {
-  tryRender(document.getElementById("formula"), fmtFormula());
+function tick() {
+  displayK += (targetK - displayK) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function draw() {
+  // formula uses TARGET k (rounded to integer slider value) for instant feedback
+  tryRender(document.getElementById("formula"), fmtFormula(targetK));
 
   var pts = [];
   var STEPS = 400;
-  // Skip the start (near asymptote) where y blows up.
-  // x in [0.1, 16] sampled at higher density near 0.
   for (var i = 0; i <= STEPS; i++) {
-    // Spend more samples where x is small (where curve is steep)
     var t = i / STEPS;
-    var x = XMIN + (XMAX - XMIN) * t * t; // quadratic mapping for density
+    var x = XMIN + (XMAX - XMIN) * t * t; // quadratic density mapping
     if (x < 0.15) { pts.push(null); continue; }
-    var y = fn(x);
+    var y = fnAt(x, displayK);
     if (y < YMIN - 1 || y > YMAX + 5 || !isFinite(y)) {
       pts.push(null);
       continue;
@@ -191,13 +199,16 @@ function update() {
   document.getElementById("curvePath").setAttribute("d", d);
 }
 
-document.getElementById("form").addEventListener("change", function(e) { form = e.target.value; update(); });
-document.getElementById("k").addEventListener("input", function(e) {
-  kVal = parseInt(e.target.value, 10);
-  document.getElementById("vk").textContent = kVal;
-  update();
+document.getElementById("form").addEventListener("change", function(e) {
+  form = e.target.value;
+  // form change is a topology switch — snap displayK to target.
+  displayK = targetK;
 });
-update();
+document.getElementById("k").addEventListener("input", function(e) {
+  targetK = parseInt(e.target.value, 10);
+  document.getElementById("vk").textContent = targetK;
+});
+tick();
 
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {

@@ -153,22 +153,18 @@ function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_
 })();
 
 var form = "lin";
-var kVal = 1;
+// Spring split: slider updates targetK, rAF tick eases displayK toward it.
+// The curve uses displayK (smooth motion); the formula readout uses targetK
+// (instant text feedback so labels never lag).
+var targetK = 1, displayK = 1;
+var SPRING = 0.20;
 
-// Each form has its own k-scale factor so the curve sits nicely in y ∈ [0, 10]
-// at the slider's mid-range. The visible k value the student sees is the
-// slider's k; the internal scaling handles the math so the curve stays in view.
-function scaledK() {
-  // For y = kx, midpoint of slider should give a line topping at y ≈ 5 at x=16.
-  // For y = kx^2, kx² at x=16 = 256k. Want max y around 10 at slider max → k ≈ 0.04.
-  // For y = kx^3, x=16: 4096k. Want max y ≈ 10 at slider max → k ≈ 0.0024.
-  // For y = k√x, x=16: 4k. Want max y ≈ 10 → k ≈ 2.5.
-  // Slider value range: 0.1..3.0
-  if (form === "lin")  return kVal * 0.5;       // visible at midrange
-  if (form === "sq")   return kVal * 0.025;     // 0.025 .. 0.075 effective
-  if (form === "cub")  return kVal * 0.0015;
-  if (form === "sqrt") return kVal * 1.0;       // 0.1..3.0 → 1..3 visible
-  return kVal;
+function scaledK(k) {
+  if (form === "lin")  return k * 0.5;
+  if (form === "sq")   return k * 0.025;
+  if (form === "cub")  return k * 0.0015;
+  if (form === "sqrt") return k * 1.0;
+  return k;
 }
 
 function fn(x, k) {
@@ -180,7 +176,6 @@ function fn(x, k) {
 }
 
 function fmtFormula(k) {
-  // format k as a clean decimal
   var rounded = Math.round(k * 1000) / 1000;
   var kStr = rounded === 1 ? "" : rounded + " \\,";
   if (form === "lin")  return "y = " + kStr + "x";
@@ -190,10 +185,17 @@ function fmtFormula(k) {
   return "y";
 }
 
-function update() {
-  var k = scaledK();
-  tryRender(document.getElementById("formula"), fmtFormula(k));
+function tick() {
+  displayK += (targetK - displayK) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
 
+function draw() {
+  // formula uses TARGET k for instant readout
+  tryRender(document.getElementById("formula"), fmtFormula(scaledK(targetK)));
+  // curve uses DISPLAY k for smooth motion
+  var k = scaledK(displayK);
   var pts = [];
   var STEPS = 200;
   for (var i = 0; i <= STEPS; i++) {
@@ -215,13 +217,17 @@ function update() {
   document.getElementById("curvePath").setAttribute("d", d);
 }
 
-document.getElementById("form").addEventListener("change", function(e) { form = e.target.value; update(); });
-document.getElementById("k").addEventListener("input", function(e) {
-  kVal = parseFloat(e.target.value);
-  document.getElementById("vk").textContent = kVal.toFixed(1);
-  update();
+document.getElementById("form").addEventListener("change", function(e) {
+  // form change is a topology switch — snap displayK to target so the curve
+  // doesn't try to morph through the wrong shape during the spring.
+  form = e.target.value;
+  displayK = targetK;
 });
-update();
+document.getElementById("k").addEventListener("input", function(e) {
+  targetK = parseFloat(e.target.value);
+  document.getElementById("vk").textContent = targetK.toFixed(1);
+});
+tick();
 
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {
