@@ -251,16 +251,26 @@ modes.line = {
 modes.line_pts = {
   label: "MATCH THE LINE THROUGH 2 POINTS",
   footer: "the yellow dots must lie on your blue line",
-  newChallenge() {
-    const m = pick([-2, -1, 1, 2]);
-    const c = pick([-2, -1, 0, 1, 2]);
-    let p1, p2;
-    do {
-      p1 = pick([-3, -2, -1]);
-      p2 = pick([1, 2, 3]);
-    } while (Math.abs(m * p1 + c) > 3 || Math.abs(m * p2 + c) > 3);
-    return { m: m, c: c, p1: p1, p2: p2 };
-  },
+  // Pre-compute every (m, c, p1, p2) combination whose endpoints stay
+  // inside the visible y-range. No infinite loop — pick from the list.
+  _validCombos: (function() {
+    const out = [];
+    for (const m of [-2, -1, 1, 2]) {
+      for (const c of [-2, -1, 0, 1, 2]) {
+        for (const p1 of [-3, -2, -1]) {
+          for (const p2 of [1, 2, 3]) {
+            const y1 = m * p1 + c;
+            const y2 = m * p2 + c;
+            if (Math.abs(y1) <= 3 && Math.abs(y2) <= 3) {
+              out.push({ m: m, c: c, p1: p1, p2: p2 });
+            }
+          }
+        }
+      }
+    }
+    return out;
+  })(),
+  newChallenge() { return pick(this._validCombos); },
   targetTex(t) {
     const y1 = t.m * t.p1 + t.c, y2 = t.m * t.p2 + t.c;
     return "\\text{line through } (" + t.p1 + ", " + y1 + ") \\text{ and } (" + t.p2 + ", " + y2 + ")";
