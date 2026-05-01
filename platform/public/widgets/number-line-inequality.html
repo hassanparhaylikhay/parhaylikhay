@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Number Line Inequality</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
+  .formula { font-size:18px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap; }
+  .controls .name { color:#fff067; font-weight:600; min-width:18px; }
+  .controls input[type=range] { flex:1; min-width:120px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .controls input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .controls input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .controls .val { min-width:30px; text-align:right; color:#f0eeea; font-weight:600; }
+  .controls select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:5px 22px 5px 10px; border-radius:5px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+
+  .axis-line { stroke:#7a7875; stroke-width:1.2; }
+  .tick { stroke:#3a4a5a; stroke-width:1; }
+  .tick-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#7a7875; }
+  .solution-line { stroke:#0fee89; stroke-width:3.5; stroke-linecap:butt; }
+  .boundary-circle { stroke:#0fee89; stroke-width:2.2; }
+
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="controls">
+    <span class="name">x</span>
+    <select id="op">
+      <option value="lt">&lt;</option>
+      <option value="le">&le;</option>
+      <option value="gt" selected>&gt;</option>
+      <option value="ge">&ge;</option>
+    </select>
+    <input type="range" id="bv" min="-10" max="10" value="2" step="1"/>
+    <span class="val" id="vbv">2</span>
+  </div>
+
+  <svg viewBox="0 0 600 110" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <defs>
+      <marker id="arrowR" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="#0fee89"/>
+      </marker>
+      <marker id="arrowL" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+        <path d="M10,0 L0,5 L10,10 z" fill="#0fee89"/>
+      </marker>
+    </defs>
+
+    <!-- the axis line -->
+    <line class="axis-line" x1="20" y1="55" x2="580" y2="55"/>
+
+    <!-- ticks and labels (built by JS) -->
+    <g id="ticks"></g>
+
+    <!-- solution segment (built by JS) -->
+    <line id="solLine" class="solution-line" style="display:none"/>
+    <circle id="bCircle" class="boundary-circle" r="7"/>
+  </svg>
+
+  <p class="footer">drag the boundary, switch the operator. closed circle = inclusive, open = strict.</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+// =========================================================================
+// Number line: x range [-10, 10] mapped to SVG x [40, 560]. 520/20 = 26 px/unit.
+// y is fixed at 55 (axis line). The visualisation is one-dimensional.
+// =========================================================================
+var XMIN = -10, XMAX = 10;
+var PX_LEFT = 40, PX_RIGHT = 560;
+function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
+
+(function buildTicks() {
+  var t = document.getElementById("ticks");
+  for (var x = XMIN; x <= XMAX; x++) {
+    var px = xPx(x);
+    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("class", "tick");
+    line.setAttribute("x1", px); line.setAttribute("x2", px);
+    line.setAttribute("y1", 50); line.setAttribute("y2", 60);
+    t.appendChild(line);
+    if (x !== 0 && x % 2 === 0 || x === 0) {
+      var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tl.setAttribute("class", "tick-label");
+      tl.setAttribute("x", px); tl.setAttribute("y", 78);
+      tl.setAttribute("text-anchor", "middle");
+      tl.textContent = x;
+      t.appendChild(tl);
+    }
+  }
+})();
+
+// State
+var targetB = 2, displayB = 2;
+var op = "gt";
+var SPRING = 0.22;
+
+function tick() {
+  displayB += (targetB - displayB) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function opSymbolTex() {
+  return op === "lt" ? "\\lt" : op === "le" ? "\\leq" : op === "gt" ? "\\gt" : "\\geq";
+}
+function isInclusive() { return op === "le" || op === "ge"; }
+function isLeft() { return op === "lt" || op === "le"; }
+
+function draw() {
+  // formula at top: x ⊙ b
+  tryRender(document.getElementById("formula"), "x \\;" + opSymbolTex() + "\\; " + targetB);
+
+  // boundary circle position uses display value for smooth glide
+  var px = xPx(displayB);
+  var c = document.getElementById("bCircle");
+  c.setAttribute("cx", px);
+  c.setAttribute("cy", 55);
+  if (isInclusive()) {
+    c.setAttribute("fill", "#0fee89");
+  } else {
+    c.setAttribute("fill", "#0b1118");
+  }
+
+  // solution line — extends from boundary to the appropriate edge of the visible range
+  var sol = document.getElementById("solLine");
+  sol.style.display = "";
+  if (isLeft()) {
+    sol.setAttribute("x1", PX_LEFT);
+    sol.setAttribute("y1", 55);
+    sol.setAttribute("x2", px - 4);
+    sol.setAttribute("y2", 55);
+    sol.setAttribute("marker-start", "url(#arrowL)");
+    sol.removeAttribute("marker-end");
+  } else {
+    sol.setAttribute("x1", px + 4);
+    sol.setAttribute("y1", 55);
+    sol.setAttribute("x2", PX_RIGHT);
+    sol.setAttribute("y2", 55);
+    sol.setAttribute("marker-end", "url(#arrowR)");
+    sol.removeAttribute("marker-start");
+  }
+}
+
+document.getElementById("bv").addEventListener("input", function(e) {
+  targetB = parseInt(e.target.value, 10);
+  document.getElementById("vbv").textContent = targetB;
+});
+document.getElementById("op").addEventListener("change", function(e) {
+  op = e.target.value;
+});
+tick();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

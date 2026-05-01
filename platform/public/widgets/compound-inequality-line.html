@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Compound Inequality Line</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
+  .formula { font-size:18px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:grid; grid-template-columns:1fr 1fr; gap:10px 14px; margin-bottom:10px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:8px; min-width:0; }
+  .row .name { color:#fff067; font-weight:600; min-width:36px; }
+  .row select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:4px 22px 4px 8px; border-radius:5px; cursor:pointer; min-width:42px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+  .row input[type=range] { flex:1; min-width:80px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row .val { min-width:24px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+
+  .axis-line { stroke:#7a7875; stroke-width:1.2; }
+  .tick { stroke:#3a4a5a; stroke-width:1; }
+  .tick-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#7a7875; }
+  .solution-line { stroke:#0fee89; stroke-width:3.5; stroke-linecap:butt; }
+  .boundary-circle { stroke:#0fee89; stroke-width:2.2; }
+  .empty-msg { font-family:'Geist Mono',monospace; font-size:11px; fill:#ff4670; }
+
+  .readout {
+    margin-top:10px; padding:10px 12px;
+    background:#07090d; border:1px solid #141e2a; border-radius:6px;
+    font-family:'Geist Mono',monospace; font-size:13px; color:#f0eeea;
+    text-align:center; min-height:30px;
+  }
+  .readout .integers { color:#0fee89; font-weight:600; }
+  .readout .empty { color:#ff4670; font-weight:600; }
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">lower</span>
+      <select id="loOp">
+        <option value="lt">&lt;</option>
+        <option value="le" selected>&le;</option>
+      </select>
+      <input type="range" id="lo" min="-10" max="10" value="-2" step="1"/>
+      <span class="val" id="vlo">-2</span>
+    </div>
+    <div class="row">
+      <span class="name">upper</span>
+      <select id="hiOp">
+        <option value="lt" selected>&lt;</option>
+        <option value="le">&le;</option>
+      </select>
+      <input type="range" id="hi" min="-10" max="10" value="4" step="1"/>
+      <span class="val" id="vhi">4</span>
+    </div>
+  </div>
+
+  <svg viewBox="0 0 600 110" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <line class="axis-line" x1="20" y1="55" x2="580" y2="55"/>
+    <g id="ticks"></g>
+    <line id="solLine" class="solution-line" style="display:none"/>
+    <circle id="cLo" class="boundary-circle" r="7"/>
+    <circle id="cHi" class="boundary-circle" r="7"/>
+    <text id="emptyMsg" class="empty-msg" x="300" y="32" text-anchor="middle" style="display:none">no values satisfy this — upper bound is below lower bound</text>
+  </svg>
+
+  <div class="readout" id="readout"></div>
+  <p class="footer">drag both bounds, switch operators. closed circle = inclusive, open = strict.</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var XMIN = -10, XMAX = 10;
+var PX_LEFT = 40, PX_RIGHT = 560;
+function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
+
+(function buildTicks() {
+  var t = document.getElementById("ticks");
+  for (var x = XMIN; x <= XMAX; x++) {
+    var px = xPx(x);
+    var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("class", "tick");
+    line.setAttribute("x1", px); line.setAttribute("x2", px);
+    line.setAttribute("y1", 50); line.setAttribute("y2", 60);
+    t.appendChild(line);
+    if (x % 2 === 0) {
+      var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tl.setAttribute("class", "tick-label");
+      tl.setAttribute("x", px); tl.setAttribute("y", 78);
+      tl.setAttribute("text-anchor", "middle");
+      tl.textContent = x;
+      t.appendChild(tl);
+    }
+  }
+})();
+
+// State
+var targetLo = -2, targetHi = 4;
+var displayLo = -2, displayHi = 4;
+var loOp = "le", hiOp = "lt";
+var SPRING = 0.22;
+
+function tick() {
+  displayLo += (targetLo - displayLo) * SPRING;
+  displayHi += (targetHi - displayHi) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function opSymbolTex(op) { return op === "lt" ? "\\lt" : "\\leq"; }
+
+function draw() {
+  // Formula: a ⊙ x ⊙ b
+  tryRender(
+    document.getElementById("formula"),
+    targetLo + " \\; " + opSymbolTex(loOp) + " \\; x \\; " + opSymbolTex(hiOp) + " \\; " + targetHi
+  );
+
+  var pxLo = xPx(displayLo);
+  var pxHi = xPx(displayHi);
+  var cLo = document.getElementById("cLo");
+  var cHi = document.getElementById("cHi");
+  cLo.setAttribute("cx", pxLo); cLo.setAttribute("cy", 55);
+  cHi.setAttribute("cx", pxHi); cHi.setAttribute("cy", 55);
+  cLo.setAttribute("fill", loOp === "le" ? "#0fee89" : "#0b1118");
+  cHi.setAttribute("fill", hiOp === "le" ? "#0fee89" : "#0b1118");
+
+  var sol = document.getElementById("solLine");
+  var emptyMsg = document.getElementById("emptyMsg");
+  var readout = document.getElementById("readout");
+
+  var empty = false;
+  if (targetLo > targetHi) empty = true;
+  else if (targetLo === targetHi && !(loOp === "le" && hiOp === "le")) empty = true;
+
+  if (empty) {
+    sol.style.display = "none";
+    cLo.style.opacity = 0.4;
+    cHi.style.opacity = 0.4;
+    emptyMsg.style.display = "";
+    readout.innerHTML = '<span class="empty">EMPTY</span> no values of x satisfy both';
+    return;
+  }
+  cLo.style.opacity = 1;
+  cHi.style.opacity = 1;
+  emptyMsg.style.display = "none";
+
+  sol.style.display = "";
+  // The line goes from the lower-circle right edge to the upper-circle left edge.
+  // Use small offset (4px) so the segment doesn't cover the circle itself.
+  sol.setAttribute("x1", pxLo + 4);
+  sol.setAttribute("y1", 55);
+  sol.setAttribute("x2", pxHi - 4);
+  sol.setAttribute("y2", 55);
+
+  // List integers in the range
+  var ints = [];
+  var lo = targetLo, hi = targetHi;
+  var startInt = loOp === "le" ? lo : lo + 1;
+  var endInt = hiOp === "le" ? hi : hi - 1;
+  for (var i = startInt; i <= endInt; i++) ints.push(i);
+  if (ints.length === 0) {
+    readout.innerHTML = '<span class="empty">No integer satisfies this</span>';
+  } else {
+    readout.innerHTML = '<span class="integers">' + ints.length + ' integer' + (ints.length === 1 ? "" : "s") + ':</span> ' + ints.join(", ");
+  }
+}
+
+document.getElementById("lo").addEventListener("input", function(e) {
+  targetLo = parseInt(e.target.value, 10);
+  document.getElementById("vlo").textContent = targetLo;
+});
+document.getElementById("hi").addEventListener("input", function(e) {
+  targetHi = parseInt(e.target.value, 10);
+  document.getElementById("vhi").textContent = targetHi;
+});
+document.getElementById("loOp").addEventListener("change", function(e) { loOp = e.target.value; });
+document.getElementById("hiOp").addEventListener("change", function(e) { hiOp = e.target.value; });
+tick();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

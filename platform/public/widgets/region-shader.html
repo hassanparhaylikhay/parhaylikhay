@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Region Shader</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
+  .formula { font-size:16px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px 14px; margin-bottom:12px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:8px; min-width:0; }
+  .row .name { color:#fff067; font-weight:600; min-width:36px; }
+  .row select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:4px 22px 4px 8px; border-radius:5px; cursor:pointer; min-width:48px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+  .row input[type=range] { flex:1; min-width:80px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row .val { min-width:30px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+
+  .axis-line { stroke:#3a4a5a; stroke-width:1; }
+  .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
+  .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
+  .boundary { stroke:#0fee89; stroke-width:2; fill:none; }
+  .boundary.broken { stroke-dasharray:6 4; }
+  .region-fill { fill:#0fee89; opacity:0.16; }
+
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">m</span>
+      <input type="range" id="m" min="-3" max="3" value="1" step="0.1"/>
+      <span class="val" id="vm">1.0</span>
+    </div>
+    <div class="row">
+      <span class="name">c</span>
+      <input type="range" id="c" min="-4" max="4" value="1" step="0.1"/>
+      <span class="val" id="vc">1.0</span>
+    </div>
+    <div class="row" style="grid-column: 1 / -1; justify-content:center; gap:14px">
+      <span class="name">y</span>
+      <select id="op">
+        <option value="lt">&lt;</option>
+        <option value="le" selected>&le;</option>
+        <option value="gt">&gt;</option>
+        <option value="ge">&ge;</option>
+      </select>
+      <span style="color:#7a7875">mx + c</span>
+    </div>
+  </div>
+
+  <svg viewBox="0 0 480 300" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <defs>
+      <clipPath id="plot-clip">
+        <rect x="30" y="20" width="400" height="250"/>
+      </clipPath>
+    </defs>
+    <g id="grid"></g>
+    <line class="axis-line" id="xAxis"/>
+    <line class="axis-line" id="yAxis"/>
+    <g id="ticks"></g>
+    <g clip-path="url(#plot-clip)">
+      <polygon class="region-fill" id="regionFill"/>
+      <line class="boundary" id="bLine"/>
+    </g>
+  </svg>
+
+  <p class="footer">drag m, c. flip the operator. solid = inclusive, dashed = strict.</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+// =========================================================================
+// COORDINATE MODEL — wider-than-tall plot with EQUAL 25 px / math-unit on
+// both axes. Same dimensions as the 2.5 graphers.
+// =========================================================================
+var XMIN = -8, XMAX = 8, YMIN = -5, YMAX = 5;
+var PX_LEFT = 30, PX_RIGHT = 430;
+var PX_TOP  = 20, PX_BOT   = 270;
+function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
+function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_TOP);  }
+
+(function buildAxes() {
+  var g = document.getElementById("grid");
+  var t = document.getElementById("ticks");
+  var x0 = xPx(0), y0 = yPx(0);
+  document.getElementById("xAxis").setAttribute("x1", PX_LEFT);
+  document.getElementById("xAxis").setAttribute("x2", PX_RIGHT);
+  document.getElementById("xAxis").setAttribute("y1", y0);
+  document.getElementById("xAxis").setAttribute("y2", y0);
+  document.getElementById("yAxis").setAttribute("x1", x0);
+  document.getElementById("yAxis").setAttribute("x2", x0);
+  document.getElementById("yAxis").setAttribute("y1", PX_TOP);
+  document.getElementById("yAxis").setAttribute("y2", PX_BOT);
+  for (var x = XMIN; x <= XMAX; x++) {
+    var px = xPx(x);
+    if (x !== 0) {
+      var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("class", "grid-line");
+      line.setAttribute("x1", px); line.setAttribute("x2", px);
+      line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
+      g.appendChild(line);
+    }
+    if (x !== 0 && x % 2 === 0) {
+      var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tl.setAttribute("class", "axis-tick-label");
+      tl.setAttribute("x", px); tl.setAttribute("y", y0 + 14);
+      tl.setAttribute("text-anchor", "middle");
+      tl.textContent = x;
+      t.appendChild(tl);
+    }
+  }
+  for (var y = YMIN; y <= YMAX; y++) {
+    var py = yPx(y);
+    if (y !== 0) {
+      var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      gl.setAttribute("class", "grid-line");
+      gl.setAttribute("x1", PX_LEFT); gl.setAttribute("x2", PX_RIGHT);
+      gl.setAttribute("y1", py); gl.setAttribute("y2", py);
+      g.appendChild(gl);
+    }
+    if (y !== 0) {
+      var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tly.setAttribute("class", "axis-tick-label");
+      tly.setAttribute("x", x0 - 6); tly.setAttribute("y", py + 3);
+      tly.setAttribute("text-anchor", "end");
+      tly.textContent = y;
+      t.appendChild(tly);
+    }
+  }
+})();
+
+// State
+var targetM = 1, displayM = 1;
+var targetC = 1, displayC = 1;
+var op = "le";
+var SPRING = 0.20;
+
+function tick() {
+  displayM += (targetM - displayM) * SPRING;
+  displayC += (targetC - displayC) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function opSymbolTex() { return op === "lt" ? "\\lt" : op === "le" ? "\\leq" : op === "gt" ? "\\gt" : "\\geq"; }
+function isInclusive() { return op === "le" || op === "ge"; }
+function isBelow() { return op === "lt" || op === "le"; }
+
+function fmtCoef(c) {
+  if (Math.abs(c) < 0.05) return "";
+  var rounded = Math.round(c * 10) / 10;
+  return (rounded < 0 ? " - " : " + ") + Math.abs(rounded);
+}
+function fmtSlope(m) {
+  if (Math.abs(m) < 0.05) return "0";
+  var rounded = Math.round(m * 10) / 10;
+  if (rounded === 1) return "x";
+  if (rounded === -1) return "-x";
+  return rounded + "x";
+}
+
+function draw() {
+  // Formula: y ⊙ mx + c
+  tryRender(
+    document.getElementById("formula"),
+    "y \\;" + opSymbolTex() + "\\; " + fmtSlope(targetM) + fmtCoef(targetC)
+  );
+
+  // Boundary line (clipped to plot box)
+  var b = document.getElementById("bLine");
+  b.setAttribute("class", isInclusive() ? "boundary" : "boundary broken");
+  b.setAttribute("x1", xPx(XMIN));
+  b.setAttribute("y1", yPx(displayM * XMIN + displayC));
+  b.setAttribute("x2", xPx(XMAX));
+  b.setAttribute("y2", yPx(displayM * XMAX + displayC));
+
+  // Region fill: a polygon clipped to the plot box. For y < mx + c (below),
+  // the polygon is bounded by the line on top and the bottom edge of the plot.
+  // For y > mx + c (above), the line on the bottom and the top edge.
+  var poly = document.getElementById("regionFill");
+  var lineLeft  = displayM * XMIN + displayC;
+  var lineRight = displayM * XMAX + displayC;
+  var pts;
+  if (isBelow()) {
+    // below the line, down to YMIN
+    pts = [
+      [xPx(XMIN), yPx(lineLeft)],
+      [xPx(XMAX), yPx(lineRight)],
+      [xPx(XMAX), yPx(YMIN)],
+      [xPx(XMIN), yPx(YMIN)]
+    ];
+  } else {
+    pts = [
+      [xPx(XMIN), yPx(lineLeft)],
+      [xPx(XMAX), yPx(lineRight)],
+      [xPx(XMAX), yPx(YMAX)],
+      [xPx(XMIN), yPx(YMAX)]
+    ];
+  }
+  poly.setAttribute("points", pts.map(function(p) { return p[0] + "," + p[1]; }).join(" "));
+}
+
+function fmtVal(v) {
+  var r = Math.round(v * 10) / 10;
+  return r.toFixed(1);
+}
+document.getElementById("m").addEventListener("input", function(e) {
+  targetM = parseFloat(e.target.value);
+  document.getElementById("vm").textContent = fmtVal(targetM);
+});
+document.getElementById("c").addEventListener("input", function(e) {
+  targetC = parseFloat(e.target.value);
+  document.getElementById("vc").textContent = fmtVal(targetC);
+});
+document.getElementById("op").addEventListener("change", function(e) { op = e.target.value; });
+tick();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
