@@ -129,15 +129,18 @@ function buildSVG(shape, a, format) {
       plotW = (xMax - xMin) * pxPerUnit; plotH = (yMax - yMin) * pxPerUnit;
     }
   } else {
-    plotW = 140; plotH = 100; marginL = 22; marginR = 12; marginT = 14; marginB = 14;
-    pxPerUnit = 20;
+    // Mini cards: keep total viewBox identical for every shape so the
+    // SVG scales by the same factor in every grid cell — otherwise the
+    // stroke appears thicker on shapes with smaller plot dims.
+    marginL = 22; marginR = 12; marginT = 14; marginB = 14;
     if (sh.firstQuadrantOnly) {
-      xMin = 0; xMax = 3.5; yMin = 0; yMax = 2.4;
-      plotW = (xMax - xMin) * pxPerUnit; plotH = (yMax - yMin) * pxPerUnit;
+      xMin = 0; xMax = 3.5; yMin = 0; yMax = 2;
+      pxPerUnit = 40; // 3.5 × 40 = 140 wide, 2 × 40 = 80 tall
     } else {
       xMin = -3.5; xMax = 3.5; yMin = -2; yMax = 2;
-      plotW = (xMax - xMin) * pxPerUnit; plotH = (yMax - yMin) * pxPerUnit;
+      pxPerUnit = 20; // 7 × 20 = 140 wide, 4 × 20 = 80 tall
     }
+    plotW = (xMax - xMin) * pxPerUnit; plotH = (yMax - yMin) * pxPerUnit;
   }
 
   const totalW = marginL + plotW + marginR;
