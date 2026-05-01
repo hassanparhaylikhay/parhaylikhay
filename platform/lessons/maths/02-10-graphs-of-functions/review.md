@@ -13,10 +13,10 @@ checks:
     options: ["all four quadrants", "Q1 and Q2", "Q1 and Q3", "Q2 and Q4"]
     correct: 2
     explain: 'When $x > 0$, $y > 0$ (Q1). When $x < 0$, $y < 0$ (Q3). Diagonal branches.'
-  - q: 'For $y = 3 \\cdot 2^x$ at $x = 0$, what is $y$?'
+  - q: 'For $y = 3 \cdot 2^x$ at $x = 0$, what is $y$?'
     options: ["$0$", "$2$", "$3$", "$6$"]
     correct: 2
-    explain: '$2^0 = 1$, so $y = 3 \\times 1 = 3$. The $y$-intercept is always at $a$ for $y = a \\cdot b^x$.'
+    explain: '$2^0 = 1$, so $y = 3 \times 1 = 3$. The $y$-intercept is always at $a$ for $y = a \cdot b^x$.'
   - q: 'A graph of $y = x^2 - 2x - 3$ is drawn. The roots of $x^2 - 2x - 3 = 0$ are read from where the curve crosses...'
     options: ["the $y$-axis", "the line $y = x$", "the $x$-axis", "the origin"]
     correct: 2
