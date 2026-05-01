@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Curve-Line Intersector</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:24px; flex-direction:column; gap:4px; }
+  .head .formula { font-size:14px; color:#f0eeea; }
+  .head .formula.line-eq { color:#00abfa; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:grid; grid-template-columns:repeat(2, 1fr); gap:10px 14px; margin-bottom:12px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:8px; min-width:0; }
+  .row .name { color:#00abfa; font-weight:600; min-width:50px; }
+  .row input[type=range] { flex:1; min-width:80px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#00abfa; cursor:pointer; border:0; }
+  .row input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#00abfa; cursor:pointer; border:0; }
+  .row .val { min-width:36px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+
+  .axis-line { stroke:#3a4a5a; stroke-width:1; }
+  .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
+  .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
+  .axis-title { font-family:'Geist Mono',monospace; font-size:10px; fill:#7a7875; }
+  .curve { stroke:#fff067; stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .line { stroke:#00abfa; stroke-width:2.2; fill:none; }
+  .ix { fill:#0fee89; stroke:#0fee89; }
+
+  .readout {
+    margin-top:10px; padding:10px 12px;
+    background:#07090d; border:1px solid #141e2a; border-radius:6px;
+    font-family:'Geist Mono',monospace; font-size:12px; color:#f0eeea;
+    text-align:center;
+  }
+  .readout .lbl { color:#7a7875; }
+  .readout .val { color:#0fee89; font-weight:600; }
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="curveFormula"></span>
+    <span class="formula line-eq" id="lineFormula"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">slope m</span>
+      <input type="range" id="m" min="-5" max="5" value="0" step="0.5"/>
+      <span class="val" id="vm">0</span>
+    </div>
+    <div class="row">
+      <span class="name">intercept c</span>
+      <input type="range" id="c" min="-6" max="6" value="0" step="1"/>
+      <span class="val" id="vc">0</span>
+    </div>
+  </div>
+
+  <svg viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <clipPath id="plot-clip">
+        <rect x="40" y="14" width="420" height="276"/>
+      </clipPath>
+    </defs>
+    <g id="grid"></g>
+    <line class="axis-line" id="xAxis"/>
+    <line class="axis-line" id="yAxis"/>
+    <g id="ticks"></g>
+    <text class="axis-title" x="250" y="312" text-anchor="middle">x</text>
+    <text class="axis-title" x="32" y="20" text-anchor="middle">y</text>
+
+    <g clip-path="url(#plot-clip)">
+      <path class="curve" id="curvePath"/>
+      <line class="line" id="linePath"/>
+      <g id="ixGroup"></g>
+    </g>
+  </svg>
+
+  <div class="readout">
+    <span class="lbl">intersections (x):</span> <span class="val" id="ixVals">—</span>
+  </div>
+  <p class="footer">curve y = x³ − 3x + 2 · adjust the line to find solutions of x³ − (3+m)x + (2−c) = 0</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var XMIN = -3, XMAX = 3, YMIN = -8, YMAX = 8;
+var PX_LEFT = 40, PX_RIGHT = 460;
+var PX_TOP  = 14, PX_BOT   = 290;
+
+function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
+function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_TOP);  }
+
+(function buildAxes() {
+  var g = document.getElementById("grid");
+  var t = document.getElementById("ticks");
+  document.getElementById("xAxis").setAttribute("x1", PX_LEFT);
+  document.getElementById("xAxis").setAttribute("x2", PX_RIGHT);
+  document.getElementById("xAxis").setAttribute("y1", yPx(0));
+  document.getElementById("xAxis").setAttribute("y2", yPx(0));
+  document.getElementById("yAxis").setAttribute("x1", xPx(0));
+  document.getElementById("yAxis").setAttribute("x2", xPx(0));
+  document.getElementById("yAxis").setAttribute("y1", PX_TOP);
+  document.getElementById("yAxis").setAttribute("y2", PX_BOT);
+  for (var x = XMIN; x <= XMAX; x++) {
+    var px = xPx(x);
+    if (x !== 0) {
+      var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("class", "grid-line");
+      line.setAttribute("x1", px); line.setAttribute("x2", px);
+      line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
+      g.appendChild(line);
+    }
+    var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tl.setAttribute("class", "axis-tick-label");
+    tl.setAttribute("x", px); tl.setAttribute("y", yPx(0) + 14);
+    tl.setAttribute("text-anchor", "middle");
+    tl.textContent = x;
+    t.appendChild(tl);
+  }
+  for (var y = YMIN; y <= YMAX; y += 2) {
+    if (y === 0) continue;
+    var py = yPx(y);
+    var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    gl.setAttribute("class", "grid-line");
+    gl.setAttribute("x1", PX_LEFT); gl.setAttribute("x2", PX_RIGHT);
+    gl.setAttribute("y1", py); gl.setAttribute("y2", py);
+    g.appendChild(gl);
+    if (y % 4 === 0) {
+      var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tly.setAttribute("class", "axis-tick-label");
+      tly.setAttribute("x", xPx(0) - 6); tly.setAttribute("y", py + 3);
+      tly.setAttribute("text-anchor", "end");
+      tly.textContent = y;
+      t.appendChild(tly);
+    }
+  }
+})();
+
+// fixed curve y = x³ - 3x + 2
+function curveY(x) { return x*x*x - 3*x + 2; }
+
+(function drawCurve() {
+  var d = "";
+  for (var i = 0; i <= 240; i++) {
+    var x = XMIN + (XMAX - XMIN) * (i / 240);
+    var y = curveY(x);
+    var py = yPx(Math.max(YMIN - 0.5, Math.min(YMAX + 0.5, y)));
+    d += (i === 0 ? "M " : " L ") + xPx(x) + " " + py;
+  }
+  document.getElementById("curvePath").setAttribute("d", d);
+  tryRender(document.getElementById("curveFormula"),
+    "y = x^3 - 3x + 2 \\;\\;\\text{(fixed)}");
+})();
+
+var targetM = 0, displayM = 0;
+var targetC = 0, displayC = 0;
+var SPRING = 0.20;
+
+function fmt(v) {
+  var n = Math.round(v * 10) / 10;
+  return (n === Math.floor(n)) ? n.toFixed(0) : n.toFixed(1);
+}
+function fmtSign(v) {
+  if (Math.abs(v) < 0.01) return "";
+  return (v > 0 ? "+ " : "- ") + fmt(Math.abs(v));
+}
+
+function tick() {
+  displayM += (targetM - displayM) * SPRING;
+  displayC += (targetC - displayC) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+// find intersections by sign-change scan + bisection
+function findIntersections(m, c) {
+  function diff(x) { return curveY(x) - (m * x + c); }
+  var roots = [];
+  var SCAN = 600;
+  var prevX = XMIN, prevY = diff(XMIN);
+  for (var i = 1; i <= SCAN; i++) {
+    var x = XMIN + (XMAX - XMIN) * (i / SCAN);
+    var y = diff(x);
+    if ((prevY > 0 && y < 0) || (prevY < 0 && y > 0)) {
+      // bisect
+      var lo = prevX, hi = x, fLo = prevY, fHi = y;
+      for (var k = 0; k < 40; k++) {
+        var mid = 0.5 * (lo + hi);
+        var fMid = diff(mid);
+        if ((fLo > 0 && fMid < 0) || (fLo < 0 && fMid > 0)) {
+          hi = mid; fHi = fMid;
+        } else {
+          lo = mid; fLo = fMid;
+        }
+      }
+      roots.push(0.5 * (lo + hi));
+    } else if (Math.abs(y) < 1e-6 && Math.abs(prevY) < 1e-6) {
+      // skip plateau
+    }
+    prevX = x; prevY = y;
+  }
+  // dedupe
+  var dedup = [];
+  for (var j = 0; j < roots.length; j++) {
+    var r = roots[j];
+    var dup = false;
+    for (var l = 0; l < dedup.length; l++) {
+      if (Math.abs(r - dedup[l]) < 0.05) { dup = true; break; }
+    }
+    if (!dup) dedup.push(r);
+  }
+  return dedup;
+}
+
+function draw() {
+  // line eq
+  var slopeTex = (Math.abs(displayM) < 0.01) ? "" : (fmt(displayM) + "x");
+  var cTex = fmtSign(displayC);
+  if (slopeTex === "" && cTex === "") cTex = "0";
+  var lineEq = "y = " + (slopeTex || "") + (slopeTex && cTex ? " \\;" + cTex : (cTex || ""));
+  if (slopeTex === "" && cTex !== "") lineEq = "y = " + fmt(displayC);
+  tryRender(document.getElementById("lineFormula"), lineEq);
+
+  // line endpoints
+  var xL = XMIN, xR = XMAX;
+  document.getElementById("linePath").setAttribute("x1", xPx(xL));
+  document.getElementById("linePath").setAttribute("y1", yPx(displayM * xL + displayC));
+  document.getElementById("linePath").setAttribute("x2", xPx(xR));
+  document.getElementById("linePath").setAttribute("y2", yPx(displayM * xR + displayC));
+
+  // intersections (using TARGET values for stable readout)
+  var roots = findIntersections(targetM, targetC);
+  var ixGroup = document.getElementById("ixGroup");
+  ixGroup.innerHTML = "";
+  roots.forEach(function(r) {
+    var ry = curveY(r);
+    var c1 = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    c1.setAttribute("class", "ix");
+    c1.setAttribute("cx", xPx(r));
+    c1.setAttribute("cy", yPx(ry));
+    c1.setAttribute("r", 4);
+    ixGroup.appendChild(c1);
+  });
+  if (roots.length === 0) {
+    document.getElementById("ixVals").textContent = "no intersections in view";
+  } else {
+    document.getElementById("ixVals").textContent =
+      roots.map(function(r) { return fmt(r); }).join(", ");
+  }
+}
+
+document.getElementById("m").addEventListener("input", function(e) {
+  targetM = parseFloat(e.target.value);
+  document.getElementById("vm").textContent = fmt(targetM);
+});
+document.getElementById("c").addEventListener("input", function(e) {
+  targetC = parseFloat(e.target.value);
+  document.getElementById("vc").textContent = fmt(targetC);
+});
+tick();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

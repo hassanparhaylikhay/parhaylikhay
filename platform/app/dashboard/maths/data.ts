@@ -284,10 +284,11 @@ export const UNITS: Unit[] = [
       {
         slug: "10", code: "2.10", title: "Graphs of functions",
         parts: [
-          { slug: "p1",     label: "P1", title: "Tables of values and plotting" },
-          { slug: "p2",     label: "P2", title: "Linear, quadratic, cubic graphs" },
-          { slug: "p3",     label: "P3", title: "Reciprocal and exponential graphs" },
-          { slug: "p4",     label: "P4", title: "Solving equations graphically" },
+          { slug: "p1",     label: "P1", title: "Tables of values and drawing curves" },
+          { slug: "p2",     label: "P2", title: "Reciprocal and power graphs" },
+          { slug: "p3",     label: "P3", title: "Exponential graphs" },
+          { slug: "p4",     label: "P4", title: "Solving equations using graphs" },
+          { slug: "p5",     label: "P5", title: "Estimating gradient by tangent" },
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },

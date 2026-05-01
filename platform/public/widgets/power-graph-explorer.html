@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Power Graph Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:24px; }
+  .formula { font-size:16px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  .picker { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-bottom:10px; }
+  .picker button {
+    background:#0b1118; color:#c8c6be; border:1px solid #1a2330;
+    border-radius:6px; padding:5px 10px; cursor:pointer;
+    font-family:'Geist Mono',monospace; font-size:11px;
+  }
+  .picker button.active { background:#fff067; color:#0b1118; border-color:#fff067; font-weight:600; }
+  .picker button:hover:not(.active) { background:#141e2a; }
+
+  .controls { display:flex; gap:14px; align-items:center; margin-bottom:12px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:8px; flex:1; min-width:0; }
+  .row .name { color:#fff067; font-weight:600; min-width:32px; }
+  .row input[type=range] { flex:1; min-width:80px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row .val { min-width:36px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+
+  .axis-line { stroke:#3a4a5a; stroke-width:1; }
+  .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
+  .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
+  .axis-title { font-family:'Geist Mono',monospace; font-size:10px; fill:#7a7875; }
+  .curve { stroke:#fff067; stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .asymptote { stroke:#ff4670; stroke-width:1; stroke-dasharray:4 4; opacity:0.5; }
+
+  .readout {
+    margin-top:10px; padding:8px 12px;
+    background:#07090d; border:1px solid #141e2a; border-radius:6px;
+    font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875;
+    text-align:center;
+  }
+  .readout .name { color:#0fee89; font-weight:600; }
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="picker" id="picker"></div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">a</span>
+      <input type="range" id="a" min="-4" max="4" value="2" step="0.5"/>
+      <span class="val" id="va">2</span>
+    </div>
+  </div>
+
+  <svg viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <clipPath id="plot-clip">
+        <rect x="40" y="14" width="420" height="276"/>
+      </clipPath>
+    </defs>
+    <g id="grid"></g>
+    <line class="axis-line" id="xAxis"/>
+    <line class="axis-line" id="yAxis"/>
+    <g id="ticks"></g>
+    <text class="axis-title" x="250" y="312" text-anchor="middle">x</text>
+    <text class="axis-title" x="32" y="20" text-anchor="middle">y</text>
+
+    <g clip-path="url(#plot-clip)">
+      <path class="curve" id="curvePath1"/>
+      <path class="curve" id="curvePath2"/>
+    </g>
+  </svg>
+
+  <div class="readout" id="readout"></div>
+  <p class="footer">switch n to change the shape · slide a to scale</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var XMIN = -4, XMAX = 4, YMIN = -8, YMAX = 8;
+var PX_LEFT = 40, PX_RIGHT = 460;
+var PX_TOP  = 14, PX_BOT   = 290;
+
+function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
+function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_TOP);  }
+
+(function buildAxes() {
+  var g = document.getElementById("grid");
+  var t = document.getElementById("ticks");
+  document.getElementById("xAxis").setAttribute("x1", PX_LEFT);
+  document.getElementById("xAxis").setAttribute("x2", PX_RIGHT);
+  document.getElementById("xAxis").setAttribute("y1", yPx(0));
+  document.getElementById("xAxis").setAttribute("y2", yPx(0));
+  document.getElementById("yAxis").setAttribute("x1", xPx(0));
+  document.getElementById("yAxis").setAttribute("x2", xPx(0));
+  document.getElementById("yAxis").setAttribute("y1", PX_TOP);
+  document.getElementById("yAxis").setAttribute("y2", PX_BOT);
+  for (var x = XMIN; x <= XMAX; x++) {
+    var px = xPx(x);
+    if (x !== 0) {
+      var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("class", "grid-line");
+      line.setAttribute("x1", px); line.setAttribute("x2", px);
+      line.setAttribute("y1", PX_TOP); line.setAttribute("y2", PX_BOT);
+      g.appendChild(line);
+    }
+    var tl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tl.setAttribute("class", "axis-tick-label");
+    tl.setAttribute("x", px); tl.setAttribute("y", yPx(0) + 14);
+    tl.setAttribute("text-anchor", "middle");
+    tl.textContent = x;
+    t.appendChild(tl);
+  }
+  for (var y = YMIN; y <= YMAX; y += 2) {
+    if (y === 0) continue;
+    var py = yPx(y);
+    var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    gl.setAttribute("class", "grid-line");
+    gl.setAttribute("x1", PX_LEFT); gl.setAttribute("x2", PX_RIGHT);
+    gl.setAttribute("y1", py); gl.setAttribute("y2", py);
+    g.appendChild(gl);
+    if (y % 4 === 0) {
+      var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      tly.setAttribute("class", "axis-tick-label");
+      tly.setAttribute("x", xPx(0) - 6); tly.setAttribute("y", py + 3);
+      tly.setAttribute("text-anchor", "end");
+      tly.textContent = y;
+      t.appendChild(tly);
+    }
+  }
+})();
+
+// Power options: each defines a function f(x), a TeX label, and "name" + asymptote info
+var SHAPES = [
+  { id: "lin",   tex: "y = ax",                 name: "linear",        f: function(a, x) { return a * x; },                 split: false },
+  { id: "sq",    tex: "y = ax^2",               name: "parabola",      f: function(a, x) { return a * x * x; },             split: false },
+  { id: "cub",   tex: "y = ax^3",               name: "cubic",         f: function(a, x) { return a * x * x * x; },         split: false },
+  { id: "sqrt",  tex: "y = a\\sqrt{x}",         name: "sq-root",       f: function(a, x) { return x < 0 ? NaN : a * Math.sqrt(x); }, split: false },
+  { id: "rec",   tex: "y = \\dfrac{a}{x}",      name: "reciprocal",    f: function(a, x) { return Math.abs(x) < 0.05 ? NaN : a / x; }, split: true },
+  { id: "rec2",  tex: "y = \\dfrac{a}{x^2}",    name: "inverse-square",f: function(a, x) { return Math.abs(x) < 0.05 ? NaN : a / (x * x); }, split: true }
+];
+
+var picker = document.getElementById("picker");
+SHAPES.forEach(function(s, i) {
+  var btn = document.createElement("button");
+  btn.textContent = s.name;
+  btn.dataset.idx = i;
+  btn.addEventListener("click", function() {
+    selected = i;
+    document.querySelectorAll(".picker button").forEach(function(b) { b.classList.remove("active"); });
+    btn.classList.add("active");
+  });
+  if (i === 0) btn.classList.add("active");
+  picker.appendChild(btn);
+});
+
+var selected = 0;
+var targetA = 2, displayA = 2;
+var SPRING = 0.20;
+
+function fmtA(v) {
+  var n = Math.round(v * 10) / 10;
+  return (n === Math.floor(n)) ? n.toFixed(0) : n.toFixed(1);
+}
+
+function tick() {
+  displayA += (targetA - displayA) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function draw() {
+  var s = SHAPES[selected];
+  tryRender(document.getElementById("formula"),
+    s.tex.replace("a", "(" + fmtA(displayA) + ")").replace(/\\dfrac/g, "\\dfrac"));
+
+  var p1 = "", p2 = "";
+  var SAMPLES = 240;
+
+  if (!s.split) {
+    var prevValid = false;
+    for (var i = 0; i <= SAMPLES; i++) {
+      var x = XMIN + (XMAX - XMIN) * (i / SAMPLES);
+      var y = s.f(displayA, x);
+      if (!isFinite(y)) { prevValid = false; continue; }
+      if (y > YMAX * 2 || y < YMIN * 2) { prevValid = false; continue; }
+      var px = xPx(x);
+      var py = yPx(Math.max(YMIN - 0.5, Math.min(YMAX + 0.5, y)));
+      p1 += (prevValid ? " L " : "M ") + px + " " + py;
+      prevValid = true;
+    }
+    document.getElementById("curvePath1").setAttribute("d", p1);
+    document.getElementById("curvePath2").setAttribute("d", "");
+  } else {
+    // split into negative-x branch and positive-x branch
+    var prev1 = false;
+    for (var j = 0; j <= SAMPLES / 2; j++) {
+      var xx = XMIN + (0 - XMIN) * (j / (SAMPLES / 2)) - 0.05;
+      var yy = s.f(displayA, xx);
+      if (!isFinite(yy)) { prev1 = false; continue; }
+      if (yy > YMAX * 2 || yy < YMIN * 2) { prev1 = false; continue; }
+      var px2 = xPx(xx);
+      var py2 = yPx(Math.max(YMIN - 0.5, Math.min(YMAX + 0.5, yy)));
+      p1 += (prev1 ? " L " : "M ") + px2 + " " + py2;
+      prev1 = true;
+    }
+    var prev2 = false;
+    for (var k = 0; k <= SAMPLES / 2; k++) {
+      var xxx = 0.05 + (XMAX - 0) * (k / (SAMPLES / 2));
+      var yyy = s.f(displayA, xxx);
+      if (!isFinite(yyy)) { prev2 = false; continue; }
+      if (yyy > YMAX * 2 || yyy < YMIN * 2) { prev2 = false; continue; }
+      var px3 = xPx(xxx);
+      var py3 = yPx(Math.max(YMIN - 0.5, Math.min(YMAX + 0.5, yyy)));
+      p2 += (prev2 ? " L " : "M ") + px3 + " " + py3;
+      prev2 = true;
+    }
+    document.getElementById("curvePath1").setAttribute("d", p1);
+    document.getElementById("curvePath2").setAttribute("d", p2);
+  }
+
+  // readout
+  var hint = "";
+  if (s.id === "rec") hint = "asymptotes: x = 0 and y = 0 · two branches";
+  else if (s.id === "rec2") hint = "asymptotes: x = 0 and y = 0 · both branches above x-axis (a > 0)";
+  else if (s.id === "sqrt") hint = "domain: x ≥ 0 only";
+  else if (s.id === "lin") hint = "straight line through the origin";
+  else if (s.id === "sq") hint = "parabola, vertex at origin";
+  else if (s.id === "cub") hint = "S-shape, point of inflection at origin";
+  document.getElementById("readout").innerHTML = '<span class="name">' + s.name + ':</span> ' + hint;
+}
+
+document.getElementById("a").addEventListener("input", function(e) {
+  targetA = parseFloat(e.target.value);
+  document.getElementById("va").textContent = fmtA(targetA);
+});
+tick();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
