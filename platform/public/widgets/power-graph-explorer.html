@@ -11,7 +11,7 @@
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 18px 16px; }
-  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .wrap { max-width:480px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
   .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:24px; }
   .formula { font-size:16px; color:#f0eeea; }
   .formula .katex { font-size:1em; }
@@ -40,7 +40,6 @@
   .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
   .axis-title { font-family:'Geist Mono',monospace; font-size:10px; fill:#7a7875; }
   .curve { stroke:#fff067; stroke-width:2.5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
-  .asymptote { stroke:#ff4670; stroke-width:1; stroke-dasharray:4 4; opacity:0.5; }
 
   .readout {
     margin-top:10px; padding:8px 12px;
@@ -68,18 +67,18 @@
     </div>
   </div>
 
-  <svg viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 460 460" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <clipPath id="plot-clip">
-        <rect x="40" y="14" width="420" height="276"/>
+        <rect x="40" y="20" width="400" height="400"/>
       </clipPath>
     </defs>
     <g id="grid"></g>
     <line class="axis-line" id="xAxis"/>
     <line class="axis-line" id="yAxis"/>
     <g id="ticks"></g>
-    <text class="axis-title" x="250" y="312" text-anchor="middle">x</text>
-    <text class="axis-title" x="32" y="20" text-anchor="middle">y</text>
+    <text class="axis-title" x="240" y="450" text-anchor="middle">x</text>
+    <text class="axis-title" x="32" y="26" text-anchor="middle">y</text>
 
     <g clip-path="url(#plot-clip)">
       <path class="curve" id="curvePath1"/>
@@ -103,9 +102,11 @@ function tryRender(target, tex) {
   }
 }
 
-var XMIN = -4, XMAX = 4, YMIN = -8, YMAX = 8;
-var PX_LEFT = 40, PX_RIGHT = 460;
-var PX_TOP  = 14, PX_BOT   = 290;
+// Equal pixels per unit: 50 px/unit on both axes.
+// x range -4 to 4 (8 units → 400 px), y range -4 to 4 (8 units → 400 px)
+var XMIN = -4, XMAX = 4, YMIN = -4, YMAX = 4;
+var PX_LEFT = 40, PX_RIGHT = 440;
+var PX_TOP  = 20, PX_BOT   = 420;
 
 function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
 function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_TOP);  }
@@ -137,7 +138,7 @@ function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_
     tl.textContent = x;
     t.appendChild(tl);
   }
-  for (var y = YMIN; y <= YMAX; y += 2) {
+  for (var y = YMIN; y <= YMAX; y++) {
     if (y === 0) continue;
     var py = yPx(y);
     var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -145,25 +146,40 @@ function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_
     gl.setAttribute("x1", PX_LEFT); gl.setAttribute("x2", PX_RIGHT);
     gl.setAttribute("y1", py); gl.setAttribute("y2", py);
     g.appendChild(gl);
-    if (y % 4 === 0) {
-      var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      tly.setAttribute("class", "axis-tick-label");
-      tly.setAttribute("x", xPx(0) - 6); tly.setAttribute("y", py + 3);
-      tly.setAttribute("text-anchor", "end");
-      tly.textContent = y;
-      t.appendChild(tly);
-    }
+    var tly = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    tly.setAttribute("class", "axis-tick-label");
+    tly.setAttribute("x", xPx(0) - 6); tly.setAttribute("y", py + 3);
+    tly.setAttribute("text-anchor", "end");
+    tly.textContent = y;
+    t.appendChild(tly);
   }
 })();
 
-// Power options: each defines a function f(x), a TeX label, and "name" + asymptote info
+// Power options: each defines a function f(x), a TeX-builder, name, and split flag
+function fmtA(v) {
+  var n = Math.round(v * 10) / 10;
+  return (n === Math.floor(n)) ? n.toFixed(0) : n.toFixed(1);
+}
+
 var SHAPES = [
-  { id: "lin",   tex: "y = ax",                 name: "linear",        f: function(a, x) { return a * x; },                 split: false },
-  { id: "sq",    tex: "y = ax^2",               name: "parabola",      f: function(a, x) { return a * x * x; },             split: false },
-  { id: "cub",   tex: "y = ax^3",               name: "cubic",         f: function(a, x) { return a * x * x * x; },         split: false },
-  { id: "sqrt",  tex: "y = a\\sqrt{x}",         name: "sq-root",       f: function(a, x) { return x < 0 ? NaN : a * Math.sqrt(x); }, split: false },
-  { id: "rec",   tex: "y = \\dfrac{a}{x}",      name: "reciprocal",    f: function(a, x) { return Math.abs(x) < 0.05 ? NaN : a / x; }, split: true },
-  { id: "rec2",  tex: "y = \\dfrac{a}{x^2}",    name: "inverse-square",f: function(a, x) { return Math.abs(x) < 0.05 ? NaN : a / (x * x); }, split: true }
+  { id: "lin",  name: "linear",        split: false,
+    f: function(a, x) { return a * x; },
+    texFn: function(a) { return "y = " + fmtA(a) + "x"; } },
+  { id: "sq",   name: "parabola",      split: false,
+    f: function(a, x) { return a * x * x; },
+    texFn: function(a) { return "y = " + fmtA(a) + "x^2"; } },
+  { id: "cub",  name: "cubic",         split: false,
+    f: function(a, x) { return a * x * x * x; },
+    texFn: function(a) { return "y = " + fmtA(a) + "x^3"; } },
+  { id: "sqrt", name: "sq-root",       split: false,
+    f: function(a, x) { return x < 0 ? NaN : a * Math.sqrt(x); },
+    texFn: function(a) { return "y = " + fmtA(a) + "\\sqrt{x}"; } },
+  { id: "rec",  name: "reciprocal",    split: true,
+    f: function(a, x) { return Math.abs(x) < 0.05 ? NaN : a / x; },
+    texFn: function(a) { return "y = \\dfrac{" + fmtA(a) + "}{x}"; } },
+  { id: "rec2", name: "inverse-square",split: true,
+    f: function(a, x) { return Math.abs(x) < 0.05 ? NaN : a / (x * x); },
+    texFn: function(a) { return "y = \\dfrac{" + fmtA(a) + "}{x^2}"; } }
 ];
 
 var picker = document.getElementById("picker");
@@ -184,11 +200,6 @@ var selected = 0;
 var targetA = 2, displayA = 2;
 var SPRING = 0.20;
 
-function fmtA(v) {
-  var n = Math.round(v * 10) / 10;
-  return (n === Math.floor(n)) ? n.toFixed(0) : n.toFixed(1);
-}
-
 function tick() {
   displayA += (targetA - displayA) * SPRING;
   draw();
@@ -197,53 +208,36 @@ function tick() {
 
 function draw() {
   var s = SHAPES[selected];
-  tryRender(document.getElementById("formula"),
-    s.tex.replace("a", "(" + fmtA(displayA) + ")").replace(/\\dfrac/g, "\\dfrac"));
+  tryRender(document.getElementById("formula"), s.texFn(displayA));
 
   var p1 = "", p2 = "";
-  var SAMPLES = 240;
+  var SAMPLES = 320;
+  var Y_OVERSHOOT = (YMAX - YMIN) * 0.5;
+
+  function pathSegment(xLo, xHi, count) {
+    var out = "";
+    var prev = false;
+    for (var i = 0; i <= count; i++) {
+      var x = xLo + (xHi - xLo) * (i / count);
+      var y = s.f(displayA, x);
+      if (!isFinite(y)) { prev = false; continue; }
+      if (y > YMAX + Y_OVERSHOOT || y < YMIN - Y_OVERSHOOT) { prev = false; continue; }
+      var py = yPx(Math.max(YMIN - 0.5, Math.min(YMAX + 0.5, y)));
+      out += (prev ? " L " : "M ") + xPx(x) + " " + py;
+      prev = true;
+    }
+    return out;
+  }
 
   if (!s.split) {
-    var prevValid = false;
-    for (var i = 0; i <= SAMPLES; i++) {
-      var x = XMIN + (XMAX - XMIN) * (i / SAMPLES);
-      var y = s.f(displayA, x);
-      if (!isFinite(y)) { prevValid = false; continue; }
-      if (y > YMAX * 2 || y < YMIN * 2) { prevValid = false; continue; }
-      var px = xPx(x);
-      var py = yPx(Math.max(YMIN - 0.5, Math.min(YMAX + 0.5, y)));
-      p1 += (prevValid ? " L " : "M ") + px + " " + py;
-      prevValid = true;
-    }
-    document.getElementById("curvePath1").setAttribute("d", p1);
-    document.getElementById("curvePath2").setAttribute("d", "");
+    p1 = pathSegment(XMIN, XMAX, SAMPLES);
+    p2 = "";
   } else {
-    // split into negative-x branch and positive-x branch
-    var prev1 = false;
-    for (var j = 0; j <= SAMPLES / 2; j++) {
-      var xx = XMIN + (0 - XMIN) * (j / (SAMPLES / 2)) - 0.05;
-      var yy = s.f(displayA, xx);
-      if (!isFinite(yy)) { prev1 = false; continue; }
-      if (yy > YMAX * 2 || yy < YMIN * 2) { prev1 = false; continue; }
-      var px2 = xPx(xx);
-      var py2 = yPx(Math.max(YMIN - 0.5, Math.min(YMAX + 0.5, yy)));
-      p1 += (prev1 ? " L " : "M ") + px2 + " " + py2;
-      prev1 = true;
-    }
-    var prev2 = false;
-    for (var k = 0; k <= SAMPLES / 2; k++) {
-      var xxx = 0.05 + (XMAX - 0) * (k / (SAMPLES / 2));
-      var yyy = s.f(displayA, xxx);
-      if (!isFinite(yyy)) { prev2 = false; continue; }
-      if (yyy > YMAX * 2 || yyy < YMIN * 2) { prev2 = false; continue; }
-      var px3 = xPx(xxx);
-      var py3 = yPx(Math.max(YMIN - 0.5, Math.min(YMAX + 0.5, yyy)));
-      p2 += (prev2 ? " L " : "M ") + px3 + " " + py3;
-      prev2 = true;
-    }
-    document.getElementById("curvePath1").setAttribute("d", p1);
-    document.getElementById("curvePath2").setAttribute("d", p2);
+    p1 = pathSegment(XMIN, -0.05, SAMPLES / 2);
+    p2 = pathSegment(0.05, XMAX, SAMPLES / 2);
   }
+  document.getElementById("curvePath1").setAttribute("d", p1);
+  document.getElementById("curvePath2").setAttribute("d", p2);
 
   // readout
   var hint = "";
