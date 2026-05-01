@@ -67,17 +67,17 @@
     </div>
   </div>
 
-  <svg viewBox="0 0 460 460" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <svg viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <clipPath id="plot-clip">
-        <rect x="40" y="20" width="400" height="400"/>
+        <rect x="40" y="20" width="400" height="250"/>
       </clipPath>
     </defs>
     <g id="grid"></g>
     <line class="axis-line" id="xAxis"/>
     <line class="axis-line" id="yAxis"/>
     <g id="ticks"></g>
-    <text class="axis-title" x="240" y="450" text-anchor="middle">x</text>
+    <text class="axis-title" x="240" y="310" text-anchor="middle">x</text>
     <text class="axis-title" x="32" y="26" text-anchor="middle">y</text>
 
     <g clip-path="url(#plot-clip)">
@@ -103,10 +103,10 @@ function tryRender(target, tex) {
 }
 
 // Equal pixels per unit: 50 px/unit on both axes.
-// x range -4 to 4 (8 units → 400 px), y range -4 to 4 (8 units → 400 px)
-var XMIN = -4, XMAX = 4, YMIN = -4, YMAX = 4;
+// x range -4 to 4 (8 units → 400 px), y range -2.5 to 2.5 (5 units → 250 px)
+var XMIN = -4, XMAX = 4, YMIN = -2.5, YMAX = 2.5;
 var PX_LEFT = 40, PX_RIGHT = 440;
-var PX_TOP  = 20, PX_BOT   = 420;
+var PX_TOP  = 20, PX_BOT   = 270;
 
 function xPx(x) { return PX_LEFT + ((x - XMIN) / (XMAX - XMIN)) * (PX_RIGHT - PX_LEFT); }
 function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_TOP);  }
@@ -138,7 +138,7 @@ function yPx(y) { return PX_BOT  - ((y - YMIN) / (YMAX - YMIN)) * (PX_BOT  - PX_
     tl.textContent = x;
     t.appendChild(tl);
   }
-  for (var y = YMIN; y <= YMAX; y++) {
+  for (var y = Math.ceil(YMIN); y <= Math.floor(YMAX); y++) {
     if (y === 0) continue;
     var py = yPx(y);
     var gl = document.createElementNS("http://www.w3.org/2000/svg", "line");
