@@ -104,6 +104,12 @@ Full marks $= 3$.
 - **Quadratic:** factorise, complete the square, or formula. Discriminant tells you the number of roots.
 - **Change subject:** undo operations in reverse order; factor when the subject appears twice.
 
+## Practice: match a line through given points
+
+The two yellow dots mark the points your line must pass through. Drag the **m** (slope) and **c** (y-intercept) sliders until the blue line covers both dots. Hit "New challenge" for a fresh pair of points.
+
+<iframe src="/widgets/match-trainer.html?mode=line_pts" style="width:100%;max-width:696px;height:560px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
 ## Your turn: full quiz
 
 The widget below is a mixed quiz drawing from all five parts.

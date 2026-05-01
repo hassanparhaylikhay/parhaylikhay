@@ -112,6 +112,12 @@ Full marks $= 11$.
 - **Solve $g(x) = 0$**: rearrange to "curve = line", draw the line, read intersections.
 - **Gradient at a point**: draw tangent, compute rise/run with widely-spaced points.
 
+## Practice: match the cubic
+
+Slide $b$ and $c$ in $y = x^3 + bx + c$ until your blue cubic covers the faded yellow target. The wiggle pattern tells you about $b$ (controls how the middle bends); the height tells you about $c$ (controls vertical shift).
+
+<iframe src="/widgets/match-trainer.html?mode=cubic" style="width:100%;max-width:696px;height:560px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
 ## Your turn: full quiz
 
 The widget below is a mixed quiz drawing from all five parts.

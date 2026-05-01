@@ -87,6 +87,12 @@ Full marks $= 4$.
 - **Reciprocal** $\dfrac{a}{x} + b$: asymptotes $x = 0$ and $y = b$; one x-intercept.
 - **Exponential** $a \times r^x + b$: y-intercept $(0, a + b)$; asymptote $y = b$; $r > 1$ growth, $r < 1$ decay.
 
+## Practice: match the parabola
+
+The faded yellow parabola has its turning point at some $(h, k)$. Slide your $h$ and $k$ until the blue parabola sits on top. Once you can read the vertex off the graph quickly, sketching one in an exam takes seconds.
+
+<iframe src="/widgets/match-trainer.html?mode=quad" style="width:100%;max-width:696px;height:560px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
 ## Your turn: full quiz
 
 The widget below is a mixed quiz drawing from all three parts.

@@ -90,6 +90,12 @@ Full marks $= 3$.
 - **Fibonacci**: each = sum of previous two. Work term-by-term.
 - Standard forms: $n^2$, $n^3$, $\dfrac{n(n+1)}{2}$.
 
+## Practice: find $a$ and $d$
+
+The yellow row shows the first five terms of a target arithmetic sequence. Slide $a$ (first term) and $d$ (common difference) until your blue row matches the yellow row term-for-term. Then hit "New challenge".
+
+<iframe src="/widgets/match-trainer.html?mode=sequence" style="width:100%;max-width:696px;height:340px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
 ## Your turn: full quiz
 
 The widget below is a mixed quiz drawing from all four parts.

@@ -92,6 +92,12 @@ Full marks $= 5$.
 - **The recipe**: write equation → find $k$ → use it.
 - **Scaling**: doubling $x$ multiplies $y$ by $2^n$ (direct) or divides by $2^n$ (inverse).
 
+## Practice: pick the proportion type and find $k$
+
+The faded yellow curve is the target. First pick the relationship type (direct, inverse, square, square-root) — that fixes the SHAPE. Then slide $k$ until your blue curve covers the yellow one.
+
+<iframe src="/widgets/match-trainer.html?mode=proportion" style="width:100%;max-width:696px;height:560px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
 ## Your turn: full quiz
 
 The widget below is a mixed quiz drawing from all three parts.
