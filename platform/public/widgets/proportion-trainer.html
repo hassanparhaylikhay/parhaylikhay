@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Proportion Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:696px; margin:0 auto; }
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .target-picker { display:flex; gap:6px; align-items:center; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .target-picker select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:5px 22px 5px 10px; border-radius:5px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:24px 24px 22px; }
+  .q-label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#3a4a5a; margin-bottom:12px; text-align:center; }
+  .q-prompt { font-size:14.5px; color:#c8c6be; text-align:center; margin-bottom:8px; line-height:1.5; }
+  .q-expr { font-size:22px; color:#f0eeea; margin:6px 0 16px; text-align:center; min-height:32px; }
+  .q-expr .katex { font-size:1em; }
+  .options { display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .opt {
+    appearance:none; background:#07090d; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:14px; padding:11px 14px; border-radius:7px;
+    text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px;
+  }
+  .opt:hover:not(:disabled) { border-color:#3a4a5a; }
+  .opt .opt-letter { font-family:'Geist Mono',monospace; color:#3a4a5a; font-size:11px; min-width:14px; }
+  .opt .opt-text { flex:1; }
+  .opt .opt-text .katex { font-size:1em; }
+  .opt.right { border-color:#0fee89; background:rgba(15,238,137,0.07); color:#0fee89; }
+  .opt.right .opt-letter { color:#0fee89; }
+  .opt.wrong { border-color:#ff4670; background:rgba(255,70,112,0.06); color:#ff4670; }
+  .opt.wrong .opt-letter { color:#ff4670; }
+  .opt.dim { opacity:0.45; }
+  .opt:disabled { cursor:default; }
+  .reveal { margin-top:18px; padding-top:14px; border-top:1px solid #141e2a; text-align:center; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; margin:6px auto 12px; max-width:480px; }
+  .reveal-explain .katex { font-size:1em; color:#f0eeea; }
+  .controls { display:flex; gap:8px; margin-top:6px; justify-content:center; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+  .progress-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .progress-row .right { color:#0fee89; }
+  .progress-row .wrong { color:#ff4670; }
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">PROPORTION TRAINER · 8 QUESTIONS</span>
+    <div class="target-picker">
+      <span>topic:</span>
+      <select id="topic">
+        <option value="direct">direct</option>
+        <option value="inverse">inverse</option>
+        <option value="scaling">scaling</option>
+        <option value="mixed">mixed</option>
+      </select>
+    </div>
+  </div>
+  <div class="card" id="card"></div>
+  <div class="progress-row">
+    <span><b id="step-num">1</b>/<span id="step-total">8</span></span>
+    <span><span class="right">✓ <b id="right-count">0</b></span> &nbsp; <span class="wrong">✗ <b id="wrong-count">0</b></span></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  arr = arr.slice();
+  for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+  return arr;
+}
+function escapeHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function renderMixed(target, text) {
+  if (typeof katex === "undefined") { setTimeout(function() { renderMixed(target, text); }, 50); return; }
+  var parts = text.split("$");
+  var html = "";
+  parts.forEach(function(part, i) {
+    if (i % 2 === 0) html += escapeHtml(part);
+    else { try { html += katex.renderToString(part, { throwOnError: false }); } catch (e) { html += escapeHtml(part); } }
+  });
+  target.innerHTML = html;
+}
+
+// =========================================================================
+// DIRECT
+// =========================================================================
+
+function genDirect() {
+  var pattern = pick(["lin", "lin", "sq", "sqrt"]);
+  if (pattern === "lin") {
+    var k = rand(2, 7);
+    var x1 = rand(2, 8);
+    var y1 = k * x1;
+    var x2 = rand(2, 12);
+    while (x2 === x1) x2 = rand(2, 12);
+    var y2 = k * x2;
+    var origTex = "y = " + k + "x \\;\\text{when}\\; x = " + x1;
+    return mc(
+      "y is directly proportional to x. When x = " + x1 + ", y = " + y1 + ". Find y when x = " + x2 + ".",
+      "y = kx",
+      shuffle([String(y2), String(y2 + x2), String(y2 - x2), String(k + x2)]),
+      String(y2),
+      "$y = kx$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " \\cdot " + x2 + " = " + y2 + "$."
+    );
+  } else if (pattern === "sq") {
+    var k = rand(2, 5);
+    var x1 = pick([2, 3, 4]);
+    var y1 = k * x1 * x1;
+    var x2 = pick([2, 3, 4, 5, 6]);
+    while (x2 === x1) x2 = pick([2, 3, 4, 5, 6]);
+    var y2 = k * x2 * x2;
+    return mc(
+      "y is proportional to x². When x = " + x1 + ", y = " + y1 + ". Find y when x = " + x2 + ".",
+      "y = kx^2",
+      shuffle([String(y2), String(y2 + x2), String(y2 - x2), String(k * x2)]),
+      String(y2),
+      "$y = kx^2$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " \\cdot " + (x2 * x2) + " = " + y2 + "$."
+    );
+  } else {
+    // sqrt
+    var k = rand(2, 5);
+    var x1 = pick([4, 9, 16, 25]);
+    var y1 = k * Math.sqrt(x1);
+    var x2 = pick([4, 9, 16, 25, 36]);
+    while (x2 === x1) x2 = pick([4, 9, 16, 25, 36]);
+    var y2 = k * Math.sqrt(x2);
+    return mc(
+      "y is proportional to √x. When x = " + x1 + ", y = " + y1 + ". Find y when x = " + x2 + ".",
+      "y = k\\sqrt{x}",
+      shuffle([String(y2), String(y2 + 1), String(k + Math.sqrt(x2)), String(y2 - 1)]),
+      String(y2),
+      "$y = k\\sqrt{x}$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " \\cdot \\sqrt{" + x2 + "} = " + y2 + "$."
+    );
+  }
+}
+
+// =========================================================================
+// INVERSE
+// =========================================================================
+
+function genInverse() {
+  var pattern = pick(["x", "x", "x2"]);
+  if (pattern === "x") {
+    var k = pick([12, 16, 20, 24, 30, 36, 40, 60]);
+    var x1Cand = [];
+    for (var i = 2; i <= 12; i++) if (k % i === 0) x1Cand.push(i);
+    var x1 = pick(x1Cand);
+    var y1 = k / x1;
+    var x2Cand = x1Cand.filter(function(v) { return v !== x1; });
+    var x2 = pick(x2Cand);
+    var y2 = k / x2;
+    return mc(
+      "y is inversely proportional to x. When x = " + x1 + ", y = " + y1 + ". Find y when x = " + x2 + ".",
+      "y = \\dfrac{k}{x}",
+      shuffle([String(y2), String(y2 + 1), String(y1), String(k - x2)]),
+      String(y2),
+      "$y = k/x$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " / " + x2 + " = " + y2 + "$."
+    );
+  } else {
+    // 1/x²
+    var k = pick([36, 100, 144, 196]);
+    var x1 = pick([2, 3]);
+    var y1 = k / (x1 * x1);
+    var x2 = pick([2, 3, 4, 6]);
+    while (x2 === x1 || (k % (x2 * x2)) !== 0) x2 = pick([2, 3, 4, 6]);
+    var y2 = k / (x2 * x2);
+    return mc(
+      "y is inversely proportional to x². When x = " + x1 + ", y = " + y1 + ". Find y when x = " + x2 + ".",
+      "y = \\dfrac{k}{x^2}",
+      shuffle([String(y2), String(y2 + 1), String(k - x2 * x2), String(y2 * 2)]),
+      String(y2),
+      "$y = k/x^2$. From $(" + x1 + ", " + y1 + ")$: $k = " + k + "$. At $x = " + x2 + "$: $y = " + k + " / " + (x2 * x2) + " = " + y2 + "$."
+    );
+  }
+}
+
+// =========================================================================
+// SCALING — "what happens to y when x scales by N"
+// =========================================================================
+
+function genScaling() {
+  var pattern = pick([
+    { rel: "y \\propto x",      factor: 2, mul: 2,    txt: "doubles",  ans: "2y" },
+    { rel: "y \\propto x^2",    factor: 2, mul: 4,    txt: "doubles",  ans: "4y" },
+    { rel: "y \\propto x^3",    factor: 2, mul: 8,    txt: "doubles",  ans: "8y" },
+    { rel: "y \\propto x^2",    factor: 3, mul: 9,    txt: "triples",  ans: "9y" },
+    { rel: "y \\propto x",      factor: 3, mul: 3,    txt: "triples",  ans: "3y" },
+    { rel: "y \\propto \\dfrac{1}{x}",   factor: 2, mul: 0.5,  txt: "doubles", ans: "y/2" },
+    { rel: "y \\propto \\dfrac{1}{x^2}", factor: 2, mul: 0.25, txt: "doubles", ans: "y/4" },
+    { rel: "y \\propto \\dfrac{1}{x}",   factor: 3, mul: "1/3", txt: "triples", ans: "y/3" }
+  ]);
+  var distractors = ["2y", "3y", "4y", "y/2", "y/3", "y/4", "8y", "9y"].filter(function(v) { return v !== pattern.ans; });
+  var others = shuffle(distractors).slice(0, 3);
+  var s = shuffle([pattern.ans].concat(others));
+  return {
+    type: "mc",
+    promptHTML: "If $" + pattern.rel + "$ and $x$ " + pattern.txt + ", what happens to $y$?",
+    tex: pattern.rel + ", \\;x \\to " + pattern.factor + "x",
+    options: s,
+    correctIdx: s.indexOf(pattern.ans),
+    why: "For this proportion, multiplying $x$ by " + pattern.factor + " multiplies $y$ by " + (pattern.mul + "") + "."
+  };
+}
+
+// =========================================================================
+// HELPERS
+// =========================================================================
+
+function mc(prompt, tex, options, correct, why) {
+  return {
+    type: "mc",
+    promptHTML: prompt,
+    tex: tex,
+    options: options,
+    correctIdx: options.indexOf(correct),
+    why: why
+  };
+}
+
+// =========================================================================
+// PIPELINE
+// =========================================================================
+
+function genQuestion(topic) {
+  if (topic === "direct")  return genDirect();
+  if (topic === "inverse") return genInverse();
+  if (topic === "scaling") return genScaling();
+  var bag = [genDirect, genDirect, genInverse, genInverse, genScaling];
+  return bag[Math.floor(Math.random() * bag.length)]();
+}
+
+function buildSet(topic, n) {
+  var out = [];
+  for (var i = 0; i < n; i++) out.push(genQuestion(topic));
+  return out;
+}
+
+var state = { idx: 0, right: 0, wrong: 0, set: [], locked: false };
+var cardEl = document.getElementById("card");
+var topicSel = document.getElementById("topic");
+var stepNumEl = document.getElementById("step-num");
+var rightCountEl = document.getElementById("right-count");
+var wrongCountEl = document.getElementById("wrong-count");
+
+(function setInitialTopic() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var t = params.get("topic");
+    var valid = ["direct", "inverse", "scaling", "mixed"];
+    if (t && valid.indexOf(t) !== -1) topicSel.value = t;
+    else topicSel.value = "mixed";
+  } catch (e) { topicSel.value = "mixed"; }
+})();
+
+topicSel.addEventListener("change", reset);
+
+function reset() {
+  state = { idx: 0, right: 0, wrong: 0, locked: false, set: buildSet(topicSel.value, 8) };
+  rightCountEl.textContent = 0; wrongCountEl.textContent = 0;
+  document.getElementById("step-total").textContent = state.set.length;
+  renderQ();
+}
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); } catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+function renderQ() {
+  if (state.idx >= state.set.length) { renderDone(); return; }
+  var q = state.set[state.idx];
+  stepNumEl.textContent = state.idx + 1;
+  state.locked = false;
+  cardEl.innerHTML =
+    '<p class="q-label">QUESTION</p>' +
+    '<p class="q-prompt" id="prompt"></p>' +
+    '<div class="q-expr" id="expr"></div>' +
+    '<div class="options" id="opts"></div>' +
+    '<div id="reveal-slot"></div>';
+  renderMixed(document.getElementById("prompt"), q.promptHTML);
+  tryRender(document.getElementById("expr"), q.tex);
+  var optsEl = document.getElementById("opts");
+  q.options.forEach(function(opt, i) {
+    var btn = document.createElement("button");
+    btn.className = "opt"; btn.dataset.idx = i;
+    btn.innerHTML = '<span class="opt-letter">' + String.fromCharCode(65 + i) + '</span><span class="opt-text" id="opt-text-' + i + '"></span>';
+    btn.addEventListener("click", function() { submitMC(i); });
+    optsEl.appendChild(btn);
+    var optTextEl = document.getElementById("opt-text-" + i);
+    if (/^\d+(\.\d+)?$/.test(opt)) optTextEl.textContent = opt;
+    else if (opt.indexOf("\\") === -1 && opt.indexOf("/") !== -1) optTextEl.textContent = opt;
+    else if (opt.indexOf("\\") === -1) optTextEl.textContent = opt;
+    else tryRender(optTextEl, opt);
+  });
+  reportHeight();
+}
+
+function finishCorrectness(correct) {
+  if (state.locked) return;
+  state.locked = true;
+  if (correct) state.right++; else state.wrong++;
+  rightCountEl.textContent = state.right; wrongCountEl.textContent = state.wrong;
+}
+
+function showReveal(correct, q) {
+  var slot = document.getElementById("reveal-slot");
+  slot.innerHTML =
+    '<div class="reveal ' + (correct ? "ok" : "bad") + '">' +
+      '<p class="reveal-line">' + (correct ? "✓ CORRECT" : "✗ ANSWER: " + String.fromCharCode(65 + q.correctIdx)) + '</p>' +
+      '<p class="reveal-explain" id="why"></p>' +
+      '<div class="controls"><button class="btn primary" id="next">' + (state.idx < state.set.length - 1 ? "Next →" : "See result") + '</button></div>' +
+    '</div>';
+  renderMixed(document.getElementById("why"), q.why);
+  document.getElementById("next").addEventListener("click", function() { state.idx++; renderQ(); });
+  reportHeight();
+}
+
+function submitMC(idx) {
+  if (state.locked) return;
+  var q = state.set[state.idx];
+  var correct = idx === q.correctIdx;
+  finishCorrectness(correct);
+  var btns = document.querySelectorAll(".opt");
+  btns.forEach(function(b, i) {
+    b.disabled = true;
+    if (i === q.correctIdx) b.classList.add("right");
+    else if (i === idx) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  showReveal(correct, q);
+}
+
+function renderDone() {
+  var total = state.set.length;
+  var pct = Math.round((state.right / total) * 100);
+  var msg = pct === 100 ? "Perfect. Proportion is sharp." :
+            pct >= 80 ? "Strong. Watch the squared / cubed factor." :
+            pct >= 50 ? "Decent. Drill 'direct' or 'inverse' alone." :
+            "More drill needed. Pick one mode from the dropdown.";
+  cardEl.innerHTML =
+    '<div class="done-card"><span class="kicker">SCORE</span>' +
+    '<p class="big">' + state.right + '<span class="total"> / ' + total + '</span></p>' +
+    '<p class="sub">' + pct + '%</p>' +
+    '<p class="msg">' + msg + '</p>' +
+    '<div class="controls" style="justify-content:center;margin-top:14px"><button class="btn primary" id="retry">Retry</button></div></div>';
+  document.getElementById("retry").addEventListener("click", reset);
+  stepNumEl.textContent = total;
+  reportHeight();
+}
+
+reset();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
