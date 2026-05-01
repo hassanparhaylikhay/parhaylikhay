@@ -26,7 +26,6 @@
   .card .eq-row { display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:6px; min-height:22px; }
   .card .eq-row .eq { color:#0fee89; font-size:13px; }
   .card .eq-row .eq .katex { font-size:1em; }
-  .card .eq-row .nval { color:#7a7875; font-family:'Geist Mono',monospace; font-size:10px; }
   .card .feat { color:#7a7875; font-family:'Geist Mono',monospace; font-size:10px; text-align:center; margin-top:6px; line-height:1.35; }
 
   svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
@@ -35,6 +34,7 @@
   .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
   .axis-title { font-family:'Geist Mono',monospace; font-size:10px; fill:#7a7875; }
   .curve { stroke:#fff067; stroke-width:2.4; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .asymptote { stroke:#ff4670; stroke-width:1; stroke-dasharray:4 4; opacity:0.6; }
 </style>
 </head>
 <body>
@@ -43,7 +43,6 @@
 <script>
 "use strict";
 
-// ===== KaTeX render helper =====
 function tryRender(target, tex) {
   if (typeof katex !== "undefined") {
     try { katex.render(tex, target, { throwOnError: false }); }
@@ -53,9 +52,6 @@ function tryRender(target, tex) {
   }
 }
 
-// ===== Catmull-Rom → cubic Bezier path =====
-// Produces a smooth curve through all sample points. Input: [{x, y}, ...].
-// Skips segments where either endpoint is null (used to break at asymptotes / domain edges).
 function catmullRomPath(points) {
   if (points.length < 2) return "";
   let d = "";
@@ -78,36 +74,72 @@ function catmullRomPath(points) {
   return d;
 }
 
+function fmt(v) {
+  const n = Math.round(v * 100) / 100;
+  if (n === Math.floor(n)) return n.toFixed(0);
+  return String(n);
+}
+function fmtSign(v) {
+  if (Math.abs(v) < 0.001) return "";
+  return (v > 0 ? "+" : "-") + fmt(Math.abs(v));
+}
+
 // ===== Shape definitions =====
-// Each shape provides: TeX label (with `${a}` placeholder for formula generation),
-// f(a, x), domain bounds, and whether it has two branches (split at x=0).
+// Each shape provides:
+//   feat       — short feature line for the gallery card
+//   f(p, x)    — function value, p is the params object (always contains p.a, sometimes p.h, p.k, p.b, p.r, p.r1, p.r2, p.r3)
+//   texFn(p)   — TeX string for the example header (uses params)
+//   galleryTex — fixed canonical TeX shown in the 7-shape gallery (a = 1)
+//   split      — true if curve has two branches (don't draw across x = 0)
+//   firstQuadrantOnly — true if domain is x ≥ 0 (sqrt)
+//   asymptote  — optional function asymptoteY(p) returning y-value of horizontal asymptote (for shifted shapes)
+//   range      — optional { xMin, xMax, yMin, yMax, pxX, pxY } for shape-specific plot dims (overrides format defaults)
 const SHAPES = {
-  lin:   { feat: "line through origin",                f: (a,x) => a*x,                       texPattern: "y = ${a}x",            galleryTex: "y = x",                domain: [-3, 3], split: false, firstQuadrantOnly: false },
-  sq:    { feat: "parabola, vertex at origin",         f: (a,x) => a*x*x,                     texPattern: "y = ${a}x^2",          galleryTex: "y = x^2",              domain: [-3, 3], split: false, firstQuadrantOnly: false },
-  cub:   { feat: "S-curve, inflection at origin",      f: (a,x) => a*x*x*x,                   texPattern: "y = ${a}x^3",          galleryTex: "y = x^3",              domain: [-3, 3], split: false, firstQuadrantOnly: false },
-  sqrt:  { feat: "x ≥ 0 only, rises and flattens",     f: (a,x) => x < 0 ? NaN : a*Math.sqrt(x), texPattern: "y = ${a}\\sqrt{x}",  galleryTex: "y = \\sqrt{x}",        domain: [0, 4],  split: false, firstQuadrantOnly: true  },
-  rec:   { feat: "two branches in Q1 and Q3",          f: (a,x) => Math.abs(x) < 0.001 ? NaN : a/x,        texPattern: "y = \\dfrac{${a}}{x}",   galleryTex: "y = \\dfrac{1}{x}",   domain: [-4, 4], split: true,  firstQuadrantOnly: false },
-  rec2:  { feat: "two branches both above x-axis",     f: (a,x) => Math.abs(x) < 0.001 ? NaN : a/(x*x),    texPattern: "y = \\dfrac{${a}}{x^2}", galleryTex: "y = \\dfrac{1}{x^2}", domain: [-4, 4], split: true,  firstQuadrantOnly: false },
-  const: { feat: "horizontal line at y = 1",           f: (a,x) => a,                         texPattern: "y = ${a}",             galleryTex: "y = 1",                domain: [-3, 3], split: false, firstQuadrantOnly: false },
+  lin:   { feat: "line through origin",                f: (p,x) => p.a*x,                                 texFn: p => "y = " + fmt(p.a) + "x",                                galleryTex: "y = x",          split: false, firstQuadrantOnly: false },
+  sq:    { feat: "parabola, vertex at origin",         f: (p,x) => p.a*x*x,                               texFn: p => "y = " + fmt(p.a) + "x^2",                              galleryTex: "y = x^2",        split: false, firstQuadrantOnly: false },
+  cub:   { feat: "S-curve, inflection at origin",      f: (p,x) => p.a*x*x*x,                             texFn: p => "y = " + fmt(p.a) + "x^3",                              galleryTex: "y = x^3",        split: false, firstQuadrantOnly: false },
+  sqrt:  { feat: "x ≥ 0 only, rises and flattens",     f: (p,x) => x < 0 ? NaN : p.a*Math.sqrt(x),        texFn: p => "y = " + fmt(p.a) + "\\sqrt{x}",                        galleryTex: "y = \\sqrt{x}",  split: false, firstQuadrantOnly: true },
+  rec:   { feat: "two branches in Q1 and Q3",          f: (p,x) => Math.abs(x) < 0.001 ? NaN : p.a/x,     texFn: p => "y = \\dfrac{" + fmt(p.a) + "}{x}",                     galleryTex: "y = \\dfrac{1}{x}",   split: true,  firstQuadrantOnly: false },
+  rec2:  { feat: "two branches both above x-axis",     f: (p,x) => Math.abs(x) < 0.001 ? NaN : p.a/(x*x), texFn: p => "y = \\dfrac{" + fmt(p.a) + "}{x^2}",                   galleryTex: "y = \\dfrac{1}{x^2}", split: true,  firstQuadrantOnly: false },
+  const: { feat: "horizontal line at y = 1",           f: (p,x) => p.a,                                   texFn: p => "y = " + fmt(p.a),                                      galleryTex: "y = 1",          split: false, firstQuadrantOnly: false },
+
+  // Parameterized shapes for sketching lessons (2.11)
+  quad: {
+    feat: "parabola, vertex (h, k)",
+    f: (p, x) => p.a * (x - p.h) * (x - p.h) + p.k,
+    texFn: p => "y = " + (p.a === 1 ? "" : (p.a === -1 ? "-" : fmt(p.a))) + "(x " + fmtSign(-p.h) + ")^2 " + fmtSign(p.k),
+    split: false, firstQuadrantOnly: false,
+    range: { xMin: -2, xMax: 6, yMin: -10, yMax: 6, pxX: 50, pxY: 25 }
+  },
+  cubic_factored: {
+    feat: "cubic with three roots",
+    f: (p, x) => (x - p.r1) * (x - p.r2) * (x - p.r3),
+    texFn: p => "y = (x " + fmtSign(-p.r1) + ")(x " + fmtSign(-p.r2) + ")(x " + fmtSign(-p.r3) + ")",
+    split: false, firstQuadrantOnly: false,
+    range: { xMin: -4, xMax: 4, yMin: -10, yMax: 10, pxX: 45, pxY: 18 }
+  },
+  recip_shifted: {
+    feat: "shifted reciprocal",
+    f: (p, x) => Math.abs(x) < 0.001 ? NaN : p.a / x + p.b,
+    texFn: p => "y = \\dfrac{" + fmt(p.a) + "}{x} " + fmtSign(p.b),
+    asymptoteY: p => p.b,
+    split: true, firstQuadrantOnly: false,
+    range: { xMin: -4, xMax: 4, yMin: -3, yMax: 5, pxX: 50, pxY: 30 }
+  },
+  exp_shifted: {
+    feat: "shifted exponential",
+    f: (p, x) => p.a * Math.pow(p.r, x) + p.b,
+    texFn: p => "y = " + fmt(p.a) + " \\cdot " + fmt(p.r) + "^x " + fmtSign(p.b),
+    asymptoteY: p => p.b,
+    split: false, firstQuadrantOnly: false,
+    range: { xMin: -3, xMax: 3, yMin: -2, yMax: 8, pxX: 60, pxY: 28 }
+  }
 };
 
 const SHAPE_ORDER = ["lin", "sq", "cub", "sqrt", "rec", "rec2", "const"];
 
-function fmtA(a) {
-  const n = Math.round(a * 10) / 10;
-  return (n === Math.floor(n)) ? n.toFixed(0) : n.toFixed(1);
-}
-
-function texFor(shape, a) {
-  return SHAPES[shape].texPattern.replace("${a}", fmtA(a));
-}
-
 // ===== Build SVG for a single shape =====
-// `large` = section-graph format (480×320, 50 px/unit, x [-4,4], y [-2.5, 2.5] for centred-axis shapes).
-// `mini`  = grid card format (170×140, 20 px/unit, x [-2.5, 2.5], y [-2, 2]).
-// firstQuadrantOnly shapes get an L-shaped axis at left/bottom and a [0, max] range.
-
-function buildSVG(shape, a, format) {
+function buildSVG(shape, p, format) {
   const sh = SHAPES[shape];
   const NS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(NS, "svg");
@@ -115,58 +147,54 @@ function buildSVG(shape, a, format) {
   svg.setAttribute("xmlns", NS);
 
   let plotW, plotH, marginL, marginR, marginT, marginB;
-  let xMin, xMax, yMin, yMax, pxPerUnit;
+  let xMin, xMax, yMin, yMax, pxX, pxY;
 
   if (format === "large") {
-    plotW = 400; plotH = 200; marginL = 50; marginR = 30; marginT = 20; marginB = 30;
-    pxPerUnit = 50; // 50 px = 1 unit on both axes
-    if (sh.firstQuadrantOnly) {
+    marginL = 50; marginR = 30; marginT = 20; marginB = 30;
+    if (sh.range) {
+      xMin = sh.range.xMin; xMax = sh.range.xMax;
+      yMin = sh.range.yMin; yMax = sh.range.yMax;
+      pxX  = sh.range.pxX;  pxY  = sh.range.pxY;
+    } else if (sh.firstQuadrantOnly) {
       xMin = 0; xMax = 4; yMin = 0; yMax = 3;
-      plotW = (xMax - xMin) * pxPerUnit; plotH = (yMax - yMin) * pxPerUnit;
+      pxX = 50; pxY = 50;
     } else {
       xMin = -4; xMax = 4; yMin = -2; yMax = 2;
-      plotW = (xMax - xMin) * pxPerUnit; plotH = (yMax - yMin) * pxPerUnit;
+      pxX = 50; pxY = 50;
     }
+    plotW = (xMax - xMin) * pxX;
+    plotH = (yMax - yMin) * pxY;
   } else {
-    // Mini cards: keep total viewBox identical for every shape so the
-    // SVG scales by the same factor in every grid cell — otherwise the
-    // stroke appears thicker on shapes with smaller plot dims.
+    // Mini cards (gallery only) — only for the 7 base shapes; new params shapes never appear in gallery.
     marginL = 22; marginR = 12; marginT = 14; marginB = 14;
     if (sh.firstQuadrantOnly) {
-      xMin = 0; xMax = 3.5; yMin = 0; yMax = 2;
-      pxPerUnit = 40; // 3.5 × 40 = 140 wide, 2 × 40 = 80 tall
+      xMin = 0; xMax = 3.5; yMin = 0; yMax = 2; pxX = 40; pxY = 40;
     } else {
-      xMin = -3.5; xMax = 3.5; yMin = -2; yMax = 2;
-      pxPerUnit = 20; // 7 × 20 = 140 wide, 4 × 20 = 80 tall
+      xMin = -3.5; xMax = 3.5; yMin = -2; yMax = 2; pxX = 20; pxY = 20;
     }
-    plotW = (xMax - xMin) * pxPerUnit; plotH = (yMax - yMin) * pxPerUnit;
+    plotW = (xMax - xMin) * pxX;
+    plotH = (yMax - yMin) * pxY;
   }
 
   const totalW = marginL + plotW + marginR;
   const totalH = marginT + plotH + marginB;
   svg.setAttribute("viewBox", `0 0 ${totalW} ${totalH}`);
 
-  const xPx = (x) => marginL + (x - xMin) * pxPerUnit;
-  const yPx = (y) => marginT + plotH - (y - yMin) * pxPerUnit;
+  const xPx = (x) => marginL + (x - xMin) * pxX;
+  const yPx = (y) => marginT + plotH - (y - yMin) * pxY;
 
-  // Gridlines + tick labels
+  // Gridlines
   const grid = document.createElementNS(NS, "g");
-  grid.setAttribute("class", "grid-line");
-  grid.setAttribute("fill", "none");
-  // Vertical gridlines at integer x
   for (let xi = Math.ceil(xMin); xi <= Math.floor(xMax); xi++) {
-    if (xi === 0 && !sh.firstQuadrantOnly) continue;
-    if (sh.firstQuadrantOnly && xi === 0) continue;
+    if (xi === 0) continue;
     const ln = document.createElementNS(NS, "line");
     ln.setAttribute("class", "grid-line");
     ln.setAttribute("x1", xPx(xi)); ln.setAttribute("x2", xPx(xi));
     ln.setAttribute("y1", yPx(yMax)); ln.setAttribute("y2", yPx(yMin));
     grid.appendChild(ln);
   }
-  // Horizontal gridlines at integer y
   for (let yi = Math.ceil(yMin); yi <= Math.floor(yMax); yi++) {
-    if (yi === 0 && !sh.firstQuadrantOnly) continue;
-    if (sh.firstQuadrantOnly && yi === 0) continue;
+    if (yi === 0) continue;
     const ln = document.createElementNS(NS, "line");
     ln.setAttribute("class", "grid-line");
     ln.setAttribute("x1", xPx(xMin)); ln.setAttribute("x2", xPx(xMax));
@@ -175,24 +203,36 @@ function buildSVG(shape, a, format) {
   }
   svg.appendChild(grid);
 
-  // Axes
+  // Axes — drawn at the edge for firstQuadrantOnly, through origin otherwise.
   const axisX = document.createElementNS(NS, "line");
   axisX.setAttribute("class", "axis-line");
   axisX.setAttribute("x1", xPx(xMin)); axisX.setAttribute("x2", xPx(xMax));
   const axisY = document.createElementNS(NS, "line");
   axisY.setAttribute("class", "axis-line");
   axisY.setAttribute("y1", yPx(yMax)); axisY.setAttribute("y2", yPx(yMin));
-  if (sh.firstQuadrantOnly) {
-    axisX.setAttribute("y1", yPx(0)); axisX.setAttribute("y2", yPx(0));
-    axisY.setAttribute("x1", xPx(0)); axisY.setAttribute("x2", xPx(0));
-  } else {
-    axisX.setAttribute("y1", yPx(0)); axisX.setAttribute("y2", yPx(0));
-    axisY.setAttribute("x1", xPx(0)); axisY.setAttribute("x2", xPx(0));
-  }
+  // x-axis at y = 0 (in data) clamped to plot bounds
+  const xAxisY = (yMin <= 0 && yMax >= 0) ? yPx(0) : yPx(yMin);
+  const yAxisX = (xMin <= 0 && xMax >= 0) ? xPx(0) : xPx(xMin);
+  axisX.setAttribute("y1", xAxisY); axisX.setAttribute("y2", xAxisY);
+  axisY.setAttribute("x1", yAxisX); axisY.setAttribute("x2", yAxisX);
   svg.appendChild(axisX);
   svg.appendChild(axisY);
 
-  // Tick labels (only on large format; mini is too small for legible labels)
+  // Asymptote line (red dashed) if shape declares one
+  if (sh.asymptoteY) {
+    const ay = sh.asymptoteY(p);
+    if (ay >= yMin && ay <= yMax) {
+      const aLine = document.createElementNS(NS, "line");
+      aLine.setAttribute("class", "asymptote");
+      aLine.setAttribute("x1", xPx(xMin));
+      aLine.setAttribute("x2", xPx(xMax));
+      aLine.setAttribute("y1", yPx(ay));
+      aLine.setAttribute("y2", yPx(ay));
+      svg.appendChild(aLine);
+    }
+  }
+
+  // Tick labels (large format only)
   if (format === "large") {
     for (let xi = Math.ceil(xMin); xi <= Math.floor(xMax); xi++) {
       if (xi === 0) continue;
@@ -200,16 +240,18 @@ function buildSVG(shape, a, format) {
       t.setAttribute("class", "axis-tick-label");
       t.setAttribute("text-anchor", "middle");
       t.setAttribute("x", xPx(xi));
-      t.setAttribute("y", yPx(0) + (sh.firstQuadrantOnly ? 14 : 14));
+      t.setAttribute("y", xAxisY + 14);
       t.textContent = String(xi);
       svg.appendChild(t);
     }
-    for (let yi = Math.ceil(yMin); yi <= Math.floor(yMax); yi++) {
+    // Y ticks at every other integer if range > 6, else at every integer
+    const yStep = (yMax - yMin) > 6 ? 2 : 1;
+    for (let yi = Math.ceil(yMin / yStep) * yStep; yi <= yMax; yi += yStep) {
       if (yi === 0 && !sh.firstQuadrantOnly) continue;
       const t = document.createElementNS(NS, "text");
       t.setAttribute("class", "axis-tick-label");
       t.setAttribute("text-anchor", "end");
-      t.setAttribute("x", xPx(sh.firstQuadrantOnly ? 0 : 0) - 6);
+      t.setAttribute("x", yAxisX - 6);
       t.setAttribute("y", yPx(yi) + 3);
       t.textContent = String(yi);
       svg.appendChild(t);
@@ -218,8 +260,8 @@ function buildSVG(shape, a, format) {
       const t0 = document.createElementNS(NS, "text");
       t0.setAttribute("class", "axis-tick-label");
       t0.setAttribute("text-anchor", "end");
-      t0.setAttribute("x", xPx(0) - 6);
-      t0.setAttribute("y", yPx(0) + 3);
+      t0.setAttribute("x", yAxisX - 6);
+      t0.setAttribute("y", xAxisY + 3);
       t0.textContent = "0";
       svg.appendChild(t0);
     }
@@ -227,41 +269,36 @@ function buildSVG(shape, a, format) {
     const xt = document.createElementNS(NS, "text");
     xt.setAttribute("class", "axis-title");
     xt.setAttribute("x", xPx(xMax) + 8);
-    xt.setAttribute("y", yPx(0) + 4);
+    xt.setAttribute("y", xAxisY + 4);
     xt.textContent = "x";
     svg.appendChild(xt);
     const yt = document.createElementNS(NS, "text");
     yt.setAttribute("class", "axis-title");
-    yt.setAttribute("x", xPx(0));
+    yt.setAttribute("x", yAxisX);
     yt.setAttribute("y", yPx(yMax) - 8);
     yt.setAttribute("text-anchor", "middle");
     yt.textContent = "y";
     svg.appendChild(yt);
   }
 
-  // Curve(s) — sample 250 points per branch and convert to smooth Catmull-Rom Bezier
+  // Curve(s)
   function buildBranch(branchXMin, branchXMax) {
     const N = 250;
     const points = [];
     for (let i = 0; i <= N; i++) {
       const x = branchXMin + (branchXMax - branchXMin) * (i / N);
-      const y = sh.f(a, x);
+      const y = sh.f(p, x);
       if (!isFinite(y) || y > yMax || y < yMin) {
-        points.push(null); // gap
+        points.push(null);
         continue;
       }
       points.push({ x: xPx(x), y: yPx(y) });
     }
-    // Split into contiguous runs of non-null points and emit a path per run.
     const segments = [];
     let cur = [];
-    for (const p of points) {
-      if (p === null) {
-        if (cur.length >= 2) segments.push(cur);
-        cur = [];
-      } else {
-        cur.push(p);
-      }
+    for (const pt of points) {
+      if (pt === null) { if (cur.length >= 2) segments.push(cur); cur = []; }
+      else cur.push(pt);
     }
     if (cur.length >= 2) segments.push(cur);
     const out = [];
@@ -275,7 +312,6 @@ function buildSVG(shape, a, format) {
     return out;
   }
 
-  // Clip path so curves don't escape the plot rect
   const defs = document.createElementNS(NS, "defs");
   const clip = document.createElementNS(NS, "clipPath");
   const clipId = "clip-" + Math.random().toString(36).slice(2);
@@ -293,10 +329,10 @@ function buildSVG(shape, a, format) {
   curveGroup.setAttribute("clip-path", `url(#${clipId})`);
   if (sh.split) {
     const eps = 0.02;
-    buildBranch(xMin, -eps).forEach(p => curveGroup.appendChild(p));
-    buildBranch(eps, xMax).forEach(p => curveGroup.appendChild(p));
+    buildBranch(xMin, -eps).forEach(el => curveGroup.appendChild(el));
+    buildBranch(eps, xMax).forEach(el => curveGroup.appendChild(el));
   } else {
-    buildBranch(xMin, xMax).forEach(p => curveGroup.appendChild(p));
+    buildBranch(xMin, xMax).forEach(el => curveGroup.appendChild(el));
   }
   svg.appendChild(curveGroup);
 
@@ -305,7 +341,7 @@ function buildSVG(shape, a, format) {
 
 // ===== Page-level layouts =====
 
-function renderSingle(shape, a) {
+function renderSingle(shape, p) {
   const root = document.getElementById("root");
   const wrap = document.createElement("div");
   wrap.className = "wrap-single";
@@ -320,11 +356,11 @@ function renderSingle(shape, a) {
   head.appendChild(lbl); head.appendChild(eq);
   wrap.appendChild(head);
 
-  const svg = buildSVG(shape, a, "large");
+  const svg = buildSVG(shape, p, "large");
   wrap.appendChild(svg);
   root.appendChild(wrap);
 
-  tryRender(eq, texFor(shape, a));
+  tryRender(eq, SHAPES[shape].texFn(p));
 }
 
 function renderGallery() {
@@ -346,7 +382,7 @@ function renderGallery() {
     eq.className = "eq";
     eqRow.appendChild(eq);
     card.appendChild(eqRow);
-    const svg = buildSVG(shapeId, 1, "mini");
+    const svg = buildSVG(shapeId, { a: 1 }, "mini");
     card.appendChild(svg);
     const feat = document.createElement("div");
     feat.className = "feat";
@@ -358,15 +394,28 @@ function renderGallery() {
 }
 
 // ===== Boot =====
-const params = new URLSearchParams(window.location.search);
-const layout = params.get("layout") || "single";
+const urlParams = new URLSearchParams(window.location.search);
+const layout = urlParams.get("layout") || "single";
 if (layout === "gallery") {
   renderGallery();
 } else {
-  const shape = params.get("shape") || "rec";
-  const a = parseFloat(params.get("a") || "2");
-  if (!SHAPES[shape]) { document.getElementById("root").textContent = "unknown shape"; }
-  else renderSingle(shape, a);
+  const shape = urlParams.get("shape") || "rec";
+  if (!SHAPES[shape]) {
+    document.getElementById("root").textContent = "unknown shape: " + shape;
+  } else {
+    // Read every possible param into the params object; shapes pick what they need.
+    const p = {
+      a: parseFloat(urlParams.get("a") || "2"),
+      b: parseFloat(urlParams.get("b") || "0"),
+      h: parseFloat(urlParams.get("h") || "0"),
+      k: parseFloat(urlParams.get("k") || "0"),
+      r: parseFloat(urlParams.get("r") || "2"),
+      r1: parseFloat(urlParams.get("r1") || "-1"),
+      r2: parseFloat(urlParams.get("r2") || "1"),
+      r3: parseFloat(urlParams.get("r3") || "2")
+    };
+    renderSingle(shape, p);
+  }
 }
 
 // ===== iframe height reporting =====
@@ -389,7 +438,6 @@ function reportHeight() {
 }
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
-// Also report after KaTeX renders (it can change wrap height)
 setTimeout(reportHeight, 200);
 setTimeout(reportHeight, 600);
 </script>

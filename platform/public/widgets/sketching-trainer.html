@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sketching Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:696px; margin:0 auto; }
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .target-picker { display:flex; gap:6px; align-items:center; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .target-picker select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:5px 22px 5px 10px; border-radius:5px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:24px 24px 22px; }
+  .q-label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#3a4a5a; margin-bottom:12px; text-align:center; }
+  .q-prompt { font-size:14.5px; color:#c8c6be; text-align:center; margin-bottom:12px; line-height:1.5; }
+  .q-prompt .katex { font-size:1.05em; color:#f0eeea; }
+  .options { display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .opt { appearance:none; background:#07090d; border:1px solid #141e2a; color:#f0eeea; font-family:inherit; font-size:14px; padding:11px 14px; border-radius:7px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px; }
+  .opt:hover:not(:disabled) { border-color:#3a4a5a; }
+  .opt .opt-letter { font-family:'Geist Mono',monospace; color:#3a4a5a; font-size:11px; min-width:14px; }
+  .opt .opt-text { flex:1; }
+  .opt .opt-text .katex { font-size:1em; }
+  .opt.right { border-color:#0fee89; background:rgba(15,238,137,0.07); color:#0fee89; }
+  .opt.right .opt-letter { color:#0fee89; }
+  .opt.wrong { border-color:#ff4670; background:rgba(255,70,112,0.06); color:#ff4670; }
+  .opt.wrong .opt-letter { color:#ff4670; }
+  .opt.dim { opacity:0.45; }
+  .opt:disabled { cursor:default; }
+  .reveal { margin-top:18px; padding-top:14px; border-top:1px solid #141e2a; text-align:center; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; margin:6px auto 12px; max-width:480px; }
+  .reveal-explain .katex { font-size:1em; color:#f0eeea; }
+  .controls { display:flex; gap:8px; margin-top:6px; justify-content:center; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+  .progress-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .progress-row .right { color:#0fee89; }
+  .progress-row .wrong { color:#ff4670; }
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">SKETCHING · 8 QUESTIONS</span>
+    <div class="target-picker">
+      <span>topic:</span>
+      <select id="topic">
+        <option value="quad">quadratics</option>
+        <option value="cubic">cubics & reciprocals</option>
+        <option value="exp">exponentials</option>
+        <option value="mixed">mixed</option>
+      </select>
+    </div>
+  </div>
+  <div class="card" id="card"></div>
+  <div class="progress-row">
+    <span><b id="step-num">1</b>/<span id="step-total">8</span></span>
+    <span><span class="right">✓ <b id="right-count">0</b></span> &nbsp; <span class="wrong">✗ <b id="wrong-count">0</b></span></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  arr = arr.slice();
+  for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+  return arr;
+}
+function escapeHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function renderMixed(target, text) {
+  if (typeof katex === "undefined") { setTimeout(function() { renderMixed(target, text); }, 50); return; }
+  var parts = text.split("$");
+  var html = "";
+  parts.forEach(function(part, i) {
+    if (i % 2 === 0) html += escapeHtml(part);
+    else { try { html += katex.renderToString(part, { throwOnError: false }); } catch (e) { html += escapeHtml(part); } }
+  });
+  target.innerHTML = html;
+}
+function fmtSign(v) {
+  if (v === 0) return "";
+  return (v > 0 ? "+ " : "- ") + Math.abs(v);
+}
+
+// =========================================================================
+// QUADRATIC questions
+// =========================================================================
+
+function genQuad() {
+  var pattern = pick(["shape", "yint", "xint", "vertex"]);
+  if (pattern === "shape") {
+    var a = pick([-3, -2, -1, 1, 2, 3]);
+    var b = pick([-4, -3, 2, 4]);
+    var c = pick([-6, -3, 3, 6]);
+    var bSign = b > 0 ? "+ " + b : "- " + Math.abs(b);
+    var cSign = c > 0 ? "+ " + c : "- " + Math.abs(c);
+    var aText = a === 1 ? "" : (a === -1 ? "-" : a);
+    var correct = a > 0 ? "opens upward (U-shape)" : "opens downward (∩-shape)";
+    return mc(
+      "For $y = " + aText + "x^2 " + bSign + "x " + cSign + "$, the parabola...",
+      shuffle([correct, "opens leftward", "opens rightward", a > 0 ? "opens downward (∩-shape)" : "opens upward (U-shape)"]),
+      correct,
+      "Sign of the $x^2$ coefficient sets direction. $a = " + a + "$ is " + (a > 0 ? "positive → U-shape" : "negative → ∩-shape") + "."
+    );
+  } else if (pattern === "yint") {
+    var aa = pick([1, 2, -1, -2]);
+    var bb = pick([-5, -3, 3, 5]);
+    var cc = pick([-9, -7, -5, 4, 6, 8]);
+    var bSign2 = bb > 0 ? "+ " + bb : "- " + Math.abs(bb);
+    var cSign2 = cc > 0 ? "+ " + cc : "- " + Math.abs(cc);
+    var aText2 = aa === 1 ? "" : (aa === -1 ? "-" : aa);
+    return mc(
+      "The y-intercept of $y = " + aText2 + "x^2 " + bSign2 + "x " + cSign2 + "$ is at...",
+      shuffle(["$(0, " + cc + ")$", "$(0, " + aa + ")$", "$(0, " + bb + ")$", "$(" + cc + ", 0)$"]),
+      "$(0, " + cc + ")$",
+      "Y-intercept: set $x = 0$, get $y = " + cc + "$. Always the constant term."
+    );
+  } else if (pattern === "xint") {
+    var r1 = pick([-4, -3, -2, -1]);
+    var r2 = pick([1, 2, 3, 4]);
+    return mc(
+      "The x-intercepts of $y = (x " + fmtSign(-r1) + ")(x " + fmtSign(-r2) + ")$ are at...",
+      shuffle(["$x = " + r1 + ", x = " + r2 + "$", "$x = " + (-r1) + ", x = " + (-r2) + "$", "$x = " + (r1 * r2) + "$ only", "$x = 0$ only"]),
+      "$x = " + r1 + ", x = " + r2 + "$",
+      "Set $y = 0$: each bracket equals zero gives a root."
+    );
+  } else {
+    var h = pick([-3, -2, -1, 1, 2, 3]);
+    var k = pick([-7, -5, -3, 2, 4, 6]);
+    var aaa = pick([1, 2, -1, -2]);
+    var aText3 = aaa === 1 ? "" : (aaa === -1 ? "-" : aaa);
+    return mc(
+      "The turning point of $y = " + aText3 + "(x " + fmtSign(-h) + ")^2 " + fmtSign(k) + "$ is at...",
+      shuffle(["$(" + h + ", " + k + ")$", "$(" + (-h) + ", " + k + ")$", "$(" + h + ", " + (-k) + ")$", "$(" + (-h) + ", " + (-k) + ")$"]),
+      "$(" + h + ", " + k + ")$",
+      "$y = a(x - h)^2 + k$ has turning point $(h, k)$. Read $h$ and $k$ off directly."
+    );
+  }
+}
+
+// =========================================================================
+// CUBIC + RECIPROCAL questions
+// =========================================================================
+
+function genCubic() {
+  var pattern = pick(["roots", "shape", "yint", "asymptote"]);
+  if (pattern === "roots") {
+    var r1 = pick([-3, -2]);
+    var r2 = pick([1, 2]);
+    var r3 = pick([3, 4]);
+    return mc(
+      "The x-intercepts of $y = (x " + fmtSign(-r1) + ")(x " + fmtSign(-r2) + ")(x " + fmtSign(-r3) + ")$ are at...",
+      shuffle(["$x = " + r1 + ", " + r2 + ", " + r3 + "$", "$x = " + (-r1) + ", " + (-r2) + ", " + (-r3) + "$", "$x = 0$ only", "$x = " + (r1 + r2 + r3) + "$ only"]),
+      "$x = " + r1 + ", " + r2 + ", " + r3 + "$",
+      "Each bracket = 0 gives a root. Roots: " + r1 + ", " + r2 + ", " + r3 + "."
+    );
+  } else if (pattern === "shape") {
+    var a = pick([-2, -1, 1, 2]);
+    var aText = a === 1 ? "" : (a === -1 ? "-" : a);
+    var correct = a > 0 ? "bottom-left to top-right (S-shape)" : "top-left to bottom-right";
+    return mc(
+      "A cubic with leading coefficient $" + a + "$ goes...",
+      shuffle([correct, a > 0 ? "top-left to bottom-right" : "bottom-left to top-right (S-shape)", "always upward U", "horizontal line"]),
+      correct,
+      "Sign of the leading coefficient sets the overall direction. $a = " + a + "$ → " + correct + "."
+    );
+  } else if (pattern === "yint") {
+    var rr1 = pick([-3, -2, -1]);
+    var rr2 = pick([1, 2]);
+    var rr3 = pick([3, 4]);
+    var yval = (-rr1) * (-rr2) * (-rr3);
+    return mc(
+      "The y-intercept of $y = (x " + fmtSign(-rr1) + ")(x " + fmtSign(-rr2) + ")(x " + fmtSign(-rr3) + ")$ is at...",
+      shuffle(["$(0, " + yval + ")$", "$(0, " + (-yval) + ")$", "$(0, 0)$", "$(0, " + (rr1 + rr2 + rr3) + ")$"]),
+      "$(0, " + yval + ")$",
+      "Set $x = 0$: $y = (" + (-rr1) + ")(" + (-rr2) + ")(" + (-rr3) + ") = " + yval + "$."
+    );
+  } else {
+    var aval = pick([1, 2, 3, 4]);
+    var bval = pick([-3, -2, 2, 3]);
+    return mc(
+      "The horizontal asymptote of $y = \\dfrac{" + aval + "}{x} " + fmtSign(bval) + "$ is at...",
+      shuffle(["$y = " + bval + "$", "$y = 0$", "$y = " + aval + "$", "$y = " + (aval + bval) + "$"]),
+      "$y = " + bval + "$",
+      "As $x \\to \\pm\\infty$, $\\dfrac{" + aval + "}{x} \\to 0$, so $y \\to " + bval + "$."
+    );
+  }
+}
+
+// =========================================================================
+// EXPONENTIAL questions
+// =========================================================================
+
+function genExp() {
+  var pattern = pick(["yint", "asymptote", "growth_decay"]);
+  if (pattern === "yint") {
+    var a = pick([2, 3, 4, 5]);
+    var b = pick([-2, -1, 0, 1, 2]);
+    var r = pick([2, 3]);
+    var yval = a + b;
+    return mc(
+      "The y-intercept of $y = " + a + " \\cdot " + r + "^x " + fmtSign(b) + "$ is at...",
+      shuffle(["$(0, " + yval + ")$", "$(0, " + a + ")$", "$(0, " + b + ")$", "$(0, " + (a*r) + ")$"]),
+      "$(0, " + yval + ")$",
+      "$x = 0$: $r^0 = 1$, so $y = " + a + " \\cdot 1 " + fmtSign(b) + " = " + yval + "$."
+    );
+  } else if (pattern === "asymptote") {
+    var aa = pick([2, 3, 5]);
+    var bb = pick([-3, -1, 2, 4]);
+    var rr = pick([2, 3, "0.5"]);
+    return mc(
+      "The horizontal asymptote of $y = " + aa + " \\cdot " + rr + "^x " + fmtSign(bb) + "$ is at...",
+      shuffle(["$y = " + bb + "$", "$y = 0$", "$y = " + aa + "$", "$y = " + (aa + bb) + "$"]),
+      "$y = " + bb + "$",
+      "Asymptote at the constant shift $b = " + bb + "$."
+    );
+  } else {
+    var concepts = [
+      { q: "Which describes exponential GROWTH?", correct: "$y = 4 \\cdot 2^x$ (base $> 1$)", others: ["$y = 4 \\cdot 0.5^x$ (base $< 1$)", "$y = 4 \\cdot 0.3^x$", "$y = 4x$"] },
+      { q: "Which describes exponential DECAY?", correct: "$y = 5 \\cdot 0.4^x$ (base $< 1$)", others: ["$y = 5 \\cdot 2^x$", "$y = 5 \\cdot 3^x$", "$y = 5 \\cdot 4^x$"] }
+    ];
+    var c = pick(concepts);
+    return mc(c.q, shuffle([c.correct].concat(c.others)), c.correct,
+      "Growth: base $r > 1$. Decay: $0 < r < 1$.");
+  }
+}
+
+// =========================================================================
+
+function mc(prompt, options, correct, why) {
+  return { type: "mc", promptHTML: prompt, options: options, correctIdx: options.indexOf(correct), why: why };
+}
+
+function genQuestion(topic) {
+  if (topic === "quad")  return genQuad();
+  if (topic === "cubic") return genCubic();
+  if (topic === "exp")   return genExp();
+  var bag = [genQuad, genCubic, genExp];
+  return bag[Math.floor(Math.random() * bag.length)]();
+}
+
+function buildSet(topic, n) { var out = []; for (var i = 0; i < n; i++) out.push(genQuestion(topic)); return out; }
+
+var state = { idx: 0, right: 0, wrong: 0, set: [], locked: false };
+var cardEl = document.getElementById("card");
+var topicSel = document.getElementById("topic");
+var stepNumEl = document.getElementById("step-num");
+var rightCountEl = document.getElementById("right-count");
+var wrongCountEl = document.getElementById("wrong-count");
+
+(function setInitialTopic() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var t = params.get("topic");
+    var valid = ["quad", "cubic", "exp", "mixed"];
+    if (t && valid.indexOf(t) !== -1) topicSel.value = t;
+    else topicSel.value = "mixed";
+  } catch (e) { topicSel.value = "mixed"; }
+})();
+
+topicSel.addEventListener("change", reset);
+
+function reset() {
+  state = { idx: 0, right: 0, wrong: 0, locked: false, set: buildSet(topicSel.value, 8) };
+  rightCountEl.textContent = 0; wrongCountEl.textContent = 0;
+  document.getElementById("step-total").textContent = state.set.length;
+  renderQ();
+}
+
+function renderQ() {
+  if (state.idx >= state.set.length) { renderDone(); return; }
+  var q = state.set[state.idx];
+  stepNumEl.textContent = state.idx + 1;
+  state.locked = false;
+  cardEl.innerHTML = '<p class="q-label">QUESTION</p><p class="q-prompt" id="prompt"></p><div class="options" id="opts"></div><div id="reveal-slot"></div>';
+  renderMixed(document.getElementById("prompt"), q.promptHTML);
+  var optsEl = document.getElementById("opts");
+  q.options.forEach(function(opt, i) {
+    var btn = document.createElement("button");
+    btn.className = "opt"; btn.dataset.idx = i;
+    btn.innerHTML = '<span class="opt-letter">' + String.fromCharCode(65 + i) + '</span><span class="opt-text" id="opt-text-' + i + '"></span>';
+    btn.addEventListener("click", function() { submitMC(i); });
+    optsEl.appendChild(btn);
+    renderMixed(document.getElementById("opt-text-" + i), opt);
+  });
+  reportHeight();
+}
+
+function showReveal(correct, q) {
+  var slot = document.getElementById("reveal-slot");
+  slot.innerHTML = '<div class="reveal ' + (correct ? "ok" : "bad") + '"><p class="reveal-line">' + (correct ? "✓ CORRECT" : "✗ ANSWER: " + String.fromCharCode(65 + q.correctIdx)) + '</p><p class="reveal-explain" id="why"></p><div class="controls"><button class="btn primary" id="next">' + (state.idx < state.set.length - 1 ? "Next →" : "See result") + '</button></div></div>';
+  renderMixed(document.getElementById("why"), q.why);
+  document.getElementById("next").addEventListener("click", function() { state.idx++; renderQ(); });
+  reportHeight();
+}
+
+function submitMC(idx) {
+  if (state.locked) return;
+  var q = state.set[state.idx];
+  var correct = idx === q.correctIdx;
+  state.locked = true;
+  if (correct) state.right++; else state.wrong++;
+  rightCountEl.textContent = state.right; wrongCountEl.textContent = state.wrong;
+  var btns = document.querySelectorAll(".opt");
+  btns.forEach(function(b, i) {
+    b.disabled = true;
+    if (i === q.correctIdx) b.classList.add("right");
+    else if (i === idx) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  showReveal(correct, q);
+}
+
+function renderDone() {
+  var total = state.set.length;
+  var pct = Math.round((state.right / total) * 100);
+  var msg = pct === 100 ? "Perfect. Sketches are sharp." : pct >= 80 ? "Strong. Watch the sign of the leading coefficient." : pct >= 50 ? "Decent. Drill the asymptote rules." : "More drill needed. Pick one mode from the dropdown.";
+  cardEl.innerHTML = '<div class="done-card"><span class="kicker">SCORE</span><p class="big">' + state.right + '<span class="total"> / ' + total + '</span></p><p class="sub">' + pct + '%</p><p class="msg">' + msg + '</p><div class="controls" style="justify-content:center;margin-top:14px"><button class="btn primary" id="retry">Retry</button></div></div>';
+  document.getElementById("retry").addEventListener("click", reset);
+  stepNumEl.textContent = total;
+  reportHeight();
+}
+
+reset();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
