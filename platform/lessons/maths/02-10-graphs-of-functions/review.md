@@ -101,7 +101,7 @@ Reading from the graph: $x \approx -0.8$, $x \approx 1.5$, $x \approx 3.3$. **[M
 
 **Answer:** **(c)** $x \approx 0.7, 1.6, 3.7$. **(d)** $x \approx -0.8, 1.5, 3.3$.
 
-Full marks $= B3 + B1 + M1 + A2 + M2 + A2 = 11$.
+Full marks $= 11$.
 
 ## Quick reference
 
