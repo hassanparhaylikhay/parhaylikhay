@@ -201,7 +201,7 @@ function genConv() {
                      { from: "kg", to: "pounds", k: 2.2, x: 10, y: 22 }]);
     return mc(
       "Using the rate $1 \\text{ " + rate.from + "} = " + rate.k + " \\text{ " + rate.to + "}$, convert " + rate.x + " " + rate.from + " to " + rate.to + ".",
-      shuffle([rate.y + " " + rate.to, (rate.y + 10) + " " + rate.to, (rate.x / rate.k) + " " + rate.to, (rate.x + rate.k) + " " + rate.to]),
+      shuffle([rate.y + " " + rate.to, (rate.y + 10) + " " + rate.to, (rate.y / 10) + " " + rate.to, (rate.x + rate.k) + " " + rate.to]),
       rate.y + " " + rate.to,
       "Multiply: $" + rate.x + " \\times " + rate.k + " = " + rate.y + "$ " + rate.to + "."
     );
