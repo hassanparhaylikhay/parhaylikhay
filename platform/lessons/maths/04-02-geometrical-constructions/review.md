@@ -53,22 +53,24 @@ For **nets and surface area / volume**:
 
 If the question asks you to **show** something, you must write the substituted formula. If it asks you to **calculate**, the working line $+$ answer is enough.
 
-<svg viewBox="0 0 520 200" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="260" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">CONSTRUCTION RECAP: ARCS = THE MARK</text>
-  <line x1="80" y1="160" x2="440" y2="160" stroke="#00abfa" stroke-width="2.5"/>
-  <circle cx="80" cy="160" r="5" fill="#0fee89"/>
-  <circle cx="440" cy="160" r="5" fill="#0fee89"/>
-  <text x="74" y="180" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">A</text>
-  <text x="445" y="180" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">B</text>
-  <path d="M 200 70 A 220 220 0 0 1 290 47" fill="none" stroke="#fff067" stroke-width="2" stroke-dasharray="4,3"/>
-  <path d="M 220 45 A 200 200 0 0 1 320 75" fill="none" stroke="#ff822c" stroke-width="2" stroke-dasharray="4,3"/>
-  <line x1="80" y1="160" x2="245" y2="60" stroke="#00abfa" stroke-width="2.5"/>
-  <line x1="440" y1="160" x2="245" y2="60" stroke="#00abfa" stroke-width="2.5"/>
-  <circle cx="245" cy="60" r="5" fill="#fff067"/>
-  <text x="240" y="50" fill="#fff067" font-family="Geist Mono,monospace" font-size="10" font-weight="600">C</text>
-  <text x="120" y="105" fill="#fff067" font-family="Geist Mono,monospace" font-size="9" font-weight="600">arcs LEFT VISIBLE</text>
-  <text x="320" y="105" fill="#ff4670" font-family="Geist Mono,monospace" font-size="9" font-weight="600">erase = lose B1</text>
-</svg>
+<div style="background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:520px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;text-align:center;margin-bottom:14px">CONSTRUCTION RECAP: ARCS = THE MARK</div>
+  <div style="position:relative;width:400px;height:180px;margin:0 auto">
+    <div style="position:absolute;top:140px;left:20px;width:360px;height:0;border-top:2.5px solid #00abfa"></div>
+    <div style="position:absolute;top:136px;left:16px;width:10px;height:10px;background:#0fee89;border-radius:50%"></div>
+    <div style="position:absolute;top:136px;left:376px;width:10px;height:10px;background:#0fee89;border-radius:50%"></div>
+    <span style="position:absolute;top:155px;left:14px;color:#0fee89;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">A</span>
+    <span style="position:absolute;top:155px;left:378px;color:#0fee89;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">B</span>
+    <div style="position:absolute;top:0;left:140px;width:140px;height:60px;border:2px dashed #fff067;border-bottom:none;border-right:none;border-radius:50% 0 0 0;transform:rotate(15deg);clip-path:polygon(20% 100%,100% 100%,100% 0,80% 0)"></div>
+    <div style="position:absolute;top:0;left:120px;width:140px;height:60px;border:2px dashed #ff822c;border-bottom:none;border-left:none;border-radius:0 50% 0 0;transform:rotate(-15deg);clip-path:polygon(0 100%,80% 100%,100% 0,20% 0)"></div>
+    <div style="position:absolute;top:30px;left:20px;width:188px;height:0;border-top:2.5px solid #00abfa;transform-origin:left center;transform:rotate(38deg)"></div>
+    <div style="position:absolute;top:30px;left:200px;width:188px;height:0;border-top:2.5px solid #00abfa;transform-origin:right center;transform:rotate(-38deg)"></div>
+    <div style="position:absolute;top:26px;left:196px;width:10px;height:10px;background:#fff067;border-radius:50%"></div>
+    <span style="position:absolute;top:8px;left:194px;color:#fff067;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">C</span>
+    <span style="position:absolute;top:88px;left:60px;color:#fff067;font-family:'Geist Mono',monospace;font-size:9px;font-weight:600">arcs LEFT VISIBLE</span>
+    <span style="position:absolute;top:88px;left:280px;color:#ff4670;font-family:'Geist Mono',monospace;font-size:9px;font-weight:600">erase = lose B1</span>
+  </div>
+</div>
 
 ## Tolerance reminders
 
@@ -92,23 +94,20 @@ If a textbook drills these, skip those pages. They will not be tested. The only 
 
 A solid is a triangular prism. The triangular cross-section is a right-angled triangle with legs $5$ cm and $12$ cm. The length of the prism is $20$ cm.
 
-<svg viewBox="0 0 520 280" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="260" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">TRIANGULAR PRISM NET: 5-12-13 BY 20</text>
-  <g stroke="#00abfa" stroke-width="2.5" fill="none">
-    <rect x="80" y="60" width="320" height="40" fill="#00abfa" fill-opacity="0.10"/>
-    <rect x="80" y="100" width="320" height="60" fill="#00abfa" fill-opacity="0.10"/>
-    <rect x="80" y="160" width="320" height="50" fill="#00abfa" fill-opacity="0.10"/>
-  </g>
-  <polygon points="80,100 80,160 30,160" fill="#fff067" fill-opacity="0.18" stroke="#fff067" stroke-width="2.5"/>
-  <polygon points="400,100 400,160 450,160" fill="#0fee89" fill-opacity="0.18" stroke="#0fee89" stroke-width="2.5"/>
-  <text x="240" y="85" text-anchor="middle" fill="#00abfa" font-family="Geist Mono,monospace" font-size="10" font-weight="600">5 x 20</text>
-  <text x="240" y="135" text-anchor="middle" fill="#00abfa" font-family="Geist Mono,monospace" font-size="10" font-weight="600">12 x 20</text>
-  <text x="240" y="190" text-anchor="middle" fill="#00abfa" font-family="Geist Mono,monospace" font-size="10" font-weight="600">13 x 20</text>
-  <text x="55" y="135" text-anchor="middle" fill="#fff067" font-family="Geist Mono,monospace" font-size="10" font-weight="600">tri</text>
-  <text x="425" y="135" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">tri</text>
-  <text x="80" y="240" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">5² + 12² = 169 → hypotenuse = 13</text>
-  <text x="80" y="255" fill="#0fee89" font-family="Geist Mono,monospace" font-size="9" font-weight="600">TSA = 60 + 600 = 660 cm²; V = 30 x 20 = 600 cm³</text>
-</svg>
+<div style="background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:520px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;text-align:center;margin-bottom:14px">TRIANGULAR PRISM NET: 5-12-13 BY 20</div>
+  <div style="position:relative;width:440px;height:170px;margin:0 auto">
+    <div style="position:absolute;top:0;left:50px;width:320px;height:40px;background:#00abfa20;border:2.5px solid #00abfa;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:10px;color:#00abfa;font-weight:600">5 x 20</div>
+    <div style="position:absolute;top:40px;left:50px;width:320px;height:60px;background:#00abfa20;border:2.5px solid #00abfa;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:10px;color:#00abfa;font-weight:600">12 x 20</div>
+    <div style="position:absolute;top:100px;left:50px;width:320px;height:50px;background:#00abfa20;border:2.5px solid #00abfa;display:flex;align-items:center;justify-content:center;font-family:'Geist Mono',monospace;font-size:10px;color:#00abfa;font-weight:600">13 x 20</div>
+    <div style="position:absolute;top:40px;left:0;width:50px;height:60px;background:#fff06730;border:2.5px solid #fff067;clip-path:polygon(100% 0,100% 100%,0 100%)"></div>
+    <span style="position:absolute;top:62px;left:14px;color:#fff067;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">tri</span>
+    <div style="position:absolute;top:40px;left:370px;width:50px;height:60px;background:#0fee8930;border:2.5px solid #0fee89;clip-path:polygon(0 0,100% 100%,0 100%)"></div>
+    <span style="position:absolute;top:62px;left:392px;color:#0fee89;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">tri</span>
+  </div>
+  <div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7a7875;margin-top:10px">5² + 12² = 169, hypotenuse = 13</div>
+  <div style="font-family:'Geist Mono',monospace;font-size:9px;color:#0fee89;font-weight:600;margin-top:4px">TSA = 60 + 600 = 660 cm²; V = 30 x 20 = 600 cm³</div>
+</div>
 
 (a) Calculate the length of the hypotenuse of the triangular face.
 
@@ -163,34 +162,32 @@ Full marks $= 7$.
 
 (The volume formulas for prism, cylinder, pyramid, cone, sphere are GIVEN on the formula sheet in the exam. Surface area formulas for prism and cuboid are NOT given: you must know them.)
 
-<svg viewBox="0 0 520 200" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="260" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">FORMULA RECAP CARD</text>
-  <g>
-    <rect x="40" y="50" width="100" height="120" fill="none" stroke="#00abfa" stroke-width="2"/>
-    <text x="90" y="75" text-anchor="middle" fill="#00abfa" font-family="Geist Mono,monospace" font-size="10" font-weight="600">CUBOID</text>
-    <text x="90" y="105" text-anchor="middle" fill="#fff067" font-family="Geist Mono,monospace" font-size="9">2(lw+lh+wh)</text>
-    <text x="90" y="130" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="9">V = l w h</text>
-    <text x="90" y="155" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">memorise</text>
-  </g>
-  <g>
-    <rect x="155" y="50" width="100" height="120" fill="none" stroke="#fff067" stroke-width="2"/>
-    <text x="205" y="75" text-anchor="middle" fill="#fff067" font-family="Geist Mono,monospace" font-size="10" font-weight="600">PRISM</text>
-    <text x="205" y="105" text-anchor="middle" fill="#fff067" font-family="Geist Mono,monospace" font-size="9">2A + PL</text>
-    <text x="205" y="130" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="9">V = A L</text>
-    <text x="205" y="155" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">V given</text>
-  </g>
-  <g>
-    <rect x="270" y="50" width="100" height="120" fill="none" stroke="#0fee89" stroke-width="2"/>
-    <text x="320" y="75" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">CYLINDER</text>
-    <text x="320" y="105" text-anchor="middle" fill="#fff067" font-family="Geist Mono,monospace" font-size="9">2 pi r² + 2 pi r h</text>
-    <text x="320" y="130" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="9">V = pi r² h</text>
-    <text x="320" y="155" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">V given</text>
-  </g>
-  <g>
-    <rect x="385" y="50" width="100" height="120" fill="none" stroke="#ff822c" stroke-width="2"/>
-    <text x="435" y="75" text-anchor="middle" fill="#ff822c" font-family="Geist Mono,monospace" font-size="10" font-weight="600">PYRAMID</text>
-    <text x="435" y="105" text-anchor="middle" fill="#fff067" font-family="Geist Mono,monospace" font-size="9">s² + 2 s l</text>
-    <text x="435" y="130" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="9">V = (1/3) s² h</text>
-    <text x="435" y="155" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">V given</text>
-  </g>
-</svg>
+<div style="background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:520px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;text-align:center;margin-bottom:14px">FORMULA RECAP CARD</div>
+  <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+    <div style="border:2px solid #00abfa;border-radius:6px;padding:14px 10px;width:110px;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'Geist Mono',monospace">
+      <span style="font-size:10px;color:#00abfa;font-weight:600;letter-spacing:0.4px">CUBOID</span>
+      <span style="font-size:9px;color:#fff067">2(lw+lh+wh)</span>
+      <span style="font-size:9px;color:#0fee89">V = l w h</span>
+      <span style="font-size:9px;color:#7a7875">memorise</span>
+    </div>
+    <div style="border:2px solid #fff067;border-radius:6px;padding:14px 10px;width:110px;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'Geist Mono',monospace">
+      <span style="font-size:10px;color:#fff067;font-weight:600;letter-spacing:0.4px">PRISM</span>
+      <span style="font-size:9px;color:#fff067">2A + PL</span>
+      <span style="font-size:9px;color:#0fee89">V = A L</span>
+      <span style="font-size:9px;color:#7a7875">V given</span>
+    </div>
+    <div style="border:2px solid #0fee89;border-radius:6px;padding:14px 10px;width:110px;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'Geist Mono',monospace">
+      <span style="font-size:10px;color:#0fee89;font-weight:600;letter-spacing:0.4px">CYLINDER</span>
+      <span style="font-size:9px;color:#fff067">2 pi r² + 2 pi r h</span>
+      <span style="font-size:9px;color:#0fee89">V = pi r² h</span>
+      <span style="font-size:9px;color:#7a7875">V given</span>
+    </div>
+    <div style="border:2px solid #ff822c;border-radius:6px;padding:14px 10px;width:110px;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'Geist Mono',monospace">
+      <span style="font-size:10px;color:#ff822c;font-weight:600;letter-spacing:0.4px">PYRAMID</span>
+      <span style="font-size:9px;color:#fff067">s² + 2 s l</span>
+      <span style="font-size:9px;color:#0fee89">V = (1/3) s² h</span>
+      <span style="font-size:9px;color:#7a7875">V given</span>
+    </div>
+  </div>
+</div>

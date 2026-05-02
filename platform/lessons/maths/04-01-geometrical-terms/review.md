@@ -87,43 +87,54 @@ A trapezium sits outside this chain: it has only **one** pair of parallel sides,
 - Straight: $\theta = 180°$
 - Reflex: $180° < \theta < 360°$
 
-<svg viewBox="0 0 520 200" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="260" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">ANGLE-TYPE FLASHCARD</text>
-  <g>
-    <line x1="50" y1="140" x2="120" y2="140" stroke="#00abfa" stroke-width="2.5"/>
-    <line x1="50" y1="140" x2="105" y2="95" stroke="#00abfa" stroke-width="2.5"/>
-    <path d="M 75 140 A 25 25 0 0 0 70 122" fill="none" stroke="#fff067" stroke-width="2"/>
-    <text x="85" y="170" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">ACUTE</text>
-    <text x="85" y="184" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">&lt; 90°</text>
-  </g>
-  <g>
-    <line x1="155" y1="140" x2="225" y2="140" stroke="#00abfa" stroke-width="2.5"/>
-    <line x1="155" y1="140" x2="155" y2="80" stroke="#00abfa" stroke-width="2.5"/>
-    <rect x="155" y="128" width="12" height="12" fill="none" stroke="#ff4670" stroke-width="2"/>
-    <text x="190" y="170" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">RIGHT</text>
-    <text x="190" y="184" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">= 90°</text>
-  </g>
-  <g>
-    <line x1="265" y1="140" x2="340" y2="140" stroke="#00abfa" stroke-width="2.5"/>
-    <line x1="265" y1="140" x2="215" y2="95" stroke="#00abfa" stroke-width="2.5"/>
-    <path d="M 290 140 A 25 25 0 0 1 247 128" fill="none" stroke="#fff067" stroke-width="2"/>
-    <text x="290" y="170" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">OBTUSE</text>
-    <text x="290" y="184" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">90 to 180°</text>
-  </g>
-  <g>
-    <line x1="370" y1="140" x2="445" y2="140" stroke="#00abfa" stroke-width="2.5"/>
-    <line x1="370" y1="140" x2="305" y2="140" stroke="#00abfa" stroke-width="2.5"/>
-    <text x="385" y="170" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">STRAIGHT</text>
-    <text x="385" y="184" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">180°</text>
-  </g>
-  <g>
-    <line x1="465" y1="140" x2="510" y2="140" stroke="#00abfa" stroke-width="2.5"/>
-    <line x1="465" y1="140" x2="500" y2="105" stroke="#00abfa" stroke-width="2.5"/>
-    <path d="M 488 140 A 22 22 0 1 1 481 119" fill="none" stroke="#ff4670" stroke-width="2"/>
-    <text x="490" y="170" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">REFLEX</text>
-    <text x="490" y="184" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">&gt; 180°</text>
-  </g>
-</svg>
+<div style="background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:520px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;text-align:center;margin-bottom:14px">ANGLE-TYPE FLASHCARD</div>
+  <div style="display:flex;gap:8px;justify-content:space-around;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div style="position:relative;width:80px;height:70px">
+        <div style="position:absolute;bottom:5px;left:0;width:70px;height:0;border-top:2.5px solid #00abfa"></div>
+        <div style="position:absolute;bottom:5px;left:0;width:65px;height:0;border-top:2.5px solid #00abfa;transform-origin:left center;transform:rotate(-40deg)"></div>
+        <div style="position:absolute;bottom:8px;left:14px;width:16px;height:16px;border:2px solid #fff067;border-right:none;border-bottom:none;border-radius:50% 0 0 0"></div>
+      </div>
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#0fee89;font-weight:600;letter-spacing:0.4px;margin-top:4px">ACUTE</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7a7875">&lt; 90°</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div style="position:relative;width:80px;height:70px">
+        <div style="position:absolute;bottom:5px;left:0;width:70px;height:0;border-top:2.5px solid #00abfa"></div>
+        <div style="position:absolute;bottom:5px;left:0;width:60px;height:0;border-top:2.5px solid #00abfa;transform-origin:left center;transform:rotate(-90deg)"></div>
+        <div style="position:absolute;bottom:8px;left:2px;width:10px;height:10px;border-right:2px solid #ff4670;border-bottom:2px solid #ff4670"></div>
+      </div>
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#0fee89;font-weight:600;letter-spacing:0.4px;margin-top:4px">RIGHT</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7a7875">= 90°</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div style="position:relative;width:100px;height:70px">
+        <div style="position:absolute;bottom:5px;left:35px;width:65px;height:0;border-top:2.5px solid #00abfa"></div>
+        <div style="position:absolute;bottom:5px;left:35px;width:65px;height:0;border-top:2.5px solid #00abfa;transform-origin:left center;transform:rotate(-130deg)"></div>
+      </div>
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#0fee89;font-weight:600;letter-spacing:0.4px;margin-top:4px">OBTUSE</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7a7875">90 to 180°</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div style="position:relative;width:100px;height:70px">
+        <div style="position:absolute;bottom:5px;left:0;width:100px;height:0;border-top:2.5px solid #00abfa"></div>
+        <div style="position:absolute;bottom:1px;left:46px;width:8px;height:8px;background:#fff067;border-radius:50%"></div>
+      </div>
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#0fee89;font-weight:600;letter-spacing:0.4px;margin-top:4px">STRAIGHT</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7a7875">180°</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div style="position:relative;width:80px;height:70px">
+        <div style="position:absolute;bottom:5px;left:0;width:60px;height:0;border-top:2.5px solid #00abfa"></div>
+        <div style="position:absolute;bottom:5px;left:0;width:55px;height:0;border-top:2.5px solid #00abfa;transform-origin:left center;transform:rotate(-40deg)"></div>
+        <div style="position:absolute;bottom:0;left:0;width:30px;height:30px;border:2px solid #ff4670;border-top:none;border-right:none;border-radius:0 0 0 50%"></div>
+      </div>
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#0fee89;font-weight:600;letter-spacing:0.4px;margin-top:4px">REFLEX</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7a7875">&gt; 180°</div>
+    </div>
+  </div>
+</div>
 
 ## Quick reference: circle parts
 
@@ -134,45 +145,49 @@ A trapezium sits outside this chain: it has only **one** pair of parallel sides,
 - Sector ("pizza slice", two radii + arc); minor or major.
 - Segment (chord + arc); minor or major.
 
-<svg viewBox="0 0 520 220" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="260" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">CIRCLE PARTS RECAP</text>
-  <circle cx="260" cy="125" r="75" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
-  <circle cx="260" cy="125" r="3" fill="#fff067"/>
-  <line x1="260" y1="125" x2="320" y2="80" stroke="#00abfa" stroke-width="2.5"/>
-  <line x1="200" y1="155" x2="320" y2="155" stroke="#fff067" stroke-width="2.5"/>
-  <line x1="195" y1="80" x2="335" y2="105" stroke="#0fee89" stroke-width="2.5"/>
-  <line x1="160" y1="50" x2="360" y2="50" stroke="#ff822c" stroke-width="2.5"/>
-  <circle cx="260" cy="50" r="3" fill="#ff822c"/>
-  <line x1="260" y1="125" x2="260" y2="50" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <text x="270" y="120" fill="#fff067" font-family="Geist Mono,monospace" font-size="10" font-weight="600">O</text>
-  <text x="295" y="100" fill="#00abfa" font-family="Geist Mono,monospace" font-size="9" font-weight="600">RADIUS</text>
-  <text x="208" y="170" fill="#fff067" font-family="Geist Mono,monospace" font-size="9" font-weight="600">DIAMETER</text>
-  <text x="200" y="78" fill="#0fee89" font-family="Geist Mono,monospace" font-size="9" font-weight="600">CHORD</text>
-  <text x="270" y="42" fill="#ff822c" font-family="Geist Mono,monospace" font-size="9" font-weight="600">TANGENT</text>
-  <text x="335" y="125" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">ARC = piece of circumference</text>
-</svg>
+<div style="background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:520px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;text-align:center;margin-bottom:14px">CIRCLE PARTS RECAP</div>
+  <div style="position:relative;width:300px;height:200px;margin:0 auto">
+    <div style="position:absolute;top:25px;left:75px;width:150px;height:150px;border:1.5px solid #3a4a5a;border-radius:50%"></div>
+    <div style="position:absolute;top:97px;left:147px;width:6px;height:6px;background:#fff067;border-radius:50%"></div>
+    <div style="position:absolute;top:100px;left:150px;width:80px;height:0;border-top:2.5px solid #00abfa;transform-origin:left center;transform:rotate(-40deg)"></div>
+    <div style="position:absolute;top:130px;left:90px;width:120px;height:0;border-top:2.5px solid #fff067"></div>
+    <div style="position:absolute;top:60px;left:80px;width:160px;height:0;border-top:2.5px solid #0fee89;transform-origin:left center;transform:rotate(15deg)"></div>
+    <div style="position:absolute;top:15px;left:55px;width:200px;height:0;border-top:2.5px solid #ff822c"></div>
+    <div style="position:absolute;top:12px;left:147px;width:6px;height:6px;background:#ff822c;border-radius:50%"></div>
+    <div style="position:absolute;top:18px;left:150px;width:84px;height:0;border-top:1.5px dashed #3a4a5a;transform-origin:left center;transform:rotate(90deg)"></div>
+    <span style="position:absolute;top:90px;left:155px;color:#fff067;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">O</span>
+    <span style="position:absolute;top:62px;left:185px;color:#00abfa;font-family:'Geist Mono',monospace;font-size:9px;font-weight:600">RADIUS</span>
+    <span style="position:absolute;top:138px;left:100px;color:#fff067;font-family:'Geist Mono',monospace;font-size:9px;font-weight:600">DIAMETER</span>
+    <span style="position:absolute;top:50px;left:90px;color:#0fee89;font-family:'Geist Mono',monospace;font-size:9px;font-weight:600">CHORD</span>
+    <span style="position:absolute;top:0;left:160px;color:#ff822c;font-family:'Geist Mono',monospace;font-size:9px;font-weight:600">TANGENT</span>
+  </div>
+  <div style="font-family:'Geist Mono',monospace;font-size:9px;color:#7a7875;text-align:center;margin-top:6px">ARC = piece of circumference</div>
+</div>
 
 ## Worked example
 
 The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centre $O$. The point $T$ is on the circle, between $A$ and $B$, and a line $TX$ touches the circle at $T$.
 
-<svg viewBox="0 0 480 280" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="240" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">REGULAR OCTAGON IN A CIRCLE</text>
-  <circle cx="240" cy="150" r="90" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
-  <polygon points="276,67 312,87 332,123 332,177 312,213 276,233 204,233 168,213 148,177 148,123 168,87 204,67" fill="none" stroke="#00abfa" stroke-width="2.5"/>
-  <circle cx="240" cy="150" r="3" fill="#fff067"/>
-  <line x1="240" y1="150" x2="276" y2="67" stroke="#fff067" stroke-width="2"/>
-  <circle cx="240" cy="60" r="4" fill="#0fee89"/>
-  <line x1="170" y1="60" x2="320" y2="60" stroke="#ff822c" stroke-width="2.5"/>
-  <line x1="240" y1="150" x2="240" y2="60" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3,3"/>
-  <rect x="240" y="60" width="10" height="10" fill="none" stroke="#ff4670" stroke-width="2"/>
-  <text x="240" y="142" fill="#fff067" font-family="Geist Mono,monospace" font-size="11" font-weight="600">O</text>
-  <text x="276" y="60" fill="#00abfa" font-family="Geist Mono,monospace" font-size="10" font-weight="600">A</text>
-  <text x="200" y="60" fill="#00abfa" font-family="Geist Mono,monospace" font-size="10" font-weight="600">B</text>
-  <text x="248" y="55" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">T</text>
-  <text x="170" y="52" fill="#ff822c" font-family="Geist Mono,monospace" font-size="9" font-weight="600">TX (tangent)</text>
-  <text x="290" y="105" fill="#fff067" font-family="Geist Mono,monospace" font-size="9" font-weight="600">OA radius</text>
-</svg>
+<div style="background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:520px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;text-align:center;margin-bottom:14px">REGULAR OCTAGON IN A CIRCLE</div>
+  <div style="position:relative;width:300px;height:240px;margin:0 auto">
+    <div style="position:absolute;top:30px;left:60px;width:180px;height:180px;border:1.5px solid #3a4a5a;border-radius:50%"></div>
+    <div style="position:absolute;top:30px;left:60px;width:180px;height:180px;background:transparent;border:2.5px solid #00abfa;clip-path:polygon(72% 0,90% 12%,100% 30%,100% 70%,90% 88%,72% 100%,28% 100%,10% 88%,0 70%,0 30%,10% 12%,28% 0)"></div>
+    <div style="position:absolute;top:117px;left:147px;width:6px;height:6px;background:#fff067;border-radius:50%"></div>
+    <div style="position:absolute;top:120px;left:150px;width:90px;height:0;border-top:2px solid #fff067;transform-origin:left center;transform:rotate(-66deg)"></div>
+    <div style="position:absolute;top:32px;left:182px;width:8px;height:8px;background:#0fee89;border-radius:50%"></div>
+    <div style="position:absolute;top:36px;left:30px;width:240px;height:0;border-top:2.5px solid #ff822c"></div>
+    <div style="position:absolute;top:40px;left:147px;width:80px;height:0;border-top:1.5px dashed #3a4a5a;transform-origin:left center;transform:rotate(90deg)"></div>
+    <div style="position:absolute;top:32px;left:152px;width:10px;height:10px;border-right:2px solid #ff4670;border-bottom:2px solid #ff4670"></div>
+    <span style="position:absolute;top:108px;left:130px;color:#fff067;font-family:'Geist Mono',monospace;font-size:11px;font-weight:600">O</span>
+    <span style="position:absolute;top:38px;left:200px;color:#00abfa;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">A</span>
+    <span style="position:absolute;top:38px;left:90px;color:#00abfa;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">B</span>
+    <span style="position:absolute;top:18px;left:155px;color:#0fee89;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">T</span>
+    <span style="position:absolute;top:14px;left:35px;color:#ff822c;font-family:'Geist Mono',monospace;font-size:9px;font-weight:600">TX (tangent)</span>
+    <span style="position:absolute;top:78px;left:200px;color:#fff067;font-family:'Geist Mono',monospace;font-size:9px;font-weight:600">OA radius</span>
+  </div>
+</div>
 
 (a) Write down the size of one interior angle of the octagon.
 

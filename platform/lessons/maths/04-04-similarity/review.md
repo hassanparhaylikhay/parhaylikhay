@@ -47,25 +47,30 @@ Move the slider one more time before the practice. Track length, area and volume
 - Two pairs of equal angles is enough to prove triangles are similar (AA).
 - When parallel lines cut a triangle, the smaller triangle is similar to the whole.
 
-<svg viewBox="0 0 480 200" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="240" y="20" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#7a7875" letter-spacing="0.4">SCALE-FACTOR RECAP - LENGTH, AREA, VOLUME</text>
-  <rect x="30" y="60" width="130" height="100" rx="8" fill="none" stroke="#00abfa" stroke-width="2"/>
-  <text x="95" y="84" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#00abfa">LENGTH</text>
-  <text x="95" y="108" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="14" font-weight="600" fill="#00abfa">k</text>
-  <text x="95" y="138" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">side, height,</text>
-  <text x="95" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">radius, perimeter</text>
-  <rect x="175" y="60" width="130" height="100" rx="8" fill="none" stroke="#fff067" stroke-width="2"/>
-  <text x="240" y="84" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">AREA</text>
-  <text x="240" y="108" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="14" font-weight="600" fill="#fff067">k squared</text>
-  <text x="240" y="138" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">surface area,</text>
-  <text x="240" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">paint coverage</text>
-  <rect x="320" y="60" width="130" height="100" rx="8" fill="none" stroke="#0fee89" stroke-width="2"/>
-  <text x="385" y="84" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#0fee89">VOLUME</text>
-  <text x="385" y="108" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="14" font-weight="600" fill="#0fee89">k cubed</text>
-  <text x="385" y="138" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">capacity, mass</text>
-  <text x="385" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">(same material)</text>
-  <text x="240" y="185" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#ff4670">backward: sqrt for area, cube root for volume</text>
-</svg>
+<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px">SCALE-FACTOR RECAP - LENGTH, AREA, VOLUME</div>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px">
+    <div style="border:2px solid #00abfa;border-radius:8px;padding:14px 12px;text-align:center;width:130px">
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#00abfa">LENGTH</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:14px;font-weight:600;color:#00abfa;margin:6px 0">k</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;font-weight:600;color:#7a7875">side, height,</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;font-weight:600;color:#7a7875">radius, perimeter</div>
+    </div>
+    <div style="border:2px solid #fff067;border-radius:8px;padding:14px 12px;text-align:center;width:130px">
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#fff067">AREA</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:14px;font-weight:600;color:#fff067;margin:6px 0">k squared</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;font-weight:600;color:#7a7875">surface area,</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;font-weight:600;color:#7a7875">paint coverage</div>
+    </div>
+    <div style="border:2px solid #0fee89;border-radius:8px;padding:14px 12px;text-align:center;width:130px">
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#0fee89">VOLUME</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:14px;font-weight:600;color:#0fee89;margin:6px 0">k cubed</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;font-weight:600;color:#7a7875">capacity, mass</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:9px;font-weight:600;color:#7a7875">(same material)</div>
+    </div>
+  </div>
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#ff4670;text-align:center">backward: sqrt for area, cube root for volume</div>
+</div>
 
 ## Marking patterns at a glance
 
@@ -83,25 +88,27 @@ Forgetting to **square** the scale factor for area or **cube** it for volume. If
 
 ## Recap diagram: parallel lines inside a triangle
 
-<svg viewBox="0 0 480 280" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="240" y="20" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#7a7875" letter-spacing="0.4">DE PARALLEL TO BC - APPLY LENGTH SCALE FACTOR</text>
-  <polygon points="240,50 80,250 400,250" fill="none" stroke="#00abfa" stroke-width="2.5"/>
-  <line x1="180" y1="125" x2="300" y2="125" stroke="#fff067" stroke-width="2.5"/>
-  <circle cx="240" cy="50" r="4" fill="#0fee89"/>
-  <circle cx="80" cy="250" r="4" fill="#0fee89"/>
-  <circle cx="400" cy="250" r="4" fill="#0fee89"/>
-  <circle cx="180" cy="125" r="4" fill="#0fee89"/>
-  <circle cx="300" cy="125" r="4" fill="#0fee89"/>
-  <text x="240" y="42" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#0fee89">A</text>
-  <text x="68" y="268" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#0fee89">B</text>
-  <text x="408" y="268" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#0fee89">C</text>
-  <text x="170" y="120" text-anchor="end" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#fff067">D</text>
-  <text x="310" y="120" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#fff067">E</text>
-  <text x="240" y="118" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#fff067">DE = 9</text>
-  <text x="240" y="270" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#00abfa">BC = 15</text>
-  <text x="115" y="190" text-anchor="end" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#ff822c">AD = 6, DB = 4</text>
-  <text x="240" y="200" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">k = AB/AD = 10/6  =>  BC = 9 x 5/3 = 15</text>
-</svg>
+<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px;text-align:center">DE PARALLEL TO BC - APPLY LENGTH SCALE FACTOR</div>
+  <div style="position:relative;width:100%;max-width:400px;height:240px;margin-bottom:14px">
+    <div style="position:absolute;inset:0;clip-path:polygon(50% 0%, 0% 100%, 100% 100%);background:#00abfa18;border:2.5px solid #00abfa"></div>
+    <div style="position:absolute;left:50%;top:0;width:8px;height:8px;background:#0fee89;border-radius:50%;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:0;bottom:0;width:8px;height:8px;background:#0fee89;border-radius:50%;transform:translate(-50%,50%)"></div>
+    <div style="position:absolute;right:0;bottom:0;width:8px;height:8px;background:#0fee89;border-radius:50%;transform:translate(50%,50%)"></div>
+    <div style="position:absolute;left:50%;top:-18px;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;color:#0fee89">A</div>
+    <div style="position:absolute;left:-14px;bottom:-14px;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;color:#0fee89">B</div>
+    <div style="position:absolute;right:-14px;bottom:-14px;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;color:#0fee89">C</div>
+    <div style="position:absolute;left:25%;top:38%;right:25%;border-top:2.5px solid #fff067"></div>
+    <div style="position:absolute;left:25%;top:38%;width:8px;height:8px;background:#0fee89;border-radius:50%;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;right:25%;top:38%;width:8px;height:8px;background:#0fee89;border-radius:50%;transform:translate(50%,-50%)"></div>
+    <div style="position:absolute;left:21%;top:34%;transform:translate(-100%,-100%);font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;color:#fff067">D</div>
+    <div style="position:absolute;right:21%;top:34%;transform:translate(100%,-100%);font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;color:#fff067">E</div>
+    <div style="position:absolute;left:50%;top:30%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#fff067">DE = 9</div>
+    <div style="position:absolute;left:50%;bottom:8%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#00abfa">BC = 15</div>
+    <div style="position:absolute;left:6%;top:60%;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#ff822c">AD = 6, DB = 4</div>
+  </div>
+  <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#ff4670;text-align:center">k = AB/AD = 10/6 =&gt; BC = 9 x 5/3 = 15</div>
+</div>
 
 ## Comprehensive worked example
 

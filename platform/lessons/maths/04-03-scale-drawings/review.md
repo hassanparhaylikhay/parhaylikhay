@@ -76,21 +76,33 @@ For **scale drawings combined with bearings**:
 | $1 : 50\,000$ | $1$ unit $: 50\,000$ units | $500$ m | $2$ cm drawn |
 | $1 : 100\,000$ | $1$ unit $: 100\,000$ units | $1$ km | $1$ cm drawn |
 
-<svg viewBox="0 0 480 220" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="240" y="20" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#7a7875" letter-spacing="0.4">SCALE RECAP - DRAWING vs REAL</text>
-  <line x1="60" y1="70" x2="80" y2="70" stroke="#00abfa" stroke-width="3"/>
-  <text x="90" y="74" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#00abfa">1 cm drawn</text>
-  <text x="200" y="74" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">x scale</text>
-  <line x1="280" y1="70" x2="450" y2="70" stroke="#ff4670" stroke-width="3"/>
-  <text x="365" y="62" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">scale-many cm of real distance</text>
-  <line x1="60" y1="120" x2="220" y2="120" stroke="#ff4670" stroke-width="3"/>
-  <text x="140" y="112" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">real (cm)</text>
-  <text x="232" y="124" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">/ scale</text>
-  <line x1="320" y1="120" x2="345" y2="120" stroke="#00abfa" stroke-width="3"/>
-  <text x="355" y="124" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#00abfa">drawn (cm)</text>
-  <text x="240" y="180" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#0fee89">always convert both sides to the same unit (cm) first</text>
-  <text x="240" y="205" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#7a7875">tolerance: drawn within +/- 0.1 cm, angles within +/- 1°</text>
-</svg>
+<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px">SCALE RECAP - DRAWING vs REAL</div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;justify-content:center">
+    <div style="display:flex;align-items:center;gap:6px">
+      <div style="width:24px;border-top:3px solid #00abfa"></div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#00abfa">1 cm drawn</div>
+    </div>
+    <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#fff067">x scale</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div style="width:120px;border-top:3px solid #ff4670"></div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#ff4670">scale-many cm of real distance</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;justify-content:center">
+    <div style="display:flex;align-items:center;gap:6px">
+      <div style="width:120px;border-top:3px solid #ff4670"></div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#ff4670">real (cm)</div>
+    </div>
+    <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#fff067">/ scale</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div style="width:30px;border-top:3px solid #00abfa"></div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#00abfa">drawn (cm)</div>
+    </div>
+  </div>
+  <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#0fee89;margin-bottom:6px;text-align:center">always convert both sides to the same unit (cm) first</div>
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#7a7875;text-align:center">tolerance: drawn within +/- 0.1 cm, angles within +/- 1°</div>
+</div>
 
 ## Quick reference: cardinal bearings
 
@@ -103,19 +115,21 @@ For **scale drawings combined with bearings**:
 - W $= 270°$
 - NW $= 315°$
 
-<svg viewBox="0 0 480 280" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="240" y="20" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#7a7875" letter-spacing="0.4">CARDINAL BEARINGS RECAP</text>
-  <circle cx="240" cy="150" r="100" fill="none" stroke="#3a4a5a" stroke-width="1"/>
-  <line x1="240" y1="150" x2="240" y2="50" stroke="#00abfa" stroke-width="2.5"/>
-  <text x="240" y="42" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#00abfa">N 000°</text>
-  <line x1="240" y1="150" x2="340" y2="150" stroke="#fff067" stroke-width="2.5"/>
-  <text x="350" y="154" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">E 090°</text>
-  <line x1="240" y1="150" x2="240" y2="250" stroke="#ff822c" stroke-width="2.5"/>
-  <text x="240" y="270" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff822c">S 180°</text>
-  <line x1="240" y1="150" x2="140" y2="150" stroke="#ff4670" stroke-width="2.5"/>
-  <text x="130" y="154" text-anchor="end" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">W 270°</text>
-  <circle cx="240" cy="150" r="4" fill="#fff067"/>
-</svg>
+<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px">CARDINAL BEARINGS RECAP</div>
+  <div style="position:relative;width:240px;height:240px">
+    <div style="position:absolute;inset:20px;border-radius:50%;border:1px solid #3a4a5a"></div>
+    <div style="position:absolute;left:50%;top:20px;height:50%;width:0;border-left:2.5px solid #00abfa"></div>
+    <div style="position:absolute;left:50%;top:50%;width:50%;height:0;border-top:2.5px solid #fff067"></div>
+    <div style="position:absolute;left:50%;top:50%;height:50%;width:0;border-left:2.5px solid #ff822c"></div>
+    <div style="position:absolute;left:20px;top:50%;width:calc(50% - 20px);height:0;border-top:2.5px solid #ff4670"></div>
+    <div style="position:absolute;left:50%;top:0;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#00abfa">N 000°</div>
+    <div style="position:absolute;right:0;top:50%;transform:translateY(-50%);font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#fff067">E 090°</div>
+    <div style="position:absolute;left:50%;bottom:0;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#ff822c">S 180°</div>
+    <div style="position:absolute;left:0;top:50%;transform:translateY(-50%);font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#ff4670">W 270°</div>
+    <div style="position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  </div>
+</div>
 
 ## Worked example
 
@@ -129,28 +143,27 @@ Three towns are A, B, and C in a flat region of Punjab. The bearing of B from A 
 
 (d) The angle BAC at vertex A in the scale drawing is the difference of the two bearings. Find this angle and state whether it is acute or obtuse.
 
-<svg viewBox="0 0 480 320" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="240" y="20" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#7a7875" letter-spacing="0.4">SCALE 1 CM : 2 KM - BEARINGS 068° AND 158° FROM A</text>
-  <circle cx="160" cy="160" r="5" fill="#fff067"/>
-  <text x="142" y="158" text-anchor="end" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#fff067">A</text>
-  <line x1="160" y1="160" x2="160" y2="50" stroke="#7a7875" stroke-width="1.5" stroke-dasharray="3 3"/>
-  <polygon points="160,45 156,55 164,55" fill="#7a7875"/>
-  <text x="160" y="38" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#7a7875">N</text>
-  <line x1="160" y1="160" x2="316" y2="100" stroke="#00abfa" stroke-width="2.5"/>
-  <circle cx="316" cy="100" r="5" fill="#fff067"/>
-  <text x="324" y="98" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#fff067">B</text>
-  <text x="240" y="125" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#00abfa">6 cm = 12 km</text>
-  <line x1="160" y1="160" x2="216" y2="296" stroke="#00abfa" stroke-width="2.5"/>
-  <circle cx="216" cy="296" r="5" fill="#fff067"/>
-  <text x="225" y="298" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#fff067">C</text>
-  <text x="220" y="245" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#00abfa">4.5 cm = 9 km</text>
-  <path d="M 160 110 A 50 50 0 0 1 207 128" fill="none" stroke="#fff067" stroke-width="2"/>
-  <text x="200" y="105" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">068°</text>
-  <path d="M 160 110 A 50 50 0 0 1 178 209" fill="none" stroke="#ff822c" stroke-width="2"/>
-  <text x="195" y="200" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff822c">158°</text>
-  <line x1="316" y1="100" x2="216" y2="296" stroke="#0fee89" stroke-width="2" stroke-dasharray="4 3"/>
-  <text x="290" y="200" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#0fee89">BC = 7.5 cm</text>
-</svg>
+<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px;text-align:center">SCALE 1 CM : 2 KM - BEARINGS 068° AND 158° FROM A</div>
+  <div style="position:relative;width:100%;max-width:480px;height:320px">
+    <div style="position:absolute;left:34%;top:50%;width:12px;height:12px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:28%;top:46%;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;color:#fff067">A</div>
+    <div style="position:absolute;left:34%;top:14%;height:36%;width:0;border-left:1.5px dashed #7a7875"></div>
+    <div style="position:absolute;left:34%;top:8%;transform:translateX(-50%);font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#7a7875">N</div>
+    <div style="position:absolute;left:34%;top:50%;width:170px;height:0;border-top:2.5px solid #00abfa;transform-origin:left center;transform:rotate(-22deg)"></div>
+    <div style="position:absolute;left:66%;top:31%;width:12px;height:12px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:69%;top:28%;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;color:#fff067">B</div>
+    <div style="position:absolute;left:50%;top:38%;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#00abfa">6 cm = 12 km</div>
+    <div style="position:absolute;left:34%;top:50%;width:150px;height:0;border-top:2.5px solid #00abfa;transform-origin:left center;transform:rotate(68deg)"></div>
+    <div style="position:absolute;left:46%;top:92%;width:12px;height:12px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:48%;top:90%;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;color:#fff067">C</div>
+    <div style="position:absolute;left:48%;top:74%;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#00abfa">4.5 cm = 9 km</div>
+    <div style="position:absolute;left:42%;top:32%;font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#fff067">068°</div>
+    <div style="position:absolute;left:40%;top:62%;font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#ff822c">158°</div>
+    <div style="position:absolute;left:66%;top:31%;width:230px;height:0;border-top:2px dashed #0fee89;transform-origin:left center;transform:rotate(120deg)"></div>
+    <div style="position:absolute;left:60%;top:62%;font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#0fee89">BC = 7.5 cm</div>
+  </div>
+</div>
 
 **Step 1 (a).** Drawn AB $= 12 / 2 = 6$ cm.
 

@@ -50,58 +50,62 @@ If you have worked through P1 and P2 you can:
 
 The chord-distance relationship and the perpendicular bisector both come from circle symmetry.
 
-<svg viewBox="0 0 480 280" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="20" y="22" fill="#7a7875" font-family="Geist Mono, monospace" font-size="10" letter-spacing="0.4" font-weight="600">RECAP: EQUAL CHORDS + PERPENDICULAR FROM CENTRE</text>
-  <circle cx="130" cy="160" r="80" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
-  <line x1="60" y1="120" x2="200" y2="120" stroke="#00abfa" stroke-width="2"/>
-  <line x1="60" y1="200" x2="200" y2="200" stroke="#00abfa" stroke-width="2"/>
-  <line x1="130" y1="160" x2="130" y2="120" stroke="#00abfa" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <line x1="130" y1="160" x2="130" y2="200" stroke="#00abfa" stroke-width="1.5" stroke-dasharray="4 3"/>
-  <line x1="124" y1="116" x2="136" y2="124" stroke="#0fee89" stroke-width="2"/>
-  <line x1="130" y1="116" x2="142" y2="124" stroke="#0fee89" stroke-width="2"/>
-  <line x1="124" y1="196" x2="136" y2="204" stroke="#0fee89" stroke-width="2"/>
-  <line x1="130" y1="196" x2="142" y2="204" stroke="#0fee89" stroke-width="2"/>
-  <circle cx="130" cy="160" r="3" fill="#7a7875"/>
-  <text x="138" y="176" fill="#7a7875" font-family="Geist Mono, monospace" font-size="11" font-weight="600">O</text>
-  <circle cx="370" cy="160" r="80" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
-  <line x1="290" y1="220" x2="450" y2="220" stroke="#00abfa" stroke-width="2"/>
-  <line x1="370" y1="160" x2="370" y2="220" stroke="#00abfa" stroke-width="2"/>
-  <path d="M 360 212 L 360 220 L 370 220" fill="none" stroke="#ff4670" stroke-width="2"/>
-  <line x1="324" y1="216" x2="332" y2="224" stroke="#0fee89" stroke-width="2"/>
-  <line x1="328" y1="216" x2="336" y2="224" stroke="#0fee89" stroke-width="2"/>
-  <line x1="408" y1="216" x2="416" y2="224" stroke="#0fee89" stroke-width="2"/>
-  <line x1="412" y1="216" x2="420" y2="224" stroke="#0fee89" stroke-width="2"/>
-  <circle cx="370" cy="160" r="3" fill="#7a7875"/>
-  <circle cx="370" cy="220" r="4" fill="#fff067"/>
-  <text x="378" y="176" fill="#7a7875" font-family="Geist Mono, monospace" font-size="11" font-weight="600">O</text>
-  <text x="376" y="240" fill="#fff067" font-family="Geist Mono, monospace" font-size="11" font-weight="600">M</text>
-</svg>
+<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px;position:relative">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px;align-self:flex-start">RECAP: EQUAL CHORDS + PERPENDICULAR FROM CENTRE</div>
+  <div style="position:relative;width:480px;height:240px">
+    <div style="position:absolute;left:50px;top:50px;width:160px;height:160px;border-radius:50%;border:1.5px solid #3a4a5a"></div>
+    <div style="position:absolute;left:60px;top:90px;width:140px;height:0;border-top:2px solid #00abfa"></div>
+    <div style="position:absolute;left:60px;top:170px;width:140px;height:0;border-top:2px solid #00abfa"></div>
+    <div style="position:absolute;left:130px;top:130px;width:40px;height:0;border-top:1.5px dashed #00abfa;transform-origin:left center;transform:rotate(-90deg)"></div>
+    <div style="position:absolute;left:130px;top:130px;width:40px;height:0;border-top:1.5px dashed #00abfa;transform-origin:left center;transform:rotate(90deg)"></div>
+    <div style="position:absolute;left:122px;top:84px;width:2px;height:14px;background:#0fee89;transform:rotate(20deg)"></div>
+    <div style="position:absolute;left:128px;top:84px;width:2px;height:14px;background:#0fee89;transform:rotate(20deg)"></div>
+    <div style="position:absolute;left:122px;top:164px;width:2px;height:14px;background:#0fee89;transform:rotate(20deg)"></div>
+    <div style="position:absolute;left:128px;top:164px;width:2px;height:14px;background:#0fee89;transform:rotate(20deg)"></div>
+    <div style="position:absolute;left:130px;top:130px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:138px;top:138px;font-family:'Geist Mono',monospace;font-size:11px;color:#7a7875;font-weight:600">O</div>
+    <div style="position:absolute;left:290px;top:50px;width:160px;height:160px;border-radius:50%;border:1.5px solid #3a4a5a"></div>
+    <div style="position:absolute;left:290px;top:190px;width:160px;height:0;border-top:2px solid #00abfa"></div>
+    <div style="position:absolute;left:370px;top:130px;width:60px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(90deg)"></div>
+    <div style="position:absolute;left:360px;top:178px;width:12px;height:12px;border-right:2px solid #ff4670;border-bottom:2px solid #ff4670"></div>
+    <div style="position:absolute;left:322px;top:184px;width:2px;height:14px;background:#0fee89;transform:rotate(20deg)"></div>
+    <div style="position:absolute;left:328px;top:184px;width:2px;height:14px;background:#0fee89;transform:rotate(20deg)"></div>
+    <div style="position:absolute;left:408px;top:184px;width:2px;height:14px;background:#0fee89;transform:rotate(20deg)"></div>
+    <div style="position:absolute;left:414px;top:184px;width:2px;height:14px;background:#0fee89;transform:rotate(20deg)"></div>
+    <div style="position:absolute;left:370px;top:130px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:370px;top:190px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:378px;top:138px;font-family:'Geist Mono',monospace;font-size:11px;color:#7a7875;font-weight:600">O</div>
+    <div style="position:absolute;left:376px;top:202px;font-family:'Geist Mono',monospace;font-size:11px;color:#fff067;font-weight:600">M</div>
+  </div>
+</div>
 
 The two-tangent picture: two right angles, two equal tangent lengths, kite shape with $OP$ as axis of symmetry.
 
-<svg viewBox="0 0 480 300" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="20" y="22" fill="#7a7875" font-family="Geist Mono, monospace" font-size="10" letter-spacing="0.4" font-weight="600">RECAP: TWO TANGENTS, TWO RIGHT ANGLES, KITE</text>
-  <circle cx="170" cy="160" r="70" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
-  <line x1="170" y1="160" x2="220" y2="111" stroke="#00abfa" stroke-width="2"/>
-  <line x1="170" y1="160" x2="220" y2="209" stroke="#00abfa" stroke-width="2"/>
-  <line x1="220" y1="111" x2="400" y2="160" stroke="#ff822c" stroke-width="2"/>
-  <line x1="220" y1="209" x2="400" y2="160" stroke="#ff822c" stroke-width="2"/>
-  <line x1="170" y1="160" x2="400" y2="160" stroke="#fff067" stroke-width="2" stroke-dasharray="5 4"/>
-  <path d="M 211 124 L 200 121 L 197 132 L 208 135 Z" fill="none" stroke="#ff4670" stroke-width="2"/>
-  <path d="M 211 196 L 200 199 L 197 188 L 208 185 Z" fill="none" stroke="#ff4670" stroke-width="2"/>
-  <line x1="300" y1="129" x2="312" y2="137" stroke="#0fee89" stroke-width="2"/>
-  <line x1="304" y1="125" x2="316" y2="133" stroke="#0fee89" stroke-width="2"/>
-  <line x1="300" y1="191" x2="312" y2="183" stroke="#0fee89" stroke-width="2"/>
-  <line x1="304" y1="195" x2="316" y2="187" stroke="#0fee89" stroke-width="2"/>
-  <circle cx="170" cy="160" r="3" fill="#7a7875"/>
-  <circle cx="220" cy="111" r="4" fill="#fff067"/>
-  <circle cx="220" cy="209" r="4" fill="#fff067"/>
-  <circle cx="400" cy="160" r="4" fill="#fff067"/>
-  <text x="152" y="178" fill="#7a7875" font-family="Geist Mono, monospace" font-size="12" font-weight="600">O</text>
-  <text x="226" y="105" fill="#fff067" font-family="Geist Mono, monospace" font-size="13" font-weight="600">A</text>
-  <text x="226" y="222" fill="#fff067" font-family="Geist Mono, monospace" font-size="13" font-weight="600">B</text>
-  <text x="408" y="156" fill="#fff067" font-family="Geist Mono, monospace" font-size="13" font-weight="600">P</text>
-</svg>
+<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px;position:relative">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px;align-self:flex-start">RECAP: TWO TANGENTS, TWO RIGHT ANGLES, KITE</div>
+  <div style="position:relative;width:420px;height:240px">
+    <div style="position:absolute;left:30px;top:50px;width:140px;height:140px;border-radius:50%;border:1.5px solid #3a4a5a"></div>
+    <div style="position:absolute;left:100px;top:120px;width:70px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-45deg)"></div>
+    <div style="position:absolute;left:100px;top:120px;width:70px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(45deg)"></div>
+    <div style="position:absolute;left:150px;top:71px;width:241px;height:0;border-top:2px solid #ff822c;transform-origin:left center;transform:rotate(17.0deg)"></div>
+    <div style="position:absolute;left:150px;top:169px;width:241px;height:0;border-top:2px solid #ff822c;transform-origin:left center;transform:rotate(-17.0deg)"></div>
+    <div style="position:absolute;left:100px;top:120px;width:291px;height:0;border-top:2px dashed #fff067"></div>
+    <div style="position:absolute;left:142px;top:80px;width:12px;height:12px;border-right:2px solid #ff4670;border-bottom:2px solid #ff4670;transform:rotate(72deg)"></div>
+    <div style="position:absolute;left:142px;top:148px;width:12px;height:12px;border-right:2px solid #ff4670;border-bottom:2px solid #ff4670;transform:rotate(198deg)"></div>
+    <div style="position:absolute;left:240px;top:96px;width:2px;height:14px;background:#0fee89;transform:rotate(35deg)"></div>
+    <div style="position:absolute;left:246px;top:96px;width:2px;height:14px;background:#0fee89;transform:rotate(35deg)"></div>
+    <div style="position:absolute;left:240px;top:140px;width:2px;height:14px;background:#0fee89;transform:rotate(-35deg)"></div>
+    <div style="position:absolute;left:246px;top:140px;width:2px;height:14px;background:#0fee89;transform:rotate(-35deg)"></div>
+    <div style="position:absolute;left:100px;top:120px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:150px;top:71px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:150px;top:169px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:391px;top:120px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+    <div style="position:absolute;left:80px;top:128px;font-family:'Geist Mono',monospace;font-size:12px;color:#7a7875;font-weight:600">O</div>
+    <div style="position:absolute;left:156px;top:55px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">A</div>
+    <div style="position:absolute;left:156px;top:178px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">B</div>
+    <div style="position:absolute;left:400px;top:115px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">P</div>
+  </div>
+</div>
 
 ## Marking patterns at a glance
 

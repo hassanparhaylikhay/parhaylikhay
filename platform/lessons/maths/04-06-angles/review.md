@@ -43,22 +43,20 @@ If you've worked through P1 to P3 you can:
 
 ## Recap diagram: the parallel-line trio
 
-<svg viewBox="0 0 480 240" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="240" y="18" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875" letter-spacing="0.4px">CORRESPONDING (=), ALTERNATE (=), CO-INTERIOR (180)</text>
-  <line x1="40" y1="80" x2="440" y2="80" stroke="#00abfa" stroke-width="2.6"/>
-  <line x1="40" y1="190" x2="440" y2="190" stroke="#00abfa" stroke-width="2.6"/>
-  <polygon points="216,77 226,77 221,72" fill="#0fee89"/>
-  <polygon points="216,187 226,187 221,182" fill="#0fee89"/>
-  <line x1="140" y1="40" x2="340" y2="230" stroke="#7a7875" stroke-width="2"/>
-  <path d="M 245 80 A 24 24 0 0 1 232 102" fill="none" stroke="#fff067" stroke-width="2.5"/>
-  <path d="M 348 190 A 24 24 0 0 1 335 212" fill="none" stroke="#fff067" stroke-width="2.5"/>
-  <path d="M 220 80 A 22 22 0 0 0 232 102" fill="none" stroke="#0fee89" stroke-width="2.5"/>
-  <path d="M 268 190 A 22 22 0 0 0 256 168" fill="none" stroke="#0fee89" stroke-width="2.5"/>
-  <text x="252" y="100" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#fff067">corr</text>
-  <text x="354" y="210" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#fff067">corr</text>
-  <text x="195" y="100" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#0fee89">alt</text>
-  <text x="270" y="170" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#0fee89">alt</text>
-</svg>
+<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px">CORRESPONDING (=), ALTERNATE (=), CO-INTERIOR (180)</div>
+  <div style="position:relative;width:400px;height:200px">
+    <div style="position:absolute;left:0;right:0;top:60px;height:0;border-top:2.6px solid #00abfa"></div>
+    <div style="position:absolute;left:0;right:0;top:170px;height:0;border-top:2.6px solid #00abfa"></div>
+    <div style="position:absolute;left:48%;top:54px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:7px solid #0fee89"></div>
+    <div style="position:absolute;left:48%;top:164px;width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:7px solid #0fee89"></div>
+    <div style="position:absolute;left:25%;top:0;width:240px;height:0;border-top:2px solid #7a7875;transform-origin:left top;transform:rotate(56deg)"></div>
+    <div style="position:absolute;left:53%;top:74px;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#fff067">corr</div>
+    <div style="position:absolute;left:75%;top:184px;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#fff067">corr</div>
+    <div style="position:absolute;left:38%;top:74px;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#0fee89">alt</div>
+    <div style="position:absolute;left:58%;top:144px;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#0fee89">alt</div>
+  </div>
+</div>
 
 ## Marking patterns at a glance
 
@@ -78,27 +76,29 @@ For polygon questions:
 
 ## Recap diagram: regular polygons quick view
 
-<svg viewBox="0 0 480 220" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="240" y="18" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875" letter-spacing="0.4px">REGULAR PENTAGON, HEXAGON, OCTAGON: INT, EXT</text>
-  <g transform="translate(50,40)">
-    <polygon points="60,10 110,45 92,100 28,100 10,45" fill="none" stroke="#00abfa" stroke-width="2"/>
-    <text x="60" y="135" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">INT 108</text>
-    <text x="60" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">EXT 72</text>
-    <text x="60" y="170" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875">n=5</text>
-  </g>
-  <g transform="translate(190,40)">
-    <polygon points="60,10 105,38 105,90 60,118 15,90 15,38" fill="none" stroke="#00abfa" stroke-width="2"/>
-    <text x="60" y="135" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">INT 120</text>
-    <text x="60" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">EXT 60</text>
-    <text x="60" y="170" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875">n=6</text>
-  </g>
-  <g transform="translate(330,40)">
-    <polygon points="60,10 92,22 105,55 92,88 60,100 28,88 15,55 28,22" fill="none" stroke="#00abfa" stroke-width="2"/>
-    <text x="60" y="135" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">INT 135</text>
-    <text x="60" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">EXT 45</text>
-    <text x="60" y="170" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875">n=8</text>
-  </g>
-</svg>
+<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px">REGULAR PENTAGON, HEXAGON, OCTAGON: INT, EXT</div>
+  <div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:110px;height:110px;clip-path:polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);background:#00abfa20"></div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#fff067">INT 108</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#ff4670">EXT 72</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875">n=5</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:110px;height:110px;clip-path:polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);background:#00abfa20"></div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#fff067">INT 120</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#ff4670">EXT 60</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875">n=6</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div style="width:110px;height:110px;clip-path:polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);background:#00abfa20"></div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#fff067">INT 135</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:600;color:#ff4670">EXT 45</div>
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875">n=8</div>
+    </div>
+  </div>
+</div>
 
 ## Worked example: combining several rules
 
