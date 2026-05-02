@@ -33,6 +33,24 @@ checks:
 
 You have now seen the three pieces of this topic: line symmetry of 2D shapes, rotational symmetry of 2D shapes, and the symmetry properties of common 3D solids. Cambridge mixes these freely. Most questions are short, $1$ to $3$ marks each, and reward students who have memorised the standard cases.
 
+## Recap diagram: parallelogram trap
+
+<svg viewBox="0 0 480 220" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="240" y="18" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875" letter-spacing="0.4px">PARALLELOGRAM: 0 LINES OF SYMMETRY BUT ORDER 2</text>
+  <g transform="translate(60,50)">
+    <polygon points="20,80 140,80 120,30 0,30" fill="#00abfa" fill-opacity="0.20" stroke="#00abfa" stroke-width="2.2"/>
+    <line x1="0" y1="30" x2="140" y2="80" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <line x1="120" y1="30" x2="20" y2="80" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <text x="70" y="105" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#ff4670">DIAGONALS: NOT mirror lines</text>
+  </g>
+  <g transform="translate(280,50)">
+    <polygon points="20,80 140,80 120,30 0,30" fill="#fff067" fill-opacity="0.20" stroke="#fff067" stroke-width="2.2"/>
+    <circle cx="70" cy="55" r="5" fill="#ff4670"/>
+    <text x="70" y="105" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#0fee89">ROTATE 180 deg: lands on itself</text>
+  </g>
+  <text x="240" y="200" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875">ORDER 2 ROTATIONAL, 0 MIRROR LINES</text>
+</svg>
+
 ## What you should know by now
 
 - The **lines of symmetry** of: equilateral triangle ($3$), isosceles ($1$), scalene ($0$), square ($4$), rectangle ($2$), rhombus ($2$), parallelogram ($\textcolor{#ff4670}{0}$), kite ($1$), regular $n$-gon ($n$), circle (infinite).
@@ -41,6 +59,35 @@ You have now seen the three pieces of this topic: line symmetry of 2D shapes, ro
 - The **planes of symmetry** of: general cuboid ($3$), cube ($9$), right square pyramid ($4$), right regular $n$-pyramid ($n$), cylinder (infinite), cone (infinite), sphere (infinite).
 - The **rotational axis** order of a prism through the ends matches the rotational order of its cross-section.
 - Order $1$ means "no rotational symmetry"; the minimum is $1$, never $0$.
+
+## Recap diagram: 3D solids at a glance
+
+<svg viewBox="0 0 480 220" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="240" y="18" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875" letter-spacing="0.4px">PLANES OF SYMMETRY: CUBOID 3, CUBE 9, CYLINDER INFINITE</text>
+  <g transform="translate(40,40)">
+    <polygon points="0,80 80,80 100,60 20,60" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+    <polygon points="80,80 100,60 100,140 80,160" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+    <polygon points="0,80 0,160 80,160 80,80" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+    <text x="50" y="180" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#fff067">CUBOID: 3</text>
+  </g>
+  <g transform="translate(170,40)">
+    <polygon points="0,60 60,60 80,40 20,40" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+    <polygon points="60,60 80,40 80,120 60,140" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+    <polygon points="0,60 0,140 60,140 60,60" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+    <line x1="30" y1="40" x2="30" y2="140" stroke="#fff067" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <line x1="0" y1="100" x2="80" y2="80" stroke="#fff067" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <text x="40" y="180" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#fff067">CUBE: 9</text>
+  </g>
+  <g transform="translate(310,40)">
+    <ellipse cx="50" cy="40" rx="50" ry="12" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+    <line x1="0" y1="40" x2="0" y2="120" stroke="#00abfa" stroke-width="2"/>
+    <line x1="100" y1="40" x2="100" y2="120" stroke="#00abfa" stroke-width="2"/>
+    <ellipse cx="50" cy="120" rx="50" ry="12" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+    <line x1="50" y1="28" x2="50" y2="132" stroke="#fff067" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <ellipse cx="50" cy="80" rx="50" ry="12" fill="none" stroke="#0fee89" stroke-width="1.5" stroke-dasharray="3,3"/>
+    <text x="50" y="180" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#fff067">CYLINDER: INF</text>
+  </g>
+</svg>
 
 ## Marking patterns at a glance
 
@@ -95,9 +142,3 @@ A square has $4$ lines of symmetry: $2$ through midpoints of opposite sides and 
 **Answer (c):** $4$ lines of symmetry. **[B1]**
 
 Full marks $= 3$.
-
-## Final check
-
-Seven mixed questions covering 2D line and rotational symmetry, the parallelogram trap, the symmetry of letters, and 3D plane and axis counting for cuboids, prisms, cylinders, pyramids, cones, and spheres.
-
-<iframe src="/widgets/geometry-trainer.html?topic=symmetry" style="width:100%;max-width:696px;height:540px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Similarity Scaler</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
+  .formula { font-size:15px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap; }
+  .row { display:flex; align-items:center; gap:8px; min-width:0; }
+  .row.flex { flex:1; }
+  .row .name { color:#fff067; font-weight:600; min-width:38px; }
+  .row select { background:#141e2a; color:#f0eeea; border:1px solid #3a4a5a; border-radius:4px; padding:3px 6px; font-family:'Geist Mono',monospace; font-size:11.5px; outline:none; cursor:pointer; }
+  .row input[type=range] { flex:1; min-width:120px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row .val { min-width:48px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+
+  .panel-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#7a7875; }
+  .divider { stroke:#141e2a; stroke-width:1; }
+
+  .pills { display:flex; align-items:center; justify-content:center; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .pill { background:#0b1118; padding:8px 14px; border-radius:8px; font-family:'Geist Mono',monospace; font-size:12px; color:#f0eeea; display:flex; align-items:center; gap:8px; }
+  .pill.length { border:1px solid #00abfa; }
+  .pill.area   { border:1px solid #fff067; }
+  .pill.volume { border:1px solid #0fee89; }
+  .pill .lab { color:#7a7875; }
+  .pill.length .lab { color:#00abfa; }
+  .pill.area   .lab { color:#fff067; }
+  .pill.volume .lab { color:#0fee89; }
+  .pill .katex { font-size:1em; }
+
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">shape</span>
+      <select id="shape">
+        <option value="triangle">Triangle</option>
+        <option value="rectangle">Rectangle</option>
+        <option value="lshape">L-shape</option>
+      </select>
+    </div>
+    <div class="row flex">
+      <span class="name">k</span>
+      <input type="range" id="k" min="0.5" max="3.0" value="2.0" step="0.05"/>
+      <span class="val" id="vk">2.00</span>
+    </div>
+  </div>
+
+  <svg viewBox="0 0 480 300" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <text class="panel-label" x="120" y="22" text-anchor="middle">original</text>
+    <text class="panel-label" x="360" y="22" text-anchor="middle" id="rightLabel">scaled by k</text>
+    <line class="divider" x1="240" y1="30" x2="240" y2="280"/>
+    <polygon id="leftShape"  fill="#00abfa20" stroke="#00abfa" stroke-width="2" stroke-linejoin="round"/>
+    <polygon id="rightShape" fill="#00abfa20" stroke="#00abfa" stroke-width="2" stroke-linejoin="round"/>
+  </svg>
+
+  <div class="pills">
+    <div class="pill length">
+      <span class="lab" id="pillLenLab"></span>
+      <span id="pillLenVal"></span>
+    </div>
+    <div class="pill area">
+      <span class="lab" id="pillAreaLab"></span>
+      <span id="pillAreaVal"></span>
+    </div>
+    <div class="pill volume">
+      <span class="lab" id="pillVolLab"></span>
+      <span id="pillVolVal"></span>
+    </div>
+  </div>
+
+  <p class="footer">drag k: see how length, area, and volume scale differently</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+// Shape definitions: base coords centered at (0,0).
+var SHAPES = {
+  triangle: [[-50,40],[50,40],[0,-60]],
+  rectangle: [[-40,-25],[40,-25],[40,25],[-40,25]],
+  lshape: [[-40,-30],[40,-30],[40,0],[10,0],[10,30],[-40,30]]
+};
+
+var LEFT_CX  = 120, LEFT_CY  = 150;
+var RIGHT_CX = 360, RIGHT_CY = 150;
+
+function pointsToAttr(pts, cx, cy, scale) {
+  var out = [];
+  for (var i = 0; i < pts.length; i++) {
+    var x = pts[i][0] * scale + cx;
+    var y = pts[i][1] * scale + cy;
+    out.push(x.toFixed(2) + "," + y.toFixed(2));
+  }
+  return out.join(" ");
+}
+
+var targetK = 2.0, displayK = 2.0;
+var SPRING = 0.18;
+var currentShape = "triangle";
+
+function fmt(v) { return v.toFixed(2); }
+
+function tick() {
+  displayK += (targetK - displayK) * SPRING;
+  if (Math.abs(displayK - targetK) < 0.0005) displayK = targetK;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function draw() {
+  var pts = SHAPES[currentShape];
+  var k = displayK;
+  var k2 = k * k;
+  var k3 = k * k * k;
+
+  // Left shape: drawn at base size (scale = 1)
+  document.getElementById("leftShape").setAttribute(
+    "points", pointsToAttr(pts, LEFT_CX, LEFT_CY, 1)
+  );
+  // Right shape: scaled by k about own centroid (which is (0,0) in base coords)
+  document.getElementById("rightShape").setAttribute(
+    "points", pointsToAttr(pts, RIGHT_CX, RIGHT_CY, k)
+  );
+
+  // Heading: color-matched k, k^2, k^3 with current values
+  tryRender(
+    document.getElementById("formula"),
+    "\\textcolor{#00abfa}{k = " + fmt(k) + "}, \\quad " +
+    "\\textcolor{#fff067}{k^2 = " + fmt(k2) + "}, \\quad " +
+    "\\textcolor{#0fee89}{k^3 = " + fmt(k3) + "}"
+  );
+
+  // Pills
+  tryRender(document.getElementById("pillLenLab"),  "\\text{length} \\times k");
+  tryRender(document.getElementById("pillAreaLab"), "\\text{area} \\times k^2");
+  tryRender(document.getElementById("pillVolLab"),  "\\text{volume} \\times k^3");
+
+  tryRender(document.getElementById("pillLenVal"),
+    "1 \\times " + fmt(k)  + " = " + fmt(k));
+  tryRender(document.getElementById("pillAreaVal"),
+    "1 \\times " + fmt(k2) + " = " + fmt(k2));
+  tryRender(document.getElementById("pillVolVal"),
+    "1 \\times " + fmt(k3) + " = " + fmt(k3));
+
+  // Right-panel label uses current k
+  document.getElementById("rightLabel").textContent =
+    "scaled by k = " + fmt(targetK);
+}
+
+document.getElementById("k").addEventListener("input", function(e) {
+  targetK = parseFloat(e.target.value);
+  document.getElementById("vk").textContent = fmt(targetK);
+});
+document.getElementById("shape").addEventListener("change", function(e) {
+  currentShape = e.target.value;
+});
+tick();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

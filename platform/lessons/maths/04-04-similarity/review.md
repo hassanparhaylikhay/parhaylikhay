@@ -33,6 +33,10 @@ checks:
 
 You have now seen the two skills in this topic: identifying corresponding sides on similar shapes and using the right scale factor for length, area, and volume. Cambridge questions almost always combine both. A typical 4 to 6 mark question has a similar shapes setup, a hidden $k$, and a switch between length, area, or volume.
 
+<iframe src="/widgets/similarity-scaler.html" style="width:100%;max-width:696px;height:540px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
+Move the slider one more time before the practice. Track length, area and volume together so the $k$, $k^2$, $k^3$ rule is fresh.
+
 ## What you should know by now
 
 - Similar shapes have **equal corresponding angles** and **sides in the same ratio**.
@@ -42,6 +46,26 @@ You have now seen the two skills in this topic: identifying corresponding sides 
 - Going backward: take a square root for length from area, a cube root for length from volume.
 - Two pairs of equal angles is enough to prove triangles are similar (AA).
 - When parallel lines cut a triangle, the smaller triangle is similar to the whole.
+
+<svg viewBox="0 0 480 200" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="240" y="20" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#7a7875" letter-spacing="0.4">SCALE-FACTOR RECAP - LENGTH, AREA, VOLUME</text>
+  <rect x="30" y="60" width="130" height="100" rx="8" fill="none" stroke="#00abfa" stroke-width="2"/>
+  <text x="95" y="84" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#00abfa">LENGTH</text>
+  <text x="95" y="108" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="14" font-weight="600" fill="#00abfa">k</text>
+  <text x="95" y="138" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">side, height,</text>
+  <text x="95" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">radius, perimeter</text>
+  <rect x="175" y="60" width="130" height="100" rx="8" fill="none" stroke="#fff067" stroke-width="2"/>
+  <text x="240" y="84" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">AREA</text>
+  <text x="240" y="108" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="14" font-weight="600" fill="#fff067">k squared</text>
+  <text x="240" y="138" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">surface area,</text>
+  <text x="240" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">paint coverage</text>
+  <rect x="320" y="60" width="130" height="100" rx="8" fill="none" stroke="#0fee89" stroke-width="2"/>
+  <text x="385" y="84" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#0fee89">VOLUME</text>
+  <text x="385" y="108" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="14" font-weight="600" fill="#0fee89">k cubed</text>
+  <text x="385" y="138" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">capacity, mass</text>
+  <text x="385" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="9" font-weight="600" fill="#7a7875">(same material)</text>
+  <text x="240" y="185" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#ff4670">backward: sqrt for area, cube root for volume</text>
+</svg>
 
 ## Marking patterns at a glance
 
@@ -56,6 +80,28 @@ You have now seen the two skills in this topic: identifying corresponding sides 
 ## The single biggest mistake
 
 Forgetting to **square** the scale factor for area or **cube** it for volume. If a Cambridge question gives volumes and asks for a length, you must take the cube root of the volume ratio to get $k$. Skip that step and the entire question is wrong. This single error costs marks every year.
+
+## Recap diagram: parallel lines inside a triangle
+
+<svg viewBox="0 0 480 280" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="240" y="20" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#7a7875" letter-spacing="0.4">DE PARALLEL TO BC - APPLY LENGTH SCALE FACTOR</text>
+  <polygon points="240,50 80,250 400,250" fill="none" stroke="#00abfa" stroke-width="2.5"/>
+  <line x1="180" y1="125" x2="300" y2="125" stroke="#fff067" stroke-width="2.5"/>
+  <circle cx="240" cy="50" r="4" fill="#0fee89"/>
+  <circle cx="80" cy="250" r="4" fill="#0fee89"/>
+  <circle cx="400" cy="250" r="4" fill="#0fee89"/>
+  <circle cx="180" cy="125" r="4" fill="#0fee89"/>
+  <circle cx="300" cy="125" r="4" fill="#0fee89"/>
+  <text x="240" y="42" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#0fee89">A</text>
+  <text x="68" y="268" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#0fee89">B</text>
+  <text x="408" y="268" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#0fee89">C</text>
+  <text x="170" y="120" text-anchor="end" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#fff067">D</text>
+  <text x="310" y="120" font-family="'Geist Mono',monospace" font-size="12" font-weight="600" fill="#fff067">E</text>
+  <text x="240" y="118" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#fff067">DE = 9</text>
+  <text x="240" y="270" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#00abfa">BC = 15</text>
+  <text x="115" y="190" text-anchor="end" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#ff822c">AD = 6, DB = 4</text>
+  <text x="240" y="200" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">k = AB/AD = 10/6  =>  BC = 9 x 5/3 = 15</text>
+</svg>
 
 ## Comprehensive worked example
 
@@ -90,9 +136,3 @@ $$\text{new surface area} = k^2 \times 135 = \dfrac{25}{9} \times 135 = 375$$
 **Answer (b):** Surface area of the larger cone $= 375$ cm$^2$. **[A1]**
 
 Full marks $= 6$.
-
-## Final check
-
-Seven mixed questions covering AA similarity, missing sides, parallel-line setups, area scaling, volume scaling, and going forward and backward between $k$, $k^2$, and $k^3$.
-
-<iframe src="/widgets/geometry-trainer.html?topic=similarity" style="width:100%;max-width:696px;height:540px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>

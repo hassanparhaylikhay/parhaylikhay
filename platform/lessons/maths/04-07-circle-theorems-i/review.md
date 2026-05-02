@@ -46,6 +46,90 @@ If you have worked through P1 to P3 you can:
 - Use opposite angles of a cyclic quadrilateral sum to $180°$.
 - Use the alternate segment theorem on a tangent-chord pair.
 
+## Visual recap
+
+The semicircle and tangent-radius rules: both produce a $90°$ at the action point.
+
+<svg viewBox="0 0 480 280" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="20" y="22" fill="#7a7875" font-family="Geist Mono, monospace" font-size="10" letter-spacing="0.4" font-weight="600">RECAP: SEMICIRCLE + TANGENT-RADIUS</text>
+  <circle cx="130" cy="160" r="70" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
+  <line x1="60" y1="160" x2="200" y2="160" stroke="#00abfa" stroke-width="2"/>
+  <line x1="60" y1="160" x2="170" y2="100" stroke="#00abfa" stroke-width="2"/>
+  <line x1="200" y1="160" x2="170" y2="100" stroke="#00abfa" stroke-width="2"/>
+  <path d="M 162 116 L 154 110 L 148 119 L 156 124 Z" fill="none" stroke="#ff4670" stroke-width="2"/>
+  <circle cx="130" cy="160" r="3" fill="#7a7875"/>
+  <circle cx="60" cy="160" r="4" fill="#fff067"/>
+  <circle cx="200" cy="160" r="4" fill="#fff067"/>
+  <circle cx="170" cy="100" r="4" fill="#fff067"/>
+  <text x="44" y="178" fill="#fff067" font-family="Geist Mono, monospace" font-size="13" font-weight="600">A</text>
+  <text x="206" y="178" fill="#fff067" font-family="Geist Mono, monospace" font-size="13" font-weight="600">B</text>
+  <text x="172" y="94" fill="#fff067" font-family="Geist Mono, monospace" font-size="13" font-weight="600">C</text>
+  <text x="138" y="118" fill="#ff4670" font-family="Geist Mono, monospace" font-size="11" font-weight="600">90°</text>
+  <circle cx="370" cy="160" r="60" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
+  <line x1="370" y1="160" x2="430" y2="160" stroke="#00abfa" stroke-width="2"/>
+  <line x1="430" y1="80" x2="430" y2="240" stroke="#ff822c" stroke-width="2"/>
+  <path d="M 418 148 L 418 160 L 430 160" fill="none" stroke="#ff4670" stroke-width="2"/>
+  <circle cx="370" cy="160" r="3" fill="#7a7875"/>
+  <circle cx="430" cy="160" r="4" fill="#fff067"/>
+  <text x="354" y="178" fill="#7a7875" font-family="Geist Mono, monospace" font-size="12" font-weight="600">O</text>
+  <text x="438" y="156" fill="#fff067" font-family="Geist Mono, monospace" font-size="13" font-weight="600">T</text>
+  <text x="402" y="148" fill="#ff4670" font-family="Geist Mono, monospace" font-size="11" font-weight="600">90°</text>
+</svg>
+
+The centre rule and the same-segment rule: doubling and equality.
+
+<svg viewBox="0 0 480 300" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="20" y="22" fill="#7a7875" font-family="Geist Mono, monospace" font-size="10" letter-spacing="0.4" font-weight="600">RECAP: ANGLE AT CENTRE + SAME SEGMENT</text>
+  <circle cx="130" cy="170" r="80" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
+  <line x1="65" y1="215" x2="195" y2="215" stroke="#3a4a5a" stroke-width="1" stroke-dasharray="3 3"/>
+  <line x1="65" y1="215" x2="130" y2="170" stroke="#00abfa" stroke-width="2"/>
+  <line x1="195" y1="215" x2="130" y2="170" stroke="#00abfa" stroke-width="2"/>
+  <line x1="65" y1="215" x2="130" y2="90" stroke="#00abfa" stroke-width="2"/>
+  <line x1="195" y1="215" x2="130" y2="90" stroke="#00abfa" stroke-width="2"/>
+  <path d="M 116 197 A 18 18 0 0 1 144 197" fill="none" stroke="#fff067" stroke-width="2.5"/>
+  <path d="M 122 110 A 12 12 0 0 0 138 110" fill="none" stroke="#0fee89" stroke-width="2.5"/>
+  <circle cx="130" cy="170" r="3" fill="#7a7875"/>
+  <text x="118" y="218" fill="#fff067" font-family="Geist Mono, monospace" font-size="11" font-weight="600">2θ</text>
+  <text x="125" y="125" fill="#0fee89" font-family="Geist Mono, monospace" font-size="11" font-weight="600">θ</text>
+  <circle cx="370" cy="170" r="80" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
+  <line x1="305" y1="215" x2="435" y2="215" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3 3"/>
+  <line x1="305" y1="215" x2="320" y2="105" stroke="#0fee89" stroke-width="2"/>
+  <line x1="435" y1="215" x2="320" y2="105" stroke="#0fee89" stroke-width="2"/>
+  <line x1="305" y1="215" x2="430" y2="120" stroke="#0fee89" stroke-width="2"/>
+  <line x1="435" y1="215" x2="430" y2="120" stroke="#0fee89" stroke-width="2"/>
+  <path d="M 326 122 A 12 12 0 0 0 332 130" fill="none" stroke="#0fee89" stroke-width="2.5"/>
+  <path d="M 422 134 A 12 12 0 0 0 425 144" fill="none" stroke="#0fee89" stroke-width="2.5"/>
+  <text x="320" y="142" fill="#0fee89" font-family="Geist Mono, monospace" font-size="11" font-weight="600">θ</text>
+  <text x="408" y="148" fill="#0fee89" font-family="Geist Mono, monospace" font-size="11" font-weight="600">θ</text>
+</svg>
+
+Cyclic quadrilateral and alternate segment: the harder pair.
+
+<svg viewBox="0 0 480 320" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="20" y="22" fill="#7a7875" font-family="Geist Mono, monospace" font-size="10" letter-spacing="0.4" font-weight="600">RECAP: CYCLIC QUAD + ALTERNATE SEGMENT</text>
+  <circle cx="130" cy="170" r="80" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
+  <line x1="80" y1="115" x2="190" y2="105" stroke="#00abfa" stroke-width="2"/>
+  <line x1="190" y1="105" x2="200" y2="220" stroke="#00abfa" stroke-width="2"/>
+  <line x1="200" y1="220" x2="85" y2="230" stroke="#00abfa" stroke-width="2"/>
+  <line x1="85" y1="230" x2="80" y2="115" stroke="#00abfa" stroke-width="2"/>
+  <path d="M 92 122 A 14 14 0 0 1 96 134" fill="none" stroke="#0fee89" stroke-width="2.5"/>
+  <path d="M 188 220 A 14 14 0 0 1 184 208" fill="none" stroke="#0fee89" stroke-width="2.5"/>
+  <path d="M 178 110 A 12 12 0 0 0 182 120" fill="none" stroke="#ff4670" stroke-width="2.5"/>
+  <path d="M 96 226 A 12 12 0 0 0 92 215" fill="none" stroke="#ff4670" stroke-width="2.5"/>
+  <text x="105" y="142" fill="#0fee89" font-family="Geist Mono, monospace" font-size="10" font-weight="600">A+C=180</text>
+  <text x="105" y="216" fill="#ff4670" font-family="Geist Mono, monospace" font-size="10" font-weight="600">B+D=180</text>
+  <circle cx="370" cy="170" r="80" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
+  <line x1="280" y1="250" x2="460" y2="250" stroke="#ff822c" stroke-width="2"/>
+  <line x1="370" y1="250" x2="320" y2="125" stroke="#00abfa" stroke-width="2"/>
+  <line x1="320" y1="125" x2="430" y2="135" stroke="#00abfa" stroke-width="2"/>
+  <line x1="430" y1="135" x2="370" y2="250" stroke="#00abfa" stroke-width="2"/>
+  <path d="M 358 232 A 14 14 0 0 0 354 222" fill="none" stroke="#fff067" stroke-width="2.5"/>
+  <path d="M 418 148 A 12 12 0 0 1 424 156" fill="none" stroke="#fff067" stroke-width="2.5"/>
+  <text x="335" y="222" fill="#fff067" font-family="Geist Mono, monospace" font-size="11" font-weight="600">θ</text>
+  <text x="412" y="170" fill="#fff067" font-family="Geist Mono, monospace" font-size="11" font-weight="600">θ</text>
+  <text x="284" y="245" fill="#ff822c" font-family="Geist Mono, monospace" font-size="10" font-weight="600">tangent</text>
+</svg>
+
 ## Marking patterns at a glance
 
 In Cambridge 4024, circle theorem questions usually award:
@@ -79,11 +163,9 @@ Find:
 
 **Step 1 (a): semicircle gives $90°$ at $B$.**
 
-$AC$ is a diameter, so angle $ABC$ subtends the diameter at $B$.
+$AC$ is a diameter, so angle $ABC$ subtends the diameter at $B$. The right angle sits at $B$.
 
 $$\text{angle } ABC = 90°$$
-
-Wait - re-read. We need angle $ABC$ where $B$ is on the circle and $AC$ is the diameter. The right angle sits at $B$. So angle $ABC = 90°$.
 
 (Reason: angle in semicircle is $90°$.)
 
@@ -93,13 +175,9 @@ In triangle $ABC$:
 
 $$\text{angle } BCA = 180° - 90° - 28° = 62°$$
 
-**Step 3 (b): alternate segment / same segment? Use centre rule.**
+**Step 3 (b): same segment.**
 
-Angle $AOB$ at the centre is twice angle $ACB$ at the circumference.
-
-$$\text{angle } AOB = 2 \times 62° = 124°$$
-
-Then angle $ADB$ at the circumference (on the major arc, same side as $C$) is half of angle $AOB$ - but actually $D$ and $C$ are both on the major arc of chord $AB$, so angle $ADB$ and angle $ACB$ are in the **same segment**.
+$D$ and $C$ are both on the major arc of chord $AB$, so angle $ADB$ and angle $ACB$ are in the **same segment**.
 
 $$\text{angle } ADB = \text{angle } ACB = 62°$$
 
@@ -135,9 +213,3 @@ When you sketch the diagram, immediately:
 1. Mark right angles wherever you spot a diameter or a tangent.
 2. Identify any cyclic quadrilateral vertices.
 3. Look for chords that have two vertices on the same side - that is your same-segment cue.
-
-## Your turn: full quiz
-
-The widget below is a mixed quiz pulling from all three parts of 4.7. Aim for the full reason-and-value answer every time.
-
-<iframe src="/widgets/geometry-trainer.html?topic=circles" style="width:100%;max-width:696px;height:540px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>

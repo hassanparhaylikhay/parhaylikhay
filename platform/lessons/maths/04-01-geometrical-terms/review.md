@@ -24,7 +24,7 @@ checks:
   - q: 'A frustum is...'
     options: ["a cone with the top cut off parallel to the base", "a sphere cut in half", "a prism with triangular ends", "a cylinder with a hole through it"]
     correct: 0
-    explain: 'A frustum is what is left of a cone or pyramid when the top tapering part is sliced off parallel to the base : like a paper cup.'
+    explain: 'A frustum is what is left of a cone or pyramid when the top tapering part is sliced off parallel to the base, like a paper cup.'
   - q: 'The angle between a tangent and the radius at the point of contact is...'
     options: ["$0°$", "$45°$", "$90°$", "$180°$"]
     correct: 2
@@ -44,7 +44,7 @@ If you've worked through P1 you can:
 
 ## Marking patterns at a glance
 
-Cambridge "name the shape / state the reason" questions are nearly always **B1 each**. They are independent marks : you do not lose them by getting an earlier part wrong. So:
+Cambridge "name the shape / state the reason" questions are nearly always **B1 each**. They are independent marks: you do not lose them by getting an earlier part wrong. So:
 
 - If you have **any** sensible guess at a one-word answer, write it.
 - Use the precise vocabulary. "Right angle" and "$90°$" both work; "square corner" does not.
@@ -57,7 +57,22 @@ A mark that is awarded for a correct **reason** can still be lost if your reason
 
 Square $\to$ rectangle $\to$ parallelogram. Square $\to$ rhombus $\to$ parallelogram. So a square is also a rhombus, also a rectangle, also a parallelogram. When asked for "the name", give the **most specific** one that fits.
 
-A trapezium sits outside this chain : it has only **one** pair of parallel sides, while parallelograms have two.
+A trapezium sits outside this chain: it has only **one** pair of parallel sides, while parallelograms have two.
+
+<svg viewBox="0 0 520 240" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="260" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">QUADRILATERAL HIERARCHY</text>
+  <rect x="50" y="50" width="420" height="170" fill="none" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="4,4"/>
+  <text x="60" y="68" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" font-weight="600">PARALLELOGRAM</text>
+  <rect x="100" y="80" width="320" height="130" fill="none" stroke="#00abfa" stroke-width="2"/>
+  <text x="110" y="98" fill="#00abfa" font-family="Geist Mono,monospace" font-size="10" font-weight="600">RECTANGLE</text>
+  <rect x="260" y="110" width="160" height="100" fill="none" stroke="#0fee89" stroke-width="2"/>
+  <text x="268" y="128" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">RHOMBUS</text>
+  <rect x="260" y="140" width="80" height="70" fill="#fff067" fill-opacity="0.18" stroke="#fff067" stroke-width="2.5"/>
+  <text x="270" y="158" fill="#fff067" font-family="Geist Mono,monospace" font-size="10" font-weight="600">SQUARE</text>
+  <text x="270" y="225" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">most specific name</text>
+  <line x1="50" y1="50" x2="50" y2="240" stroke="#3a4a5a" stroke-width="0"/>
+  <text x="385" y="65" fill="#ff4670" font-family="Geist Mono,monospace" font-size="10" font-weight="600">TRAPEZIUM (outside chain)</text>
+</svg>
 
 ## Quick reference: angle types
 
@@ -66,6 +81,44 @@ A trapezium sits outside this chain : it has only **one** pair of parallel sides
 - Obtuse: $90° < \theta < 180°$
 - Straight: $\theta = 180°$
 - Reflex: $180° < \theta < 360°$
+
+<svg viewBox="0 0 520 200" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="260" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">ANGLE-TYPE FLASHCARD</text>
+  <g>
+    <line x1="50" y1="140" x2="120" y2="140" stroke="#00abfa" stroke-width="2.5"/>
+    <line x1="50" y1="140" x2="105" y2="95" stroke="#00abfa" stroke-width="2.5"/>
+    <path d="M 75 140 A 25 25 0 0 0 70 122" fill="none" stroke="#fff067" stroke-width="2"/>
+    <text x="85" y="170" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">ACUTE</text>
+    <text x="85" y="184" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">&lt; 90°</text>
+  </g>
+  <g>
+    <line x1="155" y1="140" x2="225" y2="140" stroke="#00abfa" stroke-width="2.5"/>
+    <line x1="155" y1="140" x2="155" y2="80" stroke="#00abfa" stroke-width="2.5"/>
+    <rect x="155" y="128" width="12" height="12" fill="none" stroke="#ff4670" stroke-width="2"/>
+    <text x="190" y="170" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">RIGHT</text>
+    <text x="190" y="184" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">= 90°</text>
+  </g>
+  <g>
+    <line x1="265" y1="140" x2="340" y2="140" stroke="#00abfa" stroke-width="2.5"/>
+    <line x1="265" y1="140" x2="215" y2="95" stroke="#00abfa" stroke-width="2.5"/>
+    <path d="M 290 140 A 25 25 0 0 1 247 128" fill="none" stroke="#fff067" stroke-width="2"/>
+    <text x="290" y="170" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">OBTUSE</text>
+    <text x="290" y="184" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">90 to 180°</text>
+  </g>
+  <g>
+    <line x1="370" y1="140" x2="445" y2="140" stroke="#00abfa" stroke-width="2.5"/>
+    <line x1="370" y1="140" x2="305" y2="140" stroke="#00abfa" stroke-width="2.5"/>
+    <text x="385" y="170" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">STRAIGHT</text>
+    <text x="385" y="184" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">180°</text>
+  </g>
+  <g>
+    <line x1="465" y1="140" x2="510" y2="140" stroke="#00abfa" stroke-width="2.5"/>
+    <line x1="465" y1="140" x2="500" y2="105" stroke="#00abfa" stroke-width="2.5"/>
+    <path d="M 488 140 A 22 22 0 1 1 481 119" fill="none" stroke="#ff4670" stroke-width="2"/>
+    <text x="490" y="170" text-anchor="middle" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">REFLEX</text>
+    <text x="490" y="184" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">&gt; 180°</text>
+  </g>
+</svg>
 
 ## Quick reference: circle parts
 
@@ -76,9 +129,45 @@ A trapezium sits outside this chain : it has only **one** pair of parallel sides
 - Sector ("pizza slice", two radii + arc); minor or major.
 - Segment (chord + arc); minor or major.
 
+<svg viewBox="0 0 520 220" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="260" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">CIRCLE PARTS RECAP</text>
+  <circle cx="260" cy="125" r="75" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
+  <circle cx="260" cy="125" r="3" fill="#fff067"/>
+  <line x1="260" y1="125" x2="320" y2="80" stroke="#00abfa" stroke-width="2.5"/>
+  <line x1="200" y1="155" x2="320" y2="155" stroke="#fff067" stroke-width="2.5"/>
+  <line x1="195" y1="80" x2="335" y2="105" stroke="#0fee89" stroke-width="2.5"/>
+  <line x1="160" y1="50" x2="360" y2="50" stroke="#ff822c" stroke-width="2.5"/>
+  <circle cx="260" cy="50" r="3" fill="#ff822c"/>
+  <line x1="260" y1="125" x2="260" y2="50" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <text x="270" y="120" fill="#fff067" font-family="Geist Mono,monospace" font-size="10" font-weight="600">O</text>
+  <text x="295" y="100" fill="#00abfa" font-family="Geist Mono,monospace" font-size="9" font-weight="600">RADIUS</text>
+  <text x="208" y="170" fill="#fff067" font-family="Geist Mono,monospace" font-size="9" font-weight="600">DIAMETER</text>
+  <text x="200" y="78" fill="#0fee89" font-family="Geist Mono,monospace" font-size="9" font-weight="600">CHORD</text>
+  <text x="270" y="42" fill="#ff822c" font-family="Geist Mono,monospace" font-size="9" font-weight="600">TANGENT</text>
+  <text x="335" y="125" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">ARC = piece of circumference</text>
+</svg>
+
 ## Worked example
 
 The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centre $O$. The point $T$ is on the circle, between $A$ and $B$, and a line $TX$ touches the circle at $T$.
+
+<svg viewBox="0 0 480 280" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="240" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">REGULAR OCTAGON IN A CIRCLE</text>
+  <circle cx="240" cy="150" r="90" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
+  <polygon points="276,67 312,87 332,123 332,177 312,213 276,233 204,233 168,213 148,177 148,123 168,87 204,67" fill="none" stroke="#00abfa" stroke-width="2.5"/>
+  <circle cx="240" cy="150" r="3" fill="#fff067"/>
+  <line x1="240" y1="150" x2="276" y2="67" stroke="#fff067" stroke-width="2"/>
+  <circle cx="240" cy="60" r="4" fill="#0fee89"/>
+  <line x1="170" y1="60" x2="320" y2="60" stroke="#ff822c" stroke-width="2.5"/>
+  <line x1="240" y1="150" x2="240" y2="60" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3,3"/>
+  <rect x="240" y="60" width="10" height="10" fill="none" stroke="#ff4670" stroke-width="2"/>
+  <text x="240" y="142" fill="#fff067" font-family="Geist Mono,monospace" font-size="11" font-weight="600">O</text>
+  <text x="276" y="60" fill="#00abfa" font-family="Geist Mono,monospace" font-size="10" font-weight="600">A</text>
+  <text x="200" y="60" fill="#00abfa" font-family="Geist Mono,monospace" font-size="10" font-weight="600">B</text>
+  <text x="248" y="55" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">T</text>
+  <text x="170" y="52" fill="#ff822c" font-family="Geist Mono,monospace" font-size="9" font-weight="600">TX (tangent)</text>
+  <text x="290" y="105" fill="#fff067" font-family="Geist Mono,monospace" font-size="9" font-weight="600">OA radius</text>
+</svg>
 
 (a) Write down the size of one interior angle of the octagon.
 
@@ -112,14 +201,8 @@ Full marks $= 5$.
 
 ## Common mistakes recap
 
-- "Sector" vs "segment" : sector is bounded by two radii and an arc; segment is bounded by a chord and an arc.
-- "Diameter" vs "chord" : every diameter is a chord, but only one passing through the centre is a diameter.
-- "Reflex" : means $> 180°$, NOT just any angle outside the shape.
-- Writing bearing as $62°$ instead of $062°$ : always three digits.
+- "Sector" vs "segment": sector is bounded by two radii and an arc; segment is bounded by a chord and an arc.
+- "Diameter" vs "chord": every diameter is a chord, but only one passing through the centre is a diameter.
+- "Reflex": means $> 180°$, NOT just any angle outside the shape.
+- Writing bearing as $62°$ instead of $062°$: always three digits.
 - Naming a shape too generally ("quadrilateral" when the answer wanted is "rhombus").
-
-## Your turn: full quiz
-
-The widget below is a mixed quiz across all the geometrical terms : circle parts, angle types, quadrilateral names, solid identifications, and similar/congruent prompts.
-
-<iframe src="/widgets/geometry-trainer.html?topic=terms" style="width:100%;max-width:696px;height:540px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>

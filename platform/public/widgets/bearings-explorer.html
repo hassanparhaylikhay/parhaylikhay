@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Bearings Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:8px; min-height:24px; }
+  .formula { font-size:15px; color:#f0eeea; text-align:center; }
+  .formula .katex { font-size:1em; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; touch-action:none; }
+
+  .compass-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:3 3; }
+  .compass-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#3a4a5a; font-weight:500; }
+  .north-line { stroke:#7a7875; stroke-width:1.5; fill:none; }
+  .north-line-b { stroke:#7a7875; stroke-width:1.2; fill:none; stroke-dasharray:4 3; }
+  .point-label { font-family:'Geist Mono',monospace; font-size:12px; fill:#f0eeea; }
+  .north-label { font-family:'Geist Mono',monospace; font-size:11px; fill:#7a7875; font-weight:600; }
+  .ab-line { stroke:#00abfa; stroke-width:2; fill:none; }
+  .b-point { fill:#fff067; cursor:grab; filter:drop-shadow(0 0 12px rgba(255,240,103,0.18)); }
+  .b-point.dragging { cursor:grabbing; }
+  .a-point { fill:#7a7875; }
+  .arc-from-a { fill:#fff06720; stroke:#fff067; stroke-width:1.5; }
+  .arc-from-b { fill:#ff467020; stroke:#ff4670; stroke-width:1.5; }
+  .arc-label-a { font-family:'Geist Mono',monospace; font-size:12px; fill:#fff067; font-weight:600; }
+  .arc-label-b { font-family:'Geist Mono',monospace; font-size:12px; fill:#ff4670; font-weight:600; }
+
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <svg viewBox="0 0 480 340" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <defs>
+      <marker id="ab-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L10,5 L0,10 Z" fill="#00abfa"/>
+      </marker>
+      <marker id="north-arrow-a" viewBox="0 0 10 10" refX="5" refY="2" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,8 L5,0 L10,8 Z" fill="#7a7875"/>
+      </marker>
+      <marker id="north-arrow-b" viewBox="0 0 10 10" refX="5" refY="2" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0,8 L5,0 L10,8 Z" fill="#7a7875"/>
+      </marker>
+    </defs>
+
+    <!-- Compass rose at A (faint) -->
+    <g id="compassRose"></g>
+
+    <!-- North arrow at A (solid reference) -->
+    <line class="north-line" id="northA" x1="240" y1="170" x2="240" y2="75" marker-end="url(#north-arrow-a)"/>
+    <text class="north-label" id="northALabel" x="240" y="68" text-anchor="middle">N</text>
+
+    <!-- Bearing arc from A (yellow) -->
+    <path class="arc-from-a" id="arcA"/>
+    <text class="arc-label-a" id="arcALabel" x="0" y="0" text-anchor="middle">060</text>
+
+    <!-- Line A -> B -->
+    <line class="ab-line" id="abLine" marker-end="url(#ab-arrow)"/>
+
+    <!-- North arrow at B (dashed, smaller) -->
+    <line class="north-line-b" id="northB" marker-end="url(#north-arrow-b)"/>
+    <text class="north-label" id="northBLabel" x="0" y="0" text-anchor="middle">N</text>
+
+    <!-- Reverse-bearing arc at B (pink) -->
+    <path class="arc-from-b" id="arcB"/>
+    <text class="arc-label-b" id="arcBLabel" x="0" y="0" text-anchor="middle">240</text>
+
+    <!-- A point -->
+    <circle class="a-point" cx="240" cy="170" r="5"/>
+    <text class="point-label" x="240" y="190" text-anchor="middle">A</text>
+
+    <!-- B point -->
+    <circle class="b-point" id="bPoint" cx="335" cy="115" r="8"/>
+    <text class="point-label" id="bLabel" x="0" y="0" text-anchor="middle">B</text>
+  </svg>
+
+  <p class="footer">drag the yellow B point: bearings always measured CLOCKWISE from north</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+// Geometry constants
+var AX = 240, AY = 170;
+var MIN_R = 25, MAX_R = 200;
+var ARC_R_A = 35;        // bearing arc radius at A
+var ARC_R_B = 28;        // reverse-bearing arc radius at B
+var NORTH_LEN_A = 95;    // length of north arrow at A
+var NORTH_LEN_B = 60;    // length of north arrow at B
+var COMPASS_LEN = 110;   // faint compass-rose lines
+var SPRING = 0.18;
+
+// Default B at bearing 060 from A, distance ~110 px.
+// SVG y goes down; "up" is -y. Angle from north (clockwise):
+//   dx = r * sin(theta), dy = -r * cos(theta)
+function bearingToOffset(bearingDeg, r) {
+  var t = bearingDeg * Math.PI / 180;
+  return { x: r * Math.sin(t), y: -r * Math.cos(t) };
+}
+
+var initOff = bearingToOffset(60, 110);
+var Bx = AX + initOff.x, By = AY + initOff.y;
+var BxT = Bx, ByT = By;
+var dragging = false;
+
+// Build faint compass rose
+(function buildCompass() {
+  var g = document.getElementById("compassRose");
+  var dirs = [
+    { dx:  0, dy: -1, label: "N" },
+    { dx:  1, dy:  0, label: "E" },
+    { dx:  0, dy:  1, label: "S" },
+    { dx: -1, dy:  0, label: "W" }
+  ];
+  for (var i = 0; i < dirs.length; i++) {
+    var d = dirs[i];
+    if (d.label !== "N") {
+      // Skip the line for N, since the solid north arrow already covers up.
+      var line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      line.setAttribute("class", "compass-line");
+      line.setAttribute("x1", AX);
+      line.setAttribute("y1", AY);
+      line.setAttribute("x2", AX + d.dx * COMPASS_LEN);
+      line.setAttribute("y2", AY + d.dy * COMPASS_LEN);
+      g.appendChild(line);
+    }
+    if (d.label === "N") continue; // N label sits on the solid arrow
+    var t = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    t.setAttribute("class", "compass-label");
+    var lx = AX + d.dx * (COMPASS_LEN + 10);
+    var ly = AY + d.dy * (COMPASS_LEN + 10) + 3;
+    t.setAttribute("x", lx);
+    t.setAttribute("y", ly);
+    t.setAttribute("text-anchor", "middle");
+    t.textContent = d.label;
+    g.appendChild(t);
+  }
+})();
+
+// Bearing math
+function bearingFromAToPoint(px, py, ax, ay) {
+  // Clockwise angle from north (up = -y in SVG)
+  var dx = px - ax;
+  var dy = -(py - ay); // flip so +y means up
+  var theta = Math.atan2(dx, dy); // 0 when due north, increases clockwise
+  if (theta < 0) theta += 2 * Math.PI;
+  return theta * 180 / Math.PI;
+}
+
+function fmt3(deg) {
+  var n = Math.round(deg);
+  if (n === 360) n = 0;
+  if (n < 10) return "00" + n;
+  if (n < 100) return "0" + n;
+  return "" + n;
+}
+
+// Build an SVG arc path going CLOCKWISE from north (0 deg) to bearing `b` deg,
+// centered at (cx, cy), radius r. Includes the centre so the wedge fills.
+function arcPath(cx, cy, r, bearingDeg) {
+  if (bearingDeg < 0.5) bearingDeg = 0.5; // avoid degenerate path
+  var t = bearingDeg * Math.PI / 180;
+  var x0 = cx, y0 = cy - r;                 // start at north
+  var x1 = cx + r * Math.sin(t);
+  var y1 = cy - r * Math.cos(t);
+  var largeArc = bearingDeg > 180 ? 1 : 0;
+  // Sweep flag = 1 means clockwise in SVG's user coordinate system (y-down).
+  return "M " + cx + "," + cy +
+         " L " + x0 + "," + y0 +
+         " A " + r + "," + r + " 0 " + largeArc + " 1 " + x1 + "," + y1 +
+         " Z";
+}
+
+// Mid-angle position for placing arc labels (just outside the arc)
+function arcLabelPos(cx, cy, r, bearingDeg, pad) {
+  var mid = bearingDeg / 2;
+  var t = mid * Math.PI / 180;
+  var rr = r + pad;
+  return { x: cx + rr * Math.sin(t), y: cy - rr * Math.cos(t) + 3 };
+}
+
+// rAF tick
+function tick() {
+  Bx += (BxT - Bx) * SPRING;
+  By += (ByT - By) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function draw() {
+  var bAB = bearingFromAToPoint(Bx, By, AX, AY);
+  var bBA = (bAB + 180) % 360;
+
+  // Heading
+  var s =
+    "\\textcolor{#fff067}{\\text{Bearing of } B \\text{ from } A = " + fmt3(bAB) + "\\degree}" +
+    " \\;:\\; " +
+    "\\textcolor{#ff4670}{\\text{Bearing of } A \\text{ from } B = " + fmt3(bBA) + "\\degree}";
+  tryRender(document.getElementById("formula"), s);
+
+  // A -> B line (shorten so arrow head sits at B)
+  var dx = Bx - AX, dy = By - AY;
+  var dist = Math.sqrt(dx * dx + dy * dy);
+  var ux = dx / (dist || 1), uy = dy / (dist || 1);
+  var startX = AX + ux * 6; // start a touch outside A's dot
+  var startY = AY + uy * 6;
+  var endX = Bx - ux * 10;  // stop short of B for arrow head
+  var endY = By - uy * 10;
+  var line = document.getElementById("abLine");
+  line.setAttribute("x1", startX);
+  line.setAttribute("y1", startY);
+  line.setAttribute("x2", endX);
+  line.setAttribute("y2", endY);
+
+  // B point + label
+  var bPoint = document.getElementById("bPoint");
+  bPoint.setAttribute("cx", Bx);
+  bPoint.setAttribute("cy", By);
+  var bLabel = document.getElementById("bLabel");
+  // Place label outward from A along the AB direction
+  var lx = Bx + ux * 18;
+  var ly = By + uy * 18 + 4;
+  bLabel.setAttribute("x", lx);
+  bLabel.setAttribute("y", ly);
+
+  // Bearing arc at A (yellow)
+  var arcA = document.getElementById("arcA");
+  arcA.setAttribute("d", arcPath(AX, AY, ARC_R_A, bAB));
+  var labA = arcLabelPos(AX, AY, ARC_R_A, bAB, 14);
+  var arcALabel = document.getElementById("arcALabel");
+  arcALabel.setAttribute("x", labA.x);
+  arcALabel.setAttribute("y", labA.y);
+  arcALabel.textContent = fmt3(bAB) + "°";
+
+  // North arrow at B
+  var northB = document.getElementById("northB");
+  northB.setAttribute("x1", Bx);
+  northB.setAttribute("y1", By);
+  northB.setAttribute("x2", Bx);
+  northB.setAttribute("y2", By - NORTH_LEN_B);
+  var northBLabel = document.getElementById("northBLabel");
+  northBLabel.setAttribute("x", Bx);
+  northBLabel.setAttribute("y", By - NORTH_LEN_B - 6);
+
+  // Reverse-bearing arc at B (pink), measured clockwise from B's north to BA direction
+  var arcB = document.getElementById("arcB");
+  arcB.setAttribute("d", arcPath(Bx, By, ARC_R_B, bBA));
+  var labB = arcLabelPos(Bx, By, ARC_R_B, bBA, 14);
+  var arcBLabel = document.getElementById("arcBLabel");
+  arcBLabel.setAttribute("x", labB.x);
+  arcBLabel.setAttribute("y", labB.y);
+  arcBLabel.textContent = fmt3(bBA) + "°";
+}
+
+// Drag handling
+var svg = document.getElementById("svg");
+var bPoint = document.getElementById("bPoint");
+
+function svgPoint(evt) {
+  var rect = svg.getBoundingClientRect();
+  var vb = svg.viewBox.baseVal;
+  var x = (evt.clientX - rect.left) * (vb.width / rect.width);
+  var y = (evt.clientY - rect.top) * (vb.height / rect.height);
+  return { x: x, y: y };
+}
+
+function clampToRing(x, y) {
+  var dx = x - AX, dy = y - AY;
+  var d = Math.sqrt(dx * dx + dy * dy);
+  if (d < 0.0001) {
+    return { x: AX + MIN_R, y: AY };
+  }
+  if (d < MIN_R) {
+    return { x: AX + (dx / d) * MIN_R, y: AY + (dy / d) * MIN_R };
+  }
+  if (d > MAX_R) {
+    return { x: AX + (dx / d) * MAX_R, y: AY + (dy / d) * MAX_R };
+  }
+  return { x: x, y: y };
+}
+
+function startDrag(evt) {
+  dragging = true;
+  bPoint.classList.add("dragging");
+  evt.preventDefault();
+}
+function moveDrag(evt) {
+  if (!dragging) return;
+  var src = evt.touches && evt.touches[0] ? evt.touches[0] : evt;
+  var p = svgPoint(src);
+  var c = clampToRing(p.x, p.y);
+  BxT = c.x; ByT = c.y;
+  evt.preventDefault();
+}
+function endDrag() {
+  dragging = false;
+  bPoint.classList.remove("dragging");
+}
+
+bPoint.addEventListener("mousedown", startDrag);
+bPoint.addEventListener("touchstart", startDrag, { passive: false });
+window.addEventListener("mousemove", moveDrag);
+window.addEventListener("touchmove", moveDrag, { passive: false });
+window.addEventListener("mouseup", endDrag);
+window.addEventListener("touchend", endDrag);
+window.addEventListener("touchcancel", endDrag);
+
+tick();
+
+// Resize reporting for iframe host
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

@@ -41,6 +41,25 @@ If you've worked through P1 to P3 you can:
 - Use **three-letter notation** (vertex letter in the middle) for any angle you name.
 - Quote the rule **by full name** when giving a reason: "co-interior angles sum to $180°$", not "co-interior" alone.
 
+## Recap diagram: the parallel-line trio
+
+<svg viewBox="0 0 480 240" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="240" y="18" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875" letter-spacing="0.4px">CORRESPONDING (=), ALTERNATE (=), CO-INTERIOR (180)</text>
+  <line x1="40" y1="80" x2="440" y2="80" stroke="#00abfa" stroke-width="2.6"/>
+  <line x1="40" y1="190" x2="440" y2="190" stroke="#00abfa" stroke-width="2.6"/>
+  <polygon points="216,77 226,77 221,72" fill="#0fee89"/>
+  <polygon points="216,187 226,187 221,182" fill="#0fee89"/>
+  <line x1="140" y1="40" x2="340" y2="230" stroke="#7a7875" stroke-width="2"/>
+  <path d="M 245 80 A 24 24 0 0 1 232 102" fill="none" stroke="#fff067" stroke-width="2.5"/>
+  <path d="M 348 190 A 24 24 0 0 1 335 212" fill="none" stroke="#fff067" stroke-width="2.5"/>
+  <path d="M 220 80 A 22 22 0 0 0 232 102" fill="none" stroke="#0fee89" stroke-width="2.5"/>
+  <path d="M 268 190 A 22 22 0 0 0 256 168" fill="none" stroke="#0fee89" stroke-width="2.5"/>
+  <text x="252" y="100" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#fff067">corr</text>
+  <text x="354" y="210" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#fff067">corr</text>
+  <text x="195" y="100" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#0fee89">alt</text>
+  <text x="270" y="170" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#0fee89">alt</text>
+</svg>
+
 ## Marking patterns at a glance
 
 For "find the angle" questions, marks usually split as:
@@ -56,6 +75,30 @@ For polygon questions:
 - **M1** for $(n - 2) \times 180$ or $\dfrac{360}{n}$ used correctly.
 - **M1** for an intermediate step (e.g. dividing by $n$, or solving for $n$).
 - **A1** for the final value.
+
+## Recap diagram: regular polygons quick view
+
+<svg viewBox="0 0 480 220" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
+  <text x="240" y="18" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875" letter-spacing="0.4px">REGULAR PENTAGON, HEXAGON, OCTAGON: INT, EXT</text>
+  <g transform="translate(50,40)">
+    <polygon points="60,10 110,45 92,100 28,100 10,45" fill="none" stroke="#00abfa" stroke-width="2"/>
+    <text x="60" y="135" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">INT 108</text>
+    <text x="60" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">EXT 72</text>
+    <text x="60" y="170" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875">n=5</text>
+  </g>
+  <g transform="translate(190,40)">
+    <polygon points="60,10 105,38 105,90 60,118 15,90 15,38" fill="none" stroke="#00abfa" stroke-width="2"/>
+    <text x="60" y="135" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">INT 120</text>
+    <text x="60" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">EXT 60</text>
+    <text x="60" y="170" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875">n=6</text>
+  </g>
+  <g transform="translate(330,40)">
+    <polygon points="60,10 92,22 105,55 92,88 60,100 28,88 15,55 28,22" fill="none" stroke="#00abfa" stroke-width="2"/>
+    <text x="60" y="135" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#fff067">INT 135</text>
+    <text x="60" y="150" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="11" font-weight="600" fill="#ff4670">EXT 45</text>
+    <text x="60" y="170" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875">n=8</text>
+  </g>
+</svg>
 
 ## Worked example: combining several rules
 
@@ -122,13 +165,7 @@ Full marks $= 7$.
 
 ## Common pitfalls (recap)
 
-- Two-letter angle names when several angles share a vertex - use three letters.
-- "Co-interior" without saying "$180°$" - state the rule fully.
-- Using regular polygon formulas on irregular shapes - only $(n-2) \times 180$ works for irregular.
-- Forgetting the parallel-line condition in the reason - "alternate angles" alone is half a reason.
-
-## Your turn: full quiz
-
-The widget below is a mixed quiz drawing from all three parts of this sub-topic.
-
-<iframe src="/widgets/geometry-trainer.html?topic=angles" style="width:100%;max-width:696px;height:540px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+- Two-letter angle names when several angles share a vertex: use three letters.
+- "Co-interior" without saying "$180°$": state the rule fully.
+- Using regular polygon formulas on irregular shapes: only $(n-2) \times 180$ works for irregular.
+- Forgetting the parallel-line condition in the reason: "alternate angles" alone is half a reason.

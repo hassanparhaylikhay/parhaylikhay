@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Symmetry Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
+  .formula { font-size:16px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:flex; align-items:center; gap:14px; margin-bottom:12px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap; }
+  .row { display:flex; align-items:center; gap:8px; min-width:0; }
+  .row .name { color:#fff067; font-weight:600; }
+  .row select {
+    background:#141e2a; color:#f0eeea; border:1px solid #3a4a5a;
+    border-radius:5px; padding:4px 8px; font-family:'Geist Mono',monospace;
+    font-size:11.5px; outline:none; cursor:pointer;
+  }
+  .row select:focus { border-color:#00abfa; }
+  .row button {
+    background:#141e2a; color:#fff067; border:1px solid #fff067;
+    border-radius:5px; padding:4px 12px; font-family:'Geist Mono',monospace;
+    font-size:11.5px; outline:none; cursor:pointer; font-weight:600;
+    transition: background 0.15s, color 0.15s;
+  }
+  .row button:hover:not(:disabled) { background:#fff067; color:#0b1118; }
+  .row button:disabled { opacity:0.45; cursor:not-allowed; }
+  .row button.hidden { display:none; }
+  .step-counter {
+    margin-left:auto;
+    font-family:'Geist Mono',monospace;
+    font-size:11.5px;
+    color:#0fee89;
+    font-weight:600;
+    transition: color 0.25s;
+  }
+  .step-counter.flash { color:#fff067; }
+  .step-counter.dim { color:#3a4a5a; font-weight:400; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+
+  .shape-fill { fill:#00abfa20; stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
+  .shape-ghost { fill:none; stroke:#3a4a5a; stroke-width:1; stroke-dasharray:3 4; stroke-linejoin:round; }
+  .sym-line { stroke:#fff067; stroke-width:1.5; stroke-dasharray:5 5; }
+  .sym-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#fff067; font-weight:700; }
+  .tracker-dot { fill:#ff4670; stroke:#0b1118; stroke-width:1.5; }
+  .no-mirror-label { font-family:'Geist Mono',monospace; font-size:11px; fill:#7a7875; font-style:italic; }
+  .center-dot { fill:#7a7875; }
+
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">shape</span>
+      <select id="shapeSel">
+        <option value="eqtri">Equilateral triangle</option>
+        <option value="isotri">Isosceles triangle</option>
+        <option value="square">Square</option>
+        <option value="rect">Rectangle</option>
+        <option value="rhombus">Rhombus</option>
+        <option value="parallelogram">Parallelogram</option>
+        <option value="kite">Kite</option>
+        <option value="pentagon">Regular pentagon</option>
+        <option value="hexagon">Regular hexagon</option>
+        <option value="letterF">Letter F</option>
+      </select>
+    </div>
+    <div class="row">
+      <span class="name">mode</span>
+      <select id="modeSel">
+        <option value="lines">Lines of symmetry</option>
+        <option value="rotate">Rotational symmetry</option>
+      </select>
+    </div>
+    <div class="row">
+      <button id="rotateBtn" class="hidden">Rotate</button>
+    </div>
+    <div class="step-counter dim" id="stepCounter">Position 1/1</div>
+  </div>
+
+  <svg viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
+    <g id="ghostLayer"></g>
+    <g id="symLinesLayer"></g>
+    <g id="shapeLayer"></g>
+    <g id="trackerLayer"></g>
+    <g id="labelLayer"></g>
+  </svg>
+
+  <p class="footer">pick a shape  switch modes  click rotate to see rotational symmetry</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+// Geometry centre on the SVG canvas
+var CX = 240, CY = 170;
+
+// Pre-defined shape data. Each entry has:
+//   pts:        polygon vertices around (0,0)
+//   lines:      array of mirror-line angles in DEGREES (line passes through origin)
+//   order:      rotational symmetry order
+//   trackerIdx: index into pts of the vertex used as tracker (or a chosen feature)
+var SHAPES = {
+  eqtri: {
+    label: "Equilateral triangle",
+    pts: (function() {
+      var arr = [];
+      // vertices at angles -90, 30, 150 (degrees), radius 70
+      var angs = [-90, 30, 150];
+      for (var i = 0; i < angs.length; i++) {
+        var a = angs[i] * Math.PI / 180;
+        arr.push([70 * Math.cos(a), 70 * Math.sin(a)]);
+      }
+      return arr;
+    })(),
+    lines: [90, 30, 150],
+    order: 3,
+    trackerIdx: 0
+  },
+  isotri: {
+    label: "Isosceles triangle",
+    pts: [[-40, 50], [40, 50], [0, -60]],
+    lines: [90],
+    order: 1,
+    trackerIdx: 2
+  },
+  square: {
+    label: "Square",
+    pts: [[-50, -50], [50, -50], [50, 50], [-50, 50]],
+    lines: [0, 90, 45, 135],
+    order: 4,
+    trackerIdx: 0
+  },
+  rect: {
+    label: "Rectangle",
+    pts: [[-70, -40], [70, -40], [70, 40], [-70, 40]],
+    lines: [0, 90],
+    order: 2,
+    trackerIdx: 0
+  },
+  rhombus: {
+    label: "Rhombus",
+    pts: [[0, -60], [60, 0], [0, 60], [-60, 0]],
+    lines: [0, 90],
+    order: 2,
+    trackerIdx: 0
+  },
+  parallelogram: {
+    label: "Parallelogram",
+    pts: [[-60, -30], [50, -30], [60, 30], [-50, 30]],
+    lines: [],
+    order: 2,
+    trackerIdx: 0
+  },
+  kite: {
+    label: "Kite",
+    pts: [[0, -60], [40, -10], [0, 60], [-40, -10]],
+    lines: [90],
+    order: 1,
+    trackerIdx: 0
+  },
+  pentagon: {
+    label: "Regular pentagon",
+    pts: (function() {
+      var arr = [];
+      // first vertex at the top (angle -90)
+      for (var i = 0; i < 5; i++) {
+        var a = (-90 + i * 72) * Math.PI / 180;
+        arr.push([65 * Math.cos(a), 65 * Math.sin(a)]);
+      }
+      return arr;
+    })(),
+    lines: [90, 90 + 72, 90 + 144, 90 + 216, 90 + 288],
+    order: 5,
+    trackerIdx: 0
+  },
+  hexagon: {
+    label: "Regular hexagon",
+    pts: (function() {
+      var arr = [];
+      // first vertex at angle 0 (right)
+      for (var i = 0; i < 6; i++) {
+        var a = (i * 60) * Math.PI / 180;
+        arr.push([60 * Math.cos(a), 60 * Math.sin(a)]);
+      }
+      return arr;
+    })(),
+    lines: [0, 30, 60, 90, 120, 150],
+    order: 6,
+    trackerIdx: 0
+  },
+  letterF: {
+    label: "Letter F",
+    pts: [
+      [-40, -50], [40, -50], [40, -30], [-20, -30],
+      [-20, -10], [20, -10], [20, 10], [-20, 10],
+      [-20, 50], [-40, 50]
+    ],
+    lines: [],
+    order: 1,
+    trackerIdx: 1   // top-right corner of the F, easy to track
+  }
+};
+
+var state = {
+  shape: "eqtri",
+  mode: "lines",
+  currentRotation: 0,    // current displayed rotation, degrees
+  targetRotation: 0,     // target rotation, degrees
+  animating: false,
+  lastPosition: 1,       // 1..order
+  lastFlashTime: 0,
+  rotateClicks: 0
+};
+
+var svgNS = "http://www.w3.org/2000/svg";
+
+function clearLayer(id) {
+  var g = document.getElementById(id);
+  while (g.firstChild) g.removeChild(g.firstChild);
+}
+
+function ptsToString(pts) {
+  return pts.map(function(p) { return p[0].toFixed(2) + "," + p[1].toFixed(2); }).join(" ");
+}
+
+function rotatePts(pts, angDeg, cx, cy) {
+  var a = angDeg * Math.PI / 180;
+  var ca = Math.cos(a), sa = Math.sin(a);
+  return pts.map(function(p) {
+    var x = p[0], y = p[1];
+    return [cx + x * ca - y * sa, cy + x * sa + y * ca];
+  });
+}
+
+function transformPts(pts, cx, cy) {
+  return pts.map(function(p) { return [cx + p[0], cy + p[1]]; });
+}
+
+function drawHeading() {
+  var sh = SHAPES[state.shape];
+  var X = sh.lines.length;
+  var Y = sh.order;
+  var tex =
+    "\\textcolor{#fff067}{" + X + "\\text{ lines of symmetry}}" +
+    "\\;\\;\\;" +
+    "\\textcolor{#ff4670}{\\text{Rotational order } " + Y + "}";
+  tryRender(document.getElementById("formula"), tex);
+}
+
+function drawLinesMode() {
+  clearLayer("ghostLayer");
+  clearLayer("symLinesLayer");
+  clearLayer("shapeLayer");
+  clearLayer("trackerLayer");
+  clearLayer("labelLayer");
+
+  var sh = SHAPES[state.shape];
+
+  // shape itself, no rotation
+  var poly = document.createElementNS(svgNS, "polygon");
+  poly.setAttribute("class", "shape-fill");
+  poly.setAttribute("points", ptsToString(transformPts(sh.pts, CX, CY)));
+  document.getElementById("shapeLayer").appendChild(poly);
+
+  // mirror lines
+  var symG = document.getElementById("symLinesLayer");
+  var labelG = document.getElementById("labelLayer");
+
+  if (sh.lines.length === 0) {
+    var t = document.createElementNS(svgNS, "text");
+    t.setAttribute("class", "no-mirror-label");
+    t.setAttribute("x", CX);
+    t.setAttribute("y", CY + 90);
+    t.setAttribute("text-anchor", "middle");
+    t.textContent = "no mirror lines";
+    labelG.appendChild(t);
+  } else {
+    // estimate shape "radius" so the dashed line reaches ~30px past the shape
+    var maxR = 0;
+    for (var i = 0; i < sh.pts.length; i++) {
+      var r = Math.sqrt(sh.pts[i][0] * sh.pts[i][0] + sh.pts[i][1] * sh.pts[i][1]);
+      if (r > maxR) maxR = r;
+    }
+    var halfLen = maxR + 30;
+
+    for (var k = 0; k < sh.lines.length; k++) {
+      var ang = sh.lines[k] * Math.PI / 180;
+      var dx = Math.cos(ang), dy = Math.sin(ang);
+      var x1 = CX - halfLen * dx, y1 = CY - halfLen * dy;
+      var x2 = CX + halfLen * dx, y2 = CY + halfLen * dy;
+      var ln = document.createElementNS(svgNS, "line");
+      ln.setAttribute("class", "sym-line");
+      ln.setAttribute("x1", x1.toFixed(2));
+      ln.setAttribute("y1", y1.toFixed(2));
+      ln.setAttribute("x2", x2.toFixed(2));
+      ln.setAttribute("y2", y2.toFixed(2));
+      symG.appendChild(ln);
+
+      // numeric label near the outer end (x2,y2), nudged slightly
+      var lx = CX + (halfLen + 10) * dx;
+      var ly = CY + (halfLen + 10) * dy;
+      var lab = document.createElementNS(svgNS, "text");
+      lab.setAttribute("class", "sym-label");
+      lab.setAttribute("x", lx.toFixed(2));
+      lab.setAttribute("y", (ly + 3).toFixed(2));
+      lab.setAttribute("text-anchor", "middle");
+      lab.textContent = String(k + 1);
+      labelG.appendChild(lab);
+    }
+  }
+
+  // tracker dot at the chosen vertex
+  var p = sh.pts[sh.trackerIdx];
+  var dot = document.createElementNS(svgNS, "circle");
+  dot.setAttribute("class", "tracker-dot");
+  dot.setAttribute("cx", (CX + p[0]).toFixed(2));
+  dot.setAttribute("cy", (CY + p[1]).toFixed(2));
+  dot.setAttribute("r", 5);
+  document.getElementById("trackerLayer").appendChild(dot);
+}
+
+function drawRotateMode() {
+  clearLayer("ghostLayer");
+  clearLayer("symLinesLayer");
+  clearLayer("shapeLayer");
+  clearLayer("trackerLayer");
+  clearLayer("labelLayer");
+
+  var sh = SHAPES[state.shape];
+
+  // ghost (starting position) outline
+  var ghost = document.createElementNS(svgNS, "polygon");
+  ghost.setAttribute("class", "shape-ghost");
+  ghost.setAttribute("points", ptsToString(transformPts(sh.pts, CX, CY)));
+  document.getElementById("ghostLayer").appendChild(ghost);
+
+  // rotated shape
+  var rotated = rotatePts(sh.pts, state.currentRotation, CX, CY);
+  var poly = document.createElementNS(svgNS, "polygon");
+  poly.setAttribute("class", "shape-fill");
+  poly.setAttribute("points", ptsToString(rotated));
+  document.getElementById("shapeLayer").appendChild(poly);
+
+  // small centre dot to make the rotation centre clear
+  var c = document.createElementNS(svgNS, "circle");
+  c.setAttribute("class", "center-dot");
+  c.setAttribute("cx", CX); c.setAttribute("cy", CY);
+  c.setAttribute("r", 2.5);
+  document.getElementById("shapeLayer").appendChild(c);
+
+  // tracker dot (rotated)
+  var tp = rotated[sh.trackerIdx];
+  var dot = document.createElementNS(svgNS, "circle");
+  dot.setAttribute("class", "tracker-dot");
+  dot.setAttribute("cx", tp[0].toFixed(2));
+  dot.setAttribute("cy", tp[1].toFixed(2));
+  dot.setAttribute("r", 5);
+  document.getElementById("trackerLayer").appendChild(dot);
+}
+
+function updateStepCounter() {
+  var sh = SHAPES[state.shape];
+  var counter = document.getElementById("stepCounter");
+  if (state.mode !== "rotate") {
+    counter.classList.add("dim");
+    counter.textContent = "";
+    return;
+  }
+  counter.classList.remove("dim");
+  counter.textContent = "Position " + state.lastPosition + "/" + sh.order;
+
+  // flash if recent
+  var now = performance.now();
+  if (now - state.lastFlashTime < 350) {
+    counter.classList.add("flash");
+  } else {
+    counter.classList.remove("flash");
+  }
+}
+
+function updateRotateBtn() {
+  var btn = document.getElementById("rotateBtn");
+  if (state.mode !== "rotate") {
+    btn.classList.add("hidden");
+    return;
+  }
+  btn.classList.remove("hidden");
+  btn.disabled = state.animating;
+  if (state.rotateClicks === 0) {
+    btn.textContent = "Rotate";
+  } else if (state.animating) {
+    btn.textContent = "Rotating...";
+  } else {
+    btn.textContent = "Rotate again";
+  }
+}
+
+function setShape(key) {
+  state.shape = key;
+  state.currentRotation = 0;
+  state.targetRotation = 0;
+  state.animating = false;
+  state.rotateClicks = 0;
+  state.lastPosition = 1;
+  state.lastFlashTime = 0;
+  drawHeading();
+  redraw();
+  updateStepCounter();
+  updateRotateBtn();
+}
+
+function setMode(m) {
+  state.mode = m;
+  state.currentRotation = 0;
+  state.targetRotation = 0;
+  state.animating = false;
+  state.rotateClicks = 0;
+  state.lastPosition = 1;
+  state.lastFlashTime = 0;
+  redraw();
+  updateStepCounter();
+  updateRotateBtn();
+}
+
+function redraw() {
+  if (state.mode === "lines") {
+    drawLinesMode();
+  } else {
+    drawRotateMode();
+  }
+}
+
+// rAF animation loop
+var rotateStart = 0;       // ms timestamp when current rotation animation started
+var rotateFrom = 0;        // currentRotation at start
+var rotateTo = 0;          // target at start
+var ROTATE_MS = 2500;
+
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+function tick() {
+  if (state.mode === "rotate" && state.animating) {
+    var now = performance.now();
+    var t = (now - rotateStart) / ROTATE_MS;
+    if (t >= 1) t = 1;
+    var prev = state.currentRotation;
+    state.currentRotation = rotateFrom + (rotateTo - rotateFrom) * easeInOutCubic(t);
+
+    // Detect crossing of a multiple of 360/order between prev and current
+    var sh = SHAPES[state.shape];
+    var step = 360 / sh.order;
+    // count how many step-boundaries lie in (prev, current]
+    // (we only animate forwards)
+    var startIdx = Math.floor(prev / step);
+    var endIdx = Math.floor(state.currentRotation / step);
+    if (endIdx > startIdx) {
+      // one or more crossings
+      var crossings = endIdx - startIdx;
+      // each crossing advances lastPosition by 1 modulo order (1-indexed)
+      for (var i = 0; i < crossings; i++) {
+        state.lastPosition = state.lastPosition + 1;
+        if (state.lastPosition > sh.order) state.lastPosition = 1;
+      }
+      state.lastFlashTime = now;
+    }
+
+    redraw();
+    updateStepCounter();
+
+    if (t >= 1) {
+      state.animating = false;
+      // snap to a clean multiple of 360 so future rotations stay tidy
+      state.currentRotation = rotateTo;
+      updateRotateBtn();
+    }
+  } else {
+    // still need to clear the flash class once it expires
+    updateStepCounter();
+  }
+  requestAnimationFrame(tick);
+}
+
+document.getElementById("shapeSel").addEventListener("change", function(e) {
+  setShape(e.target.value);
+});
+document.getElementById("modeSel").addEventListener("change", function(e) {
+  setMode(e.target.value);
+});
+document.getElementById("rotateBtn").addEventListener("click", function() {
+  if (state.animating) return;
+  state.animating = true;
+  state.rotateClicks += 1;
+  rotateStart = performance.now();
+  rotateFrom = state.currentRotation;
+  rotateTo = state.currentRotation + 360;
+  // we keep lastPosition where it is; the crossings during the animation
+  // will advance it through every position before returning to it.
+  updateRotateBtn();
+});
+
+// Initial render
+drawHeading();
+redraw();
+updateStepCounter();
+updateRotateBtn();
+tick();
+
+// postMessage resize reporter
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
