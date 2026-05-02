@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Parallel & Perpendicular Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; gap:14px; min-height:24px; margin-bottom:10px; flex-wrap:wrap; }
+  .head .eq { font-size:14px; }
+  .head .eq.L1 { color:#fff067; }
+  .head .eq.L2 { color:#00abfa; }
+  .head .eq .katex { font-size:1em; }
+
+  .controls { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px 14px; margin-bottom:8px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:6px; min-width:0; }
+  .row .name { font-weight:600; min-width:32px; }
+  .row.L1 .name { color:#fff067; }
+  .row.L2 .name { color:#00abfa; }
+  .row input[type=range] { flex:1; min-width:50px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .row.L1 input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row.L1 input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row.L2 input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:#00abfa; cursor:pointer; border:0; }
+  .row.L2 input[type=range]::-moz-range-thumb { width:13px; height:13px; border-radius:50%; background:#00abfa; cursor:pointer; border:0; }
+  .row .val { min-width:30px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+  .axis-line { stroke:#3a4a5a; stroke-width:1; }
+  .grid-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:2 4; }
+  .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
+  .line-1 { stroke:#fff067; stroke-width:2.4; fill:none; }
+  .line-2 { stroke:#00abfa; stroke-width:2.4; fill:none; }
+
+  .badges { display:flex; gap:8px; justify-content:center; margin-top:10px; flex-wrap:wrap; font-family:'Geist Mono',monospace; font-size:11.5px; }
+  .badge { padding:6px 12px; border-radius:6px; border:1px solid #141e2a; background:#07090d; color:#7a7875; }
+  .badge.active { color:#0fee89; border-color:#0fee89; background:rgba(15,238,137,0.08); }
+  .product { margin-top:6px; padding:8px 12px; background:#07090d; border:1px solid #141e2a; border-radius:6px; font-family:'Geist Mono',monospace; font-size:12px; color:#7a7875; text-align:center; }
+  .product .val { color:#f0eeea; font-weight:600; }
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="eq L1" id="eq1"></span>
+    <span class="eq L2" id="eq2"></span>
+  </div>
+  <div class="controls">
+    <div class="row L1"><span class="name">m₁</span><input type="range" id="m1" min="-3" max="3" value="2" step="0.25"/><span class="val" id="vm1">2</span></div>
+    <div class="row L1"><span class="name">c₁</span><input type="range" id="c1" min="-4" max="4" value="0" step="1"/><span class="val" id="vc1">0</span></div>
+    <div class="row L2"><span class="name">m₂</span><input type="range" id="m2" min="-3" max="3" value="2" step="0.25"/><span class="val" id="vm2">2</span></div>
+    <div class="row L2"><span class="name">c₂</span><input type="range" id="c2" min="-4" max="4" value="2" step="1"/><span class="val" id="vc2">2</span></div>
+  </div>
+
+  <svg viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="grid"></g>
+    <line class="axis-line" id="xAxis"/>
+    <line class="axis-line" id="yAxis"/>
+    <g id="ticks"></g>
+    <line class="line-1" id="line1"/>
+    <line class="line-2" id="line2"/>
+  </svg>
+
+  <div class="badges">
+    <span class="badge" id="parBadge">PARALLEL</span>
+    <span class="badge" id="perpBadge">PERPENDICULAR</span>
+    <span class="badge" id="neitherBadge">NEITHER</span>
+  </div>
+  <div class="product" id="product"></div>
+  <p class="footer">parallel: m₁ = m₂ &nbsp;·&nbsp; perpendicular: m₁ × m₂ = −1</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+const PLOT = { xMin: -6, xMax: 6, yMin: -4, yMax: 4, pxPerUnit: 35, ml: 40, mr: 30, mt: 20, mb: 30 };
+function plotW() { return (PLOT.xMax - PLOT.xMin) * PLOT.pxPerUnit; }
+function plotH() { return (PLOT.yMax - PLOT.yMin) * PLOT.pxPerUnit; }
+function xPx(x) { return PLOT.ml + (x - PLOT.xMin) * PLOT.pxPerUnit; }
+function yPx(y) { return PLOT.mt + plotH() - (y - PLOT.yMin) * PLOT.pxPerUnit; }
+
+(function buildAxes() {
+  const NS = "http://www.w3.org/2000/svg";
+  const grid = document.getElementById("grid");
+  const ticks = document.getElementById("ticks");
+  for (let xi = Math.ceil(PLOT.xMin); xi <= Math.floor(PLOT.xMax); xi++) {
+    if (xi === 0) continue;
+    const ln = document.createElementNS(NS, "line");
+    ln.setAttribute("class", "grid-line");
+    ln.setAttribute("x1", xPx(xi)); ln.setAttribute("x2", xPx(xi));
+    ln.setAttribute("y1", yPx(PLOT.yMax)); ln.setAttribute("y2", yPx(PLOT.yMin));
+    grid.appendChild(ln);
+  }
+  for (let yi = Math.ceil(PLOT.yMin); yi <= Math.floor(PLOT.yMax); yi++) {
+    if (yi === 0) continue;
+    const ln = document.createElementNS(NS, "line");
+    ln.setAttribute("class", "grid-line");
+    ln.setAttribute("x1", xPx(PLOT.xMin)); ln.setAttribute("x2", xPx(PLOT.xMax));
+    ln.setAttribute("y1", yPx(yi)); ln.setAttribute("y2", yPx(yi));
+    grid.appendChild(ln);
+  }
+  document.getElementById("xAxis").setAttribute("x1", xPx(PLOT.xMin));
+  document.getElementById("xAxis").setAttribute("x2", xPx(PLOT.xMax));
+  document.getElementById("xAxis").setAttribute("y1", yPx(0));
+  document.getElementById("xAxis").setAttribute("y2", yPx(0));
+  document.getElementById("yAxis").setAttribute("x1", xPx(0));
+  document.getElementById("yAxis").setAttribute("x2", xPx(0));
+  document.getElementById("yAxis").setAttribute("y1", yPx(PLOT.yMax));
+  document.getElementById("yAxis").setAttribute("y2", yPx(PLOT.yMin));
+  for (let xi = Math.ceil(PLOT.xMin); xi <= Math.floor(PLOT.xMax); xi++) {
+    if (xi === 0) continue;
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("class", "axis-tick-label"); t.setAttribute("text-anchor", "middle");
+    t.setAttribute("x", xPx(xi)); t.setAttribute("y", yPx(0) + 14);
+    t.textContent = String(xi);
+    ticks.appendChild(t);
+  }
+  for (let yi = Math.ceil(PLOT.yMin); yi <= Math.floor(PLOT.yMax); yi++) {
+    if (yi === 0) continue;
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("class", "axis-tick-label"); t.setAttribute("text-anchor", "end");
+    t.setAttribute("x", xPx(0) - 6); t.setAttribute("y", yPx(yi) + 3);
+    t.textContent = String(yi);
+    ticks.appendChild(t);
+  }
+})();
+
+let tM1 = 2, tC1 = 0, tM2 = 2, tC2 = 2;
+let dM1 = 2, dC1 = 0, dM2 = 2, dC2 = 2;
+const SPRING = 0.22;
+
+function fmt(v) {
+  if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+  return String(Math.round(v * 100) / 100);
+}
+function fmtSign(v) { if (Math.abs(v) < 0.001) return ""; return v > 0 ? " + " + fmt(v) : " - " + fmt(Math.abs(v)); }
+
+function clipLine(slope, intercept) {
+  const x1 = PLOT.xMin, x2 = PLOT.xMax;
+  return { x1: x1, y1: slope * x1 + intercept, x2: x2, y2: slope * x2 + intercept };
+}
+
+function tick() {
+  dM1 += (tM1 - dM1) * SPRING; dC1 += (tC1 - dC1) * SPRING;
+  dM2 += (tM2 - dM2) * SPRING; dC2 += (tC2 - dC2) * SPRING;
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function draw() {
+  const s1 = clipLine(dM1, dC1), s2 = clipLine(dM2, dC2);
+  document.getElementById("line1").setAttribute("x1", xPx(s1.x1));
+  document.getElementById("line1").setAttribute("y1", yPx(s1.y1));
+  document.getElementById("line1").setAttribute("x2", xPx(s1.x2));
+  document.getElementById("line1").setAttribute("y2", yPx(s1.y2));
+  document.getElementById("line2").setAttribute("x1", xPx(s2.x1));
+  document.getElementById("line2").setAttribute("y1", yPx(s2.y1));
+  document.getElementById("line2").setAttribute("x2", xPx(s2.x2));
+  document.getElementById("line2").setAttribute("y2", yPx(s2.y2));
+
+  // Equations from target
+  tryRender(document.getElementById("eq1"), "L_1: y = " + fmt(tM1) + "x" + fmtSign(tC1));
+  tryRender(document.getElementById("eq2"), "L_2: y = " + fmt(tM2) + "x" + fmtSign(tC2));
+
+  const par = Math.abs(tM1 - tM2) < 0.05 && Math.abs(tC1 - tC2) > 0.05;
+  const same = Math.abs(tM1 - tM2) < 0.05 && Math.abs(tC1 - tC2) < 0.05;
+  const perp = Math.abs(tM1 * tM2 + 1) < 0.05;
+
+  const parB = document.getElementById("parBadge");
+  const perpB = document.getElementById("perpBadge");
+  const neitherB = document.getElementById("neitherBadge");
+  parB.classList.toggle("active", par || same);
+  perpB.classList.toggle("active", perp);
+  neitherB.classList.toggle("active", !par && !same && !perp);
+
+  const prod = tM1 * tM2;
+  document.getElementById("product").innerHTML =
+    'm₁ × m₂ = ' + fmt(tM1) + ' × ' + fmt(tM2) + ' = <span class="val">' + fmt(prod) + '</span>';
+}
+
+document.getElementById("m1").addEventListener("input", e => { tM1 = parseFloat(e.target.value); document.getElementById("vm1").textContent = fmt(tM1); });
+document.getElementById("c1").addEventListener("input", e => { tC1 = parseInt(e.target.value, 10); document.getElementById("vc1").textContent = tC1; });
+document.getElementById("m2").addEventListener("input", e => { tM2 = parseFloat(e.target.value); document.getElementById("vm2").textContent = fmt(tM2); });
+document.getElementById("c2").addEventListener("input", e => { tC2 = parseInt(e.target.value, 10); document.getElementById("vc2").textContent = tC2; });
+
+tick();
+
+let lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    const wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    const padTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    const padBot = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    const h = Math.ceil(rect.height + padTop + padBot);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+setTimeout(reportHeight, 200);
+</script>
+</body>
+</html>

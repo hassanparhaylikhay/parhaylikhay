@@ -315,13 +315,60 @@ export const UNITS: Unit[] = [
   {
     slug: "03", title: "Coordinate geometry", color: "#0fee89",
     topics: [
-      { slug: "01", code: "3.1", title: "Coordinates" },
-      { slug: "02", code: "3.2", title: "Drawing linear graphs" },
-      { slug: "03", code: "3.3", title: "Gradient of linear graphs" },
-      { slug: "04", code: "3.4", title: "Length and midpoint" },
-      { slug: "05", code: "3.5", title: "Equations of linear graphs" },
-      { slug: "06", code: "3.6", title: "Parallel lines" },
-      { slug: "07", code: "3.7", title: "Perpendicular lines" },
+      {
+        slug: "01", code: "3.1", title: "Coordinates",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Cartesian coordinates" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "02", code: "3.2", title: "Drawing linear graphs",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Drawing y = mx + c" },
+          { slug: "p2",     label: "P2", title: "General form, vertical & horizontal" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "03", code: "3.3", title: "Gradient of linear graphs",
+        parts: [
+          { slug: "p1",     label: "P1", title: "The gradient formula" },
+          { slug: "p2",     label: "P2", title: "Sign, steepness, special cases" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "04", code: "3.4", title: "Length and midpoint",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Length of a line segment" },
+          { slug: "p2",     label: "P2", title: "Midpoint of a line segment" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "05", code: "3.5", title: "Equations of linear graphs",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Equation from gradient + point" },
+          { slug: "p2",     label: "P2", title: "Equation from two points" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "06", code: "3.6", title: "Parallel lines",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Parallel lines" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "07", code: "3.7", title: "Perpendicular lines",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Perpendicular lines" },
+          { slug: "p2",     label: "P2", title: "Perpendicular bisectors" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
     ],
   },
   {

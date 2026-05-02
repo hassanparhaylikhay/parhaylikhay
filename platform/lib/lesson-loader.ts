@@ -56,6 +56,13 @@ const LESSON_FOLDERS: Record<string, string> = {
   "02-10": "02-10-graphs-of-functions",
   "02-11": "02-11-sketching-curves",
   "02-12": "02-12-functions",
+  "03-01": "03-01-coordinates",
+  "03-02": "03-02-drawing-linear-graphs",
+  "03-03": "03-03-gradient-of-linear-graphs",
+  "03-04": "03-04-length-and-midpoint",
+  "03-05": "03-05-equations-of-linear-graphs",
+  "03-06": "03-06-parallel-lines",
+  "03-07": "03-07-perpendicular-lines",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
@@ -138,6 +145,25 @@ const WIDGETS: Record<string, WidgetSpec> = {
   "02-12-p2":     { url: "/widgets/functions-trainer.html?topic=inverse",       height: 540 },
   "02-12-p3":     { url: "/widgets/functions-trainer.html?topic=composite",     height: 540 },
   "02-12-review": { url: "/widgets/functions-trainer.html",                     height: 540 },
+  "03-01-p1":     { url: "/widgets/coord-geometry-trainer.html?topic=coord",   height: 540 },
+  "03-01-review": { url: "/widgets/coord-geometry-trainer.html?topic=coord",   height: 540 },
+  "03-02-p1":     { url: "/widgets/coord-geometry-trainer.html?topic=line",    height: 540 },
+  "03-02-p2":     { url: "/widgets/coord-geometry-trainer.html?topic=line",    height: 540 },
+  "03-02-review": { url: "/widgets/coord-geometry-trainer.html?topic=line",    height: 540 },
+  "03-03-p1":     { url: "/widgets/coord-geometry-trainer.html?topic=grad",    height: 540 },
+  "03-03-p2":     { url: "/widgets/coord-geometry-trainer.html?topic=grad",    height: 540 },
+  "03-03-review": { url: "/widgets/coord-geometry-trainer.html?topic=grad",    height: 540 },
+  "03-04-p1":     { url: "/widgets/coord-geometry-trainer.html?topic=dist",    height: 540 },
+  "03-04-p2":     { url: "/widgets/coord-geometry-trainer.html?topic=dist",    height: 540 },
+  "03-04-review": { url: "/widgets/coord-geometry-trainer.html?topic=dist",    height: 540 },
+  "03-05-p1":     { url: "/widgets/coord-geometry-trainer.html?topic=eq",      height: 540 },
+  "03-05-p2":     { url: "/widgets/coord-geometry-trainer.html?topic=eq",      height: 540 },
+  "03-05-review": { url: "/widgets/coord-geometry-trainer.html?topic=eq",      height: 540 },
+  "03-06-p1":     { url: "/widgets/coord-geometry-trainer.html?topic=parperp", height: 540 },
+  "03-06-review": { url: "/widgets/coord-geometry-trainer.html?topic=parperp", height: 540 },
+  "03-07-p1":     { url: "/widgets/coord-geometry-trainer.html?topic=parperp", height: 540 },
+  "03-07-p2":     { url: "/widgets/coord-geometry-trainer.html?topic=parperp", height: 540 },
+  "03-07-review": { url: "/widgets/coord-geometry-trainer.html",               height: 540 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {
