@@ -374,14 +374,72 @@ export const UNITS: Unit[] = [
   {
     slug: "04", title: "Geometry", color: "#ff822c",
     topics: [
-      { slug: "01", code: "4.1", title: "Geometrical terms" },
-      { slug: "02", code: "4.2", title: "Geometrical constructions" },
-      { slug: "03", code: "4.3", title: "Scale drawings" },
-      { slug: "04", code: "4.4", title: "Similarity" },
-      { slug: "05", code: "4.5", title: "Symmetry" },
-      { slug: "06", code: "4.6", title: "Angles" },
-      { slug: "07", code: "4.7", title: "Circle theorems I" },
-      { slug: "08", code: "4.8", title: "Circle theorems II" },
+      {
+        slug: "01", code: "4.1", title: "Geometrical terms",
+        parts: [
+          { slug: "p1",     label: "P1", title: "The vocabulary of geometry" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "02", code: "4.2", title: "Geometrical constructions",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Measuring and constructing triangles" },
+          { slug: "p2",     label: "P2", title: "Nets of solids" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "03", code: "4.3", title: "Scale drawings",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Scale drawings" },
+          { slug: "p2",     label: "P2", title: "Bearings" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "04", code: "4.4", title: "Similarity",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Similar shapes, length scale" },
+          { slug: "p2",     label: "P2", title: "Area and volume scale factors" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "05", code: "4.5", title: "Symmetry",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Line symmetry" },
+          { slug: "p2",     label: "P2", title: "Rotational symmetry" },
+          { slug: "p3",     label: "P3", title: "Symmetry of 3D solids" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "06", code: "4.6", title: "Angles",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Basic angle rules" },
+          { slug: "p2",     label: "P2", title: "Parallel-line angles" },
+          { slug: "p3",     label: "P3", title: "Polygon angles" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "07", code: "4.7", title: "Circle theorems I",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Semicircle, tangent and radius" },
+          { slug: "p2",     label: "P2", title: "Angle at centre, same segment" },
+          { slug: "p3",     label: "P3", title: "Cyclic quadrilateral, alternate segment" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "08", code: "4.8", title: "Circle theorems II",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Equal chords, perpendicular bisectors" },
+          { slug: "p2",     label: "P2", title: "Tangents from an external point" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
     ],
   },
   {
