@@ -27,7 +27,7 @@ checks:
 
 If you've worked through P1 you can:
 
-- Read and write coordinates in the form $(x, y)$ — x first, y second.
+- Read and write coordinates in the form $(x, y)$ - x first, y second.
 - Identify the origin, the x-axis, and the y-axis.
 - Name the quadrant a point sits in (or recognise points that sit on an axis).
 - Plot a point from its coordinates by going across first (x), then up or down (y).
@@ -43,13 +43,13 @@ If you've worked through P1 you can:
 
 Plot the points $A(3, 2)$, $B(-3, 2)$, $C(-3, -2)$, $D(3, -2)$ and state what shape they form.
 
-**Step 1.** Plot $A$ at $(3, 2)$ — Q1.
+**Step 1.** Plot $A$ at $(3, 2)$ - Q1.
 
-**Step 2.** Plot $B$ at $(-3, 2)$ — Q2.
+**Step 2.** Plot $B$ at $(-3, 2)$ - Q2.
 
-**Step 3.** Plot $C$ at $(-3, -2)$ — Q3.
+**Step 3.** Plot $C$ at $(-3, -2)$ - Q3.
 
-**Step 4.** Plot $D$ at $(3, -2)$ — Q4.
+**Step 4.** Plot $D$ at $(3, -2)$ - Q4.
 
 **Step 5.** Connect $A \to B \to C \to D \to A$.
 
@@ -61,7 +61,7 @@ Full marks $= 2$.
 
 ## Quick reference
 
-- $(x, y)$ — x first, y second.
+- $(x, y)$ - x first, y second.
 - Origin: $(0, 0)$.
 - Q1: $x > 0, y > 0$. Q2: $x < 0, y > 0$. Q3: $x < 0, y < 0$. Q4: $x > 0, y < 0$.
 - y-axis: $x = 0$. x-axis: $y = 0$.

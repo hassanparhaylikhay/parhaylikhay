@@ -16,7 +16,7 @@ checks:
   - q: 'A vertical line has gradient...'
     options: ["$0$", "$1$", "$\\infty$", "undefined"]
     correct: 3
-    explain: 'No run — division by zero — undefined.'
+    explain: 'No run - division by zero - undefined.'
   - q: 'For $y = -5x + 2$, the gradient is...'
     options: ["$-5$", "$5$", "$2$", "$-2$"]
     correct: 0
@@ -77,7 +77,7 @@ Full marks $= 3$.
 
 ## Quick reference
 
-- $m = \dfrac{y_2 - y_1}{x_2 - x_1}$ — y on top, x on bottom.
+- $m = \dfrac{y_2 - y_1}{x_2 - x_1}$ - y on top, x on bottom.
 - $m > 0$: uphill. $m < 0$: downhill.
 - $m = 0$: horizontal. Undefined: vertical.
 - Steepness: bigger $|m|$ = steeper.

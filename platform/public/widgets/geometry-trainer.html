@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Geometry Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:696px; margin:0 auto; }
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .target-picker { display:flex; gap:6px; align-items:center; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .target-picker select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:5px 22px 5px 10px; border-radius:5px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:24px 24px 22px; }
+  .q-label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#3a4a5a; margin-bottom:12px; text-align:center; }
+  .q-prompt { font-size:14.5px; color:#c8c6be; text-align:center; margin-bottom:12px; line-height:1.5; }
+  .q-prompt .katex { font-size:1.05em; color:#f0eeea; }
+  .options { display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+  .opt { appearance:none; background:#07090d; border:1px solid #141e2a; color:#f0eeea; font-family:inherit; font-size:14px; padding:11px 14px; border-radius:7px; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px; }
+  .opt:hover:not(:disabled) { border-color:#3a4a5a; }
+  .opt .opt-letter { font-family:'Geist Mono',monospace; color:#3a4a5a; font-size:11px; min-width:14px; }
+  .opt .opt-text { flex:1; }
+  .opt .opt-text .katex { font-size:1em; }
+  .opt.right { border-color:#0fee89; background:rgba(15,238,137,0.07); color:#0fee89; }
+  .opt.right .opt-letter { color:#0fee89; }
+  .opt.wrong { border-color:#ff4670; background:rgba(255,70,112,0.06); color:#ff4670; }
+  .opt.wrong .opt-letter { color:#ff4670; }
+  .opt.dim { opacity:0.45; }
+  .opt:disabled { cursor:default; }
+  .reveal { margin-top:18px; padding-top:14px; border-top:1px solid #141e2a; text-align:center; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; margin:6px auto 12px; max-width:480px; }
+  .reveal-explain .katex { font-size:1em; color:#f0eeea; }
+  .controls { display:flex; gap:8px; margin-top:6px; justify-content:center; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+  .progress-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .progress-row .right { color:#0fee89; }
+  .progress-row .wrong { color:#ff4670; }
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">GEOMETRY · 8 QUESTIONS</span>
+    <div class="target-picker">
+      <span>topic:</span>
+      <select id="topic">
+        <option value="terms">terms</option>
+        <option value="constructions">constructions</option>
+        <option value="scale">scale</option>
+        <option value="bearings">bearings</option>
+        <option value="similarity">similarity</option>
+        <option value="symmetry">symmetry</option>
+        <option value="angles">angles</option>
+        <option value="circles">circles</option>
+        <option value="mixed">mixed</option>
+      </select>
+    </div>
+  </div>
+  <div class="card" id="card"></div>
+  <div class="progress-row">
+    <span><b id="step-num">1</b>/<span id="step-total">8</span></span>
+    <span><span class="right">✓ <b id="right-count">0</b></span> &nbsp; <span class="wrong">✗ <b id="wrong-count">0</b></span></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr) {
+  arr = arr.slice();
+  for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+  return arr;
+}
+function escapeHtml(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function renderMixed(target, text) {
+  if (typeof katex === "undefined") { setTimeout(function() { renderMixed(target, text); }, 50); return; }
+  var parts = text.split("$");
+  var html = "";
+  parts.forEach(function(part, i) {
+    if (i % 2 === 0) html += escapeHtml(part);
+    else { try { html += katex.renderToString(part, { throwOnError: false }); } catch (e) { html += escapeHtml(part); } }
+  });
+  target.innerHTML = html;
+}
+
+// =========================================================================
+// TERMS — vocabulary recognition
+// =========================================================================
+function genTerms() {
+  var concepts = [
+    { q: "A polygon with 6 sides is called a...", correct: "hexagon", others: ["pentagon", "octagon", "decagon"] },
+    { q: "A polygon with 8 sides is called an...", correct: "octagon", others: ["hexagon", "pentagon", "decagon"] },
+    { q: "A polygon with 5 sides is called a...", correct: "pentagon", others: ["hexagon", "octagon", "quadrilateral"] },
+    { q: "A polygon with 10 sides is called a...", correct: "decagon", others: ["hexagon", "octagon", "dodecagon"] },
+    { q: "A triangle with all three sides equal is called...", correct: "equilateral", others: ["isosceles", "scalene", "right-angled"] },
+    { q: "A triangle with exactly two sides equal is called...", correct: "isosceles", others: ["equilateral", "scalene", "right-angled"] },
+    { q: "A triangle with no equal sides is called...", correct: "scalene", others: ["equilateral", "isosceles", "right-angled"] },
+    { q: "An angle greater than $90°$ but less than $180°$ is...", correct: "obtuse", others: ["acute", "right", "reflex"] },
+    { q: "An angle greater than $180°$ but less than $360°$ is...", correct: "reflex", others: ["acute", "obtuse", "straight"] },
+    { q: "An angle of exactly $90°$ is...", correct: "right", others: ["acute", "obtuse", "straight"] },
+    { q: "An angle less than $90°$ is...", correct: "acute", others: ["obtuse", "right", "reflex"] },
+    { q: "A line that just touches a circle at exactly one point is called a...", correct: "tangent", others: ["chord", "diameter", "radius"] },
+    { q: "A straight line from one point on a circle to another is called a...", correct: "chord", others: ["tangent", "arc", "sector"] },
+    { q: "Half of a circle's circumference is called a...", correct: "semicircle", others: ["sector", "segment", "arc"] },
+    { q: "A pie-slice region bounded by two radii and an arc is called a...", correct: "sector", others: ["segment", "semicircle", "tangent"] },
+    { q: "A 3D solid with a uniform cross-section is called a...", correct: "prism", others: ["pyramid", "cone", "sphere"] },
+    { q: "Quadrilateral with both pairs of opposite sides parallel and equal in length is...", correct: "parallelogram", others: ["trapezium", "kite", "scalene"] },
+    { q: "Quadrilateral with exactly one pair of parallel sides is a...", correct: "trapezium", others: ["parallelogram", "rhombus", "kite"] },
+    { q: "Quadrilateral with all four sides equal but not necessarily right angles is a...", correct: "rhombus", others: ["square", "rectangle", "trapezium"] }
+  ];
+  var c = pick(concepts);
+  return mc(c.q, shuffle([c.correct].concat(c.others)), c.correct,
+    "Memorise the standard geometric terminology - Cambridge expects you to use these names exactly.");
+}
+
+// =========================================================================
+// CONSTRUCTIONS — procedural recognition
+// =========================================================================
+function genConstructions() {
+  var concepts = [
+    { q: "To construct a triangle with three given side lengths you need...", correct: "ruler and compasses", others: ["protractor only", "ruler only", "set square"] },
+    { q: "When constructing a triangle from three sides, what must you leave visible?", correct: "the construction arcs", others: ["only the final triangle", "the protractor marks", "nothing"] },
+    { q: "A net of a cube has how many squares?", correct: "$6$", others: ["$4$", "$5$", "$8$"] },
+    { q: "When using a net to find surface area, you...", correct: "sum the area of every face", others: ["multiply length and width", "use $\\dfrac{1}{2}bh$", "ignore the bases"] },
+    { q: "To draw an angle of $42°$ accurately, you use a...", correct: "protractor", others: ["compass", "set square", "ruler only"] }
+  ];
+  var c = pick(concepts);
+  return mc(c.q, shuffle([c.correct].concat(c.others)), c.correct,
+    "Cambridge tests technical drawing - construction arcs must remain on your diagram and a protractor reading should be to the nearest degree.");
+}
+
+// =========================================================================
+// SCALE — ratio computation
+// =========================================================================
+function genScale() {
+  var pattern = pick(["forward", "reverse"]);
+  if (pattern === "forward") {
+    var scaleCm = pick([1, 2, 5]);
+    var scaleM = pick([2, 5, 10]);
+    var dCm = pick([3, 4, 6, 8]);
+    var dM = (dCm / scaleCm) * scaleM;
+    return mc(
+      "A scale drawing uses $1\\text{ cm}$ to represent $" + (scaleM / scaleCm) + "\\text{ m}$. A length of $" + dCm + "\\text{ cm}$ on the drawing represents how many metres in real life?",
+      shuffle([dM, dM + 1, dCm * scaleM, dCm + scaleM]).map(function(o) { return "$" + o + "\\text{ m}$"; }),
+      "$" + dM + "\\text{ m}$",
+      "Multiply by the scale: $" + dCm + " \\times " + (scaleM / scaleCm) + " = " + dM + "\\text{ m}$."
+    );
+  } else {
+    var realM = pick([20, 30, 50]);
+    var scaleM = pick([5, 10]);
+    var drawingCm = realM / scaleM;
+    return mc(
+      "A scale of $1\\text{ cm}$ to $" + scaleM + "\\text{ m}$ is used. How long is a wall of $" + realM + "\\text{ m}$ on the drawing?",
+      shuffle([drawingCm, drawingCm + 1, realM * scaleM, realM]).map(function(o) { return "$" + o + "\\text{ cm}$"; }),
+      "$" + drawingCm + "\\text{ cm}$",
+      "Divide by the scale: $\\dfrac{" + realM + "}{" + scaleM + "} = " + drawingCm + "\\text{ cm}$."
+    );
+  }
+}
+
+// =========================================================================
+// BEARINGS
+// =========================================================================
+function genBearings() {
+  var pattern = pick(["reverse", "format", "compass"]);
+  if (pattern === "reverse") {
+    var b = pick([45, 60, 80, 100, 130, 200, 250, 310]);
+    var rev = (b + 180) % 360;
+    return mc(
+      "The bearing of $A$ from $B$ is $" + b + "°$. What is the bearing of $B$ from $A$?",
+      shuffle([rev, b, 360 - b, b + 90]).map(function(o) { return "$" + o + "°$"; }),
+      "$" + rev + "°$",
+      "Reverse bearing rule: add $180°$ if less than $180°$, subtract $180°$ if more. Result: $" + b + " " + (b < 180 ? "+" : "-") + " 180 = " + rev + "°$."
+    );
+  } else if (pattern === "format") {
+    var b = pick([5, 25, 95]);
+    var formatted = ("000" + b).slice(-3);
+    return mc(
+      "Bearings are always written using how many digits?",
+      shuffle(["one", "two", "three", "four"]),
+      "three",
+      "Always 3 digits: $005°$ not $5°$, $095°$ not $95°$. Pad leading zeros."
+    );
+  } else {
+    var concepts = [
+      { q: "Due East corresponds to a bearing of...", correct: "$090°$", others: ["$000°$", "$180°$", "$270°$"] },
+      { q: "Due South corresponds to a bearing of...", correct: "$180°$", others: ["$090°$", "$270°$", "$360°$"] },
+      { q: "Due West corresponds to a bearing of...", correct: "$270°$", others: ["$090°$", "$180°$", "$000°$"] },
+      { q: "Bearings are measured...", correct: "clockwise from North", others: ["anticlockwise from North", "clockwise from East", "anticlockwise from East"] }
+    ];
+    var c = pick(concepts);
+    return mc(c.q, shuffle([c.correct].concat(c.others)), c.correct,
+      "Bearings are 3-figure angles measured clockwise from North.");
+  }
+}
+
+// =========================================================================
+// SIMILARITY
+// =========================================================================
+function genSimilarity() {
+  var pattern = pick(["length", "area", "volume"]);
+  var k = pick([2, 3]);
+  if (pattern === "length") {
+    var s1 = pick([3, 4, 5]);
+    var s2 = s1 * k;
+    return mc(
+      "Two similar triangles have corresponding sides $" + s1 + "$ and $" + s2 + "$. The scale factor is...",
+      shuffle([k, s1, s2, k * 2]).map(function(o) { return "$" + o + "$"; }),
+      "$" + k + "$",
+      "Scale factor $= \\dfrac{\\text{new side}}{\\text{original side}} = \\dfrac{" + s2 + "}{" + s1 + "} = " + k + "$."
+    );
+  } else if (pattern === "area") {
+    return mc(
+      "Two similar shapes have linear scale factor $" + k + "$. Their areas are in ratio...",
+      shuffle([k * k, k, k * k * k, 2 * k]).map(function(o) { return "$1 : " + o + "$"; }),
+      "$1 : " + (k * k) + "$",
+      "Area scale factor = (linear)² $= " + k + "^2 = " + (k * k) + "$."
+    );
+  } else {
+    return mc(
+      "Two similar solids have linear scale factor $" + k + "$. Their volumes are in ratio...",
+      shuffle([k * k * k, k * k, k, 4 * k]).map(function(o) { return "$1 : " + o + "$"; }),
+      "$1 : " + (k * k * k) + "$",
+      "Volume scale factor = (linear)³ $= " + k + "^3 = " + (k * k * k) + "$."
+    );
+  }
+}
+
+// =========================================================================
+// SYMMETRY
+// =========================================================================
+function genSymmetry() {
+  var pattern = pick(["lines", "rotation"]);
+  if (pattern === "lines") {
+    var concepts = [
+      { q: "How many lines of symmetry does a SQUARE have?", correct: "$4$", others: ["$2$", "$1$", "$8$"] },
+      { q: "How many lines of symmetry does a RECTANGLE (non-square) have?", correct: "$2$", others: ["$4$", "$1$", "$0$"] },
+      { q: "How many lines of symmetry does an EQUILATERAL TRIANGLE have?", correct: "$3$", others: ["$1$", "$2$", "$0$"] },
+      { q: "How many lines of symmetry does an ISOSCELES (non-equilateral) TRIANGLE have?", correct: "$1$", others: ["$0$", "$2$", "$3$"] },
+      { q: "How many lines of symmetry does a SCALENE TRIANGLE have?", correct: "$0$", others: ["$1$", "$2$", "$3$"] },
+      { q: "How many lines of symmetry does a REGULAR HEXAGON have?", correct: "$6$", others: ["$3$", "$4$", "$2$"] },
+      { q: "How many lines of symmetry does a PARALLELOGRAM (non-rhombus) have?", correct: "$0$", others: ["$1$", "$2$", "$4$"] }
+    ];
+    var c = pick(concepts);
+    return mc(c.q, shuffle([c.correct].concat(c.others)), c.correct,
+      "A line of symmetry: fold along it and the shape coincides with itself.");
+  } else {
+    var concepts2 = [
+      { q: "Order of rotational symmetry of a SQUARE is...", correct: "$4$", others: ["$2$", "$1$", "$8$"] },
+      { q: "Order of rotational symmetry of a RECTANGLE (non-square) is...", correct: "$2$", others: ["$4$", "$1$", "$0$"] },
+      { q: "Order of rotational symmetry of an EQUILATERAL TRIANGLE is...", correct: "$3$", others: ["$1$", "$6$", "$0$"] },
+      { q: "Order of rotational symmetry of a PARALLELOGRAM is...", correct: "$2$", others: ["$1$", "$4$", "$0$"] },
+      { q: "Order of rotational symmetry of a REGULAR PENTAGON is...", correct: "$5$", others: ["$1$", "$10$", "$2$"] },
+      { q: "A shape with no rotational symmetry has order...", correct: "$1$", others: ["$0$", "$2$", "undefined"] }
+    ];
+    var c2 = pick(concepts2);
+    return mc(c2.q, shuffle([c2.correct].concat(c2.others)), c2.correct,
+      "Order = number of times the shape coincides with itself in one full $360°$ turn.");
+  }
+}
+
+// =========================================================================
+// ANGLES
+// =========================================================================
+function genAngles() {
+  var pattern = pick(["sum_line", "sum_triangle", "polygon_int", "polygon_ext", "parallel"]);
+  if (pattern === "sum_line") {
+    var a = pick([35, 50, 70, 110, 130]);
+    return mc(
+      "Two angles lie on a straight line. One is $" + a + "°$. The other is...",
+      shuffle([180 - a, 90 - a, 360 - a, a]).map(function(o) { return "$" + o + "°$"; }),
+      "$" + (180 - a) + "°$",
+      "Angles on a straight line sum to $180°$. So the other is $180° - " + a + "° = " + (180 - a) + "°$."
+    );
+  } else if (pattern === "sum_triangle") {
+    var a = pick([30, 50, 60, 80]);
+    var b = pick([40, 60, 70, 100]);
+    if (a + b >= 180) { a = 30; b = 50; }
+    return mc(
+      "A triangle has angles $" + a + "°$, $" + b + "°$, and one more. The third angle is...",
+      shuffle([180 - a - b, 90 - a, a + b, 360 - a - b]).map(function(o) { return "$" + o + "°$"; }),
+      "$" + (180 - a - b) + "°$",
+      "Angles in a triangle sum to $180°$. So $180° - " + a + "° - " + b + "° = " + (180 - a - b) + "°$."
+    );
+  } else if (pattern === "polygon_int") {
+    var n = pick([5, 6, 8, 10]);
+    var sum = (n - 2) * 180;
+    return mc(
+      "What is the sum of the interior angles of a polygon with $" + n + "$ sides?",
+      shuffle([sum, sum + 180, n * 180, 360]).map(function(o) { return "$" + o + "°$"; }),
+      "$" + sum + "°$",
+      "Sum $= (n - 2) \\times 180° = (" + n + " - 2) \\times 180° = " + sum + "°$."
+    );
+  } else if (pattern === "polygon_ext") {
+    var concepts = [
+      { q: "The sum of the exterior angles of any polygon is...", correct: "$360°$", others: ["$180°$", "depends on $n$", "$720°$"] },
+      { q: "Each exterior angle of a regular hexagon is...", correct: "$60°$", others: ["$120°$", "$72°$", "$30°$"] },
+      { q: "Each interior angle of a regular hexagon is...", correct: "$120°$", others: ["$60°$", "$108°$", "$144°$"] }
+    ];
+    var c = pick(concepts);
+    return mc(c.q, shuffle([c.correct].concat(c.others)), c.correct,
+      "Exterior angle $= 360° / n$. Interior $+ $ exterior $= 180°$.");
+  } else {
+    var concepts2 = [
+      { q: "When two parallel lines are crossed by a transversal, alternate angles are...", correct: "equal", others: ["supplementary", "complementary", "double each other"] },
+      { q: "When two parallel lines are crossed by a transversal, co-interior angles...", correct: "sum to $180°$", others: ["are equal", "sum to $90°$", "sum to $360°$"] },
+      { q: "Vertically opposite angles are always...", correct: "equal", others: ["supplementary", "complementary", "$90°$"] }
+    ];
+    var c2 = pick(concepts2);
+    return mc(c2.q, shuffle([c2.correct].concat(c2.others)), c2.correct,
+      "Parallel-line rules: corresponding equal, alternate equal, co-interior sum $180°$.");
+  }
+}
+
+// =========================================================================
+// CIRCLES — circle theorems
+// =========================================================================
+function genCircles() {
+  var concepts = [
+    { q: "The angle in a semicircle is...", correct: "$90°$", others: ["$45°$", "$180°$", "depends on the chord"] },
+    { q: "The angle between a tangent and the radius at the point of contact is...", correct: "$90°$", others: ["$45°$", "$0°$", "$180°$"] },
+    { q: "The angle at the centre of a circle is ___ the angle at the circumference subtended by the same arc.", correct: "twice", others: ["half", "equal to", "the supplement of"] },
+    { q: "Angles in the same segment are...", correct: "equal", others: ["supplementary", "complementary", "all $90°$"] },
+    { q: "Opposite angles of a cyclic quadrilateral sum to...", correct: "$180°$", others: ["$90°$", "$360°$", "$270°$"] },
+    { q: "Two tangents drawn from the same external point to a circle are...", correct: "equal in length", others: ["perpendicular", "parallel", "the diameter"] },
+    { q: "The perpendicular from the centre of a circle to a chord...", correct: "bisects the chord", others: ["is parallel to the chord", "is the diameter", "equals the radius"] },
+    { q: "Equal chords of a circle are...", correct: "equidistant from the centre", others: ["parallel to each other", "always perpendicular", "all diameters"] },
+    { q: "If $A$ and $B$ are on a circle with centre $O$ and the angle $AOB$ at centre is $80°$, the angle $APB$ at the circumference (for $P$ on the major arc) is...", correct: "$40°$", others: ["$80°$", "$160°$", "$100°$"] }
+  ];
+  var c = pick(concepts);
+  return mc(c.q, shuffle([c.correct].concat(c.others)), c.correct,
+    "Cambridge expects you to STATE the reason when you use a circle theorem - the reason is itself worth marks.");
+}
+
+// =========================================================================
+function mc(prompt, options, correct, why) {
+  return { type: "mc", promptHTML: prompt, options: options, correctIdx: options.indexOf(correct), why: why };
+}
+
+function genQuestion(topic) {
+  if (topic === "terms")         return genTerms();
+  if (topic === "constructions") return genConstructions();
+  if (topic === "scale")         return genScale();
+  if (topic === "bearings")      return genBearings();
+  if (topic === "similarity")    return genSimilarity();
+  if (topic === "symmetry")      return genSymmetry();
+  if (topic === "angles")        return genAngles();
+  if (topic === "circles")       return genCircles();
+  var bag = [genTerms, genScale, genBearings, genSimilarity, genSymmetry, genAngles, genCircles];
+  return bag[Math.floor(Math.random() * bag.length)]();
+}
+
+function buildSet(topic, n) { var out = []; for (var i = 0; i < n; i++) out.push(genQuestion(topic)); return out; }
+
+var state = { idx: 0, right: 0, wrong: 0, set: [], locked: false };
+var cardEl = document.getElementById("card");
+var topicSel = document.getElementById("topic");
+var stepNumEl = document.getElementById("step-num");
+var rightCountEl = document.getElementById("right-count");
+var wrongCountEl = document.getElementById("wrong-count");
+
+(function setInitialTopic() {
+  try {
+    var params = new URLSearchParams(window.location.search);
+    var t = params.get("topic");
+    var valid = ["terms", "constructions", "scale", "bearings", "similarity", "symmetry", "angles", "circles", "mixed"];
+    if (t && valid.indexOf(t) !== -1) topicSel.value = t;
+    else topicSel.value = "mixed";
+  } catch (e) { topicSel.value = "mixed"; }
+})();
+
+topicSel.addEventListener("change", reset);
+
+function reset() {
+  state = { idx: 0, right: 0, wrong: 0, locked: false, set: buildSet(topicSel.value, 8) };
+  rightCountEl.textContent = 0; wrongCountEl.textContent = 0;
+  document.getElementById("step-total").textContent = state.set.length;
+  renderQ();
+}
+
+function renderQ() {
+  if (state.idx >= state.set.length) { renderDone(); return; }
+  var q = state.set[state.idx];
+  stepNumEl.textContent = state.idx + 1;
+  state.locked = false;
+  cardEl.innerHTML = '<p class="q-label">QUESTION</p><p class="q-prompt" id="prompt"></p><div class="options" id="opts"></div><div id="reveal-slot"></div>';
+  renderMixed(document.getElementById("prompt"), q.promptHTML);
+  var optsEl = document.getElementById("opts");
+  q.options.forEach(function(opt, i) {
+    var btn = document.createElement("button");
+    btn.className = "opt"; btn.dataset.idx = i;
+    btn.innerHTML = '<span class="opt-letter">' + String.fromCharCode(65 + i) + '</span><span class="opt-text" id="opt-text-' + i + '"></span>';
+    btn.addEventListener("click", function() { submitMC(i); });
+    optsEl.appendChild(btn);
+    renderMixed(document.getElementById("opt-text-" + i), opt);
+  });
+  reportHeight();
+}
+
+function showReveal(correct, q) {
+  var slot = document.getElementById("reveal-slot");
+  slot.innerHTML = '<div class="reveal ' + (correct ? "ok" : "bad") + '"><p class="reveal-line">' + (correct ? "✓ CORRECT" : "✗ ANSWER: " + String.fromCharCode(65 + q.correctIdx)) + '</p><p class="reveal-explain" id="why"></p><div class="controls"><button class="btn primary" id="next">' + (state.idx < state.set.length - 1 ? "Next →" : "See result") + '</button></div></div>';
+  renderMixed(document.getElementById("why"), q.why);
+  document.getElementById("next").addEventListener("click", function() { state.idx++; renderQ(); });
+  reportHeight();
+}
+
+function submitMC(idx) {
+  if (state.locked) return;
+  var q = state.set[state.idx];
+  var correct = idx === q.correctIdx;
+  state.locked = true;
+  if (correct) state.right++; else state.wrong++;
+  rightCountEl.textContent = state.right; wrongCountEl.textContent = state.wrong;
+  var btns = document.querySelectorAll(".opt");
+  btns.forEach(function(b, i) {
+    b.disabled = true;
+    if (i === q.correctIdx) b.classList.add("right");
+    else if (i === idx) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  showReveal(correct, q);
+}
+
+function renderDone() {
+  var total = state.set.length;
+  var pct = Math.round((state.right / total) * 100);
+  var msg = pct === 100 ? "Perfect. Geometry is locked." : pct >= 80 ? "Strong. Watch the circle-theorem reasons." : pct >= 50 ? "Decent. Drill the angle rules and bearings." : "More drill needed. Pick one mode from the dropdown.";
+  cardEl.innerHTML = '<div class="done-card"><span class="kicker">SCORE</span><p class="big">' + state.right + '<span class="total"> / ' + total + '</span></p><p class="sub">' + pct + '%</p><p class="msg">' + msg + '</p><div class="controls" style="justify-content:center;margin-top:14px"><button class="btn primary" id="retry">Retry</button></div></div>';
+  document.getElementById("retry").addEventListener("click", reset);
+  stepNumEl.textContent = total;
+  reportHeight();
+}
+
+reset();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

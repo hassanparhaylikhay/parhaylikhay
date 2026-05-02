@@ -69,7 +69,7 @@ Full marks $= 4$.
 ## Quick reference
 
 - $y = mx + c$: $m$ gradient, $c$ y-intercept.
-- $ax + by = c$: two-intercept trick — set $y = 0$ then $x = 0$.
+- $ax + by = c$: two-intercept trick - set $y = 0$ then $x = 0$.
 - $x = k$: vertical, gradient undefined.
 - $y = k$: horizontal, gradient $0$.
 - Always use a ruler.

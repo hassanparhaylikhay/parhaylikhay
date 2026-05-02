@@ -87,6 +87,12 @@ Full marks $= 5$.
 - Perpendicular bisector: midpoint + perpendicular gradient + equation.
 - Horizontal ⊥ Vertical (and vice versa).
 
+## Practice: build the perpendicular line
+
+The faded yellow line is the reference. The yellow dot is the point your blue line must pass through. Make the blue line PERPENDICULAR to the yellow one (gradients must multiply to $-1$) and also pass through the dot.
+
+<iframe src="/widgets/match-trainer.html?mode=perpendicular" style="width:100%;max-width:696px;height:560px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
 ## Your turn: full quiz
 
 The widget below is a mixed quiz drawing from both parts.

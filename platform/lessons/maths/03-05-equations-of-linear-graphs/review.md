@@ -16,7 +16,7 @@ checks:
   - q: 'Find the equation of the line through $(2, 5)$ and $(2, -1)$.'
     options: ["$x = 2$", "$y = 2$", "$y = 5$", "$y = -x + 7$"]
     correct: 0
-    explain: 'Both points have $x = 2$ — vertical line $x = 2$.'
+    explain: 'Both points have $x = 2$ - vertical line $x = 2$.'
   - q: 'A line passes through $(3, 5)$ with gradient $0$. Its equation is...'
     options: ["$y = 5$", "$x = 3$", "$y = 3x + 5$", "$y = 3$"]
     correct: 0
@@ -79,6 +79,12 @@ Full marks $= 4$.
 - Gradient + point: substitute into $y = mx + c$ → solve for $c$.
 - Two points: gradient first, then substitute → solve for $c$.
 - Vertical: $x = k$. Horizontal: $y = k$.
+
+## Practice: build the line that fits
+
+The yellow dot below is the point your line must pass through, and the target gradient is given. Slide $m$ and $c$ until the blue line has the right gradient AND covers the dot. Hit "New challenge" for a fresh target.
+
+<iframe src="/widgets/match-trainer.html?mode=line_grad" style="width:100%;max-width:696px;height:560px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
 ## Your turn: full quiz
 

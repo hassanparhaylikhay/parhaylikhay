@@ -20,7 +20,7 @@ checks:
   - q: 'Two points have $\\Delta x = 7$ and $\\Delta y = -3$. Length is...'
     options: ["$10$", "$4$", "$\\sqrt{58}$", "$\\sqrt{40}$"]
     correct: 2
-    explain: '$\sqrt{49 + 9} = \sqrt{58}$ — leave in surd form.'
+    explain: '$\sqrt{49 + 9} = \sqrt{58}$ - leave in surd form.'
   - q: 'Which midpoint coordinate uses an average?'
     options: ["x only", "y only", "both", "neither"]
     correct: 2

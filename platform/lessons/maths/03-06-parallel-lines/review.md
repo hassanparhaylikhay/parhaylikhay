@@ -70,6 +70,12 @@ Full marks $= 4$.
 - Parallel ⟺ same $m$.
 - Recipe: keep $m$, find new $c$ from the given point.
 
+## Practice: build the parallel line
+
+The faded yellow line is the reference, and the yellow dot is the point your blue line must pass through. Make the blue line PARALLEL to the yellow one (same gradient) and also pass through the dot.
+
+<iframe src="/widgets/match-trainer.html?mode=parallel" style="width:100%;max-width:696px;height:560px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
 ## Your turn: full quiz
 
 The widget below is a mixed quiz on parallel lines.
