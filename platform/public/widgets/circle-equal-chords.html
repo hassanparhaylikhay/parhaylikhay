@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Equal Chords and Equal Distances</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:8px; min-height:24px; text-align:center; }
+  .formula { font-size:15px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+  canvas { display:block; width:100%; height:auto; cursor:default; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; text-align:center; letter-spacing:0.3px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <canvas id="c"></canvas>
+
+  <p class="footer">drag A, B, C, D: equal chord lengths give equal distances from centre. Perpendicular from centre always bisects chord.</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+var W = 560, H = 380;
+var DPR = window.devicePixelRatio || 1;
+canvas.width = W * DPR;
+canvas.height = H * DPR;
+canvas.style.width = W + 'px';
+canvas.style.height = H + 'px';
+ctx.scale(DPR, DPR);
+
+// Circle: centre at (CX, CY), radius R px
+var CX = W / 2;
+var CY = H / 2 - 6;
+var R = 130;
+
+// Chord endpoints stored as angles on the circle
+function N(a) { return ((a % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI); }
+
+// Initial: AB and CD start equal-ish so the equal-chord state is visible
+var tA = N(160 * Math.PI / 180);
+var tB = N( 20 * Math.PI / 180);
+var tC = N(225 * Math.PI / 180);
+var tD = N(335 * Math.PI / 180);
+
+function P(t) {
+  return { x: CX + R * Math.cos(t), y: CY - R * Math.sin(t) };
+}
+
+// Minimum angular separation so a chord never collapses to a point
+var MIN_SEP = 14 * Math.PI / 180;
+function setAngle(which, t) {
+  t = N(t);
+  var partner;
+  if (which === 'A') partner = tB;
+  else if (which === 'B') partner = tA;
+  else if (which === 'C') partner = tD;
+  else partner = tC;
+  var d = N(t - partner); if (d > Math.PI) d = 2*Math.PI - d;
+  if (d < MIN_SEP) return;
+  if      (which === 'A') tA = t;
+  else if (which === 'B') tB = t;
+  else if (which === 'C') tC = t;
+  else                    tD = t;
+}
+
+// Drawing helpers
+function hexAlpha(hex, a) {
+  var r = parseInt(hex.slice(1,3),16),
+      g = parseInt(hex.slice(3,5),16),
+      b = parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+
+function dot(cx, cy, color, r, glowing) {
+  if (glowing) {
+    ctx.fillStyle = hexAlpha(color, 0.18);
+    ctx.beginPath(); ctx.arc(cx, cy, r + 9, 0, 2*Math.PI); ctx.fill();
+  }
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(cx, cy, glowing ? r + 1.5 : r, 0, 2*Math.PI); ctx.fill();
+}
+
+function label(x, y, text, color, size) {
+  size = size || 12;
+  ctx.font = '600 ' + size + 'px Geist, -apple-system, sans-serif';
+  var tw = ctx.measureText(text).width;
+  ctx.fillStyle = 'rgba(11,17,24,0.86)';
+  ctx.fillRect(x - tw/2 - 5, y - size/2 - 4, tw + 10, size + 8);
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+}
+
+function plainLabel(x, y, text, color, size) {
+  size = size || 13;
+  ctx.font = '700 ' + size + 'px Geist, -apple-system, sans-serif';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+}
+
+// Draw a small right-angle marker at point M, with the marker's two arms aligned
+// along chord direction (ux,uy) and perpendicular direction (nx,ny).
+// The marker sits in the corner pointing toward O (so along +nx, +ny relative to M).
+function rightAngleMarker(Mx, My, ux, uy, nx, ny, sx, sy, size, color) {
+  // sx, sy = sign for which side of the chord the centre sits on (so the L points correctly)
+  // Build the L: corner at M, two short segments out by `size` along the chord and along the perpendicular toward O
+  var c1x = Mx + ux * size * sx;
+  var c1y = My + uy * size * sx;
+  var c2x = Mx + nx * size * sy;
+  var c2y = My + ny * size * sy;
+  var c3x = c1x + nx * size * sy;
+  var c3y = c1y + ny * size * sy;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(c1x, c1y);
+  ctx.lineTo(c3x, c3y);
+  ctx.lineTo(c2x, c2y);
+  ctx.stroke();
+}
+
+// Draw a small perpendicular tick mark at point (px, py), perpendicular to chord direction (ux, uy)
+function tick(px, py, ux, uy, color, size) {
+  // perpendicular unit vector
+  var nx = -uy, ny = ux;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(px - nx * size, py - ny * size);
+  ctx.lineTo(px + nx * size, py + ny * size);
+  ctx.stroke();
+}
+
+// Compute key chord data given two endpoint angles
+function chordData(t1, t2) {
+  var P1 = P(t1), P2 = P(t2);
+  var dx = P2.x - P1.x, dy = P2.y - P1.y;
+  var len = Math.sqrt(dx*dx + dy*dy);
+  var Mx = (P1.x + P2.x) / 2;
+  var My = (P1.y + P2.y) / 2;
+  // unit along chord (P1 -> P2)
+  var ux = len > 0 ? dx / len : 1, uy = len > 0 ? dy / len : 0;
+  // unit normal pointing from M to O
+  var ox = CX - Mx, oy = CY - My;
+  var d = Math.sqrt(ox*ox + oy*oy);
+  var nx = d > 0 ? ox / d : 0, ny = d > 0 ? oy / d : -1;
+  return {
+    P1: P1, P2: P2,
+    Mx: Mx, My: My,
+    len: len,
+    distFromCentre: d,
+    ux: ux, uy: uy,
+    nx: nx, ny: ny
+  };
+}
+
+var dragging = null, hovering = null;
+var HIT = 18;
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0b1118';
+  ctx.fillRect(0, 0, W, H);
+
+  var AB = chordData(tA, tB);
+  var CD = chordData(tC, tD);
+
+  // Convert pixel lengths to user-friendly scale (units): use 1 unit = 20 px
+  var SCALE = 20;
+  var lenAB = AB.len / SCALE;
+  var lenCD = CD.len / SCALE;
+  var dAB = AB.distFromCentre / SCALE;
+  var dCD = CD.distFromCentre / SCALE;
+
+  var EQ_TOL = 0.1;
+  var equal = Math.abs(lenAB - lenCD) < EQ_TOL;
+
+  var GREEN = '#0fee89';
+  var BLUE  = '#00abfa';
+  var YEL   = '#fff067';
+  var ORG   = '#ff822c';
+  var PINK  = '#ff4670';
+  var GREY  = '#7a7875';
+  var FAINT = '#3a4a5a';
+
+  // 1. Circle outline
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, 2*Math.PI);
+  ctx.strokeStyle = FAINT;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([]);
+  ctx.stroke();
+
+  // 2. Chord AB
+  ctx.strokeStyle = BLUE;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(AB.P1.x, AB.P1.y);
+  ctx.lineTo(AB.P2.x, AB.P2.y);
+  ctx.stroke();
+
+  // 3. Chord CD
+  ctx.beginPath();
+  ctx.moveTo(CD.P1.x, CD.P1.y);
+  ctx.lineTo(CD.P2.x, CD.P2.y);
+  ctx.stroke();
+
+  // 4. Perpendicular from O to midpoint of AB (dashed)
+  var distColor = equal ? GREEN : YEL;
+  ctx.strokeStyle = distColor;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(CX, CY);
+  ctx.lineTo(AB.Mx, AB.My);
+  ctx.stroke();
+
+  // 5. Perpendicular from O to midpoint of CD (dashed)
+  ctx.beginPath();
+  ctx.moveTo(CX, CY);
+  ctx.lineTo(CD.Mx, CD.My);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 6. Right-angle markers at each midpoint (small pink L-shape)
+  function placeRA(c) {
+    // The marker corner sits at M. One arm goes along +ux (toward P2), the other goes from M
+    // along +n (toward O). Use a 9px arm size.
+    var size = 9;
+    var Mx = c.Mx, My = c.My;
+    var arm1x = Mx + c.ux * size, arm1y = My + c.uy * size;
+    var arm2x = Mx + c.nx * size, arm2y = My + c.ny * size;
+    var cornerx = arm1x + c.nx * size, cornery = arm1y + c.ny * size;
+    ctx.strokeStyle = PINK;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(arm1x, arm1y);
+    ctx.lineTo(cornerx, cornery);
+    ctx.lineTo(arm2x, arm2y);
+    ctx.stroke();
+  }
+  if (AB.distFromCentre > 6) placeRA(AB);
+  if (CD.distFromCentre > 6) placeRA(CD);
+
+  // 7. Tick marks on each chord half (2 per half, perpendicular to chord direction)
+  // When equal, all green; otherwise pair colors per chord (still green for visual unity, but marker count
+  // signals "halves are equal" within each chord regardless).
+  function placeTicks(c, color) {
+    var halfLen = c.len / 2;
+    // half 1: between P1 and M
+    var t1a = 0.30, t1b = 0.40;
+    var t2a = 0.60, t2b = 0.70;
+    var size = 5;
+    var Hx = c.P1.x, Hy = c.P1.y;
+    function ptAt(t) {
+      return { x: c.P1.x + (c.P2.x - c.P1.x) * t, y: c.P1.y + (c.P2.y - c.P1.y) * t };
+    }
+    var p;
+    p = ptAt(t1a); tick(p.x, p.y, c.ux, c.uy, color, size);
+    p = ptAt(t1b); tick(p.x, p.y, c.ux, c.uy, color, size);
+    p = ptAt(t2a); tick(p.x, p.y, c.ux, c.uy, color, size);
+    p = ptAt(t2b); tick(p.x, p.y, c.ux, c.uy, color, size);
+  }
+  placeTicks(AB, GREEN);
+  placeTicks(CD, GREEN);
+
+  // 8. Centre O
+  ctx.fillStyle = GREY;
+  ctx.beginPath();
+  ctx.arc(CX, CY, 4, 0, 2*Math.PI);
+  ctx.fill();
+  plainLabel(CX - 12, CY - 12, 'O', GREY, 13);
+
+  // 9. Distance labels along the perpendiculars (mid-point of O -> M)
+  var d1Lx = (CX + AB.Mx) / 2 + AB.nx * 12;
+  var d1Ly = (CY + AB.My) / 2 + AB.ny * 12;
+  // Actually we want offset *perpendicular to* the perpendicular line, which is along ±ux
+  d1Lx = (CX + AB.Mx) / 2 + AB.ux * 14;
+  d1Ly = (CY + AB.My) / 2 + AB.uy * 14;
+  label(d1Lx, d1Ly, 'd₁ = ' + dAB.toFixed(1), distColor, 11);
+
+  var d2Lx = (CX + CD.Mx) / 2 + CD.ux * 14;
+  var d2Ly = (CY + CD.My) / 2 + CD.uy * 14;
+  label(d2Lx, d2Ly, 'd₂ = ' + dCD.toFixed(1), distColor, 11);
+
+  // 10. Chord length labels at each chord's midpoint (offset along the centre-side normal)
+  var abLx = AB.Mx - AB.nx * 16;
+  var abLy = AB.My - AB.ny * 16;
+  label(abLx, abLy, 'AB = ' + lenAB.toFixed(1), BLUE, 11);
+
+  var cdLx = CD.Mx - CD.nx * 16;
+  var cdLy = CD.My - CD.ny * 16;
+  label(cdLx, cdLy, 'CD = ' + lenCD.toFixed(1), BLUE, 11);
+
+  // 11. Chord endpoint dots
+  dot(AB.P1.x, AB.P1.y, BLUE, 7, dragging === 'A' || hovering === 'A');
+  dot(AB.P2.x, AB.P2.y, BLUE, 7, dragging === 'B' || hovering === 'B');
+  dot(CD.P1.x, CD.P1.y, ORG,  7, dragging === 'C' || hovering === 'C');
+  dot(CD.P2.x, CD.P2.y, ORG,  7, dragging === 'D' || hovering === 'D');
+
+  // 12. Endpoint letter labels just outside the circle
+  var lo = R + 18;
+  var lA = { x: CX + Math.cos(tA) * lo, y: CY - Math.sin(tA) * lo };
+  var lB = { x: CX + Math.cos(tB) * lo, y: CY - Math.sin(tB) * lo };
+  var lC = { x: CX + Math.cos(tC) * lo, y: CY - Math.sin(tC) * lo };
+  var lD = { x: CX + Math.cos(tD) * lo, y: CY - Math.sin(tD) * lo };
+  plainLabel(lA.x, lA.y, 'A', BLUE, 14);
+  plainLabel(lB.x, lB.y, 'B', BLUE, 14);
+  plainLabel(lC.x, lC.y, 'C', ORG,  14);
+  plainLabel(lD.x, lD.y, 'D', ORG,  14);
+
+  // 13. Bottom banner
+  var bannerText = 'AB = ' + lenAB.toFixed(2) + '   CD = ' + lenCD.toFixed(2)
+                 + '   d₁ = ' + dAB.toFixed(2) + '   d₂ = ' + dCD.toFixed(2);
+  ctx.font = '600 12px Geist Mono, monospace';
+  var bw = ctx.measureText(bannerText).width;
+  ctx.fillStyle = 'rgba(11,17,24,0.92)';
+  ctx.fillRect(W/2 - bw/2 - 14, H - 30, bw + 28, 22);
+  ctx.strokeStyle = hexAlpha(GREEN, 0.35);
+  ctx.lineWidth = 1;
+  ctx.strokeRect(W/2 - bw/2 - 14, H - 30, bw + 28, 22);
+  ctx.fillStyle = GREEN;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(bannerText, W/2, H - 19);
+
+  if (equal) {
+    var eqText = 'EQUAL CHORDS, EQUAL DISTANCES';
+    ctx.font = '700 11px Geist Mono, monospace';
+    var ew = ctx.measureText(eqText).width;
+    ctx.fillStyle = 'rgba(11,17,24,0.92)';
+    ctx.fillRect(W/2 - ew/2 - 10, H - 56, ew + 20, 20);
+    ctx.strokeStyle = hexAlpha(PINK, 0.45);
+    ctx.strokeRect(W/2 - ew/2 - 10, H - 56, ew + 20, 20);
+    ctx.fillStyle = PINK;
+    ctx.fillText(eqText, W/2, H - 46);
+  }
+
+  // 14. Heading formula (KaTeX) with live numeric distance comparison
+  var eqSign = equal ? '=' : (dAB > dCD ? '>' : '<');
+  var headTex =
+    '\\text{equal chords} \\Leftrightarrow \\text{equidistant from centre} \\quad\\;\\;'
+    + '\\textcolor{' + (equal ? '#0fee89' : '#fff067') + '}{d_1 = ' + dAB.toFixed(2)
+    + '\\ ' + eqSign + '\\ d_2 = ' + dCD.toFixed(2) + '}';
+  tryRender(document.getElementById('formula'), headTex);
+}
+
+// Interaction
+function getPos(e) {
+  var rect = canvas.getBoundingClientRect();
+  var ev = e.touches ? e.touches[0] : e;
+  return {
+    x: (ev.clientX - rect.left) * (W / rect.width),
+    y: (ev.clientY - rect.top)  * (H / rect.height)
+  };
+}
+
+function nearPoint(px, py, t) {
+  var p = P(t);
+  var dx = px - p.x, dy = py - p.y;
+  return Math.sqrt(dx*dx + dy*dy) < HIT;
+}
+
+function angleFromPos(px, py) {
+  return Math.atan2(CY - py, px - CX);
+}
+
+canvas.addEventListener('mousedown', function(e) {
+  var p = getPos(e);
+  if      (nearPoint(p.x, p.y, tA)) dragging = 'A';
+  else if (nearPoint(p.x, p.y, tB)) dragging = 'B';
+  else if (nearPoint(p.x, p.y, tC)) dragging = 'C';
+  else if (nearPoint(p.x, p.y, tD)) dragging = 'D';
+  if (dragging) e.preventDefault();
+});
+
+canvas.addEventListener('mousemove', function(e) {
+  var p = getPos(e);
+  if (dragging) {
+    setAngle(dragging, angleFromPos(p.x, p.y));
+    draw();
+  } else {
+    var prev = hovering;
+    if      (nearPoint(p.x, p.y, tA)) hovering = 'A';
+    else if (nearPoint(p.x, p.y, tB)) hovering = 'B';
+    else if (nearPoint(p.x, p.y, tC)) hovering = 'C';
+    else if (nearPoint(p.x, p.y, tD)) hovering = 'D';
+    else hovering = null;
+    canvas.style.cursor = hovering ? 'grab' : 'default';
+    if (hovering !== prev) draw();
+  }
+});
+
+canvas.addEventListener('mouseup',    function() { dragging = null; });
+canvas.addEventListener('mouseleave', function() {
+  if (dragging || hovering) {
+    dragging = hovering = null;
+    canvas.style.cursor = 'default';
+    draw();
+  }
+});
+
+canvas.addEventListener('touchstart', function(e) {
+  var p = getPos(e);
+  if      (nearPoint(p.x, p.y, tA)) dragging = 'A';
+  else if (nearPoint(p.x, p.y, tB)) dragging = 'B';
+  else if (nearPoint(p.x, p.y, tC)) dragging = 'C';
+  else if (nearPoint(p.x, p.y, tD)) dragging = 'D';
+  if (dragging) e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchmove', function(e) {
+  if (!dragging) return;
+  e.preventDefault();
+  var p = getPos(e);
+  setAngle(dragging, angleFromPos(p.x, p.y));
+  draw();
+}, { passive: false });
+
+canvas.addEventListener('touchend', function() { dragging = null; });
+
+draw();
+
+// postMessage resize
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById('wrap');
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: 'pl-widget-resize', height: h }, '*');
+  });
+}
+window.addEventListener('load', reportHeight);
+window.addEventListener('resize', reportHeight);
+</script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Angle in a Semicircle</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:8px; min-height:22px; }
+  .formula { font-size:16px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+  canvas { display:block; margin:0 auto; cursor:default; touch-action:none; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+  <canvas id="c"></canvas>
+  <p class="footer">drag A or B (diameter rotates), or drag P (always 90 degrees)</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var canvas = document.getElementById("c");
+var ctx = canvas.getContext("2d");
+var W = 560, H = 380;
+
+var DPR = window.devicePixelRatio || 1;
+canvas.width = W * DPR;
+canvas.height = H * DPR;
+canvas.style.width = W + "px";
+canvas.style.height = H + "px";
+ctx.scale(DPR, DPR);
+
+// Coordinate system
+var CX = W / 2;
+var CY = H / 2 - 10;
+var R = 3;
+var S = 46; // pixels per math unit -> circle = 138 px radius
+
+function toC(mx, my) { return { x: CX + mx * S, y: CY - my * S }; }
+function fromC(cx, cy) { return { mx: (cx - CX) / S, my: (CY - cy) / S }; }
+function ptOnCircle(t) { return { x: R * Math.cos(t), y: R * Math.sin(t) }; }
+
+function N(a) { return ((a % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI); }
+
+// Initial angles: A and B are antipodal; P sits on the upper arc
+var tA = N(200 * Math.PI / 180);
+var tB = N(tA + Math.PI);
+var tP = N(70 * Math.PI / 180);
+
+// Constraint: P stays away from A and B by a small buffer so the right angle is visible
+var EPS = 7 * Math.PI / 180;
+
+function clampP(t) {
+  t = N(t);
+  // Forbid P landing on top of A or B (would collapse the triangle)
+  var dA = N(t - tA); if (dA > Math.PI) dA = 2*Math.PI - dA;
+  var dB = N(t - tB); if (dB > Math.PI) dB = 2*Math.PI - dB;
+  if (dA < EPS) {
+    // Push to the closer side of A
+    var sign = (N(t - tA) < Math.PI) ? 1 : -1;
+    return N(tA + sign * EPS);
+  }
+  if (dB < EPS) {
+    var sign2 = (N(t - tB) < Math.PI) ? 1 : -1;
+    return N(tB + sign2 * EPS);
+  }
+  return t;
+}
+
+function setA(t) { tA = N(t); tB = N(tA + Math.PI); tP = clampP(tP); }
+function setB(t) { tB = N(t); tA = N(tB + Math.PI); tP = clampP(tP); }
+function setP(t) { tP = clampP(N(t)); }
+
+function computeAngleAtP() {
+  var A = ptOnCircle(tA), B = ptOnCircle(tB), P = ptOnCircle(tP);
+  var PAx = A.x - P.x, PAy = A.y - P.y;
+  var PBx = B.x - P.x, PBy = B.y - P.y;
+  var dot = PAx*PBx + PAy*PBy;
+  var mag = Math.sqrt(PAx*PAx + PAy*PAy) * Math.sqrt(PBx*PBx + PBy*PBy);
+  return mag > 0 ? Math.acos(Math.max(-1, Math.min(1, dot / mag))) : 0;
+}
+
+// Draw helpers
+function dot(cx, cy, color, r, glowing) {
+  if (glowing) {
+    ctx.fillStyle = hexAlpha(color, 0.18);
+    ctx.beginPath(); ctx.arc(cx, cy, r + 9, 0, 2*Math.PI); ctx.fill();
+  }
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(cx, cy, glowing ? r + 2 : r, 0, 2*Math.PI); ctx.fill();
+}
+
+function hexAlpha(hex, a) {
+  var r = parseInt(hex.slice(1,3),16),
+      g = parseInt(hex.slice(3,5),16),
+      b = parseInt(hex.slice(5,7),16);
+  return "rgba("+r+","+g+","+b+","+a+")";
+}
+
+function label(x, y, text, color, size) {
+  size = size || 12;
+  ctx.font = "600 " + size + "px 'Geist', system-ui, sans-serif";
+  var tw = ctx.measureText(text).width;
+  ctx.fillStyle = "rgba(11,17,24,0.85)";
+  ctx.fillRect(x - tw/2 - 5, y - size/2 - 4, tw + 10, size + 8);
+  ctx.fillStyle = color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, x, y);
+}
+
+function arcBetween(cx, cy, r, ca, cb) {
+  ctx.beginPath();
+  // Choose the shorter direction
+  var d = N(cb - ca);
+  var ccw = d > Math.PI;
+  ctx.arc(cx, cy, r, ca, cb, ccw);
+  ctx.stroke();
+}
+
+// Draw a small right-angle square at vertex V on rays toward A and B
+function rightAngleSquare(Vx, Vy, Ax, Ay, Bx, By, size, color) {
+  var dax = Ax - Vx, day = Ay - Vy;
+  var dbx = Bx - Vx, dby = By - Vy;
+  var la = Math.sqrt(dax*dax + day*day);
+  var lb = Math.sqrt(dbx*dbx + dby*dby);
+  if (la < 1 || lb < 1) return;
+  var ux = dax / la, uy = day / la;
+  var vx = dbx / lb, vy = dby / lb;
+  var p1x = Vx + ux * size, p1y = Vy + uy * size;
+  var p2x = Vx + ux * size + vx * size, p2y = Vy + uy * size + vy * size;
+  var p3x = Vx + vx * size, p3y = Vy + vy * size;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(p1x, p1y);
+  ctx.lineTo(p2x, p2y);
+  ctx.lineTo(p3x, p3y);
+  ctx.stroke();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#0b1118";
+  ctx.fillRect(0, 0, W, H);
+
+  var A = ptOnCircle(tA), B = ptOnCircle(tB), P = ptOnCircle(tP);
+  var Ac = toC(A.x, A.y), Bc = toC(B.x, B.y), Pc = toC(P.x, P.y);
+  var rPx = R * S;
+
+  // 1. Circle outline
+  ctx.beginPath();
+  ctx.arc(CX, CY, rPx, 0, 2*Math.PI);
+  ctx.strokeStyle = "#3a4a5a";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 2. Diameter AB highlighted yellow
+  ctx.strokeStyle = "#fff067";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(Ac.x, Ac.y); ctx.lineTo(Bc.x, Bc.y);
+  ctx.stroke();
+
+  // 3. Triangle sides PA, PB in blue
+  ctx.strokeStyle = "#00abfa";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(Pc.x, Pc.y); ctx.lineTo(Ac.x, Ac.y);
+  ctx.moveTo(Pc.x, Pc.y); ctx.lineTo(Bc.x, Bc.y);
+  ctx.stroke();
+
+  // 4. Right-angle square at P (pink)
+  rightAngleSquare(Pc.x, Pc.y, Ac.x, Ac.y, Bc.x, Bc.y, 12, "#ff4670");
+
+  // 5. Inscribed angle arc at P (pink, radius 28)
+  var dPA = Math.atan2(Ac.y - Pc.y, Ac.x - Pc.x);
+  var dPB = Math.atan2(Bc.y - Pc.y, Bc.x - Pc.x);
+  ctx.strokeStyle = "#ff4670";
+  ctx.lineWidth = 2;
+  arcBetween(Pc.x, Pc.y, 28, dPA, dPB);
+
+  // 6. Centre dot O
+  ctx.fillStyle = "#fff067";
+  ctx.beginPath(); ctx.arc(CX, CY, 4, 0, 2*Math.PI); ctx.fill();
+
+  // 7. Draggable points
+  dot(Ac.x, Ac.y, "#00abfa", 7, dragging === "A" || hovering === "A");
+  dot(Bc.x, Bc.y, "#ff822c", 7, dragging === "B" || hovering === "B");
+  dot(Pc.x, Pc.y, "#ff4670", 7, dragging === "P" || hovering === "P");
+
+  // 8. Letters outside the circle
+  var lo = rPx + 18;
+  ctx.font = "700 14px 'Geist', system-ui, sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillStyle = "#00abfa";
+  ctx.fillText("A", CX + Math.cos(tA) * lo, CY - Math.sin(tA) * lo);
+  ctx.fillStyle = "#ff822c";
+  ctx.fillText("B", CX + Math.cos(tB) * lo, CY - Math.sin(tB) * lo);
+  ctx.fillStyle = "#ff4670";
+  ctx.fillText("P", CX + Math.cos(tP) * lo, CY - Math.sin(tP) * lo);
+
+  // O letter near centre dot
+  ctx.fillStyle = "#7a7875";
+  ctx.font = "600 12px 'Geist', system-ui, sans-serif";
+  ctx.fillText("O", CX + 12, CY - 10);
+
+  // 9. "90 degrees" label inside the angle arc, biased toward centre of circle from P
+  var ang = computeAngleAtP();
+  var deg = Math.round(ang * 180 / Math.PI);
+  // Snap tiny float drift to 90
+  if (Math.abs(deg - 90) <= 1) deg = 90;
+  // Place label along bisector of PA and PB, away from P
+  var bxd = Math.cos(dPA) + Math.cos(dPB);
+  var byd = Math.sin(dPA) + Math.sin(dPB);
+  var bl = Math.sqrt(bxd*bxd + byd*byd);
+  var lx, ly;
+  if (bl > 0.001) {
+    lx = Pc.x + (bxd / bl) * 46;
+    ly = Pc.y + (byd / bl) * 46;
+  } else {
+    lx = Pc.x; ly = Pc.y + 46;
+  }
+  label(lx, ly, deg + "°", "#ff4670", 12);
+
+  // 10. Bottom relationship banner (green)
+  var rel = "∠APB = 90°";
+  ctx.font = "700 13px 'Geist', system-ui, sans-serif";
+  var rw = ctx.measureText(rel).width;
+  ctx.fillStyle = "rgba(11,17,24,0.88)";
+  ctx.fillRect(W/2 - rw/2 - 16, H - 30, rw + 32, 24);
+  ctx.strokeStyle = "rgba(15,238,137,0.45)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(W/2 - rw/2 - 16, H - 30, rw + 32, 24);
+  ctx.fillStyle = "#0fee89";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(rel, W/2, H - 18);
+
+  // 11. Update KaTeX heading
+  tryRender(
+    document.getElementById("formula"),
+    "\\textcolor{#ff4670}{\\angle APB} = " + deg + "^\\circ"
+  );
+}
+
+// Interaction
+var dragging = null, hovering = null;
+var HIT = 18;
+
+function getPos(e) {
+  var rect = canvas.getBoundingClientRect();
+  var ev = e.touches ? e.touches[0] : e;
+  return {
+    x: (ev.clientX - rect.left) * (W / rect.width),
+    y: (ev.clientY - rect.top) * (H / rect.height)
+  };
+}
+
+function nearPoint(px, py, t) {
+  var c = toC(R * Math.cos(t), R * Math.sin(t));
+  var dx = px - c.x, dy = py - c.y;
+  return Math.sqrt(dx*dx + dy*dy) < HIT;
+}
+
+function angleFromPos(px, py) {
+  var m = fromC(px, py);
+  return Math.atan2(m.my, m.mx);
+}
+
+function hitTest(p) {
+  if (nearPoint(p.x, p.y, tA)) return "A";
+  if (nearPoint(p.x, p.y, tB)) return "B";
+  if (nearPoint(p.x, p.y, tP)) return "P";
+  return null;
+}
+
+canvas.addEventListener("mousedown", function(e) {
+  var p = getPos(e);
+  dragging = hitTest(p);
+  if (dragging) e.preventDefault();
+});
+
+canvas.addEventListener("mousemove", function(e) {
+  var p = getPos(e);
+  if (dragging) {
+    var t = angleFromPos(p.x, p.y);
+    if (dragging === "A") setA(t);
+    else if (dragging === "B") setB(t);
+    else setP(t);
+    draw();
+  } else {
+    var prev = hovering;
+    hovering = hitTest(p);
+    canvas.style.cursor = hovering ? "grab" : "default";
+    if (hovering !== prev) draw();
+  }
+});
+
+canvas.addEventListener("mouseup", function() { dragging = null; });
+canvas.addEventListener("mouseleave", function() {
+  if (dragging || hovering) {
+    dragging = hovering = null;
+    canvas.style.cursor = "default";
+    draw();
+  }
+});
+
+canvas.addEventListener("touchstart", function(e) {
+  var p = getPos(e);
+  dragging = hitTest(p);
+  if (dragging) e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener("touchmove", function(e) {
+  if (!dragging) return;
+  e.preventDefault();
+  var p = getPos(e);
+  var t = angleFromPos(p.x, p.y);
+  if (dragging === "A") setA(t);
+  else if (dragging === "B") setB(t);
+  else setP(t);
+  draw();
+}, { passive: false });
+
+canvas.addEventListener("touchend", function() { dragging = null; });
+
+draw();
+
+// Resize reporter for iframe embedding
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

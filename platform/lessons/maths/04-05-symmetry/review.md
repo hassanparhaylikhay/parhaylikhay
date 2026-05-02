@@ -35,21 +35,18 @@ You have now seen the three pieces of this topic: line symmetry of 2D shapes, ro
 
 ## Recap diagram: parallelogram trap
 
-<svg viewBox="0 0 480 220" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="240" y="18" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875" letter-spacing="0.4px">PARALLELOGRAM: 0 LINES OF SYMMETRY BUT ORDER 2</text>
-  <g transform="translate(60,50)">
-    <polygon points="20,80 140,80 120,30 0,30" fill="#00abfa" fill-opacity="0.20" stroke="#00abfa" stroke-width="2.2"/>
-    <line x1="0" y1="30" x2="140" y2="80" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3,3"/>
-    <line x1="120" y1="30" x2="20" y2="80" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3,3"/>
-    <text x="70" y="105" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#ff4670">DIAGONALS: NOT mirror lines</text>
-  </g>
-  <g transform="translate(280,50)">
-    <polygon points="20,80 140,80 120,30 0,30" fill="#fff067" fill-opacity="0.20" stroke="#fff067" stroke-width="2.2"/>
-    <circle cx="70" cy="55" r="5" fill="#ff4670"/>
-    <text x="70" y="105" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" font-weight="600" fill="#0fee89">ROTATE 180 deg: lands on itself</text>
-  </g>
-  <text x="240" y="200" text-anchor="middle" font-family="'Geist Mono',monospace" font-size="10" fill="#7a7875">ORDER 2 ROTATIONAL, 0 MIRROR LINES</text>
-</svg>
+<div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#7a7875;letter-spacing:0.4px;width:100%;text-align:center">PARALLELOGRAM: 0 LINES OF SYMMETRY BUT ORDER 2</div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:200px">
+    <div style="width:140px;height:60px;background:#00abfa20;border:2px solid #00abfa;transform:skewX(-25deg)"></div>
+    <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#ff4670;text-align:center">DIAGONALS: NOT mirror lines</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:200px">
+    <div style="position:relative;width:140px;height:60px"><div style="width:140px;height:60px;background:#fff06720;border:2px solid #fff067;transform:skewX(-25deg)"></div><div style="position:absolute;top:50%;left:50%;width:8px;height:8px;background:#ff4670;border-radius:50%;transform:translate(-50%,-50%)"></div></div>
+    <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#0fee89;text-align:center">ROTATE 180°: lands on itself</div>
+  </div>
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;text-align:center;width:100%">ORDER 2 ROTATIONAL, 0 MIRROR LINES</div>
+</div>
 
 ## What you should know by now
 

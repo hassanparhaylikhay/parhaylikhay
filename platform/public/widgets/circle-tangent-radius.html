@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tangent Perpendicular to Radius</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:8px; min-height:22px; }
+  .formula { font-size:16px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+  canvas { display:block; margin:0 auto; cursor:default; touch-action:none; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+  <canvas id="c"></canvas>
+  <p class="footer">drag T around the circle: tangent stays perpendicular to OT</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var canvas = document.getElementById("c");
+var ctx = canvas.getContext("2d");
+var W = 560, H = 380;
+
+var DPR = window.devicePixelRatio || 1;
+canvas.width = W * DPR;
+canvas.height = H * DPR;
+canvas.style.width = W + "px";
+canvas.style.height = H + "px";
+ctx.scale(DPR, DPR);
+
+// Coordinate system
+var CX = W / 2 - 30;     // shift centre slightly left so tangent has room on the right
+var CY = H / 2;
+var R_MATH = 3;
+var S = 38;              // pixels per math unit -> circle radius = 114 px
+var R_PX = R_MATH * S;
+
+function N(a) { return ((a % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI); }
+
+// State: tT is angle of touch point T on the circle.
+// dP is signed distance of P along the tangent direction at T (positive: counter-clockwise tangent dir).
+var tT = N(20 * Math.PI / 180);
+var dP = 110; // initial distance of P from T along tangent
+
+var DP_MIN = 40;
+var DP_MAX = 200;
+
+function tangentDir(t) {
+  // Tangent unit vector at angle t on the circle, pointing in CCW direction.
+  // Radius direction is (cos t, sin t) in math coords. Rotate +90 deg: (-sin t, cos t).
+  return { x: -Math.sin(t), y: Math.cos(t) };
+}
+
+function radiusEnd(t) {
+  // T point in canvas pixels
+  return { x: CX + Math.cos(t) * R_PX, y: CY - Math.sin(t) * R_PX };
+}
+
+function tangentDirCanvas(t) {
+  // Same tangent direction but in canvas coords (y flipped)
+  return { x: -Math.sin(t), y: -Math.cos(t) };
+}
+
+function pPos() {
+  var T = radiusEnd(tT);
+  var d = tangentDirCanvas(tT);
+  return { x: T.x + d.x * dP, y: T.y + d.y * dP };
+}
+
+function setT(angle) { tT = N(angle); }
+
+function setPFromMouse(mx, my) {
+  // Project mouse position onto the tangent line at T
+  var T = radiusEnd(tT);
+  var d = tangentDirCanvas(tT);
+  var vx = mx - T.x, vy = my - T.y;
+  var proj = vx * d.x + vy * d.y;
+  if (proj < DP_MIN) proj = DP_MIN;
+  if (proj > DP_MAX) proj = DP_MAX;
+  // If projection is negative, flip: keep P on the positive side relative to current
+  // Actually, allow either side: if user drags way to the other side, switch sign so tangent label follows.
+  // Simpler: clamp to absolute value with sign of original proj, but enforce minimum length.
+  // Keep proj on the same side the user is dragging.
+  dP = proj;
+}
+
+function dot(cx, cy, color, r, glowing) {
+  if (glowing) {
+    ctx.fillStyle = hexAlpha(color, 0.18);
+    ctx.beginPath(); ctx.arc(cx, cy, r + 9, 0, 2*Math.PI); ctx.fill();
+  }
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(cx, cy, glowing ? r + 2 : r, 0, 2*Math.PI); ctx.fill();
+}
+
+function hexAlpha(hex, a) {
+  var r = parseInt(hex.slice(1,3),16),
+      g = parseInt(hex.slice(3,5),16),
+      b = parseInt(hex.slice(5,7),16);
+  return "rgba("+r+","+g+","+b+","+a+")";
+}
+
+function label(x, y, text, color, size) {
+  size = size || 12;
+  ctx.font = "600 " + size + "px 'Geist', system-ui, sans-serif";
+  var tw = ctx.measureText(text).width;
+  ctx.fillStyle = "rgba(11,17,24,0.85)";
+  ctx.fillRect(x - tw/2 - 5, y - size/2 - 4, tw + 10, size + 8);
+  ctx.fillStyle = color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, x, y);
+}
+
+// Right-angle square at T, oriented along radius (toward O) and tangent
+function rightAngleSquare(Tx, Ty, ux, uy, vx, vy, size, color) {
+  // u and v should already be unit vectors and perpendicular
+  var p1x = Tx + ux * size, p1y = Ty + uy * size;
+  var p2x = Tx + ux * size + vx * size, p2y = Ty + uy * size + vy * size;
+  var p3x = Tx + vx * size, p3y = Ty + vy * size;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(p1x, p1y);
+  ctx.lineTo(p2x, p2y);
+  ctx.lineTo(p3x, p3y);
+  ctx.stroke();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#0b1118";
+  ctx.fillRect(0, 0, W, H);
+
+  // 1. Circle
+  ctx.beginPath();
+  ctx.arc(CX, CY, R_PX, 0, 2*Math.PI);
+  ctx.strokeStyle = "#3a4a5a";
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  var T = radiusEnd(tT);
+  var P = pPos();
+  var tdc = tangentDirCanvas(tT);
+
+  // 2. Radius OT (blue)
+  ctx.strokeStyle = "#00abfa";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(CX, CY); ctx.lineTo(T.x, T.y);
+  ctx.stroke();
+
+  // 3. Tangent line at T (orange) - extend ~120 px on the side opposite to P,
+  //    and extend just past P on P's side.
+  var tangentBackLen = 120;
+  var tangentForwardLen = Math.abs(dP) + 30;
+  // P side direction sign: if dP positive, forward is +tdc; if negative, forward is -tdc.
+  var sign = dP >= 0 ? 1 : -1;
+  var fwdX = tdc.x * sign, fwdY = tdc.y * sign;
+  var bwdX = -fwdX, bwdY = -fwdY;
+  var tBackX = T.x + bwdX * tangentBackLen;
+  var tBackY = T.y + bwdY * tangentBackLen;
+  var tFwdX = T.x + fwdX * tangentForwardLen;
+  var tFwdY = T.y + fwdY * tangentForwardLen;
+  ctx.strokeStyle = "#ff822c";
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(tBackX, tBackY); ctx.lineTo(tFwdX, tFwdY);
+  ctx.stroke();
+
+  // 4. Right-angle square at T, on the side that has the radius going toward O and tangent toward P
+  // Unit vector from T toward O (pointing inward along radius)
+  var ux = (CX - T.x) / R_PX;
+  var uy = (CY - T.y) / R_PX;
+  // Tangent unit vector toward P
+  var vx = fwdX, vy = fwdY;
+  rightAngleSquare(T.x, T.y, ux, uy, vx, vy, 14, "#ff4670");
+
+  // 5. "90°" label inside the square (bisector direction from T)
+  var bx = (ux + vx), by = (uy + vy);
+  var bl = Math.sqrt(bx*bx + by*by);
+  var sqLx = T.x + (bx / bl) * 26;
+  var sqLy = T.y + (by / bl) * 26;
+  label(sqLx, sqLy, "90°", "#ff4670", 11);
+
+  // 6. Centre dot O
+  ctx.fillStyle = "#7a7875";
+  ctx.beginPath(); ctx.arc(CX, CY, 4, 0, 2*Math.PI); ctx.fill();
+
+  // 7. Letter labels
+  // "O" near centre, offset so it doesn't sit on the radius line
+  ctx.font = "600 12px 'Geist', system-ui, sans-serif";
+  ctx.fillStyle = "#7a7875";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  // Offset O perpendicular to OT
+  var perpX = -uy, perpY = ux;
+  // ux,uy points from T toward O, so flip to get O->T direction... but for O label we just shift away from radius
+  ctx.fillText("O", CX - perpX * 12, CY - perpY * 12);
+
+  // 8. T label outside the circle
+  var tLabOffset = 18;
+  var tLx = T.x + Math.cos(tT) * tLabOffset;
+  var tLy = T.y - Math.sin(tT) * tLabOffset;
+  ctx.font = "700 14px 'Geist', system-ui, sans-serif";
+  ctx.fillStyle = "#fff067";
+  ctx.fillText("T", tLx, tLy);
+
+  // 9. Tangent points (T yellow, P green)
+  dot(T.x, T.y, "#fff067", 7, dragging === "T" || hovering === "T");
+  dot(P.x, P.y, "#0fee89", 7, dragging === "P" || hovering === "P");
+
+  // P label - offset perpendicular to tangent so it doesn't sit on the line
+  var pPerpX = -fwdY, pPerpY = fwdX; // 90 deg rotation of forward
+  // Choose side that is away from circle centre
+  var toCx = CX - P.x, toCy = CY - P.y;
+  var dotSign = toCx * pPerpX + toCy * pPerpY;
+  if (dotSign > 0) { pPerpX = -pPerpX; pPerpY = -pPerpY; }
+  ctx.font = "700 14px 'Geist', system-ui, sans-serif";
+  ctx.fillStyle = "#0fee89";
+  ctx.fillText("P", P.x + pPerpX * 14, P.y + pPerpY * 14);
+
+  // 10. "tangent" caption near far end of tangent line, on the opposite side from P (back end)
+  ctx.font = "500 11px 'Geist Mono', monospace";
+  ctx.fillStyle = "#ff822c";
+  // Position label slightly inside the back end
+  var capX = T.x + bwdX * (tangentBackLen - 24);
+  var capY = T.y + bwdY * (tangentBackLen - 24);
+  // Offset perpendicular to keep off the line
+  var capPerpX = -bwdY, capPerpY = bwdX;
+  var towardCx = CX - capX, towardCy = CY - capY;
+  var capDotSign = towardCx * capPerpX + towardCy * capPerpY;
+  if (capDotSign > 0) { capPerpX = -capPerpX; capPerpY = -capPerpY; }
+  ctx.fillText("tangent", capX + capPerpX * 12, capY + capPerpY * 12);
+
+  // 11. Bottom relationship banner (green)
+  var rel = "radius ⟂ tangent";
+  ctx.font = "700 13px 'Geist', system-ui, sans-serif";
+  var rw = ctx.measureText(rel).width;
+  ctx.fillStyle = "rgba(11,17,24,0.88)";
+  ctx.fillRect(W/2 - rw/2 - 16, H - 30, rw + 32, 24);
+  ctx.strokeStyle = "rgba(15,238,137,0.45)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(W/2 - rw/2 - 16, H - 30, rw + 32, 24);
+  ctx.fillStyle = "#0fee89";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(rel, W/2, H - 18);
+
+  // 12. KaTeX heading
+  tryRender(
+    document.getElementById("formula"),
+    "\\textcolor{#00abfa}{OT} \\perp \\textcolor{#ff822c}{\\text{tangent}} \\Rightarrow \\textcolor{#ff4670}{\\angle = 90^\\circ}"
+  );
+}
+
+// Interaction
+var dragging = null, hovering = null;
+var HIT = 18;
+
+function getPos(e) {
+  var rect = canvas.getBoundingClientRect();
+  var ev = e.touches ? e.touches[0] : e;
+  return {
+    x: (ev.clientX - rect.left) * (W / rect.width),
+    y: (ev.clientY - rect.top) * (H / rect.height)
+  };
+}
+
+function near(px, py, qx, qy) {
+  var dx = px - qx, dy = py - qy;
+  return Math.sqrt(dx*dx + dy*dy) < HIT;
+}
+
+function hitTest(p) {
+  var T = radiusEnd(tT);
+  var P = pPos();
+  if (near(p.x, p.y, T.x, T.y)) return "T";
+  if (near(p.x, p.y, P.x, P.y)) return "P";
+  return null;
+}
+
+function tFromPos(px, py) {
+  var dx = px - CX, dy = CY - py;
+  return Math.atan2(dy, dx);
+}
+
+canvas.addEventListener("mousedown", function(e) {
+  var p = getPos(e);
+  dragging = hitTest(p);
+  if (dragging) e.preventDefault();
+});
+
+canvas.addEventListener("mousemove", function(e) {
+  var p = getPos(e);
+  if (dragging === "T") {
+    setT(tFromPos(p.x, p.y));
+    draw();
+  } else if (dragging === "P") {
+    setPFromMouse(p.x, p.y);
+    draw();
+  } else {
+    var prev = hovering;
+    hovering = hitTest(p);
+    canvas.style.cursor = hovering ? "grab" : "default";
+    if (hovering !== prev) draw();
+  }
+});
+
+canvas.addEventListener("mouseup", function() { dragging = null; });
+canvas.addEventListener("mouseleave", function() {
+  if (dragging || hovering) {
+    dragging = hovering = null;
+    canvas.style.cursor = "default";
+    draw();
+  }
+});
+
+canvas.addEventListener("touchstart", function(e) {
+  var p = getPos(e);
+  dragging = hitTest(p);
+  if (dragging) e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener("touchmove", function(e) {
+  if (!dragging) return;
+  e.preventDefault();
+  var p = getPos(e);
+  if (dragging === "T") setT(tFromPos(p.x, p.y));
+  else if (dragging === "P") setPFromMouse(p.x, p.y);
+  draw();
+}, { passive: false });
+
+canvas.addEventListener("touchend", function() { dragging = null; });
+
+draw();
+
+// Resize reporter for iframe embedding
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

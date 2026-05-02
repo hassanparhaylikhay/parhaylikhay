@@ -59,20 +59,25 @@ Square $\to$ rectangle $\to$ parallelogram. Square $\to$ rhombus $\to$ parallelo
 
 A trapezium sits outside this chain: it has only **one** pair of parallel sides, while parallelograms have two.
 
-<svg viewBox="0 0 520 240" style="display:block;width:100%;max-width:520px;height:auto;margin:18px auto;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:8px" xmlns="http://www.w3.org/2000/svg">
-  <text x="260" y="22" text-anchor="middle" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" letter-spacing="0.4" font-weight="600">QUADRILATERAL HIERARCHY</text>
-  <rect x="50" y="50" width="420" height="170" fill="none" stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="4,4"/>
-  <text x="60" y="68" fill="#7a7875" font-family="Geist Mono,monospace" font-size="10" font-weight="600">PARALLELOGRAM</text>
-  <rect x="100" y="80" width="320" height="130" fill="none" stroke="#00abfa" stroke-width="2"/>
-  <text x="110" y="98" fill="#00abfa" font-family="Geist Mono,monospace" font-size="10" font-weight="600">RECTANGLE</text>
-  <rect x="260" y="110" width="160" height="100" fill="none" stroke="#0fee89" stroke-width="2"/>
-  <text x="268" y="128" fill="#0fee89" font-family="Geist Mono,monospace" font-size="10" font-weight="600">RHOMBUS</text>
-  <rect x="260" y="140" width="80" height="70" fill="#fff067" fill-opacity="0.18" stroke="#fff067" stroke-width="2.5"/>
-  <text x="270" y="158" fill="#fff067" font-family="Geist Mono,monospace" font-size="10" font-weight="600">SQUARE</text>
-  <text x="270" y="225" fill="#7a7875" font-family="Geist Mono,monospace" font-size="9">most specific name</text>
-  <line x1="50" y1="50" x2="50" y2="240" stroke="#3a4a5a" stroke-width="0"/>
-  <text x="385" y="65" fill="#ff4670" font-family="Geist Mono,monospace" font-size="10" font-weight="600">TRAPEZIUM (outside chain)</text>
-</svg>
+<div style="background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#7a7875;letter-spacing:0.4px;text-align:center;margin-bottom:14px">QUADRILATERAL HIERARCHY</div>
+  <div style="border:1.5px dashed #7a7875;border-radius:6px;padding:10px;position:relative">
+    <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#7a7875;margin-bottom:8px">PARALLELOGRAM</div>
+    <div style="border:2px solid #00abfa;border-radius:6px;padding:10px">
+      <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#00abfa;margin-bottom:8px">RECTANGLE</div>
+      <div style="display:flex;justify-content:flex-end">
+        <div style="border:2px solid #0fee89;border-radius:6px;padding:10px;width:55%">
+          <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#0fee89;margin-bottom:8px">RHOMBUS</div>
+          <div style="background:#fff06720;border:2px solid #fff067;border-radius:6px;padding:8px;width:50%">
+            <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#fff067">SQUARE</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;text-align:center;margin-top:8px">square is the most specific name</div>
+  <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#ff4670;text-align:center;margin-top:6px">TRAPEZIUM sits outside this chain (only 1 pair of parallel sides)</div>
+</div>
 
 ## Quick reference: angle types
 

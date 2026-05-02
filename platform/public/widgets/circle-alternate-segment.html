@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Alternate Segment Theorem</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:8px; min-height:22px; }
+  .formula { font-size:14.5px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+
+  canvas { display:block; width:100%; height:auto; user-select:none; touch-action:none; }
+
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <canvas id="c"></canvas>
+
+  <p class="footer">drag T, A, or B: tangent-chord angle equals inscribed angle in the alternate segment</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+var W = 560, H = 380;
+
+function setupCanvas() {
+  var DPR = window.devicePixelRatio || 1;
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  canvas.style.width = '100%';
+  canvas.style.height = 'auto';
+  canvas.style.aspectRatio = W + ' / ' + H;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(DPR, DPR);
+}
+setupCanvas();
+
+var CX = W / 2;
+var CY = H / 2 + 4;
+var R_PX = 130;
+
+function ptOnCircle(t) {
+  return { x: CX + Math.cos(t) * R_PX, y: CY + Math.sin(t) * R_PX };
+}
+
+function N(a) { return ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); }
+
+// Initial positions
+var tT = N(270 * Math.PI / 180);  // T at the bottom
+var tA = N(330 * Math.PI / 180);  // A on the right
+var tB = N(120 * Math.PI / 180);  // B on the left/upper (alternate segment)
+
+var MIN_SEP = 12 * Math.PI / 180;
+
+// Constraint: B must lie in the alternate segment of chord TA, i.e. on the
+// opposite side of chord TA from the tangent direction at T. The tangent at
+// T is perpendicular to OT, so the "tangent side of chord TA" is determined
+// by which of the two semiplanes of chord TA contains the small piece of the
+// tangent line (i.e. the side adjacent to T's tangent direction toward A).
+//
+// Practically: chord TA divides the disk into two arcs. The arc that contains
+// B must be the one OPPOSITE to the side of the tangent-chord angle being
+// measured. We pick the tangent direction (one of two) so that the
+// tangent-chord angle is the one in the segment NOT containing B. So B's
+// constraint is just: B must NOT lie on the chord TA itself, and must stay
+// strictly inside one of the two arcs (we keep it on the major-arc side that
+// it started in, automatically by clamping it away from T and A).
+
+function clampB(t) {
+  t = N(t);
+  // B must remain not within MIN_SEP of either tT or tA along the circle.
+  var dT = Math.abs(((t - tT + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
+  var dA = Math.abs(((t - tA + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI);
+  if (dT < MIN_SEP) {
+    var dir = N(t - tT) < Math.PI ? 1 : -1;
+    t = N(tT + dir * MIN_SEP);
+  }
+  if (dA < MIN_SEP) {
+    var dir2 = N(t - tA) < Math.PI ? 1 : -1;
+    t = N(tA + dir2 * MIN_SEP);
+  }
+  return t;
+}
+
+function setT(t) {
+  t = N(t);
+  // Keep T at least MIN_SEP from A
+  var d = N(t - tA); if (d > Math.PI) d = 2 * Math.PI - d;
+  if (d < MIN_SEP) {
+    // Snap to MIN_SEP on the same side T was on
+    var sign = N(tT - tA) < Math.PI ? 1 : -1;
+    t = N(tA + sign * MIN_SEP);
+  }
+  tT = t;
+  tB = clampB(tB);
+}
+
+function setA(t) {
+  t = N(t);
+  var d = N(t - tT); if (d > Math.PI) d = 2 * Math.PI - d;
+  if (d < MIN_SEP) {
+    var sign = N(tA - tT) < Math.PI ? 1 : -1;
+    t = N(tT + sign * MIN_SEP);
+  }
+  tA = t;
+  tB = clampB(tB);
+}
+
+function setB(t) {
+  tB = clampB(N(t));
+}
+
+// Compute everything we need for drawing and for the angle readouts.
+function compute() {
+  var T = ptOnCircle(tT);
+  var A = ptOnCircle(tA);
+  var B = ptOnCircle(tB);
+
+  // Tangent direction at T: perpendicular to OT (radius from O to T).
+  // OT direction:
+  var ox = T.x - CX, oy = T.y - CY;
+  var len = Math.sqrt(ox * ox + oy * oy);
+  ox /= len; oy /= len;
+  // Perpendicular (rotate 90 deg): one direction
+  var tx = -oy, ty = ox;
+  // Choose the tangent direction such that it lies on the OPPOSITE side of
+  // chord TA from B. That gives us the tangent-chord angle in the segment
+  // NOT containing B, which by the theorem equals the inscribed angle TBA.
+  //
+  // Side test: line through T and A, signed distance of a point P from it
+  // is given by ((A - T) cross (P - T)).
+  var TA = { x: A.x - T.x, y: A.y - T.y };
+  function sideOf(px, py) {
+    return TA.x * (py - T.y) - TA.y * (px - T.x);
+  }
+  var bSide = sideOf(B.x, B.y);
+  // Probe a point a tiny bit along (tx,ty) from T.
+  var probeSide = sideOf(T.x + tx * 5, T.y + ty * 5);
+  // We want probeSide to have OPPOSITE sign from bSide. If same sign, flip.
+  if ((probeSide > 0 && bSide > 0) || (probeSide < 0 && bSide < 0)) {
+    tx = -tx; ty = -ty;
+  }
+
+  // Tangent-chord angle: between (tx,ty) and (TA normalised)
+  var taLen = Math.sqrt(TA.x * TA.x + TA.y * TA.y);
+  var TAnx = TA.x / taLen, TAny = TA.y / taLen;
+  var dotTC = tx * TAnx + ty * TAny;
+  if (dotTC > 1) dotTC = 1; if (dotTC < -1) dotTC = -1;
+  var tangentChord = Math.acos(dotTC);
+
+  // Inscribed angle TBA at B: between BT and BA
+  var BTx = T.x - B.x, BTy = T.y - B.y;
+  var BAx = A.x - B.x, BAy = A.y - B.y;
+  var dotInsc = BTx * BAx + BTy * BAy;
+  var magInsc = Math.sqrt(BTx * BTx + BTy * BTy) * Math.sqrt(BAx * BAx + BAy * BAy);
+  var insc = magInsc > 0 ? Math.acos(Math.max(-1, Math.min(1, dotInsc / magInsc))) : 0;
+
+  return {
+    T: T, A: A, B: B,
+    tx: tx, ty: ty,        // chosen tangent unit vector
+    nx: -tx, ny: -ty,       // opposite tangent direction
+    tangentChord: tangentChord,
+    inscribed: insc
+  };
+}
+
+function backedLabel(x, y, text, color, size) {
+  size = size || 12;
+  ctx.font = '600 ' + size + "px 'Geist Mono', monospace";
+  var tw = ctx.measureText(text).width;
+  ctx.fillStyle = 'rgba(11,17,24,0.88)';
+  ctx.fillRect(x - tw / 2 - 5, y - size / 2 - 4, tw + 10, size + 8);
+  ctx.strokeStyle = '#141e2a';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x - tw / 2 - 5, y - size / 2 - 4, tw + 10, size + 8);
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+}
+
+function dot(x, y, color, r, glowing) {
+  if (glowing) {
+    ctx.fillStyle = hexAlpha(color, 0.20);
+    ctx.beginPath(); ctx.arc(x, y, r + 9, 0, 2 * Math.PI); ctx.fill();
+  }
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, glowing ? r + 1.5 : r, 0, 2 * Math.PI); ctx.fill();
+}
+
+function hexAlpha(hex, a) {
+  var r = parseInt(hex.slice(1, 3), 16),
+      g = parseInt(hex.slice(3, 5), 16),
+      b = parseInt(hex.slice(5, 7), 16);
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+}
+
+// Draw the smaller (inner) angle arc at vertex V from direction d1 to direction d2,
+// where d1 and d2 are unit vectors (canvas space).
+function drawAngleArcVec(V, d1, d2, radius, color) {
+  var a1 = Math.atan2(d1.y, d1.x);
+  var a2 = Math.atan2(d2.y, d2.x);
+  var diff = ((a2 - a1) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+  var anticlockwise = diff > Math.PI;
+  ctx.beginPath();
+  ctx.arc(V.x, V.y, radius, a1, a2, anticlockwise);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  var midAng;
+  if (anticlockwise) {
+    var revDiff = 2 * Math.PI - diff;
+    midAng = a1 - revDiff / 2;
+  } else {
+    midAng = a1 + diff / 2;
+  }
+  return midAng;
+}
+
+var dragging = null, hovering = null;
+var HIT = 18;
+
+function getPos(e) {
+  var rect = canvas.getBoundingClientRect();
+  var ev = e.touches ? e.touches[0] : e;
+  return {
+    x: (ev.clientX - rect.left) * (W / rect.width),
+    y: (ev.clientY - rect.top) * (H / rect.height)
+  };
+}
+
+function nearPoint(px, py, t) {
+  var p = ptOnCircle(t);
+  var dx = px - p.x, dy = py - p.y;
+  return Math.sqrt(dx * dx + dy * dy) < HIT;
+}
+
+function angleFromPos(px, py) {
+  return Math.atan2(py - CY, px - CX);
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0b1118';
+  ctx.fillRect(0, 0, W, H);
+
+  var s = compute();
+  var T = s.T, A = s.A, B = s.B;
+
+  // 1. Circle outline
+  ctx.beginPath();
+  ctx.arc(CX, CY, R_PX, 0, 2 * Math.PI);
+  ctx.strokeStyle = '#3a4a5a';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // 2. Centre dot
+  ctx.fillStyle = '#7a7875';
+  ctx.beginPath(); ctx.arc(CX, CY, 3, 0, 2 * Math.PI); ctx.fill();
+
+  // Optional: faint OT line for context (commented to keep it clean)
+  // ctx.strokeStyle = 'rgba(122,120,117,0.25)';
+  // ctx.setLineDash([4, 4]);
+  // ctx.beginPath(); ctx.moveTo(CX, CY); ctx.lineTo(T.x, T.y); ctx.stroke();
+  // ctx.setLineDash([]);
+
+  // 3. Tangent line at T (orange), 140 px each side
+  var TANG = 140;
+  ctx.strokeStyle = '#ff822c';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(T.x + s.tx * TANG, T.y + s.ty * TANG);
+  ctx.lineTo(T.x - s.tx * TANG, T.y - s.ty * TANG);
+  ctx.stroke();
+
+  // 4. Chords TA, TB, AB in BLUE
+  ctx.strokeStyle = '#00abfa';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(T.x, T.y); ctx.lineTo(A.x, A.y);
+  ctx.moveTo(T.x, T.y); ctx.lineTo(B.x, B.y);
+  ctx.moveTo(A.x, A.y); ctx.lineTo(B.x, B.y);
+  ctx.stroke();
+
+  // 5. Angle arcs in YELLOW
+  // At T: between tangent direction (s.tx, s.ty) and chord direction TA
+  var TA = { x: A.x - T.x, y: A.y - T.y };
+  var taLen = Math.sqrt(TA.x * TA.x + TA.y * TA.y);
+  var TAdir = { x: TA.x / taLen, y: TA.y / taLen };
+  var midT = drawAngleArcVec(T, { x: s.tx, y: s.ty }, TAdir, 28, '#fff067');
+
+  // At B: between BT and BA
+  var BT = { x: T.x - B.x, y: T.y - B.y };
+  var BA = { x: A.x - B.x, y: A.y - B.y };
+  var bt = Math.sqrt(BT.x * BT.x + BT.y * BT.y);
+  var ba = Math.sqrt(BA.x * BA.x + BA.y * BA.y);
+  var BTdir = { x: BT.x / bt, y: BT.y / bt };
+  var BAdir = { x: BA.x / ba, y: BA.y / ba };
+  var midB = drawAngleArcVec(B, BTdir, BAdir, 28, '#fff067');
+
+  // 6. Angle labels (X deg at T, Y deg at B)
+  var Xdeg = Math.round(s.tangentChord * 180 / Math.PI);
+  var Ydeg = Math.round(s.inscribed * 180 / Math.PI);
+
+  var labelOff = 44;
+  backedLabel(T.x + Math.cos(midT) * labelOff, T.y + Math.sin(midT) * labelOff,
+              Xdeg + ' deg', '#fff067', 11);
+  backedLabel(B.x + Math.cos(midB) * labelOff, B.y + Math.sin(midB) * labelOff,
+              Ydeg + ' deg', '#fff067', 11);
+
+  // 7. Vertex dots
+  dot(T.x, T.y, '#fff067', 7, dragging === 'T' || hovering === 'T');
+  dot(A.x, A.y, '#00abfa', 7, dragging === 'A' || hovering === 'A');
+  dot(B.x, B.y, '#0fee89', 7, dragging === 'B' || hovering === 'B');
+
+  // 8. Outer letters
+  var outR = R_PX + 18;
+  ctx.font = "700 14px 'Geist', sans-serif";
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#fff067';
+  ctx.fillText('T', CX + Math.cos(tT) * outR, CY + Math.sin(tT) * outR);
+  ctx.fillStyle = '#00abfa';
+  ctx.fillText('A', CX + Math.cos(tA) * outR, CY + Math.sin(tA) * outR);
+  ctx.fillStyle = '#0fee89';
+  ctx.fillText('B', CX + Math.cos(tB) * outR, CY + Math.sin(tB) * outR);
+
+  // 9. Bottom banner
+  var bannerY = H - 32;
+  var bannerH = 26;
+  var bannerW = 380;
+  var bx = (W - bannerW) / 2;
+  ctx.fillStyle = 'rgba(15,238,137,0.06)';
+  ctx.fillRect(bx, bannerY, bannerW, bannerH);
+  ctx.strokeStyle = 'rgba(15,238,137,0.45)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(bx, bannerY, bannerW, bannerH);
+  ctx.font = "600 12px 'Geist Mono', monospace";
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#0fee89';
+  ctx.fillText('tangent-chord ' + Xdeg + ' deg = inscribed ' + Ydeg + ' deg', W / 2, bannerY + bannerH / 2);
+
+  // KaTeX heading
+  var headTex =
+    "\\textcolor{#fff067}{\\text{tangent-chord }\\angle = " + Xdeg + "\\degree} \\;=\\; " +
+    "\\textcolor{#fff067}{\\text{inscribed }\\angle\\text{ in alt segment} = " + Ydeg + "\\degree}";
+  tryRender(document.getElementById("formula"), headTex);
+}
+
+// ── Input handling ─────────────────────────────────────────────────────────
+
+canvas.addEventListener('mousedown', function(e) {
+  var p = getPos(e);
+  if (nearPoint(p.x, p.y, tT)) dragging = 'T';
+  else if (nearPoint(p.x, p.y, tA)) dragging = 'A';
+  else if (nearPoint(p.x, p.y, tB)) dragging = 'B';
+  if (dragging) e.preventDefault();
+});
+
+canvas.addEventListener('mousemove', function(e) {
+  var p = getPos(e);
+  if (dragging) {
+    var t = angleFromPos(p.x, p.y);
+    if (dragging === 'T') setT(t);
+    else if (dragging === 'A') setA(t);
+    else if (dragging === 'B') setB(t);
+    draw();
+  } else {
+    var prev = hovering;
+    hovering = null;
+    if (nearPoint(p.x, p.y, tT)) hovering = 'T';
+    else if (nearPoint(p.x, p.y, tA)) hovering = 'A';
+    else if (nearPoint(p.x, p.y, tB)) hovering = 'B';
+    canvas.style.cursor = hovering ? 'grab' : 'default';
+    if (hovering !== prev) draw();
+  }
+});
+
+canvas.addEventListener('mouseup', function() { dragging = null; });
+canvas.addEventListener('mouseleave', function() {
+  if (dragging || hovering) {
+    dragging = hovering = null;
+    canvas.style.cursor = 'default';
+    draw();
+  }
+});
+
+canvas.addEventListener('touchstart', function(e) {
+  var p = getPos(e);
+  if (nearPoint(p.x, p.y, tT)) dragging = 'T';
+  else if (nearPoint(p.x, p.y, tA)) dragging = 'A';
+  else if (nearPoint(p.x, p.y, tB)) dragging = 'B';
+  if (dragging) e.preventDefault();
+}, { passive: false });
+
+canvas.addEventListener('touchmove', function(e) {
+  if (!dragging) return;
+  e.preventDefault();
+  var p = getPos(e);
+  var t = angleFromPos(p.x, p.y);
+  if (dragging === 'T') setT(t);
+  else if (dragging === 'A') setA(t);
+  else if (dragging === 'B') setB(t);
+  draw();
+}, { passive: false });
+
+canvas.addEventListener('touchend', function() { dragging = null; });
+
+draw();
+
+// ── postMessage resize ─────────────────────────────────────────────────────
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", function() { setupCanvas(); draw(); reportHeight(); });
+setTimeout(reportHeight, 200);
+</script>
+</body>
+</html>

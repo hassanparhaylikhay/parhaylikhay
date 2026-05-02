@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tangents from an External Point</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:8px; min-height:24px; text-align:center; }
+  .formula { font-size:15px; color:#f0eeea; }
+  .formula .katex { font-size:1em; }
+  canvas { display:block; width:100%; height:auto; cursor:default; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; text-align:center; letter-spacing:0.3px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <canvas id="c"></canvas>
+
+  <p class="footer">drag P (external point): the two tangents from P always have equal length. OAPB forms a kite.</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var canvas = document.getElementById('c');
+var ctx = canvas.getContext('2d');
+
+var W = 560, H = 380;
+var DPR = window.devicePixelRatio || 1;
+canvas.width = W * DPR;
+canvas.height = H * DPR;
+canvas.style.width = W + 'px';
+canvas.style.height = H + 'px';
+ctx.scale(DPR, DPR);
+
+// Circle
+var CX = W / 2 - 60;
+var CY = H / 2 - 6;
+var R = 90;
+
+// External point P (initial: to the right of O, comfortably outside)
+var P = { x: CX + 200, y: CY - 40 };
+
+// Pixel scale for friendly numbers (1 unit = 20 px)
+var SCALE = 20;
+
+// Drag state
+var dragging = null, hovering = null;
+var HIT = 18;
+
+function hexAlpha(hex, a) {
+  var r = parseInt(hex.slice(1,3),16),
+      g = parseInt(hex.slice(3,5),16),
+      b = parseInt(hex.slice(5,7),16);
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+
+function dot(cx, cy, color, r, glowing) {
+  if (glowing) {
+    ctx.fillStyle = hexAlpha(color, 0.18);
+    ctx.beginPath(); ctx.arc(cx, cy, r + 9, 0, 2*Math.PI); ctx.fill();
+  }
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(cx, cy, glowing ? r + 1.5 : r, 0, 2*Math.PI); ctx.fill();
+}
+
+function label(x, y, text, color, size) {
+  size = size || 12;
+  ctx.font = '600 ' + size + 'px Geist, -apple-system, sans-serif';
+  var tw = ctx.measureText(text).width;
+  ctx.fillStyle = 'rgba(11,17,24,0.86)';
+  ctx.fillRect(x - tw/2 - 5, y - size/2 - 4, tw + 10, size + 8);
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+}
+
+function plainLabel(x, y, text, color, size) {
+  size = size || 13;
+  ctx.font = '700 ' + size + 'px Geist, -apple-system, sans-serif';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+}
+
+// Constrain P to lie outside the circle (|OP| >= R + 5)
+function clampP(x, y) {
+  var dx = x - CX, dy = y - CY;
+  var d = Math.sqrt(dx*dx + dy*dy);
+  var minD = R + 5;
+  if (d < minD) {
+    if (d < 0.001) { dx = 1; dy = 0; d = 1; }
+    var k = minD / d;
+    x = CX + dx * k;
+    y = CY + dy * k;
+  }
+  // Keep P inside the canvas bounds with a small inset
+  var INSET = 24;
+  if (x < INSET) x = INSET;
+  if (x > W - INSET) x = W - INSET;
+  if (y < INSET) y = INSET;
+  if (y > H - 36) y = H - 36;
+  // Re-check radial constraint after clamping to bounds
+  dx = x - CX; dy = y - CY;
+  d = Math.sqrt(dx*dx + dy*dy);
+  if (d < minD) {
+    var k2 = minD / d;
+    x = CX + dx * k2;
+    y = CY + dy * k2;
+  }
+  return { x: x, y: y };
+}
+
+// Compute tangent points A, B on the circle from external point P.
+// d = |OP|. cos(angle(OAP at O)) = R / d. The tangent points lie at angles
+// theta_OP +/- acos(R/d) measured from O. (Using math-y angles where +y is up
+// and converting to canvas y at draw time.)
+function computeTangentPoints() {
+  var dx = P.x - CX, dy = P.y - CY;
+  var d = Math.sqrt(dx*dx + dy*dy);
+  var theta = Math.atan2(-dy, dx); // math angle: y is flipped vs canvas
+  if (d <= R) {
+    // shouldn't happen due to clamp, but guard anyway
+    return null;
+  }
+  var alpha = Math.acos(R / d);
+  var aAng = theta + alpha;
+  var bAng = theta - alpha;
+  var A = { x: CX + R * Math.cos(aAng), y: CY - R * Math.sin(aAng) };
+  var B = { x: CX + R * Math.cos(bAng), y: CY - R * Math.sin(bAng) };
+  var tangentLen = Math.sqrt(d*d - R*R);
+  return { A: A, B: B, d: d, tLen: tangentLen, theta: theta, alpha: alpha };
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0b1118';
+  ctx.fillRect(0, 0, W, H);
+
+  var GREEN = '#0fee89';
+  var BLUE  = '#00abfa';
+  var YEL   = '#fff067';
+  var ORG   = '#ff822c';
+  var PINK  = '#ff4670';
+  var GREY  = '#7a7875';
+  var FAINT = '#3a4a5a';
+
+  var t = computeTangentPoints();
+  if (!t) return;
+  var A = t.A, B = t.B;
+
+  // 1. Translucent kite OAPB fill
+  ctx.fillStyle = 'rgba(15,238,137,0.07)';
+  ctx.beginPath();
+  ctx.moveTo(CX, CY);
+  ctx.lineTo(A.x, A.y);
+  ctx.lineTo(P.x, P.y);
+  ctx.lineTo(B.x, B.y);
+  ctx.closePath();
+  ctx.fill();
+
+  // 2. Circle outline
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, 0, 2*Math.PI);
+  ctx.strokeStyle = FAINT;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([]);
+  ctx.stroke();
+
+  // 3. Line OP (dashed yellow, line of symmetry)
+  ctx.strokeStyle = YEL;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([6, 4]);
+  ctx.beginPath();
+  ctx.moveTo(CX, CY);
+  ctx.lineTo(P.x, P.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 4. Radii OA and OB (blue)
+  ctx.strokeStyle = BLUE;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(CX, CY); ctx.lineTo(A.x, A.y);
+  ctx.moveTo(CX, CY); ctx.lineTo(B.x, B.y);
+  ctx.stroke();
+
+  // 5. Tangents PA and PB (orange)
+  ctx.strokeStyle = ORG;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(P.x, P.y); ctx.lineTo(A.x, A.y);
+  ctx.moveTo(P.x, P.y); ctx.lineTo(B.x, B.y);
+  ctx.stroke();
+
+  // 6. Right-angle markers at A and B (radius perpendicular to tangent)
+  // For point A: arms along (A -> O) direction and (A -> P) direction.
+  function rightAngleAt(Q) {
+    var size = 9;
+    // unit Q -> O
+    var ox = CX - Q.x, oy = CY - Q.y;
+    var od = Math.sqrt(ox*ox + oy*oy);
+    if (od < 0.001) return;
+    var ux = ox / od, uy = oy / od;
+    // unit Q -> P
+    var px = P.x - Q.x, py = P.y - Q.y;
+    var pd = Math.sqrt(px*px + py*py);
+    if (pd < 0.001) return;
+    var vx = px / pd, vy = py / pd;
+    var arm1x = Q.x + ux * size, arm1y = Q.y + uy * size;
+    var arm2x = Q.x + vx * size, arm2y = Q.y + vy * size;
+    var cornerx = Q.x + (ux + vx) * size;
+    var cornery = Q.y + (uy + vy) * size;
+    ctx.strokeStyle = PINK;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(arm1x, arm1y);
+    ctx.lineTo(cornerx, cornery);
+    ctx.lineTo(arm2x, arm2y);
+    ctx.stroke();
+  }
+  rightAngleAt(A);
+  rightAngleAt(B);
+
+  // 7. Equal-length tick marks on PA and PB (single tick perpendicular to tangent, midway)
+  function tickOn(Q) {
+    var midx = (P.x + Q.x) / 2;
+    var midy = (P.y + Q.y) / 2;
+    // unit along tangent (P -> Q)
+    var dx = Q.x - P.x, dy = Q.y - P.y;
+    var d = Math.sqrt(dx*dx + dy*dy);
+    if (d < 0.001) return;
+    var ux = dx / d, uy = dy / d;
+    var nx = -uy, ny = ux;
+    var size = 6;
+    ctx.strokeStyle = GREEN;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(midx - nx * size, midy - ny * size);
+    ctx.lineTo(midx + nx * size, midy + ny * size);
+    ctx.stroke();
+  }
+  tickOn(A);
+  tickOn(B);
+
+  // 8. Centre O dot and label
+  ctx.fillStyle = GREY;
+  ctx.beginPath();
+  ctx.arc(CX, CY, 4, 0, 2*Math.PI);
+  ctx.fill();
+  plainLabel(CX - 12, CY - 12, 'O', GREY, 13);
+
+  // 9. Tangent points A and B (yellow filled, no hover glow)
+  ctx.fillStyle = YEL;
+  ctx.beginPath(); ctx.arc(A.x, A.y, 6, 0, 2*Math.PI); ctx.fill();
+  ctx.beginPath(); ctx.arc(B.x, B.y, 6, 0, 2*Math.PI); ctx.fill();
+
+  // 10. External point P (green, draggable) with hover glow
+  dot(P.x, P.y, GREEN, 8, dragging === 'P' || hovering === 'P');
+
+  // 11. Letter labels for A, B, P (placed away from circle / away from O)
+  // For A and B: place outside the circle along the radial direction
+  function labelOutside(Q, text, color) {
+    var dx = Q.x - CX, dy = Q.y - CY;
+    var d = Math.sqrt(dx*dx + dy*dy);
+    if (d < 0.001) { plainLabel(Q.x, Q.y - 16, text, color, 14); return; }
+    var lx = Q.x + (dx / d) * 14;
+    var ly = Q.y + (dy / d) * 14;
+    plainLabel(lx, ly, text, color, 14);
+  }
+  labelOutside(A, 'A', YEL);
+  labelOutside(B, 'B', YEL);
+
+  // P label: place to the side away from the circle
+  var pdx = P.x - CX, pdy = P.y - CY;
+  var pdLen = Math.sqrt(pdx*pdx + pdy*pdy) || 1;
+  var pLx = P.x + (pdx / pdLen) * 16;
+  var pLy = P.y + (pdy / pdLen) * 16;
+  plainLabel(pLx, pLy, 'P', GREEN, 14);
+
+  // 12. Length labels |PA| and |PB|
+  var paLen = t.tLen / SCALE;
+  var pbLen = t.tLen / SCALE; // identical by theorem
+  // place each near the midpoint of its tangent, offset perpendicular outward (away from kite interior)
+  function placeLenLabel(Q, text) {
+    var midx = (P.x + Q.x) / 2;
+    var midy = (P.y + Q.y) / 2;
+    var dx = Q.x - P.x, dy = Q.y - P.y;
+    var d = Math.sqrt(dx*dx + dy*dy);
+    if (d < 0.001) return;
+    var nx = -dy / d, ny = dx / d;
+    // pick the side further from O (so label is outside the kite)
+    var off = 16;
+    var s1x = midx + nx * off, s1y = midy + ny * off;
+    var s2x = midx - nx * off, s2y = midy - ny * off;
+    var d1 = (s1x - CX) * (s1x - CX) + (s1y - CY) * (s1y - CY);
+    var d2 = (s2x - CX) * (s2x - CX) + (s2y - CY) * (s2y - CY);
+    var lx = d1 > d2 ? s1x : s2x;
+    var ly = d1 > d2 ? s1y : s2y;
+    label(lx, ly, text, GREEN, 11);
+  }
+  placeLenLabel(A, '|PA| = ' + paLen.toFixed(2));
+  placeLenLabel(B, '|PB| = ' + pbLen.toFixed(2));
+
+  // 13. Bottom banner
+  var bannerText = 'PA = PB = ' + paLen.toFixed(2);
+  ctx.font = '600 13px Geist Mono, monospace';
+  var bw = ctx.measureText(bannerText).width;
+  ctx.fillStyle = 'rgba(11,17,24,0.92)';
+  ctx.fillRect(W/2 - bw/2 - 14, H - 32, bw + 28, 22);
+  ctx.strokeStyle = hexAlpha(GREEN, 0.35);
+  ctx.lineWidth = 1;
+  ctx.strokeRect(W/2 - bw/2 - 14, H - 32, bw + 28, 22);
+  ctx.fillStyle = GREEN;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(bannerText, W/2, H - 21);
+
+  var kiteText = 'OAPB is a kite';
+  ctx.font = '500 10px Geist Mono, monospace';
+  ctx.fillStyle = GREEN;
+  ctx.fillText(kiteText, W/2, H - 6);
+
+  // 14. Heading formula (KaTeX) with live numeric value
+  var headTex = '\\textcolor{#0fee89}{PA = PB = ' + paLen.toFixed(2) + '}';
+  tryRender(document.getElementById('formula'), headTex);
+}
+
+// Interaction
+function getPos(e) {
+  var rect = canvas.getBoundingClientRect();
+  var ev = e.touches ? e.touches[0] : e;
+  return {
+    x: (ev.clientX - rect.left) * (W / rect.width),
+    y: (ev.clientY - rect.top)  * (H / rect.height)
+  };
+}
+
+function nearP(px, py) {
+  var dx = px - P.x, dy = py - P.y;
+  return Math.sqrt(dx*dx + dy*dy) < HIT;
+}
+
+canvas.addEventListener('mousedown', function(e) {
+  var p = getPos(e);
+  if (nearP(p.x, p.y)) { dragging = 'P'; e.preventDefault(); }
+});
+
+canvas.addEventListener('mousemove', function(e) {
+  var p = getPos(e);
+  if (dragging === 'P') {
+    var c = clampP(p.x, p.y);
+    P.x = c.x; P.y = c.y;
+    draw();
+  } else {
+    var prev = hovering;
+    hovering = nearP(p.x, p.y) ? 'P' : null;
+    canvas.style.cursor = hovering ? 'grab' : 'default';
+    if (hovering !== prev) draw();
+  }
+});
+
+canvas.addEventListener('mouseup',    function() { dragging = null; });
+canvas.addEventListener('mouseleave', function() {
+  if (dragging || hovering) {
+    dragging = hovering = null;
+    canvas.style.cursor = 'default';
+    draw();
+  }
+});
+
+canvas.addEventListener('touchstart', function(e) {
+  var p = getPos(e);
+  if (nearP(p.x, p.y)) { dragging = 'P'; e.preventDefault(); }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', function(e) {
+  if (dragging !== 'P') return;
+  e.preventDefault();
+  var p = getPos(e);
+  var c = clampP(p.x, p.y);
+  P.x = c.x; P.y = c.y;
+  draw();
+}, { passive: false });
+
+canvas.addEventListener('touchend', function() { dragging = null; });
+
+draw();
+
+// postMessage resize
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById('wrap');
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: 'pl-widget-resize', height: h }, '*');
+  });
+}
+window.addEventListener('load', reportHeight);
+window.addEventListener('resize', reportHeight);
+</script>
+</body>
+</html>
