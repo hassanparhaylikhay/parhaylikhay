@@ -137,9 +137,114 @@ window.addEventListener("keydown", function(e) {
   }
 });
 
-// Canvas
+// Canvas with HiDPI fix
 var cv = document.getElementById("cv");
 var ctx = cv.getContext("2d");
+var W = 560, H = 320;
+var DPR = window.devicePixelRatio || 1;
+cv.width = W * DPR;
+cv.height = H * DPR;
+cv.style.width = W + "px";
+cv.style.height = H + "px";
+ctx.scale(DPR, DPR);
+
+// Convert a mouse event to canvas-local CSS coords
+function mouseToCanvas(e) {
+  var rect = cv.getBoundingClientRect();
+  var sx = e.clientX !== undefined ? e.clientX : (e.touches ? e.touches[0].clientX : 0);
+  var sy = e.clientY !== undefined ? e.clientY : (e.touches ? e.touches[0].clientY : 0);
+  return {
+    x: (sx - rect.left) * (W / rect.width),
+    y: (sy - rect.top) * (H / rect.height)
+  };
+}
+
+// Distance from point P to line segment AB
+function distToSegment(px, py, ax, ay, bx, by) {
+  var dx = bx - ax, dy = by - ay;
+  var len2 = dx*dx + dy*dy;
+  if (len2 < 0.001) return Math.hypot(px - ax, py - ay);
+  var t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
+  var qx = ax + t * dx, qy = ay + t * dy;
+  return Math.hypot(px - qx, py - qy);
+}
+
+// Determine which part of the circle the cursor is hovering over.
+// Returns the key of the closest hit (within tolerance), or null if none.
+function hitTestCanvas(mx, my) {
+  var dxC = mx - CX, dyC = my - CY;
+  var distFromCentre = Math.hypot(dxC, dyC);
+  var TOL = 8;          // line/point click tolerance
+  var EDGE_TOL = 6;     // tolerance for "on circumference"
+
+  // 1. centre dot (highest priority — tiny target)
+  if (distFromCentre <= 12) return "centre";
+
+  // 2. tangent point + tangent line (vertical line at x = CX + R)
+  var tx = GEO.tangentPoint.x, ty = GEO.tangentPoint.y;
+  if (Math.hypot(mx - tx, my - ty) <= 14) return "tangent";
+  if (Math.abs(mx - (CX + R)) <= TOL && my >= 50 && my <= 290) return "tangent";
+
+  // 3. circumference (close to ring)
+  if (Math.abs(distFromCentre - R) <= EDGE_TOL) {
+    // arc band check first (between angles arcStart and arcEnd, inclusive)
+    var theta = Math.atan2(-(my - CY), mx - CX) * 180 / Math.PI;  // 0 at +x, ccw
+    if (theta < 0) theta += 360;
+    if (theta >= GEO.arcStart && theta <= GEO.arcEnd) return "arc";
+    return "circumference";
+  }
+
+  // 4. radius line (centre to radiusEnd)
+  if (distToSegment(mx, my, CX, CY, GEO.radiusEnd.x, GEO.radiusEnd.y) <= TOL) return "radius";
+
+  // 5. diameter line
+  if (distToSegment(mx, my, GEO.diameterA.x, GEO.diameterA.y, GEO.diameterB.x, GEO.diameterB.y) <= TOL) return "diameter";
+
+  // 6. chord
+  if (distToSegment(mx, my, GEO.chordA.x, GEO.chordA.y, GEO.chordB.x, GEO.chordB.y) <= TOL) return "chord";
+
+  // 7. sector area (inside circle AND between sector angles)
+  if (distFromCentre <= R) {
+    var theta = Math.atan2(-(my - CY), mx - CX) * 180 / Math.PI;
+    if (theta < 0) theta += 360;
+    if (theta >= GEO.sectorStart && theta <= GEO.sectorEnd) return "sector";
+
+    // 8. segment area: above the chord between segmentStart=110 and segmentEnd=70
+    // the chord goes from pt(110, R) to pt(70, R); the segment is the cap above that chord.
+    // A point is in the segment if it's inside the circle AND above the chord line (smaller cap).
+    var sA = pt(GEO.segmentStart, R), sB = pt(GEO.segmentEnd, R);
+    // Chord line equation: cross product side test
+    var crossSeg = (sB.x - sA.x) * (my - sA.y) - (sB.y - sA.y) * (mx - sA.x);
+    if (crossSeg < 0) return "segment";  // above the chord (canvas y down → "above" = smaller y)
+  }
+
+  return null;
+}
+
+cv.addEventListener("mousemove", function(e) {
+  var p = mouseToCanvas(e);
+  var hit = hitTestCanvas(p.x, p.y);
+  if (state.hovered !== hit) {
+    state.hovered = hit;
+    cv.style.cursor = hit ? "pointer" : "default";
+    refresh();
+  }
+});
+cv.addEventListener("mouseleave", function() {
+  if (state.hovered !== null) {
+    state.hovered = null;
+    cv.style.cursor = "default";
+    refresh();
+  }
+});
+cv.addEventListener("click", function(e) {
+  var p = mouseToCanvas(e);
+  var hit = hitTestCanvas(p.x, p.y);
+  if (hit) {
+    state.clicked = (state.clicked === hit) ? null : hit;
+    refresh();
+  }
+});
 
 // Hex with alpha helper
 function withAlpha(hex, alpha) {
