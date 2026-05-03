@@ -11,20 +11,12 @@
   body { padding:14px 18px 16px; }
   .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
   .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; min-height:22px; }
-  .name { font-family:'Geist Mono',monospace; font-size:13px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .name { font-family:'Geist Mono',monospace; font-size:13px; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
 
   .stage { position:relative; width:100%; height:300px; perspective:900px; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:none; }
   .stage.grabbing { cursor:grabbing; }
-  .scene { position:absolute; top:50%; left:50%; transform-style:preserve-3d; transform:translate(-50%,-50%); transition:transform 0s; }
-
-  .face { position:absolute; left:50%; top:50%; transform-style:preserve-3d; }
-  .edge { position:absolute; background:#00abfa; transform-origin:left center; }
-
-  /* face fills (translucent) and outlines */
-  .face-fill { width:100%; height:100%; position:absolute; left:0; top:0; background:rgba(0,171,250,0.06); border:1.5px solid #00abfa; }
-  .face-fill.dim { background:rgba(0,171,250,0.04); border-color:rgba(0,171,250,0.55); }
-  .face-tri { width:100%; height:100%; position:absolute; left:0; top:0; }
+  .scene { position:absolute; top:50%; left:50%; transform-style:preserve-3d; transform:translate(-50%,-50%); }
 
   .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
@@ -44,7 +36,6 @@
 <script>
 "use strict";
 
-// ── URL ?shape= parameter ─────────────────────────────────────────────
 var params = new URLSearchParams(window.location.search);
 var SHAPE = (params.get("shape") || "cube").toLowerCase();
 
@@ -59,42 +50,23 @@ var SHAPE_NAMES = {
   hemisphere: "HEMISPHERE",
   frustum: "FRUSTUM"
 };
-document.getElementById("name").textContent = SHAPE_NAMES[SHAPE] || SHAPE.toUpperCase();
+var SHAPE_COLORS = {
+  cube:       "#00abfa",
+  cuboid:     "#fff067",
+  prism:      "#0fee89",
+  pyramid:    "#ff822c",
+  cylinder:   "#ff4670",
+  cone:       "#00abfa",
+  sphere:     "#fff067",
+  hemisphere: "#0fee89",
+  frustum:    "#ff822c"
+};
+var COLOR = SHAPE_COLORS[SHAPE] || "#00abfa";
+var nameEl = document.getElementById("name");
+nameEl.textContent = SHAPE_NAMES[SHAPE] || SHAPE.toUpperCase();
+nameEl.style.color = COLOR;
 
-// ── Build the scene ──────────────────────────────────────────────────
 var scene = document.getElementById("scene");
-
-function el(tag, style, parent) {
-  var n = document.createElement(tag);
-  if (style) for (var k in style) n.style[k] = style[k];
-  (parent || scene).appendChild(n);
-  return n;
-}
-
-function face(opts) {
-  // opts: {w, h, tx, ty, tz, rx, ry, rz, color, alpha, parent}
-  var w = opts.w, h = opts.h;
-  var c = opts.color || "#00abfa";
-  var a = opts.alpha == null ? 0.06 : opts.alpha;
-  var rgba = hexToRgba(c, a);
-  var f = el("div", {
-    width: w + "px",
-    height: h + "px",
-    position: "absolute",
-    left: "50%",
-    top: "50%",
-    marginLeft: (-w/2) + "px",
-    marginTop: (-h/2) + "px",
-    background: rgba,
-    border: "1.5px solid " + c,
-    transform:
-      "translate3d(" + (opts.tx || 0) + "px," + (opts.ty || 0) + "px," + (opts.tz || 0) + "px)" +
-      " rotateX(" + (opts.rx || 0) + "deg)" +
-      " rotateY(" + (opts.ry || 0) + "deg)" +
-      " rotateZ(" + (opts.rz || 0) + "deg)"
-  }, opts.parent || scene);
-  return f;
-}
 
 function hexToRgba(hex, a) {
   var r = parseInt(hex.slice(1,3), 16);
@@ -103,411 +75,251 @@ function hexToRgba(hex, a) {
   return "rgba(" + r + "," + g + "," + b + "," + a + ")";
 }
 
-// Triangular face built from a clip-path on a positioned div
-function triFace(opts) {
-  // opts: {w, h, points, tx, ty, tz, rx, ry, rz, color, alpha}
-  var c = opts.color || "#00abfa";
-  var a = opts.alpha == null ? 0.06 : opts.alpha;
-  var f = el("div", {
-    width: opts.w + "px",
-    height: opts.h + "px",
-    position: "absolute",
-    left: "50%",
-    top: "50%",
-    marginLeft: (-opts.w/2) + "px",
-    marginTop: (-opts.h/2) + "px",
-    clipPath: "polygon(" + opts.points + ")",
-    background: hexToRgba(c, a),
-    transform:
-      "translate3d(" + (opts.tx || 0) + "px," + (opts.ty || 0) + "px," + (opts.tz || 0) + "px)" +
-      " rotateX(" + (opts.rx || 0) + "deg)" +
-      " rotateY(" + (opts.ry || 0) + "deg)" +
-      " rotateZ(" + (opts.rz || 0) + "deg)"
-  }, opts.parent || scene);
-  // Outline via inset border using filter? Simplest: add an inner div with border via clip-path mask.
-  // Easier: add a thin SVG outline overlay. Skip for compactness; fill alone with translucent color reads OK.
-  // Use a darker border alpha to suggest the edge:
-  f.style.outline = "1.5px solid " + c;
-  f.style.outlineOffset = "-1px";
-  return f;
+function makeFace(w, h, transform, opts) {
+  opts = opts || {};
+  var d = document.createElement("div");
+  d.style.cssText =
+    "position:absolute;left:50%;top:50%;width:" + w + "px;height:" + h + "px;" +
+    "margin-left:" + (-w/2) + "px;margin-top:" + (-h/2) + "px;" +
+    "background:" + (opts.fill || hexToRgba(COLOR, 0.06)) + ";" +
+    (opts.border === false ? "" : "border:1.5px solid " + COLOR + ";") +
+    (opts.clipPath ? "clip-path:" + opts.clipPath + ";outline:1.5px solid " + COLOR + ";outline-offset:-1px;background:" + (opts.fill || hexToRgba(COLOR, 0.06)) + ";" : "") +
+    (opts.borderRadius ? "border-radius:" + opts.borderRadius + ";" : "") +
+    (opts.borderTop ? "border-top:1px solid " + opts.borderTop + ";border-left:none;border-right:none;border-bottom:none;background:transparent;" : "") +
+    (opts.borderColor ? "border:1.5px solid " + opts.borderColor + ";" : "") +
+    "transform:" + transform + ";";
+  scene.appendChild(d);
+  return d;
 }
 
 // ── Shape builders ─────────────────────────────────────────────────────
 
 function buildCube() {
-  var s = 110, c = "#00abfa";
-  // 6 faces: front, back, right, left, top, bottom
-  face({w:s, h:s, tz: s/2, color:c});                      // front
-  face({w:s, h:s, tz:-s/2, ry:180, color:c});               // back
-  face({w:s, h:s, tx: s/2, ry:90, color:c});                // right
-  face({w:s, h:s, tx:-s/2, ry:-90, color:c});               // left
-  face({w:s, h:s, ty:-s/2, rx:90, color:c});                // top
-  face({w:s, h:s, ty: s/2, rx:-90, color:c});               // bottom
+  var s = 110;
+  // 6 faces using simple translate + rotate
+  makeFace(s, s, "translateZ(" + (s/2) + "px)");                            // front
+  makeFace(s, s, "translateZ(" + (-s/2) + "px) rotateY(180deg)");           // back
+  makeFace(s, s, "translateX(" + (s/2) + "px) rotateY(90deg)");             // right
+  makeFace(s, s, "translateX(" + (-s/2) + "px) rotateY(-90deg)");           // left
+  makeFace(s, s, "translateY(" + (-s/2) + "px) rotateX(90deg)");            // top
+  makeFace(s, s, "translateY(" + (s/2) + "px) rotateX(-90deg)");            // bottom
 }
 
 function buildCuboid() {
-  var w = 140, h = 90, d = 70, c = "#00abfa";
-  face({w:w, h:h, tz: d/2, color:c});                       // front
-  face({w:w, h:h, tz:-d/2, ry:180, color:c});               // back
-  face({w:d, h:h, tx: w/2, ry:90, color:c});                // right
-  face({w:d, h:h, tx:-w/2, ry:-90, color:c});               // left
-  face({w:w, h:d, ty:-h/2, rx:90, color:c});                // top
-  face({w:w, h:d, ty: h/2, rx:-90, color:c});               // bottom
+  var w = 140, h = 90, d = 70;
+  makeFace(w, h, "translateZ(" + (d/2) + "px)");
+  makeFace(w, h, "translateZ(" + (-d/2) + "px) rotateY(180deg)");
+  makeFace(d, h, "translateX(" + (w/2) + "px) rotateY(90deg)");
+  makeFace(d, h, "translateX(" + (-w/2) + "px) rotateY(-90deg)");
+  makeFace(w, d, "translateY(" + (-h/2) + "px) rotateX(90deg)");
+  makeFace(w, d, "translateY(" + (h/2) + "px) rotateX(-90deg)");
 }
 
 function buildPrism() {
-  // Triangular prism: equilateral triangle cross section, lying with the rectangular sides facing out
-  // Triangle side length s, prism length L
-  var s = 110, L = 130, c = "#00abfa";
-  var h = s * Math.sqrt(3) / 2; // height of equilateral triangle = ~95
-  // Place the prism so its axis runs left-right (x-axis). Triangle lies in y-z plane.
-  // Triangle vertices in y-z plane (centroid at origin):
-  // top (0, -h*2/3), bottom-left (-s/2, h/3), bottom-right (s/2, h/3)
-  // We'll rotate the triangle to lie flat (e.g. apex up) and treat the prism axis as x.
-  // Rectangular faces are 3 rectangles of size s x L wrapping around.
+  // Equilateral triangle cross-section (side s), prism length L along x-axis.
+  var s = 120, L = 130;
+  var ht = s * Math.sqrt(3) / 2;       // altitude of equilateral
+  var R  = s / Math.sqrt(3);            // circumradius (apex distance from centroid)
+  var a  = ht / 3;                      // apothem (inradius, side-mid distance from centroid)
 
-  // Two triangular ends (left and right caps) using clip-path
-  var capW = s, capH = h;
-  // Left cap (at x = -L/2), facing -x
-  triFace({
-    w: capW, h: capH,
-    points: "50% 0%, 0% 100%, 100% 100%",
-    tx: -L/2, ry: -90, color: c
-  });
-  // Right cap (at x = +L/2), facing +x
-  triFace({
-    w: capW, h: capH,
-    points: "50% 0%, 0% 100%, 100% 100%",
-    tx: L/2, ry: 90, color: c
-  });
+  // Two triangular caps
+  // Right cap (x = +L/2, normal +x). Bounding-box centre offset from centroid by ht/6 along local +y.
+  // Apex at face local (0, -ht/2). Translation must shift bounding-box-centre so centroid lands on x-axis.
+  // For the right cap with rotateY(+90), face normal goes from +z to +x. Local +y stays world +y.
+  // Bounding-box centre lands at world: (+L/2, -ht/6, 0)
+  makeFace(s, ht, "translate3d(" + (L/2) + "px," + (-ht/6) + "px,0px) rotateY(90deg)",
+           {clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)"});
+  makeFace(s, ht, "translate3d(" + (-L/2) + "px," + (-ht/6) + "px,0px) rotateY(-90deg)",
+           {clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)"});
 
-  // Three rectangular sides each of size s x L:
-  // (1) bottom face — flat, ty = h/3 below centre
-  face({w: L, h: s, ty: h/3, rx: 90, color: c});
-  // (2) left slanted face — at angle  120 deg from bottom (rotate 60 deg about prism axis)
-  // We can express each slant as a rectangle rotated around x-axis
-  // Easier approach: place rectangles as faces of width L and height s, then rotate around x
-  // But our rectangle has width=L, height=s. We need to wrap them around the triangle edge.
-  // The triangle has 3 edges: bottom (length s), and two slanted (length s).
-  // Rotation about x-axis: bottom rotates 90 (already done above).
-  // Other two edges of the triangle make angles +60 and -60 with horizontal at the centroid? Actually the slope angles are 60 deg from vertical => 30 from horizontal? Let's compute.
-  // Side faces of equilateral prism are at +/- 60 deg from each other in the rotation about prism axis from the bottom.
-  // So bottom is at rotation 90 (around x-axis to make ty offset), then the others are at 90 - 120 = -30, and 90 + 120 = 210.
-  // But the offset distance from centre to each face midpoint is the "apothem" = h/3.
-  // Build the other two faces by translating outward perpendicular to each face direction.
-  buildPrismSlant(L, s, c, 60);   // upper-right slant
-  buildPrismSlant(L, s, c, -60);  // upper-left slant
-}
-
-function buildPrismSlant(L, s, c, rotXdeg) {
-  // Rotate a rectangle of size L x s around the prism axis (x) by rotXdeg, then offset outward.
-  // Inscribed apothem of equilateral with side s: a = s * sqrt(3) / 6
-  var a = s * Math.sqrt(3) / 6;
-  // Translate outward in the direction (0, -cos, sin) roughly. We use rotation then translate first.
-  // Build the face flat (in x-y plane), translate it outward by a, rotated to face out.
-  // Pre-rotate to face the outward direction at angle rotXdeg from "downward".
-  // For our bottom face (rotXdeg = 0), the rectangle was positioned at ty = h/3 = a + ... actually the apothem of equilateral triangle with side s is a = s/(2*sqrt(3)) ~ 0.289 s. Our `h/3` from centroid to a side is also a/2... let's not get tangled.
-  // Simpler: position face at ty=0 at first, rx 90 to face down, ty=apothem. Already done for bottom.
-  // For slants: the same rectangle, but rx is 90+rotXdeg and ty is the projection of the apothem into y.
-  // Translate (ty, tz) such that the face mid lies at distance "a" from prism axis in the outward direction.
-  // Use: outward normal direction (sin(rot), -cos(rot)) in (z, y) space (so up=neg y).
-  // Then face at: translate ty=-a*cos(rot+90)? Easier to construct via rotateX then translate by apothem along outward.
-  // Method: build face (L wide, s tall) in xy plane, rotateX(rotXdeg + 90) so its outward normal is +y direction rotated, then translate3d in (z, y).
-  var rad = rotXdeg * Math.PI / 180;
-  // Apothem direction in (y, z) before rotation: (1, 0). After rotateX(rotXdeg+90)... too complex.
-  // Just compute outward normal ourselves:
-  // After rotateX(rotXdeg+90), the face's normal (originally +z, since we built it lying flat with rx=0 and the face is on the xy plane facing +z) becomes:
-  //   normal = (0, sin(rotXdeg+90), cos(rotXdeg+90))
-  //          = (0, cos(rotXdeg), -sin(rotXdeg))
-  // Wait, rx in CSS rotates around x: a point (0,0,1) -> (0, -sin(rx), cos(rx)).
-  // For our bottom face we used rx=90, which gave normal (0, -sin90, cos90) = (0, -1, 0) ie "up" — that's WRONG, we wanted it to face down. Anyway.
-  // Let me just empirically place the slants.
-  // Bottom face (rx=90, ty=h/3=apothem): face's normal points downward (+y in screen coords), correct.
-  // For upper slants, we want normals pointing up-right and up-left. Rotate the bottom face around x-axis by +120 and -120 (in rx).
-  var slantRx = 90 + rotXdeg + 120 * (rotXdeg > 0 ? -1 : 1);
-  // Hmm let me just hard-code by trial: upper right face: rx = -30 deg, then translate to position
-  // For a triangular prism apothem a, with the bottom face down (rx=90, ty=+a):
-  //   Upper-right face: rx = 90 - 120 = -30; translation = (ty=-a*cos(60), tz=+a*sin(60)) where 60 deg is the rotation from down to upper-right
-  //   Upper-left face: rx = 90 + 120 = 210; translation = (ty=-a*cos(60), tz=-a*sin(60))
-  // Direction (in (y,z) plane) of outward normal for upper-right face: rotating (0, +1, 0) by 120 about x => (0, cos(120), sin(120)) = (0, -0.5, 0.866). Wait rx rotates +z toward +y so... let's just place by trial and adjust.
-  // Use actual math: rotate (y_after, z_after) of point (0, +1, 0) by rx degrees around x-axis using right-hand rule:
-  //   y' = y*cos(rx) - z*sin(rx)
-  //   z' = y*sin(rx) + z*cos(rx)
-  // For rx = -30 (or 330), starting point (0, 1, 0): y' = cos(-30) = 0.866, z' = sin(-30) = -0.5. So normal (0, 0.866, -0.5). That's "down-and-back". Not what we want.
-  // For our purpose let's just trust: build with rx that wraps around the triangle correctly.
-  // For an equilateral cross-section, the three rectangle sides are at rx = 90 (down), 90 + 120 (up-left), 90 - 120 = -30 (up-right). Translate by apothem in the OPPOSITE direction of the normal so the rectangle lies along the side.
-  var rx = 90 + (rotXdeg > 0 ? -120 : 120);   // simpler chain
-  // Translation along apothem: when rx=90, ty=a. when rx=210, ty = a*cos(120) = -0.5a, tz = a*sin(120) = 0.866a. Hmm this is getting muddy.
-  // Easiest correct path: parametric.
-  // Define angle theta from down direction. theta=0 -> bottom face, theta=120 -> upper-left, theta=-120 -> upper-right
-  var theta = rotXdeg > 0 ? -120 : 120;        // upper-right when rotXdeg>0, upper-left otherwise
-  var thetaRad = theta * Math.PI / 180;
-  var apothem = s * Math.sqrt(3) / 6;
-  // Bottom face was at ty=+apothem (since +y is "down" in screen). For other faces, rotate that displacement vector by theta around x:
-  var ty = apothem * Math.cos(thetaRad);
-  var tz = apothem * Math.sin(thetaRad);
-  // Face orientation: rx for that face is 90 + theta (so its normal points outward in the rotated direction)
-  var faceRx = 90 + theta;
-  face({w: L, h: s, ty: ty, tz: tz, rx: faceRx, color: c});
+  // Three rectangular faces, each L x s.
+  // Bottom face (centred at world (0, +a, 0), normal +y). Use rotateX(-90).
+  makeFace(L, s, "translate3d(0px," + a + "px,0px) rotateX(-90deg)");
+  // Upper-right face: rotate the bottom face by +120 around the prism axis (world x).
+  makeFace(L, s, "rotateX(120deg) translate3d(0px," + a + "px,0px) rotateX(-90deg)");
+  // Upper-left face: rotate by -120.
+  makeFace(L, s, "rotateX(-120deg) translate3d(0px," + a + "px,0px) rotateX(-90deg)");
 }
 
 function buildPyramid() {
-  // Square base of side s, apex above at height H
-  var s = 120, H = 110, c = "#00abfa";
-  // Base (square) at the bottom: ty = +s*0... we'll make base centred at y=H/2 (so apex is at y=-H/2)
-  // Square face at ty = H/2, rotated to lie horizontal (rx=90)
-  face({w: s, h: s, ty: H/2, rx: 90, color: c});
-  // 4 triangular sides
-  // Each triangle: base s (bottom edge of side), apex at top
-  // Slant height L = sqrt((s/2)^2 + H^2)
-  var L = Math.sqrt((s/2)*(s/2) + H*H);
-  // Tilt angle from vertical: alpha = atan2(s/2, H)
-  var alpha = Math.atan2(s/2, H) * 180 / Math.PI;
-  // Front face: tilted forward by alpha, positioned at tz=+s/2 along the bottom edge midpoint, ty=0
-  // Build a triangular face of width s and height L (apex at top):
-  // points: 50% 0, 0% 100%, 100% 100%
-  // Then rx = -alpha (so the bottom edge stays at +y, apex tilts away from +z)
-  // Then translate so bottom edge is at the base square edge.
-  // After tilting, the bottom edge of the triangle is at: ty = +H/2, tz = +s/2 (matching the front edge of the base).
-  // We position the triangle face so its CENTER is correct:
-  // Center of triangle (above bottom edge by L/2 in face space): in world, after rx=-alpha,
-  //   relative position from bottom edge midpoint: (0, -L/2 cos(alpha), -L/2 sin(alpha))
-  // Bottom edge midpoint at world (0, +H/2, +s/2). So center = (0, H/2 - L/2 cos a, s/2 - L/2 sin a).
-  var cosA = Math.cos(alpha * Math.PI / 180);
-  var sinA = Math.sin(alpha * Math.PI / 180);
-  function pyrSide(rotY) {
-    // rotY=0: front, 90: right, 180: back, -90/270: left
-    var ry = rotY;
-    // Position relative to centre in face's local frame:
-    var ty = H/2 - L/2 * cosA;
-    var tz = s/2 - L/2 * sinA;
-    // For the rotated faces we need to rotate (tx, tz) around y by rotY:
-    var rad = ry * Math.PI / 180;
-    var nx = Math.sin(rad) * tz;
-    var nz = Math.cos(rad) * tz;
-    triFace({
-      w: s, h: L,
-      points: "50% 0%, 0% 100%, 100% 100%",
-      tx: nx, ty: ty, tz: nz,
-      ry: ry, rx: -alpha,
-      color: c
-    });
+  var s = 120, H = 130;
+  var L = Math.sqrt((s/2)*(s/2) + H*H);   // slant height
+  var alpha = Math.atan2(s/2, H);          // tilt from vertical
+  var alphaDeg = alpha * 180 / Math.PI;
+
+  // Base: square of side s at world y = +H/2
+  makeFace(s, s, "translate3d(0px," + (H/2) + "px,0px) rotateX(-90deg)");
+
+  // Triangular sides — built so that all four apexes coincide at (0, -H/2, 0).
+  // For each side, transform = rotateY(theta) translate3d(0, 0, +s/4) rotateX(-alpha)
+  // CSS reads right-to-left: rotateX first (tilts the face), then translate3d (places centre
+  // at z=+s/4 in front of axis), then rotateY (rotates the placed face around y by theta).
+  // Apex of face (local 0,-L/2,0) → after rotateX(-alpha): (0, -L/2 cos a, +L/2 sin a)
+  //   → after translate(0,0,+s/4): (0, -L/2 cos a, s/4 + L/2 sin a)
+  //   With cos a = H/L, sin a = (s/2)/L: → (0, -H/2, s/4 + s/4) = (0, -H/2, s/2). Hmm, want (0, -H/2, 0). Need translate(0, 0, -s/4) instead.
+  // Actually let me redo: for the FRONT face (theta=0), bottom edge midpoint should be at world (0, +H/2, +s/2).
+  //   Bottom-edge midpoint in face local: (0, +L/2). After rotateX(-alpha): (0, +L/2 cos a, -L/2 sin a) = (0, +H/2, -s/4).
+  //   After translate(tx,0,tz): (tx, +H/2, tz - s/4). Want = (0, +H/2, +s/2). So tx=0, tz=+s/2 + s/4 = +3s/4. Hmm nope.
+  // Let me redo using rotateX(+alpha) instead of -alpha. With +alpha: apex (0,-L/2,0) → (0, -L/2 cos a, -L/2 sin a) = (0, -H/2, -s/4).
+  //   Want apex at (0, -H/2, 0). So translate by (0, 0, +s/4). After translate: (0, -H/2, 0). ✓
+  //   Bottom-edge midpoint after rotateX(+alpha): (0, +L/2 cos a, +L/2 sin a) = (0, +H/2, +s/4). After translate: (0, +H/2, +s/2). ✓
+  //   So front-face transform: translate3d(0,0,+s/4) rotateX(+alpha). Outward normal: face normal +z after +alpha rotation → (0, +sin a, cos a) — has +z and +y component, "down-and-out". That's wrong for the FRONT face (we want normal up-and-out, since the face tilts back from vertical).
+  //   Hmm. Actually with my y-axis convention (world +y is DOWN in screen), outward normal for front pyramid face should have NEGATIVE y component (pointing UP in screen, away from the base) and POSITIVE z (toward viewer).
+  //   With rotateX(+alpha) on +z → (0, sin(+alpha), cos(+alpha)). Wait formula (x,y,z)→(x, y*cos - z*sin, y*sin + z*cos) for rotateX(theta). For (0,0,1) and theta=+alpha: (0, -sin(alpha), cos(alpha)). So normal y-comp is -sin a (negative, pointing UP in screen). ✓ Good.
+  //   So front-face transform is: translate3d(0,0,+s/4) rotateX(+alpha) — with +alpha not -alpha.
+  // But also for the back face (theta=180), we need rotateY(180) wrapping so the face faces backward.
+  // Use rotateY(theta) outermost: transform = rotateY(theta) translate3d(0,0,+s/4) rotateX(+alpha).
+  function pyramidSide(theta) {
+    var t =
+      "rotateY(" + theta + "deg) " +
+      "translate3d(0px,0px," + (s/4) + "px) " +
+      "rotateX(" + alphaDeg + "deg)";
+    makeFace(s, L, t, {clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)"});
   }
-  pyrSide(0);
-  pyrSide(90);
-  pyrSide(180);
-  pyrSide(-90);
+  pyramidSide(0);
+  pyramidSide(90);
+  pyramidSide(180);
+  pyramidSide(-90);
 }
 
 function buildCylinder() {
-  // Two end-caps as ellipses, plus N vertical slats around the curved surface
-  var r = 65, h = 130, c = "#00abfa", N = 28;
-  // Top cap (a circle div, lying horizontal at ty = -h/2)
-  var top = el("div", {
-    width: (r*2) + "px", height: (r*2) + "px",
-    position:"absolute", left:"50%", top:"50%",
-    marginLeft: (-r) + "px", marginTop: (-r) + "px",
-    borderRadius: "50%",
-    border: "1.5px solid " + c,
-    background: hexToRgba(c, 0.06),
-    transform: "translate3d(0px," + (-h/2) + "px,0px) rotateX(90deg)"
-  });
-  var bottom = el("div", {
-    width: (r*2) + "px", height: (r*2) + "px",
-    position:"absolute", left:"50%", top:"50%",
-    marginLeft: (-r) + "px", marginTop: (-r) + "px",
-    borderRadius: "50%",
-    border: "1.5px solid " + c,
-    background: hexToRgba(c, 0.06),
-    transform: "translate3d(0px," + (h/2) + "px,0px) rotateX(90deg)"
-  });
-  // Slats around the side (each is a thin rectangle)
-  var slatW = 2 * Math.PI * r / N + 2; // small overlap
+  var r = 70, h = 130, N = 32;
+  // Top + bottom ellipses
+  makeFace(r*2, r*2, "translate3d(0px," + (-h/2) + "px,0px) rotateX(90deg)",
+           {borderRadius: "50%"});
+  makeFace(r*2, r*2, "translate3d(0px," + (h/2) + "px,0px) rotateX(90deg)",
+           {borderRadius: "50%"});
+  // Vertical slats around the curved side
+  var slatW = 2 * Math.PI * r / N + 2;
   for (var i = 0; i < N; i++) {
     var theta = (i / N) * 360;
     var rad = theta * Math.PI / 180;
     var x = Math.cos(rad) * r;
     var z = Math.sin(rad) * r;
-    el("div", {
-      width: slatW + "px", height: h + "px",
-      position:"absolute", left:"50%", top:"50%",
-      marginLeft: (-slatW/2) + "px", marginTop: (-h/2) + "px",
-      background: hexToRgba(c, 0.06),
-      borderLeft: "0.5px solid " + hexToRgba(c, 0.7),
-      borderRight: "0.5px solid " + hexToRgba(c, 0.7),
-      transform: "translate3d(" + x + "px,0px," + z + "px) rotateY(" + (90 - theta) + "deg)"
-    });
+    var d = document.createElement("div");
+    d.style.cssText =
+      "position:absolute;left:50%;top:50%;width:" + slatW + "px;height:" + h + "px;" +
+      "margin-left:" + (-slatW/2) + "px;margin-top:" + (-h/2) + "px;" +
+      "background:" + hexToRgba(COLOR, 0.05) + ";" +
+      "border-left:0.5px solid " + hexToRgba(COLOR, 0.7) + ";" +
+      "border-right:0.5px solid " + hexToRgba(COLOR, 0.7) + ";" +
+      "transform:translate3d(" + x + "px,0px," + z + "px) rotateY(" + (90 - theta) + "deg);";
+    scene.appendChild(d);
   }
 }
 
 function buildCone() {
-  // Base ellipse + N triangular slats meeting at apex
-  var r = 75, h = 140, c = "#00abfa", N = 28;
-  // Base
-  el("div", {
-    width: (r*2) + "px", height: (r*2) + "px",
-    position:"absolute", left:"50%", top:"50%",
-    marginLeft: (-r) + "px", marginTop: (-r) + "px",
-    borderRadius: "50%",
-    border: "1.5px solid " + c,
-    background: hexToRgba(c, 0.06),
-    transform: "translate3d(0px," + (h/2) + "px,0px) rotateX(90deg)"
-  });
-  // Slats: thin triangles converging at apex (0, -h/2, 0)
-  // Each slat is a clip-path triangle of width s_seg (~ 2π r / N) and height = slant height L
-  var L = Math.sqrt(r*r + h*h);
+  var r = 75, H = 140, N = 32;
+  var L = Math.sqrt(r*r + H*H);
+  var alpha = Math.atan2(r, H);
+  var alphaDeg = alpha * 180 / Math.PI;
+
+  // Base ellipse
+  makeFace(r*2, r*2, "translate3d(0px," + (H/2) + "px,0px) rotateX(90deg)",
+           {borderRadius: "50%"});
+  // N triangular slats meeting at apex (0, -H/2, 0)
+  // Same pattern as pyramid: rotateY(theta) translate3d(0,0,r/2) rotateX(+alpha)
+  // Apex (0, -L/2) → rotateX(+alpha): (0, -L/2 cos a, -L/2 sin a) = (0, -H/2, -r/2)
+  // Then translate(0,0,r/2): (0, -H/2, 0). ✓
+  // Then rotateY(theta) leaves apex on y-axis.
   var slatW = 2 * Math.PI * r / N + 2;
-  // Tilt each slat by angle alpha from vertical
-  var alphaR = Math.atan2(r, h);
-  var alpha = alphaR * 180 / Math.PI;
   for (var i = 0; i < N; i++) {
     var theta = (i / N) * 360;
-    var rad = theta * Math.PI / 180;
-    var x = Math.cos(rad) * r;
-    var z = Math.sin(rad) * r;
-    // Position the slat: its base edge sits at (x, +h/2, z), apex at (0, -h/2, 0).
-    // The slat is a triangle of width slatW and height L (apex at top in local face frame).
-    // The slat's centre (in its own face plane) is at L/2 above its base edge.
-    // We position the centre at the midpoint between (apex) and (base midpoint):
-    //   centre = ( x/2, (-h/2 + h/2)/2... )  — actually: midpoint of (apex, base_mid) = (x/2, 0, z/2)
-    // Then orient: rotate around y by (90 - theta) so the slat faces outward, then tilt by alpha around x.
-    triFace({
-      w: slatW, h: L,
-      points: "50% 0%, 0% 100%, 100% 100%",
-      tx: x/2, ty: 0, tz: z/2,
-      ry: 90 - theta, rx: -alpha,
-      color: c
-    });
+    var t =
+      "rotateY(" + theta + "deg) " +
+      "translate3d(0px,0px," + (r/2) + "px) " +
+      "rotateX(" + alphaDeg + "deg)";
+    makeFace(slatW, L, t,
+             {clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
+              fill: hexToRgba(COLOR, 0.05)});
   }
 }
 
 function buildSphere() {
-  // Approximated by 12 great circles rotated around different axes
-  var r = 80, c = "#00abfa";
-  // Latitude rings (rotateX): 5 rings
-  var ringCount = 7;
-  for (var i = 0; i < ringCount; i++) {
-    var phi = -90 + (i + 0.5) * (180 / ringCount); // -90..90
+  var r = 80;
+  var rings = 7;
+  for (var i = 0; i < rings; i++) {
+    var phi = -90 + (i + 0.5) * (180 / rings);
     var rad = phi * Math.PI / 180;
-    var ringR = r * Math.cos(rad);
-    var ringY = r * Math.sin(rad);
-    if (ringR < 4) continue;
-    el("div", {
-      width: (ringR*2) + "px", height: (ringR*2) + "px",
-      position:"absolute", left:"50%", top:"50%",
-      marginLeft: (-ringR) + "px", marginTop: (-ringR) + "px",
-      borderRadius: "50%",
-      border: "1px solid " + hexToRgba(c, 0.55),
-      background: "transparent",
-      transform: "translate3d(0px," + ringY + "px,0px) rotateX(90deg)"
-    });
+    var rr = r * Math.cos(rad);
+    var yy = r * Math.sin(rad);
+    if (rr < 4) continue;
+    makeFace(rr*2, rr*2,
+             "translate3d(0px," + yy + "px,0px) rotateX(90deg)",
+             {borderRadius: "50%", borderColor: hexToRgba(COLOR, 0.55), fill: "transparent"});
   }
-  // Longitude rings (rotateY): 8 great circles
   for (var j = 0; j < 8; j++) {
     var theta = (j / 8) * 180;
-    el("div", {
-      width: (r*2) + "px", height: (r*2) + "px",
-      position:"absolute", left:"50%", top:"50%",
-      marginLeft: (-r) + "px", marginTop: (-r) + "px",
-      borderRadius: "50%",
-      border: "1px solid " + hexToRgba(c, 0.55),
-      background: "transparent",
-      transform: "rotateY(" + theta + "deg)"
-    });
+    makeFace(r*2, r*2,
+             "rotateY(" + theta + "deg)",
+             {borderRadius: "50%", borderColor: hexToRgba(COLOR, 0.55), fill: "transparent"});
   }
 }
 
 function buildHemisphere() {
-  // Top half: latitude rings from 0..90, plus a flat circular base
-  var r = 80, c = "#00abfa";
-  // Flat base
-  el("div", {
-    width: (r*2) + "px", height: (r*2) + "px",
-    position:"absolute", left:"50%", top:"50%",
-    marginLeft: (-r) + "px", marginTop: (-r) + "px",
-    borderRadius: "50%",
-    border: "1.5px solid " + c,
-    background: hexToRgba(c, 0.06),
-    transform: "rotateX(90deg)"
-  });
-  // Top latitude rings (only top half)
-  var ringCount = 6;
-  for (var i = 0; i < ringCount; i++) {
-    var phi = -90 + (i + 0.5) * (90 / ringCount); // -90..0
+  var r = 80;
+  // Flat base (full circle, lying horizontal at y = 0)
+  makeFace(r*2, r*2, "rotateX(90deg)", {borderRadius: "50%"});
+
+  // Top latitude rings (only top half: phi from -90 to 0)
+  var rings = 6;
+  for (var i = 0; i < rings; i++) {
+    var phi = -90 + (i + 0.5) * (90 / rings);
     var rad = phi * Math.PI / 180;
-    var ringR = r * Math.cos(rad);
-    var ringY = r * Math.sin(rad);
-    if (ringR < 4) continue;
-    el("div", {
-      width: (ringR*2) + "px", height: (ringR*2) + "px",
-      position:"absolute", left:"50%", top:"50%",
-      marginLeft: (-ringR) + "px", marginTop: (-ringR) + "px",
-      borderRadius: "50%",
-      border: "1px solid " + hexToRgba(c, 0.55),
-      background: "transparent",
-      transform: "translate3d(0px," + ringY + "px,0px) rotateX(90deg)"
-    });
+    var rr = r * Math.cos(rad);
+    var yy = r * Math.sin(rad);
+    if (rr < 4) continue;
+    makeFace(rr*2, rr*2,
+             "translate3d(0px," + yy + "px,0px) rotateX(90deg)",
+             {borderRadius: "50%", borderColor: hexToRgba(COLOR, 0.55), fill: "transparent"});
   }
-  // Half longitude meridians: each is a half-circle (hard with border-radius). Approximate with full circles whose top half coincides; their bottom half won't show much because of layering.
+  // Longitude meridians: full circles clipped to top half only.
   for (var j = 0; j < 8; j++) {
     var theta = (j / 8) * 180;
-    el("div", {
-      width: (r*2) + "px", height: (r*2) + "px",
-      position:"absolute", left:"50%", top:"50%",
-      marginLeft: (-r) + "px", marginTop: (-r) + "px",
-      borderRadius: "50% 50% 0 0 / 100% 100% 0 0",
-      borderTop: "1px solid " + hexToRgba(c, 0.55),
-      borderLeft: "1px solid " + hexToRgba(c, 0.55),
-      borderRight: "1px solid " + hexToRgba(c, 0.55),
-      background: "transparent",
-      transform: "rotateY(" + theta + "deg)"
-    });
+    var d = document.createElement("div");
+    d.style.cssText =
+      "position:absolute;left:50%;top:50%;width:" + (r*2) + "px;height:" + (r*2) + "px;" +
+      "margin-left:" + (-r) + "px;margin-top:" + (-r) + "px;" +
+      "border-radius:50%;" +
+      "border:1px solid " + hexToRgba(COLOR, 0.55) + ";" +
+      "background:transparent;" +
+      "clip-path:polygon(0% 0%, 100% 0%, 100% 50%, 0% 50%);" +
+      "transform:rotateY(" + theta + "deg);";
+    scene.appendChild(d);
   }
 }
 
 function buildFrustum() {
-  // Frustum of a cone: ring slats with top radius r1 and bottom radius r2
-  var r1 = 45, r2 = 80, h = 130, c = "#00abfa", N = 28;
-  // Top
-  el("div", {
-    width: (r1*2) + "px", height: (r1*2) + "px",
-    position:"absolute", left:"50%", top:"50%",
-    marginLeft: (-r1) + "px", marginTop: (-r1) + "px",
-    borderRadius: "50%",
-    border: "1.5px solid " + c,
-    background: hexToRgba(c, 0.06),
-    transform: "translate3d(0px," + (-h/2) + "px,0px) rotateX(90deg)"
-  });
-  // Bottom
-  el("div", {
-    width: (r2*2) + "px", height: (r2*2) + "px",
-    position:"absolute", left:"50%", top:"50%",
-    marginLeft: (-r2) + "px", marginTop: (-r2) + "px",
-    borderRadius: "50%",
-    border: "1.5px solid " + c,
-    background: hexToRgba(c, 0.06),
-    transform: "translate3d(0px," + (h/2) + "px,0px) rotateX(90deg)"
-  });
-  // Slants: trapezoids approximated as thin strips
+  var r1 = 50, r2 = 85, h = 130, N = 32;
+  var L = Math.sqrt(h*h + (r2-r1)*(r2-r1));
+  var slantA = Math.atan2(r2 - r1, h) * 180 / Math.PI;
+
+  makeFace(r1*2, r1*2, "translate3d(0px," + (-h/2) + "px,0px) rotateX(90deg)",
+           {borderRadius: "50%"});
+  makeFace(r2*2, r2*2, "translate3d(0px," + (h/2) + "px,0px) rotateX(90deg)",
+           {borderRadius: "50%"});
+
+  // Slats — each is a thin strip slanted by slantA, at midpoint between r1 (top) and r2 (bottom).
+  // Strip's centre at world ((r1+r2)/2 cos(theta), 0, (r1+r2)/2 sin(theta))
+  // Use the same composition as cylinder slat but with rotateX(slantA) added:
+  // transform: translate3d(x_mid, 0, z_mid) rotateY(90 - theta) rotateX(slantA)
+  // After rotateX(slantA), face's local +y tilts inward at top, outward at bottom — matching the frustum shape (top is narrower).
+  var midR = (r1 + r2) / 2;
+  var slatW = 2 * Math.PI * midR / N + 2;
   for (var i = 0; i < N; i++) {
     var theta = (i / N) * 360;
     var rad = theta * Math.PI / 180;
-    // Top point (r1, -h/2) and bottom point (r2, h/2). Place strip between.
-    var midR = (r1 + r2) / 2;
     var x = Math.cos(rad) * midR;
     var z = Math.sin(rad) * midR;
-    var L = Math.sqrt(h*h + (r2-r1)*(r2-r1));
-    var slantA = Math.atan2(r2 - r1, h) * 180 / Math.PI;
-    var slatW = 2 * Math.PI * midR / N + 2;
-    el("div", {
-      width: slatW + "px", height: L + "px",
-      position:"absolute", left:"50%", top:"50%",
-      marginLeft: (-slatW/2) + "px", marginTop: (-L/2) + "px",
-      background: hexToRgba(c, 0.06),
-      borderLeft: "0.5px solid " + hexToRgba(c, 0.7),
-      borderRight: "0.5px solid " + hexToRgba(c, 0.7),
-      transform: "translate3d(" + x + "px,0px," + z + "px) rotateY(" + (90 - theta) + "deg) rotateX(" + (-slantA) + "deg)"
-    });
+    var d = document.createElement("div");
+    d.style.cssText =
+      "position:absolute;left:50%;top:50%;width:" + slatW + "px;height:" + L + "px;" +
+      "margin-left:" + (-slatW/2) + "px;margin-top:" + (-L/2) + "px;" +
+      "background:" + hexToRgba(COLOR, 0.05) + ";" +
+      "border-left:0.5px solid " + hexToRgba(COLOR, 0.7) + ";" +
+      "border-right:0.5px solid " + hexToRgba(COLOR, 0.7) + ";" +
+      "transform:translate3d(" + x + "px,0px," + z + "px) rotateY(" + (90 - theta) + "deg) rotateX(" + slantA + "deg);";
+    scene.appendChild(d);
   }
 }
 
@@ -522,11 +334,10 @@ var BUILDERS = {
   hemisphere: buildHemisphere,
   frustum: buildFrustum
 };
-
 (BUILDERS[SHAPE] || buildCube)();
 
 // ── Drag-to-rotate + auto-spin ────────────────────────────────────────
-var rotX = -20, rotY = 25;        // current rotation
+var rotX = -20, rotY = 25;
 var dragging = false;
 var lastX = 0, lastY = 0;
 var lastInteractAt = Date.now();
@@ -538,21 +349,17 @@ function applyRotation() {
 applyRotation();
 
 function onDown(clientX, clientY) {
-  dragging = true;
-  lastX = clientX;
-  lastY = clientY;
+  dragging = true; lastX = clientX; lastY = clientY;
   stage.classList.add("grabbing");
   lastInteractAt = Date.now();
 }
 function onMove(clientX, clientY) {
   if (!dragging) return;
-  var dx = clientX - lastX;
-  var dy = clientY - lastY;
+  var dx = clientX - lastX, dy = clientY - lastY;
   rotY += dx * 0.5;
   rotX -= dy * 0.5;
   rotX = Math.max(-89, Math.min(89, rotX));
-  lastX = clientX;
-  lastY = clientY;
+  lastX = clientX; lastY = clientY;
   lastInteractAt = Date.now();
   applyRotation();
 }
@@ -561,7 +368,6 @@ function onUp() {
   stage.classList.remove("grabbing");
   lastInteractAt = Date.now();
 }
-
 stage.addEventListener("mousedown", function(e) { e.preventDefault(); onDown(e.clientX, e.clientY); });
 window.addEventListener("mousemove", function(e) { onMove(e.clientX, e.clientY); });
 window.addEventListener("mouseup", onUp);
@@ -573,7 +379,6 @@ stage.addEventListener("touchmove", function(e) {
 }, { passive: false });
 stage.addEventListener("touchend", onUp);
 
-// Auto-rotate when idle for >2 seconds
 function tick() {
   var idleMs = Date.now() - lastInteractAt;
   if (!dragging && idleMs > 2000) {
@@ -584,7 +389,6 @@ function tick() {
 }
 tick();
 
-// ── Height reporter for iframe embedding ──────────────────────────────
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {
   if (reportScheduled) return;
