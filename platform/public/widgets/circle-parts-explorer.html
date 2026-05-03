@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Circle Parts Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 14px; }
+
+  .head { display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:12px; min-height:54px; gap:4px; }
+  .head .title { font-family:'Geist Mono',monospace; font-size:18px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:#fff067; line-height:1.1; }
+  .head .subtitle { font-size:13px; color:#c8c6be; text-align:center; line-height:1.3; max-width:520px; }
+
+  .buttons { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin-bottom:14px; padding:0 4px; }
+  .pill {
+    padding:6px 12px;
+    border:1px solid #141e2a;
+    border-radius:999px;
+    background:#0b1118;
+    color:#7a7875;
+    cursor:pointer;
+    font-family:'Geist Mono',monospace;
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.4px;
+    text-transform:uppercase;
+    transition:border-color 120ms ease, color 120ms ease, background 120ms ease;
+    user-select:none;
+  }
+  .pill:hover { background:#141e2a; }
+  .pill.active { background:#141e2a; }
+
+  .canvas-wrap { display:flex; justify-content:center; margin-bottom:8px; }
+  canvas { display:block; background:#0b1118; border-radius:6px; }
+
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="title" id="title">PARTS OF A CIRCLE</span>
+    <span class="subtitle" id="subtitle">hover or click a name to see it on the diagram</span>
+  </div>
+
+  <div class="buttons" id="buttons"></div>
+
+  <div class="canvas-wrap">
+    <canvas id="cv" width="560" height="320"></canvas>
+  </div>
+
+  <p class="footer">hover or click a name above to see each part of the circle</p>
+</div>
+
+<script>
+"use strict";
+
+// Brand palette
+var COLOR = {
+  bg: "#0b1118",
+  blue: "#00abfa",
+  yellow: "#fff067",
+  orange: "#ff822c",
+  green: "#0fee89",
+  pink: "#ff4670",
+  grey: "#7a7875",
+  axis: "#3a4a5a",
+  border: "#141e2a",
+  faint: "#1a2330"
+};
+
+// Part definitions: name, color, definition
+var PARTS = [
+  { key: "centre",        label: "centre",        color: COLOR.yellow, def: "the middle point of the circle" },
+  { key: "radius",        label: "radius",        color: COLOR.blue,   def: "a line from the centre to the circumference" },
+  { key: "diameter",      label: "diameter",      color: COLOR.orange, def: "a chord that passes through the centre, twice the radius" },
+  { key: "chord",         label: "chord",         color: COLOR.green,  def: "a straight line joining two points on the circumference" },
+  { key: "tangent",       label: "tangent",       color: COLOR.orange, def: "a line that touches the circle at exactly one point, perpendicular to the radius there" },
+  { key: "arc",           label: "arc",           color: COLOR.blue,   def: "a piece of the circumference between two points" },
+  { key: "sector",        label: "sector",        color: COLOR.pink,   def: "a pie slice bounded by two radii and an arc" },
+  { key: "segment",       label: "segment",       color: COLOR.green,  def: "the region between a chord and an arc" },
+  { key: "circumference", label: "circumference", color: COLOR.blue,   def: "the entire curved boundary of the circle" }
+];
+
+// Geometry constants
+var CX = 280, CY = 170, R = 120;
+
+// Helper: convert polar (degrees, math convention with 0 at +x, ccw) to canvas coords
+// Canvas y grows downward, so we flip the sin term.
+function pt(angleDeg, radius) {
+  var a = angleDeg * Math.PI / 180;
+  return { x: CX + radius * Math.cos(a), y: CY - radius * Math.sin(a) };
+}
+
+// State
+var state = {
+  hovered: null,
+  clicked: null
+};
+function active() { return state.hovered || state.clicked || null; }
+
+// Build buttons
+var buttonsRow = document.getElementById("buttons");
+var pillEls = {};
+PARTS.forEach(function(p) {
+  var btn = document.createElement("button");
+  btn.className = "pill";
+  btn.textContent = p.label;
+  btn.dataset.key = p.key;
+  btn.addEventListener("mouseenter", function() {
+    state.hovered = p.key;
+    refresh();
+  });
+  btn.addEventListener("mouseleave", function() {
+    state.hovered = null;
+    refresh();
+  });
+  btn.addEventListener("click", function() {
+    state.clicked = (state.clicked === p.key) ? null : p.key;
+    refresh();
+  });
+  buttonsRow.appendChild(btn);
+  pillEls[p.key] = btn;
+});
+
+// Escape key clears clicked
+window.addEventListener("keydown", function(e) {
+  if (e.key === "Escape") {
+    state.clicked = null;
+    refresh();
+  }
+});
+
+// Canvas
+var cv = document.getElementById("cv");
+var ctx = cv.getContext("2d");
+
+// Hex with alpha helper
+function withAlpha(hex, alpha) {
+  // hex like "#00abfa"
+  var r = parseInt(hex.slice(1,3), 16);
+  var g = parseInt(hex.slice(3,5), 16);
+  var b = parseInt(hex.slice(5,7), 16);
+  return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+}
+
+// Parts geometry presets
+var GEO = {
+  // radius from centre to point on circumference at 60 degrees
+  radiusEnd: pt(60, R),
+  // diameter horizontal
+  diameterA: pt(180, R),
+  diameterB: pt(0, R),
+  // chord between two non-diameter points
+  chordA: pt(200, R),
+  chordB: pt(340, R),
+  // tangent at angle 0 (rightmost point), drawn vertical
+  tangentPoint: pt(0, R),
+  // arc from 30 deg to 150 deg
+  arcStart: 30,
+  arcEnd: 150,
+  // sector between angles 220 and 290
+  sectorStart: 220,
+  sectorEnd: 290,
+  // segment chord between angles 110 and 70 (smaller cap above the chord)
+  segmentStart: 110,
+  segmentEnd: 70
+};
+
+// Drawing helpers
+function drawBaseCircle(activeKey) {
+  // If circumference is selected, the entire boundary becomes thick blue.
+  // Otherwise we draw the faint base outline.
+  if (activeKey === "circumference") {
+    ctx.strokeStyle = COLOR.blue;
+    ctx.lineWidth = 3.5;
+    ctx.beginPath();
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
+    ctx.stroke();
+  } else {
+    // base outline
+    ctx.strokeStyle = COLOR.axis;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(CX, CY, R, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function partAlpha(key, activeKey) {
+  if (activeKey === null) return 0.45;       // nothing selected: dim everything evenly
+  if (activeKey === key)  return 1.0;        // selected part full saturation
+  return 0.15;                                // other parts dim
+}
+
+function partLabelAlpha(key, activeKey) {
+  // Only show labels for the active part (or none if nothing active and we want a clean default)
+  if (activeKey === null) return 0;
+  if (activeKey === key)  return 1.0;
+  return 0;
+}
+
+// Individual part renderers
+function drawCentre(alpha, showLabel) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = COLOR.yellow;
+  ctx.beginPath();
+  ctx.arc(CX, CY, 5, 0, Math.PI * 2);
+  ctx.fill();
+  if (showLabel) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = COLOR.yellow;
+    ctx.font = "600 13px 'Geist Mono', monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText("O", CX + 10, CY - 2);
+  }
+  ctx.restore();
+}
+
+function drawRadius(alpha, showLabel) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = COLOR.blue;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(CX, CY);
+  ctx.lineTo(GEO.radiusEnd.x, GEO.radiusEnd.y);
+  ctx.stroke();
+  // endpoint dot
+  ctx.fillStyle = COLOR.blue;
+  ctx.beginPath();
+  ctx.arc(GEO.radiusEnd.x, GEO.radiusEnd.y, 3, 0, Math.PI * 2);
+  ctx.fill();
+  if (showLabel) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = COLOR.blue;
+    ctx.font = "600 12px 'Geist Mono', monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    var midX = (CX + GEO.radiusEnd.x) / 2 + 8;
+    var midY = (CY + GEO.radiusEnd.y) / 2 - 8;
+    ctx.fillText("radius", midX, midY);
+  }
+  ctx.restore();
+}
+
+function drawDiameter(alpha, showLabel) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = COLOR.orange;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(GEO.diameterA.x, GEO.diameterA.y);
+  ctx.lineTo(GEO.diameterB.x, GEO.diameterB.y);
+  ctx.stroke();
+  // endpoint dots
+  ctx.fillStyle = COLOR.orange;
+  ctx.beginPath();
+  ctx.arc(GEO.diameterA.x, GEO.diameterA.y, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(GEO.diameterB.x, GEO.diameterB.y, 3, 0, Math.PI * 2);
+  ctx.fill();
+  if (showLabel) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = COLOR.orange;
+    ctx.font = "600 12px 'Geist Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("diameter", CX, CY + 16);
+  }
+  ctx.restore();
+}
+
+function drawChord(alpha, showLabel) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = COLOR.green;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(GEO.chordA.x, GEO.chordA.y);
+  ctx.lineTo(GEO.chordB.x, GEO.chordB.y);
+  ctx.stroke();
+  // endpoint dots
+  ctx.fillStyle = COLOR.green;
+  ctx.beginPath();
+  ctx.arc(GEO.chordA.x, GEO.chordA.y, 3, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(GEO.chordB.x, GEO.chordB.y, 3, 0, Math.PI * 2);
+  ctx.fill();
+  if (showLabel) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = COLOR.green;
+    ctx.font = "600 12px 'Geist Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    var mx = (GEO.chordA.x + GEO.chordB.x) / 2;
+    var my = (GEO.chordA.y + GEO.chordB.y) / 2 + 14;
+    ctx.fillText("chord", mx, my);
+  }
+  ctx.restore();
+}
+
+function drawTangent(alpha, showLabel) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = COLOR.orange;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  // tangent at point (CX+R, CY) is vertical
+  var tx = GEO.tangentPoint.x;
+  ctx.beginPath();
+  ctx.moveTo(tx, CY - 120);
+  ctx.lineTo(tx, CY + 120);
+  ctx.stroke();
+  // tangent point dot
+  ctx.fillStyle = COLOR.orange;
+  ctx.beginPath();
+  ctx.arc(tx, CY, 4, 0, Math.PI * 2);
+  ctx.fill();
+  // right-angle marker between radius (horizontal to right from centre) and tangent (vertical)
+  // The radius to the tangent point goes from (CX,CY) to (CX+R,CY). The right angle sits at (CX+R, CY).
+  // Marker: small square inside the circle, opening toward centre.
+  ctx.strokeStyle = COLOR.pink;
+  ctx.lineWidth = 1.5;
+  var sq = 10;
+  ctx.beginPath();
+  ctx.moveTo(tx - sq, CY);
+  ctx.lineTo(tx - sq, CY - sq);
+  ctx.lineTo(tx, CY - sq);
+  ctx.stroke();
+  if (showLabel) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = COLOR.orange;
+    ctx.font = "600 12px 'Geist Mono', monospace";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText("tangent", tx + 8, CY - 80);
+  }
+  ctx.restore();
+}
+
+function drawArc(alpha, showLabel) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = COLOR.blue;
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  // canvas arc: angles measured clockwise from +x axis on screen, but our pt() flips sin.
+  // To match our math convention (ccw, 0 at +x), use canvas arc with anticlockwise=true and negate the start/end.
+  ctx.beginPath();
+  ctx.arc(CX, CY, R, -GEO.arcEnd * Math.PI / 180, -GEO.arcStart * Math.PI / 180);
+  ctx.stroke();
+  if (showLabel) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = COLOR.blue;
+    ctx.font = "600 12px 'Geist Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    var mid = (GEO.arcStart + GEO.arcEnd) / 2;
+    var lp = pt(mid, R + 18);
+    ctx.fillText("arc", lp.x, lp.y);
+  }
+  ctx.restore();
+}
+
+function drawSector(alpha, showLabel) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  // translucent fill
+  ctx.fillStyle = withAlpha(COLOR.pink, 0.2 * alpha + 0.05 * alpha);
+  ctx.strokeStyle = COLOR.pink;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(CX, CY);
+  ctx.arc(CX, CY, R, -GEO.sectorEnd * Math.PI / 180, -GEO.sectorStart * Math.PI / 180);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  if (showLabel) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = COLOR.pink;
+    ctx.font = "600 12px 'Geist Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    var mid = (GEO.sectorStart + GEO.sectorEnd) / 2;
+    var lp = pt(mid, R * 0.5);
+    ctx.fillText("sector", lp.x, lp.y);
+  }
+  ctx.restore();
+}
+
+function drawSegment(alpha, showLabel) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.fillStyle = withAlpha(COLOR.green, 0.22);
+  ctx.strokeStyle = COLOR.green;
+  ctx.lineWidth = 2;
+  // chord between angle 110 and angle 70 -> the minor segment is the cap above the chord (between chord and the short arc going through 90 deg, i.e. the top).
+  var aStart = GEO.segmentStart; // 110
+  var aEnd   = GEO.segmentEnd;   // 70
+  var pA = pt(aStart, R);
+  // Path: start at pA, line to pB along the chord? Actually, easier: arc from aStart down to aEnd going through 90 (the short way), then close.
+  // Going from 110 to 70 ccw (decreasing) is the short way through 90. In canvas that means anticlockwise=false from -110 to -70.
+  ctx.beginPath();
+  ctx.moveTo(pA.x, pA.y);
+  // arc going from -110 (canvas) to -70 (canvas) clockwise is the short top arc.
+  ctx.arc(CX, CY, R, -aStart * Math.PI / 180, -aEnd * Math.PI / 180, false);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  if (showLabel) {
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = COLOR.green;
+    ctx.font = "600 12px 'Geist Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    var mid = (aStart + aEnd) / 2; // 90
+    var lp = pt(mid, R - 14);
+    ctx.fillText("segment", lp.x, lp.y);
+  }
+  ctx.restore();
+}
+
+function drawCircumferenceHighlight(alpha) {
+  // Only visible when nothing else is selected (it sits at base) or when itself selected.
+  // When circumference is the active key, drawBaseCircle already drew it thick blue.
+  // Here we handle the dim-non-active case for circumference (all others active).
+  if (alpha >= 0.99) return; // active: already drawn by drawBaseCircle as thick
+  // For the "nothing selected" default and for the case when another part is selected,
+  // we leave the base outline as-is (drawn by drawBaseCircle as faint axis grey).
+  // But we want the circumference at slightly visible blue when nothing's selected so the student
+  // notices it's a part. Skip drawing here to avoid double-stroke; the base already conveys it.
+}
+
+// Master draw
+function draw() {
+  ctx.clearRect(0, 0, cv.width, cv.height);
+
+  var act = active();
+
+  // Base circle (handles circumference-active case internally)
+  drawBaseCircle(act);
+
+  // Order matters: fills first, then strokes, then dots, then labels.
+  // We render each part with appropriate alpha.
+
+  // sector (filled region)
+  drawSector(partAlpha("sector", act), partLabelAlpha("sector", act) > 0);
+
+  // segment (filled region)
+  drawSegment(partAlpha("segment", act), partLabelAlpha("segment", act) > 0);
+
+  // arc (thick stroke over base)
+  drawArc(partAlpha("arc", act), partLabelAlpha("arc", act) > 0);
+
+  // chord
+  drawChord(partAlpha("chord", act), partLabelAlpha("chord", act) > 0);
+
+  // diameter
+  drawDiameter(partAlpha("diameter", act), partLabelAlpha("diameter", act) > 0);
+
+  // radius
+  drawRadius(partAlpha("radius", act), partLabelAlpha("radius", act) > 0);
+
+  // tangent
+  drawTangent(partAlpha("tangent", act), partLabelAlpha("tangent", act) > 0);
+
+  // centre dot last so it sits on top
+  drawCentre(partAlpha("centre", act), partLabelAlpha("centre", act) > 0);
+}
+
+// Update title / subtitle / pill styles
+function refresh() {
+  var act = active();
+  var titleEl = document.getElementById("title");
+  var subEl   = document.getElementById("subtitle");
+
+  if (act === null) {
+    titleEl.textContent = "PARTS OF A CIRCLE";
+    titleEl.style.color = COLOR.yellow;
+    subEl.textContent = "hover or click a name to see it on the diagram";
+    subEl.style.color = "#c8c6be";
+  } else {
+    var p = PARTS.find(function(x) { return x.key === act; });
+    titleEl.textContent = p.label.toUpperCase();
+    titleEl.style.color = p.color;
+    subEl.textContent = p.def;
+    subEl.style.color = "#c8c6be";
+  }
+
+  // Update pill styles
+  PARTS.forEach(function(p) {
+    var el = pillEls[p.key];
+    var isActive = (act === p.key);
+    var isClicked = (state.clicked === p.key);
+    if (isActive) {
+      el.style.borderColor = p.color;
+      el.style.color = p.color;
+      el.classList.add("active");
+    } else if (isClicked) {
+      // sticky-clicked but currently overridden by a different hover: keep a subtle hint
+      el.style.borderColor = p.color;
+      el.style.color = p.color;
+      el.classList.remove("active");
+    } else {
+      el.style.borderColor = "";
+      el.style.color = "";
+      el.classList.remove("active");
+    }
+  });
+
+  draw();
+  reportHeight();
+}
+
+// Initial draw
+refresh();
+
+// Height reporter for iframe embedding
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

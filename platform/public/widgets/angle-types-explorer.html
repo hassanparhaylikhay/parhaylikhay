@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Angle Types Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
+  .formula { font-size:16px; color:#f0eeea; text-align:center; }
+  .formula .katex { font-size:1em; }
+
+  canvas { display:block; margin:0 auto; touch-action:none; cursor:default; }
+  canvas.grabbing { cursor:grabbing; }
+  canvas.grab { cursor:grab; }
+
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <canvas id="c"></canvas>
+
+  <p class="footer">drag the yellow arm to change the angle from 0 deg to 360 deg</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+// ---------- Canvas + HiDPI ----------
+var W = 560, H = 320;
+var canvas = document.getElementById("c");
+var ctx = canvas.getContext("2d");
+var DPR = window.devicePixelRatio || 1;
+canvas.width = W * DPR;
+canvas.height = H * DPR;
+canvas.style.width = W + "px";
+canvas.style.height = H + "px";
+ctx.scale(DPR, DPR);
+
+// ---------- Brand palette ----------
+var COL_BG     = "#0b1118";
+var COL_BLUE   = "#00abfa";
+var COL_YELLOW = "#fff067";
+var COL_ORANGE = "#ff822c";
+var COL_GREEN  = "#0fee89";
+var COL_PINK   = "#ff4670";
+var COL_GREY   = "#7a7875";
+var COL_FAINT  = "#3a4a5a";
+
+// ---------- Geometry ----------
+var V = { x: 240, y: 200 };  // vertex
+var ARM_LEN = 200;            // length of both arms
+// fixed reference arm: along +x to (V.x + ARM_LEN, V.y)
+// draggable arm: starts at angle 90 degrees CCW from +x => points up
+var theta = 90; // degrees, 0..360, measured CCW from +x
+
+// ---------- Drag state ----------
+var dragging = false;
+var hover = false;
+
+function endpoint() {
+  var rad = theta * Math.PI / 180;
+  // canvas y increases downward, so to draw CCW (math sense),
+  // we negate sin to flip the y-axis for visual upright behaviour
+  return { x: V.x + ARM_LEN * Math.cos(rad), y: V.y - ARM_LEN * Math.sin(rad) };
+}
+
+function pointerPos(e) {
+  var rect = canvas.getBoundingClientRect();
+  var clientX, clientY;
+  if (e.touches && e.touches.length) {
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+function dist(a, b) {
+  var dx = a.x - b.x, dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function setThetaFromPoint(p) {
+  // angle of vector from V to p, CCW from +x, with y-axis flip
+  var dx = p.x - V.x;
+  var dy = -(p.y - V.y);
+  var rad = Math.atan2(dy, dx);
+  var deg = rad * 180 / Math.PI;
+  if (deg < 0) deg += 360;
+  // landmark snapping at 90, 180, 270, 360/0
+  var snaps = [0, 90, 180, 270, 360];
+  for (var i = 0; i < snaps.length; i++) {
+    if (Math.abs(deg - snaps[i]) <= 2) { deg = snaps[i]; break; }
+  }
+  if (deg >= 360) deg = 0;
+  theta = deg;
+}
+
+canvas.addEventListener("mousedown", function(e) {
+  var p = pointerPos(e);
+  var ep = endpoint();
+  if (dist(p, ep) <= 16) {
+    dragging = true;
+    canvas.classList.add("grabbing");
+    canvas.classList.remove("grab");
+    e.preventDefault();
+  }
+});
+
+canvas.addEventListener("mousemove", function(e) {
+  var p = pointerPos(e);
+  if (dragging) {
+    setThetaFromPoint(p);
+    draw();
+    e.preventDefault();
+  } else {
+    var ep = endpoint();
+    var near = dist(p, ep) <= 16;
+    if (near !== hover) {
+      hover = near;
+      if (hover) canvas.classList.add("grab"); else canvas.classList.remove("grab");
+      draw();
+    }
+  }
+});
+
+window.addEventListener("mouseup", function() {
+  if (dragging) {
+    dragging = false;
+    canvas.classList.remove("grabbing");
+    draw();
+  }
+});
+
+canvas.addEventListener("touchstart", function(e) {
+  var p = pointerPos(e);
+  var ep = endpoint();
+  if (dist(p, ep) <= 22) {
+    dragging = true;
+    e.preventDefault();
+  }
+}, { passive: false });
+
+canvas.addEventListener("touchmove", function(e) {
+  if (dragging) {
+    var p = pointerPos(e);
+    setThetaFromPoint(p);
+    draw();
+    e.preventDefault();
+  }
+}, { passive: false });
+
+window.addEventListener("touchend", function() {
+  dragging = false;
+});
+
+// ---------- Classification ----------
+function classify(t) {
+  // ordering matters: special exact landmarks first
+  if (t <= 2 || t >= 358) return { name: "FULL TURN",  color: COL_YELLOW, key: "full" };
+  if (t >= 88 && t <= 92) return { name: "RIGHT",      color: COL_PINK,   key: "right" };
+  if (t >= 178 && t <= 182) return { name: "STRAIGHT", color: COL_ORANGE, key: "straight" };
+  if (t > 0 && t < 90)    return { name: "ACUTE",     color: COL_GREEN,  key: "acute" };
+  if (t > 90 && t < 180)  return { name: "OBTUSE",    color: COL_YELLOW, key: "obtuse" };
+  if (t > 180 && t < 360) return { name: "REFLEX",    color: COL_BLUE,   key: "reflex" };
+  return { name: "ZERO", color: COL_GREY, key: "zero" };
+}
+
+// ---------- Drawing ----------
+function backedLabel(text, x, y, color, size) {
+  ctx.font = "700 " + size + "px 'Geist Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  var w = ctx.measureText(text).width;
+  var padX = 5, padY = 3;
+  ctx.fillStyle = "rgba(11,17,24,0.85)";
+  ctx.fillRect(x - w / 2 - padX, y - size / 2 - padY, w + padX * 2, size + padY * 2);
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, y);
+}
+
+function draw() {
+  // background
+  ctx.fillStyle = COL_BG;
+  ctx.fillRect(0, 0, W, H);
+
+  // faint reference circle showing the arc track
+  ctx.beginPath();
+  ctx.arc(V.x, V.y, ARM_LEN, 0, Math.PI * 2);
+  ctx.strokeStyle = "#1a2330";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([2, 4]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  var cls = classify(theta);
+
+  // angle arc / right-angle square
+  if (cls.key === "right") {
+    // small right-angle square at vertex
+    var sz = 18;
+    var rad = theta * Math.PI / 180;
+    // for theta=90, draggable arm points up. Square between +x and +y(arm)
+    // unit vectors: along reference (+x), along arm (cos(theta), -sin(theta))
+    var ux = 1, uy = 0;
+    var ax = Math.cos(rad), ay = -Math.sin(rad);
+    var p1x = V.x + ux * sz, p1y = V.y + uy * sz;
+    var p2x = V.x + ux * sz + ax * sz, p2y = V.y + uy * sz + ay * sz;
+    var p3x = V.x + ax * sz, p3y = V.y + ay * sz;
+    ctx.beginPath();
+    ctx.moveTo(V.x, V.y);
+    ctx.lineTo(p1x, p1y);
+    ctx.lineTo(p2x, p2y);
+    ctx.lineTo(p3x, p3y);
+    ctx.closePath();
+    ctx.strokeStyle = COL_PINK;
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+  } else if (cls.key !== "zero") {
+    // arc from 0 CCW to theta at radius 60
+    // canvas arc with anticlockwise=true requires negated angles for math CCW
+    var R = 60;
+    var startA = 0;
+    var endA = -theta * Math.PI / 180; // negative because canvas y is flipped
+    ctx.beginPath();
+    ctx.arc(V.x, V.y, R, startA, endA, true);
+    ctx.strokeStyle = cls.color;
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    // soft fill
+    ctx.beginPath();
+    ctx.moveTo(V.x, V.y);
+    ctx.arc(V.x, V.y, R, startA, endA, true);
+    ctx.closePath();
+    ctx.fillStyle = cls.color;
+    ctx.globalAlpha = 0.15;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // fixed reference arm (BLUE, +x)
+  ctx.beginPath();
+  ctx.moveTo(V.x, V.y);
+  ctx.lineTo(V.x + ARM_LEN, V.y);
+  ctx.strokeStyle = COL_BLUE;
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  ctx.stroke();
+
+  // draggable arm (YELLOW)
+  var ep = endpoint();
+  ctx.beginPath();
+  ctx.moveTo(V.x, V.y);
+  ctx.lineTo(ep.x, ep.y);
+  ctx.strokeStyle = COL_YELLOW;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // vertex dot
+  ctx.beginPath();
+  ctx.arc(V.x, V.y, 4, 0, Math.PI * 2);
+  ctx.fillStyle = "#f0eeea";
+  ctx.fill();
+
+  // draggable endpoint dot with hover glow
+  if (hover || dragging) {
+    ctx.beginPath();
+    ctx.arc(ep.x, ep.y, 14, 0, Math.PI * 2);
+    ctx.fillStyle = COL_YELLOW;
+    ctx.globalAlpha = 0.22;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  ctx.beginPath();
+  ctx.arc(ep.x, ep.y, 8, 0, Math.PI * 2);
+  ctx.fillStyle = COL_YELLOW;
+  ctx.fill();
+  ctx.strokeStyle = COL_BG;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // angle label inside the arc / near vertex
+  if (cls.key !== "zero") {
+    var labelR = (cls.key === "right") ? 30 : 38;
+    // place label at half-angle
+    var halfRad = (theta / 2) * Math.PI / 180;
+    var lx = V.x + labelR * Math.cos(halfRad);
+    var ly = V.y - labelR * Math.sin(halfRad);
+    var displayText;
+    if (cls.key === "full") displayText = "360 deg";
+    else displayText = Math.round(theta) + " deg";
+    backedLabel(displayText, lx, ly, cls.color, 14);
+  }
+
+  // axis hint label at end of reference arm
+  ctx.font = "500 10px 'Geist Mono', monospace";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = COL_FAINT;
+  ctx.fillText("reference", V.x + ARM_LEN + 6, V.y);
+
+  // KaTeX heading
+  var fmt;
+  if (cls.key === "full") {
+    fmt = "\\textcolor{" + cls.color + "}{\\text{FULL TURN}} \\quad \\theta = 360^\\circ";
+  } else if (cls.key === "right") {
+    fmt = "\\textcolor{" + cls.color + "}{\\text{RIGHT}} \\quad \\theta = 90^\\circ";
+  } else if (cls.key === "straight") {
+    fmt = "\\textcolor{" + cls.color + "}{\\text{STRAIGHT}} \\quad \\theta = 180^\\circ";
+  } else if (cls.key === "zero") {
+    fmt = "\\textcolor{" + COL_GREY + "}{\\text{ZERO}} \\quad \\theta = 0^\\circ";
+  } else {
+    fmt = "\\textcolor{" + cls.color + "}{\\text{" + cls.name + "}} \\quad \\theta = " + Math.round(theta) + "^\\circ";
+  }
+  tryRender(document.getElementById("formula"), fmt);
+}
+
+draw();
+
+// ---------- Resize reporter ----------
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

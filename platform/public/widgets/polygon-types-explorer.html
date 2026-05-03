@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Polygon Types Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:24px; }
+  .formula { font-size:18px; color:#f0eeea; letter-spacing:0.5px; }
+  .formula .katex { font-size:1em; }
+
+  .controls { display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
+  .row .name { color:#fff067; font-weight:600; min-width:18px; }
+  .row input[type=range] { flex:1; min-width:80px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
+  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
+  .row .val { min-width:30px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  canvas { display:block; width:100%; height:auto; touch-action:none; }
+  .info { display:flex; justify-content:space-around; margin-top:8px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .info .v { color:#f0eeea; font-weight:600; }
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">n</span>
+      <input type="range" id="nslider" min="3" max="12" value="5" step="1"/>
+      <span class="val" id="vn">5</span>
+    </div>
+  </div>
+
+  <canvas id="cv" width="560" height="320"></canvas>
+
+  <div class="info">
+    <div>interior angle: <span class="v" id="iAng">108.0&deg;</span></div>
+    <div>exterior angle: <span class="v" id="eAng">72.0&deg;</span></div>
+  </div>
+
+  <p class="footer">drag the slider: from triangle (n=3) to dodecagon (n=12)</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var BG       = "#0b1118";
+var BLUE     = "#00abfa";
+var YELLOW   = "#fff067";
+var ORANGE   = "#ff822c";
+var GREEN    = "#0fee89";
+var PINK     = "#ff4670";
+var GREY     = "#7a7875";
+var EDGE     = "#3a4a5a";
+
+var W = 560, H = 320;
+var CX = 280, CY = 160;
+var R_BASE = 110;
+
+var POLYGONS = {
+  3:  { name:"TRIANGLE",   color:BLUE   },
+  4:  { name:"SQUARE",     color:YELLOW },
+  5:  { name:"PENTAGON",   color:GREEN  },
+  6:  { name:"HEXAGON",    color:PINK   },
+  7:  { name:"HEPTAGON",   color:ORANGE },
+  8:  { name:"OCTAGON",    color:BLUE   },
+  9:  { name:"NONAGON",    color:YELLOW },
+  10: { name:"DECAGON",    color:GREEN  },
+  11: { name:"HENDECAGON", color:PINK   },
+  12: { name:"DODECAGON",  color:ORANGE }
+};
+
+var cv = document.getElementById("cv");
+var ctx = cv.getContext("2d");
+
+(function hidpi() {
+  var dpr = window.devicePixelRatio || 1;
+  cv.width  = W * dpr;
+  cv.height = H * dpr;
+  cv.style.width  = W + "px";
+  cv.style.height = H + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+})();
+
+var nTarget = 5;        // integer n from slider
+var nDisplay = 5;       // smoothed n (animates between integer values)
+var radiusKick = 0;     // small radius perturbation on n change (springs back to 0)
+var radiusVel = 0;
+var SPRING_N = 0.18;
+var SPRING_R = 0.12;
+var DAMP_R   = 0.78;
+
+function hexWithAlpha(hex, a) {
+  // hex like "#aabbcc"
+  var r = parseInt(hex.slice(1,3),16);
+  var g = parseInt(hex.slice(3,5),16);
+  var b = parseInt(hex.slice(5,7),16);
+  return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+}
+
+function colorForN(n) {
+  var entry = POLYGONS[n] || POLYGONS[3];
+  return entry.color;
+}
+function nameForN(n) {
+  var entry = POLYGONS[n] || POLYGONS[3];
+  return entry.name;
+}
+
+function lerpColor(c1, c2, t) {
+  function px(h){ return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
+  var a = px(c1), b = px(c2);
+  function clamp(v){ return Math.max(0, Math.min(255, Math.round(v))); }
+  var r = clamp(a[0]+(b[0]-a[0])*t);
+  var g = clamp(a[1]+(b[1]-a[1])*t);
+  var bl= clamp(a[2]+(b[2]-a[2])*t);
+  return "rgb(" + r + "," + g + "," + bl + ")";
+}
+
+function draw() {
+  ctx.fillStyle = BG;
+  ctx.fillRect(0,0,W,H);
+
+  var nFloor = Math.floor(nDisplay);
+  var nCeil  = Math.ceil(nDisplay);
+  if (nFloor < 3) nFloor = 3;
+  if (nCeil  > 12) nCeil  = 12;
+  var t = nDisplay - nFloor;
+
+  // For drawing the polygon during transition, use nDisplay (fractional n).
+  // We'll round vertex count to the nearest integer along the way to avoid
+  // visual artefacts; instead, draw with target n and let the radius kick
+  // signal change.
+  var n = nTarget;
+  var r = R_BASE + radiusKick;
+
+  var col = lerpColor(colorForN(nFloor), colorForN(nCeil), t);
+  var fill = hexWithAlpha(POLYGONS[n].color, 0.08);
+
+  // vertices at -π/2, -π/2 + 2π/n, ...
+  var pts = [];
+  for (var i=0;i<n;i++) {
+    var ang = -Math.PI/2 + (2*Math.PI*i)/n;
+    pts.push({ x: CX + r*Math.cos(ang), y: CY + r*Math.sin(ang) });
+  }
+
+  // fill
+  ctx.beginPath();
+  for (var p=0;p<pts.length;p++) {
+    if (p===0) ctx.moveTo(pts[p].x, pts[p].y);
+    else ctx.lineTo(pts[p].x, pts[p].y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+
+  // outline
+  ctx.strokeStyle = col;
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = "round";
+  ctx.stroke();
+
+  // vertex dots
+  for (var v=0; v<pts.length; v++) {
+    ctx.beginPath();
+    ctx.fillStyle = col;
+    ctx.arc(pts[v].x, pts[v].y, 4.5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = BG;
+    ctx.stroke();
+  }
+
+  // n label inside
+  ctx.font = "600 28px 'Geist', sans-serif";
+  ctx.fillStyle = hexWithAlpha(col, 0.85);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("n = " + n, CX, CY - 6);
+  ctx.font = "500 12px 'Geist Mono', monospace";
+  ctx.fillStyle = "#7a7875";
+  ctx.fillText("sides", CX, CY + 16);
+
+  // heading
+  tryRender(document.getElementById("formula"),
+    "\\text{REGULAR } \\textcolor{" + POLYGONS[n].color + "}{\\text{" + POLYGONS[n].name + "}}");
+
+  // info row
+  var interior = ((n-2)*180)/n;
+  var exterior = 360/n;
+  document.getElementById("iAng").textContent = interior.toFixed(1) + "°";
+  document.getElementById("eAng").textContent = exterior.toFixed(1) + "°";
+}
+
+function tick() {
+  // smooth nDisplay toward nTarget
+  nDisplay += (nTarget - nDisplay) * SPRING_N;
+  // spring radiusKick back to 0
+  radiusVel += (0 - radiusKick) * SPRING_R;
+  radiusVel *= DAMP_R;
+  radiusKick += radiusVel;
+  draw();
+  requestAnimationFrame(tick);
+}
+tick();
+
+var slider = document.getElementById("nslider");
+var nLabel = document.getElementById("vn");
+slider.addEventListener("input", function(e) {
+  var newN = parseInt(e.target.value, 10);
+  if (newN !== nTarget) {
+    // brief shrink-then-grow: kick the radius down a bit
+    radiusKick = -10;
+    radiusVel = 0;
+  }
+  nTarget = newN;
+  nLabel.textContent = String(nTarget);
+});
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

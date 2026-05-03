@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Triangle Types Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
+  .head { display:flex; align-items:center; justify-content:center; margin-bottom:10px; min-height:22px; }
+  .formula { font-size:16px; color:#f0eeea; text-align:center; }
+  .formula .katex { font-size:1em; }
+
+  canvas { display:block; margin:0 auto; touch-action:none; cursor:default; }
+  canvas.grabbing { cursor:grabbing; }
+  canvas.grab { cursor:grab; }
+
+  .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="formula" id="formula"></span>
+  </div>
+
+  <canvas id="c"></canvas>
+
+  <p class="footer">drag A, B, or C to change side lengths and angles</p>
+</div>
+
+<script>
+"use strict";
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+// ---------- Canvas + HiDPI ----------
+var W = 560, H = 340;
+var canvas = document.getElementById("c");
+var ctx = canvas.getContext("2d");
+var DPR = window.devicePixelRatio || 1;
+canvas.width = W * DPR;
+canvas.height = H * DPR;
+canvas.style.width = W + "px";
+canvas.style.height = H + "px";
+ctx.scale(DPR, DPR);
+
+// ---------- Brand palette ----------
+var COL_BG     = "#0b1118";
+var COL_BLUE   = "#00abfa";
+var COL_YELLOW = "#fff067";
+var COL_ORANGE = "#ff822c";
+var COL_GREEN  = "#0fee89";
+var COL_PINK   = "#ff4670";
+var COL_GREY   = "#7a7875";
+var COL_FAINT  = "#3a4a5a";
+
+// ---------- Vertices ----------
+var A = { x: 140, y: 240, color: COL_BLUE,   name: "A" };
+var B = { x: 420, y: 240, color: COL_YELLOW, name: "B" };
+var C = { x: 280, y: 100, color: COL_PINK,   name: "C" };
+var verts = [A, B, C];
+
+var MARGIN = 30;
+var EQ_TOL = 5;        // px tolerance for equal sides
+var RIGHT_TOL = 2;     // degrees for right-angle test
+
+// ---------- Drag state ----------
+var dragIdx = -1;
+var hoverIdx = -1;
+
+function pointerPos(e) {
+  var rect = canvas.getBoundingClientRect();
+  var clientX, clientY;
+  if (e.touches && e.touches.length) {
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
+function dist(a, b) {
+  var dx = a.x - b.x, dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function findHit(p) {
+  for (var i = 0; i < verts.length; i++) {
+    if (dist(p, verts[i]) <= 16) return i;
+  }
+  return -1;
+}
+
+function clampToCanvas(v) {
+  if (v.x < MARGIN) v.x = MARGIN;
+  if (v.x > W - MARGIN) v.x = W - MARGIN;
+  if (v.y < MARGIN) v.y = MARGIN;
+  if (v.y > H - MARGIN) v.y = H - MARGIN;
+}
+
+canvas.addEventListener("mousedown", function(e) {
+  var p = pointerPos(e);
+  var i = findHit(p);
+  if (i >= 0) {
+    dragIdx = i;
+    canvas.classList.add("grabbing");
+    canvas.classList.remove("grab");
+    e.preventDefault();
+  }
+});
+
+canvas.addEventListener("mousemove", function(e) {
+  var p = pointerPos(e);
+  if (dragIdx >= 0) {
+    verts[dragIdx].x = p.x;
+    verts[dragIdx].y = p.y;
+    clampToCanvas(verts[dragIdx]);
+    draw();
+    e.preventDefault();
+  } else {
+    var i = findHit(p);
+    if (i !== hoverIdx) {
+      hoverIdx = i;
+      if (hoverIdx >= 0) canvas.classList.add("grab"); else canvas.classList.remove("grab");
+      draw();
+    }
+  }
+});
+
+window.addEventListener("mouseup", function() {
+  if (dragIdx >= 0) {
+    dragIdx = -1;
+    canvas.classList.remove("grabbing");
+    draw();
+  }
+});
+
+canvas.addEventListener("touchstart", function(e) {
+  var p = pointerPos(e);
+  for (var i = 0; i < verts.length; i++) {
+    if (dist(p, verts[i]) <= 22) {
+      dragIdx = i;
+      e.preventDefault();
+      return;
+    }
+  }
+}, { passive: false });
+
+canvas.addEventListener("touchmove", function(e) {
+  if (dragIdx >= 0) {
+    var p = pointerPos(e);
+    verts[dragIdx].x = p.x;
+    verts[dragIdx].y = p.y;
+    clampToCanvas(verts[dragIdx]);
+    draw();
+    e.preventDefault();
+  }
+}, { passive: false });
+
+window.addEventListener("touchend", function() {
+  dragIdx = -1;
+});
+
+// ---------- Geometry helpers ----------
+function sideLengths() {
+  // a = side opposite A = BC; b = opposite B = CA; c = opposite C = AB
+  return {
+    a: dist(B, C),
+    b: dist(C, A),
+    c: dist(A, B)
+  };
+}
+
+function angleAt(P, Q, R) {
+  // angle at P formed by rays PQ and PR, in degrees (0..180)
+  var v1x = Q.x - P.x, v1y = Q.y - P.y;
+  var v2x = R.x - P.x, v2y = R.y - P.y;
+  var dot = v1x * v2x + v1y * v2y;
+  var m1 = Math.sqrt(v1x * v1x + v1y * v1y);
+  var m2 = Math.sqrt(v2x * v2x + v2y * v2y);
+  if (m1 === 0 || m2 === 0) return 0;
+  var cosA = dot / (m1 * m2);
+  if (cosA > 1) cosA = 1;
+  if (cosA < -1) cosA = -1;
+  return Math.acos(cosA) * 180 / Math.PI;
+}
+
+function classifyTriangle() {
+  var s = sideLengths();
+  var sideClass;
+  if (Math.abs(s.a - s.b) < EQ_TOL && Math.abs(s.b - s.c) < EQ_TOL && Math.abs(s.a - s.c) < EQ_TOL) {
+    sideClass = { name: "EQUILATERAL", color: COL_GREEN };
+  } else if (Math.abs(s.a - s.b) < EQ_TOL || Math.abs(s.b - s.c) < EQ_TOL || Math.abs(s.a - s.c) < EQ_TOL) {
+    sideClass = { name: "ISOSCELES", color: COL_YELLOW };
+  } else {
+    sideClass = { name: "SCALENE", color: COL_ORANGE };
+  }
+
+  var aA = angleAt(A, B, C);
+  var aB = angleAt(B, A, C);
+  var aC = angleAt(C, A, B);
+  var maxAng = Math.max(aA, aB, aC);
+  var angleClass;
+  if (Math.abs(maxAng - 90) <= RIGHT_TOL) {
+    angleClass = { name: "RIGHT-ANGLED", color: COL_PINK };
+  } else if (maxAng > 92) {
+    angleClass = { name: "OBTUSE", color: COL_ORANGE };
+  } else {
+    angleClass = { name: "ACUTE", color: COL_GREEN };
+  }
+
+  return { sideClass: sideClass, angleClass: angleClass, sides: s, angles: { A: aA, B: aB, C: aC } };
+}
+
+// ---------- Drawing ----------
+function backedText(text, x, y, color, size, weight) {
+  ctx.font = (weight || 600) + " " + size + "px 'Geist Mono', monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  var w = ctx.measureText(text).width;
+  var padX = 4, padY = 2;
+  ctx.fillStyle = "rgba(11,17,24,0.85)";
+  ctx.fillRect(x - w / 2 - padX, y - size / 2 - padY, w + padX * 2, size + padY * 2);
+  ctx.fillStyle = color;
+  ctx.fillText(text, x, y);
+}
+
+function drawTickMark(P, Q, count) {
+  // draw `count` small perpendicular ticks at midpoint of segment PQ
+  var mx = (P.x + Q.x) / 2;
+  var my = (P.y + Q.y) / 2;
+  var dx = Q.x - P.x, dy = Q.y - P.y;
+  var L = Math.sqrt(dx * dx + dy * dy);
+  if (L === 0) return;
+  // unit along
+  var ux = dx / L, uy = dy / L;
+  // perpendicular
+  var px = -uy, py = ux;
+  var spacing = 5; // along
+  var tickLen = 5;
+  ctx.strokeStyle = COL_GREEN;
+  ctx.lineWidth = 1.8;
+  ctx.lineCap = "round";
+  for (var i = 0; i < count; i++) {
+    var off = (i - (count - 1) / 2) * spacing;
+    var cx = mx + ux * off;
+    var cy = my + uy * off;
+    ctx.beginPath();
+    ctx.moveTo(cx - px * tickLen, cy - py * tickLen);
+    ctx.lineTo(cx + px * tickLen, cy + py * tickLen);
+    ctx.stroke();
+  }
+}
+
+function drawAngleArc(P, Q, R, color, size) {
+  // arc at vertex P between rays PQ and PR
+  var a1 = Math.atan2(Q.y - P.y, Q.x - P.x);
+  var a2 = Math.atan2(R.y - P.y, R.x - P.x);
+  // ensure we draw the interior arc (smaller sweep)
+  var diff = a2 - a1;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  var startA, endA, anti;
+  if (diff > 0) { startA = a1; endA = a2; anti = false; }
+  else          { startA = a2; endA = a1; anti = false; }
+  ctx.beginPath();
+  ctx.arc(P.x, P.y, size, startA, endA, anti);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
+}
+
+function angleLabelPos(P, Q, R, dist) {
+  // place a label in the direction bisecting the angle at P
+  var a1 = Math.atan2(Q.y - P.y, Q.x - P.x);
+  var a2 = Math.atan2(R.y - P.y, R.x - P.x);
+  // bisector direction (interior)
+  var diff = a2 - a1;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  var mid = a1 + diff / 2;
+  return { x: P.x + dist * Math.cos(mid), y: P.y + dist * Math.sin(mid) };
+}
+
+function draw() {
+  // background
+  ctx.fillStyle = COL_BG;
+  ctx.fillRect(0, 0, W, H);
+
+  var info = classifyTriangle();
+  var s = info.sides;
+  var ang = info.angles;
+
+  // identify equal-side groups for tick marks
+  var eqAB = Math.abs(s.a - s.b) < EQ_TOL; // sides a and b equal
+  var eqBC = Math.abs(s.b - s.c) < EQ_TOL; // sides b and c equal
+  var eqAC = Math.abs(s.a - s.c) < EQ_TOL; // sides a and c equal
+  var allEq = eqAB && eqBC && eqAC;
+
+  // tick assignment: side a (BC), side b (CA), side c (AB)
+  var ticks = { a: 0, b: 0, c: 0 };
+  if (allEq) { ticks.a = 1; ticks.b = 1; ticks.c = 1; }
+  else if (eqAB) { ticks.a = 1; ticks.b = 1; }
+  else if (eqBC) { ticks.b = 2; ticks.c = 2; }
+  else if (eqAC) { ticks.a = 2; ticks.c = 2; }
+
+  // triangle fill (very subtle) + outline
+  ctx.beginPath();
+  ctx.moveTo(A.x, A.y);
+  ctx.lineTo(B.x, B.y);
+  ctx.lineTo(C.x, C.y);
+  ctx.closePath();
+  ctx.fillStyle = COL_BLUE;
+  ctx.globalAlpha = 0.06;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = COL_BLUE;
+  ctx.lineWidth = 2;
+  ctx.lineJoin = "round";
+  ctx.stroke();
+
+  // tick marks for equal sides
+  if (ticks.a > 0) drawTickMark(B, C, ticks.a);
+  if (ticks.b > 0) drawTickMark(C, A, ticks.b);
+  if (ticks.c > 0) drawTickMark(A, B, ticks.c);
+
+  // angle arcs at each vertex, colored by acute / right / obtuse
+  function angleColor(a) {
+    if (Math.abs(a - 90) <= RIGHT_TOL) return COL_PINK;
+    if (a > 92) return COL_PINK;
+    return COL_GREEN;
+  }
+  drawAngleArc(A, B, C, angleColor(ang.A), 22);
+  drawAngleArc(B, A, C, angleColor(ang.B), 22);
+  drawAngleArc(C, A, B, angleColor(ang.C), 22);
+
+  // angle labels
+  var pA = angleLabelPos(A, B, C, 36);
+  var pB = angleLabelPos(B, A, C, 36);
+  var pC = angleLabelPos(C, A, B, 36);
+  backedText(Math.round(ang.A) + " deg", pA.x, pA.y, angleColor(ang.A), 11, 600);
+  backedText(Math.round(ang.B) + " deg", pB.x, pB.y, angleColor(ang.B), 11, 600);
+  backedText(Math.round(ang.C) + " deg", pC.x, pC.y, angleColor(ang.C), 11, 600);
+
+  // side length labels at midpoints, nudged perpendicular outward from centroid
+  var cx = (A.x + B.x + C.x) / 3;
+  var cy = (A.y + B.y + C.y) / 3;
+  function sideLabelPos(P, Q) {
+    var mx = (P.x + Q.x) / 2;
+    var my = (P.y + Q.y) / 2;
+    // outward direction from centroid
+    var ox = mx - cx, oy = my - cy;
+    var L = Math.sqrt(ox * ox + oy * oy);
+    if (L < 1) { ox = 0; oy = -1; L = 1; }
+    var off = 16;
+    return { x: mx + (ox / L) * off, y: my + (oy / L) * off };
+  }
+  // a = BC, b = CA, c = AB
+  var labA = sideLabelPos(B, C);
+  var labB = sideLabelPos(C, A);
+  var labC = sideLabelPos(A, B);
+  backedText(s.a.toFixed(0), labA.x, labA.y, "#f0eeea", 11, 500);
+  backedText(s.b.toFixed(0), labB.x, labB.y, "#f0eeea", 11, 500);
+  backedText(s.c.toFixed(0), labC.x, labC.y, "#f0eeea", 11, 500);
+
+  // vertex dots with hover glow + vertex labels
+  for (var i = 0; i < verts.length; i++) {
+    var v = verts[i];
+    if (i === hoverIdx || i === dragIdx) {
+      ctx.beginPath();
+      ctx.arc(v.x, v.y, 14, 0, Math.PI * 2);
+      ctx.fillStyle = v.color;
+      ctx.globalAlpha = 0.22;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.beginPath();
+    ctx.arc(v.x, v.y, 8, 0, Math.PI * 2);
+    ctx.fillStyle = v.color;
+    ctx.fill();
+    ctx.strokeStyle = COL_BG;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // vertex letter label, offset away from centroid
+    var ox = v.x - cx, oy = v.y - cy;
+    var L = Math.sqrt(ox * ox + oy * oy);
+    if (L < 1) { ox = 0; oy = -1; L = 1; }
+    var lx = v.x + (ox / L) * 16;
+    var ly = v.y + (oy / L) * 16;
+    backedText(v.name, lx, ly, v.color, 12, 700);
+  }
+
+  // KaTeX heading
+  var fmt = "\\textcolor{" + info.sideClass.color + "}{\\text{" + info.sideClass.name + "}} \\quad \\textcolor{" + info.angleClass.color + "}{\\text{" + info.angleClass.name + "}}";
+  tryRender(document.getElementById("formula"), fmt);
+}
+
+draw();
+
+// ---------- Resize reporter ----------
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
