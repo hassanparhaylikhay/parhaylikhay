@@ -35,17 +35,20 @@ You have now seen the three pieces of this topic: line symmetry of 2D shapes, ro
 
 ## Recap diagram: parallelogram trap
 
-<div style="display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
-  <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#7a7875;letter-spacing:0.4px;width:100%;text-align:center">PARALLELOGRAM: 0 LINES OF SYMMETRY BUT ORDER 2</div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:200px">
-    <div style="width:140px;height:60px;background:#00abfa20;border:2px solid #00abfa;transform:skewX(-25deg)"></div>
-    <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#ff4670;text-align:center">DIAGONALS: NOT mirror lines</div>
-  </div>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:200px">
-    <div style="position:relative;width:140px;height:60px"><div style="width:140px;height:60px;background:#fff06720;border:2px solid #fff067;transform:skewX(-25deg)"></div><div style="position:absolute;top:50%;left:50%;width:8px;height:8px;background:#ff4670;border-radius:50%;transform:translate(-50%,-50%)"></div></div>
-    <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#0fee89;text-align:center">ROTATE 180°: lands on itself</div>
-  </div>
-  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;text-align:center;width:100%">ORDER 2 ROTATIONAL, 0 MIRROR LINES</div>
+<div class="diagram">
+<div class="diagram-caption">PARALLELOGRAM: 0 LINES OF SYMMETRY BUT ORDER 2</div>
+<div style="display:flex;justify-content:center">
+<svg viewBox="0 0 480 160" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
+<polygon points="40,40 180,40 160,100 20,100" fill="#00abfa22" stroke="#00abfa" stroke-width="2"/>
+<line x1="40" y1="40" x2="160" y2="100" stroke="#ff4670" stroke-width="1.5" stroke-dasharray="4 4"/>
+<line x1="180" y1="40" x2="20" y2="100" stroke="#ff4670" stroke-width="1.5" stroke-dasharray="4 4"/>
+<text x="100" y="130" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670" font-weight="600" text-anchor="middle">DIAGONALS: NOT mirror lines</text>
+<polygon points="300,40 440,40 420,100 280,100" fill="#fff06722" stroke="#fff067" stroke-width="2"/>
+<circle cx="360" cy="70" r="6" fill="#ff4670"/>
+<text x="360" y="130" font-family="Geist Mono,monospace" font-size="11" fill="#0fee89" font-weight="600" text-anchor="middle">ROTATE 180 DEG: lands on itself</text>
+<text x="240" y="156" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">ORDER 2 ROTATIONAL, 0 MIRROR LINES</text>
+</svg>
+</div>
 </div>
 
 ## What you should know by now
@@ -59,45 +62,35 @@ You have now seen the three pieces of this topic: line symmetry of 2D shapes, ro
 
 ## Recap diagram: 3D solids at a glance
 
-<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px">
-  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px">PLANES OF SYMMETRY: CUBOID 3, CUBE 9, CYLINDER INFINITE</div>
-  <div style="display:flex;justify-content:center;gap:32px;flex-wrap:wrap">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div style="position:relative;width:120px;height:120px">
-        <div style="position:absolute;left:0;top:30px;width:80px;height:80px;background:#1a2330;border:2px solid #00abfa"></div>
-        <div style="position:absolute;left:0;top:30px;width:30px;height:0;border-top:2px solid #00abfa;transform-origin:left top;transform:rotate(-37deg)"></div>
-        <div style="position:absolute;left:80px;top:30px;width:30px;height:0;border-top:2px solid #00abfa;transform-origin:left top;transform:rotate(-37deg)"></div>
-        <div style="position:absolute;left:24px;top:6px;width:80px;height:0;border-top:2px solid #00abfa"></div>
-        <div style="position:absolute;left:104px;top:6px;width:0;height:80px;border-left:2px solid #00abfa"></div>
-        <div style="position:absolute;left:80px;top:110px;width:30px;height:0;border-top:2px solid #00abfa;transform-origin:left top;transform:rotate(-37deg)"></div>
-      </div>
-      <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#fff067">CUBOID: 3</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div style="position:relative;width:100px;height:120px">
-        <div style="position:absolute;left:0;top:30px;width:60px;height:60px;background:#1a2330;border:2px solid #00abfa"></div>
-        <div style="position:absolute;left:0;top:30px;width:25px;height:0;border-top:2px solid #00abfa;transform-origin:left top;transform:rotate(-37deg)"></div>
-        <div style="position:absolute;left:60px;top:30px;width:25px;height:0;border-top:2px solid #00abfa;transform-origin:left top;transform:rotate(-37deg)"></div>
-        <div style="position:absolute;left:20px;top:10px;width:60px;height:0;border-top:2px solid #00abfa"></div>
-        <div style="position:absolute;left:80px;top:10px;width:0;height:60px;border-left:2px solid #00abfa"></div>
-        <div style="position:absolute;left:60px;top:90px;width:25px;height:0;border-top:2px solid #00abfa;transform-origin:left top;transform:rotate(-37deg)"></div>
-        <div style="position:absolute;left:30px;top:10px;width:0;height:80px;border-left:1.5px dashed #fff067"></div>
-        <div style="position:absolute;left:0;top:60px;width:80px;height:0;border-top:1.5px dashed #fff067"></div>
-      </div>
-      <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#fff067">CUBE: 9</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div style="position:relative;width:100px;height:120px">
-        <div style="position:absolute;left:0;top:0;width:100px;height:24px;background:#1a2330;border:2px solid #00abfa;border-radius:50%/100%"></div>
-        <div style="position:absolute;left:0;top:12px;width:0;height:80px;border-left:2px solid #00abfa"></div>
-        <div style="position:absolute;left:98px;top:12px;width:0;height:80px;border-left:2px solid #00abfa"></div>
-        <div style="position:absolute;left:0;bottom:0;width:100px;height:24px;background:#1a2330;border:2px solid #00abfa;border-radius:50%/100%"></div>
-        <div style="position:absolute;left:50%;top:0;bottom:0;width:0;border-left:1.5px dashed #fff067;transform:translateX(-50%)"></div>
-        <div style="position:absolute;left:50%;top:50%;width:100px;height:18px;border:1.5px dashed #0fee89;border-radius:50%/100%;transform:translate(-50%,-50%)"></div>
-      </div>
-      <div style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;color:#fff067">CYLINDER: INF</div>
-    </div>
-  </div>
+<div class="diagram">
+<div class="diagram-caption">PLANES OF SYMMETRY: CUBOID 3, CUBE 9, CYLINDER INFINITE</div>
+<div style="display:flex;justify-content:center">
+<svg viewBox="0 0 480 180" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
+<g transform="translate(20,20)">
+<polygon points="0,30 80,30 80,110 0,110" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+<polygon points="0,30 30,5 110,5 80,30" fill="#141e2a" stroke="#00abfa" stroke-width="2"/>
+<polygon points="80,30 110,5 110,85 80,110" fill="#141e2a" stroke="#00abfa" stroke-width="2"/>
+<text x="55" y="155" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600" text-anchor="middle">CUBOID: 3</text>
+</g>
+<g transform="translate(180,20)">
+<polygon points="0,30 60,30 60,90 0,90" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+<polygon points="0,30 25,5 85,5 60,30" fill="#141e2a" stroke="#00abfa" stroke-width="2"/>
+<polygon points="60,30 85,5 85,65 60,90" fill="#141e2a" stroke="#00abfa" stroke-width="2"/>
+<line x1="30" y1="30" x2="30" y2="90" stroke="#fff067" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="0" y1="60" x2="60" y2="60" stroke="#fff067" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="40" y="155" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600" text-anchor="middle">CUBE: 9</text>
+</g>
+<g transform="translate(340,20)">
+<ellipse cx="50" cy="10" rx="45" ry="9" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+<line x1="5" y1="10" x2="5" y2="90" stroke="#00abfa" stroke-width="2"/>
+<line x1="95" y1="10" x2="95" y2="90" stroke="#00abfa" stroke-width="2"/>
+<path d="M 5 90 A 45 9 0 0 0 95 90" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
+<line x1="50" y1="2" x2="50" y2="100" stroke="#fff067" stroke-width="1.5" stroke-dasharray="4 3"/>
+<ellipse cx="50" cy="50" rx="45" ry="8" fill="none" stroke="#0fee89" stroke-width="1.5" stroke-dasharray="4 3"/>
+<text x="50" y="155" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600" text-anchor="middle">CYLINDER: INF</text>
+</g>
+</svg>
+</div>
 </div>
 
 ## Marking patterns at a glance

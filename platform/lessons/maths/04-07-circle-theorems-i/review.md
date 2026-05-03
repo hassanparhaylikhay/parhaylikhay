@@ -50,91 +50,56 @@ If you have worked through P1 to P3 you can:
 
 The semicircle and tangent-radius rules: both produce a $90°$ at the action point.
 
-<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px;position:relative">
-  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px;align-self:flex-start">RECAP: SEMICIRCLE + TANGENT-RADIUS</div>
-  <div style="position:relative;width:480px;height:240px">
-    <div style="position:absolute;left:60px;top:60px;width:140px;height:140px;border-radius:50%;border:1.5px solid #3a4a5a"></div>
-    <div style="position:absolute;left:60px;top:130px;width:140px;height:0;border-top:2px solid #00abfa"></div>
-    <div style="position:absolute;left:60px;top:130px;width:124.9px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-28.61deg)"></div>
-    <div style="position:absolute;left:200px;top:130px;width:67.1px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-153.43deg)"></div>
-    <div style="position:absolute;left:162px;top:80px;width:12px;height:12px;border-right:2px solid #ff4670;border-bottom:2px solid #ff4670;transform:rotate(135deg)"></div>
-    <div style="position:absolute;left:130px;top:130px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:60px;top:130px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:200px;top:130px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:170px;top:70px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:42px;top:142px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">A</div>
-    <div style="position:absolute;left:208px;top:142px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">B</div>
-    <div style="position:absolute;left:172px;top:58px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">C</div>
-    <div style="position:absolute;left:140px;top:90px;font-family:'Geist Mono',monospace;font-size:11px;color:#ff4670;font-weight:600">90°</div>
-    <div style="position:absolute;left:310px;top:70px;width:120px;height:120px;border-radius:50%;border:1.5px solid #3a4a5a"></div>
-    <div style="position:absolute;left:370px;top:130px;width:60px;height:0;border-top:2px solid #00abfa"></div>
-    <div style="position:absolute;left:430px;top:50px;width:160px;height:0;border-top:2px solid #ff822c;transform-origin:left center;transform:rotate(90deg)"></div>
-    <div style="position:absolute;left:418px;top:118px;width:12px;height:12px;border-right:2px solid #ff4670;border-bottom:2px solid #ff4670"></div>
-    <div style="position:absolute;left:370px;top:130px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:430px;top:130px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:354px;top:142px;font-family:'Geist Mono',monospace;font-size:12px;color:#7a7875;font-weight:600">O</div>
-    <div style="position:absolute;left:438px;top:124px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">T</div>
-    <div style="position:absolute;left:402px;top:118px;font-family:'Geist Mono',monospace;font-size:11px;color:#ff4670;font-weight:600">90°</div>
-  </div>
+<div class="diagram">
+<div class="diagram-caption">RECAP: SEMICIRCLE + TANGENT-RADIUS</div>
+<svg viewBox="0 0 500 220" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:520px;height:auto" xmlns="http://www.w3.org/2000/svg">
+<circle cx="120" cy="120" r="70" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
+<line x1="50" y1="120" x2="190" y2="120" stroke="#00abfa" stroke-width="2"/>
+<line x1="50" y1="120" x2="160" y2="60" stroke="#00abfa" stroke-width="2"/>
+<line x1="190" y1="120" x2="160" y2="60" stroke="#00abfa" stroke-width="2"/>
+<polyline points="153,75 160,68 167,75" fill="none" stroke="#ff4670" stroke-width="1.5"/>
+<text x="148" y="92" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670">90°</text>
+<circle cx="120" cy="120" r="3" fill="#7a7875"/>
+<circle cx="50" cy="120" r="4" fill="#fff067"/>
+<circle cx="190" cy="120" r="4" fill="#fff067"/>
+<circle cx="160" cy="60" r="4" fill="#fff067"/>
+<text x="36" y="135" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">A</text>
+<text x="196" y="135" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">B</text>
+<text x="166" y="54" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">C</text>
+<circle cx="370" cy="120" r="60" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
+<line x1="370" y1="120" x2="430" y2="120" stroke="#00abfa" stroke-width="2"/>
+<line x1="430" y1="40" x2="430" y2="200" stroke="#ff822c" stroke-width="2.5"/>
+<polyline points="416,120 416,134 430,134" fill="none" stroke="#ff4670" stroke-width="1.5"/>
+<text x="396" y="116" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670">90°</text>
+<circle cx="370" cy="120" r="3" fill="#7a7875"/>
+<circle cx="430" cy="120" r="4" fill="#fff067"/>
+<text x="356" y="116" font-family="Geist Mono,monospace" font-size="13" fill="#7a7875">O</text>
+<text x="438" y="116" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">T</text>
+</svg>
 </div>
 
 The centre rule and the same-segment rule: doubling and equality.
 
-<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px;position:relative">
-  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px;align-self:flex-start">RECAP: ANGLE AT CENTRE + SAME SEGMENT</div>
-  <div style="position:relative;width:480px;height:260px">
-    <div style="position:absolute;left:50px;top:60px;width:160px;height:160px;border-radius:50%;border:1.5px solid #3a4a5a"></div>
-    <div style="position:absolute;left:65px;top:185px;width:130px;height:0;border-top:1px dashed #3a4a5a"></div>
-    <div style="position:absolute;left:65px;top:185px;width:80px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-34.7deg)"></div>
-    <div style="position:absolute;left:195px;top:185px;width:80px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-145.3deg)"></div>
-    <div style="position:absolute;left:65px;top:185px;width:128.5px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-47.5deg)"></div>
-    <div style="position:absolute;left:195px;top:185px;width:128.5px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-132.5deg)"></div>
-    <div style="position:absolute;left:130px;top:140px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:108px;top:188px;font-family:'Geist Mono',monospace;font-size:11px;color:#fff067;font-weight:600">2θ</div>
-    <div style="position:absolute;left:125px;top:90px;font-family:'Geist Mono',monospace;font-size:11px;color:#0fee89;font-weight:600">θ</div>
-    <div style="position:absolute;left:290px;top:60px;width:160px;height:160px;border-radius:50%;border:1.5px solid #3a4a5a"></div>
-    <div style="position:absolute;left:305px;top:185px;width:130px;height:0;border-top:1px dashed #3a4a5a"></div>
-    <div style="position:absolute;left:305px;top:185px;width:111.0px;height:0;border-top:2px solid #0fee89;transform-origin:left center;transform:rotate(-82.2deg)"></div>
-    <div style="position:absolute;left:435px;top:185px;width:160.7px;height:0;border-top:2px solid #0fee89;transform-origin:left center;transform:rotate(-150.16deg)"></div>
-    <div style="position:absolute;left:305px;top:185px;width:155.6px;height:0;border-top:2px solid #0fee89;transform-origin:left center;transform:rotate(-31.43deg)"></div>
-    <div style="position:absolute;left:435px;top:185px;width:95.1px;height:0;border-top:2px solid #0fee89;transform-origin:left center;transform:rotate(-93.0deg)"></div>
-    <div style="position:absolute;left:308px;top:138px;font-family:'Geist Mono',monospace;font-size:11px;color:#0fee89;font-weight:600">θ</div>
-    <div style="position:absolute;left:418px;top:138px;font-family:'Geist Mono',monospace;font-size:11px;color:#0fee89;font-weight:600">θ</div>
-  </div>
+<div class="diagram">
+<div class="diagram-caption">RECAP: ANGLE AT CENTRE + SAME SEGMENT</div>
+<div style="font-family:var(--font-geist-mono),monospace;font-size:18px;color:#f0eeea;text-align:center;line-height:1.9">
+<div><span style="color:#fff067;font-weight:700">angle AOB</span> = 2 x <span style="color:#0fee89;font-weight:700">angle APB</span></div>
+<div><span style="color:#0fee89;font-weight:700">angle APB</span> = <span style="color:#0fee89;font-weight:700">angle AQB</span></div>
+<div style="color:#7a7875;font-size:13px">centre rule (yellow=2 x green) and same segment (green=green)</div>
+</div>
 </div>
 
 Cyclic quadrilateral and alternate segment: the harder pair.
 
-<div style="display:flex;flex-direction:column;align-items:center;background:#0b1118;border:1px solid #141e2a;border-radius:10px;padding:18px;margin:18px auto;max-width:560px;position:relative">
-  <div style="font-family:'Geist Mono',monospace;font-size:10px;color:#7a7875;letter-spacing:0.4px;text-transform:uppercase;font-weight:600;margin-bottom:14px;align-self:flex-start">RECAP: CYCLIC QUAD + ALTERNATE SEGMENT</div>
-  <div style="position:relative;width:480px;height:280px">
-    <div style="position:absolute;left:50px;top:60px;width:160px;height:160px;border-radius:50%;border:1.5px solid #3a4a5a"></div>
-    <div style="position:absolute;left:80px;top:85px;width:110.5px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-5.2deg)"></div>
-    <div style="position:absolute;left:190px;top:75px;width:115.4px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(85.0deg)"></div>
-    <div style="position:absolute;left:200px;top:190px;width:115.4px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-175.0deg)"></div>
-    <div style="position:absolute;left:85px;top:200px;width:115.1px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-92.5deg)"></div>
-    <div style="position:absolute;left:80px;top:85px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:190px;top:75px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:200px;top:190px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:85px;top:200px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:62px;top:78px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">A</div>
-    <div style="position:absolute;left:198px;top:60px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">B</div>
-    <div style="position:absolute;left:206px;top:202px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">C</div>
-    <div style="position:absolute;left:68px;top:212px;font-family:'Geist Mono',monospace;font-size:13px;color:#fff067;font-weight:600">D</div>
-    <div style="position:absolute;left:105px;top:130px;font-family:'Geist Mono',monospace;font-size:10px;color:#0fee89;font-weight:600">A+C=180</div>
-    <div style="position:absolute;left:105px;top:158px;font-family:'Geist Mono',monospace;font-size:10px;color:#ff4670;font-weight:600">B+D=180</div>
-    <div style="position:absolute;left:290px;top:90px;width:160px;height:160px;border-radius:50%;border:1.5px solid #3a4a5a"></div>
-    <div style="position:absolute;left:280px;top:250px;width:180px;height:0;border-top:2px solid #ff822c"></div>
-    <div style="position:absolute;left:370px;top:250px;width:135.0px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(-111.8deg)"></div>
-    <div style="position:absolute;left:320px;top:125px;width:110.5px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(5.2deg)"></div>
-    <div style="position:absolute;left:430px;top:135px;width:130.0px;height:0;border-top:2px solid #00abfa;transform-origin:left center;transform:rotate(118.4deg)"></div>
-    <div style="position:absolute;left:320px;top:125px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:430px;top:135px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:370px;top:250px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-    <div style="position:absolute;left:325px;top:200px;font-family:'Geist Mono',monospace;font-size:11px;color:#fff067;font-weight:600">θ</div>
-    <div style="position:absolute;left:402px;top:148px;font-family:'Geist Mono',monospace;font-size:11px;color:#fff067;font-weight:600">θ</div>
-    <div style="position:absolute;left:284px;top:256px;font-family:'Geist Mono',monospace;font-size:10px;color:#ff822c;font-weight:600">tangent</div>
-  </div>
+<div class="diagram">
+<div class="diagram-caption">RECAP: CYCLIC QUAD + ALTERNATE SEGMENT</div>
+<div style="font-family:var(--font-geist-mono),monospace;font-size:18px;color:#f0eeea;text-align:center;line-height:1.9">
+<div><span style="color:#0fee89;font-weight:700">angle A + angle C = 180°</span></div>
+<div><span style="color:#ff4670;font-weight:700">angle B + angle D = 180°</span></div>
+<div style="color:#7a7875;font-size:13px;margin-top:6px">cyclic quad: opposite pairs sum to 180°</div>
+<div style="margin-top:14px"><span style="color:#ff822c;font-weight:700">tangent-chord angle</span> = <span style="color:#fff067;font-weight:700">angle in alternate segment</span></div>
+<div style="color:#7a7875;font-size:13px">alternate segment theorem</div>
+</div>
 </div>
 
 ## Marking patterns at a glance
