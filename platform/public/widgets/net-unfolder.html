@@ -340,23 +340,31 @@ function buildCuboid() {
 
 function buildPrism() {
   document.getElementById("title").textContent = "TRIANGULAR PRISM";
-  document.getElementById("footer").textContent = "2 triangles + 3 rectangles wrap around the cross-section";
-  // Right-angled cross-section: legs a (vertical) and b (horizontal), hypotenuse hyp.
-  // Prism axis along x; cross-section in yz plane.
-  var a = 55, b = 90, L = 120;
-  var hyp = Math.sqrt(a * a + b * b);
+  // Cross-section legs and prism length in cm (URL-configurable).
+  var aCm = parseFloat(qs.get("a")) || 5;   // a-leg (vertical)
+  var bCm = parseFloat(qs.get("b")) || 8;   // b-leg (horizontal)
+  var Lcm = parseFloat(qs.get("L")) || 12;  // prism length
+  var hCm = Math.sqrt(aCm * aCm + bCm * bCm);
+  // Auto-scale so the unfolded net (width = L + 2a, height = b + a + hyp) fits
+  // the 480x360 stage with ~15% margin.
+  var netWcm = Lcm + 2 * aCm;
+  var netHcm = bCm + aCm + hCm;
+  var scale = Math.min(420 / netWcm, 320 / netHcm);
+  var a = aCm * scale, b = bCm * scale, L = Lcm * scale, hyp = hCm * scale;
+  document.getElementById("footer").textContent =
+    "2 triangles (" + aCm + "-" + bCm + "-" + Math.round(hCm) +
+    ") + 3 rectangles (length " + Lcm + ")";
   var c = COL.green;
 
   // Bottom (b-leg side) rectangle: anchor in xy plane at z=0
-  scene.appendChild(rectFace(L, b, c, L + " x " + b));
+  scene.appendChild(rectFace(L, b, c, Lcm + " x " + bCm));
 
   // a-leg side: hinged at bottom's TOP edge (y = -b/2). Folds back -90 about x.
   var hSide1 = trackHinge(hinge(scene, -90, "X", 0, -b/2, 0));
-  hSide1.appendChild(rectFace(L, a, c, L + " x " + a, "bottom"));
+  hSide1.appendChild(rectFace(L, a, c, Lcm + " x " + aCm, "bottom"));
 
-  // Hypotenuse side: hinged at the top edge of the a-leg side (in side1's local
-  // frame at y = -a). Wrap angle = 180 - top-vertex-angle of the cross-section.
-  // Top vertex (where a meets hyp) has angle acos(a/hyp).
+  // Hypotenuse side: hinged at the top edge of the a-leg side. Wrap angle =
+  // 180 - top-vertex-angle of the cross-section (= 180 - acos(a/hyp)).
   var wrapDeg = 180 - Math.acos(a / hyp) * 180 / Math.PI;
   var hSide2 = document.createElement("div");
   hSide2.className = "hinge";
@@ -364,20 +372,15 @@ function buildPrism() {
   hSide2.style.transform = "translate3d(0px," + (-a) + "px,0px) " + hSide2.dataset.foldedRotate;
   hSide1.appendChild(hSide2);
   allHinges.push(hSide2);
-  hSide2.appendChild(rectFace(L, hyp, c, L + " x " + Math.round(hyp), "bottom"));
+  hSide2.appendChild(rectFace(L, hyp, c, Lcm + " x " + Math.round(hCm), "bottom"));
 
   // Caps: triangle in cross-section (right angle between a and b legs).
-  // LEFT cap at x=-L/2: width=a, height=b. In flat layout, face extends in -x
-  // direction from bottom rectangle's left edge (the b-leg, vertical line of length b).
-  // Right-angle corner at top-right (where a and b meet); a-leg endpoint at top-left;
-  // b-leg endpoint at bottom-right. clip-path: top-right, bottom-right, top-left.
+  var capLabel = aCm + "-" + bCm + "-" + Math.round(hCm);
   var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, 0, 0));
-  hCapL.appendChild(triFace(a, b, c, "tri", "100% 0%, 100% 100%, 0% 0%", "right"));
+  hCapL.appendChild(triFace(a, b, c, capLabel, "100% 0%, 100% 100%, 0% 0%", "right"));
 
-  // RIGHT cap at x=+L/2: mirror. Face extends in +x direction from bottom's right edge.
-  // Right-angle at top-left, a-leg endpoint at top-right, b-leg at bottom-left.
   var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, 0, 0));
-  hCapR.appendChild(triFace(a, b, c, "tri", "0% 0%, 0% 100%, 100% 0%", "left"));
+  hCapR.appendChild(triFace(a, b, c, capLabel, "0% 0%, 0% 100%, 100% 0%", "left"));
 }
 
 function buildCylinder() {

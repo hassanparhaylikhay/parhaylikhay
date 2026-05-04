@@ -96,27 +96,7 @@ If a textbook drills these, skip those pages. They will not be tested. The only 
 
 A solid is a triangular prism. The triangular cross-section is a right-angled triangle with legs $5$ cm and $12$ cm. The length of the prism is $20$ cm.
 
-<div class="diagram">
-<div class="diagram-caption">TRIANGULAR PRISM NET: 5-12-13 BY 20</div>
-<div style="display:flex;justify-content:center">
-<svg viewBox="0 0 460 200" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<g font-family="Geist Mono,monospace" font-size="11" font-weight="600">
-<rect fill="#00abfa20" stroke="#00abfa" stroke-width="2" x="60" y="0" width="320" height="40"/>
-<text x="220" y="25" fill="#00abfa" text-anchor="middle">5 x 20</text>
-<rect fill="#00abfa20" stroke="#00abfa" stroke-width="2" x="60" y="40" width="320" height="60"/>
-<text x="220" y="75" fill="#00abfa" text-anchor="middle">12 x 20</text>
-<rect fill="#00abfa20" stroke="#00abfa" stroke-width="2" x="60" y="100" width="320" height="50"/>
-<text x="220" y="130" fill="#00abfa" text-anchor="middle">13 x 20</text>
-<polygon fill="#fff06730" stroke="#fff067" stroke-width="2" points="60,40 60,100 10,100"/>
-<text x="35" y="80" fill="#fff067" font-size="10">tri</text>
-<polygon fill="#0fee8930" stroke="#0fee89" stroke-width="2" points="380,40 430,100 380,100"/>
-<text x="395" y="80" fill="#0fee89" font-size="10">tri</text>
-</g>
-<text x="20" y="172" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875">5^2 + 12^2 = 169, hypotenuse = 13</text>
-<text x="20" y="190" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89" font-weight="600">TSA = 60 + 600 = 660 cm^2; V = 30 x 20 = 600 cm^3</text>
-</svg>
-</div>
-</div>
+<iframe src="/widgets/net-unfolder.html?solid=prism&a=5&b=12&L=20" style="width:100%;max-width:696px;height:480px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
 (a) Calculate the length of the hypotenuse of the triangular face.
 
