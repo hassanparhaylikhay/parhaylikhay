@@ -356,11 +356,19 @@ function buildPrism() {
     ") + 3 rectangles (length " + Lcm + ")";
   var c = COL.green;
 
-  // Bottom (b-leg side) rectangle: anchor in xy plane at z=0
-  scene.appendChild(rectFace(L, b, c, Lcm + " x " + bCm));
+  // The net extends upward from the bottom rectangle by (a + hyp). To keep
+  // the whole figure visually centred in the stage, translate everything
+  // DOWN by (a + hyp)/2 so the bounding box of the net spans symmetrically
+  // around the scene origin.
+  var yOff = (a + hyp) / 2;
 
-  // a-leg side: hinged at bottom's TOP edge (y = -b/2). Folds back -90 about x.
-  var hSide1 = trackHinge(hinge(scene, -90, "X", 0, -b/2, 0));
+  // Bottom (b-leg side) rectangle: anchor in xy plane at z=0
+  var bottomEl = rectFace(L, b, c, Lcm + " x " + bCm);
+  bottomEl.style.top = (-b/2 + yOff) + "px";
+  scene.appendChild(bottomEl);
+
+  // a-leg side: hinged at bottom's TOP edge (y = -b/2 + yOff). Folds back -90 about x.
+  var hSide1 = trackHinge(hinge(scene, -90, "X", 0, -b/2 + yOff, 0));
   hSide1.appendChild(rectFace(L, a, c, Lcm + " x " + aCm, "bottom"));
 
   // Hypotenuse side: hinged at the top edge of the a-leg side. Wrap angle =
@@ -375,11 +383,12 @@ function buildPrism() {
   hSide2.appendChild(rectFace(L, hyp, c, Lcm + " x " + Math.round(hCm), "bottom"));
 
   // Caps: triangle in cross-section (right angle between a and b legs).
+  // Hinges at the bottom rectangle's left and right edges (y = yOff).
   var capLabel = aCm + "-" + bCm + "-" + Math.round(hCm);
-  var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, 0, 0));
+  var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, yOff, 0));
   hCapL.appendChild(triFace(a, b, c, capLabel, "100% 0%, 100% 100%, 0% 0%", "right"));
 
-  var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, 0, 0));
+  var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, yOff, 0));
   hCapR.appendChild(triFace(a, b, c, capLabel, "0% 0%, 0% 100%, 100% 0%", "left"));
 }
 
