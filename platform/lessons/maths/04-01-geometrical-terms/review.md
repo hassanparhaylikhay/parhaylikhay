@@ -87,12 +87,12 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 <div class="diagram-caption">REGULAR OCTAGON IN A CIRCLE</div>
 <div style="display:flex;justify-content:center">
 <svg viewBox="0 0 320 260" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<circle fill="none" stroke="#3a4a5a" stroke-width="1.5" cx="160" cy="130" r="90"/>
-<polygon fill="#00abfa10" stroke="#00abfa" stroke-width="2.5" stroke-linejoin="round" points="194.44,46.85 125.56,46.85 76.85,95.56 76.85,164.44 125.56,213.15 194.44,213.15 243.15,164.44 243.15,95.56"/>
-<line stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3 2" x1="160" y1="40" x2="160" y2="130"/>
-<line stroke="#fff067" stroke-width="2.5" x1="160" y1="130" x2="194.44" y2="46.85"/>
-<line stroke="#ff822c" stroke-width="2.5" x1="60" y1="40" x2="260" y2="40"/>
-<path fill="none" stroke="#ff4670" stroke-width="2" d="M172 40 L172 52 L160 52"/>
+<circle fill="none" stroke="#3a4a5a" stroke-width="1" cx="160" cy="130" r="90"/>
+<polygon fill="#00abfa10" stroke="#00abfa" stroke-width="1.6" stroke-linejoin="round" points="194.44,46.85 125.56,46.85 76.85,95.56 76.85,164.44 125.56,213.15 194.44,213.15 243.15,164.44 243.15,95.56"/>
+<line stroke="#3a4a5a" stroke-width="1" stroke-dasharray="3 2" x1="160" y1="40" x2="160" y2="130"/>
+<line stroke="#fff067" stroke-width="1.6" x1="160" y1="130" x2="194.44" y2="46.85"/>
+<line stroke="#ff822c" stroke-width="1.6" x1="60" y1="40" x2="260" y2="40"/>
+<path fill="none" stroke="#ff4670" stroke-width="1.4" d="M172 40 L172 52 L160 52"/>
 <circle fill="#fff067" cx="160" cy="130" r="4"/>
 <circle fill="#0fee89" cx="160" cy="40" r="5"/>
 <circle fill="#00abfa" cx="194.44" cy="46.85" r="3.5"/>
