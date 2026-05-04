@@ -13,32 +13,56 @@
 
   .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
-  .step-num { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
 
-  .stage-wrap { display:flex; justify-content:center; }
-  .stage {
+  .stage-outer {
+    width:100%;
+    max-width:440px;
+    margin:0 auto;
+    aspect-ratio: 440 / 340;
     position:relative;
-    width:360px;
-    height:270px;
+  }
+  .stage {
+    position:absolute;
+    top:0; left:0;
+    width:440px;
+    height:340px;
+    transform-origin: top left;
     overflow:hidden;
     border-radius:6px;
   }
 
-  .controls { display:flex; gap:6px; justify-content:center; margin-top:14px; align-items:center; flex-wrap:wrap; }
+  /* Animation CSS */
+  .draw-line {
+    width: 0;
+    transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1);
+  }
+  .draw-line.drawn { width: var(--draw-len); }
+
+  .draw-arc {
+    clip-path: polygon(0% 0%, 0% 0%, 0% 50%, 0% 50%);
+    transition: clip-path 1s cubic-bezier(0.4, 0.1, 0.4, 1);
+  }
+  .draw-arc.drawn {
+    clip-path: polygon(0% 0%, 100% 0%, 100% 50%, 0% 50%);
+  }
+
+  .draw-fade {
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    transition-delay: 0.35s;
+  }
+  .draw-fade.drawn { opacity: 1; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
   button.ctl {
     background:#0b1118; border:1px solid #141e2a; color:#7a7875;
-    font-family:'Geist Mono',monospace; font-size:11px; font-weight:600;
-    padding:6px 10px; border-radius:6px; cursor:pointer; min-width:38px;
-    transition: color 0.12s, border-color 0.12s;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
   }
   button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
-  button.ctl.play { color:#0fee89; border-color:#0fee89; }
-  button.ctl.play:hover:not(:disabled) { color:#0fee89; border-color:#0fee89; background:#0fee8910; }
   button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
-
-  .dots { display:flex; gap:5px; margin-left:8px; }
-  .dot { width:8px; height:8px; border-radius:50%; background:#141e2a; transition: background 0.12s; }
-  .dot.on { background:#fff067; }
 
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
@@ -49,28 +73,24 @@
     <span class="step-title" id="title">step 0 — start</span>
     <span class="step-num" id="counter">0 / 5</span>
   </div>
-  <div class="stage-wrap">
+  <div class="stage-outer" id="stage-outer">
     <div class="stage" id="stage"></div>
   </div>
   <div class="controls">
-    <button class="ctl" id="reset" title="reset">⟲</button>
-    <button class="ctl" id="prev">prev</button>
-    <button class="ctl play" id="play">▶ play</button>
-    <button class="ctl" id="next">next</button>
-    <div class="dots" id="dots"></div>
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
   </div>
-  <p class="footer">construct triangle PQR (PQ = 8 cm, PR = 6 cm, QR = 7 cm) — step through the construction</p>
+  <p class="footer">construct triangle PQR (PQ = 8 cm, PR = 6 cm, QR = 7 cm)</p>
 </div>
 
 <script>
 "use strict";
 
-// Triangle parameters in cm
+// --- Triangle parameters and geometry ---------------------------------
 var SIDE_PQ = 8, SIDE_PR = 6, SIDE_QR = 7;
-var SCALE = 30;  // px per cm
+var SCALE = 36;  // px per cm
 
-// Compute geometry (P at left, Q at right; R above the base)
-var P = { x: 40, y: 220 };
+var P = { x: 30, y: 290 };
 var Q = { x: P.x + SIDE_PQ * SCALE, y: P.y };
 var d = (SIDE_PQ * SIDE_PQ + SIDE_PR * SIDE_PR - SIDE_QR * SIDE_QR) / (2 * SIDE_PQ);
 var h = Math.sqrt(SIDE_PR * SIDE_PR - d * d);
@@ -78,19 +98,37 @@ var R = { x: P.x + d * SCALE, y: P.y - h * SCALE };
 var PR_px = SIDE_PR * SCALE;
 var QR_px = SIDE_QR * SCALE;
 
+// --- Stage scaling ----------------------------------------------------
 var stage = document.getElementById("stage");
+var stageOuter = document.getElementById("stage-outer");
+var STAGE_W = 440, STAGE_H = 340;
 
+function fitStage() {
+  var w = stageOuter.clientWidth;
+  if (!w) return;
+  var s = w / STAGE_W;
+  stage.style.transform = "scale(" + s + ")";
+}
+fitStage();
+window.addEventListener("resize", fitStage);
+if (window.ResizeObserver) {
+  new ResizeObserver(fitStage).observe(stageOuter);
+}
+
+// --- DOM builders -----------------------------------------------------
 function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
 
-function makeNode(tag, style, dataStep) {
+function makeNode(tag, style, dataStep, cls) {
   var n = document.createElement(tag);
+  if (cls) n.className = cls;
   setStyle(n, style);
   if (dataStep != null) n.dataset.step = String(dataStep);
   stage.appendChild(n);
   return n;
 }
 
-// Straight line from (x1,y1) to (x2,y2) using a rotated thin div
+// Straight line from (x1,y1) to (x2,y2) using a rotated thin div.
+// Animated by transitioning the `width` from 0 to its full length.
 function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
   var dx = x2 - x1, dy = y2 - y1;
   var len = Math.sqrt(dx * dx + dy * dy);
@@ -100,7 +138,6 @@ function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
     position: "absolute",
     left: x1 + "px",
     top: y1 + "px",
-    width: len + "px",
     height: t + "px",
     transformOrigin: "0 50%",
     transform: "translateY(" + (-t / 2) + "px) rotate(" + ang + "deg)"
@@ -112,24 +149,28 @@ function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
   } else {
     s.background = color;
   }
-  return makeNode("div", s, dataStep);
+  s["--draw-len"] = len + "px";
+  return makeNode("div", s, dataStep, "draw-line");
 }
 
-// Filled circle dot of radius r at (x,y)
+// Filled circle dot of size px at (x,y). Fades in on draw.
 function dotEl(x, y, color, size, dataStep) {
-  var s = size || 7;
+  var sz = size || 7;
   return makeNode("div", {
     position: "absolute",
-    left: (x - s / 2) + "px",
-    top: (y - s / 2) + "px",
-    width: s + "px",
-    height: s + "px",
+    left: (x - sz / 2) + "px",
+    top: (y - sz / 2) + "px",
+    width: sz + "px",
+    height: sz + "px",
     borderRadius: "50%",
     background: color
-  }, dataStep);
+  }, dataStep, "draw-fade");
 }
 
-// Upper-half arc of a circle of radius r centred at (cx,cy)
+// Upper-half arc of a circle of radius r centred at (cx,cy).
+// The 2r x 2r div has a border-radius:50% border; the .draw-arc
+// clip-path animates from a degenerate left-edge polygon to the
+// full upper-half rectangle, sweeping the visible arc left-to-right.
 function arcUpperEl(cx, cy, r, color, thickness, dashed, dataStep) {
   var t = thickness || 1.5;
   return makeNode("div", {
@@ -140,12 +181,10 @@ function arcUpperEl(cx, cy, r, color, thickness, dashed, dataStep) {
     height: (2 * r) + "px",
     borderRadius: "50%",
     border: t + "px " + (dashed ? "dashed" : "solid") + " " + color,
-    clipPath: "polygon(0% 0%, 100% 0%, 100% 50%, 0% 50%)",
     pointerEvents: "none"
-  }, dataStep);
+  }, dataStep, "draw-arc");
 }
 
-// Text label
 function labelEl(x, y, text, color, fontSize, dataStep, opts) {
   opts = opts || {};
   var n = makeNode("div", {
@@ -158,14 +197,14 @@ function labelEl(x, y, text, color, fontSize, dataStep, opts) {
     fontWeight: opts.weight || "700",
     whiteSpace: "nowrap",
     pointerEvents: "none"
-  }, dataStep);
+  }, dataStep, "draw-fade");
   n.textContent = text;
   return n;
 }
 
-// === Build the construction ============================================
+// === Build the construction ==========================================
 
-// STEP 0: empty stage with a faint reference rule mark (always visible)
+// Reference rule (faint, always visible)
 makeNode("div", {
   position: "absolute",
   left: P.x + "px",
@@ -175,31 +214,31 @@ makeNode("div", {
   borderTop: "1px solid #1a2330"
 });
 
-// STEP 1: draw the base PQ
-lineEl(P.x, P.y, Q.x, Q.y, "#00abfa", 2, false, 1);
-dotEl(P.x, P.y, "#0fee89", 7, 1);
-dotEl(Q.x, Q.y, "#0fee89", 7, 1);
-labelEl(P.x - 14, P.y + 6, "P", "#0fee89", 13, 1);
-labelEl(Q.x + 6, Q.y + 6, "Q", "#0fee89", 13, 1);
-labelEl((P.x + Q.x) / 2 - 18, P.y + 16, "8 cm", "#00abfa", 11, 1, { weight: "600" });
+// Step 1 — base PQ
+lineEl(P.x, P.y, Q.x, Q.y, "#00abfa", 2.5, false, 1);
+dotEl(P.x, P.y, "#0fee89", 8, 1);
+dotEl(Q.x, Q.y, "#0fee89", 8, 1);
+labelEl(P.x - 16, P.y + 8, "P", "#0fee89", 14, 1);
+labelEl(Q.x + 8, Q.y + 8, "Q", "#0fee89", 14, 1);
+labelEl((P.x + Q.x) / 2 - 22, P.y + 18, "8 cm", "#00abfa", 12, 1, { weight: "600" });
 
-// STEP 2: arc from P with radius 6 cm
-arcUpperEl(P.x, P.y, PR_px, "#fff067", 1.5, true, 2);
-labelEl(P.x + 60, P.y - 100, "arc 1: r = 6", "#fff067", 10, 2, { weight: "600" });
+// Step 2 — arc 1 from P
+arcUpperEl(P.x, P.y, PR_px, "#fff067", 1.6, true, 2);
+labelEl(P.x + 50, P.y - 130, "arc 1: r = 6 cm", "#fff067", 11, 2, { weight: "600" });
 
-// STEP 3: arc from Q with radius 7 cm
-arcUpperEl(Q.x, Q.y, QR_px, "#ff822c", 1.5, true, 3);
-labelEl(Q.x - 130, Q.y - 100, "arc 2: r = 7", "#ff822c", 10, 3, { weight: "600" });
+// Step 3 — arc 2 from Q
+arcUpperEl(Q.x, Q.y, QR_px, "#ff822c", 1.6, true, 3);
+labelEl(Q.x - 168, Q.y - 130, "arc 2: r = 7 cm", "#ff822c", 11, 3, { weight: "600" });
 
-// STEP 4: mark intersection R
-dotEl(R.x, R.y, "#ff4670", 9, 4);
-labelEl(R.x - 4, R.y - 20, "R", "#ff4670", 13, 4);
+// Step 4 — mark intersection R
+dotEl(R.x, R.y, "#ff4670", 10, 4);
+labelEl(R.x - 6, R.y - 24, "R", "#ff4670", 14, 4);
 
-// STEP 5: draw PR and QR
-lineEl(P.x, P.y, R.x, R.y, "#00abfa", 2, false, 5);
-lineEl(Q.x, Q.y, R.x, R.y, "#00abfa", 2, false, 5);
+// Step 5 — join PR and QR
+lineEl(P.x, P.y, R.x, R.y, "#00abfa", 2.5, false, 5);
+lineEl(Q.x, Q.y, R.x, R.y, "#00abfa", 2.5, false, 5);
 
-// === Step controller ===================================================
+// === Step controller =================================================
 
 var STEPS = [
   "step 0 — start",
@@ -212,23 +251,11 @@ var STEPS = [
 
 var step = 0;
 var maxStep = STEPS.length - 1;
-var playTimer = null;
 
 var titleEl = document.getElementById("title");
 var counterEl = document.getElementById("counter");
-var dotsEl = document.getElementById("dots");
 var prevBtn = document.getElementById("prev");
 var nextBtn = document.getElementById("next");
-var resetBtn = document.getElementById("reset");
-var playBtn = document.getElementById("play");
-
-// Build dot indicators
-for (var i = 0; i <= maxStep; i++) {
-  var d = document.createElement("div");
-  d.className = "dot";
-  dotsEl.appendChild(d);
-}
-var dotEls = dotsEl.querySelectorAll(".dot");
 
 function setStep(n) {
   step = Math.max(0, Math.min(maxStep, n));
@@ -237,38 +264,19 @@ function setStep(n) {
   var els = stage.querySelectorAll("[data-step]");
   for (var i = 0; i < els.length; i++) {
     var s = parseInt(els[i].dataset.step, 10);
-    els[i].style.display = (s <= step) ? "" : "none";
+    if (s <= step) els[i].classList.add("drawn");
+    else els[i].classList.remove("drawn");
   }
   prevBtn.disabled = (step === 0);
   nextBtn.disabled = (step === maxStep);
-  for (var j = 0; j < dotEls.length; j++) {
-    if (j === step) dotEls[j].classList.add("on");
-    else dotEls[j].classList.remove("on");
-  }
 }
 
-function stopPlay() {
-  if (playTimer) { clearInterval(playTimer); playTimer = null; }
-  playBtn.textContent = "▶ play";
-}
-
-prevBtn.onclick = function() { stopPlay(); setStep(step - 1); };
-nextBtn.onclick = function() { stopPlay(); setStep(step + 1); };
-resetBtn.onclick = function() { stopPlay(); setStep(0); };
-playBtn.onclick = function() {
-  if (playTimer) { stopPlay(); return; }
-  if (step >= maxStep) setStep(0);
-  playBtn.textContent = "❚❚ pause";
-  playTimer = setInterval(function() {
-    if (step >= maxStep) { stopPlay(); return; }
-    setStep(step + 1);
-  }, 1100);
-};
+prevBtn.onclick = function() { setStep(step - 1); };
+nextBtn.onclick = function() { setStep(step + 1); };
 
 setStep(0);
 
-// === Height reporter ====================================================
-
+// === Height reporter =================================================
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {
   if (reportScheduled) return;
