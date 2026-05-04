@@ -41,7 +41,8 @@
   .scene.solid-cube,
   .scene.solid-cuboid,
   .scene.solid-prism,
-  .scene.solid-cylinder { transform: rotateX(-22deg) rotateY(28deg); }
+  .scene.solid-cylinder,
+  .scene.solid-cone { transform: rotateX(-22deg) rotateY(28deg); }
   /* Pyramid: order matters. CSS applies right-to-left, so writing
      rotateY(15) rotateX(60) tilts the +z apex straight up FIRST (to
      -0.866 y), then twists by 15 deg around the world y-axis -- the
@@ -512,13 +513,100 @@ function buildPyramid() {
   hE.appendChild(triFace(slant, s, c, "side", "100% 50%, 0% 0%, 0% 100%", "left"));
 }
 
+function buildCone() {
+  document.getElementById("title").textContent = "CONE";
+  // Cone parameters: base radius r, vertical height h
+  var rCm = parseFloat(qs.get("r")) || 4;
+  var hCm = parseFloat(qs.get("h")) || 9;
+  var slantCm = Math.sqrt(rCm * rCm + hCm * hCm);
+  // Net spans: sector ~ 2*slant wide and slant tall, plus base circle 2r below it.
+  // Auto-scale so it fits the 480x320 stage.
+  var scale = Math.min(420 / (2 * slantCm), 320 / (slantCm + 2 * rCm + 10));
+  var r = rCm * scale, H = hCm * scale, slant = slantCm * scale;
+  document.getElementById("footer").textContent =
+    "1 circular base (r=" + rCm + ") + 1 sector (radius = slant " + Math.round(slantCm) + ")";
+  var c = COL.blue;
+
+  // Cone half-angle (between axis and slant edge) — the slat tilt from vertical.
+  var alphaCone = Math.atan2(r, H) * 180 / Math.PI;
+  var sectorAngleDeg = (2 * Math.PI * r / slant) * 180 / Math.PI;
+
+  // Centre the net vertically: net y range is [-yOff, -yOff + slant + 2r].
+  var yOff = (slant + 2 * r) / 2;
+
+  var N = 36;
+  var slatW = 2 * Math.PI * r / N + 1.5;
+  for (var i = 0; i < N; i++) {
+    var thetaDeg = (i + 0.5) / N * 360;             // 3D angle around cone axis
+    var thetaRad = thetaDeg * Math.PI / 180;
+    var alphaDeg = (i + 0.5) / N * sectorAngleDeg - sectorAngleDeg / 2;  // flat-sector angle from central axis
+    var alphaRad = alphaDeg * Math.PI / 180;
+
+    var slat = document.createElement("div");
+    slat.className = "face cone-slat";
+    setStyle(slat, {
+      position: "absolute",
+      left: (-slatW / 2) + "px",
+      top: (-slant / 2) + "px",
+      width: slatW + "px",
+      height: slant + "px",
+      background: fillOf(c),
+      clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
+      outline: "0.5px solid " + c,
+      outlineOffset: "-0.5px",
+      transition: "transform 1.4s cubic-bezier(0.4, 0.1, 0.4, 1)"
+    });
+
+    // Folded transform: bbox centre at midpoint between cone apex (0,-H/2,0) and base
+    // mid (r*cos,H/2,r*sin). Rotation: rotateY(-theta) rotateZ(-alphaCone) so the
+    // slat's local +y aligns with apex->base direction.
+    var foldedTx = r * Math.cos(thetaRad) / 2;
+    var foldedTz = r * Math.sin(thetaRad) / 2;
+    slat.dataset.folded3d =
+      "translate3d(" + foldedTx + "px,0px," + foldedTz + "px) " +
+      "rotateY(" + (-thetaDeg) + "deg) rotateZ(" + (-alphaCone) + "deg)";
+
+    // Flat transform: sector centred at scene (0, -yOff, 0), arc opens DOWNWARD.
+    // bbox centre at midpoint between apex (0,-yOff,0) and base mid
+    // (sin(alpha)*slant, -yOff+cos(alpha)*slant, 0).
+    var flatTx = Math.sin(alphaRad) * slant / 2;
+    var flatTy = -yOff + Math.cos(alphaRad) * slant / 2;
+    slat.dataset.flat3d =
+      "translate3d(" + flatTx + "px," + flatTy + "px,0px) rotateZ(" + (-alphaDeg) + "deg)";
+
+    slat.style.transform = slat.dataset.folded3d;
+    scene.appendChild(slat);
+  }
+
+  // Base circle: animates between cone base position (xz plane at y=H/2) and flat
+  // net position (below the sector, in xy plane).
+  var baseCircle = document.createElement("div");
+  baseCircle.className = "face cone-base";
+  setStyle(baseCircle, {
+    position: "absolute",
+    left: (-r) + "px",
+    top: (-r) + "px",
+    width: (2 * r) + "px",
+    height: (2 * r) + "px",
+    borderRadius: "50%",
+    border: "1.5px solid " + c,
+    background: fillOf(c),
+    transition: "transform 1.4s cubic-bezier(0.4, 0.1, 0.4, 1)"
+  });
+  baseCircle.dataset.folded3d = "translate3d(0px," + (H / 2) + "px,0px) rotateX(90deg)";
+  baseCircle.dataset.flat3d = "translate3d(0px," + (-yOff + slant + r) + "px,0px) rotateX(0deg)";
+  baseCircle.style.transform = baseCircle.dataset.folded3d;
+  scene.appendChild(baseCircle);
+}
+
 // Apply the requested solid
 var BUILDERS = {
   cube: buildCube,
   cuboid: buildCuboid,
   prism: buildPrism,
   cylinder: buildCylinder,
-  pyramid: buildPyramid
+  pyramid: buildPyramid,
+  cone: buildCone
 };
 (BUILDERS[SOLID] || buildCube)();
 
