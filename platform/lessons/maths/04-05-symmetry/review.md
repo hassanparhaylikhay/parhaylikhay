@@ -113,11 +113,17 @@ You have now seen the three pieces of this topic: line symmetry of 2D shapes, ro
 
 A solid is made of a cube of side $4$ cm with a square-based pyramid stacked on top, where the apex of the pyramid sits directly above the centre of the cube and the base of the pyramid coincides with the top face of the cube.
 
-**(a)** State the number of planes of symmetry of this solid.
+**(a)**
 
-**(b)** State the order of rotational symmetry about the vertical axis through the apex of the pyramid and the centre of the base of the cube.
+State the number of planes of symmetry of this solid.
 
-**(c)** Looking at the solid from directly above, you see a square. State the number of lines of symmetry of this 2D view.
+**(b)**
+
+State the order of rotational symmetry about the vertical axis through the apex of the pyramid and the centre of the base of the cube.
+
+**(c)**
+
+Looking at the solid from directly above, you see a square. State the number of lines of symmetry of this 2D view.
 
 **Visualise.**
 

@@ -113,9 +113,13 @@ Forgetting to **square** the scale factor for area or **cube** it for volume. If
 
 Two solid metal cones are mathematically similar. The smaller cone has slant height $9$ cm and total surface area $135$ cm$^2$. The larger cone has volume $1\,000$ cm$^3$. The smaller cone has volume $216$ cm$^3$. Both cones are made of the same metal.
 
-**(a)** Find the slant height of the larger cone.
+**(a)**
 
-**(b)** Find the surface area of the larger cone.
+Find the slant height of the larger cone.
+
+**(b)**
+
+Find the surface area of the larger cone.
 
 **Find the length scale factor from the volumes.**
 
