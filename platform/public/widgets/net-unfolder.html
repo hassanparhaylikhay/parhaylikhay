@@ -42,11 +42,11 @@
   .scene.solid-cuboid,
   .scene.solid-prism,
   .scene.solid-cylinder { transform: rotateX(-22deg) rotateY(28deg); }
-  /* Pyramid: rotateX(80) puts the +z apex at -0.985 y (basically straight up)
-     and the base flat-ish; rotateY(22) twists for a 3/4 view of two adjacent
-     triangular faces. Result: base sits at the bottom of the diagram, apex
-     clearly up at the top, two front sides visible. */
-  .scene.solid-pyramid  { transform: rotateX(80deg) rotateY(22deg); }
+  /* Pyramid: rotateX(60) tilts the base 30 deg off edge-on so it shows
+     clearly as a parallelogram, and lifts the +z apex to (-0.866 y, 0.5 z)
+     i.e. 87% of H upward in screen and 50% of H toward viewer.
+     rotateY(15) twists for 3/4 view so two front sides are visible. */
+  .scene.solid-pyramid  { transform: rotateX(60deg) rotateY(15deg); }
   /* Net (flat) state: top-down view for every solid. */
   .stage.is-flat .scene { transform: rotateX(0deg) rotateY(0deg); }
 
@@ -464,8 +464,8 @@ function buildCylinder() {
 function buildPyramid() {
   document.getElementById("title").textContent = "SQUARE-BASED PYRAMID";
   document.getElementById("footer").textContent = "1 square base + 4 triangular faces meeting at the apex";
-  var s = 80;
-  var H = 90;
+  var s = 100;
+  var H = 110;
   var slant = Math.sqrt((s/2)*(s/2) + H*H);
   var c = COL.orange;
   // Fold angle for each side: 180 - atan2(H, s/2). The face has to rotate PAST
