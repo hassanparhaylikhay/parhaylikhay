@@ -144,8 +144,9 @@ var W = 560, H = 320;
 var DPR = window.devicePixelRatio || 1;
 cv.width = W * DPR;
 cv.height = H * DPR;
-cv.style.width = W + "px";
-cv.style.height = H + "px";
+cv.style.maxWidth = W + "px";
+cv.style.width = "100%";
+cv.style.height = "auto";
 ctx.scale(DPR, DPR);
 
 // Convert a mouse event to canvas-local CSS coords
@@ -273,9 +274,9 @@ var GEO = {
   // sector between angles 220 and 290
   sectorStart: 220,
   sectorEnd: 290,
-  // segment chord between angles 110 and 70 (smaller cap above the chord)
-  segmentStart: 110,
-  segmentEnd: 70
+  // segment chord between angles 145 and 35 (cap above the chord, bigger and clearly visible)
+  segmentStart: 145,
+  segmentEnd: 35
 };
 
 // Drawing helpers

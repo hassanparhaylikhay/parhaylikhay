@@ -53,8 +53,9 @@ var ctx = canvas.getContext("2d");
 var DPR = window.devicePixelRatio || 1;
 canvas.width = W * DPR;
 canvas.height = H * DPR;
-canvas.style.width = W + "px";
-canvas.style.height = H + "px";
+canvas.style.maxWidth = W + "px";
+canvas.style.width = "100%";
+canvas.style.height = "auto";
 ctx.scale(DPR, DPR);
 
 // ---------- Brand palette ----------
@@ -68,8 +69,8 @@ var COL_GREY   = "#7a7875";
 var COL_FAINT  = "#3a4a5a";
 
 // ---------- Geometry ----------
-var V = { x: 240, y: 200 };  // vertex
-var ARM_LEN = 200;            // length of both arms
+var V = { x: 280, y: 170 };  // vertex
+var ARM_LEN = 130;            // length of both arms
 // fixed reference arm: along +x to (V.x + ARM_LEN, V.y)
 // draggable arm: starts at angle 90 degrees CCW from +x => points up
 var theta = 90; // degrees, 0..360, measured CCW from +x

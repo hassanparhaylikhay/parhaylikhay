@@ -61,8 +61,9 @@ var ctx = cv.getContext("2d");
   var dpr = window.devicePixelRatio || 1;
   cv.width  = W * dpr;
   cv.height = H * dpr;
-  cv.style.width  = W + "px";
-  cv.style.height = H + "px";
+  cv.style.maxWidth = W + "px";
+  cv.style.width = "100%";
+  cv.style.height = "auto";
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 })();
 
