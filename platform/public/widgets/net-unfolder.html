@@ -34,9 +34,16 @@
     left:50%; top:50%;
     width:0; height:0;
     transform-style: preserve-3d;
-    transform: rotateX(-22deg) rotateY(28deg);
     transition: transform 1.4s cubic-bezier(0.4, 0.1, 0.4, 1);
   }
+  /* Per-solid 3D scene rotation. Pyramid apex points along +z so it
+     needs more X-tilt to stand the apex up in screen. */
+  .scene.solid-cube,
+  .scene.solid-cuboid,
+  .scene.solid-prism,
+  .scene.solid-cylinder { transform: rotateX(-22deg) rotateY(28deg); }
+  .scene.solid-pyramid  { transform: rotateX(72deg) rotateY(-20deg); }
+  /* Net (flat) state: top-down view for every solid. */
   .stage.is-flat .scene { transform: rotateX(0deg) rotateY(0deg); }
 
   /* All hinges share preserve-3d + smooth transform transitions */
@@ -120,6 +127,7 @@ function fillOf(hex) {
 }
 
 var scene = document.getElementById("scene");
+scene.classList.add("solid-" + SOLID);
 
 function setStyle(el, s) {
   for (var k in s) {
@@ -161,35 +169,77 @@ function rectFace(w, h, color, label, hingeAttach) {
   return el;
 }
 
-// Triangle face via clip-path. Vertices given as percentages.
-// hinge edge is the bottom edge (y=100%, x from 0 to 100%).
+// Triangle face: a wrapper div that is itself unclipped, containing
+//   1) a clip-path filled div (the triangle's translucent fill),
+//   2) three explicit edge lines along the triangle sides (so the
+//      faces still have a clean stroke in 3D — clip-path on a div
+//      clips its outline to the bounding box, leaving slanted edges
+//      invisible).
 function triFace(w, h, color, label, points, hingeAttach) {
-  var el = document.createElement("div");
-  el.className = "face";
+  var wrapper = document.createElement("div");
+  wrapper.className = "face";
   var off = { left: 0, top: 0 };
   if (hingeAttach === "bottom") { off.left = -w/2; off.top = -h; }
   else if (hingeAttach === "top") { off.left = -w/2; off.top = 0; }
   else if (hingeAttach === "left") { off.left = 0; off.top = -h/2; }
   else if (hingeAttach === "right") { off.left = -w; off.top = -h/2; }
   else { off.left = -w/2; off.top = -h/2; }
-  setStyle(el, {
+  setStyle(wrapper, {
     width: w + "px",
     height: h + "px",
     left: off.left + "px",
-    top: off.top + "px",
-    background: fillOf(color),
-    clipPath: "polygon(" + points + ")",
-    outline: "1.5px solid " + color,
-    outlineOffset: "-1px"
+    top: off.top + "px"
   });
+
+  // Translucent fill, clipped to the polygon shape
+  var fill = document.createElement("div");
+  setStyle(fill, {
+    position: "absolute",
+    left: "0",
+    top: "0",
+    width: "100%",
+    height: "100%",
+    background: fillOf(color),
+    clipPath: "polygon(" + points + ")"
+  });
+  wrapper.appendChild(fill);
+
+  // Parse `points` into pixel-space vertex coords and add 3 edge lines
+  var verts = points.split(",").map(function(p) {
+    var parts = p.trim().split(/\s+/);
+    return {
+      x: parseFloat(parts[0]) / 100 * w,
+      y: parseFloat(parts[1]) / 100 * h
+    };
+  });
+  for (var i = 0; i < verts.length; i++) {
+    var a = verts[i], b = verts[(i + 1) % verts.length];
+    var dx = b.x - a.x, dy = b.y - a.y;
+    var len = Math.sqrt(dx * dx + dy * dy);
+    var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    var line = document.createElement("div");
+    setStyle(line, {
+      position: "absolute",
+      left: a.x + "px",
+      top: a.y + "px",
+      width: len + "px",
+      height: "1.5px",
+      background: color,
+      transformOrigin: "0 50%",
+      transform: "translateY(-0.75px) rotate(" + ang + "deg)",
+      pointerEvents: "none"
+    });
+    wrapper.appendChild(line);
+  }
+
   if (label) {
     var lab = document.createElement("div");
     lab.className = "face-label";
     lab.textContent = label;
     lab.style.color = color;
-    el.appendChild(lab);
+    wrapper.appendChild(lab);
   }
-  return el;
+  return wrapper;
 }
 
 // Make a hinge wrapper. Fold angle = the rotation when in folded (3D) state.
