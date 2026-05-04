@@ -118,33 +118,25 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 **Step 1 (a).** Exterior angle of a regular octagon $= \dfrac{360°}{8} = 45°$.
 
 <div class="diagram">
-<div class="diagram-caption">STEP 1: 8 EXTERIOR ANGLES SUM TO 360°, SO EACH IS 360° ÷ 8 = 45°</div>
+<div class="diagram-caption">STEP 1: 360° SPLIT INTO 8 EQUAL PIECES → EACH IS 45°</div>
 <div style="display:flex;justify-content:center">
-<svg viewBox="0 0 280 200" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:420px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<polygon fill="#00abfa10" stroke="#00abfa" stroke-width="1" stroke-linejoin="round" points="159.13,53.81 120.87,53.81 93.80,80.85 93.80,119.15 120.87,146.19 159.13,146.19 186.20,119.15 186.20,80.85"/>
-<g stroke="#3a4a5a" stroke-width="0.7" stroke-dasharray="3 2" fill="none">
-  <line x1="159.13" y1="53.81" x2="195" y2="53.81"/>
-  <line x1="186.20" y1="80.85" x2="205.39" y2="46.61"/>
-  <line x1="186.20" y1="119.15" x2="205.39" y2="153.39"/>
-  <line x1="159.13" y1="146.19" x2="195" y2="146.19"/>
-  <line x1="120.87" y1="146.19" x2="85" y2="146.19"/>
-  <line x1="93.80" y1="119.15" x2="74.61" y2="153.39"/>
-  <line x1="93.80" y1="80.85" x2="74.61" y2="46.61"/>
-  <line x1="120.87" y1="53.81" x2="85" y2="53.81"/>
-</g>
-<g stroke="#fff067" stroke-width="1" fill="#fff06720">
-  <path d="M 171.13 53.81 A 12 12 0 0 1 167.62 62.30 L 159.13 53.81 Z"/>
-  <path d="M 198.20 80.85 A 12 12 0 0 1 194.69 89.34 L 186.20 80.85 Z"/>
-  <path d="M 198.20 119.15 A 12 12 0 0 0 194.69 110.66 L 186.20 119.15 Z"/>
-  <path d="M 171.13 146.19 A 12 12 0 0 0 167.62 137.70 L 159.13 146.19 Z"/>
-  <path d="M 132.87 146.19 A 12 12 0 0 1 124.38 142.68 L 120.87 146.19 Z"/>
-  <path d="M 105.80 119.15 A 12 12 0 0 1 97.31 122.66 L 93.80 119.15 Z"/>
-  <path d="M 105.80 80.85 A 12 12 0 0 0 97.31 77.34 L 93.80 80.85 Z"/>
-  <path d="M 132.87 53.81 A 12 12 0 0 0 124.38 57.32 L 120.87 53.81 Z"/>
-</g>
-<text x="218" y="46" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="700">45°</text>
-<text x="140" y="180" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">8 × 45° = 360°</text>
+<div style="position:relative;width:280px;height:200px;font-family:'Geist Mono',monospace">
+<svg viewBox="0 0 280 200" style="position:absolute;inset:0;width:100%;height:100%" xmlns="http://www.w3.org/2000/svg">
+<circle cx="140" cy="100" r="60" fill="none" stroke="#3a4a5a" stroke-width="1"/>
+<path fill="#fff06730" stroke="#fff067" stroke-width="1" d="M 140 100 L 182.43 57.57 A 60 60 0 0 0 140 40 Z"/>
+<line x1="140" y1="100" x2="200" y2="100" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="140" y1="100" x2="182.43" y2="57.57" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="140" y1="100" x2="140" y2="40" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="140" y1="100" x2="97.57" y2="57.57" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="140" y1="100" x2="80" y2="100" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="140" y1="100" x2="97.57" y2="142.43" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="140" y1="100" x2="140" y2="160" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="140" y1="100" x2="182.43" y2="142.43" stroke="#3a4a5a" stroke-width="0.7"/>
+<circle cx="140" cy="100" r="2.5" fill="#7a7875"/>
 </svg>
+<div style="position:absolute;left:148px;top:55px;font-size:12px;color:#fff067;font-weight:700">45°</div>
+<div style="position:absolute;left:0;right:0;top:178px;text-align:center;font-size:11px;color:#7a7875">8 × 45° = 360°</div>
+</div>
 </div>
 </div>
 
@@ -153,19 +145,21 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 <div class="diagram">
 <div class="diagram-caption">STEP 2: AT EACH VERTEX, INTERIOR + EXTERIOR = 180° (STRAIGHT LINE)</div>
 <div style="display:flex;justify-content:center">
-<svg viewBox="0 0 280 160" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:420px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<line stroke="#00abfa" stroke-width="1.2" x1="40" y1="80" x2="140" y2="80"/>
-<line stroke="#3a4a5a" stroke-width="0.8" stroke-dasharray="3 2" x1="140" y1="80" x2="240" y2="80"/>
-<line stroke="#00abfa" stroke-width="1.2" x1="140" y1="80" x2="210.71" y2="150.71"/>
-<circle fill="#00abfa" cx="140" cy="80" r="3.5"/>
-<path fill="#fff06720" stroke="#fff067" stroke-width="1" d="M 110 80 A 30 30 0 0 0 119.79 101.21 L 140 80 Z"/>
-<path fill="#ff467020" stroke="#ff4670" stroke-width="1" d="M 165 80 A 25 25 0 0 1 157.68 97.68 L 140 80 Z"/>
-<text x="118" y="100" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="700" text-anchor="middle">135°</text>
-<text x="167" y="100" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670" font-weight="700">45°</text>
-<text x="80" y="74" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875">side of octagon</text>
-<text x="240" y="74" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="end">extension</text>
-<text x="140" y="146" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89" font-weight="600" text-anchor="middle">135° + 45° = 180°</text>
+<div style="position:relative;width:320px;height:200px;font-family:'Geist Mono',monospace">
+<svg viewBox="0 0 320 200" style="position:absolute;inset:0;width:100%;height:100%" xmlns="http://www.w3.org/2000/svg">
+<line x1="40" y1="100" x2="160" y2="100" stroke="#00abfa" stroke-width="1.2"/>
+<line x1="160" y1="100" x2="280" y2="100" stroke="#3a4a5a" stroke-width="0.8" stroke-dasharray="3 2"/>
+<line x1="160" y1="100" x2="195.36" y2="135.36" stroke="#00abfa" stroke-width="1.2"/>
+<path fill="#fff06725" stroke="#fff067" stroke-width="1" d="M 160 100 L 130 100 A 30 30 0 0 0 181.21 121.21 Z"/>
+<path fill="#ff467025" stroke="#ff4670" stroke-width="1" d="M 160 100 L 188 100 A 28 28 0 0 1 179.80 119.80 Z"/>
+<circle cx="160" cy="100" r="3.5" fill="#00abfa"/>
 </svg>
+<div style="position:absolute;left:60px;top:78px;font-size:10px;color:#7a7875">side of octagon</div>
+<div style="position:absolute;left:200px;top:78px;font-size:10px;color:#7a7875">extension</div>
+<div style="position:absolute;left:124px;top:128px;font-size:11px;color:#fff067;font-weight:700">135°</div>
+<div style="position:absolute;left:194px;top:120px;font-size:11px;color:#ff4670;font-weight:700">45°</div>
+<div style="position:absolute;left:0;right:0;top:178px;text-align:center;font-size:11px;color:#0fee89;font-weight:600">135° + 45° = 180°</div>
+</div>
 </div>
 </div>
 
@@ -174,15 +168,17 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 <div class="diagram">
 <div class="diagram-caption">STEP 3: O AT CENTRE, A ON CIRCLE → OA IS A RADIUS</div>
 <div style="display:flex;justify-content:center">
-<svg viewBox="0 0 280 160" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:380px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<circle fill="none" stroke="#3a4a5a" stroke-width="0.7" cx="140" cy="80" r="55"/>
-<line stroke="#fff067" stroke-width="1.2" x1="140" y1="80" x2="187.86" y2="52.36"/>
-<circle fill="#fff067" cx="140" cy="80" r="3.5"/>
-<circle fill="#00abfa" cx="187.86" cy="52.36" r="3.5"/>
-<text x="134" y="94" font-family="Geist Mono,monospace" font-size="13" fill="#fff067" font-weight="700" text-anchor="end">O</text>
-<text x="195" y="50" font-family="Geist Mono,monospace" font-size="13" fill="#00abfa" font-weight="700">A</text>
-<text x="155" y="60" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600">radius</text>
+<div style="position:relative;width:280px;height:160px;font-family:'Geist Mono',monospace">
+<svg viewBox="0 0 280 160" style="position:absolute;inset:0;width:100%;height:100%" xmlns="http://www.w3.org/2000/svg">
+<circle cx="140" cy="80" r="55" fill="none" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="140" y1="80" x2="187.63" y2="52.5" stroke="#fff067" stroke-width="1.2"/>
+<circle cx="140" cy="80" r="3.5" fill="#fff067"/>
+<circle cx="187.63" cy="52.5" r="3.5" fill="#00abfa"/>
 </svg>
+<div style="position:absolute;left:122px;top:88px;font-size:13px;color:#fff067;font-weight:700">O</div>
+<div style="position:absolute;left:194px;top:34px;font-size:13px;color:#00abfa;font-weight:700">A</div>
+<div style="position:absolute;left:148px;top:60px;font-size:11px;color:#fff067;font-weight:600">radius</div>
+</div>
 </div>
 </div>
 
@@ -191,14 +187,16 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 <div class="diagram">
 <div class="diagram-caption">STEP 4: A TANGENT TOUCHES THE CIRCLE AT EXACTLY ONE POINT</div>
 <div style="display:flex;justify-content:center">
-<svg viewBox="0 0 280 160" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:380px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<circle fill="none" stroke="#3a4a5a" stroke-width="0.7" cx="140" cy="90" r="50"/>
-<line stroke="#ff822c" stroke-width="1.2" x1="50" y1="40" x2="230" y2="40"/>
-<circle fill="#0fee89" cx="140" cy="40" r="4"/>
-<text x="140" y="32" font-family="Geist Mono,monospace" font-size="13" fill="#0fee89" font-weight="700" text-anchor="middle">T</text>
-<text x="220" y="32" font-family="Geist Mono,monospace" font-size="11" fill="#ff822c" font-weight="600" text-anchor="end">tangent TX</text>
-<text x="140" y="150" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">single contact point at T</text>
+<div style="position:relative;width:280px;height:160px;font-family:'Geist Mono',monospace">
+<svg viewBox="0 0 280 160" style="position:absolute;inset:0;width:100%;height:100%" xmlns="http://www.w3.org/2000/svg">
+<circle cx="140" cy="95" r="50" fill="none" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="40" y1="45" x2="240" y2="45" stroke="#ff822c" stroke-width="1.2"/>
+<circle cx="140" cy="45" r="4" fill="#0fee89"/>
 </svg>
+<div style="position:absolute;left:134px;top:22px;font-size:13px;color:#0fee89;font-weight:700">T</div>
+<div style="position:absolute;right:8px;top:24px;font-size:11px;color:#ff822c;font-weight:600">tangent TX</div>
+<div style="position:absolute;left:0;right:0;top:142px;text-align:center;font-size:10px;color:#7a7875">single contact point at T</div>
+</div>
 </div>
 </div>
 
@@ -207,19 +205,21 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 <div class="diagram">
 <div class="diagram-caption">STEP 5: TANGENT ⊥ RADIUS AT THE POINT OF CONTACT</div>
 <div style="display:flex;justify-content:center">
-<svg viewBox="0 0 280 180" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:380px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<circle fill="none" stroke="#3a4a5a" stroke-width="0.7" cx="140" cy="100" r="55"/>
-<line stroke="#fff067" stroke-width="1" x1="140" y1="100" x2="140" y2="45"/>
-<line stroke="#ff822c" stroke-width="1" x1="60" y1="45" x2="220" y2="45"/>
-<path fill="none" stroke="#ff4670" stroke-width="0.9" d="M 152 45 L 152 57 L 140 57"/>
-<circle fill="#fff067" cx="140" cy="100" r="3.5"/>
-<circle fill="#0fee89" cx="140" cy="45" r="3.5"/>
-<text x="148" y="112" font-family="Geist Mono,monospace" font-size="12" fill="#fff067" font-weight="700">O</text>
-<text x="140" y="36" font-family="Geist Mono,monospace" font-size="12" fill="#0fee89" font-weight="700" text-anchor="middle">T</text>
-<text x="158" y="55" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670" font-weight="700">90°</text>
-<text x="125" y="78" font-family="Geist Mono,monospace" font-size="10" fill="#fff067" text-anchor="end">radius</text>
-<text x="220" y="38" font-family="Geist Mono,monospace" font-size="10" fill="#ff822c" text-anchor="end">tangent</text>
+<div style="position:relative;width:280px;height:180px;font-family:'Geist Mono',monospace">
+<svg viewBox="0 0 280 180" style="position:absolute;inset:0;width:100%;height:100%" xmlns="http://www.w3.org/2000/svg">
+<circle cx="140" cy="105" r="55" fill="none" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="140" y1="105" x2="140" y2="50" stroke="#fff067" stroke-width="1"/>
+<line x1="50" y1="50" x2="230" y2="50" stroke="#ff822c" stroke-width="1"/>
+<path fill="none" stroke="#ff4670" stroke-width="0.9" d="M 152 50 L 152 62 L 140 62"/>
+<circle cx="140" cy="105" r="3.5" fill="#fff067"/>
+<circle cx="140" cy="50" r="3.5" fill="#0fee89"/>
 </svg>
+<div style="position:absolute;left:148px;top:114px;font-size:12px;color:#fff067;font-weight:700">O</div>
+<div style="position:absolute;left:134px;top:28px;font-size:12px;color:#0fee89;font-weight:700">T</div>
+<div style="position:absolute;left:158px;top:54px;font-size:11px;color:#ff4670;font-weight:700">90°</div>
+<div style="position:absolute;left:96px;top:74px;font-size:10px;color:#fff067">radius</div>
+<div style="position:absolute;right:10px;top:32px;font-size:10px;color:#ff822c">tangent</div>
+</div>
 </div>
 </div>
 
@@ -228,20 +228,22 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 <div class="diagram">
 <div class="diagram-caption">STEP 6: APPLY STEP 5 TO THIS DIAGRAM → ∠OTX = 90°</div>
 <div style="display:flex;justify-content:center">
-<svg viewBox="0 0 280 220" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:380px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<circle fill="none" stroke="#3a4a5a" stroke-width="0.7" cx="140" cy="120" r="80"/>
-<line stroke="#fff067" stroke-width="1" x1="140" y1="120" x2="140" y2="40"/>
-<line stroke="#ff822c" stroke-width="1" x1="40" y1="40" x2="240" y2="40"/>
-<path fill="#ff467020" stroke="#ff4670" stroke-width="0.9" d="M 154 40 L 154 54 L 140 54 Z"/>
-<circle fill="#fff067" cx="140" cy="120" r="4"/>
-<circle fill="#0fee89" cx="140" cy="40" r="4.5"/>
-<text x="148" y="132" font-family="Geist Mono,monospace" font-size="13" fill="#fff067" font-weight="700">O</text>
-<text x="140" y="30" font-family="Geist Mono,monospace" font-size="13" fill="#0fee89" font-weight="700" text-anchor="middle">T</text>
-<text x="160" y="51" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670" font-weight="700">90°</text>
-<text x="240" y="32" font-family="Geist Mono,monospace" font-size="10" fill="#ff822c" font-weight="600" text-anchor="end">tangent TX</text>
-<text x="125" y="80" font-family="Geist Mono,monospace" font-size="10" fill="#fff067" font-weight="600" text-anchor="end">radius OT</text>
-<text x="140" y="206" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89" font-weight="600" text-anchor="middle">∠OTX = 90°</text>
+<div style="position:relative;width:280px;height:240px;font-family:'Geist Mono',monospace">
+<svg viewBox="0 0 280 240" style="position:absolute;inset:0;width:100%;height:100%" xmlns="http://www.w3.org/2000/svg">
+<circle cx="140" cy="135" r="80" fill="none" stroke="#3a4a5a" stroke-width="0.7"/>
+<line x1="140" y1="135" x2="140" y2="55" stroke="#fff067" stroke-width="1"/>
+<line x1="40" y1="55" x2="240" y2="55" stroke="#ff822c" stroke-width="1"/>
+<path fill="#ff467020" stroke="#ff4670" stroke-width="0.9" d="M 154 55 L 154 69 L 140 69 Z"/>
+<circle cx="140" cy="135" r="4" fill="#fff067"/>
+<circle cx="140" cy="55" r="4.5" fill="#0fee89"/>
 </svg>
+<div style="position:absolute;left:148px;top:144px;font-size:13px;color:#fff067;font-weight:700">O</div>
+<div style="position:absolute;left:134px;top:32px;font-size:13px;color:#0fee89;font-weight:700">T</div>
+<div style="position:absolute;left:160px;top:60px;font-size:11px;color:#ff4670;font-weight:700">90°</div>
+<div style="position:absolute;right:8px;top:34px;font-size:10px;color:#ff822c;font-weight:600">tangent TX</div>
+<div style="position:absolute;left:62px;top:88px;font-size:10px;color:#fff067;font-weight:600">radius OT</div>
+<div style="position:absolute;left:0;right:0;top:218px;text-align:center;font-size:11px;color:#0fee89;font-weight:700">∠OTX = 90°</div>
+</div>
 </div>
 </div>
 
