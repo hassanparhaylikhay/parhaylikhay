@@ -106,19 +106,19 @@ A solid is a triangular prism. The triangular cross-section is a right-angled tr
 
 (d) Calculate the volume of the prism.
 
-**Step 1 (a).** Pythagoras in the right-angled triangle: $h^2 = 5^2 + 12^2 = 25 + 144 = 169$, so $h = 13$ cm.
+**(a)** Pythagoras in the right-angled triangle: $h^2 = 5^2 + 12^2 = 25 + 144 = 169$, so $h = 13$ cm.
 
-**Step 2 (b).** The net consists of: $2$ right-angled triangles (legs $5$ and $12$, hypotenuse $13$), and $3$ rectangles of dimensions $5 \times 20$, $12 \times 20$, $13 \times 20$.
+**(b)** The net consists of: $2$ right-angled triangles (legs $5$ and $12$, hypotenuse $13$), and $3$ rectangles of dimensions $5 \times 20$, $12 \times 20$, $13 \times 20$.
 
-**Step 3 (c).** Area of one triangle $= \dfrac{1}{2} \times 5 \times 12 = 30$ cm².
+**(c)** Area of one triangle $= \dfrac{1}{2} \times 5 \times 12 = 30$ cm².
 
-**Step 4 (c).** Area of two triangles $= 60$ cm².
+**(c)** Area of two triangles $= 60$ cm².
 
-**Step 5 (c).** Area of three rectangles $= (5 + 12 + 13) \times 20 = 30 \times 20 = 600$ cm².
+**(c)** Area of three rectangles $= (5 + 12 + 13) \times 20 = 30 \times 20 = 600$ cm².
 
-**Step 6 (c).** Total surface area $= 60 + 600 = 660$ cm².
+**(c)** Total surface area $= 60 + 600 = 660$ cm².
 
-**Step 7 (d).** Volume $= (\text{area of cross-section}) \times \text{length} = 30 \times 20 = 600$ cm³.
+**(d)** Volume $= (\text{area of cross-section}) \times \text{length} = 30 \times 20 = 600$ cm³.
 
 **Answer (a):** $13$ cm. **[M1 for $5^2 + 12^2$; A1 for $13$]**
 

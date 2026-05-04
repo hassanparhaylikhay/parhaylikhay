@@ -117,7 +117,7 @@ Two solid metal cones are mathematically similar. The smaller cone has slant hei
 
 **(b)** Find the surface area of the larger cone.
 
-**Step 1: Find the length scale factor from the volumes.**
+**Find the length scale factor from the volumes.**
 
 $$\dfrac{V_{\text{large}}}{V_{\text{small}}} \;=\; \dfrac{1\,000}{216} \;=\; \dfrac{125}{27}$$
 
@@ -125,13 +125,13 @@ $$k = \sqrt[3]{\dfrac{125}{27}} = \dfrac{5}{3}$$
 
 **[M1 for the volume ratio; M1 for cube-rooting]**
 
-**Step 2: Apply $k$ to the slant height for part (a).**
+**Apply $k$ to the slant height for part (a).**
 
 $$\text{new slant height} = k \times 9 = \dfrac{5}{3} \times 9 = 15$$
 
 **Answer (a):** Slant height of the larger cone $= 15$ cm. **[A1]**
 
-**Step 3: Find the area scale factor and apply it for part (b).**
+**Find the area scale factor and apply it for part (b).**
 
 $$k^2 = \left(\dfrac{5}{3}\right)^2 = \dfrac{25}{9}$$
 

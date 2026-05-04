@@ -136,7 +136,7 @@ The points $A(2, 1)$, $B(8, 1)$, $C(8, 9)$ all lie on a circle.
 
 (c) From an external point $P$, the tangent length to this circle is $12$ cm. Find $OP$.
 
-**Step 1 (a): perpendicular bisector of $AB$.**
+**(a) perpendicular bisector of $AB$.**
 
 $A$ and $B$ have the same $y$-coordinate, so $AB$ is horizontal. Midpoint of $AB$:
 
@@ -144,7 +144,7 @@ $$M_{AB} = \left(\dfrac{2+8}{2}, \dfrac{1+1}{2}\right) = (5, 1)$$
 
 The perpendicular bisector of a horizontal chord is vertical, so it has equation $x = 5$.
 
-**Step 2 (a): perpendicular bisector of $BC$.**
+**(a) perpendicular bisector of $BC$.**
 
 $B$ and $C$ have the same $x$-coordinate, so $BC$ is vertical. Midpoint:
 
@@ -152,11 +152,11 @@ $$M_{BC} = \left(\dfrac{8+8}{2}, \dfrac{1+9}{2}\right) = (8, 5)$$
 
 The perpendicular bisector of a vertical chord is horizontal, so it has equation $y = 5$.
 
-**Step 3 (a): intersect the two bisectors.**
+**(a) intersect the two bisectors.**
 
 The two bisectors meet at $(5, 5)$. So the centre is $O = (5, 5)$.
 
-**Step 4 (b): radius from centre to any of the three points.**
+**(b) radius from centre to any of the three points.**
 
 Use $A(2, 1)$ and $O(5, 5)$:
 
@@ -164,7 +164,7 @@ $$r = \sqrt{(5-2)^2 + (5-1)^2} = \sqrt{9 + 16} = \sqrt{25} = 5$$
 
 So radius $= 5$ units.
 
-**Step 5 (c): right triangle $OTP$ with $OT = r$ and $TP = 12$.**
+**(c) right triangle $OTP$ with $OT = r$ and $TP = 12$.**
 
 $T$ is the contact point of the tangent. The tangent is perpendicular to the radius at $T$, so triangle $OTP$ is right-angled at $T$.
 

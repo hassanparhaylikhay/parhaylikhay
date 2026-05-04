@@ -114,29 +114,29 @@ In the figure, $AB$ is parallel to $CD$. A transversal cuts $AB$ at $E$ and $CD$
 
 (c) Separately, find the size of one interior angle of a regular polygon with 12 sides.
 
-**Step 1 (a): identify the rule.** Angle $BEF = 40°$ (given). Angle $EFC$ is on the opposite side of the transversal at $F$, between the parallels. So $BEF$ and $EFC$ are alternate angles.
+**(a) identify the rule.** Angle $BEF = 40°$ (given). Angle $EFC$ is on the opposite side of the transversal at $F$, between the parallels. So $BEF$ and $EFC$ are alternate angles.
 
-**Step 2 (a): apply.**
+**(a) apply.**
 
 $$\text{angle } EFC = 40°$$
 
-**Step 3 (a): reason.** Alternate angles, $AB \parallel CD$.
+**(a) reason.** Alternate angles, $AB \parallel CD$.
 
-**Step 4 (b): set up the isosceles triangle.** Triangle $EFG$ with $FE = FG$, so the base angles at $E$ and $G$ are equal: angle $FEG = $ angle $FGE$.
+**(b) set up the isosceles triangle.** Triangle $EFG$ with $FE = FG$, so the base angles at $E$ and $G$ are equal: angle $FEG = $ angle $FGE$.
 
-**Step 5 (b): apply the triangle-sum rule.**
+**(b) apply the triangle-sum rule.**
 
 $$\text{angle } FEG + \text{angle } FGE + \text{angle } EFG = 180$$
 
 $$2 \times \text{angle } FEG + 70 = 180$$
 
-**Step 6 (b): solve.**
+**(b) solve.**
 
 $$2 \times \text{angle } FEG = 110$$
 
 $$\text{angle } FEG = 55°$$
 
-**Step 7 (c): apply the polygon formula.** For a regular 12-sided polygon (dodecagon), use the exterior route.
+**(c) apply the polygon formula.** For a regular 12-sided polygon (dodecagon), use the exterior route.
 
 $$\text{exterior angle} = \dfrac{360}{12} = 30°$$
 

@@ -151,17 +151,17 @@ Three towns are A, B, and C in a flat region of Punjab. The bearing of B from A 
 </div>
 </div>
 
-**Step 1 (a).** Drawn AB $= 12 / 2 = 6$ cm.
+**(a)** Drawn AB $= 12 / 2 = 6$ cm.
 
-**Step 2 (a).** Drawn AC $= 9 / 2 = 4.5$ cm.
+**(a)** Drawn AC $= 9 / 2 = 4.5$ cm.
 
-**Step 3 (b).** Real BC $= 7.5 \times 2 = 15$ km.
+**(b)** Real BC $= 7.5 \times 2 = 15$ km.
 
-**Step 4 (c).** Original bearing $068°$ is less than $180°$, so add $180°$.
+**(c)** Original bearing $068°$ is less than $180°$, so add $180°$.
 
-**Step 5 (c).** Bearing of A from B $= 068° + 180° = 248°$.
+**(c)** Bearing of A from B $= 068° + 180° = 248°$.
 
-**Step 6 (d).** $\angle BAC = 158° - 068° = 90°$. This is a right angle (which is conventionally classified separately from acute and obtuse).
+**(d)** $\angle BAC = 158° - 068° = 90°$. This is a right angle (which is conventionally classified separately from acute and obtuse).
 
 **Answer (a):** AB $= 6$ cm, AC $= 4.5$ cm. **[B1 + B1]**
 

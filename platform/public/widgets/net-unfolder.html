@@ -385,12 +385,34 @@ function buildPrism() {
 
   // Caps: triangle in cross-section (right angle between a and b legs).
   // Hinges at the bottom rectangle's left and right edges (y = yOff).
-  var capLabel = aCm + "-" + bCm + "-" + Math.round(hCm);
+  // Each side of the triangle gets its OWN label (a-leg, b-leg, hypotenuse).
+  function edgeLab(text, color, x, y) {
+    var lab = document.createElement("div");
+    lab.className = "face-label";
+    lab.style.left = x + "px";
+    lab.style.top = y + "px";
+    lab.style.color = color;
+    lab.textContent = text;
+    return lab;
+  }
+  var hypLbl = Math.round(hCm * 100) / 100;
+  // LEFT cap: vertices (a,0), (a,b), (0,0). Right angle at top-right.
+  // a-leg = top edge; b-leg = right edge (hinge); hypotenuse = diagonal.
   var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, yOff, 0));
-  hCapL.appendChild(triFace(a, b, c, capLabel, "100% 0%, 100% 100%, 0% 0%", "right"));
+  var capL = triFace(a, b, c, null, "100% 0%, 100% 100%, 0% 0%", "right");
+  hCapL.appendChild(capL);
+  capL.appendChild(edgeLab(aCm, c, a/2, 9));            // a-leg on top edge
+  capL.appendChild(edgeLab(bCm, c, a - 11, b/2));       // b-leg on right edge
+  capL.appendChild(edgeLab(hypLbl, c, 2*a/3, b/3));     // hypotenuse near centroid
 
+  // RIGHT cap: vertices (0,0), (0,b), (a,0). Right angle at top-left.
+  // a-leg = top edge; b-leg = left edge (hinge); hypotenuse = diagonal.
   var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, yOff, 0));
-  hCapR.appendChild(triFace(a, b, c, capLabel, "0% 0%, 0% 100%, 100% 0%", "left"));
+  var capR = triFace(a, b, c, null, "0% 0%, 0% 100%, 100% 0%", "left");
+  hCapR.appendChild(capR);
+  capR.appendChild(edgeLab(aCm, c, a/2, 9));            // a-leg on top edge
+  capR.appendChild(edgeLab(bCm, c, 11, b/2));           // b-leg on left edge
+  capR.appendChild(edgeLab(hypLbl, c, a/3, b/3));       // hypotenuse near centroid
 }
 
 function buildCylinder() {

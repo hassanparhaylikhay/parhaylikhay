@@ -133,7 +133,7 @@ Find:
 
 (c) angle $BCT$ (the angle between the tangent at $C$ and chord $CB$).
 
-**Step 1 (a): semicircle gives $90°$ at $B$.**
+**(a) semicircle gives $90°$ at $B$.**
 
 $AC$ is a diameter, so angle $ABC$ subtends the diameter at $B$. The right angle sits at $B$.
 
@@ -141,13 +141,13 @@ $$\text{angle } ABC = 90°$$
 
 (Reason: angle in semicircle is $90°$.)
 
-**Step 2 (a continued): use triangle sum to get angle $BCA$.**
+**(a continued) use triangle sum to get angle $BCA$.**
 
 In triangle $ABC$:
 
 $$\text{angle } BCA = 180° - 90° - 28° = 62°$$
 
-**Step 3 (b): same segment.**
+**(b) same segment.**
 
 $D$ and $C$ are both on the major arc of chord $AB$, so angle $ADB$ and angle $ACB$ are in the **same segment**.
 
@@ -155,7 +155,7 @@ $$\text{angle } ADB = \text{angle } ACB = 62°$$
 
 (Reason: angles in the same segment are equal.)
 
-**Step 4 (c): alternate segment theorem at $C$.**
+**(c) alternate segment theorem at $C$.**
 
 The tangent at $C$ makes an angle with chord $CB$. By the alternate segment theorem, this equals the inscribed angle in the alternate segment - that is, angle $BAC = 28°$.
 

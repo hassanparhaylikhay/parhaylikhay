@@ -119,11 +119,11 @@ A solid is made of a cube of side $4$ cm with a square-based pyramid stacked on 
 
 **(c)** Looking at the solid from directly above, you see a square. State the number of lines of symmetry of this 2D view.
 
-**Step 1: Visualise.**
+**Visualise.**
 
 A cube with a square pyramid on top. The vertical axis through the apex and the centre of the cube is the principal symmetry axis. The shape has the same rotational symmetry about this axis as a square has about its centre.
 
-**Step 2: Planes of symmetry of the solid (a).**
+**Planes of symmetry of the solid (a).**
 
 The cube alone has $9$ planes. The pyramid alone has $4$. The combined solid keeps only the planes that are planes of symmetry for **both** parts: the $4$ planes of the pyramid that contain the vertical axis. (The horizontal planes of the cube are broken by the pyramid; the diagonal planes of the cube that do not contain the vertical axis are also broken.)
 
@@ -131,13 +131,13 @@ These $4$ planes are: $2$ vertical planes through the midpoints of opposite vert
 
 **Answer (a):** $4$ planes of symmetry. **[B1]**
 
-**Step 3: Rotational order about the vertical axis (b).**
+**Rotational order about the vertical axis (b).**
 
 A $90°$ rotation about the vertical axis maps the cube onto itself and the pyramid onto itself. So the combined solid lands on itself after every $90°$. The order is $4$.
 
 **Answer (b):** Order $4$. **[B1]**
 
-**Step 4: View from above (c).**
+**View from above (c).**
 
 From directly above you see the apex of the pyramid in the centre of a square, with the four triangular faces sloping down. The view is a square with its two diagonals visible (or just the square, depending on shading). Either way the outline is a square.
 
