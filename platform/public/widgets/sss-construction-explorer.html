@@ -34,10 +34,8 @@
 
   /* Animation CSS */
   .draw-line {
-    width: 0;
     transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1);
   }
-  .draw-line.drawn { width: var(--draw-len); }
 
   .draw-arc {
     clip-path: polygon(0% 0%, 0% 0%, 0% 50%, 0% 50%);
@@ -138,6 +136,7 @@ function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
     position: "absolute",
     left: x1 + "px",
     top: y1 + "px",
+    width: "0px",
     height: t + "px",
     transformOrigin: "0 50%",
     transform: "translateY(" + (-t / 2) + "px) rotate(" + ang + "deg)"
@@ -145,12 +144,13 @@ function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
   if (dashed) {
     s.background = "transparent";
     s.borderTop = t + "px dashed " + color;
-    s.height = "0";
+    s.height = "0px";
   } else {
     s.background = color;
   }
-  s["--draw-len"] = len + "px";
-  return makeNode("div", s, dataStep, "draw-line");
+  var node = makeNode("div", s, dataStep, "draw-line");
+  node._fullWidth = len;
+  return node;
 }
 
 // Filled circle dot of size px at (x,y). Fades in on draw.
@@ -224,11 +224,11 @@ labelEl((P.x + Q.x) / 2 - 22, P.y + 18, "8 cm", "#00abfa", 12, 1, { weight: "600
 
 // Step 2 — arc 1 from P
 arcUpperEl(P.x, P.y, PR_px, "#fff067", 1.6, true, 2);
-labelEl(P.x + 50, P.y - 130, "arc 1: r = 6 cm", "#fff067", 11, 2, { weight: "600" });
+labelEl(8, 32, "arc 1: r = 6 cm", "#fff067", 11, 2, { weight: "600" });
 
 // Step 3 — arc 2 from Q
 arcUpperEl(Q.x, Q.y, QR_px, "#ff822c", 1.6, true, 3);
-labelEl(Q.x - 168, Q.y - 130, "arc 2: r = 7 cm", "#ff822c", 11, 3, { weight: "600" });
+labelEl(330, 32, "arc 2: r = 7 cm", "#ff822c", 11, 3, { weight: "600" });
 
 // Step 4 — mark intersection R
 dotEl(R.x, R.y, "#ff4670", 10, 4);
@@ -264,8 +264,14 @@ function setStep(n) {
   var els = stage.querySelectorAll("[data-step]");
   for (var i = 0; i < els.length; i++) {
     var s = parseInt(els[i].dataset.step, 10);
-    if (s <= step) els[i].classList.add("drawn");
-    else els[i].classList.remove("drawn");
+    var el = els[i];
+    if (s <= step) {
+      el.classList.add("drawn");
+      if (el._fullWidth != null) el.style.width = el._fullWidth + "px";
+    } else {
+      el.classList.remove("drawn");
+      if (el._fullWidth != null) el.style.width = "0px";
+    }
   }
   prevBtn.disabled = (step === 0);
   nextBtn.disabled = (step === maxStep);
