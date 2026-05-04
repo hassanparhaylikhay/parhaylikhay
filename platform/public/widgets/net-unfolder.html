@@ -278,7 +278,7 @@ function trackHinge(h) { allHinges.push(h); return h; }
 function buildCube() {
   document.getElementById("title").textContent = "CUBE";
   document.getElementById("footer").textContent = "6 square faces unfold into a cross-shaped net";
-  var s = 120;
+  var s = 100;
   var c = COL.blue;
   // Front face: anchor at scene origin, in the xy plane (z=0)
   var front = rectFace(s, s, c, "front");
@@ -311,7 +311,7 @@ function buildCube() {
 function buildCuboid() {
   document.getElementById("title").textContent = "CUBOID";
   document.getElementById("footer").textContent = "3 pairs of rectangles: 2 of 5x4, 2 of 5x3, 2 of 4x3";
-  var L = 140, W = 110, H = 80;  // length, width, height in px
+  var L = 115, W = 90, H = 70;  // length, width, height in px
   var c = COL.yellow;
   // Front face: L wide, H tall, in xy plane at z=0
   var front = rectFace(L, H, c, L + " x " + H);
@@ -343,7 +343,7 @@ function buildPrism() {
   document.getElementById("footer").textContent = "2 triangles + 3 rectangles wrap around the cross-section";
   // Right-angled cross-section: legs a (vertical) and b (horizontal), hypotenuse hyp.
   // Prism axis along x; cross-section in yz plane.
-  var a = 65, b = 105, L = 145;
+  var a = 55, b = 90, L = 120;
   var hyp = Math.sqrt(a * a + b * b);
   var c = COL.green;
 
@@ -383,8 +383,8 @@ function buildPrism() {
 function buildCylinder() {
   document.getElementById("title").textContent = "CYLINDER";
   document.getElementById("footer").textContent = "2 circular ends + a rectangle of width = circumference 2πr";
-  var r = 60;
-  var H = 130;
+  var r = 48;
+  var H = 110;
   var circ = 2 * Math.PI * r;
   var c = COL.pink;
 
