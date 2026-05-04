@@ -79,86 +79,6 @@ A trapezium sits outside this chain: it has only **one** pair of parallel sides,
 <div style="font-size:11px;font-weight:600;color:#ff4670;text-align:center;margin-top:4px">TRAPEZIUM sits outside this chain (only 1 pair of parallel sides)</div>
 </div>
 
-## Quick reference: angle types
-
-- Acute: $0° < \theta < 90°$
-- Right: $\theta = 90°$
-- Obtuse: $90° < \theta < 180°$
-- Straight: $\theta = 180°$
-- Reflex: $180° < \theta < 360°$
-
-<div class="diagram">
-<div class="diagram-caption">ANGLE-TYPE FLASHCARD</div>
-<div style="display:flex;justify-content:center">
-<svg viewBox="0 0 600 140" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<g>
-<line stroke="#00abfa" stroke-width="2.5" x1="10" y1="100" x2="80" y2="100"/>
-<line stroke="#00abfa" stroke-width="2.5" x1="10" y1="100" x2="65" y2="55"/>
-<path fill="none" stroke="#fff067" stroke-width="2" d="M40 100 A30 30 0 0 0 33 79"/>
-<text x="45" y="125" font-family="Geist Mono,monospace" font-size="11" fill="#0fee89" font-weight="600" text-anchor="middle">ACUTE</text>
-<text x="45" y="138" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">&lt; 90</text>
-</g>
-<g transform="translate(120,0)">
-<line stroke="#00abfa" stroke-width="2.5" x1="10" y1="100" x2="80" y2="100"/>
-<line stroke="#00abfa" stroke-width="2.5" x1="10" y1="100" x2="10" y2="40"/>
-<path fill="none" stroke="#ff4670" stroke-width="2" d="M10 88 L22 88 L22 100"/>
-<text x="45" y="125" font-family="Geist Mono,monospace" font-size="11" fill="#0fee89" font-weight="600" text-anchor="middle">RIGHT</text>
-<text x="45" y="138" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">= 90</text>
-</g>
-<g transform="translate(240,0)">
-<line stroke="#00abfa" stroke-width="2.5" x1="40" y1="100" x2="110" y2="100"/>
-<line stroke="#00abfa" stroke-width="2.5" x1="40" y1="100" x2="-10" y2="60"/>
-<path fill="none" stroke="#fff067" stroke-width="2" d="M70 100 A30 30 0 0 0 17 80"/>
-<text x="55" y="125" font-family="Geist Mono,monospace" font-size="11" fill="#0fee89" font-weight="600" text-anchor="middle">OBTUSE</text>
-<text x="55" y="138" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">90 to 180</text>
-</g>
-<g transform="translate(370,0)">
-<line stroke="#00abfa" stroke-width="2.5" x1="0" y1="100" x2="100" y2="100"/>
-<circle fill="#fff067" cx="50" cy="100" r="4"/>
-<text x="50" y="125" font-family="Geist Mono,monospace" font-size="11" fill="#0fee89" font-weight="600" text-anchor="middle">STRAIGHT</text>
-<text x="50" y="138" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">180</text>
-</g>
-<g transform="translate(490,0)">
-<line stroke="#00abfa" stroke-width="2.5" x1="10" y1="100" x2="70" y2="100"/>
-<line stroke="#00abfa" stroke-width="2.5" x1="10" y1="100" x2="55" y2="58"/>
-<path fill="none" stroke="#ff4670" stroke-width="2" d="M40 100 A30 30 0 1 0 32 78"/>
-<text x="45" y="125" font-family="Geist Mono,monospace" font-size="11" fill="#0fee89" font-weight="600" text-anchor="middle">REFLEX</text>
-<text x="45" y="138" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">&gt; 180</text>
-</g>
-</svg>
-</div>
-</div>
-
-## Quick reference: circle parts
-
-- Centre, radius, diameter, circumference.
-- Chord (any line joining two points on the circle).
-- Tangent (touches at exactly one point; perpendicular to the radius there).
-- Arc (a piece of circumference); minor or major.
-- Sector ("pizza slice", two radii + arc); minor or major.
-- Segment (chord + arc); minor or major.
-
-<div class="diagram">
-<div class="diagram-caption">CIRCLE PARTS RECAP</div>
-<div style="display:flex;justify-content:center">
-<svg viewBox="0 0 320 220" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<circle fill="none" stroke="#3a4a5a" stroke-width="1.5" cx="160" cy="110" r="80"/>
-<circle fill="#fff067" cx="160" cy="110" r="3.5"/>
-<line stroke="#00abfa" stroke-width="2.5" x1="160" y1="110" x2="220" y2="58"/>
-<line stroke="#fff067" stroke-width="2.5" x1="80" y1="110" x2="240" y2="110"/>
-<line stroke="#0fee89" stroke-width="2.5" x1="100" y1="148" x2="232" y2="80"/>
-<line stroke="#ff822c" stroke-width="2.5" x1="60" y1="30" x2="260" y2="30"/>
-<circle fill="#ff822c" cx="160" cy="30" r="3.5"/>
-<text x="166" y="106" font-family="Geist Mono,monospace" font-size="10" fill="#fff067" font-weight="600">O</text>
-<text x="195" y="50" font-family="Geist Mono,monospace" font-size="10" fill="#00abfa" font-weight="600">RADIUS</text>
-<text x="105" y="128" font-family="Geist Mono,monospace" font-size="10" fill="#fff067" font-weight="600">DIAMETER</text>
-<text x="115" y="135" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89" font-weight="600">CHORD</text>
-<text x="180" y="22" font-family="Geist Mono,monospace" font-size="10" fill="#ff822c" font-weight="600">TANGENT</text>
-<text x="160" y="210" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">ARC = piece of circumference</text>
-</svg>
-</div>
-</div>
-
 ## Worked example
 
 The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centre $O$. The point $T$ is on the circle, between $A$ and $B$, and a line $TX$ touches the circle at $T$.
@@ -168,19 +88,21 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 <div style="display:flex;justify-content:center">
 <svg viewBox="0 0 320 260" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
 <circle fill="none" stroke="#3a4a5a" stroke-width="1.5" cx="160" cy="130" r="90"/>
-<polygon fill="none" stroke="#00abfa" stroke-width="2.5" points="195,46 230,65 250,100 250,160 230,195 195,214 125,214 90,195 70,160 70,100 90,65 125,46"/>
-<circle fill="#fff067" cx="160" cy="130" r="4"/>
-<line stroke="#fff067" stroke-width="2" x1="160" y1="130" x2="195" y2="46"/>
-<circle fill="#0fee89" cx="160" cy="40" r="5"/>
-<line stroke="#ff822c" stroke-width="2.5" x1="60" y1="40" x2="260" y2="40"/>
+<polygon fill="#00abfa10" stroke="#00abfa" stroke-width="2.5" stroke-linejoin="round" points="194.44,46.85 125.56,46.85 76.85,95.56 76.85,164.44 125.56,213.15 194.44,213.15 243.15,164.44 243.15,95.56"/>
 <line stroke="#3a4a5a" stroke-width="1.5" stroke-dasharray="3 2" x1="160" y1="40" x2="160" y2="130"/>
-<path fill="none" stroke="#ff4670" stroke-width="2" d="M160 52 L172 52 L172 40"/>
-<text x="166" y="126" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600">O</text>
-<text x="200" y="42" font-family="Geist Mono,monospace" font-size="10" fill="#00abfa" font-weight="600">A</text>
-<text x="115" y="42" font-family="Geist Mono,monospace" font-size="10" fill="#00abfa" font-weight="600">B</text>
-<text x="155" y="34" font-family="Geist Mono,monospace" font-size="10" fill="#0fee89" font-weight="600">T</text>
-<text x="40" y="22" font-family="Geist Mono,monospace" font-size="10" fill="#ff822c" font-weight="600">TX (tangent)</text>
-<text x="195" y="90" font-family="Geist Mono,monospace" font-size="10" fill="#fff067" font-weight="600">OA radius</text>
+<line stroke="#fff067" stroke-width="2.5" x1="160" y1="130" x2="194.44" y2="46.85"/>
+<line stroke="#ff822c" stroke-width="2.5" x1="60" y1="40" x2="260" y2="40"/>
+<path fill="none" stroke="#ff4670" stroke-width="2" d="M172 40 L172 52 L160 52"/>
+<circle fill="#fff067" cx="160" cy="130" r="4"/>
+<circle fill="#0fee89" cx="160" cy="40" r="5"/>
+<circle fill="#00abfa" cx="194.44" cy="46.85" r="3.5"/>
+<circle fill="#00abfa" cx="125.56" cy="46.85" r="3.5"/>
+<text x="168" y="142" font-family="Geist Mono,monospace" font-size="13" fill="#fff067" font-weight="700">O</text>
+<text x="207" y="50" font-family="Geist Mono,monospace" font-size="13" fill="#00abfa" font-weight="700">A</text>
+<text x="116" y="50" font-family="Geist Mono,monospace" font-size="13" fill="#00abfa" font-weight="700" text-anchor="end">B</text>
+<text x="160" y="30" font-family="Geist Mono,monospace" font-size="13" fill="#0fee89" font-weight="700" text-anchor="middle">T</text>
+<text x="252" y="32" font-family="Geist Mono,monospace" font-size="11" fill="#ff822c" font-weight="600" text-anchor="end">tangent TX</text>
+<text x="184" y="92" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600">radius OA</text>
 </svg>
 </div>
 </div>
