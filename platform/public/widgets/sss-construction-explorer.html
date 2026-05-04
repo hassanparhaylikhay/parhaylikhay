@@ -262,11 +262,11 @@ labelEl((P.x + Q.x) / 2 - 22, P.y + 18, fmtNum(SIDE_PQ) + " cm", "#00abfa", 12, 
 
 // Step 2 — arc 1 from P
 arcUpperEl(P.x, P.y, PR_px, "#fff067", 1.6, true, 2);
-labelEl(8, 32, "arc 1: r = " + fmtNum(SIDE_PR) + " cm", "#fff067", 11, 2, { weight: "600" });
+labelEl(8, 10, "arc 1: r = " + fmtNum(SIDE_PR) + " cm", "#fff067", 11, 2, { weight: "600" });
 
 // Step 3 — arc 2 from Q
 arcUpperEl(Q.x, Q.y, QR_px, "#ff822c", 1.6, true, 3);
-labelEl(330, 32, "arc 2: r = " + fmtNum(SIDE_QR) + " cm", "#ff822c", 11, 3, { weight: "600" });
+labelEl(330, 10, "arc 2: r = " + fmtNum(SIDE_QR) + " cm", "#ff822c", 11, 3, { weight: "600" });
 
 // Step 4 — mark intersection R
 dotEl(R.x, R.y, "#ff4670", 10, 4);
