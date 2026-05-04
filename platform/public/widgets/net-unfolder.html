@@ -285,217 +285,160 @@ function buildCuboid() {
 function buildPrism() {
   document.getElementById("title").textContent = "TRIANGULAR PRISM";
   document.getElementById("footer").textContent = "2 triangles + 3 rectangles wrap around the cross-section";
-  // Right-angled triangle 3-4-5 cross-section, prism length 10
-  // Use the 3 and 4 legs as the cross-section (right angle at one corner)
-  var a = 60, b = 80;       // legs (3 and 4 cm scaled)
-  var L = 110;              // prism length (10 cm scaled)
-  var hyp = Math.sqrt(a*a + b*b);  // hypotenuse = 100 (5 cm scaled)
+  // Right-angled cross-section: legs a (vertical) and b (horizontal), hypotenuse hyp.
+  // Prism axis along x; cross-section in yz plane.
+  var a = 50, b = 80, L = 110;
+  var hyp = Math.sqrt(a * a + b * b);
   var c = COL.green;
 
-  // Anchor: front rectangle (the b-side rectangle along the bottom).
-  // We orient the prism so its axis is along x; cross-section in yz plane.
-  // The "bottom" rectangle (b x L) lies in the xy plane at z=0.
-  var bottom = rectFace(L, b, c, L + " x " + b);
-  scene.appendChild(bottom);
+  // Bottom (b-leg side) rectangle: anchor in xy plane at z=0
+  scene.appendChild(rectFace(L, b, c, L + " x " + b));
 
-  // Front cap (triangle, attached to left edge of bottom rectangle)
-  // Triangle has legs a (vertical) and b (horizontal), with right angle at top-left
-  // hingeAttach: right (so it pivots about its right edge to fold up)
-  var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, 0, 0));
-  hCapL.appendChild(triFace(b, b * a / b, c, "tri", "0% 100%, 100% 100%, 100% 0%", "right"));
-
-  // Back cap (right edge of bottom rectangle)
-  var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, 0, 0));
-  hCapR.appendChild(triFace(b, b * a / b, c, "tri", "0% 100%, 100% 100%, 0% 0%", "left"));
-
-  // Side rectangle 1 (a x L): attached to bottom's top edge, folds up
+  // a-leg side: hinged at bottom's TOP edge (y = -b/2). Folds back -90 about x.
   var hSide1 = trackHinge(hinge(scene, -90, "X", 0, -b/2, 0));
   hSide1.appendChild(rectFace(L, a, c, L + " x " + a, "bottom"));
 
-  // Side rectangle 2 (hypotenuse x L): attached to side1's top edge
-  // After side1 is up (rotated -90), its top edge is at y = -b/2 in scene, z = -a.
-  // In side1's local frame after attachment, its top edge is at the local y=0 of its hinge child.
-  var hSide2 = trackHinge(hinge(hSide1, -180 + (Math.atan2(b, a) * 180 / Math.PI) * 2, "X", 0, -a, 0));
-  // Actually for a prism, side2 wraps around to meet the bottom on the other side.
-  // Use the actual wrap angle: after side1 is up at 90 from bottom, side2 should rotate
-  // by (180 - acute angle of triangle at top) to meet the other side.
-  // The angle at the top of the cross-section between side1 and side2 is the angle opposite the hypotenuse-projection... let me just compute.
-  // For a right triangle with legs a, b and right angle between them, the angle between
-  // side1 (length a, vertical) and side2 (hypotenuse) is atan(b/a).
-  // So side2 folds by (180 - atan(b/a)*2)? Let me think again.
-  // When unfolded flat, side1 is along the top edge of bottom (in plane z=0).
-  // When folded into prism, side1 rotates -90 about its hinge so it's vertical (in -y direction).
-  // Then side2 is attached to side1's top edge (in side1's local frame, at y=-a relative to side1's hinge).
-  // Side2 needs to rotate to meet bottom's other edge (top edge at y=+b/2). The angle to rotate is...
-  // Actually: in 3D the prism has cross-section of an a-b-hyp right triangle. With vertical side a meeting horizontal side b at a corner, and the hypotenuse closing the triangle.
-  // Side2 (hypotenuse rectangle) tilts at an angle determined by the triangle geometry.
-  // When the bottom is in the xy plane and side1 stands vertical at -y direction, the
-  // hypotenuse goes from side1's top edge down to bottom's far edge. The angle of side2
-  // RELATIVE TO side1 is (180 - angle at the top vertex of the triangle), where the top
-  // vertex is between side1 and hypotenuse.
-  // Top vertex angle = atan(b/a) (since the triangle has legs a vertical and b horizontal,
-  // and the top vertex is where vertical leg meets the hypotenuse). The angle at top is
-  // opposite to side b in the triangle, so by sin rule or simple geometry: atan(b/a).
-  // Wait the angle at the top vertex is the angle between the vertical leg (a) and the
-  // hypotenuse. The hypotenuse points from top-left down to bottom-right (from (0,0) to (b, a) in coord).
-  // Vertical leg points from (0,0) down to (0, a), direction (0, 1).
-  // Hypotenuse from (0, 0) to (b, a), direction (b, a)/hyp = (b/hyp, a/hyp).
-  // Angle between (0,1) and (b/hyp, a/hyp) = acos((0*b/hyp + 1*a/hyp)) = acos(a/hyp).
-  // So top vertex angle = acos(a/hyp). For a=60, b=80, hyp=100: acos(0.6) ~ 53.13 deg.
-  // Side2 fold angle relative to side1 = 180 - 53.13 = 126.87 deg.
-  // In CSS, folding side2 about its hinge (top of side1) by +126.87 (or maybe -126.87, depending on direction).
-  hSide2.dataset.foldedRotate = "rotateX(" + (180 - Math.acos(a/hyp) * 180 / Math.PI) + "deg)";
+  // Hypotenuse side: hinged at the top edge of the a-leg side (in side1's local
+  // frame at y = -a). Wrap angle = 180 - top-vertex-angle of the cross-section.
+  // Top vertex (where a meets hyp) has angle acos(a/hyp).
+  var wrapDeg = 180 - Math.acos(a / hyp) * 180 / Math.PI;
+  var hSide2 = document.createElement("div");
+  hSide2.className = "hinge";
+  hSide2.dataset.foldedRotate = "rotateX(-" + wrapDeg + "deg)";
   hSide2.style.transform = "translate3d(0px," + (-a) + "px,0px) " + hSide2.dataset.foldedRotate;
+  hSide1.appendChild(hSide2);
+  allHinges.push(hSide2);
   hSide2.appendChild(rectFace(L, hyp, c, L + " x " + Math.round(hyp), "bottom"));
+
+  // Caps: triangle in cross-section (right angle between a and b legs).
+  // LEFT cap at x=-L/2: width=a, height=b. In flat layout, face extends in -x
+  // direction from bottom rectangle's left edge (the b-leg, vertical line of length b).
+  // Right-angle corner at top-right (where a and b meet); a-leg endpoint at top-left;
+  // b-leg endpoint at bottom-right. clip-path: top-right, bottom-right, top-left.
+  var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, 0, 0));
+  hCapL.appendChild(triFace(a, b, c, "tri", "100% 0%, 100% 100%, 0% 0%", "right"));
+
+  // RIGHT cap at x=+L/2: mirror. Face extends in +x direction from bottom's right edge.
+  // Right-angle at top-left, a-leg endpoint at top-right, b-leg at bottom-left.
+  var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, 0, 0));
+  hCapR.appendChild(triFace(a, b, c, "tri", "0% 0%, 0% 100%, 100% 0%", "left"));
 }
 
 function buildCylinder() {
   document.getElementById("title").textContent = "CYLINDER";
   document.getElementById("footer").textContent = "2 circular ends + a rectangle of width = circumference 2πr";
-  var r = 50;
+  var r = 45;
   var H = 100;
-  var circ = 2 * Math.PI * r;  // circumference
+  var circ = 2 * Math.PI * r;
   var c = COL.pink;
 
-  // Anchor: the curved-side rectangle (width=circ, height=H), in xy plane at z=0
-  // It's the "unrolled" curved surface in net state.
-  // In folded state, it wraps around to form the cylinder side.
-  var sideEl = rectFace(circ, H, c, "2π · r  x  H");
-  scene.appendChild(sideEl);
-
-  // For folded-cylinder visualisation, we approximate the curved side with N slats
-  // each at angular position around the cylinder axis. Each slat is a thin rectangle.
-  // In flat state, they all sit side by side as a single strip of width circ.
-  // In folded state, they wrap into a cylinder.
-  // For simplicity (and to keep this tractable), we DON'T simulate the slats animation
-  // and instead toggle the slats and the flat rectangle - showing the flat rect when
-  // unfolded, and showing the slats wrapped in 3D when folded.
-
-  // Hide the flat rectangle in the folded view, and make slats visible.
-  // We'll do this with a simple approach: in folded state, the slats' wrapper shows;
-  // in flat state, the rectangle shows. Both sit in the same scene.
-  var slats = document.createElement("div");
-  slats.className = "hinge cylinder-slats";
-  slats.style.transformStyle = "preserve-3d";
-  slats.style.transform = "translate3d(0,0,0)";
-  scene.appendChild(slats);
+  // The curved side is approximated by N slats. Each slat smoothly animates
+  // between its circumferential position (folded state) and a position along
+  // the unrolled flat rectangle (flat state). CSS transitions interpolate the
+  // transform matrix so the slats sweep open from cylinder to flat strip.
   var N = 28;
+  var slatW = (circ / N) + 1;  // small overlap to avoid hairline gaps
+  var cylinderSlats = [];
   for (var i = 0; i < N; i++) {
     var theta = (i / N) * 360;
     var rad = theta * Math.PI / 180;
-    var slatW = (circ / N) + 2;
     var slat = document.createElement("div");
-    slat.className = "face";
+    slat.className = "face cylinder-slat";
     setStyle(slat, {
       position: "absolute",
-      left: (-slatW/2) + "px",
-      top: (-H/2) + "px",
+      left: (-slatW / 2) + "px",
+      top: (-H / 2) + "px",
       width: slatW + "px",
       height: H + "px",
       background: fillOf(c),
       borderLeft: "0.5px solid " + c,
       borderRight: "0.5px solid " + c,
-      transform: "translate3d(" + (Math.cos(rad)*r) + "px,0px," + (Math.sin(rad)*r) + "px) rotateY(" + (90 - theta) + "deg)"
+      transition: "transform 1.4s cubic-bezier(0.4, 0.1, 0.4, 1)"
     });
-    slats.appendChild(slat);
+    // Folded: at angular position theta around cylinder axis (axis = y), facing outward.
+    slat.dataset.folded3d =
+      "translate3d(" + (Math.cos(rad) * r) + "px,0px," + (Math.sin(rad) * r) + "px) " +
+      "rotateY(" + (90 - theta) + "deg)";
+    // Flat: along the unrolled rectangle's width, in xy plane.
+    var xFlat = (i / N) * circ - circ / 2 + slatW / 2;
+    slat.dataset.flat3d = "translate3d(" + xFlat + "px,0px,0px) rotateY(0deg)";
+    slat.style.transform = slat.dataset.folded3d;
+    scene.appendChild(slat);
+    cylinderSlats.push(slat);
   }
 
-  // Top circle - hinged at top edge of the curved-side rectangle
-  // In flat state: circle sits ABOVE the rectangle, attached at the rect's top edge midpoint
-  // In folded state: circle rotates 90 to become the top of the cylinder
-  var hTop = trackHinge(hinge(scene, -90, "X", 0, -H/2, 0));
+  // Top circle: animate directly between two states (no hinge wrapper, since
+  // the geometry of capping the cylinder vs sitting above the rectangle isn't
+  // a single rotation about an edge).
   var topCircle = document.createElement("div");
-  topCircle.className = "face";
+  topCircle.className = "face cyl-cap-top";
   setStyle(topCircle, {
     position: "absolute",
     left: (-r) + "px",
-    top: (-2*r) + "px",
-    width: (2*r) + "px",
-    height: (2*r) + "px",
+    top: (-r) + "px",
+    width: (2 * r) + "px",
+    height: (2 * r) + "px",
     background: fillOf(c),
     border: "1.5px solid " + c,
-    borderRadius: "50%"
+    borderRadius: "50%",
+    transition: "transform 1.4s cubic-bezier(0.4, 0.1, 0.4, 1)"
   });
-  hTop.appendChild(topCircle);
+  topCircle.dataset.folded3d = "translate3d(0px," + (-H / 2) + "px,0px) rotateX(90deg)";
+  topCircle.dataset.flat3d   = "translate3d(0px," + (-H / 2 - r) + "px,0px) rotateX(0deg)";
+  topCircle.style.transform = topCircle.dataset.folded3d;
+  scene.appendChild(topCircle);
 
-  // Bottom circle
-  var hBot = trackHinge(hinge(scene, 90, "X", 0, H/2, 0));
   var botCircle = document.createElement("div");
-  botCircle.className = "face";
+  botCircle.className = "face cyl-cap-bot";
   setStyle(botCircle, {
     position: "absolute",
     left: (-r) + "px",
-    top: 0 + "px",
-    width: (2*r) + "px",
-    height: (2*r) + "px",
+    top: (-r) + "px",
+    width: (2 * r) + "px",
+    height: (2 * r) + "px",
     background: fillOf(c),
     border: "1.5px solid " + c,
-    borderRadius: "50%"
+    borderRadius: "50%",
+    transition: "transform 1.4s cubic-bezier(0.4, 0.1, 0.4, 1)"
   });
-  hBot.appendChild(botCircle);
-
-  // Hide/show the flat rectangle vs the slats based on stage state.
-  // We toggle their opacity via class on the stage.
-  sideEl.style.opacity = "0";
-  sideEl.style.transition = "opacity 0.6s ease 0.6s";
-  slats.style.transition = "opacity 0.6s ease";
-  // Initial state: solid, so slats visible, flat rect hidden
-  // After unfold: slats hidden, flat rect visible
-  sideEl.dataset.toggleOnFlat = "1";
-  slats.dataset.toggleOnFolded = "1";
+  botCircle.dataset.folded3d = "translate3d(0px," + (H / 2) + "px,0px) rotateX(-90deg)";
+  botCircle.dataset.flat3d   = "translate3d(0px," + (H / 2 + r) + "px,0px) rotateX(0deg)";
+  botCircle.style.transform = botCircle.dataset.folded3d;
+  scene.appendChild(botCircle);
 }
 
 function buildPyramid() {
   document.getElementById("title").textContent = "SQUARE-BASED PYRAMID";
   document.getElementById("footer").textContent = "1 square base + 4 triangular faces meeting at the apex";
-  var s = 80;            // base side
-  var H = 90;            // pyramid height
-  var slant = Math.sqrt((s/2)*(s/2) + H*H);  // slant height
+  var s = 80;
+  var H = 90;
+  var slant = Math.sqrt((s/2)*(s/2) + H*H);
   var c = COL.orange;
-
-  // Base square anchor in xy plane
-  var base = rectFace(s, s, c, "base " + s);
-  scene.appendChild(base);
-
-  // For each side (front, right, back, left): a triangular face hinged at the
-  // corresponding base edge. Folded angle = the dihedral angle between base
-  // and side.
-  // The dihedral angle can be derived: each face's apex sits H above the
-  // base centre, so its inward tilt from vertical is atan(H / (s/2)) — wait
-  // let me recompute. The triangular face's apex is at the centre top
-  // (above base centre). The face's base edge is at the base perimeter.
-  // The angle the face makes with the base (dihedral) is the angle between
-  // the base plane and the face plane.
-  // A line from the midpoint of a base edge to the apex has length slant.
-  // Its horizontal component is s/2 (apothem of square) and vertical H.
-  // The angle from vertical (slant from horizontal): tan(theta) = H / (s/2).
-  // The face tilts back by (90 - theta) from horizontal? Hmm.
-  // Actually: when the face is FLAT (lying on the table), its plane = base plane.
-  // When folded UP into pyramid, the face rotates about its base edge by some angle.
-  // The angle is: angle between flat plane and the face's "up" direction.
-  // The face's "up" direction (toward apex) goes from base-edge midpoint
-  // to apex. Apex relative to base-edge midpoint: (0, -H, -s/2) where the
-  // base-edge midpoint is at (0, 0, +s/2) from the centre, and apex is at
-  // (0, -H, 0) from the centre. So relative: apex - midpoint = (0, -H, -s/2).
-  // Length = slant. Angle from horizontal (xz plane) = atan2(H, s/2).
-  // So fold angle = atan(H/(s/2)) measured from flat. For s=80, H=90:
-  // atan(90/40) = atan(2.25) = 66.04 deg.
+  // Dihedral angle between base and side: atan2(H, s/2)
   var foldDeg = Math.atan2(H, s/2) * 180 / Math.PI;
-  var triH = slant;  // the triangle's height (from base to apex)
-  var triPoints = "50% 0%, 0% 100%, 100% 100%";  // apex at top, base at bottom
 
-  var hF = trackHinge(hinge(scene, -foldDeg, "X", 0, -s/2, 0));
-  hF.appendChild(triFace(s, triH, c, "side", triPoints, "bottom"));
+  // Base square anchor
+  scene.appendChild(rectFace(s, s, c, "base " + s));
 
-  var hB = trackHinge(hinge(scene, foldDeg, "X", 0, s/2, 0));
-  hB.appendChild(triFace(s, triH, c, "side", triPoints, "top"));
+  // Top side (north): triangle width=s, height=slant, apex at top, base at bottom.
+  // Hinge attaches face's bottom edge to base's top edge.
+  var hN = trackHinge(hinge(scene, -foldDeg, "X", 0, -s/2, 0));
+  hN.appendChild(triFace(s, slant, c, "side", "50% 0%, 0% 100%, 100% 100%", "bottom"));
 
-  var hL = trackHinge(hinge(scene, foldDeg, "Y", -s/2, 0, 0));
-  hL.appendChild(triFace(s, triH, c, "side", triPoints, "right"));
-  // The triangle for left/right is rotated 90 in its local frame (so its apex points in the +y direction relative to the hinge axis). Easier: define triangle with apex at the side opposite the hinge.
+  // Bottom side (south): triangle apex at the bottom-centre (pointing AWAY from base).
+  // hingeAttach="top" means face top edge is at hinge -> base of triangle (top of clip)
+  // sits on the base square's bottom edge.
+  var hS = trackHinge(hinge(scene, foldDeg, "X", 0, s/2, 0));
+  hS.appendChild(triFace(s, slant, c, "side", "0% 0%, 100% 0%, 50% 100%", "top"));
 
-  var hR = trackHinge(hinge(scene, -foldDeg, "Y", s/2, 0, 0));
-  hR.appendChild(triFace(s, triH, c, "side", triPoints, "left"));
+  // Left side (west): triangle width=slant, height=s, apex at left-centre
+  // pointing outward to the left. Base of triangle is the right edge.
+  var hW = trackHinge(hinge(scene, foldDeg, "Y", -s/2, 0, 0));
+  hW.appendChild(triFace(slant, s, c, "side", "0% 50%, 100% 0%, 100% 100%", "right"));
+
+  // Right side (east): apex at right-centre.
+  var hE = trackHinge(hinge(scene, -foldDeg, "Y", s/2, 0, 0));
+  hE.appendChild(triFace(slant, s, c, "side", "100% 50%, 0% 0%, 0% 100%", "left"));
 }
 
 // Apply the requested solid
@@ -526,11 +469,11 @@ function updateView() {
       var pos = (h.style.transform || "").match(/translate3d\([^)]*\)/);
       h.style.transform = (pos ? pos[0] : "") + " rotate3d(0,0,0,0deg)";
     }
-    // Toggle visibility for elements with dataset flags
-    var flatToggles = scene.querySelectorAll("[data-toggle-on-flat]");
-    for (var i2 = 0; i2 < flatToggles.length; i2++) flatToggles[i2].style.opacity = "1";
-    var foldedToggles = scene.querySelectorAll("[data-toggle-on-folded]");
-    for (var j = 0; j < foldedToggles.length; j++) foldedToggles[j].style.opacity = "0";
+    // Elements with their own folded/flat transforms (e.g. cylinder slats + caps)
+    var dual = scene.querySelectorAll("[data-flat3d]");
+    for (var d = 0; d < dual.length; d++) {
+      dual[d].style.transform = dual[d].dataset.flat3d;
+    }
   } else {
     stage.classList.remove("is-flat");
     toggleBtn.textContent = "unfold →";
@@ -540,10 +483,10 @@ function updateView() {
       var pos2 = (hh.style.transform || "").match(/translate3d\([^)]*\)/);
       hh.style.transform = (pos2 ? pos2[0] : "") + " " + hh.dataset.foldedRotate;
     }
-    var flatToggles2 = scene.querySelectorAll("[data-toggle-on-flat]");
-    for (var l = 0; l < flatToggles2.length; l++) flatToggles2[l].style.opacity = "0";
-    var foldedToggles2 = scene.querySelectorAll("[data-toggle-on-folded]");
-    for (var m = 0; m < foldedToggles2.length; m++) foldedToggles2[m].style.opacity = "1";
+    var dual2 = scene.querySelectorAll("[data-folded3d]");
+    for (var d2 = 0; d2 < dual2.length; d2++) {
+      dual2[d2].style.transform = dual2[d2].dataset.folded3d;
+    }
   }
 }
 
