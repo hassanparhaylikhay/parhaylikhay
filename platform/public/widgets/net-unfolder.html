@@ -414,8 +414,11 @@ function buildPyramid() {
   var H = 90;
   var slant = Math.sqrt((s/2)*(s/2) + H*H);
   var c = COL.orange;
-  // Dihedral angle between base and side: atan2(H, s/2)
-  var foldDeg = Math.atan2(H, s/2) * 180 / Math.PI;
+  // Fold angle for each side: 180 - atan2(H, s/2). The face has to rotate PAST
+  // 90 degrees because for H > s/2 the face leans inward toward the apex.
+  // Verified: with foldDeg = 180 - atan2(H, s/2) all four apexes converge at
+  // (0, 0, H) — the pyramid apex above the base centre.
+  var foldDeg = 180 - Math.atan2(H, s/2) * 180 / Math.PI;
 
   // Base square anchor
   scene.appendChild(rectFace(s, s, c, "base " + s));
