@@ -157,9 +157,13 @@ Drawn AB $= 12 / 2 = 6$ cm.
 
 Drawn AC $= 9 / 2 = 4.5$ cm.
 
+**Answer:** AB $= 6$ cm, AC $= 4.5$ cm. **[B1 + B1]**
+
 **(b)**
 
 Real BC $= 7.5 \times 2 = 15$ km.
+
+**Answer:** $15$ km. **[B1]**
 
 **(c)**
 
@@ -167,17 +171,13 @@ Original bearing $068°$ is less than $180°$, so add $180°$.
 
 Bearing of A from B $= 068° + 180° = 248°$.
 
+**Answer:** $248°$. **[B1]**
+
 **(d)**
 
 $\angle BAC = 158° - 068° = 90°$. This is a right angle (which is conventionally classified separately from acute and obtuse).
 
-**Answer (a):** AB $= 6$ cm, AC $= 4.5$ cm. **[B1 + B1]**
-
-**Answer (b):** $15$ km. **[B1]**
-
-**Answer (c):** $248°$. **[B1]**
-
-**Answer (d):** $\angle BAC = 90°$, a right angle. **[B1 for value; B1 for classification]**
+**Answer:** $\angle BAC = 90°$, a right angle. **[B1 for value; B1 for classification]**
 
 Full marks $= 6$.
 

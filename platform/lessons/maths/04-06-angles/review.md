@@ -142,12 +142,6 @@ $$\text{exterior angle} = \dfrac{360}{12} = 30°$$
 
 $$\text{interior angle} = 180 - 30 = 150°$$
 
-**Answer (a):** angle $EFC = 40°$, alternate angles, $AB \parallel CD$. **[M1 + A1 + B1 reason]**
-
-**Answer (b):** angle $FEG = 55°$. **[M1 use isosceles + triangle sum; A1 final value]**
-
-**Answer (c):** Interior angle $= 150°$. **[M1 exterior $= \dfrac{360}{12} = 30$; A1 final value]**
-
 Full marks $= 7$.
 
 ## Quick reference

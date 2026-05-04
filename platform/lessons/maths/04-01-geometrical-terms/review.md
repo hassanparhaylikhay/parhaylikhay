@@ -165,6 +165,8 @@ Interior angle $= 180° - 45° = 135°$.
 </div>
 </div>
 
+**Answer:** $135°$. **[B1]**
+
 **(b)**
 
 $O$ is the centre and $A$ is on the circle, so $OA$ is a radius.
@@ -186,6 +188,8 @@ $O$ is the centre and $A$ is on the circle, so $OA$ is a radius.
 </div>
 </div>
 
+**Answer:** $OA$ is a **radius**. **[B1]**
+
 **(c)**
 
 $TX$ touches the circle at exactly one point, so it is a tangent.
@@ -205,6 +209,8 @@ $TX$ touches the circle at exactly one point, so it is a tangent.
 </div>
 </div>
 </div>
+
+**Answer:** $TX$ is a **tangent**. **[B1]**
 
 **(d)**
 
@@ -233,13 +239,7 @@ A tangent meets the radius at the point of contact at $90°$.
 
 $OT$ is a radius; $TX$ is a tangent at $T$. So $\angle OTX = 90°$.
 
-**Answer (a):** $135°$. **[B1]**
-
-**Answer (b):** $OA$ is a **radius**. **[B1]**
-
-**Answer (c):** $TX$ is a **tangent**. **[B1]**
-
-**Answer (d):** $\angle OTX = 90°$ because the tangent is perpendicular to the radius at the point of contact. **[B1 for $90°$; B1 for reason]**
+**Answer:** $\angle OTX = 90°$ because the tangent is perpendicular to the radius at the point of contact. **[B1 for $90°$; B1 for reason]**
 
 Full marks $= 5$.
 

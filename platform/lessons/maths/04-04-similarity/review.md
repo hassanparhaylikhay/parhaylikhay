@@ -117,6 +117,8 @@ Two solid metal cones are mathematically similar. The smaller cone has slant hei
 
 Find the slant height of the larger cone.
 
+**Answer:** Slant height of the larger cone $= 15$ cm. **[A1]**
+
 **(b)**
 
 Find the surface area of the larger cone.
@@ -133,8 +135,6 @@ $$k = \sqrt[3]{\dfrac{125}{27}} = \dfrac{5}{3}$$
 
 $$\text{new slant height} = k \times 9 = \dfrac{5}{3} \times 9 = 15$$
 
-**Answer (a):** Slant height of the larger cone $= 15$ cm. **[A1]**
-
 **Find the area scale factor and apply it for part (b).**
 
 $$k^2 = \left(\dfrac{5}{3}\right)^2 = \dfrac{25}{9}$$
@@ -143,6 +143,6 @@ $$\text{new surface area} = k^2 \times 135 = \dfrac{25}{9} \times 135 = 375$$
 
 **[M1 for using $k^2$ on the area]**
 
-**Answer (b):** Surface area of the larger cone $= 375$ cm$^2$. **[A1]**
+**Answer:** Surface area of the larger cone $= 375$ cm$^2$. **[A1]**
 
 Full marks $= 6$.

@@ -110,9 +110,13 @@ A solid is a triangular prism. The triangular cross-section is a right-angled tr
 
 Pythagoras in the right-angled triangle: $h^2 = 5^2 + 12^2 = 25 + 144 = 169$, so $h = 13$ cm.
 
+**Answer:** $13$ cm. **[M1 for $5^2 + 12^2$; A1 for $13$]**
+
 **(b)**
 
 The net consists of: $2$ right-angled triangles (legs $5$ and $12$, hypotenuse $13$), and $3$ rectangles of dimensions $5 \times 20$, $12 \times 20$, $13 \times 20$.
+
+**Answer:** Net sketched with $2$ triangles and $3$ rectangles, all dimensions labelled. **[B1]**
 
 **(c)**
 
@@ -124,17 +128,13 @@ Area of three rectangles $= (5 + 12 + 13) \times 20 = 30 \times 20 = 600$ cm².
 
 Total surface area $= 60 + 600 = 660$ cm².
 
+**Answer:** $660$ cm². **[M1 for $2 \times \dfrac{1}{2} \times 5 \times 12 + (5 + 12 + 13) \times 20$ oe; A1 for $660$]**
+
 **(d)**
 
 Volume $= (\text{area of cross-section}) \times \text{length} = 30 \times 20 = 600$ cm³.
 
-**Answer (a):** $13$ cm. **[M1 for $5^2 + 12^2$; A1 for $13$]**
-
-**Answer (b):** Net sketched with $2$ triangles and $3$ rectangles, all dimensions labelled. **[B1]**
-
-**Answer (c):** $660$ cm². **[M1 for $2 \times \dfrac{1}{2} \times 5 \times 12 + (5 + 12 + 13) \times 20$ oe; A1 for $660$]**
-
-**Answer (d):** $600$ cm³. **[M1 for $\dfrac{1}{2} \times 5 \times 12 \times 20$ oe; A1 for $600$]**
+**Answer:** $600$ cm³. **[M1 for $\dfrac{1}{2} \times 5 \times 12 \times 20$ oe; A1 for $600$]**
 
 Full marks $= 7$.
 

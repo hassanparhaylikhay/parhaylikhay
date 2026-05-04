@@ -117,9 +117,13 @@ A solid is made of a cube of side $4$ cm with a square-based pyramid stacked on 
 
 State the number of planes of symmetry of this solid.
 
+**Answer:** $4$ planes of symmetry. **[B1]**
+
 **(b)**
 
 State the order of rotational symmetry about the vertical axis through the apex of the pyramid and the centre of the base of the cube.
+
+**Answer:** Order $4$. **[B1]**
 
 **(c)**
 
@@ -135,13 +139,9 @@ The cube alone has $9$ planes. The pyramid alone has $4$. The combined solid kee
 
 These $4$ planes are: $2$ vertical planes through the midpoints of opposite vertical faces of the cube, and $2$ vertical diagonal planes through opposite vertical edges.
 
-**Answer (a):** $4$ planes of symmetry. **[B1]**
-
 **Rotational order about the vertical axis (b).**
 
 A $90°$ rotation about the vertical axis maps the cube onto itself and the pyramid onto itself. So the combined solid lands on itself after every $90°$. The order is $4$.
-
-**Answer (b):** Order $4$. **[B1]**
 
 **View from above (c).**
 
@@ -149,6 +149,6 @@ From directly above you see the apex of the pyramid in the centre of a square, w
 
 A square has $4$ lines of symmetry: $2$ through midpoints of opposite sides and $2$ along the diagonals.
 
-**Answer (c):** $4$ lines of symmetry. **[B1]**
+**Answer:** $4$ lines of symmetry. **[B1]**
 
 Full marks $= 3$.
