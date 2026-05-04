@@ -225,28 +225,6 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 
 **Step 6 (d).** $OT$ is a radius; $TX$ is a tangent at $T$. So $\angle OTX = 90°$.
 
-<div class="diagram">
-<div class="diagram-caption">STEP 6: APPLY STEP 5 TO THIS DIAGRAM → ∠OTX = 90°</div>
-<div style="display:flex;justify-content:center">
-<div style="position:relative;width:280px;height:240px;font-family:'Geist Mono',monospace">
-<svg viewBox="0 0 280 240" style="position:absolute;inset:0;width:100%;height:100%" xmlns="http://www.w3.org/2000/svg">
-<circle cx="140" cy="135" r="80" fill="none" stroke="#3a4a5a" stroke-width="0.7"/>
-<line x1="140" y1="135" x2="140" y2="55" stroke="#fff067" stroke-width="1"/>
-<line x1="40" y1="55" x2="240" y2="55" stroke="#ff822c" stroke-width="1"/>
-<path fill="#ff467020" stroke="#ff4670" stroke-width="0.9" d="M 154 55 L 154 69 L 140 69 Z"/>
-<circle cx="140" cy="135" r="4" fill="#fff067"/>
-<circle cx="140" cy="55" r="4.5" fill="#0fee89"/>
-</svg>
-<div style="position:absolute;left:148px;top:144px;font-size:13px;color:#fff067;font-weight:700">O</div>
-<div style="position:absolute;left:134px;top:32px;font-size:13px;color:#0fee89;font-weight:700">T</div>
-<div style="position:absolute;left:160px;top:60px;font-size:11px;color:#ff4670;font-weight:700">90°</div>
-<div style="position:absolute;right:8px;top:34px;font-size:10px;color:#ff822c;font-weight:600">tangent TX</div>
-<div style="position:absolute;left:62px;top:88px;font-size:10px;color:#fff067;font-weight:600">radius OT</div>
-<div style="position:absolute;left:0;right:0;top:218px;text-align:center;font-size:11px;color:#0fee89;font-weight:700">∠OTX = 90°</div>
-</div>
-</div>
-</div>
-
 **Answer (a):** $135°$. **[B1]**
 
 **Answer (b):** $OA$ is a **radius**. **[B1]**
