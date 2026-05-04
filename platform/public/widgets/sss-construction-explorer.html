@@ -78,15 +78,23 @@
     <button class="ctl" id="prev">← prev</button>
     <button class="ctl" id="next">next →</button>
   </div>
-  <p class="footer">construct triangle PQR (PQ = 8 cm, PR = 6 cm, QR = 7 cm)</p>
+  <p class="footer" id="footer">construct triangle PQR</p>
 </div>
 
 <script>
 "use strict";
 
-// --- Triangle parameters and geometry ---------------------------------
-var SIDE_PQ = 8, SIDE_PR = 6, SIDE_QR = 7;
-var SCALE = 36;  // px per cm
+// --- Triangle parameters (configurable via URL params) ----------------
+var qs = new URLSearchParams(window.location.search);
+var SIDE_PQ = parseFloat(qs.get("pq")) || 8;
+var SIDE_PR = parseFloat(qs.get("pr")) || 6;
+var SIDE_QR = parseFloat(qs.get("qr")) || 7;
+var MEASURE = (qs.get("measure") || "").toLowerCase();  // "qpr", "pqr", "prq" or ""
+
+// Auto-pick a scale that keeps the base within ~330px so the diagram fits the
+// 440-wide stage with margin on each side.
+var BASE_TARGET_PX = 330;
+var SCALE = Math.min(36, BASE_TARGET_PX / SIDE_PQ);
 
 var P = { x: 30, y: 290 };
 var Q = { x: P.x + SIDE_PQ * SCALE, y: P.y };
@@ -95,6 +103,20 @@ var h = Math.sqrt(SIDE_PR * SIDE_PR - d * d);
 var R = { x: P.x + d * SCALE, y: P.y - h * SCALE };
 var PR_px = SIDE_PR * SCALE;
 var QR_px = SIDE_QR * SCALE;
+
+function fmtNum(x) {
+  // Drop a trailing ".0" if present
+  return (Math.round(x * 100) / 100).toString();
+}
+
+function angleAt(apex, sideEnd1, sideEnd2) {
+  var v1x = sideEnd1.x - apex.x, v1y = sideEnd1.y - apex.y;
+  var v2x = sideEnd2.x - apex.x, v2y = sideEnd2.y - apex.y;
+  var dot = v1x * v2x + v1y * v2y;
+  var m1 = Math.sqrt(v1x * v1x + v1y * v1y);
+  var m2 = Math.sqrt(v2x * v2x + v2y * v2y);
+  return Math.acos(Math.max(-1, Math.min(1, dot / (m1 * m2)))) * 180 / Math.PI;
+}
 
 // --- Stage scaling ----------------------------------------------------
 var stage = document.getElementById("stage");
@@ -185,6 +207,22 @@ function arcUpperEl(cx, cy, r, color, thickness, dashed, dataStep) {
   }, dataStep, "draw-arc");
 }
 
+// Filled angular wedge centred at (cx, cy) of radius r.
+// fromConicDeg = angle (conic, 0=top, CW) where the visible wedge starts.
+// sweepDeg     = angular extent of the wedge.
+function wedgeEl(cx, cy, r, fromConicDeg, sweepDeg, color, dataStep) {
+  return makeNode("div", {
+    position: "absolute",
+    left: (cx - r) + "px",
+    top: (cy - r) + "px",
+    width: (2 * r) + "px",
+    height: (2 * r) + "px",
+    borderRadius: "50%",
+    background: "conic-gradient(from " + fromConicDeg + "deg, " + color + " 0deg, " + color + " " + sweepDeg + "deg, transparent " + sweepDeg + "deg, transparent 360deg)",
+    pointerEvents: "none"
+  }, dataStep, "draw-fade");
+}
+
 function labelEl(x, y, text, color, fontSize, dataStep, opts) {
   opts = opts || {};
   var n = makeNode("div", {
@@ -220,15 +258,15 @@ dotEl(P.x, P.y, "#0fee89", 8, 1);
 dotEl(Q.x, Q.y, "#0fee89", 8, 1);
 labelEl(P.x - 16, P.y + 8, "P", "#0fee89", 14, 1);
 labelEl(Q.x + 8, Q.y + 8, "Q", "#0fee89", 14, 1);
-labelEl((P.x + Q.x) / 2 - 22, P.y + 18, "8 cm", "#00abfa", 12, 1, { weight: "600" });
+labelEl((P.x + Q.x) / 2 - 22, P.y + 18, fmtNum(SIDE_PQ) + " cm", "#00abfa", 12, 1, { weight: "600" });
 
 // Step 2 — arc 1 from P
 arcUpperEl(P.x, P.y, PR_px, "#fff067", 1.6, true, 2);
-labelEl(8, 32, "arc 1: r = 6 cm", "#fff067", 11, 2, { weight: "600" });
+labelEl(8, 32, "arc 1: r = " + fmtNum(SIDE_PR) + " cm", "#fff067", 11, 2, { weight: "600" });
 
 // Step 3 — arc 2 from Q
 arcUpperEl(Q.x, Q.y, QR_px, "#ff822c", 1.6, true, 3);
-labelEl(330, 32, "arc 2: r = 7 cm", "#ff822c", 11, 3, { weight: "600" });
+labelEl(330, 32, "arc 2: r = " + fmtNum(SIDE_QR) + " cm", "#ff822c", 11, 3, { weight: "600" });
 
 // Step 4 — mark intersection R
 dotEl(R.x, R.y, "#ff4670", 10, 4);
@@ -238,16 +276,60 @@ labelEl(R.x - 6, R.y - 24, "R", "#ff4670", 14, 4);
 lineEl(P.x, P.y, R.x, R.y, "#00abfa", 2.5, false, 5);
 lineEl(Q.x, Q.y, R.x, R.y, "#00abfa", 2.5, false, 5);
 
+// Step 6 (optional) — measure the requested angle
+var measureAngleVal = null;
+var measureLabel = "";
+if (MEASURE === "qpr" || MEASURE === "rpq") {
+  measureAngleVal = angleAt(P, Q, R);
+  // Wedge centred at P. From PR direction (conic angle) sweeping CW to PQ direction.
+  var fromConic = Math.atan2(R.x - P.x, -(R.y - P.y)) * 180 / Math.PI;
+  var sweep = measureAngleVal;
+  wedgeEl(P.x, P.y, 28, fromConic, sweep, "#fff06738", 6);
+  // Label position along the bisector of the wedge
+  var mid = fromConic + sweep / 2;
+  var midRad = mid * Math.PI / 180;
+  var lx = P.x + 38 * Math.sin(midRad) - 14;
+  var ly = P.y - 38 * Math.cos(midRad) - 8;
+  labelEl(lx, ly, Math.round(measureAngleVal) + "°", "#fff067", 13, 6);
+  labelEl(P.x + 60, P.y - 44, "∠QPR ≈ " + Math.round(measureAngleVal) + "°", "#fff067", 11, 6, { weight: "600" });
+  measureLabel = "step 6 — measure ∠QPR with a protractor";
+} else if (MEASURE === "pqr" || MEASURE === "rqp") {
+  measureAngleVal = angleAt(Q, P, R);
+  var fromConic2 = Math.atan2(P.x - Q.x, -(P.y - Q.y)) * 180 / Math.PI;
+  var sweep2 = measureAngleVal;
+  wedgeEl(Q.x, Q.y, 28, fromConic2, sweep2, "#fff06738", 6);
+  var mid2 = fromConic2 + sweep2 / 2;
+  var midRad2 = mid2 * Math.PI / 180;
+  var lx2 = Q.x + 38 * Math.sin(midRad2) - 14;
+  var ly2 = Q.y - 38 * Math.cos(midRad2) - 8;
+  labelEl(lx2, ly2, Math.round(measureAngleVal) + "°", "#fff067", 13, 6);
+  labelEl(Q.x - 130, Q.y - 44, "∠PQR ≈ " + Math.round(measureAngleVal) + "°", "#fff067", 11, 6, { weight: "600" });
+  measureLabel = "step 6 — measure ∠PQR with a protractor";
+} else if (MEASURE === "prq" || MEASURE === "qrp") {
+  measureAngleVal = angleAt(R, P, Q);
+  var fromConic3 = Math.atan2(P.x - R.x, -(P.y - R.y)) * 180 / Math.PI;
+  var sweep3 = measureAngleVal;
+  wedgeEl(R.x, R.y, 22, fromConic3, sweep3, "#fff06738", 6);
+  var mid3 = fromConic3 + sweep3 / 2;
+  var midRad3 = mid3 * Math.PI / 180;
+  var lx3 = R.x + 32 * Math.sin(midRad3) - 14;
+  var ly3 = R.y - 32 * Math.cos(midRad3) - 8;
+  labelEl(lx3, ly3, Math.round(measureAngleVal) + "°", "#fff067", 13, 6);
+  labelEl(R.x + 18, R.y + 18, "∠PRQ ≈ " + Math.round(measureAngleVal) + "°", "#fff067", 11, 6, { weight: "600" });
+  measureLabel = "step 6 — measure ∠PRQ with a protractor";
+}
+
 // === Step controller =================================================
 
 var STEPS = [
   "step 0 — start",
-  "step 1 — draw base PQ = 8 cm",
-  "step 2 — set compass to 6 cm, swing arc from P",
-  "step 3 — set compass to 7 cm, swing arc from Q",
+  "step 1 — draw base PQ = " + fmtNum(SIDE_PQ) + " cm",
+  "step 2 — set compass to " + fmtNum(SIDE_PR) + " cm, swing arc from P",
+  "step 3 — set compass to " + fmtNum(SIDE_QR) + " cm, swing arc from Q",
   "step 4 — the two arcs cross at R",
   "step 5 — join PR and QR to complete the triangle"
 ];
+if (measureLabel) STEPS.push(measureLabel);
 
 var step = 0;
 var maxStep = STEPS.length - 1;
@@ -279,6 +361,13 @@ function setStep(n) {
 
 prevBtn.onclick = function() { setStep(step - 1); };
 nextBtn.onclick = function() { setStep(step + 1); };
+
+// Footer text reflects the current parameters
+document.getElementById("footer").textContent =
+  "construct triangle PQR (PQ = " + fmtNum(SIDE_PQ) +
+  " cm, PR = " + fmtNum(SIDE_PR) +
+  " cm, QR = " + fmtNum(SIDE_QR) + " cm)" +
+  (measureLabel ? " — and measure ∠" + MEASURE.toUpperCase() : "");
 
 setStep(0);
 
