@@ -42,7 +42,11 @@
   .scene.solid-cuboid,
   .scene.solid-prism,
   .scene.solid-cylinder { transform: rotateX(-22deg) rotateY(28deg); }
-  .scene.solid-pyramid  { transform: rotateX(72deg) rotateY(-20deg); }
+  /* Pyramid: rotateX(80) puts the +z apex at -0.985 y (basically straight up)
+     and the base flat-ish; rotateY(22) twists for a 3/4 view of two adjacent
+     triangular faces. Result: base sits at the bottom of the diagram, apex
+     clearly up at the top, two front sides visible. */
+  .scene.solid-pyramid  { transform: rotateX(80deg) rotateY(22deg); }
   /* Net (flat) state: top-down view for every solid. */
   .stage.is-flat .scene { transform: rotateX(0deg) rotateY(0deg); }
 
