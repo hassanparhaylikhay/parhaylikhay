@@ -37,13 +37,14 @@
   .step-counter {
     margin-left:auto;
     font-family:'Geist Mono',monospace;
-    font-size:11.5px;
+    font-size:18px;
     color:#0fee89;
-    font-weight:600;
-    transition: color 0.25s;
+    font-weight:700;
+    letter-spacing:0.4px;
+    transition: color 0.25s, transform 0.25s;
   }
-  .step-counter.flash { color:#fff067; }
-  .step-counter.dim { color:#3a4a5a; font-weight:400; }
+  .step-counter.flash { color:#fff067; transform:scale(1.12); }
+  .step-counter.dim { color:#3a4a5a; font-weight:500; font-size:13px; }
 
   svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
 
@@ -455,51 +456,79 @@ function redraw() {
   }
 }
 
-// rAF animation loop
-var rotateStart = 0;       // ms timestamp when current rotation animation started
-var rotateFrom = 0;        // currentRotation at start
-var rotateTo = 0;          // target at start
-var ROTATE_MS = 2500;
+// rAF animation loop — rotation runs as a sequence of (rotate-chunk, pause)
+// stages, one chunk per `360/order` step. Each chunk eases in/out, then the
+// shape holds at that position long enough for a student to register
+// "this looks the same as the start", before the next chunk fires.
+var SPIN_MS = 700;     // rotate-chunk duration
+var PAUSE_MS = 700;    // pause duration after each chunk
+
+var chunkStart = 0;    // ms timestamp when current chunk's rotate stage began
+var chunkFrom = 0;     // currentRotation at start of the chunk
+var chunkTo = 0;       // currentRotation at end of the chunk
+var chunksLeft = 0;    // chunks still to fire (including the current one)
+var inPause = false;   // true while holding between chunks
 
 function easeInOutCubic(t) {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
 
+function startNextChunk() {
+  var sh = SHAPES[state.shape];
+  var step = 360 / sh.order;
+  chunkFrom = state.currentRotation;
+  chunkTo = chunkFrom + step;
+  chunkStart = performance.now();
+  inPause = false;
+}
+
 function tick() {
   if (state.mode === "rotate" && state.animating) {
     var now = performance.now();
-    var t = (now - rotateStart) / ROTATE_MS;
-    if (t >= 1) t = 1;
-    var prev = state.currentRotation;
-    state.currentRotation = rotateFrom + (rotateTo - rotateFrom) * easeInOutCubic(t);
-
-    // Detect crossing of a multiple of 360/order between prev and current
+    var elapsed = now - chunkStart;
     var sh = SHAPES[state.shape];
     var step = 360 / sh.order;
-    // count how many step-boundaries lie in (prev, current]
-    // (we only animate forwards)
-    var startIdx = Math.floor(prev / step);
-    var endIdx = Math.floor(state.currentRotation / step);
-    if (endIdx > startIdx) {
-      // one or more crossings
-      var crossings = endIdx - startIdx;
-      // each crossing advances lastPosition by 1 modulo order (1-indexed)
-      for (var i = 0; i < crossings; i++) {
-        state.lastPosition = state.lastPosition + 1;
-        if (state.lastPosition > sh.order) state.lastPosition = 1;
+
+    if (!inPause) {
+      // Rotating phase
+      var t = elapsed / SPIN_MS;
+      if (t >= 1) t = 1;
+      var prev = state.currentRotation;
+      state.currentRotation = chunkFrom + (chunkTo - chunkFrom) * easeInOutCubic(t);
+
+      // Detect crossing of any multiple of step inside this chunk
+      var startIdx = Math.floor(prev / step);
+      var endIdx = Math.floor(state.currentRotation / step);
+      if (endIdx > startIdx) {
+        var crossings = endIdx - startIdx;
+        for (var i = 0; i < crossings; i++) {
+          state.lastPosition = state.lastPosition + 1;
+          if (state.lastPosition > sh.order) state.lastPosition = 1;
+        }
+        state.lastFlashTime = now;
       }
-      state.lastFlashTime = now;
+
+      if (t >= 1) {
+        // Snap exactly to chunkTo to avoid drift
+        state.currentRotation = chunkTo;
+        chunksLeft -= 1;
+        if (chunksLeft <= 0) {
+          state.animating = false;
+          updateRotateBtn();
+        } else {
+          inPause = true;
+          chunkStart = now;  // restart timer for the pause phase
+        }
+      }
+    } else {
+      // Pause phase — shape stands still at chunkTo
+      if (elapsed >= PAUSE_MS) {
+        startNextChunk();
+      }
     }
 
     redraw();
     updateStepCounter();
-
-    if (t >= 1) {
-      state.animating = false;
-      // snap to a clean multiple of 360 so future rotations stay tidy
-      state.currentRotation = rotateTo;
-      updateRotateBtn();
-    }
   } else {
     // still need to clear the flash class once it expires
     updateStepCounter();
@@ -517,9 +546,11 @@ document.getElementById("rotateBtn").addEventListener("click", function() {
   if (state.animating) return;
   state.animating = true;
   state.rotateClicks += 1;
-  rotateStart = performance.now();
-  rotateFrom = state.currentRotation;
-  rotateTo = state.currentRotation + 360;
+  // Queue one chunk per rotational symmetry position; chunks-of-step land
+  // the shape on each of its self-coincidences in turn.
+  var sh = SHAPES[state.shape];
+  chunksLeft = sh.order;
+  startNextChunk();
   // we keep lastPosition where it is; the crossings during the animation
   // will advance it through every position before returning to it.
   updateRotateBtn();
