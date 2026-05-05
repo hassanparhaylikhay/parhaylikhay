@@ -99,19 +99,26 @@ For **scale drawings combined with bearings**:
 
 <div class="diagram">
 <div class="diagram-caption">CARDINAL BEARINGS RECAP</div>
-<div style="display:flex;justify-content:center">
-<svg viewBox="0 0 280 280" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:340px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<circle cx="140" cy="140" r="120" fill="none" stroke="#3a4a5a"/>
-<line stroke="#00abfa" stroke-width="3" x1="140" y1="20" x2="140" y2="140"/>
-<line stroke="#fff067" stroke-width="3" x1="140" y1="140" x2="260" y2="140"/>
-<line stroke="#ff822c" stroke-width="3" x1="140" y1="140" x2="140" y2="260"/>
-<line stroke="#ff4670" stroke-width="3" x1="20" y1="140" x2="140" y2="140"/>
-<text x="140" y="14" font-family="Geist Mono,monospace" font-size="13" font-weight="700" fill="#00abfa" text-anchor="middle">N 000°</text>
-<text x="276" y="144" font-family="Geist Mono,monospace" font-size="13" font-weight="700" fill="#fff067" text-anchor="end">E 090°</text>
-<text x="140" y="276" font-family="Geist Mono,monospace" font-size="13" font-weight="700" fill="#ff822c" text-anchor="middle">S 180°</text>
-<text x="4" y="144" font-family="Geist Mono,monospace" font-size="13" font-weight="700" fill="#ff4670">W 270°</text>
-<circle cx="140" cy="140" r="5" fill="#fff067"/>
-</svg>
+<div style="display:flex;justify-content:center;padding:14px 0">
+<div style="position:relative;width:360px;height:360px;max-width:100%">
+  <!-- Outer circle -->
+  <div style="position:absolute;left:50%;top:50%;width:240px;height:240px;border:1.5px solid #3a4a5a;border-radius:50%;transform:translate(-50%,-50%)"></div>
+  <!-- N line (blue) -->
+  <div style="position:absolute;left:50%;top:60px;width:3px;height:120px;background:#00abfa;transform:translateX(-50%)"></div>
+  <!-- E line (yellow) -->
+  <div style="position:absolute;left:180px;top:50%;width:120px;height:3px;background:#fff067;transform:translateY(-50%)"></div>
+  <!-- S line (orange) -->
+  <div style="position:absolute;left:50%;top:180px;width:3px;height:120px;background:#ff822c;transform:translateX(-50%)"></div>
+  <!-- W line (pink) -->
+  <div style="position:absolute;left:60px;top:50%;width:120px;height:3px;background:#ff4670;transform:translateY(-50%)"></div>
+  <!-- Centre dot -->
+  <div style="position:absolute;left:50%;top:50%;width:10px;height:10px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <!-- Labels OUTSIDE the circle -->
+  <div style="position:absolute;left:50%;top:30px;transform:translate(-50%,-50%);font:700 13px 'Geist Mono',monospace;color:#00abfa;letter-spacing:0.4px">N 000°</div>
+  <div style="position:absolute;left:330px;top:50%;transform:translate(-50%,-50%);font:700 13px 'Geist Mono',monospace;color:#fff067;letter-spacing:0.4px">E 090°</div>
+  <div style="position:absolute;left:50%;top:330px;transform:translate(-50%,-50%);font:700 13px 'Geist Mono',monospace;color:#ff822c;letter-spacing:0.4px">S 180°</div>
+  <div style="position:absolute;left:30px;top:50%;transform:translate(-50%,-50%);font:700 13px 'Geist Mono',monospace;color:#ff4670;letter-spacing:0.4px">W 270°</div>
+</div>
 </div>
 </div>
 
