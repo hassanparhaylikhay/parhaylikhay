@@ -134,29 +134,7 @@ Three towns are A, B, and C in a flat region of Punjab. The bearing of B from A 
 
 (d) The angle BAC at vertex A in the scale drawing is the difference of the two bearings. Find this angle and state whether it is acute or obtuse.
 
-<div class="diagram">
-<div class="diagram-caption">SCALE 1 CM : 2 KM - BEARINGS 068° AND 158° FROM A</div>
-<div style="display:flex;justify-content:center">
-<svg viewBox="0 0 500 360" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<line stroke="#7a7875" stroke-width="1.5" stroke-dasharray="4 3" x1="170" y1="40" x2="170" y2="180"/>
-<text x="170" y="32" font-family="Geist Mono,monospace" font-size="12" fill="#7a7875" text-anchor="middle">N</text>
-<circle cx="170" cy="180" r="6" fill="#fff067"/>
-<text x="150" y="184" font-family="Geist Mono,monospace" font-size="13" font-weight="700" fill="#fff067">A</text>
-<line stroke="#00abfa" stroke-width="2.5" x1="170" y1="180" x2="328" y2="116"/>
-<circle cx="328" cy="116" r="6" fill="#fff067"/>
-<text x="340" y="116" font-family="Geist Mono,monospace" font-size="13" font-weight="700" fill="#fff067">B</text>
-<text x="240" y="135" font-family="Geist Mono,monospace" font-size="11" fill="#00abfa">6 cm = 12 km</text>
-<line stroke="#00abfa" stroke-width="2.5" x1="170" y1="180" x2="226" y2="319"/>
-<circle cx="226" cy="319" r="6" fill="#fff067"/>
-<text x="234" y="324" font-family="Geist Mono,monospace" font-size="13" font-weight="700" fill="#fff067">C</text>
-<text x="180" y="270" font-family="Geist Mono,monospace" font-size="11" fill="#00abfa">4.5 cm = 9 km</text>
-<text x="194" y="118" font-family="Geist Mono,monospace" font-size="12" fill="#fff067">068°</text>
-<text x="178" y="225" font-family="Geist Mono,monospace" font-size="12" fill="#ff822c">158°</text>
-<line stroke="#0fee89" stroke-width="2" stroke-dasharray="5 3" x1="328" y1="116" x2="226" y2="319"/>
-<text x="305" y="225" font-family="Geist Mono,monospace" font-size="12" fill="#0fee89">BC = 7.5 cm</text>
-</svg>
-</div>
-</div>
+<iframe src="/widgets/scale-bearing-explorer.html?b1=68&d1=12&p1=B&b2=158&d2=9&p2=C&origin=A&scale=2&unit=km" style="width:100%;max-width:696px;height:660px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
 **Step a: Drawn lengths AB and AC.** Real-to-drawn $\to$ divide by $2$:
 
