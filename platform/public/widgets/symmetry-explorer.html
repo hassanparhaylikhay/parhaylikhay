@@ -583,6 +583,12 @@ function reportHeight() {
 }
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
+// The widget's height changes when the user switches mode (Rotate button
+// appears) or when controls reflow on a different shape — neither fires a
+// window resize, so observe the wrap directly.
+if (window.ResizeObserver) {
+  new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+}
 </script>
 </body>
 </html>
