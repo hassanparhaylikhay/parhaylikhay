@@ -115,9 +115,7 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 
 (d) State the size of $\angle OTX$, giving a reason.
 
-**(a)**
-
-Exterior angle of a regular octagon $= \dfrac{360°}{8} = 45°$.
+**Step 1: (a) Exterior angle of the regular octagon.** Exterior angle $= \dfrac{360°}{8} = 45°$.
 
 <div class="diagram">
 <div class="diagram-caption">STEP 1: 360° SPLIT INTO 8 EQUAL PIECES → EACH IS 45°</div>
@@ -142,7 +140,7 @@ Exterior angle of a regular octagon $= \dfrac{360°}{8} = 45°$.
 </div>
 </div>
 
-Interior angle $= 180° - 45° = 135°$.
+**Step 2: (a) Interior + exterior $= 180°$.** Interior angle $= 180° - 45° = \boxed{135°}$. **[B1 for $135°$]**
 
 <div class="diagram">
 <div class="diagram-caption">STEP 2: AT EACH VERTEX, INTERIOR + EXTERIOR = 180° (STRAIGHT LINE)</div>
@@ -165,11 +163,7 @@ Interior angle $= 180° - 45° = 135°$.
 </div>
 </div>
 
-**Answer:** $135°$. **[B1]**
-
-**(b)**
-
-$O$ is the centre and $A$ is on the circle, so $OA$ is a radius.
+**Step 3: (b) Identify $OA$.** $O$ is the centre and $A$ is on the circle, so $OA$ is a $\boxed{\text{radius}}$. **[B1 for radius]**
 
 <div class="diagram">
 <div class="diagram-caption">STEP 3: O AT CENTRE, A ON CIRCLE → OA IS A RADIUS</div>
@@ -188,11 +182,7 @@ $O$ is the centre and $A$ is on the circle, so $OA$ is a radius.
 </div>
 </div>
 
-**Answer:** $OA$ is a **radius**. **[B1]**
-
-**(c)**
-
-$TX$ touches the circle at exactly one point, so it is a tangent.
+**Step 4: (c) Identify $TX$.** $TX$ touches the circle at exactly one point, so it is a $\boxed{\text{tangent}}$. **[B1 for tangent]**
 
 <div class="diagram">
 <div class="diagram-caption">STEP 4: A TANGENT TOUCHES THE CIRCLE AT EXACTLY ONE POINT</div>
@@ -210,11 +200,7 @@ $TX$ touches the circle at exactly one point, so it is a tangent.
 </div>
 </div>
 
-**Answer:** $TX$ is a **tangent**. **[B1]**
-
-**(d)**
-
-A tangent meets the radius at the point of contact at $90°$.
+**Step 5: (d) Apply the tangent-radius rule.** A tangent meets a radius at the point of contact at $90°$.
 
 <div class="diagram">
 <div class="diagram-caption">STEP 5: TANGENT ⊥ RADIUS AT THE POINT OF CONTACT</div>
@@ -237,9 +223,7 @@ A tangent meets the radius at the point of contact at $90°$.
 </div>
 </div>
 
-$OT$ is a radius; $TX$ is a tangent at $T$. So $\angle OTX = 90°$.
-
-**Answer:** $\angle OTX = 90°$ because the tangent is perpendicular to the radius at the point of contact. **[B1 for $90°$; B1 for reason]**
+**Step 6: (d) State the angle and reason.** $OT$ is a radius and $TX$ is a tangent at $T$, so $\angle OTX = \boxed{90°}$ (tangent ⟂ radius at the point of contact). **[B1 for $90°$; B1 for the reason]**
 
 Full marks $= 5$.
 
