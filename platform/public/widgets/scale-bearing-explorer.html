@@ -79,19 +79,81 @@ var P1 = (qs.get("p1") || "A").toUpperCase();
 var P2 = (qs.get("p2") || "C").toUpperCase();
 var ORIG = (qs.get("origin") || "B").toUpperCase();
 var UNIT = (qs.get("unit") || "km");
+// `showDist=0` hides the per-leg "X cm = Y km" labels and the AC-conversion
+// caption — used when the question quotes bearings only and no distances.
+var SHOW_DIST = (qs.get("showDist") || "1") !== "0";
 
 // Drawn-cm lengths, then auto-scale into pixels
 var drawn1Cm = DIST1 / KM_PER_CM;
 var drawn2Cm = DIST2 / KM_PER_CM;
 var maxDrawn = Math.max(drawn1Cm, drawn2Cm);
-var CM_TO_PX = Math.min(56, 320 / maxDrawn);
+
+function bearingToVec(deg) {
+  var r = deg * Math.PI / 180;
+  return { x: Math.sin(r), y: -Math.cos(r) };
+}
+
+// Auto-fit: choose CM_TO_PX so the resulting figure fits the stage with
+// margins, AND choose ORG so the figure is centred horizontally / vertically
+// (with extra headroom above ORG for the North line + label).
+var STAGE_W_TARGET = 660;
+var STAGE_H_TARGET = 460;
+var MARGIN_X = 80;       // horizontal slack each side for labels
+var NORTH_PX = 180;      // North line length above ORG
+var BOTTOM_PAD = 70;     // headroom for the AC-conversion caption
+
+var v1tmp = bearingToVec(BEAR1);
+var v2tmp = bearingToVec(BEAR2);
+
+function fitScale() {
+  // Available stage area for the figure portion (NOT including the N line)
+  var availX = STAGE_W_TARGET - 2 * MARGIN_X;
+  var availY = STAGE_H_TARGET - NORTH_PX - BOTTOM_PAD;
+  // Trial: compute the figure's bounding box assuming ORG at (0,0)
+  // for a candidate CM_TO_PX. Then scale CM_TO_PX so it fits.
+  var capX = Math.max(
+    Math.abs(v1tmp.x), Math.abs(v2tmp.x),
+    Math.abs(v1tmp.x - v2tmp.x) / 2 + Math.max(Math.abs(v1tmp.x), Math.abs(v2tmp.x)) / 2
+  );
+  var capY = Math.max(0, v1tmp.y, v2tmp.y) - Math.min(0, v1tmp.y, v2tmp.y);
+  // Width spans = (max(0,v1.x,v2.x) - min(0,v1.x,v2.x)) * dist (worst leg)
+  var xSpanPerCm = Math.max(0, v1tmp.x * drawn1Cm, v2tmp.x * drawn2Cm)
+                 - Math.min(0, v1tmp.x * drawn1Cm, v2tmp.x * drawn2Cm);
+  var ySpanPerCm = Math.max(0, v1tmp.y * drawn1Cm, v2tmp.y * drawn2Cm)
+                 - Math.min(0, v1tmp.y * drawn1Cm, v2tmp.y * drawn2Cm);
+  // pixels-per-cm such that x-span and y-span both fit
+  var pxX = xSpanPerCm > 0 ? availX / xSpanPerCm : 56;
+  var pxY = ySpanPerCm > 0 ? availY / ySpanPerCm : 56;
+  return Math.min(56, pxX, pxY);
+}
+var CM_TO_PX = fitScale();
 
 var dist1Px = drawn1Cm * CM_TO_PX;
 var dist2Px = drawn2Cm * CM_TO_PX;
 
-// Origin biased toward upper-left so figures with bearings into the SE / E
-// quadrants spread across the full stage instead of clumping near the centre.
-var ORG = { x: 180, y: 230 };
+// Centre the figure: place ORG so the (origin → P1, origin → P2) bbox is
+// horizontally centred in the stage, and vertically positioned with N-line
+// headroom above. Without this, bearings into the SW / W quadrant push the
+// figure off the left edge of the stage.
+function computeOrigin() {
+  var xs = [0, v1tmp.x * dist1Px, v2tmp.x * dist1Px === undefined ? 0 : v2tmp.x * dist2Px];
+  xs[2] = v2tmp.x * dist2Px;
+  var ys = [0, v1tmp.y * dist1Px, v2tmp.y * dist2Px];
+  var minX = Math.min.apply(null, xs);
+  var maxX = Math.max.apply(null, xs);
+  var minY = Math.min.apply(null, ys);
+  var maxY = Math.max.apply(null, ys);
+  // Centre x: ORG.x + (minX + maxX)/2 = STAGE_W/2
+  var orgX = STAGE_W_TARGET / 2 - (minX + maxX) / 2;
+  // Vertical: keep N line clear above. ORG.y must satisfy:
+  //   ORG.y >= NORTH_PX + 28 (room for N label)
+  //   ORG.y + maxY <= STAGE_H - BOTTOM_PAD
+  // Centre the figure span (minY..maxY) plus an upward NORTH_PX zone.
+  var idealOrgY = (NORTH_PX + 28) + (-minY)
+                + (STAGE_H_TARGET - BOTTOM_PAD - (NORTH_PX + 28) - (maxY - minY)) / 2;
+  return { x: orgX, y: idealOrgY };
+}
+var ORG = computeOrigin();
 
 function pad(n, total) {
   var s = String(Math.round(n));
@@ -105,8 +167,8 @@ function bearingToVec(deg) {
   return { x: Math.sin(r), y: -Math.cos(r) };
 }
 
-var v1 = bearingToVec(BEAR1);
-var v2 = bearingToVec(BEAR2);
+var v1 = v1tmp;
+var v2 = v2tmp;
 var P1pos = { x: ORG.x + v1.x * dist1Px, y: ORG.y + v1.y * dist1Px };
 var P2pos = { x: ORG.x + v2.x * dist2Px, y: ORG.y + v2.y * dist2Px };
 
@@ -295,12 +357,14 @@ var mid1x = (ORG.x + P1pos.x) / 2;
 var mid1y = (ORG.y + P1pos.y) / 2;
 // Perpendicular offset
 var perp1 = awayPerp(v1, v2);
-labelEl(
-  mid1x + perp1.x * 22 - 40,
-  mid1y + perp1.y * 22 - 7,
-  fmt(drawn1Cm) + " cm = " + fmt(DIST1) + " " + UNIT,
-  "#00abfa", 12, 2, { weight: "600" }
-);
+if (SHOW_DIST) {
+  labelEl(
+    mid1x + perp1.x * 22 - 40,
+    mid1y + perp1.y * 22 - 7,
+    fmt(drawn1Cm) + " cm = " + fmt(DIST1) + " " + UNIT,
+    "#00abfa", 12, 2, { weight: "600" }
+  );
+}
 
 // --- Step 3: mark second bearing wedge ------------------------------
 var col2 = "#fff067";
@@ -322,52 +386,63 @@ labelEl(P2pos.x + 8, P2pos.y - 14, P2, "#fff067", 13, 4);
 var mid2x = (ORG.x + P2pos.x) / 2;
 var mid2y = (ORG.y + P2pos.y) / 2;
 var perp2 = awayPerp(v2, v1);
-labelEl(
-  mid2x + perp2.x * 22 - 40,
-  mid2y + perp2.y * 22 - 7,
-  fmt(drawn2Cm) + " cm = " + fmt(DIST2) + " " + UNIT,
-  "#00abfa", 12, 4, { weight: "600" }
-);
+if (SHOW_DIST) {
+  labelEl(
+    mid2x + perp2.x * 22 - 40,
+    mid2y + perp2.y * 22 - 7,
+    fmt(drawn2Cm) + " cm = " + fmt(DIST2) + " " + UNIT,
+    "#00abfa", 12, 4, { weight: "600" }
+  );
+}
 
 // --- Step 5: dashed measure line P1–P2 ------------------------------
 var col3 = "#0fee89";
-lineEl(P1pos.x, P1pos.y, P2pos.x, P2pos.y, col3, 2, true, 5);
-// "measure AC" label at midpoint, perpendicular offset
-var midACx = (P1pos.x + P2pos.x) / 2;
-var midACy = (P1pos.y + P2pos.y) / 2;
-var dxAC = P2pos.x - P1pos.x, dyAC = P2pos.y - P1pos.y;
-var lenAC = Math.sqrt(dxAC * dxAC + dyAC * dyAC) || 1;
-var perpACx = -dyAC / lenAC, perpACy = dxAC / lenAC;
-labelEl(
-  midACx + perpACx * 18 - 40,
-  midACy + perpACy * 18 - 7,
-  "measure " + P1 + P2,
-  col3, 12, 5, { weight: "600" }
-);
+if (SHOW_DIST) {
+  lineEl(P1pos.x, P1pos.y, P2pos.x, P2pos.y, col3, 2, true, 5);
+  var midACx = (P1pos.x + P2pos.x) / 2;
+  var midACy = (P1pos.y + P2pos.y) / 2;
+  var dxAC = P2pos.x - P1pos.x, dyAC = P2pos.y - P1pos.y;
+  var lenAC = Math.sqrt(dxAC * dxAC + dyAC * dyAC) || 1;
+  var perpACx = -dyAC / lenAC, perpACy = dxAC / lenAC;
+  labelEl(
+    midACx + perpACx * 18 - 40,
+    midACy + perpACy * 18 - 7,
+    "measure " + P1 + P2,
+    col3, 12, 5, { weight: "600" }
+  );
+}
 
 // --- Step 6: convert drawn cm to real km ---------------------------
-labelEl(
-  24, STAGE_H - 36,
-  P1 + P2 + " ≈ " + fmt(drawnAC_cm) + " cm  ×  " + fmt(KM_PER_CM) +
-  "  =  " + fmt(realAC_km) + " " + UNIT,
-  col3, 13, 6, { weight: "700" }
-);
-labelEl(
-  24, STAGE_H - 16,
-  "scale 1 cm : " + fmt(KM_PER_CM) + " " + UNIT + "  →  real " + P1 + P2 + " = drawn " + P1 + P2 + " × " + fmt(KM_PER_CM),
-  "#7a7875", 11, 6, { weight: "500" }
-);
+if (SHOW_DIST) {
+  labelEl(
+    24, STAGE_H - 36,
+    P1 + P2 + " ≈ " + fmt(drawnAC_cm) + " cm  ×  " + fmt(KM_PER_CM) +
+    "  =  " + fmt(realAC_km) + " " + UNIT,
+    col3, 13, 6, { weight: "700" }
+  );
+  labelEl(
+    24, STAGE_H - 16,
+    "scale 1 cm : " + fmt(KM_PER_CM) + " " + UNIT + "  →  real " + P1 + P2 + " = drawn " + P1 + P2 + " × " + fmt(KM_PER_CM),
+    "#7a7875", 11, 6, { weight: "500" }
+  );
+}
 
 // --- Step controller ---------------------------------------------------
 var STEPS = [
   "step 0 — mark " + ORIG + " and draw a North line through it",
   "step 1 — measure " + pad(BEAR1, 3) + "° clockwise from N",
-  "step 2 — draw " + fmt(drawn1Cm) + " cm in that direction → " + P1,
+  "step 2 — " + (SHOW_DIST
+    ? "draw " + fmt(drawn1Cm) + " cm in that direction → " + P1
+    : "draw the line at that bearing → " + P1),
   "step 3 — back at " + ORIG + ", measure " + pad(BEAR2, 3) + "° clockwise from N",
-  "step 4 — draw " + fmt(drawn2Cm) + " cm in that direction → " + P2,
-  "step 5 — measure the distance " + P1 + P2 + " on the page",
-  "step 6 — convert: real " + P1 + P2 + " = drawn " + P1 + P2 + " × " + fmt(KM_PER_CM)
+  "step 4 — " + (SHOW_DIST
+    ? "draw " + fmt(drawn2Cm) + " cm in that direction → " + P2
+    : "draw the line at that bearing → " + P2)
 ];
+if (SHOW_DIST) {
+  STEPS.push("step 5 — measure the distance " + P1 + P2 + " on the page");
+  STEPS.push("step 6 — convert: real " + P1 + P2 + " = drawn " + P1 + P2 + " × " + fmt(KM_PER_CM));
+}
 
 var step = 0;
 var maxStep = STEPS.length - 1;
@@ -399,10 +474,12 @@ function setStep(n) {
 prevBtn.onclick = function() { setStep(step - 1); };
 nextBtn.onclick = function() { setStep(step + 1); };
 
-document.getElementById("footer").textContent =
-  "scale 1 cm : " + fmt(KM_PER_CM) + " " + UNIT + "  ·  " +
-  P1 + " on bearing " + pad(BEAR1, 3) + "° at " + fmt(DIST1) + " " + UNIT + "  ·  " +
-  P2 + " on bearing " + pad(BEAR2, 3) + "° at " + fmt(DIST2) + " " + UNIT;
+document.getElementById("footer").textContent = SHOW_DIST
+  ? "scale 1 cm : " + fmt(KM_PER_CM) + " " + UNIT + "  ·  " +
+    P1 + " on bearing " + pad(BEAR1, 3) + "° at " + fmt(DIST1) + " " + UNIT + "  ·  " +
+    P2 + " on bearing " + pad(BEAR2, 3) + "° at " + fmt(DIST2) + " " + UNIT
+  : P1 + " on bearing " + pad(BEAR1, 3) + "° from " + ORIG + "  ·  " +
+    P2 + " on bearing " + pad(BEAR2, 3) + "° from " + ORIG;
 
 setStep(0);
 
