@@ -133,41 +133,11 @@ Find:
 
 (c) angle $BCT$ (the angle between the tangent at $C$ and chord $CB$).
 
-**(a) semicircle gives $90°$ at $B$.**
+**Step a: Angle $ABC$.** $AC$ is a diameter, so $\angle ABC$ subtends the diameter at $B$. By the angle-in-semicircle theorem $\angle ABC = \boxed{90°}$ (angle in a semicircle is $90°$). **[A1 for $90°$; B1 for the reason]**
 
-$AC$ is a diameter, so angle $ABC$ subtends the diameter at $B$. The right angle sits at $B$.
+**Step b: Angle $ADB$.** First find $\angle ACB$ from $\triangle ABC$: $\angle ACB = 180° - 90° - 28° = 62°$. Then $D$ and $C$ both lie on the major arc of chord $AB$, so $\angle ADB$ and $\angle ACB$ are in the SAME SEGMENT, giving $\angle ADB = \boxed{62°}$ (angles in the same segment are equal). **[M1 for triangle-sum to get $\angle ACB$; A1 for $62°$; B1 for the reason]**
 
-$$\text{angle } ABC = 90°$$
-
-(Reason: angle in semicircle is $90°$.)
-
-**(a continued) use triangle sum to get angle $BCA$.**
-
-In triangle $ABC$:
-
-$$\text{angle } BCA = 180° - 90° - 28° = 62°$$
-
-**(b) same segment.**
-
-$D$ and $C$ are both on the major arc of chord $AB$, so angle $ADB$ and angle $ACB$ are in the **same segment**.
-
-$$\text{angle } ADB = \text{angle } ACB = 62°$$
-
-(Reason: angles in the same segment are equal.)
-
-**(c) alternate segment theorem at $C$.**
-
-The tangent at $C$ makes an angle with chord $CB$. By the alternate segment theorem, this equals the inscribed angle in the alternate segment - that is, angle $BAC = 28°$.
-
-$$\text{angle } BCT = 28°$$
-
-**Answer:**
-
-(a) angle $ABC = 90°$ (angle in semicircle is $90°$). **[A1 value; B1 reason]**
-
-(b) angle $ADB = 62°$ (angles in the same segment are equal). **[M1 use triangle sum to find $ACB$; A1 value; B1 reason]**
-
-(c) angle $BCT = 28°$ (alternate segment theorem). **[A1 value; B1 reason]**
+**Step c: Angle $BCT$.** The tangent at $C$ makes an angle with chord $CB$. By the alternate segment theorem this equals the inscribed angle in the alternate segment, $\angle BAC = 28°$. So $\angle BCT = \boxed{28°}$ (alternate segment theorem). **[A1 for $28°$; B1 for the reason]**
 
 Full marks $= 7$.
 

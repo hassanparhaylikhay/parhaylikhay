@@ -136,49 +136,25 @@ The points $A(2, 1)$, $B(8, 1)$, $C(8, 9)$ all lie on a circle.
 
 (c) From an external point $P$, the tangent length to this circle is $12$ cm. Find $OP$.
 
-**(a) perpendicular bisector of $AB$.**
+**Step a: Coordinates of the centre.** Build the perpendicular bisector of two chords and intersect them.
 
-$A$ and $B$ have the same $y$-coordinate, so $AB$ is horizontal. Midpoint of $AB$:
+$AB$ is horizontal: midpoint $\left(\tfrac{2+8}{2}, \tfrac{1+1}{2}\right) = (5, 1)$. Its perpendicular bisector is vertical: $x = 5$.
 
-$$M_{AB} = \left(\dfrac{2+8}{2}, \dfrac{1+1}{2}\right) = (5, 1)$$
+$BC$ is vertical: midpoint $\left(\tfrac{8+8}{2}, \tfrac{1+9}{2}\right) = (8, 5)$. Its perpendicular bisector is horizontal: $y = 5$.
 
-The perpendicular bisector of a horizontal chord is vertical, so it has equation $x = 5$.
+The two bisectors meet at $\boxed{O = (5, 5)}$. **[M1 for midpoint of $AB$; M1 for midpoint of $BC$; A1 for the centre]**
 
-**(a) perpendicular bisector of $BC$.**
+**Step b: Radius.** Distance from $O(5, 5)$ to $A(2, 1)$:
 
-$B$ and $C$ have the same $x$-coordinate, so $BC$ is vertical. Midpoint:
+$$r = \sqrt{(5-2)^2 + (5-1)^2} = \sqrt{9 + 16} = \sqrt{25} = \boxed{5}$$
 
-$$M_{BC} = \left(\dfrac{8+8}{2}, \dfrac{1+9}{2}\right) = (8, 5)$$
+**[M1 for the distance formula; A1 for $5$]**
 
-The perpendicular bisector of a vertical chord is horizontal, so it has equation $y = 5$.
+**Step c: Length $OP$.** Tangent ⟂ radius at the contact point $T$, so $\triangle OTP$ is right-angled at $T$ with legs $OT = r = 5$ and $TP = 12$:
 
-**(a) intersect the two bisectors.**
+$$OP^2 = 5^2 + 12^2 = 169 \;\Rightarrow\; OP = \boxed{13}$$
 
-The two bisectors meet at $(5, 5)$. So the centre is $O = (5, 5)$.
-
-**(b) radius from centre to any of the three points.**
-
-Use $A(2, 1)$ and $O(5, 5)$:
-
-$$r = \sqrt{(5-2)^2 + (5-1)^2} = \sqrt{9 + 16} = \sqrt{25} = 5$$
-
-So radius $= 5$ units.
-
-**(c) right triangle $OTP$ with $OT = r$ and $TP = 12$.**
-
-$T$ is the contact point of the tangent. The tangent is perpendicular to the radius at $T$, so triangle $OTP$ is right-angled at $T$.
-
-$$OP^2 = OT^2 + TP^2 = 5^2 + 12^2 = 25 + 144 = 169$$
-
-$$OP = 13$$
-
-**Answer:**
-
-(a) Centre $O = (5, 5)$ (intersection of perpendicular bisectors of two chords). **[M1 midpoint of $AB$; M1 midpoint of $BC$; A1 centre coordinates]**
-
-(b) Radius $= 5$. **[M1 distance formula; A1 value]**
-
-(c) $OP = 13$ (Pythagoras with tangent perpendicular to radius). **[M1 right-triangle setup; A1 value]**
+**[M1 for the right-triangle setup; A1 for $13$]**
 
 Full marks $= 7$.
 

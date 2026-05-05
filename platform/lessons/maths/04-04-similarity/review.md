@@ -113,36 +113,16 @@ Forgetting to **square** the scale factor for area or **cube** it for volume. If
 
 Two solid metal cones are mathematically similar. The smaller cone has slant height $9$ cm and total surface area $135$ cm$^2$. The larger cone has volume $1\,000$ cm$^3$. The smaller cone has volume $216$ cm$^3$. Both cones are made of the same metal.
 
-**(a)**
+**Step a: Slant height of the larger cone.** Length scale factor $k$ comes from the volume ratio:
 
-Find the slant height of the larger cone.
+$$\dfrac{V_{\text{large}}}{V_{\text{small}}} = \dfrac{1\,000}{216} = \dfrac{125}{27}, \qquad k = \sqrt[3]{\dfrac{125}{27}} = \dfrac{5}{3}$$
 
-**Answer:** Slant height of the larger cone $= 15$ cm. **[A1]**
+Apply $k$ to the slant height: new slant $= k \times 9 = \dfrac{5}{3}\times 9 = \boxed{15}$ cm. **[M1 for volume ratio; M1 for cube root; A1 for $15$]**
 
-**(b)**
+**Step b: Surface area of the larger cone.** Area scale factor is $k^2 = \left(\dfrac{5}{3}\right)^2 = \dfrac{25}{9}$. Apply to the smaller surface area:
 
-Find the surface area of the larger cone.
+$$\text{new SA} = k^2 \times 135 = \dfrac{25}{9}\times 135 = \boxed{375}\;\text{cm}^2$$
 
-**Find the length scale factor from the volumes.**
-
-$$\dfrac{V_{\text{large}}}{V_{\text{small}}} \;=\; \dfrac{1\,000}{216} \;=\; \dfrac{125}{27}$$
-
-$$k = \sqrt[3]{\dfrac{125}{27}} = \dfrac{5}{3}$$
-
-**[M1 for the volume ratio; M1 for cube-rooting]**
-
-**Apply $k$ to the slant height for part (a).**
-
-$$\text{new slant height} = k \times 9 = \dfrac{5}{3} \times 9 = 15$$
-
-**Find the area scale factor and apply it for part (b).**
-
-$$k^2 = \left(\dfrac{5}{3}\right)^2 = \dfrac{25}{9}$$
-
-$$\text{new surface area} = k^2 \times 135 = \dfrac{25}{9} \times 135 = 375$$
-
-**[M1 for using $k^2$ on the area]**
-
-**Answer:** Surface area of the larger cone $= 375$ cm$^2$. **[A1]**
+**[M1 for $k^2$ on the area; A1 for $375$]**
 
 Full marks $= 6$.
