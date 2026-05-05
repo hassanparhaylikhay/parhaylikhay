@@ -46,7 +46,7 @@ function preprocess(md: string): string {
   // float-right cluster, so the marks visually align with the line that
   // earned them.
   out = out.replace(
-    /^## (?:Comprehensive +)?Worked example(?: *(\d+))?([^\n]*)\n([\s\S]*?)^Full marks \$= (\d+)\$\.\s*/gm,
+    /^## (?:Comprehensive +)?Worked example(?: *(\d+))?([^\n]*)\n([\s\S]*?)^Full marks \$= (\d+)\$\.\s*/gim,
     (_m, num: string | undefined, rest: string, body: string, marks: string) => {
       const n = (num || "1").padStart(2, "0")
       const headingText =
