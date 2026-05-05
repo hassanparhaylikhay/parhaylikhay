@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Scale Drawing — Bearings Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+
+  .stage-outer {
+    width:100%;
+    max-width:480px;
+    margin:0 auto;
+    aspect-ratio: 480 / 360;
+    position:relative;
+  }
+  .stage {
+    position:absolute;
+    top:0; left:0;
+    width:480px;
+    height:360px;
+    transform-origin: top left;
+    overflow:hidden;
+    border-radius:6px;
+  }
+
+  .draw-line  { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
+  .draw-fade  { opacity:0; transition: opacity 0.35s ease; transition-delay:0.35s; }
+  .draw-fade.drawn { opacity:1; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
+
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">step 0 — start</span>
+    <span class="step-num" id="counter">0 / 6</span>
+  </div>
+  <div class="stage-outer" id="stage-outer">
+    <div class="stage" id="stage"></div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
+  </div>
+  <p class="footer" id="footer">scale drawing with bearings</p>
+</div>
+
+<script>
+"use strict";
+
+// --- Parameters --------------------------------------------------------
+var qs = new URLSearchParams(window.location.search);
+var BEAR1 = parseFloat(qs.get("b1")) || 120;       // bearing of A from origin
+var DIST1 = parseFloat(qs.get("d1")) || 50;        // real distance (km) to A
+var BEAR2 = parseFloat(qs.get("b2")) || 50;        // bearing of C from origin
+var DIST2 = parseFloat(qs.get("d2")) || 30;        // real distance (km) to C
+var KM_PER_CM = parseFloat(qs.get("scale")) || 10; // scale: 1 cm : N km
+var P1 = (qs.get("p1") || "A").toUpperCase();
+var P2 = (qs.get("p2") || "C").toUpperCase();
+var ORIG = (qs.get("origin") || "B").toUpperCase();
+var UNIT = (qs.get("unit") || "km");
+
+// Drawn-cm lengths, then auto-scale into pixels
+var drawn1Cm = DIST1 / KM_PER_CM;
+var drawn2Cm = DIST2 / KM_PER_CM;
+var maxDrawn = Math.max(drawn1Cm, drawn2Cm);
+var CM_TO_PX = Math.min(22, 140 / maxDrawn);
+
+var dist1Px = drawn1Cm * CM_TO_PX;
+var dist2Px = drawn2Cm * CM_TO_PX;
+
+// Origin near horizontal centre, vertically biased so southerly bearings still fit
+var ORG = { x: 180, y: 175 };
+
+function pad(n, total) {
+  var s = String(Math.round(n));
+  while (s.length < total) s = "0" + s;
+  return s;
+}
+function fmt(n) { return (Math.round(n * 100) / 100).toString(); }
+
+function bearingToVec(deg) {
+  var r = deg * Math.PI / 180;
+  return { x: Math.sin(r), y: -Math.cos(r) };
+}
+
+var v1 = bearingToVec(BEAR1);
+var v2 = bearingToVec(BEAR2);
+var P1pos = { x: ORG.x + v1.x * dist1Px, y: ORG.y + v1.y * dist1Px };
+var P2pos = { x: ORG.x + v2.x * dist2Px, y: ORG.y + v2.y * dist2Px };
+
+// Real-world A→C distance (cosine rule on the actual bearings)
+var ang = Math.abs(BEAR1 - BEAR2);
+if (ang > 180) ang = 360 - ang;
+var realAC_km = Math.sqrt(
+  DIST1 * DIST1 + DIST2 * DIST2 -
+  2 * DIST1 * DIST2 * Math.cos(ang * Math.PI / 180)
+);
+var drawnAC_cm = realAC_km / KM_PER_CM;
+
+// --- Stage scaling -----------------------------------------------------
+var stage = document.getElementById("stage");
+var stageOuter = document.getElementById("stage-outer");
+var STAGE_W = 480, STAGE_H = 360;
+
+function fitStage() {
+  var w = stageOuter.clientWidth;
+  if (!w) return;
+  stage.style.transform = "scale(" + (w / STAGE_W) + ")";
+}
+fitStage();
+window.addEventListener("resize", fitStage);
+if (window.ResizeObserver) new ResizeObserver(fitStage).observe(stageOuter);
+
+// --- DOM builders ------------------------------------------------------
+function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
+
+function makeNode(tag, style, dataStep, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  setStyle(n, style);
+  if (dataStep != null) n.dataset.step = String(dataStep);
+  stage.appendChild(n);
+  return n;
+}
+
+function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
+  var dx = x2 - x1, dy = y2 - y1;
+  var len = Math.sqrt(dx * dx + dy * dy);
+  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  var t = thickness || 2;
+  var s = {
+    position: "absolute",
+    left: x1 + "px",
+    top: y1 + "px",
+    width: "0px",
+    height: t + "px",
+    transformOrigin: "0 50%",
+    transform: "translateY(" + (-t / 2) + "px) rotate(" + ang + "deg)"
+  };
+  if (dashed) {
+    s.background = "transparent";
+    s.borderTop = t + "px dashed " + color;
+    s.height = "0px";
+  } else {
+    s.background = color;
+  }
+  var node = makeNode("div", s, dataStep, "draw-line");
+  node._fullWidth = len;
+  return node;
+}
+
+function dotEl(x, y, color, size, dataStep) {
+  var sz = size || 8;
+  return makeNode("div", {
+    position: "absolute",
+    left: (x - sz / 2) + "px",
+    top: (y - sz / 2) + "px",
+    width: sz + "px",
+    height: sz + "px",
+    borderRadius: "50%",
+    background: color
+  }, dataStep, "draw-fade");
+}
+
+function wedgeEl(cx, cy, r, sweepDeg, color, dataStep) {
+  // Conic gradient defaults to 12 o'clock = north, sweeping clockwise.
+  return makeNode("div", {
+    position: "absolute",
+    left: (cx - r) + "px",
+    top: (cy - r) + "px",
+    width: (2 * r) + "px",
+    height: (2 * r) + "px",
+    borderRadius: "50%",
+    background: "conic-gradient(" + color + " 0deg " + sweepDeg + "deg, transparent " + sweepDeg + "deg)",
+    pointerEvents: "none"
+  }, dataStep, "draw-fade");
+}
+
+function labelEl(x, y, text, color, fontSize, dataStep, opts) {
+  opts = opts || {};
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px",
+    top: y + "px",
+    fontFamily: "'Geist Mono', monospace",
+    fontSize: (fontSize || 11) + "px",
+    color: color,
+    fontWeight: opts.weight || "700",
+    whiteSpace: "nowrap",
+    pointerEvents: "none",
+    transform: opts.transform || ""
+  }, dataStep, "draw-fade");
+  n.textContent = text;
+  return n;
+}
+
+// --- Static base: origin and faint North arrow at origin --------------
+// (Always visible, all steps.)
+var northTopY = ORG.y - 130;
+makeNode("div", {
+  position: "absolute",
+  left: ORG.x + "px",
+  top: northTopY + "px",
+  width: "0",
+  height: (ORG.y - northTopY) + "px",
+  borderLeft: "1.5px dashed #7a7875"
+});
+makeNode("div", {
+  position: "absolute",
+  left: (ORG.x - 6) + "px",
+  top: (northTopY - 18) + "px",
+  width: "12px",
+  fontFamily: "'Geist Mono',monospace",
+  fontSize: "12px",
+  color: "#7a7875",
+  textAlign: "center"
+}).textContent = "N";
+
+// Origin dot + label (yellow)
+var orgDot = document.createElement("div");
+setStyle(orgDot, {
+  position: "absolute",
+  left: (ORG.x - 5) + "px",
+  top: (ORG.y - 5) + "px",
+  width: "10px",
+  height: "10px",
+  borderRadius: "50%",
+  background: "#fff067"
+});
+stage.appendChild(orgDot);
+var orgLab = document.createElement("div");
+setStyle(orgLab, {
+  position: "absolute",
+  left: (ORG.x - 18) + "px",
+  top: (ORG.y - 6) + "px",
+  fontFamily: "'Geist Mono',monospace",
+  fontSize: "13px",
+  fontWeight: "700",
+  color: "#fff067"
+});
+orgLab.textContent = ORIG;
+stage.appendChild(orgLab);
+
+// --- Step 1: mark first bearing wedge --------------------------------
+var col1 = "#ff822c";
+wedgeEl(ORG.x, ORG.y, 26, BEAR1, col1 + "60", 1);
+// Bearing label, positioned along the bisector outside the wedge
+var bis1 = BEAR1 / 2;
+var bis1Vec = bearingToVec(bis1);
+labelEl(
+  ORG.x + bis1Vec.x * 38 - 12,
+  ORG.y + bis1Vec.y * 38 - 8,
+  pad(BEAR1, 3) + "°",
+  col1, 12, 1, { weight: "700" }
+);
+
+// --- Step 2: draw line to P1 + dot + label --------------------------
+lineEl(ORG.x, ORG.y, P1pos.x, P1pos.y, "#00abfa", 2.5, false, 2);
+dotEl(P1pos.x, P1pos.y, "#fff067", 10, 2);
+// P1 label, offset perpendicular to line for clarity
+labelEl(P1pos.x + 8, P1pos.y + 4, P1, "#fff067", 13, 2);
+// Distance label along line midpoint, above the line
+var mid1x = (ORG.x + P1pos.x) / 2;
+var mid1y = (ORG.y + P1pos.y) / 2;
+// Perpendicular offset
+var perp1 = { x: -v1.y, y: v1.x };
+labelEl(
+  mid1x + perp1.x * 14 - 36,
+  mid1y + perp1.y * 14 - 6,
+  fmt(drawn1Cm) + " cm = " + fmt(DIST1) + " " + UNIT,
+  "#00abfa", 11, 2, { weight: "600" }
+);
+
+// --- Step 3: mark second bearing wedge ------------------------------
+var col2 = "#fff067";
+wedgeEl(ORG.x, ORG.y, 22, BEAR2, col2 + "55", 3);
+var bis2 = BEAR2 / 2;
+var bis2Vec = bearingToVec(bis2);
+labelEl(
+  ORG.x + bis2Vec.x * 32 - 12,
+  ORG.y + bis2Vec.y * 32 - 8,
+  pad(BEAR2, 3) + "°",
+  col2, 12, 3, { weight: "700" }
+);
+
+// --- Step 4: draw line to P2 + dot + label --------------------------
+lineEl(ORG.x, ORG.y, P2pos.x, P2pos.y, "#00abfa", 2.5, false, 4);
+dotEl(P2pos.x, P2pos.y, "#fff067", 10, 4);
+labelEl(P2pos.x + 8, P2pos.y - 14, P2, "#fff067", 13, 4);
+var mid2x = (ORG.x + P2pos.x) / 2;
+var mid2y = (ORG.y + P2pos.y) / 2;
+var perp2 = { x: -v2.y, y: v2.x };
+labelEl(
+  mid2x + perp2.x * 14 - 36,
+  mid2y + perp2.y * 14 - 6,
+  fmt(drawn2Cm) + " cm = " + fmt(DIST2) + " " + UNIT,
+  "#00abfa", 11, 4, { weight: "600" }
+);
+
+// --- Step 5: dashed measure line P1–P2 ------------------------------
+var col3 = "#0fee89";
+lineEl(P1pos.x, P1pos.y, P2pos.x, P2pos.y, col3, 2, true, 5);
+// "measure AC" label at midpoint, perpendicular offset
+var midACx = (P1pos.x + P2pos.x) / 2;
+var midACy = (P1pos.y + P2pos.y) / 2;
+var dxAC = P2pos.x - P1pos.x, dyAC = P2pos.y - P1pos.y;
+var lenAC = Math.sqrt(dxAC * dxAC + dyAC * dyAC) || 1;
+var perpACx = -dyAC / lenAC, perpACy = dxAC / lenAC;
+labelEl(
+  midACx + perpACx * 16 - 36,
+  midACy + perpACy * 16 - 6,
+  "measure " + P1 + P2,
+  col3, 11, 5, { weight: "600" }
+);
+
+// --- Step 6: convert drawn cm to real km ---------------------------
+labelEl(
+  20, STAGE_H - 32,
+  P1 + P2 + " ≈ " + fmt(drawnAC_cm) + " cm  ×  " + fmt(KM_PER_CM) +
+  "  =  " + fmt(realAC_km) + " " + UNIT,
+  col3, 12, 6, { weight: "700" }
+);
+labelEl(
+  20, STAGE_H - 14,
+  "scale 1 cm : " + fmt(KM_PER_CM) + " " + UNIT + "  →  real " + P1 + P2 + " = drawn " + P1 + P2 + " × " + fmt(KM_PER_CM),
+  "#7a7875", 10, 6, { weight: "500" }
+);
+
+// --- Step controller ---------------------------------------------------
+var STEPS = [
+  "step 0 — mark " + ORIG + " and draw a North line through it",
+  "step 1 — measure " + pad(BEAR1, 3) + "° clockwise from N",
+  "step 2 — draw " + fmt(drawn1Cm) + " cm in that direction → " + P1,
+  "step 3 — back at " + ORIG + ", measure " + pad(BEAR2, 3) + "° clockwise from N",
+  "step 4 — draw " + fmt(drawn2Cm) + " cm in that direction → " + P2,
+  "step 5 — measure the distance " + P1 + P2 + " on the page",
+  "step 6 — convert: real " + P1 + P2 + " = drawn " + P1 + P2 + " × " + fmt(KM_PER_CM)
+];
+
+var step = 0;
+var maxStep = STEPS.length - 1;
+var titleEl = document.getElementById("title");
+var counterEl = document.getElementById("counter");
+var prevBtn = document.getElementById("prev");
+var nextBtn = document.getElementById("next");
+
+function setStep(n) {
+  step = Math.max(0, Math.min(maxStep, n));
+  titleEl.textContent = STEPS[step];
+  counterEl.textContent = step + " / " + maxStep;
+  var els = stage.querySelectorAll("[data-step]");
+  for (var i = 0; i < els.length; i++) {
+    var s = parseInt(els[i].dataset.step, 10);
+    var el = els[i];
+    if (s <= step) {
+      el.classList.add("drawn");
+      if (el._fullWidth != null) el.style.width = el._fullWidth + "px";
+    } else {
+      el.classList.remove("drawn");
+      if (el._fullWidth != null) el.style.width = "0px";
+    }
+  }
+  prevBtn.disabled = (step === 0);
+  nextBtn.disabled = (step === maxStep);
+}
+
+prevBtn.onclick = function() { setStep(step - 1); };
+nextBtn.onclick = function() { setStep(step + 1); };
+
+document.getElementById("footer").textContent =
+  "scale 1 cm : " + fmt(KM_PER_CM) + " " + UNIT + "  ·  " +
+  P1 + " on bearing " + pad(BEAR1, 3) + "° at " + fmt(DIST1) + " " + UNIT + "  ·  " +
+  P2 + " on bearing " + pad(BEAR2, 3) + "° at " + fmt(DIST2) + " " + UNIT;
+
+setStep(0);
+
+// --- Height reporter --------------------------------------------------
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
