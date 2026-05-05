@@ -84,13 +84,14 @@ var UNIT = (qs.get("unit") || "km");
 var drawn1Cm = DIST1 / KM_PER_CM;
 var drawn2Cm = DIST2 / KM_PER_CM;
 var maxDrawn = Math.max(drawn1Cm, drawn2Cm);
-var CM_TO_PX = Math.min(40, 240 / maxDrawn);
+var CM_TO_PX = Math.min(56, 320 / maxDrawn);
 
 var dist1Px = drawn1Cm * CM_TO_PX;
 var dist2Px = drawn2Cm * CM_TO_PX;
 
-// Origin near horizontal centre, vertically biased so southerly bearings still fit
-var ORG = { x: 240, y: 230 };
+// Origin biased toward upper-left so figures with bearings into the SE / E
+// quadrants spread across the full stage instead of clumping near the centre.
+var ORG = { x: 180, y: 230 };
 
 function pad(n, total) {
   var s = String(Math.round(n));
@@ -108,6 +109,14 @@ var v1 = bearingToVec(BEAR1);
 var v2 = bearingToVec(BEAR2);
 var P1pos = { x: ORG.x + v1.x * dist1Px, y: ORG.y + v1.y * dist1Px };
 var P2pos = { x: ORG.x + v2.x * dist2Px, y: ORG.y + v2.y * dist2Px };
+
+// Pick whichever perpendicular to v points AWAY from vOther — used to
+// position distance labels on the outer side of the angle at the origin.
+function awayPerp(v, vOther) {
+  var p = { x: -v.y, y: v.x };
+  if (p.x * vOther.x + p.y * vOther.y > 0) return { x: -p.x, y: -p.y };
+  return p;
+}
 
 // Real-world A→C distance (cosine rule on the actual bearings)
 var ang = Math.abs(BEAR1 - BEAR2);
@@ -263,14 +272,15 @@ orgLab.textContent = ORIG;
 stage.appendChild(orgLab);
 
 // --- Step 1: mark first bearing wedge --------------------------------
+// Push the wedge label toward the FAR edge of its sweep so it doesn't
+// crowd the second wedge (which sits in the early-angle region).
 var col1 = "#ff822c";
 wedgeEl(ORG.x, ORG.y, 38, BEAR1, col1 + "60", 1);
-// Bearing label, positioned along the bisector outside the wedge
-var bis1 = BEAR1 / 2;
-var bis1Vec = bearingToVec(bis1);
+var bis1Deg = BEAR1 - Math.min(20, BEAR1 / 4);
+var bis1Vec = bearingToVec(bis1Deg);
 labelEl(
-  ORG.x + bis1Vec.x * 54 - 14,
-  ORG.y + bis1Vec.y * 54 - 8,
+  ORG.x + bis1Vec.x * 56 - 14,
+  ORG.y + bis1Vec.y * 56 - 8,
   pad(BEAR1, 3) + "°",
   col1, 13, 1, { weight: "700" }
 );
@@ -284,22 +294,23 @@ labelEl(P1pos.x + 8, P1pos.y + 4, P1, "#fff067", 13, 2);
 var mid1x = (ORG.x + P1pos.x) / 2;
 var mid1y = (ORG.y + P1pos.y) / 2;
 // Perpendicular offset
-var perp1 = { x: -v1.y, y: v1.x };
+var perp1 = awayPerp(v1, v2);
 labelEl(
-  mid1x + perp1.x * 18 - 40,
-  mid1y + perp1.y * 18 - 7,
+  mid1x + perp1.x * 22 - 40,
+  mid1y + perp1.y * 22 - 7,
   fmt(drawn1Cm) + " cm = " + fmt(DIST1) + " " + UNIT,
   "#00abfa", 12, 2, { weight: "600" }
 );
 
 // --- Step 3: mark second bearing wedge ------------------------------
 var col2 = "#fff067";
-wedgeEl(ORG.x, ORG.y, 32, BEAR2, col2 + "55", 3);
-var bis2 = BEAR2 / 2;
-var bis2Vec = bearingToVec(bis2);
+wedgeEl(ORG.x, ORG.y, 30, BEAR2, col2 + "55", 3);
+// Place the second-wedge label at its bisector — well inside its own sweep,
+// distinct from the first wedge's label position.
+var bis2Vec = bearingToVec(BEAR2 / 2);
 labelEl(
-  ORG.x + bis2Vec.x * 48 - 14,
-  ORG.y + bis2Vec.y * 48 - 8,
+  ORG.x + bis2Vec.x * 50 - 14,
+  ORG.y + bis2Vec.y * 50 - 8,
   pad(BEAR2, 3) + "°",
   col2, 13, 3, { weight: "700" }
 );
@@ -310,10 +321,10 @@ dotEl(P2pos.x, P2pos.y, "#fff067", 10, 4);
 labelEl(P2pos.x + 8, P2pos.y - 14, P2, "#fff067", 13, 4);
 var mid2x = (ORG.x + P2pos.x) / 2;
 var mid2y = (ORG.y + P2pos.y) / 2;
-var perp2 = { x: -v2.y, y: v2.x };
+var perp2 = awayPerp(v2, v1);
 labelEl(
-  mid2x + perp2.x * 18 - 40,
-  mid2y + perp2.y * 18 - 7,
+  mid2x + perp2.x * 22 - 40,
+  mid2y + perp2.y * 22 - 7,
   fmt(drawn2Cm) + " cm = " + fmt(DIST2) + " " + UNIT,
   "#00abfa", 12, 4, { weight: "600" }
 );
