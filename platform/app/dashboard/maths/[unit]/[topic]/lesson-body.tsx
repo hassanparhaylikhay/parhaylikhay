@@ -57,10 +57,12 @@ function preprocess(md: string): string {
       const lineMarks: Record<number, string[]> = {}
       const annotationRe = /\*\*\s*((?:\[(?:M|B|A)\d(?:[^\]]*)\]\s*)+)\*\*/
 
-      // Find all step lines, in order.
+      // Find all step lines, in order. Step labels can be a number (`Step 1`)
+      // for single-part workings or a single lowercase letter (`Step a`) for
+      // multi-part workings where each part gets one circle.
       const stepLineIdx: number[] = []
       lines.forEach((line, i) => {
-        if (/^\*\*Step\s+\d+/.test(line)) stepLineIdx.push(i)
+        if (/^\*\*Step\s+(?:\d+|[a-z])\b/i.test(line)) stepLineIdx.push(i)
       })
       let stepCursor = 0
 
@@ -137,12 +139,15 @@ function preprocess(md: string): string {
     },
   )
 
-  // **Step N: title.** at start of paragraph → numbered chip + bold title.
-  // Step numbers are BLUE (methodical / scaffolding meaning).
+  // **Step N: title.** or **Step a: title.** at start of paragraph →
+  // chip + bold title. The chip text is the captured label (digit or letter)
+  // and is rendered BLUE (methodical / scaffolding meaning). Letter-labelled
+  // steps are used for multi-part Cambridge questions, with one chip per
+  // part (a, b, c, …) instead of per individual working line.
   out = out.replace(
-    /\*\*Step\s+(\d+)[:.]\s+([^*]+?)\*\*/g,
+    /\*\*Step\s+(\d+|[a-z])[:.]\s+([^*]+?)\*\*/gi,
     (_full, n: string, title: string) =>
-      `<span class="we-step-num">${n}</span><b>${title.trim()}</b>`,
+      `<span class="we-step-num">${n.toLowerCase()}</span><b>${title.trim()}</b>`,
   )
 
   // **Answer:** → strip. The boxed value that follows is itself the

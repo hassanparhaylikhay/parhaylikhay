@@ -115,7 +115,7 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 
 (d) State the size of $\angle OTX$, giving a reason.
 
-**Step 1: (a) Exterior angle of the regular octagon.** Exterior angle $= \dfrac{360°}{8} = 45°$.
+**Step a: Interior angle of a regular octagon.** Exterior angle $= \dfrac{360°}{8} = 45°$.
 
 <div class="diagram">
 <div class="diagram-caption">STEP 1: 360° SPLIT INTO 8 EQUAL PIECES → EACH IS 45°</div>
@@ -140,7 +140,7 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 </div>
 </div>
 
-**Step 2: (a) Interior + exterior $= 180°$.** Interior angle $= 180° - 45° = \boxed{135°}$. **[B1 for $135°$]**
+Interior + exterior $= 180°$ on a straight line, so interior angle $= 180° - 45° = \boxed{135°}$. **[B1 for $135°$]**
 
 <div class="diagram">
 <div class="diagram-caption">STEP 2: AT EACH VERTEX, INTERIOR + EXTERIOR = 180° (STRAIGHT LINE)</div>
@@ -163,7 +163,7 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 </div>
 </div>
 
-**Step 3: (b) Identify $OA$.** $O$ is the centre and $A$ is on the circle, so $OA$ is a $\boxed{\text{radius}}$. **[B1 for radius]**
+**Step b: Name segment $OA$.** $O$ is the centre and $A$ is on the circle, so $OA$ is a $\boxed{\text{radius}}$. **[B1 for radius]**
 
 <div class="diagram">
 <div class="diagram-caption">STEP 3: O AT CENTRE, A ON CIRCLE → OA IS A RADIUS</div>
@@ -182,7 +182,7 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 </div>
 </div>
 
-**Step 4: (c) Identify $TX$.** $TX$ touches the circle at exactly one point, so it is a $\boxed{\text{tangent}}$. **[B1 for tangent]**
+**Step c: Name line $TX$.** $TX$ touches the circle at exactly one point, so it is a $\boxed{\text{tangent}}$. **[B1 for tangent]**
 
 <div class="diagram">
 <div class="diagram-caption">STEP 4: A TANGENT TOUCHES THE CIRCLE AT EXACTLY ONE POINT</div>
@@ -200,7 +200,7 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 </div>
 </div>
 
-**Step 5: (d) Apply the tangent-radius rule.** A tangent meets a radius at the point of contact at $90°$.
+**Step d: Size of $\angle OTX$ with reason.** A tangent meets a radius at the point of contact at $90°$.
 
 <div class="diagram">
 <div class="diagram-caption">STEP 5: TANGENT ⊥ RADIUS AT THE POINT OF CONTACT</div>
@@ -223,7 +223,7 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 </div>
 </div>
 
-**Step 6: (d) State the angle and reason.** $OT$ is a radius and $TX$ is a tangent at $T$, so $\angle OTX = \boxed{90°}$ (tangent ⟂ radius at the point of contact). **[B1 for $90°$; B1 for the reason]**
+$OT$ is a radius and $TX$ is a tangent at $T$, so $\angle OTX = \boxed{90°}$ (tangent ⟂ radius at the point of contact). **[B1 for $90°$; B1 for the reason]**
 
 Full marks $= 5$.
 

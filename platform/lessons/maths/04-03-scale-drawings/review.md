@@ -151,33 +151,17 @@ Three towns are A, B, and C in a flat region of Punjab. The bearing of B from A 
 </div>
 </div>
 
-**(a)**
+**Step a: Drawn lengths AB and AC.** Real-to-drawn $\to$ divide by $2$:
 
-Drawn AB $= 12 / 2 = 6$ cm.
+$$\text{AB} = \dfrac{12}{2} = \boxed{6}\;\text{cm}, \qquad \text{AC} = \dfrac{9}{2} = \boxed{4.5}\;\text{cm}$$
 
-Drawn AC $= 9 / 2 = 4.5$ cm.
+**[B1 for $6$; B1 for $4.5$]**
 
-**Answer:** AB $= 6$ cm, AC $= 4.5$ cm. **[B1 + B1]**
+**Step b: Real distance BC.** Drawn-to-real $\to$ multiply by $2$: BC $= 7.5 \times 2 = \boxed{15}$ km. **[B1 for $15$]**
 
-**(b)**
+**Step c: Bearing of A from B.** Original bearing $068° < 180°$, so ADD $180°$: $068° + 180° = \boxed{248°}$. **[B1 for $248°$]**
 
-Real BC $= 7.5 \times 2 = 15$ km.
-
-**Answer:** $15$ km. **[B1]**
-
-**(c)**
-
-Original bearing $068°$ is less than $180°$, so add $180°$.
-
-Bearing of A from B $= 068° + 180° = 248°$.
-
-**Answer:** $248°$. **[B1]**
-
-**(d)**
-
-$\angle BAC = 158° - 068° = 90°$. This is a right angle (which is conventionally classified separately from acute and obtuse).
-
-**Answer:** $\angle BAC = 90°$, a right angle. **[B1 for value; B1 for classification]**
+**Step d: Angle BAC and its classification.** $\angle BAC = 158° - 068° = \boxed{90°}$ — exactly a right angle (conventionally classified separately from acute and obtuse). **[B1 for $90°$; B1 for right angle]**
 
 Full marks $= 6$.
 
