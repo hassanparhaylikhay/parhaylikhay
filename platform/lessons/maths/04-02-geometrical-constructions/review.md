@@ -53,27 +53,6 @@ For **nets and surface area / volume**:
 
 If the question asks you to **show** something, you must write the substituted formula. If it asks you to **calculate**, the working line $+$ answer is enough.
 
-<div class="diagram">
-<div class="diagram-caption">CONSTRUCTION RECAP: ARCS = THE MARK</div>
-<div style="display:flex;justify-content:center">
-<svg viewBox="0 0 420 200" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<line stroke="#00abfa" stroke-width="2.5" x1="30" y1="160" x2="390" y2="160"/>
-<circle fill="#0fee89" cx="30" cy="160" r="5"/>
-<circle fill="#0fee89" cx="390" cy="160" r="5"/>
-<text x="22" y="183" font-family="Geist Mono,monospace" font-size="11" fill="#0fee89" font-weight="600">A</text>
-<text x="384" y="183" font-family="Geist Mono,monospace" font-size="11" fill="#0fee89" font-weight="600">B</text>
-<path fill="none" stroke="#fff067" stroke-width="2" stroke-dasharray="4 3" d="M130 40 A170 170 0 0 1 280 60"/>
-<path fill="none" stroke="#ff822c" stroke-width="2" stroke-dasharray="4 3" d="M140 60 A170 170 0 0 1 290 40"/>
-<line stroke="#00abfa" stroke-width="2.5" x1="30" y1="160" x2="210" y2="40"/>
-<line stroke="#00abfa" stroke-width="2.5" x1="390" y1="160" x2="210" y2="40"/>
-<circle fill="#fff067" cx="210" cy="40" r="5"/>
-<text x="200" y="32" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600">C</text>
-<text x="60" y="105" font-family="Geist Mono,monospace" font-size="10" fill="#fff067" font-weight="600">arcs LEFT VISIBLE</text>
-<text x="290" y="105" font-family="Geist Mono,monospace" font-size="10" fill="#ff4670" font-weight="600">erase = lose B1</text>
-</svg>
-</div>
-</div>
-
 ## Tolerance reminders
 
 - Lengths measured / drawn: $\pm 0.1$ cm.
