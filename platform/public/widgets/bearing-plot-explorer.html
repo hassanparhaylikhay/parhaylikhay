@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Drawing a Bearing — Step by Step</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+
+  .stage-outer {
+    width:100%;
+    max-width:660px;
+    margin:0 auto;
+    aspect-ratio: 660 / 460;
+    position:relative;
+  }
+  .stage {
+    position:absolute;
+    top:0; left:0;
+    width:660px;
+    height:460px;
+    transform-origin: top left;
+    overflow:hidden;
+    border-radius:6px;
+  }
+
+  .draw-line  { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
+  .draw-fade  { opacity:0; transition: opacity 0.35s ease; transition-delay:0.35s; }
+  .draw-fade.drawn { opacity:1; }
+  /* Wedge sweep: animate the conic-gradient sweep angle */
+  .wedge-sweep {
+    transition: background 1.0s cubic-bezier(0.4, 0.1, 0.4, 1);
+  }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
+
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">step 0 — start</span>
+    <span class="step-num" id="counter">0 / 4</span>
+  </div>
+  <div class="stage-outer" id="stage-outer">
+    <div class="stage" id="stage"></div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
+  </div>
+  <p class="footer" id="footer">drawing a bearing of θ° from a point</p>
+</div>
+
+<script>
+"use strict";
+
+var qs = new URLSearchParams(window.location.search);
+var BEAR = parseFloat(qs.get("bearing")) || 75;
+var POINT = (qs.get("point") || "P").toUpperCase();
+var LENGTH_CM = parseFloat(qs.get("length")) || 6;  // line length in drawing-cm
+
+function pad(n, w) {
+  var s = String(Math.round(n));
+  while (s.length < w) s = "0" + s;
+  return s;
+}
+function fmt(n) { return (Math.round(n * 100) / 100).toString(); }
+
+// Stage layout
+var STAGE_W = 660, STAGE_H = 460;
+var ORG = { x: 200, y: 280 };
+var LINE_PX = Math.min(360, LENGTH_CM * 36);  // ~36 px per cm if it fits
+
+function bearingToVec(deg) {
+  var r = deg * Math.PI / 180;
+  return { x: Math.sin(r), y: -Math.cos(r) };
+}
+var v = bearingToVec(BEAR);
+var END = { x: ORG.x + v.x * LINE_PX, y: ORG.y + v.y * LINE_PX };
+
+var stage = document.getElementById("stage");
+var stageOuter = document.getElementById("stage-outer");
+
+function fitStage() {
+  var w = stageOuter.clientWidth;
+  if (!w) return;
+  stage.style.transform = "scale(" + (w / STAGE_W) + ")";
+}
+fitStage();
+window.addEventListener("resize", fitStage);
+if (window.ResizeObserver) new ResizeObserver(fitStage).observe(stageOuter);
+
+function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
+function makeNode(tag, style, dataStep, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  setStyle(n, style);
+  if (dataStep != null) n.dataset.step = String(dataStep);
+  stage.appendChild(n);
+  return n;
+}
+
+function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
+  var dx = x2 - x1, dy = y2 - y1;
+  var len = Math.sqrt(dx * dx + dy * dy);
+  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  var t = thickness || 2;
+  var s = {
+    position: "absolute",
+    left: x1 + "px",
+    top: y1 + "px",
+    width: "0px",
+    height: t + "px",
+    transformOrigin: "0 50%",
+    transform: "translateY(" + (-t / 2) + "px) rotate(" + ang + "deg)"
+  };
+  if (dashed) {
+    s.background = "transparent";
+    s.borderTop = t + "px dashed " + color;
+    s.height = "0px";
+  } else {
+    s.background = color;
+  }
+  var node = makeNode("div", s, dataStep, "draw-line");
+  node._fullWidth = len;
+  return node;
+}
+
+function dotEl(x, y, color, size, dataStep) {
+  var sz = size || 8;
+  return makeNode("div", {
+    position: "absolute",
+    left: (x - sz / 2) + "px",
+    top: (y - sz / 2) + "px",
+    width: sz + "px",
+    height: sz + "px",
+    borderRadius: "50%",
+    background: color
+  }, dataStep, "draw-fade");
+}
+
+function labelEl(x, y, text, color, fontSize, dataStep, opts) {
+  opts = opts || {};
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px",
+    top: y + "px",
+    fontFamily: "'Geist Mono', monospace",
+    fontSize: (fontSize || 11) + "px",
+    color: color,
+    fontWeight: opts.weight || "700",
+    whiteSpace: "nowrap",
+    pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  n.textContent = text;
+  return n;
+}
+
+// === Build static elements (always visible) ==========================
+// (none — point P appears at step 0)
+
+// === Step 0 — mark point P ==========================================
+dotEl(ORG.x, ORG.y, "#fff067", 12, 0);
+labelEl(ORG.x - 18, ORG.y + 6, POINT, "#fff067", 14, 0);
+
+// === Step 1 — draw the North line at P ==============================
+var NORTH_LEN = 180;
+lineEl(ORG.x, ORG.y, ORG.x, ORG.y - NORTH_LEN, "#7a7875", 1.5, true, 1);
+labelEl(ORG.x - 6, ORG.y - NORTH_LEN - 22, "N", "#7a7875", 13, 1, { weight: "600" });
+
+// === Step 2 — show a faint protractor outline + sweep wedge =======
+// Protractor: top-half-circle at P (semi-transparent ring)
+makeNode("div", {
+  position: "absolute",
+  left: (ORG.x - 110) + "px",
+  top: (ORG.y - 110) + "px",
+  width: "220px",
+  height: "220px",
+  borderRadius: "50%",
+  border: "1.5px dashed rgba(122,120,117,0.45)",
+  pointerEvents: "none"
+}, 2, "draw-fade");
+labelEl(ORG.x + 92, ORG.y - 12, "protractor", "#7a7875", 10, 2, { weight: "500" });
+// Tick marks at 0° (north) and 90°/180°/270° as guides — add 0,90,180,270
+function tick(deg, len, color, weight) {
+  var r1 = 110 - len, r2 = 110;
+  var rad = deg * Math.PI / 180;
+  var sx = ORG.x + Math.sin(rad) * r1, sy = ORG.y - Math.cos(rad) * r1;
+  var ex = ORG.x + Math.sin(rad) * r2, ey = ORG.y - Math.cos(rad) * r2;
+  return lineEl(sx, sy, ex, ey, color, weight || 1, false, 2);
+}
+tick(0, 14, "#7a7875");
+tick(90, 8, "#7a7875");
+tick(180, 8, "#7a7875");
+tick(270, 8, "#7a7875");
+
+// === Step 3 — sweep clockwise from N to bearing (wedge fills) ====
+makeNode("div", {
+  position: "absolute",
+  left: (ORG.x - 64) + "px",
+  top: (ORG.y - 64) + "px",
+  width: "128px",
+  height: "128px",
+  borderRadius: "50%",
+  background: "conic-gradient(#fff06755 0deg " + BEAR + "deg, transparent " + BEAR + "deg)",
+  WebkitMask: "radial-gradient(circle, transparent 56px, #000 57px, #000 60px, transparent 61px)",
+  mask: "radial-gradient(circle, transparent 56px, #000 57px, #000 60px, transparent 61px)",
+  pointerEvents: "none"
+}, 3, "draw-fade");
+// Filled wedge inside (lighter)
+makeNode("div", {
+  position: "absolute",
+  left: (ORG.x - 56) + "px",
+  top: (ORG.y - 56) + "px",
+  width: "112px",
+  height: "112px",
+  borderRadius: "50%",
+  background: "conic-gradient(#fff06722 0deg " + BEAR + "deg, transparent " + BEAR + "deg)",
+  pointerEvents: "none"
+}, 3, "draw-fade");
+// Bearing label along the bisector
+var bisVec = bearingToVec(BEAR / 2);
+labelEl(
+  ORG.x + bisVec.x * 78 - 16,
+  ORG.y + bisVec.y * 78 - 8,
+  pad(BEAR, 3) + "°",
+  "#fff067", 14, 3, { weight: "700" }
+);
+
+// === Step 4 — draw the line at the bearing ======================
+lineEl(ORG.x, ORG.y, END.x, END.y, "#00abfa", 2.5, false, 4);
+dotEl(END.x, END.y, "#0fee89", 9, 4);
+// "direction" tag at end of line
+labelEl(END.x + 8, END.y - 6, "→ bearing " + pad(BEAR, 3) + "°", "#0fee89", 11, 4, { weight: "600" });
+
+// === Step controller =================================================
+var STEPS = [
+  "step 0 — mark the point " + POINT,
+  "step 1 — draw a North arrow at " + POINT,
+  "step 2 — line up the protractor on " + POINT + ", 0° on the North line",
+  "step 3 — count " + pad(BEAR, 3) + "° clockwise from North",
+  "step 4 — draw the line through that mark"
+];
+
+var step = 0;
+var maxStep = STEPS.length - 1;
+var titleEl = document.getElementById("title");
+var counterEl = document.getElementById("counter");
+var prevBtn = document.getElementById("prev");
+var nextBtn = document.getElementById("next");
+
+function setStep(n) {
+  step = Math.max(0, Math.min(maxStep, n));
+  titleEl.textContent = STEPS[step];
+  counterEl.textContent = step + " / " + maxStep;
+  var els = stage.querySelectorAll("[data-step]");
+  for (var i = 0; i < els.length; i++) {
+    var s = parseInt(els[i].dataset.step, 10);
+    var el = els[i];
+    if (s <= step) {
+      el.classList.add("drawn");
+      if (el._fullWidth != null) el.style.width = el._fullWidth + "px";
+    } else {
+      el.classList.remove("drawn");
+      if (el._fullWidth != null) el.style.width = "0px";
+    }
+  }
+  prevBtn.disabled = (step === 0);
+  nextBtn.disabled = (step === maxStep);
+}
+
+prevBtn.onclick = function() { setStep(step - 1); };
+nextBtn.onclick = function() { setStep(step + 1); };
+
+document.getElementById("footer").textContent =
+  "plot a bearing of " + pad(BEAR, 3) + "° from " + POINT;
+
+setStep(0);
+
+// Height reporter
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
