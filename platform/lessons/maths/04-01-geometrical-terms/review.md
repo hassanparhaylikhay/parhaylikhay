@@ -140,7 +140,7 @@ The diagram shows a regular octagon $ABCDEFGH$ inscribed in a circle, with centr
 </div>
 </div>
 
-Interior + exterior $= 180°$ on a straight line, so interior angle $= 180° - 45° = \boxed{135°}$. **[B1 for $135°$]**
+Interior + exterior $= 180°$ on a straight line, so interior angle $= 180° - 45° = 135°$. **[B1 for $135°$]**
 
 <div class="diagram">
 <div class="diagram-caption">STEP 2: AT EACH VERTEX, INTERIOR + EXTERIOR = 180° (STRAIGHT LINE)</div>
@@ -223,7 +223,9 @@ Interior + exterior $= 180°$ on a straight line, so interior angle $= 180° - 4
 </div>
 </div>
 
-$OT$ is a radius and $TX$ is a tangent at $T$, so $\angle OTX = \boxed{90°}$ (tangent ⟂ radius at the point of contact). **[B1 for $90°$; B1 for the reason]**
+$OT$ is a radius and $TX$ is a tangent at $T$, so $\angle OTX = 90°$ (tangent ⟂ radius at the point of contact). **[B1 for $90°$; B1 for the reason]**
+
+**Answer:** (a) $\boxed{135°}$  ·  (d) $\boxed{90°}$.
 
 Full marks $= 5$.
 

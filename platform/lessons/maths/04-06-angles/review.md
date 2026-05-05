@@ -114,15 +114,17 @@ In the figure, $AB$ is parallel to $CD$. A transversal cuts $AB$ at $E$ and $CD$
 
 (c) Separately, find the size of one interior angle of a regular polygon with 12 sides.
 
-**Step a: Angle $EFC$.** Angles $BEF$ and $EFC$ sit on OPPOSITE sides of the transversal between the parallels — they are alternate angles, so $\angle EFC = \boxed{40°}$ (alternate angles, $AB \parallel CD$). **[B1 for $40°$; B1 for the reason]**
+**Step a: Angle $EFC$.** Angles $BEF$ and $EFC$ sit on OPPOSITE sides of the transversal between the parallels — they are alternate angles, so $\angle EFC = 40°$ (alternate angles, $AB \parallel CD$). **[B1 for $40°$; B1 for the reason]**
 
 **Step b: Angle $FEG$.** $\triangle EFG$ is isosceles with $FE = FG$, so the base angles satisfy $\angle FEG = \angle FGE$. By the triangle-sum rule:
 
-$$2 \times \angle FEG + 70 = 180 \;\Rightarrow\; \angle FEG = \dfrac{110}{2} = \boxed{55°}$$
+$$2 \times \angle FEG + 70 = 180 \;\Rightarrow\; \angle FEG = \dfrac{110}{2} = 55°$$
 
 **[M1 for the isosceles triangle equation; A1 for $55°$]**
 
-**Step c: One interior angle of a regular 12-gon.** Use the exterior route: exterior $= \dfrac{360}{12} = 30°$, so interior $= 180 - 30 = \boxed{150°}$. **[M1 for the exterior route; A1 for $150°$; B1 for $30°$ along the way]**
+**Step c: One interior angle of a regular 12-gon.** Use the exterior route: exterior $= \dfrac{360}{12} = 30°$, so interior $= 180 - 30 = 150°$. **[M1 for the exterior route; A1 for $150°$; B1 for $30°$ along the way]**
+
+**Answer:** (a) $\boxed{40°}$  ·  (b) $\boxed{55°}$  ·  (c) $\boxed{150°}$.
 
 Full marks $= 7$.
 
