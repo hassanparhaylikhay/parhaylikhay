@@ -17,16 +17,16 @@
 
   .stage-outer {
     width:100%;
-    max-width:480px;
+    max-width:660px;
     margin:0 auto;
-    aspect-ratio: 480 / 360;
+    aspect-ratio: 660 / 460;
     position:relative;
   }
   .stage {
     position:absolute;
     top:0; left:0;
-    width:480px;
-    height:360px;
+    width:660px;
+    height:460px;
     transform-origin: top left;
     overflow:hidden;
     border-radius:6px;
@@ -84,13 +84,13 @@ var UNIT = (qs.get("unit") || "km");
 var drawn1Cm = DIST1 / KM_PER_CM;
 var drawn2Cm = DIST2 / KM_PER_CM;
 var maxDrawn = Math.max(drawn1Cm, drawn2Cm);
-var CM_TO_PX = Math.min(22, 140 / maxDrawn);
+var CM_TO_PX = Math.min(40, 240 / maxDrawn);
 
 var dist1Px = drawn1Cm * CM_TO_PX;
 var dist2Px = drawn2Cm * CM_TO_PX;
 
 // Origin near horizontal centre, vertically biased so southerly bearings still fit
-var ORG = { x: 180, y: 175 };
+var ORG = { x: 240, y: 230 };
 
 function pad(n, total) {
   var s = String(Math.round(n));
@@ -121,7 +121,7 @@ var drawnAC_cm = realAC_km / KM_PER_CM;
 // --- Stage scaling -----------------------------------------------------
 var stage = document.getElementById("stage");
 var stageOuter = document.getElementById("stage-outer");
-var STAGE_W = 480, STAGE_H = 360;
+var STAGE_W = 660, STAGE_H = 460;
 
 function fitStage() {
   var w = stageOuter.clientWidth;
@@ -217,7 +217,7 @@ function labelEl(x, y, text, color, fontSize, dataStep, opts) {
 
 // --- Static base: origin and faint North arrow at origin --------------
 // (Always visible, all steps.)
-var northTopY = ORG.y - 130;
+var northTopY = ORG.y - 180;
 makeNode("div", {
   position: "absolute",
   left: ORG.x + "px",
@@ -264,15 +264,15 @@ stage.appendChild(orgLab);
 
 // --- Step 1: mark first bearing wedge --------------------------------
 var col1 = "#ff822c";
-wedgeEl(ORG.x, ORG.y, 26, BEAR1, col1 + "60", 1);
+wedgeEl(ORG.x, ORG.y, 38, BEAR1, col1 + "60", 1);
 // Bearing label, positioned along the bisector outside the wedge
 var bis1 = BEAR1 / 2;
 var bis1Vec = bearingToVec(bis1);
 labelEl(
-  ORG.x + bis1Vec.x * 38 - 12,
-  ORG.y + bis1Vec.y * 38 - 8,
+  ORG.x + bis1Vec.x * 54 - 14,
+  ORG.y + bis1Vec.y * 54 - 8,
   pad(BEAR1, 3) + "°",
-  col1, 12, 1, { weight: "700" }
+  col1, 13, 1, { weight: "700" }
 );
 
 // --- Step 2: draw line to P1 + dot + label --------------------------
@@ -286,22 +286,22 @@ var mid1y = (ORG.y + P1pos.y) / 2;
 // Perpendicular offset
 var perp1 = { x: -v1.y, y: v1.x };
 labelEl(
-  mid1x + perp1.x * 14 - 36,
-  mid1y + perp1.y * 14 - 6,
+  mid1x + perp1.x * 18 - 40,
+  mid1y + perp1.y * 18 - 7,
   fmt(drawn1Cm) + " cm = " + fmt(DIST1) + " " + UNIT,
-  "#00abfa", 11, 2, { weight: "600" }
+  "#00abfa", 12, 2, { weight: "600" }
 );
 
 // --- Step 3: mark second bearing wedge ------------------------------
 var col2 = "#fff067";
-wedgeEl(ORG.x, ORG.y, 22, BEAR2, col2 + "55", 3);
+wedgeEl(ORG.x, ORG.y, 32, BEAR2, col2 + "55", 3);
 var bis2 = BEAR2 / 2;
 var bis2Vec = bearingToVec(bis2);
 labelEl(
-  ORG.x + bis2Vec.x * 32 - 12,
-  ORG.y + bis2Vec.y * 32 - 8,
+  ORG.x + bis2Vec.x * 48 - 14,
+  ORG.y + bis2Vec.y * 48 - 8,
   pad(BEAR2, 3) + "°",
-  col2, 12, 3, { weight: "700" }
+  col2, 13, 3, { weight: "700" }
 );
 
 // --- Step 4: draw line to P2 + dot + label --------------------------
@@ -312,10 +312,10 @@ var mid2x = (ORG.x + P2pos.x) / 2;
 var mid2y = (ORG.y + P2pos.y) / 2;
 var perp2 = { x: -v2.y, y: v2.x };
 labelEl(
-  mid2x + perp2.x * 14 - 36,
-  mid2y + perp2.y * 14 - 6,
+  mid2x + perp2.x * 18 - 40,
+  mid2y + perp2.y * 18 - 7,
   fmt(drawn2Cm) + " cm = " + fmt(DIST2) + " " + UNIT,
-  "#00abfa", 11, 4, { weight: "600" }
+  "#00abfa", 12, 4, { weight: "600" }
 );
 
 // --- Step 5: dashed measure line P1–P2 ------------------------------
@@ -328,23 +328,23 @@ var dxAC = P2pos.x - P1pos.x, dyAC = P2pos.y - P1pos.y;
 var lenAC = Math.sqrt(dxAC * dxAC + dyAC * dyAC) || 1;
 var perpACx = -dyAC / lenAC, perpACy = dxAC / lenAC;
 labelEl(
-  midACx + perpACx * 16 - 36,
-  midACy + perpACy * 16 - 6,
+  midACx + perpACx * 18 - 40,
+  midACy + perpACy * 18 - 7,
   "measure " + P1 + P2,
-  col3, 11, 5, { weight: "600" }
+  col3, 12, 5, { weight: "600" }
 );
 
 // --- Step 6: convert drawn cm to real km ---------------------------
 labelEl(
-  20, STAGE_H - 32,
+  24, STAGE_H - 36,
   P1 + P2 + " ≈ " + fmt(drawnAC_cm) + " cm  ×  " + fmt(KM_PER_CM) +
   "  =  " + fmt(realAC_km) + " " + UNIT,
-  col3, 12, 6, { weight: "700" }
+  col3, 13, 6, { weight: "700" }
 );
 labelEl(
-  20, STAGE_H - 14,
+  24, STAGE_H - 16,
   "scale 1 cm : " + fmt(KM_PER_CM) + " " + UNIT + "  →  real " + P1 + P2 + " = drawn " + P1 + P2 + " × " + fmt(KM_PER_CM),
-  "#7a7875", 10, 6, { weight: "500" }
+  "#7a7875", 11, 6, { weight: "500" }
 );
 
 // --- Step controller ---------------------------------------------------
