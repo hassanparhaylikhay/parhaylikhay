@@ -523,7 +523,7 @@
 }
 .lesson-prose .mistake-list ul li::before { content: none; }
 .lesson-prose .mistake-list ul li::marker { content: none; }
-.lesson-prose .mistake-list ul li strong { color: #fff067; }
+.lesson-prose .mistake-list ul li strong { color: #f0eeea; }
 
 /* ─── Red-accent "trap" / warning callout ─── */
 .lesson-prose .trap-callout {
