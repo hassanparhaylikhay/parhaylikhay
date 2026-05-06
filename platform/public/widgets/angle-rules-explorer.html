@@ -149,16 +149,34 @@ for (var i = 0; i < 8; i++) {
   lblEls.push(t);
 }
 
-// State
-var targetAngle = 65, displayAngle = 65;
+// State — URL params let a lesson embed an iframe locked to one rule.
+//   ?mode=corr|alt|coint|vert|all  (initial rule)
+//   ?lock=1                        (hide the rule selector — angle slider stays)
+var qs = new URLSearchParams(location.search);
+var initialMode = qs.get("mode") || "all";
+var lockMode = qs.get("lock") === "1";
+
+var targetAngle = parseInt(qs.get("angle"), 10);
+if (isNaN(targetAngle)) targetAngle = 65;
+var displayAngle = targetAngle;
 var SPRING = 0.18;
-var mode = "all";
+var mode = initialMode;
+
+var modeSel = document.getElementById("mode");
+modeSel.value = initialMode;
+if (lockMode) {
+  // Hide just the rule row; keep the angle slider so the manipulative still
+  // animates as the student drags.
+  modeSel.parentNode.style.display = "none";
+}
+document.getElementById("angle").value = targetAngle;
+document.getElementById("vangle").textContent = targetAngle + " deg";
 
 document.getElementById("angle").addEventListener("input", function(e) {
   targetAngle = parseInt(e.target.value, 10);
   document.getElementById("vangle").textContent = targetAngle + " deg";
 });
-document.getElementById("mode").addEventListener("change", function(e) {
+modeSel.addEventListener("change", function(e) {
   mode = e.target.value;
 });
 
