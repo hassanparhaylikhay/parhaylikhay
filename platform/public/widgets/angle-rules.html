@@ -18,22 +18,17 @@
   .handle { cursor:grab; }
   .handle.grabbing { cursor:grabbing; }
   .formula {
-    margin-top:12px; text-align:center; font-family:'Geist Mono',monospace;
+    margin-top:12px; font-family:'Geist Mono',monospace;
     font-size:16px; line-height:1.6; color:#f0eeea; font-weight:600;
-    padding:10px 12px; border-radius:6px; background:rgba(15,238,137,0.05);
+    padding:10px 14px; border-radius:6px; background:rgba(15,238,137,0.05);
     border:1px solid rgba(15,238,137,0.15);
+    display:flex; align-items:center; justify-content:center; gap:14px;
+    flex-wrap:wrap;
   }
+  .formula .formula-text { text-align:center; }
   .formula .total { color:#0fee89; font-weight:700; }
-  .proof {
-    margin-top:10px; padding:8px 6px 4px; border-radius:6px;
-    border:1px dashed #141e2a; display:none;
-  }
-  .proof.shown { display:block; }
-  .proof-caption {
-    text-align:center; font-family:'Geist Mono',monospace; font-size:10px;
-    color:#7a7875; letter-spacing:0.4px; padding-bottom:4px;
-  }
-  .proof svg { display:block; margin:0 auto; }
+  .formula .proof-inline { flex-shrink:0; }
+  .formula .proof-inline svg { display:block; }
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
 </head>
@@ -45,10 +40,6 @@
   </div>
   <div class="stage" id="stage"></div>
   <div class="formula" id="formula"></div>
-  <div class="proof" id="proof">
-    <div class="proof-caption" id="proofCaption"></div>
-    <div id="proofSvgHolder"></div>
-  </div>
   <p class="footer" id="footer"></p>
 </div>
 
@@ -603,23 +594,23 @@ var BUILDERS = {
 document.getElementById("title").textContent = state.title;
 document.getElementById("footer").textContent = state.footer;
 
-// Build the visual proof: lay each angle's sector edge-to-edge starting
-// from `startAng` (radians) sweeping CCW (math) through the upper half so
-// that the total reaches `targetSum` degrees. For triangle that's 180°
-// against a horizontal baseline; for quadrilateral that's 360° around a
-// centre point.
+// Build a tiny inline visual proof that sits INSIDE the green formula box
+// next to the equation. For triangle: a small horizontal baseline with a
+// colour-coded half-fan above it filling 180°. For quad: a small full
+// circle filled with the four sectors covering 360°. Each sector is just
+// a thin coloured arc plus its two boundary rays — no fill, no labels —
+// so the proof reads as 'see, the angles add up'.
 function buildProofSvg(formulaParts, kind) {
   var pw, ph, cx, cy, R, startAng, drawBaseline;
   if (kind === "triangle") {
-    pw = 460; ph = 130; R = 70;
-    cx = pw / 2; cy = ph - 14;
-    startAng = Math.PI;     // start pointing left, sweep through upper half to right
+    pw = 110; ph = 60; R = 28;
+    cx = pw / 2; cy = ph - 6;
+    startAng = Math.PI;
     drawBaseline = true;
   } else {
-    // quad
-    pw = 260; ph = 260; R = 95;
+    pw = 70; ph = 70; R = 30;
     cx = pw / 2; cy = ph / 2;
-    startAng = -Math.PI / 2;   // start at top, sweep CW around in screen
+    startAng = -Math.PI / 2;
     drawBaseline = false;
   }
   var svgEl = el("svg", {
@@ -629,55 +620,55 @@ function buildProofSvg(formulaParts, kind) {
   });
   if (drawBaseline) {
     svgEl.appendChild(el("line", {
-      x1: 24, y1: cy, x2: pw - 24, y2: cy,
-      stroke: COL.edge, "stroke-width": 2, "stroke-linecap": "round"
+      x1: 6, y1: cy, x2: pw - 6, y2: cy,
+      stroke: COL.grey, "stroke-width": 1.2, "stroke-linecap": "round"
     }));
   }
-  // Centre dot
-  svgEl.appendChild(el("circle", { cx: cx, cy: cy, r: 4, fill: COL.faint }));
-  // Sectors
+  // Compute boundary angles (one per ray = N+1 for triangle, N for quad)
+  var boundaries = [startAng];
   var ang = startAng;
-  formulaParts.forEach(function(part) {
-    var rad = part.deg * Math.PI / 180;
-    var endAng = ang + rad;
-    var sx = cx + Math.cos(ang) * R, sy = cy + Math.sin(ang) * R;
-    var ex = cx + Math.cos(endAng) * R, ey = cy + Math.sin(endAng) * R;
-    var largeArc = rad > Math.PI ? 1 : 0;
-    // sweepFlag = 1 here (CW in user-units = CCW math, going through upper half)
-    var d = "M " + cx + " " + cy +
-            " L " + sx.toFixed(2) + " " + sy.toFixed(2) +
-            " A " + R + " " + R + " 0 " + largeArc + " 1 " + ex.toFixed(2) + " " + ey.toFixed(2) +
-            " Z";
-    svgEl.appendChild(el("path", {
-      d: d,
-      fill: part.color + "26",
-      stroke: part.color,
-      "stroke-width": 1.6,
-      "stroke-linejoin": "round"
-    }));
-    // Label inside the sector at the bisector
-    var midA = ang + rad / 2;
-    var lr = R * 0.62;
-    var lab = el("text", {
-      x: (cx + Math.cos(midA) * lr).toFixed(2),
-      y: (cy + Math.sin(midA) * lr).toFixed(2),
-      fill: part.color,
-      "font-family": "Geist Mono, monospace",
-      "font-size": 12,
-      "font-weight": 700,
-      "text-anchor": "middle",
-      "dominant-baseline": "middle"
-    });
-    lab.textContent = part.label + " = " + fmtDeg(part.deg);
-    svgEl.appendChild(lab);
-    ang = endAng;
+  formulaParts.forEach(function(p) {
+    ang += p.deg * Math.PI / 180;
+    boundaries.push(ang);
   });
+  // Draw boundary rays in the colour of the sector to their RIGHT (i.e. the
+  // sector that starts from this ray). For triangle the very last boundary
+  // (which lies along the baseline at angle 0) is skipped — it coincides
+  // with the baseline.
+  for (var i = 0; i < boundaries.length; i++) {
+    if (drawBaseline && (i === 0 || i === boundaries.length - 1)) continue; // baseline already drawn
+    var b = boundaries[i];
+    var rayColor = (i < formulaParts.length) ? formulaParts[i].color : formulaParts[i - 1].color;
+    svgEl.appendChild(el("line", {
+      x1: cx, y1: cy,
+      x2: (cx + Math.cos(b) * R).toFixed(2),
+      y2: (cy + Math.sin(b) * R).toFixed(2),
+      stroke: rayColor, "stroke-width": 1.3, "stroke-linecap": "round"
+    }));
+  }
+  // Draw each sector's arc
+  for (var j = 0; j < formulaParts.length; j++) {
+    var a1 = boundaries[j], a2 = boundaries[j + 1];
+    var rad = a2 - a1;
+    var sx = cx + Math.cos(a1) * R, sy = cy + Math.sin(a1) * R;
+    var ex = cx + Math.cos(a2) * R, ey = cy + Math.sin(a2) * R;
+    var largeArc = rad > Math.PI ? 1 : 0;
+    svgEl.appendChild(el("path", {
+      d: "M " + sx.toFixed(2) + " " + sy.toFixed(2) +
+         " A " + R + " " + R + " 0 " + largeArc + " 1 " + ex.toFixed(2) + " " + ey.toFixed(2),
+      fill: "none",
+      stroke: formulaParts[j].color,
+      "stroke-width": 1.6,
+      "stroke-linecap": "round"
+    }));
+  }
+  // Centre dot last (over the rays)
+  svgEl.appendChild(el("circle", { cx: cx, cy: cy, r: 1.6, fill: COL.faint }));
   return svgEl;
 }
 
 function redraw() {
   state.render();
-  // Update formula
   var fEl = document.getElementById("formula");
   if (!state.formulaParts) { fEl.textContent = ""; return; }
   var sumDeg = state.formulaParts.reduce(function(s, p){ return s + p.deg; }, 0);
@@ -687,24 +678,21 @@ function redraw() {
   var nums = state.formulaParts.map(function(p) {
     return '<span style="color:' + p.color + '">' + fmtDeg(p.deg) + '</span>';
   });
-  fEl.innerHTML =
+  // Clear and rebuild
+  while (fEl.firstChild) fEl.removeChild(fEl.firstChild);
+  var textBlock = document.createElement("div");
+  textBlock.className = "formula-text";
+  textBlock.innerHTML =
     parts.join(" + ") + ' = <span class="total">' + state.sumValue + '°</span><br>' +
     '<span style="color:#7a7875;font-size:13px">' +
     nums.join(" + ") + " = " + fmtDeg(sumDeg) + " ✓" +
     '</span>';
-  // Visual proof (triangle / quadrilateral only)
-  var proofEl = document.getElementById("proof");
-  var proofHolder = document.getElementById("proofSvgHolder");
-  var proofCaption = document.getElementById("proofCaption");
-  while (proofHolder.firstChild) proofHolder.removeChild(proofHolder.firstChild);
+  fEl.appendChild(textBlock);
   if (RULE === "triangle" || RULE === "quad") {
-    proofEl.classList.add("shown");
-    proofCaption.textContent = (RULE === "triangle"
-      ? "PROOF: tear off the three angles and they line up flat — a straight line, 180°"
-      : "PROOF: tear off the four angles and they fill a full turn around a point — 360°");
-    proofHolder.appendChild(buildProofSvg(state.formulaParts, RULE === "triangle" ? "triangle" : "quad"));
-  } else {
-    proofEl.classList.remove("shown");
+    var proofWrap = document.createElement("div");
+    proofWrap.className = "proof-inline";
+    proofWrap.appendChild(buildProofSvg(state.formulaParts, RULE === "triangle" ? "triangle" : "quad"));
+    fEl.appendChild(proofWrap);
   }
 }
 redraw();
