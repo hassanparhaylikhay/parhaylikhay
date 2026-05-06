@@ -90,6 +90,33 @@ function angleAt(a, c, b) {
   return ang * 180 / Math.PI;
 }
 
+// True iff segments p1p2 and p3p4 properly cross (not just touch at an
+// endpoint). Used to keep the quadrilateral non-self-intersecting.
+function segmentsCross(p1, p2, p3, p4) {
+  function ccw(A, B, C) {
+    return (B.x - A.x) * (C.y - A.y) - (B.y - A.y) * (C.x - A.x);
+  }
+  var d1 = ccw(p3, p4, p1);
+  var d2 = ccw(p3, p4, p2);
+  var d3 = ccw(p1, p2, p3);
+  var d4 = ccw(p1, p2, p4);
+  return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+         ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+}
+
+// Compare two circular orderings of N integers — true iff `a` is some
+// rotation of `b`. Used to detect whether a drag swapped two rays.
+function sameCircularOrder(a, b) {
+  if (a.length !== b.length) return false;
+  var n = a.length;
+  var start = a.indexOf(b[0]);
+  if (start < 0) return false;
+  for (var i = 0; i < n; i++) {
+    if (a[(start + i) % n] !== b[i]) return false;
+  }
+  return true;
+}
+
 // Arc path from angle1 to angle2 (sweeping CCW in math, which is CW on
 // screen because screen-y is inverted). Returns an SVG path 'd' string.
 // Angles are in radians (math convention from atan2).
@@ -195,11 +222,23 @@ function buildRulePoint() {
   state.rays = rays;
   state.centre = centre;
   state.labels = labels;
+  // Lock the initial angular order around the centre — drags that would
+  // swap one ray past another are rejected, so the labelled sectors a/b/c/d
+  // stay in the same place around the diagram.
+  var lockedOrder = rays.map(function(r, i) { return { i: i, ang: angOf(vec(centre, r)) }; })
+    .sort(function(a, b) { return a.ang - b.ang; })
+    .map(function(o) { return o.i; });
   state.onDrag = function(idx, p) {
-    // Constrain so ray endpoint stays at distance >= 50 from centre
     var v = vec(centre, p);
     var L = len(v); if (L < 50) { p.x = centre.x + 50 * v.x / L; p.y = centre.y + 50 * v.y / L; }
+    var ox = rays[idx].x, oy = rays[idx].y;
     rays[idx].x = p.x; rays[idx].y = p.y;
+    var newOrder = rays.map(function(r, i) { return { i: i, ang: angOf(vec(centre, r)) }; })
+      .sort(function(a, b) { return a.ang - b.ang; })
+      .map(function(o) { return o.i; });
+    if (!sameCircularOrder(newOrder, lockedOrder)) {
+      rays[idx].x = ox; rays[idx].y = oy;
+    }
   };
   state.render = function() {
     clearLayers();
@@ -277,12 +316,21 @@ function buildRuleLine() {
   var labels = ["p", "q", "r"];   // p = left-line→ray1, q = ray1→ray2, r = ray2→right-line
   state.title = "RULE 2 — ANGLES ON A STRAIGHT LINE";
   state.footer = "drag the two rays — angles on the upper side always sum to 180°";
+  // Lock initial left/right ordering so the dragged ray can't cross past
+  // the other one. With y-down screen coords, the up-LEFT ray has the
+  // smaller atan2 — record which array index that initially belongs to.
+  var leftIdxLocked = (angOf(vec(junction, rays[0])) < angOf(vec(junction, rays[1]))) ? 0 : 1;
   state.onDrag = function(idx, p) {
-    // Rays must stay above the line and be at least 30px from the junction
     if (p.y > junction.y - 10) p.y = junction.y - 10;
     var v = vec(junction, p);
     var L2 = len(v); if (L2 < 50) { p.x = junction.x + 50 * v.x / L2; p.y = junction.y + 50 * v.y / L2; }
+    var ox = rays[idx].x, oy = rays[idx].y;
     rays[idx].x = p.x; rays[idx].y = p.y;
+    // Reject the move if the two rays swapped left/right.
+    var nowLeft = (angOf(vec(junction, rays[0])) < angOf(vec(junction, rays[1]))) ? 0 : 1;
+    if (nowLeft !== leftIdxLocked) {
+      rays[idx].x = ox; rays[idx].y = oy;
+    }
   };
   state.render = function() {
     clearLayers();
@@ -484,7 +532,15 @@ function buildRuleQuad() {
   state.onDrag = function(idx, p) {
     p.x = Math.max(20, Math.min(W - 20, p.x));
     p.y = Math.max(20, Math.min(H - 20, p.y));
+    var ox = verts[idx].x, oy = verts[idx].y;
     verts[idx].x = p.x; verts[idx].y = p.y;
+    // Reject the move if the polygon now self-intersects (sides AB×CD or
+    // BC×DA crossing). Keeps the quad simple and the labelled angles
+    // sensible.
+    var A = verts[0], B = verts[1], C = verts[2], D = verts[3];
+    if (segmentsCross(A, B, C, D) || segmentsCross(B, C, D, A)) {
+      verts[idx].x = ox; verts[idx].y = oy;
+    }
   };
   state.render = function() {
     clearLayers();
