@@ -61,14 +61,19 @@ var COL = {
 
 // Main view geometry
 var W = 600, H = 400, MAIN_SCALE = 1.4;
-// Thumbnail geometry
+// Thumbnail geometry. Pitch is POSITIVE so the camera looks slightly DOWN
+// at the solid (back edges sit higher on screen than front edges) — that
+// matches the conventional isometric drawing orientation and removes the
+// Necker-cube ambiguity that flipped left/right while dragging.
 var TW = 110, TH = 110, THUMB_SCALE = 0.45;
 var THUMB_YAW = 28 * Math.PI / 180;
-var THUMB_PITCH = -22 * Math.PI / 180;
+var THUMB_PITCH = 22 * Math.PI / 180;
 
-// Main view rotation state (driven by drag)
+// Main view rotation state (driven by drag) — same default orientation as
+// the thumbnails so a freshly-loaded shape and the picked-thumb plane line
+// up before the student starts dragging.
 var yaw = 28 * Math.PI / 180;
-var pitch = -22 * Math.PI / 180;
+var pitch = 22 * Math.PI / 180;
 
 // Currently-selected plane (null = none, integer = plane index)
 var selectedPlaneIdx = null;
