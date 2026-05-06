@@ -620,12 +620,96 @@ function buildRuleQuad() {
   };
 }
 
+function buildRuleExterior() {
+  // Triangle ABC with the side AC extended past C; the exterior angle at C
+  // is between CB and the extension. The exterior-angle theorem says
+  // ext = A + B, where A and B are the two non-adjacent interior angles.
+  var verts = [
+    { x: 90,  y: H - 60, color: COL.yellow },   // A
+    { x: 320, y: 60,     color: COL.green  },   // B
+    { x: 380, y: H - 60, color: COL.orange }    // C (where ext sits)
+  ];
+  var labels = ["A", "B", "C"];
+  state.title = "EXTERIOR ANGLE — ext = A + B";
+  state.footer = "drag any vertex — the exterior angle always equals A + B";
+  state.onDrag = function(idx, p) {
+    p.x = Math.max(20, Math.min(W - 120, p.x));   // leave room for the extension
+    p.y = Math.max(20, Math.min(H - 30, p.y));
+    verts[idx].x = p.x; verts[idx].y = p.y;
+  };
+  state.render = function() {
+    clearLayers();
+    var A = verts[0], B = verts[1], C = verts[2];
+    // Extension point past C along AC direction
+    var dirAC = vec(A, C);
+    var lenAC = len(dirAC) || 1;
+    var ext = { x: C.x + dirAC.x / lenAC * 130, y: C.y + dirAC.y / lenAC * 130 };
+    // Triangle outline (filled body)
+    layerLines.appendChild(el("polygon", {
+      points: A.x + "," + A.y + " " + B.x + "," + B.y + " " + C.x + "," + C.y,
+      fill: "rgba(0,171,250,0.07)",
+      stroke: COL.edge, "stroke-width": 2.6, "stroke-linejoin": "round"
+    }));
+    // Extension line past C
+    layerLines.appendChild(el("line", {
+      x1: C.x, y1: C.y, x2: ext.x, y2: ext.y,
+      stroke: COL.edge, "stroke-width": 2.6, "stroke-linecap": "round"
+    }));
+    // Helper to draw an angle at a vertex with a coloured arc + label
+    function drawAngle(here, prev, next, color, label, deg, lr, arcR) {
+      var aPrev = angOf(vec(here, prev));
+      var aNext = angOf(vec(here, next));
+      var sweep = aNext - aPrev;
+      while (sweep > Math.PI) sweep -= 2 * Math.PI;
+      while (sweep < -Math.PI) sweep += 2 * Math.PI;
+      layerArcs.appendChild(el("path", {
+        d: arcPathBetween(here.x, here.y, arcR || 28, aPrev, aPrev + sweep),
+        fill: "none", stroke: color, "stroke-width": 2, "stroke-linecap": "round"
+      }));
+      var bisector = bisectorPoint(prev, here, next, lr || 56);
+      layerLabels.appendChild(textNode(
+        bisector.x, bisector.y,
+        label + " = " + fmtDeg(deg),
+        color
+      ));
+    }
+    function ang(p1, c, p2) {
+      var d = angleAt(p1, c, p2);
+      return d > 180 ? 360 - d : d;
+    }
+    var degA = ang(C, A, B);
+    var degB = ang(A, B, C);
+    var degExt = ang(B, C, ext);
+    drawAngle(A, C, B, COL.yellow, "A", degA, 60, 32);
+    drawAngle(B, A, C, COL.green,  "B", degB, 60, 32);
+    drawAngle(C, B, ext, COL.pink, "ext", degExt, 50, 28);
+    verts.forEach(function(v, i) { makeHandle(v, { fill: v.color, idx: i }); });
+    state.formulaHTML = (function() {
+      var sumAB = degA + degB;
+      var ok = Math.abs(degExt - sumAB) < 1.5;
+      return '<span style="color:' + COL.pink + '">ext</span>'
+           + ' = <span style="color:' + COL.yellow + '">A</span>'
+           + ' + <span style="color:' + COL.green + '">B</span><br>'
+           + '<span style="color:#7a7875;font-size:13px">'
+           + '<span style="color:' + COL.pink + '">' + fmtDeg(degExt) + '</span>'
+           + ' = '
+           + '<span style="color:' + COL.yellow + '">' + fmtDeg(degA) + '</span>'
+           + ' + '
+           + '<span style="color:' + COL.green + '">' + fmtDeg(degB) + '</span>'
+           + ' = ' + fmtDeg(sumAB)
+           + (ok ? ' ✓' : '')
+           + '</span>';
+    })();
+  };
+}
+
 var BUILDERS = {
   "point":    buildRulePoint,
   "line":     buildRuleLine,
   "opposite": buildRuleOpposite,
   "triangle": buildRuleTriangle,
-  "quad":     buildRuleQuad
+  "quad":     buildRuleQuad,
+  "exterior": buildRuleExterior
 };
 (BUILDERS[RULE] || buildRulePoint)();
 
@@ -708,23 +792,27 @@ function buildProofSvg(formulaParts, kind) {
 function redraw() {
   state.render();
   var fEl = document.getElementById("formula");
-  if (!state.formulaParts) { fEl.textContent = ""; return; }
-  var sumDeg = state.formulaParts.reduce(function(s, p){ return s + p.deg; }, 0);
-  var parts = state.formulaParts.map(function(p) {
-    return '<span style="color:' + p.color + '">' + p.label + '</span>';
-  });
-  var nums = state.formulaParts.map(function(p) {
-    return '<span style="color:' + p.color + '">' + fmtDeg(p.deg) + '</span>';
-  });
-  // Clear and rebuild
   while (fEl.firstChild) fEl.removeChild(fEl.firstChild);
   var textBlock = document.createElement("div");
   textBlock.className = "formula-text";
-  textBlock.innerHTML =
-    parts.join(" + ") + ' = <span class="total">' + state.sumValue + '°</span><br>' +
-    '<span style="color:#7a7875;font-size:13px">' +
-    nums.join(" + ") + " = " + fmtDeg(sumDeg) + " ✓" +
-    '</span>';
+  if (state.formulaHTML) {
+    textBlock.innerHTML = state.formulaHTML;
+  } else if (state.formulaParts) {
+    var sumDeg = state.formulaParts.reduce(function(s, p){ return s + p.deg; }, 0);
+    var parts = state.formulaParts.map(function(p) {
+      return '<span style="color:' + p.color + '">' + p.label + '</span>';
+    });
+    var nums = state.formulaParts.map(function(p) {
+      return '<span style="color:' + p.color + '">' + fmtDeg(p.deg) + '</span>';
+    });
+    textBlock.innerHTML =
+      parts.join(" + ") + ' = <span class="total">' + state.sumValue + '°</span><br>' +
+      '<span style="color:#7a7875;font-size:13px">' +
+      nums.join(" + ") + " = " + fmtDeg(sumDeg) + " ✓" +
+      '</span>';
+  } else {
+    return;
+  }
   fEl.appendChild(textBlock);
   if (RULE === "triangle" || RULE === "quad") {
     var proofWrap = document.createElement("div");
