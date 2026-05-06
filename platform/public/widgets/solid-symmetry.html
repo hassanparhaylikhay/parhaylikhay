@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Solid Symmetry — Planes</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; justify-content:center; align-items:center; margin-bottom:10px; min-height:22px; }
+  .caption { font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; text-align:center; }
+  .stage { width:100%; aspect-ratio:1.5; position:relative; }
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
+  .legend { display:flex; gap:18px; justify-content:center; margin-top:10px; flex-wrap:wrap; font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:0.4px; }
+  .swatch { display:inline-block; width:14px; height:8px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head"><span class="caption" id="caption"></span></div>
+  <div class="stage" id="stage"></div>
+  <div class="legend" id="legend"></div>
+  <p class="footer" id="footer"></p>
+</div>
+
+<script>
+"use strict";
+
+var qs = new URLSearchParams(location.search);
+var SHAPE = (qs.get("shape") || "cube").toLowerCase();
+var VARIANT = (qs.get("variant") || "default").toLowerCase();
+
+// View parameters
+var W = 600, H = 400;
+var YAW = 28 * Math.PI / 180;
+var PITCH = -22 * Math.PI / 180;
+var SCALE = 1.4;  // overall stage scale
+
+// Brand palette
+var COL = {
+  edge:   "#00abfa",
+  hidden: "#274964",
+  yellow: "#fff067",
+  green:  "#0fee89",
+  orange: "#ff822c",
+  pink:   "#ff4670",
+  grey:   "#7a7875"
+};
+
+// Project a 3D point (x,y,z) into screen (sx,sy) with depth z'.
+// World axes: +x right, +y up, +z toward viewer.
+function project(p) {
+  // rotateY (around y-axis) then rotateX (around x-axis), then translate
+  // Standard yaw + pitch rotation.
+  var cy = Math.cos(YAW), sy = Math.sin(YAW);
+  var cx = Math.cos(PITCH), sx = Math.sin(PITCH);
+  // Yaw: x' = x*cy + z*sy, z' = -x*sy + z*cy
+  var x1 = p[0] * cy + p[2] * sy;
+  var y1 = p[1];
+  var z1 = -p[0] * sy + p[2] * cy;
+  // Pitch around x: y'' = y*cx - z*sx, z'' = y*sx + z*cx
+  var x2 = x1;
+  var y2 = y1 * cx - z1 * sx;
+  var z2 = y1 * sx + z1 * cx;
+  return {
+    x: W / 2 + x2 * SCALE,
+    y: H / 2 - y2 * SCALE,   // screen y is down
+    z: z2
+  };
+}
+
+// === Solid definitions =================================================
+// Each solid returns: { vertices, edges, faces?, planes, label }
+// vertices: list of [x,y,z] in world units
+// edges: list of [vIdxA, vIdxB]
+// planes: list of { quad: [v0,v1,v2,v3], color, kind, label }
+// where each plane v_i is a 3D point (NOT vertex index — a free-floating quad).
+
+function buildCube(variant) {
+  var s = 75;
+  var v = [
+    [-s,-s,-s],[ s,-s,-s],[ s, s,-s],[-s, s,-s],   // back face
+    [-s,-s, s],[ s,-s, s],[ s, s, s],[-s, s, s]    // front face
+  ];
+  var e = [
+    [0,1],[1,2],[2,3],[3,0],
+    [4,5],[5,6],[6,7],[7,4],
+    [0,4],[1,5],[2,6],[3,7]
+  ];
+  var planes = [];
+  if (variant === "axis" || variant === "all" || variant === "default") {
+    planes.push({ quad: [[0,-s,-s],[0, s,-s],[0, s, s],[0,-s, s]], color: COL.yellow, label: "axis" });
+  }
+  if (variant === "diagonal" || variant === "all") {
+    // One face-diagonal plane (through edge xz=0 line at top + bottom)
+    planes.push({ quad: [[-s,-s,-s],[ s,-s, s],[ s, s, s],[-s, s,-s]], color: COL.green, label: "diagonal" });
+  }
+  return {
+    vertices: v, edges: e, planes: planes,
+    title: "CUBE", subtitle: "9 PLANES OF SYMMETRY (3 AXIS-ALIGNED + 6 DIAGONAL)",
+    legend: variant === "all"
+      ? [{c: COL.yellow, t: "axis-aligned (×3)"}, {c: COL.green, t: "diagonal (×6)"}]
+      : variant === "diagonal"
+        ? [{c: COL.green, t: "diagonal plane (×6 in total)"}]
+        : [{c: COL.yellow, t: "axis-aligned plane (×3 in total)"}],
+    footer: "shown is one of the planes; the cube has 9 in total"
+  };
+}
+
+function buildCuboid() {
+  var L = 110, W2 = 70, H2 = 55;
+  var v = [
+    [-L,-H2,-W2],[ L,-H2,-W2],[ L, H2,-W2],[-L, H2,-W2],
+    [-L,-H2, W2],[ L,-H2, W2],[ L, H2, W2],[-L, H2, W2]
+  ];
+  var e = [
+    [0,1],[1,2],[2,3],[3,0],
+    [4,5],[5,6],[6,7],[7,4],
+    [0,4],[1,5],[2,6],[3,7]
+  ];
+  var planes = [
+    // x = 0 (cuts length): yellow
+    { quad: [[0,-H2,-W2],[0, H2,-W2],[0, H2, W2],[0,-H2, W2]], color: COL.yellow },
+    // y = 0 (horizontal): green
+    { quad: [[-L,0,-W2],[ L,0,-W2],[ L,0, W2],[-L,0, W2]], color: COL.green },
+    // z = 0 (front-back): orange
+    { quad: [[-L,-H2,0],[ L,-H2,0],[ L, H2,0],[-L, H2,0]], color: COL.orange }
+  ];
+  return {
+    vertices: v, edges: e, planes: planes,
+    title: "CUBOID", subtitle: "3 PLANES OF SYMMETRY (one through each pair of opposite faces)",
+    legend: [
+      {c: COL.yellow, t: "vertical (length-cutting)"},
+      {c: COL.green,  t: "horizontal (mid-height)"},
+      {c: COL.orange, t: "front-back"}
+    ],
+    footer: "all sides different → exactly 3 planes"
+  };
+}
+
+function buildPrism() {
+  // Equilateral triangular prism. Triangle in xy plane (cross-section).
+  var s = 90;       // triangle side length
+  var L = 90;       // prism length along z
+  var R = s / Math.sqrt(3);   // circumradius of equilateral
+  // Triangle vertices in xy at z = ±L/2
+  var tri = [
+    [0, R, 0],
+    [-s / 2, -R / 2, 0],
+    [ s / 2, -R / 2, 0]
+  ];
+  var v = [];
+  // back triangle at z=-L/2, then front at z=+L/2
+  for (var i = 0; i < 3; i++) v.push([tri[i][0], tri[i][1], -L/2]);
+  for (var j = 0; j < 3; j++) v.push([tri[j][0], tri[j][1],  L/2]);
+  // edges
+  var e = [
+    [0,1],[1,2],[2,0],   // back triangle
+    [3,4],[4,5],[5,3],   // front triangle
+    [0,3],[1,4],[2,5]    // connecting
+  ];
+  // Planes: 3 vertical (each contains a vertex + opposite edge midpoint, extended along z)
+  // Vertex 0 at (0, R, ?), opposite-edge midpoint at ((-s/2 + s/2)/2, (-R/2 + -R/2)/2) = (0, -R/2)
+  // Plane through (0, R) and (0, -R/2) is the line x=0; extended along z it's the x=0 plane.
+  // Other two by 120° rotations.
+  function rot(p, ang) {
+    var c = Math.cos(ang), si = Math.sin(ang);
+    return [c*p[0] - si*p[1], si*p[0] + c*p[1], p[2]];
+  }
+  // Build the 3 vertical planes by rotating the x=0 plane around the prism axis.
+  // The plane x=0 has corners: (0, top, ±L/2), (0, bottom, ±L/2). top=R+pad, bottom=-R-pad
+  var pad = 10;
+  var topY = R + pad, botY = -R - pad;
+  var basePlane = [
+    [0, topY, -L/2], [0, topY, L/2], [0, botY, L/2], [0, botY, -L/2]
+  ];
+  var planes = [];
+  [0, 2*Math.PI/3, 4*Math.PI/3].forEach(function(ang) {
+    planes.push({
+      quad: basePlane.map(function(p){ return rot(p, ang); }),
+      color: COL.yellow
+    });
+  });
+  // Mid-height horizontal plane (perpendicular to prism axis at z=0)
+  // Quad covering the triangle's bounding box at z=0
+  planes.push({
+    quad: [[-s/2 - 6, -R - 6, 0], [ s/2 + 6, -R - 6, 0], [ s/2 + 6, R + 6, 0], [-s/2 - 6, R + 6, 0]],
+    color: COL.green
+  });
+  return {
+    vertices: v, edges: e, planes: planes,
+    title: "TRIANGULAR PRISM (EQUILATERAL ENDS)",
+    subtitle: "4 PLANES OF SYMMETRY",
+    legend: [
+      {c: COL.yellow, t: "3 vertical (one per cross-section line of symmetry)"},
+      {c: COL.green,  t: "1 horizontal mid-plane"}
+    ],
+    footer: "axis through cross-section centres has rotational order 3"
+  };
+}
+
+function buildCylinder(variant) {
+  var R = 65, H2 = 75;
+  // Render cylinder via two ellipses + side edges. We'll build:
+  //   * 32-segment top circle, bottom circle as polylines
+  //   * 2 side edges (left and right at extreme x)
+  var N = 32;
+  var v = []; var e = [];
+  // top ring (y = +H2)
+  for (var i = 0; i < N; i++) {
+    var a = i * 2 * Math.PI / N;
+    v.push([R * Math.cos(a), H2, R * Math.sin(a)]);
+  }
+  // bottom ring (y = -H2)
+  for (var j = 0; j < N; j++) {
+    var b = j * 2 * Math.PI / N;
+    v.push([R * Math.cos(b), -H2, R * Math.sin(b)]);
+  }
+  // edges within rings
+  for (var k = 0; k < N; k++) {
+    e.push([k, (k+1) % N]);
+    e.push([N + k, N + ((k+1) % N)]);
+  }
+  // 2 side edges at left and right extremes (x = ±R, z = 0 → indices 0 and N/2)
+  e.push([0, N]);              // (R,top,0) to (R,bot,0)
+  e.push([N/2, N + N/2]);      // (-R,top,0) to (-R,bot,0)
+
+  var planes = [];
+  // 1 vertical sample plane (yz plane, x=0 → through diameter)
+  planes.push({
+    quad: [[0, H2 + 8, -R - 6],[0, H2 + 8, R + 6],[0, -H2 - 8, R + 6],[0, -H2 - 8, -R - 6]],
+    color: COL.yellow
+  });
+  // 1 horizontal mid-plane (y=0)
+  // Build as a circle of N points (separate planeCircle handling)
+  // Represent as approximate ellipse polygon via radial points
+  var horizPoints = [];
+  for (var m = 0; m < N; m++) {
+    var ang = m * 2 * Math.PI / N;
+    horizPoints.push([(R + 6) * Math.cos(ang), 0, (R + 6) * Math.sin(ang)]);
+  }
+  planes.push({ polygon: horizPoints, color: COL.green });
+  return {
+    vertices: v, edges: e, planes: planes,
+    title: "CYLINDER",
+    subtitle: "INFINITELY MANY PLANES — SAMPLE SHOWN",
+    legend: [
+      {c: COL.yellow, t: "vertical plane through the axis (one per diameter — infinite)"},
+      {c: COL.green,  t: "horizontal mid-plane (just one)"}
+    ],
+    footer: "any vertical plane through the axis is a plane of symmetry",
+    sideStyling: "rings"
+  };
+}
+
+function buildPyramid() {
+  var s = 100, h = 110;
+  var v = [
+    [-s/2, -h/2, -s/2],   // 0 base back-left
+    [ s/2, -h/2, -s/2],   // 1 base back-right
+    [ s/2, -h/2,  s/2],   // 2 base front-right
+    [-s/2, -h/2,  s/2],   // 3 base front-left
+    [ 0,    h/2,  0]      // 4 apex
+  ];
+  var e = [
+    [0,1],[1,2],[2,3],[3,0],   // base
+    [0,4],[1,4],[2,4],[3,4]    // slant edges to apex
+  ];
+  // 4 planes through apex:
+  //   * 2 through midpoints of opposite base edges (vertical mid-planes, parallel to a base side)
+  //   * 2 through opposite base corners (diagonal vertical planes)
+  var apex = [0, h/2, 0];
+  var midN = [0, -h/2, -s/2];   // back edge midpoint
+  var midS = [0, -h/2,  s/2];
+  var midE = [ s/2, -h/2, 0];
+  var midW = [-s/2, -h/2, 0];
+  // Plane through midN, midS, apex (and one extra point for quad: just duplicate apex offset)
+  var planes = [
+    { quad: [midW, [-s/2 - 4, -h/2 - 4, 0], [ s/2 + 4, -h/2 - 4, 0], midE, apex, apex],
+      color: COL.yellow,
+      // We'll convert the quad into a polygon via separate handling
+      polygon: [[-s/2 - 4, -h/2 - 4, 0], [s/2 + 4, -h/2 - 4, 0], [0, h/2 + 4, 0]]
+    },
+    { polygon: [[0, -h/2 - 4, -s/2 - 4],[0, -h/2 - 4, s/2 + 4],[0, h/2 + 4, 0]],
+      color: COL.yellow },
+    { polygon: [v[0], v[2], apex], color: COL.green },
+    { polygon: [v[1], v[3], apex], color: COL.green }
+  ];
+  // Strip the "quad" key from first item so renderer uses polygon
+  delete planes[0].quad;
+  return {
+    vertices: v, edges: e, planes: planes,
+    title: "SQUARE-BASED PYRAMID",
+    subtitle: "4 PLANES OF SYMMETRY",
+    legend: [
+      {c: COL.yellow, t: "through midpoints of opposite base edges (×2)"},
+      {c: COL.green,  t: "through opposite base corners + apex (×2)"}
+    ],
+    footer: "rotational order 4 about the apex axis"
+  };
+}
+
+function buildCone() {
+  var R = 70, h = 130;
+  var N = 36;
+  var v = [];
+  for (var i = 0; i < N; i++) {
+    var a = i * 2 * Math.PI / N;
+    v.push([R * Math.cos(a), -h/2, R * Math.sin(a)]);
+  }
+  v.push([0, h/2, 0]);  // apex at end
+  var apexIdx = N;
+  var e = [];
+  for (var k = 0; k < N; k++) e.push([k, (k+1) % N]);
+  // Slant edges: just a couple at extremes for a cleaner profile
+  e.push([0, apexIdx]);
+  e.push([N/2, apexIdx]);
+  // Planes: 1 sample axial plane (x=0)
+  var planes = [
+    {
+      polygon: [[0, -h/2 - 4, -R - 6],[0, -h/2 - 4, R + 6],[0, h/2 + 4, 0]],
+      color: COL.yellow
+    },
+    {
+      polygon: [[-R - 6, -h/2 - 4, 0],[ R + 6, -h/2 - 4, 0],[0, h/2 + 4, 0]],
+      color: COL.yellow
+    }
+  ];
+  return {
+    vertices: v, edges: e, planes: planes,
+    title: "CONE",
+    subtitle: "INFINITELY MANY AXIAL PLANES — NO PERPENDICULAR PLANE",
+    legend: [
+      {c: COL.yellow, t: "every plane through the axis is a plane of symmetry"},
+      {c: COL.pink,   t: "no horizontal plane — the apex breaks it"}
+    ],
+    footer: "rotational order is infinite about the apex axis",
+    sideStyling: "cone"
+  };
+}
+
+var BUILDERS = {
+  cube: buildCube,
+  cuboid: buildCuboid,
+  prism: buildPrism,
+  cylinder: buildCylinder,
+  pyramid: buildPyramid,
+  cone: buildCone
+};
+
+var spec = (BUILDERS[SHAPE] || buildCube)(VARIANT);
+
+// === Render ============================================================
+function el(tag, attrs) {
+  var n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (var k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+
+var stage = document.getElementById("stage");
+var svg = el("svg", {
+  viewBox: "0 0 " + W + " " + H,
+  preserveAspectRatio: "xMidYMid meet"
+});
+stage.appendChild(svg);
+
+// Project all vertices
+var projVerts = spec.vertices.map(project);
+
+// Compute centroid z for each edge to determine front (visible) vs back (hidden)
+var edgeData = spec.edges.map(function(pair) {
+  var a = projVerts[pair[0]], b = projVerts[pair[1]];
+  return { a: a, b: b, midZ: (a.z + b.z) / 2 };
+});
+// Sort edges by midZ ascending (back first → drawn first → front on top)
+var edgesSorted = edgeData.slice().sort(function(p, q) { return p.midZ - q.midZ; });
+
+// Project planes
+var planeData = (spec.planes || []).map(function(plane) {
+  var pts = plane.polygon || plane.quad;
+  var proj = pts.map(project);
+  var midZ = proj.reduce(function(s, p) { return s + p.z; }, 0) / proj.length;
+  return { proj: proj, color: plane.color, midZ: midZ };
+});
+
+// Render order: all planes first (sorted by depth), then edges with back/front split.
+// To get planes intersecting edges nicely, we draw:
+//   1. back edges (dashed)
+//   2. all planes (translucent)
+//   3. front edges (solid) on top
+// Crude but readable.
+
+var backEdges = el("g", {});
+var frontEdges = el("g", {});
+
+// Determine front/back: midZ > 0 → toward viewer → front
+edgeData.forEach(function(ed) {
+  var line = el("line", {
+    x1: ed.a.x, y1: ed.a.y, x2: ed.b.x, y2: ed.b.y,
+    stroke: ed.midZ >= 0 ? COL.edge : COL.hidden,
+    "stroke-width": ed.midZ >= 0 ? 2 : 1.5,
+    "stroke-linecap": "round"
+  });
+  if (ed.midZ < 0) {
+    line.setAttribute("stroke-dasharray", "4 4");
+    backEdges.appendChild(line);
+  } else {
+    frontEdges.appendChild(line);
+  }
+});
+
+svg.appendChild(backEdges);
+
+// Planes
+planeData.forEach(function(pd) {
+  var pts = pd.proj.map(function(p){ return p.x + "," + p.y; }).join(" ");
+  var poly = el("polygon", {
+    points: pts,
+    fill: pd.color + "33",   // ~20% alpha
+    stroke: pd.color,
+    "stroke-width": 1.5,
+    "stroke-linejoin": "round",
+    "fill-opacity": 1
+  });
+  svg.appendChild(poly);
+});
+
+svg.appendChild(frontEdges);
+
+// === Caption / legend / footer =========================================
+var captionEl = document.getElementById("caption");
+captionEl.textContent = (spec.title + (spec.subtitle ? " — " + spec.subtitle : ""));
+
+var legendEl = document.getElementById("legend");
+(spec.legend || []).forEach(function(item) {
+  var div = document.createElement("div");
+  div.innerHTML = '<span class="swatch" style="background:' + item.c + '99;border:1px solid ' + item.c + '"></span><span style="color:' + item.c + '">' + item.t + '</span>';
+  legendEl.appendChild(div);
+});
+
+document.getElementById("footer").textContent = spec.footer || "";
+
+// === Height reporter ==================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>
