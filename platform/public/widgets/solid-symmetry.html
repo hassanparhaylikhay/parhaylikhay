@@ -397,15 +397,18 @@ var planeData = (spec.planes || []).map(function(plane) {
 var backEdges = el("g", {});
 var frontEdges = el("g", {});
 
-// Determine front/back: midZ > 0 → toward viewer → front
+// Determine front/back: in this projection's camera frame, edges with
+// midZ < 0 sit toward the viewer and edges with midZ > 0 sit behind the
+// shape, so the latter render dashed.
 edgeData.forEach(function(ed) {
+  var isBack = ed.midZ > 0;
   var line = el("line", {
     x1: ed.a.x, y1: ed.a.y, x2: ed.b.x, y2: ed.b.y,
-    stroke: ed.midZ >= 0 ? COL.edge : COL.hidden,
-    "stroke-width": ed.midZ >= 0 ? 2 : 1.5,
+    stroke: isBack ? COL.hidden : COL.edge,
+    "stroke-width": isBack ? 1.5 : 2,
     "stroke-linecap": "round"
   });
-  if (ed.midZ < 0) {
+  if (isBack) {
     line.setAttribute("stroke-dasharray", "4 4");
     backEdges.appendChild(line);
   } else {
