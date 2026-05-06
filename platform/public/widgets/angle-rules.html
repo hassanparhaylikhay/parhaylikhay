@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Angle Rules — Manipulative</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:10px; flex-wrap:wrap; }
+  .title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:700; letter-spacing:0.4px; text-transform:uppercase; }
+  .hint { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
+  .stage { width:100%; aspect-ratio: 600 / 340; position:relative; user-select:none; touch-action:none; }
+  svg { display:block; width:100%; height:100%; user-select:none; overflow:visible; }
+  .handle { cursor:grab; }
+  .handle.grabbing { cursor:grabbing; }
+  .formula {
+    margin-top:12px; text-align:center; font-family:'Geist Mono',monospace;
+    font-size:16px; line-height:1.6; color:#f0eeea; font-weight:600;
+    padding:10px 12px; border-radius:6px; background:rgba(15,238,137,0.05);
+    border:1px solid rgba(15,238,137,0.15);
+  }
+  .formula .total { color:#0fee89; font-weight:700; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="title" id="title"></span>
+    <span class="hint">drag any handle</span>
+  </div>
+  <div class="stage" id="stage"></div>
+  <div class="formula" id="formula"></div>
+  <p class="footer" id="footer"></p>
+</div>
+
+<script>
+"use strict";
+
+var qs = new URLSearchParams(location.search);
+var RULE = (qs.get("rule") || "point").toLowerCase();
+
+var COL = {
+  edge:   "#00abfa",
+  yellow: "#fff067",
+  green:  "#0fee89",
+  orange: "#ff822c",
+  pink:   "#ff4670",
+  grey:   "#7a7875",
+  faint:  "#3a4a5a"
+};
+
+var W = 600, H = 340;
+var stage = document.getElementById("stage");
+
+function el(tag, attrs) {
+  var n = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (var k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+
+var svg = el("svg", { viewBox: "0 0 " + W + " " + H, preserveAspectRatio: "xMidYMid meet" });
+stage.appendChild(svg);
+
+// Layers (back-to-front)
+var layerArcs = el("g", {});
+var layerLines = el("g", {});
+var layerHandles = el("g", {});
+var layerLabels = el("g", {});
+svg.appendChild(layerArcs);
+svg.appendChild(layerLines);
+svg.appendChild(layerHandles);
+svg.appendChild(layerLabels);
+
+// === Geometry helpers =================================================
+function vec(a, b) { return { x: b.x - a.x, y: b.y - a.y }; }
+function len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); }
+function angOf(v) { return Math.atan2(v.y, v.x); }   // -π..π
+function fmtDeg(d) { return Math.round(d) + "°"; }
+
+// Angle (in degrees) at vertex `c` between c→a and c→b, in [0, 360).
+function angleAt(a, c, b) {
+  var v1 = vec(c, a), v2 = vec(c, b);
+  var ang = Math.atan2(v2.y, v2.x) - Math.atan2(v1.y, v1.x);
+  while (ang < 0) ang += 2 * Math.PI;
+  return ang * 180 / Math.PI;
+}
+
+// Arc path from angle1 to angle2 (sweeping CCW in math, which is CW on
+// screen because screen-y is inverted). Returns an SVG path 'd' string.
+// Angles are in radians (math convention from atan2).
+function arcPathBetween(cx, cy, r, a1, a2) {
+  // Normalise the sweep so it goes the SHORT way (angles add to <= π).
+  // For our SVG screen y is down. We use atan2 directly on screen-space
+  // vectors; all arc drawing happens in screen coords too, so consistent.
+  var sweep = a2 - a1;
+  while (sweep <= -Math.PI) sweep += 2 * Math.PI;
+  while (sweep > Math.PI) sweep -= 2 * Math.PI;
+  var x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+  var x2 = cx + r * Math.cos(a1 + sweep), y2 = cy + r * Math.sin(a1 + sweep);
+  var largeArc = Math.abs(sweep) > Math.PI ? 1 : 0;
+  var sweepFlag = sweep > 0 ? 1 : 0;
+  return "M " + x1.toFixed(2) + " " + y1.toFixed(2) +
+    " A " + r.toFixed(2) + " " + r.toFixed(2) + " 0 " + largeArc + " " + sweepFlag + " " +
+    x2.toFixed(2) + " " + y2.toFixed(2);
+}
+
+// Position for a label along the bisector of (a→c→b) at distance r from c.
+function bisectorPoint(a, c, b, r) {
+  var v1 = vec(c, a), v2 = vec(c, b);
+  var l1 = len(v1) || 1, l2 = len(v2) || 1;
+  var ux = v1.x / l1 + v2.x / l2;
+  var uy = v1.y / l1 + v2.y / l2;
+  var ul = Math.sqrt(ux*ux + uy*uy) || 1;
+  // The bisector returned above is the INTERNAL bisector; for reflex
+  // angles the caller may need the other direction.
+  return { x: c.x + (ux / ul) * r, y: c.y + (uy / ul) * r };
+}
+
+// === Drag scaffolding =================================================
+var dragHandle = null;
+var dragOrigin = null;
+function makeHandle(point, opts) {
+  opts = opts || {};
+  var dot = el("circle", {
+    cx: point.x, cy: point.y, r: 10,
+    fill: opts.fill || COL.yellow,
+    stroke: "#0b1118",
+    "stroke-width": 2
+  });
+  dot.classList.add("handle");
+  dot.dataset.idx = String(opts.idx);
+  dot.addEventListener("mousedown", onDown);
+  dot.addEventListener("touchstart", onDown, { passive: false });
+  layerHandles.appendChild(dot);
+  return dot;
+}
+function onDown(e) {
+  dragHandle = e.currentTarget;
+  dragHandle.classList.add("grabbing");
+  e.preventDefault();
+}
+function pointerXY(e) {
+  var pt = svg.createSVGPoint();
+  var src = e.touches ? e.touches[0] : e;
+  pt.x = src.clientX;
+  pt.y = src.clientY;
+  var ctm = svg.getScreenCTM();
+  if (!ctm) return null;
+  return pt.matrixTransform(ctm.inverse());
+}
+function onMove(e) {
+  if (!dragHandle) return;
+  var p = pointerXY(e);
+  if (!p) return;
+  var idx = parseInt(dragHandle.dataset.idx, 10);
+  state.onDrag(idx, p);
+  redraw();
+  e.preventDefault();
+}
+function onUp() {
+  if (dragHandle) dragHandle.classList.remove("grabbing");
+  dragHandle = null;
+}
+window.addEventListener("mousemove", onMove);
+window.addEventListener("mouseup", onUp);
+window.addEventListener("touchmove", onMove, { passive: false });
+window.addEventListener("touchend", onUp);
+
+// === Per-rule state and rendering =====================================
+var state = { onDrag: function() {} };
+
+function clearLayers() {
+  [layerArcs, layerLines, layerHandles, layerLabels].forEach(function(l) {
+    while (l.firstChild) l.removeChild(l.firstChild);
+  });
+}
+
+function buildRulePoint() {
+  // 4 rays from a fixed centre.
+  var centre = { x: W / 2, y: H / 2 };
+  var rays = [
+    { x: W / 2 + 150, y: H / 2 + 0,   color: COL.yellow },
+    { x: W / 2 + 90,  y: H / 2 - 110, color: COL.green  },
+    { x: W / 2 - 130, y: H / 2 - 50,  color: COL.orange },
+    { x: W / 2 - 60,  y: H / 2 + 100, color: COL.pink   }
+  ];
+  var labels = ["a", "b", "c", "d"];
+  state.title = "RULE 1 — ANGLES AT A POINT";
+  state.footer = "drag any of the four rays to change the angles";
+  state.rays = rays;
+  state.centre = centre;
+  state.labels = labels;
+  state.onDrag = function(idx, p) {
+    // Constrain so ray endpoint stays at distance >= 50 from centre
+    var v = vec(centre, p);
+    var L = len(v); if (L < 50) { p.x = centre.x + 50 * v.x / L; p.y = centre.y + 50 * v.y / L; }
+    rays[idx].x = p.x; rays[idx].y = p.y;
+  };
+  state.render = function() {
+    clearLayers();
+    // Centre dot
+    layerLines.appendChild(el("circle", { cx: centre.x, cy: centre.y, r: 4, fill: COL.faint }));
+    // Sort rays by angle around centre to get consecutive angles
+    var indexed = rays.map(function(r, i) {
+      var a = angOf(vec(centre, r));
+      return { idx: i, ang: a, pt: r };
+    }).sort(function(a, b) { return a.ang - b.ang; });
+    // Lines from centre to each ray endpoint
+    rays.forEach(function(r) {
+      layerLines.appendChild(el("line", {
+        x1: centre.x, y1: centre.y, x2: r.x, y2: r.y,
+        stroke: COL.edge, "stroke-width": 2.6, "stroke-linecap": "round"
+      }));
+    });
+    // Arcs and angle labels between consecutive rays
+    var displayValues = [];
+    for (var i = 0; i < indexed.length; i++) {
+      var here = indexed[i], next = indexed[(i + 1) % indexed.length];
+      var a1 = here.ang, a2 = next.ang;
+      var sweep = a2 - a1; while (sweep <= 0) sweep += 2 * Math.PI;
+      var deg = sweep * 180 / Math.PI;
+      var arcRadius = 36 + (i % 2) * 12;
+      // We always sweep CW in screen (positive in atan2 convention)
+      layerArcs.appendChild(el("path", {
+        d: arcPathBetween(centre.x, centre.y, arcRadius, a1, a1 + sweep),
+        fill: "none", stroke: rays[here.idx].color, "stroke-width": 2,
+        "stroke-linecap": "round"
+      }));
+      // Bisector label position at radius arcRadius + 18
+      var midA = a1 + sweep / 2;
+      var lr = arcRadius + 18;
+      layerLabels.appendChild(textNode(
+        centre.x + Math.cos(midA) * lr,
+        centre.y + Math.sin(midA) * lr,
+        labels[here.idx] + " = " + fmtDeg(deg),
+        rays[here.idx].color
+      ));
+      displayValues.push({ label: labels[here.idx], deg: deg, color: rays[here.idx].color });
+    }
+    // Handles
+    rays.forEach(function(r, i) { makeHandle(r, { fill: r.color, idx: i }); });
+    // Build formula in source order (a, b, c, d) but using their CURRENT degrees
+    state.formulaParts = labels.map(function(lab, i) {
+      var deg = displayValues.find(function(v){ return v.label === lab; }).deg;
+      return { label: lab, deg: deg, color: rays[i].color };
+    });
+    state.sumValue = 360;
+  };
+}
+
+function textNode(x, y, str, color) {
+  var t = el("text", {
+    x: x.toFixed(2), y: y.toFixed(2),
+    fill: color || COL.yellow,
+    "font-family": "Geist Mono, monospace",
+    "font-size": 13,
+    "font-weight": 700,
+    "text-anchor": "middle",
+    "dominant-baseline": "middle"
+  });
+  t.textContent = str;
+  return t;
+}
+
+function buildRuleLine() {
+  var L = { x: 60, y: H - 70 };
+  var R = { x: W - 60, y: H - 70 };
+  var junction = { x: W / 2, y: H - 70 };
+  var rays = [
+    { x: W / 2 - 100, y: 70, color: COL.yellow },
+    { x: W / 2 + 100, y: 70, color: COL.orange }
+  ];
+  var labels = ["p", "q", "r"];   // p = left-line→ray1, q = ray1→ray2, r = ray2→right-line
+  state.title = "RULE 2 — ANGLES ON A STRAIGHT LINE";
+  state.footer = "drag the two rays — angles on the upper side always sum to 180°";
+  state.onDrag = function(idx, p) {
+    // Rays must stay above the line and be at least 30px from the junction
+    if (p.y > junction.y - 10) p.y = junction.y - 10;
+    var v = vec(junction, p);
+    var L2 = len(v); if (L2 < 50) { p.x = junction.x + 50 * v.x / L2; p.y = junction.y + 50 * v.y / L2; }
+    rays[idx].x = p.x; rays[idx].y = p.y;
+  };
+  state.render = function() {
+    clearLayers();
+    // The straight line
+    layerLines.appendChild(el("line", {
+      x1: L.x, y1: L.y, x2: R.x, y2: R.y,
+      stroke: COL.edge, "stroke-width": 2.6, "stroke-linecap": "round"
+    }));
+    layerLines.appendChild(el("circle", { cx: junction.x, cy: junction.y, r: 4, fill: COL.faint }));
+    // Rays
+    rays.forEach(function(r) {
+      layerLines.appendChild(el("line", {
+        x1: junction.x, y1: junction.y, x2: r.x, y2: r.y,
+        stroke: COL.edge, "stroke-width": 2.6, "stroke-linecap": "round"
+      }));
+    });
+    // Sort the two rays by angle (in screen, smaller atan2 angle = more LEFT-UP)
+    var sortedRays = rays.slice().sort(function(a, b) { return angOf(vec(junction, a)) - angOf(vec(junction, b)); });
+    // Anchor angles for left and right ends of the line
+    var aLeft = angOf(vec(junction, L));
+    var aRight = angOf(vec(junction, R));
+    // Walk angles CCW (in math) from aRight to aLeft on the upper half
+    var sequence = [
+      { color: COL.yellow, ptA: R, ptB: sortedRays[0], labelIdx: 0 },
+      { color: COL.green,  ptA: sortedRays[0], ptB: sortedRays[1], labelIdx: 1 },
+      { color: COL.orange, ptA: sortedRays[1], ptB: L, labelIdx: 2 }
+    ];
+    var arcRadius = 50;
+    var totalDeg = 0;
+    var formulaParts = [];
+    sequence.forEach(function(s, k) {
+      var a1 = angOf(vec(junction, s.ptA));
+      var a2 = angOf(vec(junction, s.ptB));
+      // For upper-half angles, sweep CCW (math) from ptA to ptB.
+      // Screen y is down so CCW math = going UP through the upper half.
+      var sweep = a2 - a1; while (sweep > 0) sweep -= 2 * Math.PI;
+      // We want the UPPER sweep, which in screen-down convention is the
+      // negative-sweep (math CW) path through angles less than a1.
+      var deg = -sweep * 180 / Math.PI;
+      totalDeg += deg;
+      layerArcs.appendChild(el("path", {
+        d: arcPathBetween(junction.x, junction.y, arcRadius - k * 4, a1, a1 + sweep),
+        fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linecap": "round"
+      }));
+      var midA = a1 + sweep / 2;
+      var lr = arcRadius + 18;
+      layerLabels.appendChild(textNode(
+        junction.x + Math.cos(midA) * lr,
+        junction.y + Math.sin(midA) * lr,
+        labels[s.labelIdx] + " = " + fmtDeg(deg),
+        s.color
+      ));
+      formulaParts.push({ label: labels[s.labelIdx], deg: deg, color: s.color });
+    });
+    rays.forEach(function(r, i) { makeHandle(r, { fill: r.color, idx: i }); });
+    state.formulaParts = formulaParts;
+    state.sumValue = 180;
+  };
+}
+
+function buildRuleOpposite() {
+  var centre = { x: W / 2, y: H / 2 };
+  // Two lines, each defined by one draggable endpoint (the OTHER endpoint
+  // is the antipode through the centre). Drag rotates the line.
+  var ends = [
+    { x: W / 2 + 200, y: H / 2 - 70, color: COL.yellow },
+    { x: W / 2 + 200, y: H / 2 + 70, color: COL.green  }
+  ];
+  var labels = ["x", "y", "x", "y"];
+  state.title = "RULE 3 — VERTICALLY OPPOSITE ANGLES";
+  state.footer = "drag either coloured handle — opposite angle pairs always stay equal";
+  state.onDrag = function(idx, p) {
+    var v = vec(centre, p);
+    var L = len(v); if (L < 60) { p.x = centre.x + 60 * v.x / L; p.y = centre.y + 60 * v.y / L; }
+    ends[idx].x = p.x; ends[idx].y = p.y;
+  };
+  state.render = function() {
+    clearLayers();
+    // Each line: from antipode to end
+    function antipode(e) { return { x: 2 * centre.x - e.x, y: 2 * centre.y - e.y }; }
+    var antiA = antipode(ends[0]), antiB = antipode(ends[1]);
+    // Draw the two lines
+    layerLines.appendChild(el("line", {
+      x1: antiA.x, y1: antiA.y, x2: ends[0].x, y2: ends[0].y,
+      stroke: COL.edge, "stroke-width": 2.6, "stroke-linecap": "round"
+    }));
+    layerLines.appendChild(el("line", {
+      x1: antiB.x, y1: antiB.y, x2: ends[1].x, y2: ends[1].y,
+      stroke: COL.edge, "stroke-width": 2.6, "stroke-linecap": "round"
+    }));
+    layerLines.appendChild(el("circle", { cx: centre.x, cy: centre.y, r: 4, fill: COL.faint }));
+    // 4 rays around centre, in CCW math order:
+    var rays = [
+      { pt: ends[0],  ang: angOf(vec(centre, ends[0])) },
+      { pt: ends[1],  ang: angOf(vec(centre, ends[1])) },
+      { pt: antiA,    ang: angOf(vec(centre, antiA)) },
+      { pt: antiB,    ang: angOf(vec(centre, antiB)) }
+    ].sort(function(a, b) { return a.ang - b.ang; });
+    // Compute the four sector angles between consecutive rays.
+    // Pairs (0 ↔ 2) and (1 ↔ 3) are vertically opposite, by 4-cycle.
+    var sectorColors = [COL.yellow, COL.green, COL.yellow, COL.green];
+    var sectorLabels = ["x", "y", "x", "y"];
+    var arcRadii = [40, 40, 40, 40];
+    var formulaParts = [];
+    for (var i = 0; i < 4; i++) {
+      var a1 = rays[i].ang, a2 = rays[(i + 1) % 4].ang;
+      var sweep = a2 - a1; while (sweep <= 0) sweep += 2 * Math.PI;
+      var deg = sweep * 180 / Math.PI;
+      var color = sectorColors[i];
+      layerArcs.appendChild(el("path", {
+        d: arcPathBetween(centre.x, centre.y, arcRadii[i], a1, a1 + sweep),
+        fill: "none", stroke: color, "stroke-width": 2, "stroke-linecap": "round"
+      }));
+      var midA = a1 + sweep / 2;
+      var lr = arcRadii[i] + 22;
+      layerLabels.appendChild(textNode(
+        centre.x + Math.cos(midA) * lr,
+        centre.y + Math.sin(midA) * lr,
+        sectorLabels[i] + " = " + fmtDeg(deg),
+        color
+      ));
+      formulaParts.push({ label: sectorLabels[i], deg: deg, color: color });
+    }
+    // Handles on the two end points only
+    ends.forEach(function(e, i) { makeHandle(e, { fill: e.color, idx: i }); });
+    state.formulaParts = formulaParts;
+    state.sumValue = 360;
+  };
+}
+
+function buildRuleTriangle() {
+  var verts = [
+    { x: 100, y: H - 60, color: COL.yellow },
+    { x: W - 100, y: H - 60, color: COL.green },
+    { x: W / 2, y: 50, color: COL.orange }
+  ];
+  var labels = ["A", "B", "C"];
+  state.title = "RULE 4 — ANGLES IN A TRIANGLE";
+  state.footer = "drag any vertex — the three interior angles always sum to 180°";
+  state.onDrag = function(idx, p) {
+    // Keep inside stage
+    p.x = Math.max(20, Math.min(W - 20, p.x));
+    p.y = Math.max(20, Math.min(H - 20, p.y));
+    verts[idx].x = p.x; verts[idx].y = p.y;
+  };
+  state.render = function() {
+    clearLayers();
+    // Triangle outline
+    layerLines.appendChild(el("polygon", {
+      points: verts.map(function(v) { return v.x + "," + v.y; }).join(" "),
+      fill: "rgba(0,171,250,0.07)",
+      stroke: COL.edge, "stroke-width": 2.6, "stroke-linejoin": "round"
+    }));
+    // Compute angles at each vertex
+    var formulaParts = [];
+    for (var i = 0; i < 3; i++) {
+      var prev = verts[(i + 2) % 3];
+      var here = verts[i];
+      var next = verts[(i + 1) % 3];
+      var deg = angleAt(prev, here, next);
+      // For convex vertex, angle should be < 180
+      if (deg > 180) deg = 360 - deg;
+      // Arc and label
+      var aPrev = angOf(vec(here, prev));
+      var aNext = angOf(vec(here, next));
+      // Use the shorter sweep (interior angle)
+      var sweep = aNext - aPrev; while (sweep > Math.PI) sweep -= 2 * Math.PI; while (sweep < -Math.PI) sweep += 2 * Math.PI;
+      layerArcs.appendChild(el("path", {
+        d: arcPathBetween(here.x, here.y, 30, aPrev, aPrev + sweep),
+        fill: "none", stroke: verts[i].color, "stroke-width": 2, "stroke-linecap": "round"
+      }));
+      var bisector = bisectorPoint(prev, here, next, 50);
+      layerLabels.appendChild(textNode(
+        bisector.x, bisector.y,
+        labels[i] + " = " + fmtDeg(deg),
+        verts[i].color
+      ));
+      formulaParts.push({ label: labels[i], deg: deg, color: verts[i].color });
+    }
+    verts.forEach(function(v, i) { makeHandle(v, { fill: v.color, idx: i }); });
+    state.formulaParts = formulaParts;
+    state.sumValue = 180;
+  };
+}
+
+function buildRuleQuad() {
+  var verts = [
+    { x: 100, y: H - 60, color: COL.yellow },
+    { x: W - 100, y: H - 80, color: COL.green },
+    { x: W - 70, y: 60, color: COL.orange },
+    { x: 130, y: 80, color: COL.pink }
+  ];
+  var labels = ["A", "B", "C", "D"];
+  state.title = "RULE 5 — ANGLES IN A QUADRILATERAL";
+  state.footer = "drag any vertex — the four interior angles always sum to 360°";
+  state.onDrag = function(idx, p) {
+    p.x = Math.max(20, Math.min(W - 20, p.x));
+    p.y = Math.max(20, Math.min(H - 20, p.y));
+    verts[idx].x = p.x; verts[idx].y = p.y;
+  };
+  state.render = function() {
+    clearLayers();
+    layerLines.appendChild(el("polygon", {
+      points: verts.map(function(v) { return v.x + "," + v.y; }).join(" "),
+      fill: "rgba(0,171,250,0.07)",
+      stroke: COL.edge, "stroke-width": 2.6, "stroke-linejoin": "round"
+    }));
+    var formulaParts = [];
+    for (var i = 0; i < 4; i++) {
+      var prev = verts[(i + 3) % 4];
+      var here = verts[i];
+      var next = verts[(i + 1) % 4];
+      var deg = angleAt(prev, here, next);
+      if (deg > 180) deg = 360 - deg;
+      var aPrev = angOf(vec(here, prev));
+      var aNext = angOf(vec(here, next));
+      var sweep = aNext - aPrev; while (sweep > Math.PI) sweep -= 2 * Math.PI; while (sweep < -Math.PI) sweep += 2 * Math.PI;
+      layerArcs.appendChild(el("path", {
+        d: arcPathBetween(here.x, here.y, 28, aPrev, aPrev + sweep),
+        fill: "none", stroke: verts[i].color, "stroke-width": 2, "stroke-linecap": "round"
+      }));
+      var bisector = bisectorPoint(prev, here, next, 46);
+      layerLabels.appendChild(textNode(
+        bisector.x, bisector.y,
+        labels[i] + " = " + fmtDeg(deg),
+        verts[i].color
+      ));
+      formulaParts.push({ label: labels[i], deg: deg, color: verts[i].color });
+    }
+    verts.forEach(function(v, i) { makeHandle(v, { fill: v.color, idx: i }); });
+    state.formulaParts = formulaParts;
+    state.sumValue = 360;
+  };
+}
+
+var BUILDERS = {
+  "point":    buildRulePoint,
+  "line":     buildRuleLine,
+  "opposite": buildRuleOpposite,
+  "triangle": buildRuleTriangle,
+  "quad":     buildRuleQuad
+};
+(BUILDERS[RULE] || buildRulePoint)();
+
+document.getElementById("title").textContent = state.title;
+document.getElementById("footer").textContent = state.footer;
+
+function redraw() {
+  state.render();
+  // Update formula
+  var fEl = document.getElementById("formula");
+  if (!state.formulaParts) { fEl.textContent = ""; return; }
+  var sumDeg = state.formulaParts.reduce(function(s, p){ return s + p.deg; }, 0);
+  var parts = state.formulaParts.map(function(p) {
+    return '<span style="color:' + p.color + '">' + p.label + '</span>';
+  });
+  var nums = state.formulaParts.map(function(p) {
+    return '<span style="color:' + p.color + '">' + fmtDeg(p.deg) + '</span>';
+  });
+  fEl.innerHTML =
+    parts.join(" + ") + ' = <span class="total">' + state.sumValue + '°</span><br>' +
+    '<span style="color:#7a7875;font-size:13px">' +
+    nums.join(" + ") + " = " + fmtDeg(sumDeg) + " ✓" +
+    '</span>';
+}
+redraw();
+
+// Height reporter
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>
