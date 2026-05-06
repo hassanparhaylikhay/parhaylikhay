@@ -588,18 +588,24 @@ function buildRuleQuad() {
       var next = verts[(i + 1) % 4];
       var aPrev = angOf(vec(here, prev));
       var aNext = angOf(vec(here, next));
-      var sweep = isCW ? (aPrev - aNext) : (aNext - aPrev);
-      while (sweep < 0) sweep += 2 * Math.PI;
-      while (sweep >= 2 * Math.PI) sweep -= 2 * Math.PI;
-      var startAng = isCW ? aNext : aPrev;
-      var dirSign = isCW ? +1 : -1;
-      var deg = sweep * 180 / Math.PI;
+      // Always START the arc at the FORWARD edge (aNext) and sweep through
+      // the polygon's interior to the BACKWARD edge (aPrev). CW screen
+      // polygon → positive sweep (CCW math); CCW screen → negative sweep.
+      var sweep = aPrev - aNext;
+      if (isCW) {
+        while (sweep <= 0) sweep += 2 * Math.PI;
+        while (sweep > 2 * Math.PI) sweep -= 2 * Math.PI;
+      } else {
+        while (sweep >= 0) sweep -= 2 * Math.PI;
+        while (sweep < -2 * Math.PI) sweep += 2 * Math.PI;
+      }
+      var deg = Math.abs(sweep) * 180 / Math.PI;
       layerArcs.appendChild(el("path", {
-        d: arcPathSweep(here.x, here.y, 28, startAng, dirSign * sweep),
+        d: arcPathSweep(here.x, here.y, 28, aNext, sweep),
         fill: "none", stroke: verts[i].color, "stroke-width": 2, "stroke-linecap": "round"
       }));
-      var midA = startAng + dirSign * sweep / 2;
-      var lr = sweep > Math.PI ? 70 : 58;
+      var midA = aNext + sweep / 2;
+      var lr = Math.abs(sweep) > Math.PI ? 70 : 58;
       layerLabels.appendChild(textNode(
         here.x + Math.cos(midA) * lr,
         here.y + Math.sin(midA) * lr,
