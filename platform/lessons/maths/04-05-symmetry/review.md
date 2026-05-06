@@ -60,39 +60,6 @@ You have now seen the three pieces of this topic: line symmetry of 2D shapes, ro
 - The **rotational axis** order of a prism through the ends matches the rotational order of its cross-section.
 - Order $1$ means "no rotational symmetry"; the minimum is $1$, never $0$.
 
-## Recap diagram: 3D solids at a glance
-
-<div class="diagram">
-<div class="diagram-caption">PLANES OF SYMMETRY: CUBOID 3, CUBE 9, CYLINDER INFINITE</div>
-<div style="display:flex;justify-content:center">
-<svg viewBox="0 0 480 180" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<g transform="translate(20,20)">
-<polygon points="0,30 80,30 80,110 0,110" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
-<polygon points="0,30 30,5 110,5 80,30" fill="#141e2a" stroke="#00abfa" stroke-width="2"/>
-<polygon points="80,30 110,5 110,85 80,110" fill="#141e2a" stroke="#00abfa" stroke-width="2"/>
-<text x="55" y="155" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600" text-anchor="middle">CUBOID: 3</text>
-</g>
-<g transform="translate(180,20)">
-<polygon points="0,30 60,30 60,90 0,90" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
-<polygon points="0,30 25,5 85,5 60,30" fill="#141e2a" stroke="#00abfa" stroke-width="2"/>
-<polygon points="60,30 85,5 85,65 60,90" fill="#141e2a" stroke="#00abfa" stroke-width="2"/>
-<line x1="30" y1="30" x2="30" y2="90" stroke="#fff067" stroke-width="1.5" stroke-dasharray="4 3"/>
-<line x1="0" y1="60" x2="60" y2="60" stroke="#fff067" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="40" y="155" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600" text-anchor="middle">CUBE: 9</text>
-</g>
-<g transform="translate(340,20)">
-<ellipse cx="50" cy="10" rx="45" ry="9" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
-<line x1="5" y1="10" x2="5" y2="90" stroke="#00abfa" stroke-width="2"/>
-<line x1="95" y1="10" x2="95" y2="90" stroke="#00abfa" stroke-width="2"/>
-<path d="M 5 90 A 45 9 0 0 0 95 90" fill="#1a2330" stroke="#00abfa" stroke-width="2"/>
-<line x1="50" y1="2" x2="50" y2="100" stroke="#fff067" stroke-width="1.5" stroke-dasharray="4 3"/>
-<ellipse cx="50" cy="50" rx="45" ry="8" fill="none" stroke="#0fee89" stroke-width="1.5" stroke-dasharray="4 3"/>
-<text x="50" y="155" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600" text-anchor="middle">CYLINDER: INF</text>
-</g>
-</svg>
-</div>
-</div>
-
 ## Marking patterns at a glance
 
 | Question style | Marks | What earns the marks |
