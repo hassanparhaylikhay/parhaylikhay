@@ -217,23 +217,22 @@ function buildRulePoint() {
         stroke: COL.edge, "stroke-width": 2.6, "stroke-linecap": "round"
       }));
     });
-    // Arcs and angle labels between consecutive rays
+    // Arcs at staggered radii so they don't visually stack; labels well
+    // outside the arcs so adjacent labels can't collide.
     var displayValues = [];
     for (var i = 0; i < indexed.length; i++) {
       var here = indexed[i], next = indexed[(i + 1) % indexed.length];
       var a1 = here.ang, a2 = next.ang;
       var sweep = a2 - a1; while (sweep <= 0) sweep += 2 * Math.PI;
       var deg = sweep * 180 / Math.PI;
-      var arcRadius = 36 + (i % 2) * 12;
-      // We always sweep CW in screen (positive in atan2 convention)
+      var arcRadius = 30 + i * 8;             // 30, 38, 46, 54
       layerArcs.appendChild(el("path", {
         d: arcPathBetween(centre.x, centre.y, arcRadius, a1, a1 + sweep),
         fill: "none", stroke: rays[here.idx].color, "stroke-width": 2,
         "stroke-linecap": "round"
       }));
-      // Bisector label position at radius arcRadius + 18
       var midA = a1 + sweep / 2;
-      var lr = arcRadius + 18;
+      var lr = arcRadius + 28;                // pushed further out
       layerLabels.appendChild(textNode(
         centre.x + Math.cos(midA) * lr,
         centre.y + Math.sin(midA) * lr,
@@ -300,43 +299,44 @@ function buildRuleLine() {
         stroke: COL.edge, "stroke-width": 2.6, "stroke-linecap": "round"
       }));
     });
-    // Sort the two rays by angle (in screen, smaller atan2 angle = more LEFT-UP)
+    // Sort rays by atan2 ascending. With y-down screen, up-left has smaller
+    // (more negative) atan2 than up-right, so [0] = left ray, [1] = right ray.
     var sortedRays = rays.slice().sort(function(a, b) { return angOf(vec(junction, a)) - angOf(vec(junction, b)); });
-    // Anchor angles for left and right ends of the line
-    var aLeft = angOf(vec(junction, L));
-    var aRight = angOf(vec(junction, R));
-    // Walk angles CCW (in math) from aRight to aLeft on the upper half
+    var leftRay  = sortedRays[0];
+    var rightRay = sortedRays[1];
+    // Three upper-side angles, in left→right reading order:
+    //   r = left-end of line ↔ left ray
+    //   q = left ray ↔ right ray
+    //   p = right ray ↔ right-end of line
+    // arcRadii staggered so the three arcs don't pile on top of each other.
     var sequence = [
-      { color: COL.yellow, ptA: R, ptB: sortedRays[0], labelIdx: 0 },
-      { color: COL.green,  ptA: sortedRays[0], ptB: sortedRays[1], labelIdx: 1 },
-      { color: COL.orange, ptA: sortedRays[1], ptB: L, labelIdx: 2 }
+      { color: COL.orange, ptA: L,        ptB: leftRay,  labelIdx: 2, arcR: 38 },
+      { color: COL.green,  ptA: leftRay,  ptB: rightRay, labelIdx: 1, arcR: 60 },
+      { color: COL.yellow, ptA: rightRay, ptB: R,        labelIdx: 0, arcR: 38 }
     ];
-    var arcRadius = 50;
-    var totalDeg = 0;
-    var formulaParts = [];
-    sequence.forEach(function(s, k) {
+    var formulaParts = [null, null, null];
+    sequence.forEach(function(s) {
       var a1 = angOf(vec(junction, s.ptA));
       var a2 = angOf(vec(junction, s.ptB));
-      // For upper-half angles, sweep CCW (math) from ptA to ptB.
-      // Screen y is down so CCW math = going UP through the upper half.
-      var sweep = a2 - a1; while (sweep > 0) sweep -= 2 * Math.PI;
-      // We want the UPPER sweep, which in screen-down convention is the
-      // negative-sweep (math CW) path through angles less than a1.
-      var deg = -sweep * 180 / Math.PI;
-      totalDeg += deg;
+      // Take the SHORTER sweep — this is always the upper-side angle when
+      // both rays sit above the line.
+      var sweep = a2 - a1;
+      while (sweep <= -Math.PI) sweep += 2 * Math.PI;
+      while (sweep >  Math.PI) sweep -= 2 * Math.PI;
+      var deg = Math.abs(sweep) * 180 / Math.PI;
       layerArcs.appendChild(el("path", {
-        d: arcPathBetween(junction.x, junction.y, arcRadius - k * 4, a1, a1 + sweep),
+        d: arcPathBetween(junction.x, junction.y, s.arcR, a1, a1 + sweep),
         fill: "none", stroke: s.color, "stroke-width": 2, "stroke-linecap": "round"
       }));
       var midA = a1 + sweep / 2;
-      var lr = arcRadius + 18;
+      var lr = s.arcR + 22;
       layerLabels.appendChild(textNode(
         junction.x + Math.cos(midA) * lr,
         junction.y + Math.sin(midA) * lr,
         labels[s.labelIdx] + " = " + fmtDeg(deg),
         s.color
       ));
-      formulaParts.push({ label: labels[s.labelIdx], deg: deg, color: s.color });
+      formulaParts[s.labelIdx] = { label: labels[s.labelIdx], deg: deg, color: s.color };
     });
     rays.forEach(function(r, i) { makeHandle(r, { fill: r.color, idx: i }); });
     state.formulaParts = formulaParts;
@@ -386,7 +386,9 @@ function buildRuleOpposite() {
     // Pairs (0 ↔ 2) and (1 ↔ 3) are vertically opposite, by 4-cycle.
     var sectorColors = [COL.yellow, COL.green, COL.yellow, COL.green];
     var sectorLabels = ["x", "y", "x", "y"];
-    var arcRadii = [40, 40, 40, 40];
+    // Stagger arc radii so two adjacent angle markers don't overlap when
+    // the lines pivot near each other.
+    var arcRadii = [36, 48, 36, 48];
     var formulaParts = [];
     for (var i = 0; i < 4; i++) {
       var a1 = rays[i].ang, a2 = rays[(i + 1) % 4].ang;
@@ -398,7 +400,7 @@ function buildRuleOpposite() {
         fill: "none", stroke: color, "stroke-width": 2, "stroke-linecap": "round"
       }));
       var midA = a1 + sweep / 2;
-      var lr = arcRadii[i] + 22;
+      var lr = arcRadii[i] + 28;
       layerLabels.appendChild(textNode(
         centre.x + Math.cos(midA) * lr,
         centre.y + Math.sin(midA) * lr,
@@ -455,7 +457,7 @@ function buildRuleTriangle() {
         d: arcPathBetween(here.x, here.y, 30, aPrev, aPrev + sweep),
         fill: "none", stroke: verts[i].color, "stroke-width": 2, "stroke-linecap": "round"
       }));
-      var bisector = bisectorPoint(prev, here, next, 50);
+      var bisector = bisectorPoint(prev, here, next, 62);
       layerLabels.appendChild(textNode(
         bisector.x, bisector.y,
         labels[i] + " = " + fmtDeg(deg),
@@ -505,7 +507,7 @@ function buildRuleQuad() {
         d: arcPathBetween(here.x, here.y, 28, aPrev, aPrev + sweep),
         fill: "none", stroke: verts[i].color, "stroke-width": 2, "stroke-linecap": "round"
       }));
-      var bisector = bisectorPoint(prev, here, next, 46);
+      var bisector = bisectorPoint(prev, here, next, 58);
       layerLabels.appendChild(textNode(
         bisector.x, bisector.y,
         labels[i] + " = " + fmtDeg(deg),
