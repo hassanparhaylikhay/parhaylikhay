@@ -16,9 +16,15 @@
   .stage { width:100%; aspect-ratio: 1.5; position:relative; border-radius:6px; cursor:grab; user-select:none; touch-action:none; background:transparent; }
   .stage.dragging { cursor:grabbing; }
   svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
-  .gallery-title { margin-top:14px; font-family:'Geist Mono',monospace; font-size:10.5px; color:#7a7875; letter-spacing:0.4px; text-transform:uppercase; }
+  .gallery-bar { display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:10px; }
+  .gallery-title { font-family:'Geist Mono',monospace; font-size:10.5px; color:#7a7875; letter-spacing:0.4px; text-transform:uppercase; }
+  .clear-btn { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; background:transparent; border:1px solid #141e2a; border-radius:4px; padding:4px 8px; cursor:pointer; transition:color 0.12s, border-color 0.12s; }
+  .clear-btn:hover { color:#fff067; border-color:#fff067; }
+  .clear-btn[disabled] { opacity:0.35; cursor:default; }
   .gallery { display:grid; grid-template-columns:repeat(auto-fit, minmax(86px, 1fr)); gap:10px; margin-top:8px; }
-  .thumb { position:relative; border:1px solid #141e2a; border-radius:6px; padding:6px 4px 4px; background:#0b1118; }
+  .thumb { position:relative; border:1px solid #141e2a; border-radius:6px; padding:6px 4px 4px; background:#0b1118; cursor:pointer; transition:border-color 0.12s, background 0.12s; }
+  .thumb:hover { border-color:#7a7875; }
+  .thumb.selected { border-color:#fff067; background:rgba(255,240,103,0.04); }
   .thumb svg { display:block; width:100%; height:auto; }
   .thumb-label { font-family:'Geist Mono',monospace; font-size:9px; text-align:center; letter-spacing:0.3px; padding-top:2px; }
   .footer { margin-top:10px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
@@ -28,10 +34,13 @@
 <div class="wrap" id="wrap">
   <div class="head">
     <span class="title" id="title"></span>
-    <span class="hint">drag to rotate</span>
+    <span class="hint">drag to rotate · click a plane below</span>
   </div>
   <div class="stage" id="stage"></div>
-  <div class="gallery-title" id="galleryTitle"></div>
+  <div class="gallery-bar">
+    <span class="gallery-title" id="galleryTitle"></span>
+    <button class="clear-btn" id="clearBtn" disabled>clear</button>
+  </div>
   <div class="gallery" id="gallery"></div>
   <p class="footer" id="footer"></p>
 </div>
@@ -42,23 +51,18 @@
 var qs = new URLSearchParams(location.search);
 var SHAPE = (qs.get("shape") || "cube").toLowerCase();
 
-// Brand palette
 var COL = {
   edge:   "#00abfa",
   yellow: "#fff067",
   green:  "#0fee89",
   orange: "#ff822c",
-  pink:   "#ff4670",
-  grey:   "#7a7875"
+  pink:   "#ff4670"
 };
 
 // Main view geometry
-var W = 600, H = 400;
-var SCALE = 1.4;
-
-// Thumb geometry
-var TW = 110, TH = 110;
-var THUMB_SCALE = 0.45;
+var W = 600, H = 400, MAIN_SCALE = 1.4;
+// Thumbnail geometry
+var TW = 110, TH = 110, THUMB_SCALE = 0.45;
 var THUMB_YAW = 28 * Math.PI / 180;
 var THUMB_PITCH = -22 * Math.PI / 180;
 
@@ -66,9 +70,9 @@ var THUMB_PITCH = -22 * Math.PI / 180;
 var yaw = 28 * Math.PI / 180;
 var pitch = -22 * Math.PI / 180;
 
-// Project a 3D point given current yaw/pitch into screen coords + camera-z.
-// Convention: +x right, +y up (in math), +z toward viewer. Screen y is down,
-// so we flip via H/2 - y'*SCALE.
+// Currently-selected plane (null = none, integer = plane index)
+var selectedPlaneIdx = null;
+
 function projectFn(yawAngle, pitchAngle, w, h, scale) {
   var cy = Math.cos(yawAngle), sy = Math.sin(yawAngle);
   var cx = Math.cos(pitchAngle), sx = Math.sin(pitchAngle);
@@ -76,17 +80,13 @@ function projectFn(yawAngle, pitchAngle, w, h, scale) {
     var x1 = p[0] * cy + p[2] * sy;
     var y1 = p[1];
     var z1 = -p[0] * sy + p[2] * cy;
-    var x2 = x1;
     var y2 = y1 * cx - z1 * sx;
     var z2 = y1 * sx + z1 * cx;
-    return { x: w / 2 + x2 * scale, y: h / 2 - y2 * scale, z: z2 };
+    return { x: w / 2 + x1 * scale, y: h / 2 - y2 * scale, z: z2 };
   };
 }
 
 // === Solid library ====================================================
-// Each entry: { vertices, edges, planes, title, footer, planeLabels[] }
-// Each plane: { polygon: [v0,v1,v2,...], color }
-
 function rotZ(p, ang) {
   var c = Math.cos(ang), s = Math.sin(ang);
   return [c*p[0] - s*p[1], s*p[0] + c*p[1], p[2]];
@@ -103,13 +103,12 @@ function buildCube() {
     [4,5],[5,6],[6,7],[7,4],
     [0,4],[1,5],[2,6],[3,7]
   ];
-  var p = s + 4;  // plane corner pad
   var planes = [];
-  // 3 axis-aligned (yellow): x=0, y=0, z=0
-  planes.push({ polygon: [[0,-p,-p],[0, p,-p],[0, p, p],[0,-p, p]], color: COL.yellow, label: "axis-aligned ⊥ x" });
-  planes.push({ polygon: [[-p, 0,-p],[ p, 0,-p],[ p, 0, p],[-p, 0, p]], color: COL.yellow, label: "axis-aligned ⊥ y" });
-  planes.push({ polygon: [[-p,-p, 0],[ p,-p, 0],[ p, p, 0],[-p, p, 0]], color: COL.yellow, label: "axis-aligned ⊥ z" });
-  // 6 diagonal (green): each contains a pair of opposite edges
+  // 3 axis-aligned: corners on the cube faces (no padding)
+  planes.push({ polygon: [[0,-s,-s],[0, s,-s],[0, s, s],[0,-s, s]], color: COL.yellow, label: "axis-aligned ⊥ x" });
+  planes.push({ polygon: [[-s, 0,-s],[ s, 0,-s],[ s, 0, s],[-s, 0, s]], color: COL.yellow, label: "axis-aligned ⊥ y" });
+  planes.push({ polygon: [[-s,-s, 0],[ s,-s, 0],[ s, s, 0],[-s, s, 0]], color: COL.yellow, label: "axis-aligned ⊥ z" });
+  // 6 diagonal: each contains a pair of opposite cube edges
   planes.push({ polygon: [[-s,-s,-s],[ s,-s, s],[ s, s, s],[-s, s,-s]], color: COL.green, label: "diagonal x=z" });
   planes.push({ polygon: [[-s,-s, s],[ s,-s,-s],[ s, s,-s],[-s, s, s]], color: COL.green, label: "diagonal x=−z" });
   planes.push({ polygon: [[-s,-s,-s],[ s, s,-s],[ s, s, s],[-s,-s, s]], color: COL.green, label: "diagonal x=y" });
@@ -117,10 +116,10 @@ function buildCube() {
   planes.push({ polygon: [[-s,-s,-s],[ s,-s,-s],[ s, s, s],[-s, s, s]], color: COL.green, label: "diagonal y=z" });
   planes.push({ polygon: [[-s, s,-s],[ s, s,-s],[ s,-s, s],[-s,-s, s]], color: COL.green, label: "diagonal y=−z" });
   return {
-    vertices: v, edges: e, planes: planes,
+    vertices: v, edges: e, planes: planes, kind: "polyhedron",
     title: "CUBE — 9 PLANES OF SYMMETRY",
-    galleryTitle: "ALL 9 PLANES (3 AXIS-ALIGNED + 6 DIAGONAL)",
-    footer: "principal axes: 3 of order 4, 4 of order 3, 6 of order 2"
+    galleryTitle: "ALL 9 PLANES (3 AXIS-ALIGNED · 6 DIAGONAL)",
+    footer: "rotational axes: 3 of order 4 · 4 of order 3 · 6 of order 2"
   };
 }
 
@@ -135,17 +134,16 @@ function buildCuboid() {
     [4,5],[5,6],[6,7],[7,4],
     [0,4],[1,5],[2,6],[3,7]
   ];
-  var px = L + 4, py = Hh + 4, pz = Ww + 4;
   var planes = [
-    { polygon: [[0,-py,-pz],[0, py,-pz],[0, py, pz],[0,-py, pz]], color: COL.yellow, label: "vertical ⊥ length" },
-    { polygon: [[-px, 0,-pz],[ px, 0,-pz],[ px, 0, pz],[-px, 0, pz]], color: COL.green, label: "horizontal" },
-    { polygon: [[-px,-py, 0],[ px,-py, 0],[ px, py, 0],[-px, py, 0]], color: COL.orange, label: "vertical ⊥ width" }
+    { polygon: [[0,-Hh,-Ww],[0, Hh,-Ww],[0, Hh, Ww],[0,-Hh, Ww]], color: COL.yellow, label: "vertical ⊥ length" },
+    { polygon: [[-L, 0,-Ww],[ L, 0,-Ww],[ L, 0, Ww],[-L, 0, Ww]], color: COL.green,  label: "horizontal" },
+    { polygon: [[-L,-Hh, 0],[ L,-Hh, 0],[ L, Hh, 0],[-L, Hh, 0]], color: COL.orange, label: "vertical ⊥ width" }
   ];
   return {
-    vertices: v, edges: e, planes: planes,
+    vertices: v, edges: e, planes: planes, kind: "polyhedron",
     title: "CUBOID — 3 PLANES OF SYMMETRY",
     galleryTitle: "ONE PLANE THROUGH EACH PAIR OF OPPOSITE FACE-CENTRES",
-    footer: "all sides different → exactly 3 planes; each rotational axis is order 2"
+    footer: "all sides different → 3 planes, each rotational axis order 2"
   };
 }
 
@@ -161,26 +159,29 @@ function buildPrism() {
     [3,4],[4,5],[5,3],
     [0,3],[1,4],[2,5]
   ];
-  // 3 vertical planes (yellow): each contains the prism axis and a triangle line of symmetry
-  var pad = 8;
-  var topY = R + pad, botY = -R - pad;
-  var basePlane = [[0, topY, -L/2 - 4], [0, topY, L/2 + 4], [0, botY, L/2 + 4], [0, botY, -L/2 - 4]];
+  // 3 axial planes — each contains the prism axis (z direction) and a
+  // triangle line of symmetry. Geometrically: vertex → opposite-edge midpoint.
+  // Vertex at (0, R), opposite-edge midpoint at (0, -R/2). Plane corners:
+  //   (0, R, -L/2), (0, R, L/2), (0, -R/2, L/2), (0, -R/2, -L/2)
+  var basePlane = [
+    [0,  R, -L/2], [0,  R, L/2], [0, -R/2, L/2], [0, -R/2, -L/2]
+  ];
   var planes = [];
-  [0, 2*Math.PI/3, 4*Math.PI/3].forEach(function(ang) {
+  [0, 2*Math.PI/3, 4*Math.PI/3].forEach(function(ang, i) {
     planes.push({
       polygon: basePlane.map(function(p){ return rotZ(p, ang); }),
       color: COL.yellow,
-      label: "vertical (" + Math.round(ang * 180 / Math.PI) + "°)"
+      label: i === 0 ? "vertical (top vertex)" : i === 1 ? "vertical (left vertex)" : "vertical (right vertex)"
     });
   });
-  // 1 horizontal mid-plane (green) at z=0
+  // Horizontal mid-plane: covers the triangle exactly at z=0
   planes.push({
-    polygon: [[-s/2 - pad, -R - pad, 0], [s/2 + pad, -R - pad, 0], [s/2 + pad, R + pad, 0], [-s/2 - pad, R + pad, 0]],
+    polygon: [[0, R, 0], [-s/2, -R/2, 0], [s/2, -R/2, 0]],
     color: COL.green,
     label: "horizontal mid"
   });
   return {
-    vertices: v, edges: e, planes: planes,
+    vertices: v, edges: e, planes: planes, kind: "polyhedron",
     title: "TRIANGULAR PRISM — 4 PLANES OF SYMMETRY",
     galleryTitle: "3 VERTICAL (CROSS-SECTION SYMMETRY LINES) + 1 HORIZONTAL MID-PLANE",
     footer: "principal axis through cross-section centres has rotational order 3"
@@ -189,38 +190,29 @@ function buildPrism() {
 
 function buildCylinder() {
   var R = 65, Hh = 70;
-  var N = 32;
-  var v = [];
+  var N = 96;        // smooth ring resolution
+  var ringTop = [];
+  var ringBot = [];
   for (var i = 0; i < N; i++) {
     var a = i * 2 * Math.PI / N;
-    v.push([R * Math.cos(a), Hh, R * Math.sin(a)]);
+    ringTop.push([R * Math.cos(a),  Hh, R * Math.sin(a)]);
+    ringBot.push([R * Math.cos(a), -Hh, R * Math.sin(a)]);
   }
-  for (var j = 0; j < N; j++) {
-    var b = j * 2 * Math.PI / N;
-    v.push([R * Math.cos(b), -Hh, R * Math.sin(b)]);
-  }
-  var e = [];
-  for (var k = 0; k < N; k++) {
-    e.push([k, (k+1) % N]);
-    e.push([N + k, N + ((k+1) % N)]);
-  }
-  e.push([0, N]);
-  e.push([N/2 | 0, N + (N/2 | 0)]);
-  // Vertical sample plane (yellow): yz plane (x=0) — example only; infinite exist
-  var p = R + 8;
+  // Vertical axial plane: rectangle from (-R) to (+R) on x at y=±Hh, z=0.
+  // The plane lives in the xy-plane (z=0); corners at the ring intersections.
   var planes = [
     {
-      polygon: [[0, Hh + 8, -p],[0, Hh + 8, p],[0, -Hh - 8, p],[0, -Hh - 8, -p]],
+      polygon: [[-R, -Hh, 0], [R, -Hh, 0], [R, Hh, 0], [-R, Hh, 0]],
       color: COL.yellow,
       label: "one of ∞ axial planes"
     },
-    // Horizontal mid-plane (green): approximate by polygon ring
+    // Horizontal mid-plane: a circle (polygon) at y=0 of radius R
     {
       polygon: (function(){
         var pts = [];
         for (var m = 0; m < N; m++) {
           var ang = m * 2 * Math.PI / N;
-          pts.push([(R + 8) * Math.cos(ang), 0, (R + 8) * Math.sin(ang)]);
+          pts.push([R * Math.cos(ang), 0, R * Math.sin(ang)]);
         }
         return pts;
       })(),
@@ -229,7 +221,10 @@ function buildCylinder() {
     }
   ];
   return {
-    vertices: v, edges: e, planes: planes,
+    kind: "cylinder",
+    ringTop: ringTop,
+    ringBot: ringBot,
+    planes: planes,
     title: "CYLINDER — INFINITE AXIAL PLANES + 1 HORIZONTAL",
     galleryTitle: "EVERY VERTICAL PLANE THROUGH THE AXIS WORKS — PLUS ONE HORIZONTAL MID-PLANE",
     footer: "rotational axis through the centres has infinite order"
@@ -249,53 +244,54 @@ function buildPyramid() {
     [0,1],[1,2],[2,3],[3,0],
     [0,4],[1,4],[2,4],[3,4]
   ];
-  var pad = 6;
-  var apex = [0, h/2 + pad, 0];
+  var apex = [0, h/2, 0];
   var planes = [
-    // 2 mid-edge planes (yellow)
-    { polygon: [[-s/2 - pad, -h/2 - pad, 0],[ s/2 + pad, -h/2 - pad, 0], apex], color: COL.yellow, label: "mid-edge (W↔E)" },
-    { polygon: [[0, -h/2 - pad, -s/2 - pad],[0, -h/2 - pad,  s/2 + pad], apex], color: COL.yellow, label: "mid-edge (N↔S)" },
-    // 2 corner planes (green)
+    // Mid-edge planes: triangle apex + 2 base-edge midpoints
+    { polygon: [[-s/2, -h/2, 0], [ s/2, -h/2, 0], apex], color: COL.yellow, label: "mid-edge (W↔E)" },
+    { polygon: [[ 0, -h/2, -s/2], [ 0, -h/2,  s/2], apex], color: COL.yellow, label: "mid-edge (N↔S)" },
+    // Corner planes: triangle apex + 2 opposite base corners
     { polygon: [v[0], v[2], apex], color: COL.green, label: "corner-corner" },
     { polygon: [v[1], v[3], apex], color: COL.green, label: "corner-corner" }
   ];
   return {
-    vertices: v, edges: e, planes: planes,
+    vertices: v, edges: e, planes: planes, kind: "polyhedron",
     title: "SQUARE-BASED PYRAMID — 4 PLANES OF SYMMETRY",
     galleryTitle: "2 THROUGH MIDPOINTS OF OPPOSITE EDGES + 2 THROUGH OPPOSITE BASE CORNERS",
-    footer: "principal axis through apex and base centre has rotational order 4"
+    footer: "principal axis (apex → base centre) has rotational order 4"
   };
 }
 
 function buildCone() {
   var R = 65, h = 130;
-  var N = 36;
-  var v = [];
+  var N = 96;
+  var ringBase = [];
   for (var i = 0; i < N; i++) {
     var a = i * 2 * Math.PI / N;
-    v.push([R * Math.cos(a), -h/2, R * Math.sin(a)]);
+    ringBase.push([R * Math.cos(a), -h/2, R * Math.sin(a)]);
   }
-  v.push([0, h/2, 0]);
-  var apexIdx = N;
-  var e = [];
-  for (var k = 0; k < N; k++) e.push([k, (k+1) % N]);
-  e.push([0, apexIdx]);
-  e.push([(N/2)|0, apexIdx]);
-  var p = R + 8;
-  var apex = [0, h/2 + 4, 0];
+  var apex = [0, h/2, 0];
+  // Three sample axial planes (at 0°, 60°, and 30° around the axis), each a
+  // triangle apex + 2 base-ring points at diametrically opposite angles.
+  function axialAt(ang) {
+    return [
+      [R * Math.cos(ang), -h/2, R * Math.sin(ang)],
+      [R * Math.cos(ang + Math.PI), -h/2, R * Math.sin(ang + Math.PI)],
+      apex
+    ];
+  }
   var planes = [
-    { polygon: [[0, -h/2 - 4, -p],[0, -h/2 - 4, p], apex], color: COL.yellow, label: "one of ∞ axial planes" },
-    { polygon: [[-p, -h/2 - 4, 0],[ p, -h/2 - 4, 0], apex], color: COL.yellow, label: "another axial plane" },
-    { polygon: (function(){
-        var pts = [], r2 = R/Math.sqrt(2) + 1;
-        return [[-r2, -h/2-4, -r2], [r2, -h/2-4, r2], apex];
-      })(), color: COL.yellow, label: "axial through diagonal" }
+    { polygon: axialAt(0), color: COL.yellow, label: "axial sample 1" },
+    { polygon: axialAt(Math.PI / 3), color: COL.yellow, label: "axial sample 2" },
+    { polygon: axialAt(2 * Math.PI / 3), color: COL.yellow, label: "axial sample 3" }
   ];
   return {
-    vertices: v, edges: e, planes: planes,
+    kind: "cone",
+    ringBase: ringBase,
+    apex: apex,
+    planes: planes,
     title: "CONE — INFINITE AXIAL PLANES",
     galleryTitle: "EVERY PLANE THROUGH THE AXIS WORKS — APEX FORBIDS A HORIZONTAL PLANE",
-    footer: "rotational axis through apex and base centre has infinite order"
+    footer: "rotational axis (apex → base centre) has infinite order"
   };
 }
 
@@ -307,7 +303,6 @@ var BUILDERS = {
   pyramid: buildPyramid,
   cone: buildCone
 };
-
 var spec = (BUILDERS[SHAPE] || buildCube)();
 
 // === SVG helpers ======================================================
@@ -316,45 +311,113 @@ function el(tag, attrs) {
   for (var k in attrs) n.setAttribute(k, attrs[k]);
   return n;
 }
+function ringPath(projected) {
+  // Smooth closed path through the projected ring points.
+  if (!projected.length) return "";
+  var d = "M " + projected[0].x.toFixed(2) + " " + projected[0].y.toFixed(2);
+  for (var i = 1; i < projected.length; i++) {
+    d += " L " + projected[i].x.toFixed(2) + " " + projected[i].y.toFixed(2);
+  }
+  d += " Z";
+  return d;
+}
+function findExtremes(projected) {
+  // Index of min and max screen.x. Returns {minIdx, maxIdx}.
+  var minIdx = 0, maxIdx = 0;
+  for (var i = 1; i < projected.length; i++) {
+    if (projected[i].x < projected[minIdx].x) minIdx = i;
+    if (projected[i].x > projected[maxIdx].x) maxIdx = i;
+  }
+  return { minIdx: minIdx, maxIdx: maxIdx };
+}
 
-// Render the (edges + planes) of `spec` into a parent SVG, given a project fn.
-// `withPlanes` — array of plane indices to draw (subset). If null: none.
-function renderInto(svg, project, options) {
-  options = options || {};
+// Render `spec` into an SVG using the given projection. `selectedIdx` is the
+// plane index to draw translucent (or null).
+function renderInto(svg, project, selectedIdx, edgeWidth) {
   while (svg.firstChild) svg.removeChild(svg.firstChild);
-  var planeIdxs = options.planeIdxs;
-  var edgeColor = options.edgeColor || COL.edge;
-  var edgeWidth = options.edgeWidth || 1.6;
-  // Project all vertices
-  var pv = spec.vertices.map(project);
-  // Edges: just draw all as solid (no front/back distinction in 360 mode).
-  spec.edges.forEach(function(pair) {
-    var a = pv[pair[0]], b = pv[pair[1]];
-    svg.appendChild(el("line", {
-      x1: a.x, y1: a.y, x2: b.x, y2: b.y,
-      stroke: edgeColor,
+  edgeWidth = edgeWidth || 1.6;
+
+  if (spec.kind === "cylinder") {
+    var topProj = spec.ringTop.map(project);
+    var botProj = spec.ringBot.map(project);
+    // Top ring as smooth path (closed)
+    svg.appendChild(el("path", {
+      d: ringPath(topProj),
+      fill: "none",
+      stroke: COL.edge,
       "stroke-width": edgeWidth,
-      "stroke-linecap": "round"
+      "stroke-linejoin": "round"
     }));
-  });
-  // Planes: draw selected planes as translucent polygons. Each plane is split
-  // by the depth of its centroid: if behind centroid of solid, draw before edges
-  // (so front edges are on top); else draw after edges. To keep code simple,
-  // draw all planes on top of edges with semi-transparent fill.
-  if (planeIdxs && planeIdxs.length) {
-    planeIdxs.forEach(function(idx) {
-      var plane = spec.planes[idx];
-      if (!plane) return;
-      var pts = plane.polygon.map(project)
-        .map(function(p){ return p.x + "," + p.y; }).join(" ");
-      svg.appendChild(el("polygon", {
-        points: pts,
-        fill: plane.color + "44",
-        stroke: plane.color,
-        "stroke-width": 1.6,
-        "stroke-linejoin": "round"
+    // Bottom ring as smooth path (closed)
+    svg.appendChild(el("path", {
+      d: ringPath(botProj),
+      fill: "none",
+      stroke: COL.edge,
+      "stroke-width": edgeWidth,
+      "stroke-linejoin": "round"
+    }));
+    // Side silhouette: connect screen-x extremes of top ring to corresponding
+    // bottom ring points (same angular index → same world x,z).
+    var ext = findExtremes(topProj);
+    [ext.minIdx, ext.maxIdx].forEach(function(idx) {
+      var t = topProj[idx], b = botProj[idx];
+      svg.appendChild(el("line", {
+        x1: t.x, y1: t.y, x2: b.x, y2: b.y,
+        stroke: COL.edge,
+        "stroke-width": edgeWidth,
+        "stroke-linecap": "round"
       }));
     });
+  } else if (spec.kind === "cone") {
+    var baseProj = spec.ringBase.map(project);
+    var apexProj = project(spec.apex);
+    // Base ring as smooth closed path
+    svg.appendChild(el("path", {
+      d: ringPath(baseProj),
+      fill: "none",
+      stroke: COL.edge,
+      "stroke-width": edgeWidth,
+      "stroke-linejoin": "round"
+    }));
+    // Side silhouette: 2 lines from apex to base-ring screen-x extremes
+    var extC = findExtremes(baseProj);
+    [extC.minIdx, extC.maxIdx].forEach(function(idx) {
+      var p = baseProj[idx];
+      svg.appendChild(el("line", {
+        x1: apexProj.x, y1: apexProj.y, x2: p.x, y2: p.y,
+        stroke: COL.edge,
+        "stroke-width": edgeWidth,
+        "stroke-linecap": "round"
+      }));
+    });
+  } else {
+    // Generic polyhedron: edges
+    var pv = spec.vertices.map(project);
+    spec.edges.forEach(function(pair) {
+      var a = pv[pair[0]], b = pv[pair[1]];
+      svg.appendChild(el("line", {
+        x1: a.x, y1: a.y, x2: b.x, y2: b.y,
+        stroke: COL.edge,
+        "stroke-width": edgeWidth,
+        "stroke-linecap": "round"
+      }));
+    });
+  }
+
+  // Selected plane drawn ON TOP so it's clearly visible against the wireframe.
+  if (selectedIdx != null) {
+    var plane = spec.planes[selectedIdx];
+    if (plane) {
+      var pts = plane.polygon.map(project)
+        .map(function(p){ return p.x.toFixed(2) + "," + p.y.toFixed(2); }).join(" ");
+      svg.appendChild(el("polygon", {
+        points: pts,
+        fill: plane.color + "55",
+        stroke: plane.color,
+        "stroke-width": edgeWidth,
+        "stroke-linejoin": "round"
+      }));
+    }
   }
 }
 
@@ -367,15 +430,13 @@ var mainSvg = el("svg", {
 stage.appendChild(mainSvg);
 
 function redrawMain() {
-  var project = projectFn(yaw, pitch, W, H, SCALE);
-  renderInto(mainSvg, project, { planeIdxs: null, edgeWidth: 2 });
+  renderInto(mainSvg, projectFn(yaw, pitch, W, H, MAIN_SCALE), selectedPlaneIdx, 2);
 }
 redrawMain();
 
 // Drag interaction
 var dragging = false;
 var lastX = 0, lastY = 0;
-
 function onPointerDown(e) {
   dragging = true;
   stage.classList.add("dragging");
@@ -391,10 +452,8 @@ function onPointerMove(e) {
   var dy = pt.clientY - lastY;
   lastX = pt.clientX;
   lastY = pt.clientY;
-  // Rotate: horizontal drag → yaw, vertical drag → pitch
   yaw += dx * 0.01;
   pitch += dy * 0.01;
-  // Clamp pitch to ±85° to avoid gimbal weirdness
   var lim = 85 * Math.PI / 180;
   if (pitch > lim) pitch = lim;
   if (pitch < -lim) pitch = -lim;
@@ -412,12 +471,19 @@ stage.addEventListener("touchstart", onPointerDown, { passive: false });
 stage.addEventListener("touchmove", onPointerMove, { passive: false });
 stage.addEventListener("touchend", onPointerUp);
 
-// === Plane gallery (one thumbnail per plane) ==========================
+// === Plane gallery ====================================================
 document.getElementById("title").textContent = spec.title;
 document.getElementById("galleryTitle").textContent = spec.galleryTitle || "PLANES";
 document.getElementById("footer").textContent = spec.footer || "";
 
+var clearBtn = document.getElementById("clearBtn");
+clearBtn.addEventListener("click", function() {
+  selectPlane(null);
+});
+
+var thumbs = [];
 var gallery = document.getElementById("gallery");
+
 spec.planes.forEach(function(plane, idx) {
   var thumb = document.createElement("div");
   thumb.className = "thumb";
@@ -426,15 +492,27 @@ spec.planes.forEach(function(plane, idx) {
     preserveAspectRatio: "xMidYMid meet"
   });
   thumb.appendChild(svg);
-  var project = projectFn(THUMB_YAW, THUMB_PITCH, TW, TH, THUMB_SCALE);
-  renderInto(svg, project, { planeIdxs: [idx], edgeWidth: 1.2 });
+  renderInto(svg, projectFn(THUMB_YAW, THUMB_PITCH, TW, TH, THUMB_SCALE), idx, 1.2);
   var label = document.createElement("div");
   label.className = "thumb-label";
   label.style.color = plane.color;
   label.textContent = plane.label;
   thumb.appendChild(label);
+  thumb.addEventListener("click", function() {
+    selectPlane(idx === selectedPlaneIdx ? null : idx);
+  });
   gallery.appendChild(thumb);
+  thumbs.push(thumb);
 });
+
+function selectPlane(idx) {
+  selectedPlaneIdx = idx;
+  thumbs.forEach(function(t, i) {
+    t.classList.toggle("selected", i === idx);
+  });
+  clearBtn.disabled = (idx == null);
+  redrawMain();
+}
 
 // === Height reporter ==================================================
 var lastReported = 0, reportScheduled = false;
