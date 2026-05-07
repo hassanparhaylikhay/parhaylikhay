@@ -16,7 +16,8 @@
   .formula { font-size:16px; color:#f0eeea; text-align:center; }
   .formula .katex { font-size:1em; }
 
-  canvas { display:block; margin:0 auto; touch-action:none; cursor:default; }
+  .canvas-holder { display:flex; justify-content:center; }
+  canvas { display:block; cursor:default; max-width:100%; height:auto; }
   canvas.grabbing { cursor:grabbing; }
   canvas.grab { cursor:grab; }
 
@@ -29,7 +30,7 @@
     <span class="formula" id="formula"></span>
   </div>
 
-  <canvas id="c"></canvas>
+  <div class="canvas-holder"><canvas id="c" width="560" height="340"></canvas></div>
 
   <p class="footer">drag A, B, or C to change side lengths and angles</p>
 </div>

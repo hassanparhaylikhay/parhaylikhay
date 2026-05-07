@@ -16,7 +16,8 @@
   .formula { font-size:14.5px; color:#f0eeea; }
   .formula .katex { font-size:1em; }
 
-  canvas { display:block; width:100%; height:auto; user-select:none; touch-action:none; }
+  .canvas-holder { display:flex; justify-content:center; }
+  canvas { display:block; cursor:default; max-width:100%; height:auto; user-select:none; }
 
   .footer { margin-top:6px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
@@ -27,7 +28,7 @@
     <span class="formula" id="formula"></span>
   </div>
 
-  <canvas id="c"></canvas>
+  <div class="canvas-holder"><canvas id="c" width="560" height="380"></canvas></div>
 
   <p class="footer">drag T, A, or B: tangent-chord angle equals inscribed angle in the alternate segment</p>
 </div>

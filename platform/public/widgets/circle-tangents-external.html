@@ -15,7 +15,8 @@
   .head { display:flex; align-items:center; justify-content:center; margin-bottom:8px; min-height:24px; text-align:center; }
   .formula { font-size:15px; color:#f0eeea; }
   .formula .katex { font-size:1em; }
-  canvas { display:block; width:100%; height:auto; cursor:default; }
+  .canvas-holder { display:flex; justify-content:center; }
+  canvas { display:block; cursor:default; max-width:100%; height:auto; }
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; text-align:center; letter-spacing:0.3px; }
 </style>
 </head>
@@ -25,7 +26,7 @@
     <span class="formula" id="formula"></span>
   </div>
 
-  <canvas id="c"></canvas>
+  <div class="canvas-holder"><canvas id="c" width="560" height="380"></canvas></div>
 
   <p class="footer">drag P (external point): the two tangents from P always have equal length. OAPB forms a kite.</p>
 </div>

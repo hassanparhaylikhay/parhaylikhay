@@ -15,7 +15,8 @@
   .head { display:flex; align-items:center; justify-content:center; margin-bottom:8px; min-height:22px; }
   .formula { font-size:16px; color:#f0eeea; }
   .formula .katex { font-size:1em; }
-  canvas { display:block; margin:0 auto; cursor:default; touch-action:none; }
+  .canvas-holder { display:flex; justify-content:center; }
+  canvas { display:block; cursor:default; max-width:100%; height:auto; }
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
 </head>
@@ -24,7 +25,7 @@
   <div class="head">
     <span class="formula" id="formula"></span>
   </div>
-  <canvas id="c"></canvas>
+  <div class="canvas-holder"><canvas id="c" width="560" height="380"></canvas></div>
   <p class="footer">drag T around the circle: tangent stays perpendicular to OT</p>
 </div>
 
