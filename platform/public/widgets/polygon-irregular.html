@@ -163,6 +163,32 @@ function centroid(points) {
   return { x: cx / points.length, y: cy / points.length };
 }
 
+// Round each value to a whole number AND redistribute the rounding error
+// so the totals exactly equal `targetSum` (largest-remainder method). This
+// is what stops the displayed angles from saying things like
+// "80° + 70° + 90° + 60° + 60° = 360°" when the integers actually add to
+// 359 or 361.
+function roundToSum(values, targetSum) {
+  var rounded = values.map(function(v) { return Math.round(v); });
+  var sum = 0;
+  for (var i = 0; i < rounded.length; i++) sum += rounded[i];
+  var error = targetSum - sum;
+  if (error === 0) return rounded;
+  var sign = error > 0 ? 1 : -1;
+  var absError = Math.abs(error);
+  // Sort vertex indices by how far Math.round had to push them. If we
+  // need to add (error > 0) we bump up the values that were rounded down
+  // hardest; if subtract, we trim the values that were rounded up hardest.
+  var order = values.map(function(v, i) { return { i: i, residual: v - rounded[i] }; });
+  order.sort(function(a, b) {
+    return sign > 0 ? (b.residual - a.residual) : (a.residual - b.residual);
+  });
+  for (var k = 0; k < absError && k < order.length; k++) {
+    rounded[order[k].i] += sign;
+  }
+  return rounded;
+}
+
 // Returns true if every consecutive turn in `points` has the same sign,
 // i.e. the polygon is strictly convex. Treats near-collinear triples as
 // invalid (we want a strict-positive minimum interior margin so the
@@ -279,10 +305,11 @@ function draw() {
   var showInterior = (mode === "interior" || mode === "both");
   var showExterior = (mode === "exterior" || mode === "both");
 
-  var intSum = 0;
-  var extSum = 0;
-  var intParts = [];
-  var extParts = [];
+  // Pass 1: compute geometry per vertex without emitting any labels yet.
+  // We need every raw value before we can redistribute the rounding.
+  var perVertex = [];
+  var rawIntDegs = [];
+  var rawExtDegs = [];
   var extRads = [];
 
   for (var j = 0; j < n; j++) {
@@ -299,7 +326,6 @@ function draw() {
     var aAng = Math.atan2(aNy, aNx);
     var bAng = Math.atan2(bNy, bNx);
 
-    // Inward direction at this vertex: toward centroid (works for convex).
     var inX = c.x - cur.x, inY = c.y - cur.y;
     var inLen = Math.hypot(inX, inY) || 1;
     var inNx = inX / inLen, inNy = inY / inLen;
@@ -307,51 +333,70 @@ function draw() {
     var sweepInt = sweepThrough(aAng, bAng, inNx, inNy);
     var interiorDeg = Math.abs(sweepInt) * 180 / Math.PI;
     var exteriorDeg = 180 - interiorDeg;
-    intSum += interiorDeg;
-    extSum += exteriorDeg;
-    intParts.push(fmt(interiorDeg));
-    extParts.push(fmt(exteriorDeg));
+
+    var extDx = -aNx, extDy = -aNy;
+    var extAng = Math.atan2(extDy, extDx);
+    var refX = extDx + bNx, refY = extDy + bNy;
+    var refLen = Math.hypot(refX, refY) || 1;
+    var refNx = refX / refLen, refNy = refY / refLen;
+    var sweepExt = sweepThrough(extAng, bAng, refNx, refNy);
+
+    rawIntDegs.push(interiorDeg);
+    rawExtDegs.push(exteriorDeg);
     extRads.push(exteriorDeg * Math.PI / 180);
+
+    perVertex.push({
+      cur: cur,
+      aAng: aAng, sweepInt: sweepInt,
+      inNx: inNx, inNy: inNy,
+      extDx: extDx, extDy: extDy,
+      extAng: extAng, sweepExt: sweepExt,
+      refNx: refNx, refNy: refNy
+    });
+  }
+
+  // Round each angle to a whole number, redistributing so the totals
+  // hit (n-2)·180° and 360° exactly — no off-by-one rounding visible.
+  var intWhole = roundToSum(rawIntDegs, sumInteriorTarget);
+  var extWhole = roundToSum(rawExtDegs, 360);
+
+  // Pass 2: emit arcs, extensions and labels (with rounded label values).
+  for (var jj = 0; jj < n; jj++) {
+    var d = perVertex[jj];
 
     if (showInterior) {
       intArcG.appendChild(makeEl("path", {
-        d: arcPathSigned(cur.x, cur.y, ARC_R_INT, aAng, sweepInt),
+        d: arcPathSigned(d.cur.x, d.cur.y, ARC_R_INT, d.aAng, d.sweepInt),
         class: "interior-arc"
       }));
-      var lx = cur.x + inNx * LBL_R_INT;
-      var ly = cur.y + inNy * LBL_R_INT + 3;
+      var lx = d.cur.x + d.inNx * LBL_R_INT;
+      var ly = d.cur.y + d.inNy * LBL_R_INT + 3;
       var lblI = makeEl("text", {
         x: lx.toFixed(2), y: ly.toFixed(2),
         "text-anchor": "middle", class: "interior-label"
       });
-      lblI.textContent = fmt(interiorDeg) + "°";
+      lblI.textContent = intWhole[jj] + "°";
       intLG.appendChild(lblI);
     }
 
     if (showExterior) {
-      var extDx = -aNx, extDy = -aNy;
-      var ex = cur.x + extDx * EXT_LEN;
-      var ey = cur.y + extDy * EXT_LEN;
+      var ex = d.cur.x + d.extDx * EXT_LEN;
+      var ey = d.cur.y + d.extDy * EXT_LEN;
       extG.appendChild(makeEl("line", {
-        x1: cur.x, y1: cur.y, x2: ex.toFixed(2), y2: ey.toFixed(2),
+        x1: d.cur.x, y1: d.cur.y, x2: ex.toFixed(2), y2: ey.toFixed(2),
         class: "ext-extension"
       }));
-      var extAng = Math.atan2(extDy, extDx);
-      var refX = extDx + bNx, refY = extDy + bNy;
-      var refLen = Math.hypot(refX, refY) || 1;
-      var refNx = refX / refLen, refNy = refY / refLen;
-      var sweepExt = sweepThrough(extAng, bAng, refNx, refNy);
       extArcG.appendChild(makeEl("path", {
-        d: arcPathSigned(cur.x, cur.y, ARC_R_EXT, extAng, sweepExt),
+        d: arcPathSigned(d.cur.x, d.cur.y, ARC_R_EXT, d.extAng, d.sweepExt),
         class: "exterior-arc"
       }));
-      var lxE = cur.x + refNx * LBL_R_EXT;
-      var lyE = cur.y + refNy * LBL_R_EXT + 3;
+      var lxE = d.cur.x + d.refNx * LBL_R_EXT;
+      var lyE = d.cur.y + d.refNy * LBL_R_EXT + 3;
       var lblE = makeEl("text", {
         x: lxE.toFixed(2), y: lyE.toFixed(2),
         "text-anchor": "middle", class: "exterior-label"
       });
-      lblE.textContent = fmt(exteriorDeg) + "°";
+      lblE.textContent = extWhole[jj] + "°";
       extLG.appendChild(lblE);
     }
   }
@@ -367,27 +412,27 @@ function draw() {
     tallyEl.appendChild(cueSvg);
   }
 
+  // Stringify the rounded integer arrays for the tally text.
+  var intPartsWhole = intWhole.map(function(v) { return v + "°"; });
+  var extPartsWhole = extWhole.map(function(v) { return v + "°"; });
+
   var textEl = document.createElement("span");
   textEl.className = "text";
   if (mode === "interior") {
     textEl.innerHTML =
       "<span style=\"color:#0fee89\">Interior sum:</span> " +
-      intParts.map(function(p) { return p + "°"; }).join(" + ") +
-      " = <strong style=\"color:#0fee89\">" + fmt(intSum) + "°</strong>" +
-      " &nbsp;&middot;&nbsp; target = " + sumInteriorTarget + "°";
+      intPartsWhole.join(" + ") +
+      " = <strong style=\"color:#0fee89\">" + sumInteriorTarget + "°</strong>";
   } else if (mode === "exterior") {
     textEl.innerHTML =
       "<span style=\"color:#ff4670\">Exterior sum:</span> " +
-      extParts.map(function(p) { return p + "°"; }).join(" + ") +
-      " = <strong style=\"color:#ff4670\">" + fmt(extSum) + "°</strong>" +
-      " &nbsp;&middot;&nbsp; target = 360°";
+      extPartsWhole.join(" + ") +
+      " = <strong style=\"color:#ff4670\">360°</strong>";
   } else {
     textEl.innerHTML =
-      "<span style=\"color:#0fee89\">Interior sum:</span> <strong>" + fmt(intSum) + "°</strong> " +
-      "(target " + sumInteriorTarget + "°)" +
+      "<span style=\"color:#0fee89\">Interior sum:</span> <strong>" + sumInteriorTarget + "°</strong>" +
       " &nbsp;&middot;&nbsp; " +
-      "<span style=\"color:#ff4670\">Exterior sum:</span> <strong>" + fmt(extSum) + "°</strong> " +
-      "(target 360°)";
+      "<span style=\"color:#ff4670\">Exterior sum:</span> <strong>360°</strong>";
   }
   tallyEl.appendChild(textEl);
 }

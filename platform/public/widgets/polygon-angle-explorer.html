@@ -379,18 +379,18 @@ function draw() {
     tallyEl.appendChild(cueSvg);
   }
 
+  // Use formula form (n × value = total) instead of value + value + …
+  // The displayed regular-polygon angle is rounded to one decimal, so
+  // adding the parts with a calculator would produce a small mismatch
+  // (e.g. 7 × 51.4 = 359.8). The formula version avoids that.
   var textEl = document.createElement("span");
   textEl.className = "text";
   if (mode === "interior") {
-    var parts = [];
-    for (var k = 0; k < n; k++) parts.push(fmt(interior) + "°");
     textEl.innerHTML = "<span style=\"color:#0fee89\">Interior sum:</span> " +
-      parts.join(" + ") + " = " + sumInterior + "°";
+      n + " × " + fmt(interior) + "° = <strong style=\"color:#0fee89\">" + sumInterior + "°</strong>";
   } else if (mode === "exterior") {
-    var partsE = [];
-    for (var m = 0; m < n; m++) partsE.push(fmt(exterior) + "°");
     textEl.innerHTML = "<span style=\"color:#ff4670\">Exterior sum:</span> " +
-      partsE.join(" + ") + " = <strong style=\"color:#ff4670\">360°</strong>";
+      n + " × " + fmt(exterior) + "° = <strong style=\"color:#ff4670\">360°</strong>";
   } else {
     textEl.innerHTML =
       "<span style=\"color:#0fee89\">Interior sum:</span> " +
