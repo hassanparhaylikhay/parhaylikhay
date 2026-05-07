@@ -41,24 +41,11 @@ If you've worked through P1 to P3 you can:
 - Use **three-letter notation** (vertex letter in the middle) for any angle you name.
 - Quote the rule **by full name** when giving a reason: "co-interior angles sum to $180°$", not "co-interior" alone.
 
-## Recap diagram: the parallel-line trio
+## Recap: the parallel-line trio
 
-<div class="diagram">
-<div class="diagram-caption">CORRESPONDING (=), ALTERNATE (=), CO-INTERIOR (180)</div>
-<div style="display:flex;justify-content:center">
-<svg viewBox="0 0 420 220" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<line x1="20" y1="70" x2="400" y2="70" stroke="#00abfa" stroke-width="2.6"/>
-<line x1="20" y1="180" x2="400" y2="180" stroke="#00abfa" stroke-width="2.6"/>
-<polygon points="200,62 195,72 205,72" fill="#0fee89"/>
-<polygon points="200,172 195,182 205,182" fill="#0fee89"/>
-<line x1="100" y1="20" x2="320" y2="220" stroke="#7a7875" stroke-width="2"/>
-<text x="218" y="92" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600">corr</text>
-<text x="298" y="202" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600">corr</text>
-<text x="170" y="92" font-family="Geist Mono,monospace" font-size="11" fill="#0fee89" font-weight="600">alt</text>
-<text x="240" y="166" font-family="Geist Mono,monospace" font-size="11" fill="#0fee89" font-weight="600">alt</text>
-</svg>
-</div>
-</div>
+Three rules, one transversal. Drag either line and the three relationships update live. Use the dropdown to focus on one rule at a time.
+
+<iframe src="/widgets/angle-rules-explorer.html?mode=all" style="width:100%;max-width:696px;height:540px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
 ## Marking patterns at a glance
 
@@ -76,33 +63,11 @@ For polygon questions:
 - **M1** for an intermediate step (e.g. dividing by $n$, or solving for $n$).
 - **A1** for the final value.
 
-## Recap diagram: regular polygons quick view
+## Recap: regular polygons
 
-<div class="diagram">
-<div class="diagram-caption">REGULAR PENTAGON, HEXAGON, OCTAGON: INT, EXT</div>
-<div style="display:flex;justify-content:center">
-<svg viewBox="0 0 480 200" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:560px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<g transform="translate(20,10)">
-<polygon points="60,10 110,50 90,110 30,110 10,50" fill="#00abfa22" stroke="#00abfa" stroke-width="2"/>
-<text x="60" y="138" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600" text-anchor="middle">INT 108</text>
-<text x="60" y="156" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670" font-weight="600" text-anchor="middle">EXT 72</text>
-<text x="60" y="178" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">n = 5</text>
-</g>
-<g transform="translate(180,10)">
-<polygon points="60,10 110,40 110,80 60,110 10,80 10,40" fill="#00abfa22" stroke="#00abfa" stroke-width="2"/>
-<text x="60" y="138" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600" text-anchor="middle">INT 120</text>
-<text x="60" y="156" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670" font-weight="600" text-anchor="middle">EXT 60</text>
-<text x="60" y="178" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">n = 6</text>
-</g>
-<g transform="translate(340,10)">
-<polygon points="38,10 82,10 110,38 110,82 82,110 38,110 10,82 10,38" fill="#00abfa22" stroke="#00abfa" stroke-width="2"/>
-<text x="60" y="138" font-family="Geist Mono,monospace" font-size="11" fill="#fff067" font-weight="600" text-anchor="middle">INT 135</text>
-<text x="60" y="156" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670" font-weight="600" text-anchor="middle">EXT 45</text>
-<text x="60" y="178" font-family="Geist Mono,monospace" font-size="10" fill="#7a7875" text-anchor="middle">n = 8</text>
-</g>
-</svg>
-</div>
-</div>
+Slide $n$ to step from triangle to dodecagon. Both interior and exterior angles update at every vertex, and the bottom row shows how the formulas land for that $n$.
+
+<iframe src="/widgets/polygon-angle-explorer.html" style="width:100%;max-width:696px;height:660px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
 ## Worked example: combining several rules
 
@@ -114,7 +79,52 @@ In the figure, $AB$ is parallel to $CD$. A transversal cuts $AB$ at $E$ and $CD$
 
 (c) Separately, find the size of one interior angle of a regular polygon with 12 sides.
 
-**Step a: Angle $EFC$.** Angles $BEF$ and $EFC$ sit on OPPOSITE sides of the transversal between the parallels — they are alternate angles, so $\angle EFC = 40°$ (alternate angles, $AB \parallel CD$). **[B1 for $40°$; B1 for the reason]**
+<div class="diagram">
+<div class="diagram-caption">AB ∥ CD · ∠BEF = 40° · △EFG: FE = FG, ∠EFG = 70°</div>
+<div style="display:flex;justify-content:center;padding:14px 0">
+<div style="position:relative;width:480px;height:340px;max-width:100%">
+
+  <!-- AB line -->
+  <div style="position:absolute;left:30px;right:30px;top:80px;height:2.5px;background:#00abfa"></div>
+  <div style="position:absolute;left:8px;top:64px;font:700 13px 'Geist Mono',monospace;color:#00abfa">A</div>
+  <div style="position:absolute;right:8px;top:64px;font:700 13px 'Geist Mono',monospace;color:#00abfa">B</div>
+
+  <!-- CD line -->
+  <div style="position:absolute;left:30px;right:30px;top:240px;height:2.5px;background:#00abfa"></div>
+  <div style="position:absolute;left:8px;top:248px;font:700 13px 'Geist Mono',monospace;color:#00abfa">C</div>
+  <div style="position:absolute;right:8px;top:248px;font:700 13px 'Geist Mono',monospace;color:#00abfa">D</div>
+
+  <!-- Transversal through E (130, 80) and F (321, 240); 40° below horizontal.
+       Drawn from 70px before E to 70px past F so it pokes through both lines. -->
+  <div style="position:absolute;left:76.4px;top:33.75px;width:389px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(40deg)"></div>
+
+  <!-- FG line: F (321, 240) to G (217, 300), length 120 at math angle 150° (down-left). -->
+  <div style="position:absolute;left:321px;top:238.75px;width:120px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(150deg)"></div>
+
+  <!-- Vertices -->
+  <div style="position:absolute;left:130px;top:80px;width:10px;height:10px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:118px;top:60px;font:700 13px 'Geist Mono',monospace;color:#fff067">E</div>
+
+  <div style="position:absolute;left:321px;top:240px;width:10px;height:10px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:330px;top:248px;font:700 13px 'Geist Mono',monospace;color:#fff067">F</div>
+
+  <div style="position:absolute;left:217px;top:300px;width:10px;height:10px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:225px;top:308px;font:700 13px 'Geist Mono',monospace;color:#fff067">G</div>
+
+  <!-- 40° wedge at E: between EB (east) and EF (40° below horizontal).
+       Conic-gradient is N-CW; east = 90°, EF = 130°, fill 40° from 90°. -->
+  <div style="position:absolute;left:130px;top:80px;width:60px;height:60px;border-radius:50%;background:conic-gradient(from 90deg, #fff067 0deg 40deg, transparent 40deg);-webkit-mask:radial-gradient(circle, transparent 21px, #000 22px, #000 24px, transparent 25px);mask:radial-gradient(circle, transparent 21px, #000 22px, #000 24px, transparent 25px);transform:translate(-50%,-50%);pointer-events:none"></div>
+  <div style="position:absolute;left:158px;top:96px;font:700 13px 'Geist Mono',monospace;color:#fff067">40°</div>
+
+  <!-- 70° wedge at F: between FG (math 150°, conic 240°) and FE (math 220°, conic 310°), fill 70° from 240°. -->
+  <div style="position:absolute;left:321px;top:240px;width:50px;height:50px;border-radius:50%;background:conic-gradient(from 240deg, #fff067 0deg 70deg, transparent 70deg);-webkit-mask:radial-gradient(circle, transparent 16px, #000 17px, #000 19px, transparent 20px);mask:radial-gradient(circle, transparent 16px, #000 17px, #000 19px, transparent 20px);transform:translate(-50%,-50%);pointer-events:none"></div>
+  <div style="position:absolute;left:278px;top:218px;font:700 13px 'Geist Mono',monospace;color:#fff067">70°</div>
+
+</div>
+</div>
+</div>
+
+**Step a: Angle $EFC$.** Angles $BEF$ and $EFC$ sit on opposite sides of the transversal between the parallels: they are alternate angles, so $\angle EFC = 40°$ (alternate angles, $AB \parallel CD$). **[B1 for $40°$; B1 for the reason]**
 
 **Step b: Angle $FEG$.** $\triangle EFG$ is isosceles with $FE = FG$, so the base angles satisfy $\angle FEG = \angle FGE$. By the triangle-sum rule:
 
