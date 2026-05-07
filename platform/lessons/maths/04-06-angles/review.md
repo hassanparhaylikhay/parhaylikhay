@@ -82,7 +82,7 @@ In the figure, $AB$ is parallel to $CD$. A transversal cuts $AB$ at $E$ and $CD$
 <div class="diagram">
 <div class="diagram-caption">AB ∥ CD · ∠BEF = 40° · △EFG: FE = FG, ∠EFG = 70°</div>
 <div style="display:flex;justify-content:center;padding:14px 0">
-<div style="position:relative;width:480px;height:340px;max-width:100%">
+<div style="position:relative;width:480px;height:400px;max-width:100%">
 
   <!-- AB line -->
   <div style="position:absolute;left:30px;right:30px;top:80px;height:2.5px;background:#00abfa"></div>
@@ -94,12 +94,22 @@ In the figure, $AB$ is parallel to $CD$. A transversal cuts $AB$ at $E$ and $CD$
   <div style="position:absolute;left:8px;top:248px;font:700 13px 'Geist Mono',monospace;color:#00abfa">C</div>
   <div style="position:absolute;right:8px;top:248px;font:700 13px 'Geist Mono',monospace;color:#00abfa">D</div>
 
-  <!-- Transversal through E (130, 80) and F (321, 240); 40° below horizontal.
-       Drawn from 70px before E to 70px past F so it pokes through both lines. -->
-  <div style="position:absolute;left:76.4px;top:33.75px;width:389px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(40deg)"></div>
+  <!-- Geometry derivation:
+       E = (130, 80), F is on CD at y=240. ∠BEF = 40° fixes the transversal
+       direction at 40° below horizontal, so F.x = 130 + 160/tan(40°) ≈ 321.
+       Hence F = (321, 240) and |FE| = √(191² + 160²) ≈ 249.
+       For △EFG with |FG| = |FE| = 249 and ∠EFG = 70°: rotate FE by 70°
+       toward "below CD". FE math-angle = 220°; rotating −70° gives FG at
+       math-angle 150°, so G = F + 249·(cos150°, sin150°) ≈ (105, 365). -->
 
-  <!-- FG line: F (321, 240) to G (217, 300), length 120 at math angle 150° (down-left). -->
-  <div style="position:absolute;left:321px;top:238.75px;width:120px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(150deg)"></div>
+  <!-- Transversal: from above E (extends 70px past) down through E to F. -->
+  <div style="position:absolute;left:76.4px;top:33.75px;width:319px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(40deg)"></div>
+
+  <!-- Triangle side FG: F (321, 240) → G (105, 365), length 249, math angle 150°. -->
+  <div style="position:absolute;left:321px;top:238.75px;width:249px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(150deg)"></div>
+
+  <!-- Triangle side GE: G (105, 365) → E (130, 80), length 286, math angle ≈ −85°. -->
+  <div style="position:absolute;left:105px;top:363.75px;width:286px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(-85deg)"></div>
 
   <!-- Vertices -->
   <div style="position:absolute;left:130px;top:80px;width:10px;height:10px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
@@ -108,11 +118,11 @@ In the figure, $AB$ is parallel to $CD$. A transversal cuts $AB$ at $E$ and $CD$
   <div style="position:absolute;left:321px;top:240px;width:10px;height:10px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
   <div style="position:absolute;left:330px;top:248px;font:700 13px 'Geist Mono',monospace;color:#fff067">F</div>
 
-  <div style="position:absolute;left:217px;top:300px;width:10px;height:10px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:225px;top:308px;font:700 13px 'Geist Mono',monospace;color:#fff067">G</div>
+  <div style="position:absolute;left:105px;top:365px;width:10px;height:10px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:115px;top:368px;font:700 13px 'Geist Mono',monospace;color:#fff067">G</div>
 
   <!-- 40° wedge at E: between EB (east) and EF (40° below horizontal).
-       Conic-gradient is N-CW; east = 90°, EF = 130°, fill 40° from 90°. -->
+       Conic is N→CW; east = 90°, EF = 130°, fill 40° from 90°. -->
   <div style="position:absolute;left:130px;top:80px;width:60px;height:60px;border-radius:50%;background:conic-gradient(from 90deg, #fff067 0deg 40deg, transparent 40deg);-webkit-mask:radial-gradient(circle, transparent 21px, #000 22px, #000 24px, transparent 25px);mask:radial-gradient(circle, transparent 21px, #000 22px, #000 24px, transparent 25px);transform:translate(-50%,-50%);pointer-events:none"></div>
   <div style="position:absolute;left:158px;top:96px;font:700 13px 'Geist Mono',monospace;color:#fff067">40°</div>
 
