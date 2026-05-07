@@ -29,7 +29,7 @@
   }
   button.reset:hover { border-color:#00abfa; }
 
-  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; touch-action:none; }
 
   .poly-side { stroke:#00abfa; stroke-width:2.5; fill:#00abfa10; stroke-linejoin:round; stroke-linecap:round; pointer-events:none; }
   .poly-vertex { fill:#fff067; cursor:grab; }
@@ -421,38 +421,46 @@ function draw() {
   tallyEl.appendChild(textEl);
 }
 
-// Drag handling
+// Drag handling — Pointer Events with setPointerCapture for reliable
+// behaviour on iOS WebKit (touch + Apple Pen) and any modern desktop
+// browser. Touch events alone caused iPad drags to stall until the
+// browser committed to a "drag vs scroll" gesture; pointer capture
+// avoids that delay entirely by locking subsequent moves to the SVG.
 var svg = document.getElementById("svg");
 var dragIdx = -1;
+var activePointerId = null;
 
-function svgPoint(evt) {
+function svgPoint(clientX, clientY) {
   var pt = svg.createSVGPoint();
-  pt.x = evt.clientX; pt.y = evt.clientY;
+  pt.x = clientX; pt.y = clientY;
   var ctm = svg.getScreenCTM();
   if (!ctm) return null;
   return pt.matrixTransform(ctm.inverse());
 }
 
-function startDrag(e) {
+function onPointerDown(e) {
   var target = e.target;
   if (!target.dataset || target.dataset.idx === undefined) return;
   dragIdx = parseInt(target.dataset.idx, 10);
+  activePointerId = e.pointerId;
   if (target.classList) target.classList.add("dragging");
+  // Lock subsequent pointermove events to the SVG regardless of where
+  // the finger drifts — even outside the SVG viewport.
+  if (svg.setPointerCapture) {
+    try { svg.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  }
   e.preventDefault();
 }
 
-function moveDrag(e) {
+function onPointerMove(e) {
   if (dragIdx < 0) return;
-  var evt = (e.touches && e.touches[0]) ? e.touches[0] : e;
-  var p = svgPoint(evt);
+  if (activePointerId !== null && e.pointerId !== activePointerId) return;
+  var p = svgPoint(e.clientX, e.clientY);
   if (!p) return;
-  // Clamp inside viewbox with margin so vertices stay visible.
   var x = Math.max(20, Math.min(460, p.x));
   var y = Math.max(20, Math.min(300, p.y));
   // Reject drag positions that would push the polygon past a straight
-  // line at any vertex (i.e. become concave / self-intersecting). The
-  // vertex stays at its last valid spot until the cursor returns inside
-  // the convex region.
+  // line at any vertex (concave / self-intersecting).
   var oldX = pts[dragIdx].x, oldY = pts[dragIdx].y;
   pts[dragIdx].x = x;
   pts[dragIdx].y = y;
@@ -466,26 +474,33 @@ function moveDrag(e) {
   e.preventDefault();
 }
 
-function endDrag() {
+function onPointerUp(e) {
   if (dragIdx >= 0) {
     var verts = document.querySelectorAll(".poly-vertex.dragging");
     for (var k = 0; k < verts.length; k++) verts[k].classList.remove("dragging");
   }
+  if (svg.releasePointerCapture && activePointerId !== null) {
+    try { svg.releasePointerCapture(activePointerId); } catch (err) { /* ignore */ }
+  }
   dragIdx = -1;
+  activePointerId = null;
 }
 
-svg.addEventListener("mousedown", startDrag);
-svg.addEventListener("touchstart", function(e) {
-  if (e.touches && e.touches[0]) {
-    var t = e.touches[0];
-    var el = document.elementFromPoint(t.clientX, t.clientY);
-    if (el) startDrag({ target: el, preventDefault: function() { e.preventDefault(); } });
-  }
-}, { passive: false });
-window.addEventListener("mousemove", moveDrag);
-window.addEventListener("touchmove", moveDrag, { passive: false });
-window.addEventListener("mouseup", endDrag);
-window.addEventListener("touchend", endDrag);
+if (window.PointerEvent) {
+  svg.addEventListener("pointerdown", onPointerDown);
+  svg.addEventListener("pointermove", onPointerMove);
+  svg.addEventListener("pointerup", onPointerUp);
+  svg.addEventListener("pointercancel", onPointerUp);
+} else {
+  // Fallback for very old browsers (no PointerEvent support).
+  svg.addEventListener("mousedown", function(e) {
+    onPointerDown({ target: e.target, pointerId: -1, clientX: e.clientX, clientY: e.clientY, preventDefault: function() { e.preventDefault(); } });
+  });
+  window.addEventListener("mousemove", function(e) {
+    onPointerMove({ pointerId: -1, clientX: e.clientX, clientY: e.clientY, preventDefault: function() { e.preventDefault(); } });
+  });
+  window.addEventListener("mouseup", onPointerUp);
+}
 
 document.getElementById("mode").addEventListener("change", function(e) {
   mode = e.target.value;

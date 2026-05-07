@@ -16,7 +16,7 @@
   .formula { font-size:15px; color:#f0eeea; text-align:center; }
   .formula .katex { font-size:1em; }
 
-  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; touch-action:none; }
 
   .compass-line { stroke:#1a2330; stroke-width:1; stroke-dasharray:3 3; }
   .compass-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#3a4a5a; font-weight:500; }
@@ -300,31 +300,52 @@ function clampToRing(x, y) {
   return { x: x, y: y };
 }
 
-function startDrag(evt) {
+// Pointer Events with setPointerCapture for reliable iOS WebKit drag.
+var activePointerId = null;
+function onPointerDown(evt) {
   dragging = true;
+  activePointerId = evt.pointerId;
   bPoint.classList.add("dragging");
+  if (bPoint.setPointerCapture) {
+    try { bPoint.setPointerCapture(evt.pointerId); } catch (err) { /* ignore */ }
+  }
   evt.preventDefault();
 }
-function moveDrag(evt) {
+function onPointerMove(evt) {
   if (!dragging) return;
-  var src = evt.touches && evt.touches[0] ? evt.touches[0] : evt;
-  var p = svgPoint(src);
+  if (activePointerId !== null && evt.pointerId !== activePointerId) return;
+  var p = svgPoint({ clientX: evt.clientX, clientY: evt.clientY });
   var c = clampToRing(p.x, p.y);
   BxT = c.x; ByT = c.y;
   evt.preventDefault();
 }
-function endDrag() {
+function onPointerUp(evt) {
   dragging = false;
   bPoint.classList.remove("dragging");
+  if (bPoint.releasePointerCapture && activePointerId !== null) {
+    try { bPoint.releasePointerCapture(activePointerId); } catch (err) { /* ignore */ }
+  }
+  activePointerId = null;
 }
+function onMouseDownLegacy(evt) { dragging = true; bPoint.classList.add("dragging"); evt.preventDefault(); }
+function onMouseMoveLegacy(evt) {
+  if (!dragging) return;
+  var p = svgPoint({ clientX: evt.clientX, clientY: evt.clientY });
+  var c = clampToRing(p.x, p.y);
+  BxT = c.x; ByT = c.y;
+}
+function onMouseUpLegacy() { dragging = false; bPoint.classList.remove("dragging"); }
 
-bPoint.addEventListener("mousedown", startDrag);
-bPoint.addEventListener("touchstart", startDrag, { passive: false });
-window.addEventListener("mousemove", moveDrag);
-window.addEventListener("touchmove", moveDrag, { passive: false });
-window.addEventListener("mouseup", endDrag);
-window.addEventListener("touchend", endDrag);
-window.addEventListener("touchcancel", endDrag);
+if (window.PointerEvent) {
+  bPoint.addEventListener("pointerdown", onPointerDown);
+  bPoint.addEventListener("pointermove", onPointerMove);
+  bPoint.addEventListener("pointerup", onPointerUp);
+  bPoint.addEventListener("pointercancel", onPointerUp);
+} else {
+  bPoint.addEventListener("mousedown", onMouseDownLegacy);
+  window.addEventListener("mousemove", onMouseMoveLegacy);
+  window.addEventListener("mouseup", onMouseUpLegacy);
+}
 
 tick();
 

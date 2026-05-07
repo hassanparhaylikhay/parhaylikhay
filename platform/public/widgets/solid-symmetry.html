@@ -13,7 +13,7 @@
   .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:10px; flex-wrap:wrap; }
   .title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:700; letter-spacing:0.4px; text-transform:uppercase; }
   .hint { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
-  .stage { width:100%; aspect-ratio: 1.5; position:relative; border-radius:6px; cursor:grab; user-select:none; background:transparent; }
+  .stage { width:100%; aspect-ratio: 1.5; position:relative; border-radius:6px; cursor:grab; user-select:none; touch-action:none; background:transparent; }
   .stage.dragging { cursor:grabbing; }
   svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
   .gallery-bar { display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:10px; }
@@ -439,24 +439,31 @@ function redrawMain() {
 }
 redrawMain();
 
-// Drag interaction
+// Drag interaction — Pointer Events with setPointerCapture so iOS
+// WebKit reliably dispatches pointermove events even when the user
+// holds steady or moves slowly (Touch Events alone got stuck waiting
+// for a "drag vs scroll" gesture commit).
 var dragging = false;
+var activePointerId = null;
 var lastX = 0, lastY = 0;
 function onPointerDown(e) {
   dragging = true;
+  activePointerId = e.pointerId;
   stage.classList.add("dragging");
-  var pt = e.touches ? e.touches[0] : e;
-  lastX = pt.clientX;
-  lastY = pt.clientY;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  if (stage.setPointerCapture) {
+    try { stage.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+  }
   e.preventDefault();
 }
 function onPointerMove(e) {
   if (!dragging) return;
-  var pt = e.touches ? e.touches[0] : e;
-  var dx = pt.clientX - lastX;
-  var dy = pt.clientY - lastY;
-  lastX = pt.clientX;
-  lastY = pt.clientY;
+  if (activePointerId !== null && e.pointerId !== activePointerId) return;
+  var dx = e.clientX - lastX;
+  var dy = e.clientY - lastY;
+  lastX = e.clientX;
+  lastY = e.clientY;
   yaw += dx * 0.01;
   pitch += dy * 0.01;
   var lim = 85 * Math.PI / 180;
@@ -465,16 +472,44 @@ function onPointerMove(e) {
   redrawMain();
   e.preventDefault();
 }
-function onPointerUp() {
+function onPointerUp(e) {
   dragging = false;
   stage.classList.remove("dragging");
+  if (stage.releasePointerCapture && activePointerId !== null) {
+    try { stage.releasePointerCapture(activePointerId); } catch (err) { /* ignore */ }
+  }
+  activePointerId = null;
 }
-stage.addEventListener("mousedown", onPointerDown);
-window.addEventListener("mousemove", onPointerMove);
-window.addEventListener("mouseup", onPointerUp);
-stage.addEventListener("touchstart", onPointerDown, { passive: false });
-stage.addEventListener("touchmove", onPointerMove, { passive: false });
-stage.addEventListener("touchend", onPointerUp);
+function onPointerDownLegacy(e) {
+  dragging = true;
+  stage.classList.add("dragging");
+  lastX = e.clientX;
+  lastY = e.clientY;
+  e.preventDefault();
+}
+function onPointerMoveLegacy(e) {
+  if (!dragging) return;
+  var dx = e.clientX - lastX;
+  var dy = e.clientY - lastY;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  yaw += dx * 0.01;
+  pitch += dy * 0.01;
+  var lim = 85 * Math.PI / 180;
+  if (pitch > lim) pitch = lim;
+  if (pitch < -lim) pitch = -lim;
+  redrawMain();
+}
+if (window.PointerEvent) {
+  stage.addEventListener("pointerdown", onPointerDown);
+  stage.addEventListener("pointermove", onPointerMove);
+  stage.addEventListener("pointerup", onPointerUp);
+  stage.addEventListener("pointercancel", onPointerUp);
+} else {
+  stage.addEventListener("mousedown", onPointerDownLegacy);
+  window.addEventListener("mousemove", onPointerMoveLegacy);
+  window.addEventListener("mouseup", onPointerUp);
+}
 
 // === Plane gallery ====================================================
 document.getElementById("title").textContent = spec.title;

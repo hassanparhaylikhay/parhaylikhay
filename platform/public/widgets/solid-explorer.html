@@ -14,7 +14,7 @@
   .name { font-family:'Geist Mono',monospace; font-size:13px; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
 
-  .stage { position:relative; width:100%; height:300px; perspective:900px; cursor:grab; user-select:none; -webkit-user-select:none; }
+  .stage { position:relative; width:100%; height:300px; perspective:900px; cursor:grab; user-select:none; -webkit-user-select:none; touch-action:none; }
   .stage.grabbing { cursor:grabbing; }
   .scene { position:absolute; top:50%; left:50%; transform-style:preserve-3d; transform:translate(-50%,-50%); }
 
@@ -400,16 +400,35 @@ function onUp() {
   stage.classList.remove("grabbing");
   lastInteractAt = Date.now();
 }
-stage.addEventListener("mousedown", function(e) { e.preventDefault(); onDown(e.clientX, e.clientY); });
-window.addEventListener("mousemove", function(e) { onMove(e.clientX, e.clientY); });
-window.addEventListener("mouseup", onUp);
-stage.addEventListener("touchstart", function(e) {
-  if (e.touches.length === 1) { e.preventDefault(); onDown(e.touches[0].clientX, e.touches[0].clientY); }
-}, { passive: false });
-stage.addEventListener("touchmove", function(e) {
-  if (e.touches.length === 1) { e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }
-}, { passive: false });
-stage.addEventListener("touchend", onUp);
+// Pointer Events with setPointerCapture for reliable iOS WebKit drag.
+var activePointerId = null;
+if (window.PointerEvent) {
+  stage.addEventListener("pointerdown", function(e) {
+    activePointerId = e.pointerId;
+    if (stage.setPointerCapture) {
+      try { stage.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    }
+    e.preventDefault();
+    onDown(e.clientX, e.clientY);
+  });
+  stage.addEventListener("pointermove", function(e) {
+    if (activePointerId !== null && e.pointerId !== activePointerId) return;
+    e.preventDefault();
+    onMove(e.clientX, e.clientY);
+  });
+  stage.addEventListener("pointerup", function(e) {
+    if (stage.releasePointerCapture && activePointerId !== null) {
+      try { stage.releasePointerCapture(activePointerId); } catch (err) { /* ignore */ }
+    }
+    activePointerId = null;
+    onUp();
+  });
+  stage.addEventListener("pointercancel", function() { activePointerId = null; onUp(); });
+} else {
+  stage.addEventListener("mousedown", function(e) { e.preventDefault(); onDown(e.clientX, e.clientY); });
+  window.addEventListener("mousemove", function(e) { onMove(e.clientX, e.clientY); });
+  window.addEventListener("mouseup", onUp);
+}
 
 function tick() {
   var idleMs = Date.now() - lastInteractAt;
