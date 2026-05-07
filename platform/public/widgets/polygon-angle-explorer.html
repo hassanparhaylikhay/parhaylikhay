@@ -45,8 +45,10 @@
     color:#c8c6be; padding:0 4px; word-break:break-word;
     display:flex; align-items:center; justify-content:center; gap:10px;
   }
-  .tally .text { text-align:center; }
-  .tally .ext-cue-svg { flex-shrink:0; }
+  .tally .text { text-align:center; flex:1 1 auto; min-width:0; }
+  /* Override the global svg { width:100%; height:auto } so the small
+     360° cue does not stretch to fill the tally row. */
+  .tally svg.ext-cue-svg { width:56px; height:56px; flex:0 0 56px; }
 
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
@@ -186,39 +188,65 @@ function makeEl(tag, attrs) {
   return el;
 }
 
-// Live "exterior angles sum to 360°" cue: a small full circle filled with
-// the n exterior sectors, each shown as a pink boundary ray + an arc.
-// Shape and proportions update on every redraw, matching the 4.6 P1 pattern.
+// Live "exterior angles sum to 360°" cue: a small full circle (the rim
+// = 360°) with short pink stubs at each angle boundary and a small inner
+// arc per sector that visually marks "this wedge is one of the angles".
+// Shape and proportions update on every redraw.
 function buildExteriorCue(anglesRad) {
   var pw = 56, ph = 56, cx = pw / 2, cy = ph / 2, R = 22;
+  var STUB = 6;       // length of each boundary tick coming out of the rim
+  var MARKER_R = 7;   // inner radius for the per-angle indicator arc
   var svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 " + pw + " " + ph);
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
   svg.setAttribute("width", String(pw));
   svg.setAttribute("height", String(ph));
   var COL = "#ff4670";
-  var ang = -Math.PI / 2; // start at top
+
+  // Outer rim: a single full circle = the 360° total.
+  svg.appendChild(makeEl("circle", {
+    cx: cx, cy: cy, r: R,
+    fill: "none", stroke: COL, "stroke-width": "1.5"
+  }));
+
+  var ang = -Math.PI / 2;
   for (var j = 0; j < anglesRad.length; j++) {
     var a1 = ang;
     var a2 = ang + anglesRad[j];
+
+    // Short boundary stub: starts just inside the rim and pokes out a bit.
+    var bx0 = cx + Math.cos(a1) * (R - STUB);
+    var by0 = cy + Math.sin(a1) * (R - STUB);
+    var bx1 = cx + Math.cos(a1) * R;
+    var by1 = cy + Math.sin(a1) * R;
     svg.appendChild(makeEl("line", {
-      x1: cx, y1: cy,
-      x2: (cx + Math.cos(a1) * R).toFixed(2),
-      y2: (cy + Math.sin(a1) * R).toFixed(2),
-      stroke: COL, "stroke-width": "1.2", "stroke-linecap": "round"
+      x1: bx0.toFixed(2), y1: by0.toFixed(2),
+      x2: bx1.toFixed(2), y2: by1.toFixed(2),
+      stroke: COL, "stroke-width": "1.4", "stroke-linecap": "round"
     }));
-    var sx = cx + Math.cos(a1) * R, sy = cy + Math.sin(a1) * R;
-    var ex = cx + Math.cos(a2) * R, ey = cy + Math.sin(a2) * R;
+
+    // Small inner arc that shows the angle: two short rays from center +
+    // the connecting arc near the center, the universal "this is an
+    // angle" mark in geometry diagrams.
+    var ix0 = cx + Math.cos(a1) * MARKER_R;
+    var iy0 = cy + Math.sin(a1) * MARKER_R;
+    var ix1 = cx + Math.cos(a2) * MARKER_R;
+    var iy1 = cy + Math.sin(a2) * MARKER_R;
+    svg.appendChild(makeEl("line", {
+      x1: cx, y1: cy, x2: ix0.toFixed(2), y2: iy0.toFixed(2),
+      stroke: COL, "stroke-width": "1.1", "stroke-linecap": "round"
+    }));
     var rad = a2 - a1;
     var largeArc = rad > Math.PI ? 1 : 0;
     svg.appendChild(makeEl("path", {
-      d: "M " + sx.toFixed(2) + " " + sy.toFixed(2) +
-         " A " + R + " " + R + " 0 " + largeArc + " 1 " + ex.toFixed(2) + " " + ey.toFixed(2),
-      fill: "none", stroke: COL, "stroke-width": "1.7", "stroke-linecap": "round"
+      d: "M " + ix0.toFixed(2) + " " + iy0.toFixed(2) +
+         " A " + MARKER_R + " " + MARKER_R + " 0 " + largeArc + " 1 " +
+         ix1.toFixed(2) + " " + iy1.toFixed(2),
+      fill: "none", stroke: COL, "stroke-width": "1.1", "stroke-linecap": "round"
     }));
     ang = a2;
   }
-  svg.appendChild(makeEl("circle", { cx: cx, cy: cy, r: "1.6", fill: "#7a7875" }));
+  svg.appendChild(makeEl("circle", { cx: cx, cy: cy, r: "1.4", fill: "#7a7875" }));
   return svg;
 }
 
