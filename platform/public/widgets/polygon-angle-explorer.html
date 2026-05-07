@@ -273,13 +273,20 @@ function draw() {
         class: "ext-extension"
       }));
       var extAng = Math.atan2(extDy, extDx);
-      var sweepExt = sweepThrough(extAng, bAng, outNx, outNy);
+      // Reference: bisector of the SHORT sweep between extDir and bDir.
+      // The outward radial direction is perpendicular to this bisector, so
+      // using outNx/outNy here is degenerate and floating-point flipped the
+      // sign on some vertices, picking the long (~315°) sweep.
+      var refX = extDx + bNx, refY = extDy + bNy;
+      var refLen = Math.hypot(refX, refY) || 1;
+      var refNx = refX / refLen, refNy = refY / refLen;
+      var sweepExt = sweepThrough(extAng, bAng, refNx, refNy);
       extArcG.appendChild(makeEl("path", {
         d: arcPathSigned(cur.x, cur.y, ARC_R_EXT, extAng, sweepExt),
         class: "exterior-arc"
       }));
-      var lxE = cur.x + outNx * LBL_R_EXT;
-      var lyE = cur.y + outNy * LBL_R_EXT + 3;
+      var lxE = cur.x + refNx * LBL_R_EXT;
+      var lyE = cur.y + refNy * LBL_R_EXT + 3;
       var lblE = makeEl("text", {
         x: lxE.toFixed(2), y: lyE.toFixed(2),
         "text-anchor": "middle",
