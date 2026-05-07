@@ -188,14 +188,16 @@ function makeEl(tag, attrs) {
   return el;
 }
 
-// Live "exterior angles sum to 360°" cue: a small full circle (the rim
-// = 360°) with short pink stubs at each angle boundary and a small inner
-// arc per sector that visually marks "this wedge is one of the angles".
-// Shape and proportions update on every redraw.
+// Live "exterior angles sum to 360°" cue: rim circle = 360° total, n
+// continuous boundary rays drawn from the centre out through the rim
+// and a few px beyond, plus a small inner angle-marker arc per sector
+// (the geometry-textbook "this is one angle" mark). Shape and
+// proportions update on every redraw.
 function buildExteriorCue(anglesRad) {
-  var pw = 56, ph = 56, cx = pw / 2, cy = ph / 2, R = 22;
-  var STUB = 6;       // length of each boundary tick coming out of the rim
-  var MARKER_R = 7;   // inner radius for the per-angle indicator arc
+  var pw = 56, ph = 56, cx = pw / 2, cy = ph / 2;
+  var R = 19;          // rim radius
+  var EXT = 5;         // each ray extends EXT past the rim
+  var MARKER_R = 7;    // inner radius for the per-angle indicator arc
   var svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("viewBox", "0 0 " + pw + " " + ph);
   svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
@@ -203,10 +205,9 @@ function buildExteriorCue(anglesRad) {
   svg.setAttribute("height", String(ph));
   var COL = "#ff4670";
 
-  // Outer rim: a single full circle = the 360° total.
   svg.appendChild(makeEl("circle", {
     cx: cx, cy: cy, r: R,
-    fill: "none", stroke: COL, "stroke-width": "1.5"
+    fill: "none", stroke: COL, "stroke-width": "1.4"
   }));
 
   var ang = -Math.PI / 2;
@@ -214,28 +215,20 @@ function buildExteriorCue(anglesRad) {
     var a1 = ang;
     var a2 = ang + anglesRad[j];
 
-    // Short boundary stub: starts just inside the rim and pokes out a bit.
-    var bx0 = cx + Math.cos(a1) * (R - STUB);
-    var by0 = cy + Math.sin(a1) * (R - STUB);
-    var bx1 = cx + Math.cos(a1) * R;
-    var by1 = cy + Math.sin(a1) * R;
+    // Continuous boundary ray: centre -> rim -> a few px beyond.
+    var rx = cx + Math.cos(a1) * (R + EXT);
+    var ry = cy + Math.sin(a1) * (R + EXT);
     svg.appendChild(makeEl("line", {
-      x1: bx0.toFixed(2), y1: by0.toFixed(2),
-      x2: bx1.toFixed(2), y2: by1.toFixed(2),
-      stroke: COL, "stroke-width": "1.4", "stroke-linecap": "round"
+      x1: cx, y1: cy,
+      x2: rx.toFixed(2), y2: ry.toFixed(2),
+      stroke: COL, "stroke-width": "1.3", "stroke-linecap": "round"
     }));
 
-    // Small inner arc that shows the angle: two short rays from center +
-    // the connecting arc near the center, the universal "this is an
-    // angle" mark in geometry diagrams.
+    // Small inner arc marking this sector's angle.
     var ix0 = cx + Math.cos(a1) * MARKER_R;
     var iy0 = cy + Math.sin(a1) * MARKER_R;
     var ix1 = cx + Math.cos(a2) * MARKER_R;
     var iy1 = cy + Math.sin(a2) * MARKER_R;
-    svg.appendChild(makeEl("line", {
-      x1: cx, y1: cy, x2: ix0.toFixed(2), y2: iy0.toFixed(2),
-      stroke: COL, "stroke-width": "1.1", "stroke-linecap": "round"
-    }));
     var rad = a2 - a1;
     var largeArc = rad > Math.PI ? 1 : 0;
     svg.appendChild(makeEl("path", {
@@ -246,7 +239,7 @@ function buildExteriorCue(anglesRad) {
     }));
     ang = a2;
   }
-  svg.appendChild(makeEl("circle", { cx: cx, cy: cy, r: "1.4", fill: "#7a7875" }));
+  svg.appendChild(makeEl("circle", { cx: cx, cy: cy, r: "1.3", fill: "#7a7875" }));
   return svg;
 }
 
