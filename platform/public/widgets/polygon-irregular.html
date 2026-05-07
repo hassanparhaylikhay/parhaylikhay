@@ -393,6 +393,9 @@ function reportHeight() {
 }
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
+if (typeof ResizeObserver !== "undefined") {
+  new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+}
 </script>
 </body>
 </html>

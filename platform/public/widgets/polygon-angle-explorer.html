@@ -367,6 +367,12 @@ function reportHeight() {
 }
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
+// KaTeX renders async (deferred script); the load event fires before the
+// formulas have laid out their final size. ResizeObserver catches the
+// post-render reflow so the iframe never opens with the bottom cut off.
+if (typeof ResizeObserver !== "undefined") {
+  new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+}
 </script>
 </body>
 </html>

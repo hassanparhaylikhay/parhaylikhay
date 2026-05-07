@@ -302,6 +302,11 @@ export default function LessonBody({ markdown }: { markdown: string }) {
     // `.katex` ancestor so CSS can colour the whole boxed expression
     // green (border, text, background).
     rootRef.current.querySelectorAll(".katex .fbox").forEach(fbox => {
+      // \fcolorbox{frame}{bg}{x} produces a .fbox with inline border-color
+      // and background-color styles. Those carry the author's chosen brand
+      // colour; skip the green "answer" tagging so the inline styles win.
+      const el = fbox as HTMLElement
+      if (el.style.borderColor || el.style.backgroundColor) return
       const katex = fbox.closest(".katex")
       if (katex) katex.classList.add("has-boxed-answer")
     })
