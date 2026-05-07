@@ -16,15 +16,6 @@
   .formulas { display:flex; flex-direction:column; gap:4px; align-items:center; margin-bottom:8px; }
   .formula { font-size:14px; color:#f0eeea; line-height:1.3; }
   .formula .katex { font-size:1em; }
-  .ext-cue {
-    display:none; align-items:center; justify-content:center; gap:10px;
-    margin:6px auto 8px; padding:6px 12px;
-    background:rgba(255,70,112,0.06); border:1px solid rgba(255,70,112,0.2); border-radius:6px;
-    font-family:'Geist Mono',monospace; font-size:11.5px; color:#f0eeea;
-  }
-  .ext-cue.on { display:inline-flex; }
-  .ext-cue svg { display:block; }
-  .ext-cue .total { color:#ff4670; font-weight:700; }
 
   .controls { display:flex; align-items:center; gap:14px; margin-bottom:8px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap; }
   .mode-row { display:flex; align-items:center; gap:8px; }
@@ -51,7 +42,13 @@
   .interior-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#0fee89; font-weight:600; pointer-events:none; }
   .exterior-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#ff4670; font-weight:600; pointer-events:none; }
 
-  .tally { margin-top:6px; font-family:'Geist Mono',monospace; font-size:11px; color:#c8c6be; text-align:center; padding:0 4px; word-break:break-word; line-height:1.45; }
+  .tally {
+    margin-top:6px; font-family:'Geist Mono',monospace; font-size:11px;
+    color:#c8c6be; padding:0 4px; word-break:break-word; line-height:1.45;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .tally .text { text-align:center; }
+  .tally .ext-cue-svg { flex-shrink:0; }
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
 </head>
@@ -59,11 +56,6 @@
 <div class="wrap" id="wrap">
   <div class="formulas">
     <span class="formula" id="fSum"></span>
-  </div>
-
-  <div class="ext-cue" id="extCue">
-    <span id="extCueSvgWrap"></span>
-    <span id="extCueText">live exterior sum: <span class="total">360&deg;</span></span>
   </div>
 
   <div class="controls">
@@ -89,7 +81,7 @@
     <g id="extLabels"></g>
   </svg>
 
-  <p class="tally" id="tally"></p>
+  <div class="tally" id="tally"></div>
   <p class="footer">drag any yellow vertex to deform the polygon &middot; the sum stays constant</p>
 </div>
 
@@ -169,6 +161,26 @@ function centroid(points) {
   var cx = 0, cy = 0;
   for (var i = 0; i < points.length; i++) { cx += points[i].x; cy += points[i].y; }
   return { x: cx / points.length, y: cy / points.length };
+}
+
+// Returns true if every consecutive turn in `points` has the same sign,
+// i.e. the polygon is strictly convex. Treats near-collinear triples as
+// invalid (we want a strict-positive minimum interior margin so the
+// drag can't sneak past 180° via a vanishing cross product).
+function isConvex(points) {
+  var sign = 0;
+  var len = points.length;
+  for (var i = 0; i < len; i++) {
+    var a = points[i];
+    var b = points[(i + 1) % len];
+    var c = points[(i + 2) % len];
+    var cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
+    if (Math.abs(cross) < 1) return false; // too close to straight
+    var s = cross > 0 ? 1 : -1;
+    if (sign === 0) sign = s;
+    else if (s !== sign) return false;
+  }
+  return true;
 }
 
 // Live "exterior angles sum to 360°" cue, shape and proportions reflect
@@ -327,41 +339,40 @@ function draw() {
     }
   }
 
-  // Live 360° cue (visible only when exterior info is on screen).
-  var extCue = document.getElementById("extCue");
-  if (mode === "interior") {
-    extCue.classList.remove("on");
-  } else {
-    extCue.classList.add("on");
-    var wrap = document.getElementById("extCueSvgWrap");
-    clearChildren(wrap);
-    wrap.appendChild(buildExteriorCue(extRads));
-    document.getElementById("extCueText").innerHTML =
-      "exterior sum &rarr; <span class=\"total\">" + fmt(extSum) + "&deg;</span>";
+  // Tally bar. Exterior mode also gets the live 360° cue glued
+  // to the left of the calculation.
+  var tallyEl = document.getElementById("tally");
+  clearChildren(tallyEl);
+
+  if (mode === "exterior") {
+    var cueSvg = buildExteriorCue(extRads);
+    cueSvg.setAttribute("class", "ext-cue-svg");
+    tallyEl.appendChild(cueSvg);
   }
 
-  // Tally
-  var tallyEl = document.getElementById("tally");
+  var textEl = document.createElement("span");
+  textEl.className = "text";
   if (mode === "interior") {
-    tallyEl.innerHTML =
+    textEl.innerHTML =
       "<span style=\"color:#0fee89\">Interior sum:</span> " +
       intParts.map(function(p) { return p + "°"; }).join(" + ") +
       " = <strong style=\"color:#0fee89\">" + fmt(intSum) + "°</strong>" +
-      " &nbsp;·&nbsp; target = " + sumInteriorTarget + "°";
+      " &nbsp;&middot;&nbsp; target = " + sumInteriorTarget + "°";
   } else if (mode === "exterior") {
-    tallyEl.innerHTML =
+    textEl.innerHTML =
       "<span style=\"color:#ff4670\">Exterior sum:</span> " +
       extParts.map(function(p) { return p + "°"; }).join(" + ") +
       " = <strong style=\"color:#ff4670\">" + fmt(extSum) + "°</strong>" +
-      " &nbsp;·&nbsp; target = 360°";
+      " &nbsp;&middot;&nbsp; target = 360°";
   } else {
-    tallyEl.innerHTML =
+    textEl.innerHTML =
       "<span style=\"color:#0fee89\">Interior sum:</span> <strong>" + fmt(intSum) + "°</strong> " +
       "(target " + sumInteriorTarget + "°)" +
-      " &nbsp;·&nbsp; " +
+      " &nbsp;&middot;&nbsp; " +
       "<span style=\"color:#ff4670\">Exterior sum:</span> <strong>" + fmt(extSum) + "°</strong> " +
       "(target 360°)";
   }
+  tallyEl.appendChild(textEl);
 }
 
 // Drag handling
@@ -392,8 +403,19 @@ function moveDrag(e) {
   // Clamp inside viewbox with margin so vertices stay visible.
   var x = Math.max(20, Math.min(460, p.x));
   var y = Math.max(20, Math.min(300, p.y));
+  // Reject drag positions that would push the polygon past a straight
+  // line at any vertex (i.e. become concave / self-intersecting). The
+  // vertex stays at its last valid spot until the cursor returns inside
+  // the convex region.
+  var oldX = pts[dragIdx].x, oldY = pts[dragIdx].y;
   pts[dragIdx].x = x;
   pts[dragIdx].y = y;
+  if (!isConvex(pts)) {
+    pts[dragIdx].x = oldX;
+    pts[dragIdx].y = oldY;
+    e.preventDefault();
+    return;
+  }
   draw();
   e.preventDefault();
 }
