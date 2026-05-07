@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Polygon Angle Explorer</title>
+<title>Irregular Polygon Angles</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -13,35 +13,36 @@
   body { padding:14px 18px 16px; }
   .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:12px 16px 14px; }
 
-  .formulas { display:flex; flex-direction:column; gap:4px; align-items:center; margin-bottom:10px; }
+  .formulas { display:flex; flex-direction:column; gap:4px; align-items:center; margin-bottom:8px; }
   .formula { font-size:14px; color:#f0eeea; line-height:1.3; }
   .formula .katex { font-size:1em; }
 
-  .controls { display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap; }
-  .row { display:flex; align-items:center; gap:8px; min-width:0; flex:1; }
-  .row .name { color:#fff067; font-weight:600; min-width:14px; }
-  .row input[type=range] { flex:1; min-width:80px; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
-  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
-  .row input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0; }
-  .row .val { min-width:18px; text-align:right; color:#f0eeea; font-weight:600; }
-
+  .controls { display:flex; align-items:center; gap:14px; margin-bottom:8px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap; }
   .mode-row { display:flex; align-items:center; gap:8px; }
   .mode-row .name { color:#fff067; font-weight:600; }
   .mode-row select { background:#141e2a; color:#f0eeea; border:1px solid #3a4a5a; border-radius:4px; padding:3px 6px; font-family:'Geist Mono',monospace; font-size:11px; outline:none; cursor:pointer; }
   .mode-row select:focus { border-color:#00abfa; }
+  button.reset {
+    background:#141e2a; color:#f0eeea; border:1px solid #3a4a5a;
+    border-radius:4px; padding:4px 10px; font-family:'Geist Mono',monospace;
+    font-size:11px; cursor:pointer; outline:none;
+  }
+  button.reset:hover { border-color:#00abfa; }
 
-  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+  svg { display:block; width:100%; height:auto; user-select:none; touch-action:none; overflow:hidden; }
 
-  .poly-side { stroke:#00abfa; stroke-width:2.5; fill:none; stroke-linejoin:round; stroke-linecap:round; }
-  .poly-vertex { fill:#fff067; }
-  .interior-arc { fill:#0fee8920; stroke:#0fee89; stroke-width:1.5; }
-  .exterior-arc { fill:#ff467020; stroke:#ff4670; stroke-width:1.5; }
-  .ext-extension { stroke:#7a7875; stroke-width:1; stroke-dasharray:3 3; fill:none; }
-  .interior-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#0fee89; font-weight:600; }
-  .exterior-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#ff4670; font-weight:600; }
+  .poly-side { stroke:#00abfa; stroke-width:2.5; fill:#00abfa10; stroke-linejoin:round; stroke-linecap:round; pointer-events:none; }
+  .poly-vertex { fill:#fff067; cursor:grab; }
+  .poly-vertex.dragging { cursor:grabbing; }
+  .poly-hit { fill:transparent; cursor:grab; }
 
-  .tally { margin-top:6px; font-family:'Geist Mono',monospace; font-size:11px; color:#c8c6be; text-align:center; padding:0 4px; word-break:break-word; }
+  .interior-arc { fill:#0fee8920; stroke:#0fee89; stroke-width:1.5; pointer-events:none; }
+  .exterior-arc { fill:#ff467020; stroke:#ff4670; stroke-width:1.5; pointer-events:none; }
+  .ext-extension { stroke:#7a7875; stroke-width:1; stroke-dasharray:3 3; fill:none; pointer-events:none; }
+  .interior-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#0fee89; font-weight:600; pointer-events:none; }
+  .exterior-label { font-family:'Geist Mono',monospace; font-size:10px; fill:#ff4670; font-weight:600; pointer-events:none; }
 
+  .tally { margin-top:6px; font-family:'Geist Mono',monospace; font-size:11px; color:#c8c6be; text-align:center; padding:0 4px; word-break:break-word; line-height:1.45; }
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
 </head>
@@ -49,16 +50,9 @@
 <div class="wrap" id="wrap">
   <div class="formulas">
     <span class="formula" id="fSum"></span>
-    <span class="formula" id="fInt"></span>
-    <span class="formula" id="fExt"></span>
   </div>
 
   <div class="controls">
-    <div class="row">
-      <span class="name">n</span>
-      <input type="range" id="nSlider" min="3" max="12" value="5" step="1"/>
-      <span class="val" id="nVal">5</span>
-    </div>
     <div class="mode-row">
       <span class="name">show</span>
       <select id="mode">
@@ -67,6 +61,7 @@
         <option value="both" selected>both</option>
       </select>
     </div>
+    <button class="reset" id="resetBtn">reset shape</button>
   </div>
 
   <svg viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" id="svg">
@@ -75,13 +70,13 @@
     <g id="intArcs"></g>
     <polygon id="poly" class="poly-side"/>
     <g id="vertices"></g>
+    <g id="hitTargets"></g>
     <g id="intLabels"></g>
     <g id="extLabels"></g>
   </svg>
 
   <p class="tally" id="tally"></p>
-
-  <p class="footer">drag n: from triangle (n=3) to dodecagon (n=12)</p>
+  <p class="footer">drag any yellow vertex to deform the polygon &middot; the sum stays constant</p>
 </div>
 
 <script>
@@ -97,51 +92,41 @@ function tryRender(target, tex) {
 }
 
 var SVG_NS = "http://www.w3.org/2000/svg";
-var CX = 240, CY = 165, R = 100;
 var ARC_R_INT = 22;
 var ARC_R_EXT = 18;
 var LBL_R_INT = 32;
 var LBL_R_EXT = 36;
-var EXT_LEN = 30;
+var EXT_LEN = 28;
 
-// URL params: ?mode=interior|exterior|both, ?n=3..12, ?lock=1 (hides mode dropdown)
+var INITIAL = [
+  { x: 240, y: 50  },
+  { x: 380, y: 110 },
+  { x: 340, y: 240 },
+  { x: 180, y: 250 },
+  { x: 90,  y: 130 }
+];
+
 var qp = new URLSearchParams(window.location.search);
 var qpMode = qp.get("mode");
-var qpN = parseInt(qp.get("n"), 10);
 var qpLock = qp.get("lock") === "1";
 
-var n = (qpN >= 3 && qpN <= 12) ? qpN : 5;
+var pts = INITIAL.map(function(p) { return { x: p.x, y: p.y }; });
+var n = pts.length;
 var mode = (qpMode === "interior" || qpMode === "exterior" || qpMode === "both") ? qpMode : "both";
 
-// Format number cleanly: no trailing .0, at most 1 decimal place
 function fmt(v) {
   var rounded = Math.round(v * 10) / 10;
   if (Math.abs(rounded - Math.round(rounded)) < 1e-9) return String(Math.round(rounded));
   return rounded.toFixed(1);
 }
 
-// Vertex positions for a regular polygon with the given (possibly fractional) n.
-// We use floor(n) integer vertices for drawing/labels, but the radius/positions
-// are interpolated smoothly via displayN by holding n fixed at targetN once
-// the slider settles. To keep counts consistent, we always render exactly
-// targetN vertices and let displayN govern only the apparent scale/spacing.
-function vertices(nInt, radius) {
-  var pts = [];
-  var step = 2 * Math.PI / nInt;
-  var start = -Math.PI / 2;
-  for (var i = 0; i < nInt; i++) {
-    var theta = start + i * step;
-    pts.push({
-      x: CX + radius * Math.cos(theta),
-      y: CY + radius * Math.sin(theta),
-      theta: theta
-    });
-  }
-  return pts;
+function makeEl(tag, attrs) {
+  var el = document.createElementNS(SVG_NS, tag);
+  for (var k in attrs) if (attrs.hasOwnProperty(k)) el.setAttribute(k, attrs[k]);
+  return el;
 }
+function clearChildren(el) { while (el.firstChild) el.removeChild(el.firstChild); }
 
-// Build a pie-slice arc starting at angle `a1`, sweeping by `sweep` radians
-// (signed). Positive sweep = CW in screen (CCW math, since y is flipped).
 function arcPathSigned(cx, cy, r, a1, sweep) {
   var x1 = cx + r * Math.cos(a1);
   var y1 = cy + r * Math.sin(a1);
@@ -156,10 +141,6 @@ function arcPathSigned(cx, cy, r, a1, sweep) {
          x2.toFixed(2) + " " + y2.toFixed(2) + " Z";
 }
 
-// Compute the signed sweep from a1 to a2 that goes through the side
-// indicated by the unit direction (dirX, dirY). Robust against polygon
-// winding: if the SHORT signed sweep's midpoint is on the wanted side,
-// use it; otherwise take the LONG sweep (= shortSweep - 2π or + 2π).
 function sweepThrough(a1, a2, dirX, dirY) {
   var d = a2 - a1;
   while (d > Math.PI) d -= 2 * Math.PI;
@@ -170,90 +151,89 @@ function sweepThrough(a1, a2, dirX, dirY) {
   return d > 0 ? d - 2 * Math.PI : d + 2 * Math.PI;
 }
 
-function clearChildren(el) {
-  while (el.firstChild) el.removeChild(el.firstChild);
-}
-
-function makeEl(tag, attrs) {
-  var el = document.createElementNS(SVG_NS, tag);
-  for (var k in attrs) if (attrs.hasOwnProperty(k)) el.setAttribute(k, attrs[k]);
-  return el;
+function centroid(points) {
+  var cx = 0, cy = 0;
+  for (var i = 0; i < points.length; i++) { cx += points[i].x; cy += points[i].y; }
+  return { x: cx / points.length, y: cy / points.length };
 }
 
 function draw() {
-  var interior = (n - 2) * 180 / n;
-  var exterior = 360 / n;
-  var sumInterior = (n - 2) * 180;
+  var sumInteriorTarget = (n - 2) * 180;
 
-  // Update KaTeX formulas
-  tryRender(
-    document.getElementById("fSum"),
-    "\\text{Sum of interior} = (n-2) \\times 180\\degree = \\textcolor{#0fee89}{" + sumInterior + "\\degree}"
+  var modeLabel = (mode === "interior") ? "Interior" : (mode === "exterior" ? "Exterior" : "Interior + exterior");
+  var sumLine;
+  if (mode === "interior") {
+    sumLine = "(n - 2) \\times 180\\degree = (\\textcolor{#fff067}{" + n + "} - 2) \\times 180\\degree = \\textcolor{#0fee89}{" + sumInteriorTarget + "\\degree}";
+  } else if (mode === "exterior") {
+    sumLine = "\\text{Exterior sum} = \\textcolor{#ff4670}{360\\degree} \\;\\text{(any convex polygon)}";
+  } else {
+    sumLine = "\\text{Interior sum} = \\textcolor{#0fee89}{" + sumInteriorTarget + "\\degree}\\quad\\cdot\\quad\\text{Exterior sum} = \\textcolor{#ff4670}{360\\degree}";
+  }
+  tryRender(document.getElementById("fSum"), sumLine);
+
+  document.getElementById("poly").setAttribute(
+    "points", pts.map(function(p) { return p.x.toFixed(2) + "," + p.y.toFixed(2); }).join(" ")
   );
-  tryRender(
-    document.getElementById("fInt"),
-    "\\text{Each interior (regular)} = \\textcolor{#0fee89}{" + fmt(interior) + "\\degree}"
-  );
-  tryRender(
-    document.getElementById("fExt"),
-    "\\text{Each exterior} = \\frac{360\\degree}{n} = \\textcolor{#ff4670}{" + fmt(exterior) + "\\degree}"
-  );
 
-  var pts = vertices(n, R);
-
-  // Polygon outline
-  var polyEl = document.getElementById("poly");
-  var ptsAttr = pts.map(function(p) { return p.x.toFixed(2) + "," + p.y.toFixed(2); }).join(" ");
-  polyEl.setAttribute("points", ptsAttr);
-
-  // Vertices
   var vg = document.getElementById("vertices");
+  var hg = document.getElementById("hitTargets");
   clearChildren(vg);
-  for (var i = 0; i < pts.length; i++) {
+  clearChildren(hg);
+  for (var i = 0; i < n; i++) {
     vg.appendChild(makeEl("circle", {
-      cx: pts[i].x, cy: pts[i].y, r: 4, class: "poly-vertex"
+      cx: pts[i].x, cy: pts[i].y, r: 5, class: "poly-vertex", "data-idx": String(i)
+    }));
+    // larger transparent hit target on top for easier touch dragging
+    hg.appendChild(makeEl("circle", {
+      cx: pts[i].x, cy: pts[i].y, r: 14, class: "poly-hit", "data-idx": String(i)
     }));
   }
 
-  // Interior and exterior arcs/labels
   var intArcG = document.getElementById("intArcs");
   var extArcG = document.getElementById("extArcs");
   var extG = document.getElementById("extensions");
   var intLG = document.getElementById("intLabels");
   var extLG = document.getElementById("extLabels");
-  clearChildren(intArcG);
-  clearChildren(extArcG);
-  clearChildren(extG);
-  clearChildren(intLG);
-  clearChildren(extLG);
+  clearChildren(intArcG); clearChildren(extArcG); clearChildren(extG);
+  clearChildren(intLG); clearChildren(extLG);
 
+  var c = centroid(pts);
   var showInterior = (mode === "interior" || mode === "both");
   var showExterior = (mode === "exterior" || mode === "both");
+
+  var intSum = 0;
+  var extSum = 0;
+  var intParts = [];
+  var extParts = [];
 
   for (var j = 0; j < n; j++) {
     var prev = pts[(j - 1 + n) % n];
     var cur  = pts[j];
     var next = pts[(j + 1) % n];
 
-    // Side directions from cur
     var ax = prev.x - cur.x, ay = prev.y - cur.y;
     var bx = next.x - cur.x, by = next.y - cur.y;
-    var aLen = Math.hypot(ax, ay), bLen = Math.hypot(bx, by);
+    var aLen = Math.hypot(ax, ay) || 1;
+    var bLen = Math.hypot(bx, by) || 1;
     var aNx = ax / aLen, aNy = ay / aLen;
     var bNx = bx / bLen, bNy = by / bLen;
     var aAng = Math.atan2(aNy, aNx);
     var bAng = Math.atan2(bNy, bNx);
 
-    // Inward direction at this vertex of a regular polygon centred at
-    // (CX, CY) is exactly toward the centre. This is rock-solid regardless
-    // of how prev/next sit, so it never flips on slider edges.
-    var inX = (CX - cur.x), inY = (CY - cur.y);
+    // Inward direction at this vertex: toward centroid (works for convex).
+    var inX = c.x - cur.x, inY = c.y - cur.y;
     var inLen = Math.hypot(inX, inY) || 1;
     var inNx = inX / inLen, inNy = inY / inLen;
-    var outNx = -inNx, outNy = -inNy;
+
+    var sweepInt = sweepThrough(aAng, bAng, inNx, inNy);
+    var interiorDeg = Math.abs(sweepInt) * 180 / Math.PI;
+    var exteriorDeg = 180 - interiorDeg;
+    intSum += interiorDeg;
+    extSum += exteriorDeg;
+    intParts.push(fmt(interiorDeg));
+    extParts.push(fmt(exteriorDeg));
 
     if (showInterior) {
-      var sweepInt = sweepThrough(aAng, bAng, inNx, inNy);
       intArcG.appendChild(makeEl("path", {
         d: arcPathSigned(cur.x, cur.y, ARC_R_INT, aAng, sweepInt),
         class: "interior-arc"
@@ -262,15 +242,13 @@ function draw() {
       var ly = cur.y + inNy * LBL_R_INT + 3;
       var lblI = makeEl("text", {
         x: lx.toFixed(2), y: ly.toFixed(2),
-        "text-anchor": "middle",
-        class: "interior-label"
+        "text-anchor": "middle", class: "interior-label"
       });
-      lblI.textContent = fmt(interior) + "°";
+      lblI.textContent = fmt(interiorDeg) + "°";
       intLG.appendChild(lblI);
     }
 
     if (showExterior) {
-      // Continue the prev→cur side past cur by EXT_LEN
       var extDx = -aNx, extDy = -aNy;
       var ex = cur.x + extDx * EXT_LEN;
       var ey = cur.y + extDy * EXT_LEN;
@@ -279,10 +257,6 @@ function draw() {
         class: "ext-extension"
       }));
       var extAng = Math.atan2(extDy, extDx);
-      // Reference: bisector of the SHORT sweep between extDir and bDir.
-      // The outward radial direction is perpendicular to this bisector, so
-      // using outNx/outNy here is degenerate and floating-point flipped the
-      // sign on some vertices, picking the long (~315°) sweep.
       var refX = extDx + bNx, refY = extDy + bNy;
       var refLen = Math.hypot(refX, refY) || 1;
       var refNx = refX / refLen, refNy = refY / refLen;
@@ -295,51 +269,103 @@ function draw() {
       var lyE = cur.y + refNy * LBL_R_EXT + 3;
       var lblE = makeEl("text", {
         x: lxE.toFixed(2), y: lyE.toFixed(2),
-        "text-anchor": "middle",
-        class: "exterior-label"
+        "text-anchor": "middle", class: "exterior-label"
       });
-      lblE.textContent = fmt(exterior) + "°";
+      lblE.textContent = fmt(exteriorDeg) + "°";
       extLG.appendChild(lblE);
     }
   }
 
-  // Tally text below SVG
+  // Tally
   var tallyEl = document.getElementById("tally");
   if (mode === "interior") {
-    var parts = [];
-    for (var k = 0; k < n; k++) parts.push(fmt(interior) + "°");
-    tallyEl.innerHTML = "<span style=\"color:#0fee89\">Interior sum:</span> " +
-      parts.join(" + ") + " = " + sumInterior + "°";
-  } else if (mode === "exterior") {
-    var partsE = [];
-    for (var m = 0; m < n; m++) partsE.push(fmt(exterior) + "°");
-    tallyEl.innerHTML = "<span style=\"color:#ff4670\">Exterior sum:</span> " +
-      partsE.join(" + ") + " = 360°";
-  } else {
     tallyEl.innerHTML =
       "<span style=\"color:#0fee89\">Interior sum:</span> " +
-      n + " × " + fmt(interior) + "° = " + sumInterior + "°" +
-      "  ·  " +
+      intParts.map(function(p) { return p + "°"; }).join(" + ") +
+      " = <strong style=\"color:#0fee89\">" + fmt(intSum) + "°</strong>" +
+      " &nbsp;·&nbsp; target = " + sumInteriorTarget + "°";
+  } else if (mode === "exterior") {
+    tallyEl.innerHTML =
       "<span style=\"color:#ff4670\">Exterior sum:</span> " +
-      n + " × " + fmt(exterior) + "° = 360°";
+      extParts.map(function(p) { return p + "°"; }).join(" + ") +
+      " = <strong style=\"color:#ff4670\">" + fmt(extSum) + "°</strong>" +
+      " &nbsp;·&nbsp; target = 360°";
+  } else {
+    tallyEl.innerHTML =
+      "<span style=\"color:#0fee89\">Interior sum:</span> <strong>" + fmt(intSum) + "°</strong> " +
+      "(target " + sumInteriorTarget + "°)" +
+      " &nbsp;·&nbsp; " +
+      "<span style=\"color:#ff4670\">Exterior sum:</span> <strong>" + fmt(extSum) + "°</strong> " +
+      "(target 360°)";
   }
 }
 
-document.getElementById("nSlider").addEventListener("input", function(e) {
-  n = parseInt(e.target.value, 10);
-  document.getElementById("nVal").textContent = String(n);
+// Drag handling
+var svg = document.getElementById("svg");
+var dragIdx = -1;
+
+function svgPoint(evt) {
+  var pt = svg.createSVGPoint();
+  pt.x = evt.clientX; pt.y = evt.clientY;
+  var ctm = svg.getScreenCTM();
+  if (!ctm) return null;
+  return pt.matrixTransform(ctm.inverse());
+}
+
+function startDrag(e) {
+  var target = e.target;
+  if (!target.dataset || target.dataset.idx === undefined) return;
+  dragIdx = parseInt(target.dataset.idx, 10);
+  if (target.classList) target.classList.add("dragging");
+  e.preventDefault();
+}
+
+function moveDrag(e) {
+  if (dragIdx < 0) return;
+  var evt = (e.touches && e.touches[0]) ? e.touches[0] : e;
+  var p = svgPoint(evt);
+  if (!p) return;
+  // Clamp inside viewbox with margin so vertices stay visible.
+  var x = Math.max(20, Math.min(460, p.x));
+  var y = Math.max(20, Math.min(300, p.y));
+  pts[dragIdx].x = x;
+  pts[dragIdx].y = y;
   draw();
-  reportHeight();
-});
+  e.preventDefault();
+}
+
+function endDrag() {
+  if (dragIdx >= 0) {
+    var verts = document.querySelectorAll(".poly-vertex.dragging");
+    for (var k = 0; k < verts.length; k++) verts[k].classList.remove("dragging");
+  }
+  dragIdx = -1;
+}
+
+svg.addEventListener("mousedown", startDrag);
+svg.addEventListener("touchstart", function(e) {
+  if (e.touches && e.touches[0]) {
+    var t = e.touches[0];
+    var el = document.elementFromPoint(t.clientX, t.clientY);
+    if (el) startDrag({ target: el, preventDefault: function() { e.preventDefault(); } });
+  }
+}, { passive: false });
+window.addEventListener("mousemove", moveDrag);
+window.addEventListener("touchmove", moveDrag, { passive: false });
+window.addEventListener("mouseup", endDrag);
+window.addEventListener("touchend", endDrag);
 
 document.getElementById("mode").addEventListener("change", function(e) {
   mode = e.target.value;
   draw();
 });
 
-// Apply URL params to controls before first draw.
-document.getElementById("nSlider").value = String(n);
-document.getElementById("nVal").textContent = String(n);
+document.getElementById("resetBtn").addEventListener("click", function() {
+  pts = INITIAL.map(function(p) { return { x: p.x, y: p.y }; });
+  draw();
+});
+
+// Apply URL params
 document.getElementById("mode").value = mode;
 if (qpLock) {
   var modeRow = document.querySelector(".mode-row");
