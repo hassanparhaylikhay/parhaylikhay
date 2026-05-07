@@ -52,30 +52,59 @@ The semicircle and tangent-radius rules: both produce a $90°$ at the action poi
 
 <div class="diagram">
 <div class="diagram-caption">RECAP: SEMICIRCLE + TANGENT-RADIUS</div>
-<svg viewBox="0 0 500 220" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:520px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<circle cx="120" cy="120" r="70" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
-<line x1="50" y1="120" x2="190" y2="120" stroke="#00abfa" stroke-width="2"/>
-<line x1="50" y1="120" x2="160" y2="60" stroke="#00abfa" stroke-width="2"/>
-<line x1="190" y1="120" x2="160" y2="60" stroke="#00abfa" stroke-width="2"/>
-<polyline points="153,75 160,68 167,75" fill="none" stroke="#ff4670" stroke-width="1.5"/>
-<text x="148" y="92" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670">90°</text>
-<circle cx="120" cy="120" r="3" fill="#7a7875"/>
-<circle cx="50" cy="120" r="4" fill="#fff067"/>
-<circle cx="190" cy="120" r="4" fill="#fff067"/>
-<circle cx="160" cy="60" r="4" fill="#fff067"/>
-<text x="36" y="135" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">A</text>
-<text x="196" y="135" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">B</text>
-<text x="166" y="54" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">C</text>
-<circle cx="370" cy="120" r="60" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
-<line x1="370" y1="120" x2="430" y2="120" stroke="#00abfa" stroke-width="2"/>
-<line x1="430" y1="40" x2="430" y2="200" stroke="#ff822c" stroke-width="2.5"/>
-<polyline points="416,120 416,134 430,134" fill="none" stroke="#ff4670" stroke-width="1.5"/>
-<text x="396" y="116" font-family="Geist Mono,monospace" font-size="11" fill="#ff4670">90°</text>
-<circle cx="370" cy="120" r="3" fill="#7a7875"/>
-<circle cx="430" cy="120" r="4" fill="#fff067"/>
-<text x="356" y="116" font-family="Geist Mono,monospace" font-size="13" fill="#7a7875">O</text>
-<text x="438" y="116" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">T</text>
-</svg>
+<div style="display:flex;justify-content:center;padding:14px 0">
+<div style="position:relative;width:500px;height:220px;max-width:100%">
+
+  <!-- Left: angle in semicircle. Circle O₁ = (120, 120), r = 70.
+       AB diameter from (50, 120) to (190, 120). C on the upper arc at
+       math angle 290°: C ≈ (144, 54). ∠ACB = 90°. -->
+
+  <div style="position:absolute;left:50px;top:50px;width:140px;height:140px;border-radius:50%;border:1.5px solid #3a4a5a;box-sizing:border-box"></div>
+
+  <div style="position:absolute;left:50px;top:118.75px;width:140px;height:2.5px;background:#00abfa"></div>
+  <!-- AC: A(50,120)→C(144,54), length 114.9, rotate −35°. -->
+  <div style="position:absolute;left:50px;top:118.75px;width:114.9px;height:2.5px;background:#00abfa;transform-origin:0 50%;transform:rotate(-35deg)"></div>
+  <!-- CB: C(144,54)→B(190,120), length 80.4, rotate 55.1°. -->
+  <div style="position:absolute;left:144px;top:52.75px;width:80.4px;height:2.5px;background:#00abfa;transform-origin:0 50%;transform:rotate(55.1deg)"></div>
+
+  <!-- 90° wedge at C between CB (conic 145°) and CA (conic 235°). -->
+  <div style="position:absolute;left:144px;top:54px;width:30px;height:30px;border-radius:50%;background:conic-gradient(from 145deg, #ff4670 0deg 90deg, transparent 90deg);-webkit-mask:radial-gradient(circle, transparent 11px, #000 12px, #000 13px, transparent 14px);mask:radial-gradient(circle, transparent 11px, #000 12px, #000 13px, transparent 14px);transform:translate(-50%,-50%);pointer-events:none"></div>
+  <div style="position:absolute;left:140px;top:80px;font:700 11px 'Geist Mono',monospace;color:#ff4670">90°</div>
+
+  <div style="position:absolute;left:120px;top:120px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
+
+  <div style="position:absolute;left:50px;top:120px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:34px;top:128px;font:700 14px 'Geist Mono',monospace;color:#fff067">A</div>
+
+  <div style="position:absolute;left:190px;top:120px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:200px;top:128px;font:700 14px 'Geist Mono',monospace;color:#fff067">B</div>
+
+  <div style="position:absolute;left:144px;top:54px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:152px;top:38px;font:700 14px 'Geist Mono',monospace;color:#fff067">C</div>
+
+  <!-- Right: tangent perpendicular to radius. Circle O₂ = (370, 120), r = 60.
+       Tangent point T = (430, 120) at the rightmost point. Tangent is
+       vertical (perpendicular to horizontal radius OT). -->
+
+  <div style="position:absolute;left:310px;top:60px;width:120px;height:120px;border-radius:50%;border:1.5px solid #3a4a5a;box-sizing:border-box"></div>
+
+  <!-- Radius OT (horizontal, length 60). -->
+  <div style="position:absolute;left:370px;top:118.75px;width:60px;height:2.5px;background:#00abfa"></div>
+  <!-- Tangent at T (vertical, y=40 to y=200). -->
+  <div style="position:absolute;left:428.75px;top:40px;width:2.5px;height:160px;background:#ff822c"></div>
+
+  <!-- 90° wedge at T: between OT (toward O₂, conic 270°) and tangent going up (conic 0°). -->
+  <div style="position:absolute;left:430px;top:120px;width:30px;height:30px;border-radius:50%;background:conic-gradient(from 270deg, #ff4670 0deg 90deg, transparent 90deg);-webkit-mask:radial-gradient(circle, transparent 11px, #000 12px, #000 13px, transparent 14px);mask:radial-gradient(circle, transparent 11px, #000 12px, #000 13px, transparent 14px);transform:translate(-50%,-50%);pointer-events:none"></div>
+  <div style="position:absolute;left:402px;top:104px;font:700 11px 'Geist Mono',monospace;color:#ff4670">90°</div>
+
+  <div style="position:absolute;left:370px;top:120px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:354px;top:114px;font:700 13px 'Geist Mono',monospace;color:#7a7875">O</div>
+
+  <div style="position:absolute;left:430px;top:120px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:440px;top:114px;font:700 14px 'Geist Mono',monospace;color:#fff067">T</div>
+
+</div>
+</div>
 </div>
 
 The centre rule and the same-segment rule: doubling and equality.
@@ -132,6 +161,69 @@ Find:
 (b) angle $ADB$.
 
 (c) angle $BCT$ (the angle between the tangent at $C$ and chord $CB$).
+
+<div class="diagram">
+<div class="diagram-caption">AC DIAMETER · ∠CAB = 28° · D ON MAJOR ARC OF AB · TANGENT AT C THROUGH T</div>
+<div style="display:flex;justify-content:center;padding:14px 0">
+<div style="position:relative;width:480px;height:280px;max-width:100%">
+
+  <!-- Geometry: circle O = (200, 150), r = 100. AC horizontal diameter so
+       A = (100, 150), C = (300, 150).
+       ∠CAB = 28° → arc CB (not through A) = 56°. Place B on the lower
+       arc at math angle 56°: B = (200 + 100 cos 56°, 150 + 100 sin 56°)
+       ≈ (256, 233).
+       D on the major arc of chord AB (the upper arc through C). Place D
+       at math angle 250°: D ≈ (166, 56).
+       Tangent at C is vertical (perpendicular to horizontal OC). T placed
+       below C; alternate-segment angle ∠BCT = ∠BAC = 28°. -->
+
+  <div style="position:absolute;left:100px;top:50px;width:200px;height:200px;border-radius:50%;border:1.5px solid #3a4a5a;box-sizing:border-box"></div>
+
+  <!-- Diameter AC -->
+  <div style="position:absolute;left:100px;top:148.75px;width:200px;height:2.5px;background:#00abfa"></div>
+
+  <!-- Chord AB: A(100,150)→B(256,233), length 176.7, rotate 28°. -->
+  <div style="position:absolute;left:100px;top:148.75px;width:176.7px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(28deg)"></div>
+
+  <!-- Chord BC: B(256,233)→C(300,150), length 93.9, rotate −62.05°. -->
+  <div style="position:absolute;left:256px;top:231.75px;width:93.9px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(-62.05deg)"></div>
+
+  <!-- Chord AD: A(100,150)→D(166,56), length 114.9, rotate −54.93°. -->
+  <div style="position:absolute;left:100px;top:148.75px;width:114.9px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(-54.93deg)"></div>
+
+  <!-- Chord BD: B(256,233)→D(166,56), length 198.6, rotate −116.95°. -->
+  <div style="position:absolute;left:256px;top:231.75px;width:198.6px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(-116.95deg)"></div>
+
+  <!-- Tangent at C (vertical line x=300, y=20 to y=260). -->
+  <div style="position:absolute;left:298.75px;top:20px;width:2.5px;height:240px;background:#ff822c"></div>
+
+  <!-- 28° wedge at A between AC (conic 90°) and AB (conic 118°), fill 28°. -->
+  <div style="position:absolute;left:100px;top:150px;width:60px;height:60px;border-radius:50%;background:conic-gradient(from 90deg, #fff067 0deg 28deg, transparent 28deg);-webkit-mask:radial-gradient(circle, transparent 21px, #000 22px, #000 24px, transparent 25px);mask:radial-gradient(circle, transparent 21px, #000 22px, #000 24px, transparent 25px);transform:translate(-50%,-50%);pointer-events:none"></div>
+  <div style="position:absolute;left:130px;top:160px;font:700 13px 'Geist Mono',monospace;color:#fff067">28°</div>
+
+  <!-- Centre O -->
+  <div style="position:absolute;left:200px;top:150px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:184px;top:138px;font:700 13px 'Geist Mono',monospace;color:#7a7875">O</div>
+
+  <!-- Vertices -->
+  <div style="position:absolute;left:100px;top:150px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:82px;top:140px;font:700 14px 'Geist Mono',monospace;color:#fff067">A</div>
+
+  <div style="position:absolute;left:256px;top:233px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:262px;top:240px;font:700 14px 'Geist Mono',monospace;color:#fff067">B</div>
+
+  <div style="position:absolute;left:300px;top:150px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:308px;top:140px;font:700 14px 'Geist Mono',monospace;color:#fff067">C</div>
+
+  <div style="position:absolute;left:166px;top:56px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:148px;top:40px;font:700 14px 'Geist Mono',monospace;color:#fff067">D</div>
+
+  <div style="position:absolute;left:300px;top:240px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:308px;top:248px;font:700 14px 'Geist Mono',monospace;color:#fff067">T</div>
+
+</div>
+</div>
+</div>
 
 **Step a: Angle $ABC$.** $AC$ is a diameter, so $\angle ABC$ subtends the diameter at $B$. By the angle-in-semicircle theorem $\angle ABC = \boxed{90°}$ (angle in a semicircle is $90°$). **[A1 for $90°$; B1 for the reason]**
 
