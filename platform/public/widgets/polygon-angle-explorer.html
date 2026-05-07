@@ -16,6 +16,15 @@
   .formulas { display:flex; flex-direction:column; gap:4px; align-items:center; margin-bottom:10px; }
   .formula { font-size:14px; color:#f0eeea; line-height:1.3; }
   .formula .katex { font-size:1em; }
+  .ext-cue {
+    display:none; align-items:center; justify-content:center; gap:10px;
+    margin:6px auto 8px; padding:6px 12px;
+    background:rgba(255,70,112,0.06); border:1px solid rgba(255,70,112,0.2); border-radius:6px;
+    font-family:'Geist Mono',monospace; font-size:11.5px; color:#f0eeea;
+  }
+  .ext-cue.on { display:inline-flex; }
+  .ext-cue svg { display:block; }
+  .ext-cue .total { color:#ff4670; font-weight:700; }
 
   .controls { display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:0 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap; }
   .row { display:flex; align-items:center; gap:8px; min-width:0; flex:1; }
@@ -51,6 +60,11 @@
     <span class="formula" id="fSum"></span>
     <span class="formula" id="fInt"></span>
     <span class="formula" id="fExt"></span>
+  </div>
+
+  <div class="ext-cue" id="extCue">
+    <span id="extCueSvgWrap"></span>
+    <span>n &times; <span id="extCueEach"></span> = <span class="total">360&deg;</span></span>
   </div>
 
   <div class="controls">
@@ -180,6 +194,42 @@ function makeEl(tag, attrs) {
   return el;
 }
 
+// Live "exterior angles sum to 360°" cue: a small full circle filled with
+// the n exterior sectors, each shown as a pink boundary ray + an arc.
+// Shape and proportions update on every redraw, matching the 4.6 P1 pattern.
+function buildExteriorCue(anglesRad) {
+  var pw = 56, ph = 56, cx = pw / 2, cy = ph / 2, R = 22;
+  var svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("viewBox", "0 0 " + pw + " " + ph);
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  svg.setAttribute("width", String(pw));
+  svg.setAttribute("height", String(ph));
+  var COL = "#ff4670";
+  var ang = -Math.PI / 2; // start at top
+  for (var j = 0; j < anglesRad.length; j++) {
+    var a1 = ang;
+    var a2 = ang + anglesRad[j];
+    svg.appendChild(makeEl("line", {
+      x1: cx, y1: cy,
+      x2: (cx + Math.cos(a1) * R).toFixed(2),
+      y2: (cy + Math.sin(a1) * R).toFixed(2),
+      stroke: COL, "stroke-width": "1.2", "stroke-linecap": "round"
+    }));
+    var sx = cx + Math.cos(a1) * R, sy = cy + Math.sin(a1) * R;
+    var ex = cx + Math.cos(a2) * R, ey = cy + Math.sin(a2) * R;
+    var rad = a2 - a1;
+    var largeArc = rad > Math.PI ? 1 : 0;
+    svg.appendChild(makeEl("path", {
+      d: "M " + sx.toFixed(2) + " " + sy.toFixed(2) +
+         " A " + R + " " + R + " 0 " + largeArc + " 1 " + ex.toFixed(2) + " " + ey.toFixed(2),
+      fill: "none", stroke: COL, "stroke-width": "1.7", "stroke-linecap": "round"
+    }));
+    ang = a2;
+  }
+  svg.appendChild(makeEl("circle", { cx: cx, cy: cy, r: "1.6", fill: "#7a7875" }));
+  return svg;
+}
+
 function draw() {
   var interior = (n - 2) * 180 / n;
   var exterior = 360 / n;
@@ -198,6 +248,20 @@ function draw() {
     document.getElementById("fExt"),
     "\\text{Each exterior} = \\frac{360\\degree}{n} = \\textcolor{#ff4670}{" + fmt(exterior) + "\\degree}"
   );
+
+  // Live 360° cue: visible only when the user is looking at exterior info.
+  var extCue = document.getElementById("extCue");
+  if (mode === "interior") {
+    extCue.classList.remove("on");
+  } else {
+    extCue.classList.add("on");
+    var anglesRad = [];
+    for (var ee = 0; ee < n; ee++) anglesRad.push(2 * Math.PI / n);
+    var wrap = document.getElementById("extCueSvgWrap");
+    clearChildren(wrap);
+    wrap.appendChild(buildExteriorCue(anglesRad));
+    document.getElementById("extCueEach").textContent = fmt(exterior) + "°";
+  }
 
   var pts = vertices(n, R);
 
