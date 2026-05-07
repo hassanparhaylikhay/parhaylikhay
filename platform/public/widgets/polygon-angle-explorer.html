@@ -100,14 +100,12 @@ var SVG_NS = "http://www.w3.org/2000/svg";
 var CX = 240, CY = 165, R = 100;
 var ARC_R_INT = 22;
 var ARC_R_EXT = 18;
-var LBL_R_INT = 50;
-var LBL_R_EXT = 38;
+var LBL_R_INT = 54;
+var LBL_R_EXT = 40;
 var EXT_LEN = 30;
 
-var targetN = 5;
-var displayN = 5;
+var n = 5;
 var mode = "both";
-var SPRING = 0.18;
 
 // Format number cleanly: no trailing .0, at most 1 decimal place
 function fmt(v) {
@@ -136,25 +134,34 @@ function vertices(nInt, radius) {
   return pts;
 }
 
-// Build small SVG arc path between two unit directions about a vertex.
-// dir1, dir2 are unit vectors (angles a1, a2 in radians). We draw an arc
-// from a1 to a2 going the short way (signed sweep we control explicitly).
-function arcPath(cx, cy, r, a1, a2, sweepFlag) {
+// Build a pie-slice arc starting at angle `a1`, sweeping by `sweep` radians
+// (signed). Positive sweep = CW in screen (CCW math, since y is flipped).
+function arcPathSigned(cx, cy, r, a1, sweep) {
   var x1 = cx + r * Math.cos(a1);
   var y1 = cy + r * Math.sin(a1);
+  var a2 = a1 + sweep;
   var x2 = cx + r * Math.cos(a2);
   var y2 = cy + r * Math.sin(a2);
-  // delta needed to determine large-arc-flag; we always take the minor arc
-  var delta = a2 - a1;
-  while (delta > Math.PI) delta -= 2 * Math.PI;
-  while (delta < -Math.PI) delta += 2 * Math.PI;
-  var largeArc = 0;
-  // Build the path: a pie-slice (filled wedge), since we want
-  // a pie slice: M cx,cy L x1,y1 A r,r 0 largeArc,sweepFlag x2,y2 Z
+  var largeArc = Math.abs(sweep) > Math.PI ? 1 : 0;
+  var sweepFlag = sweep > 0 ? 1 : 0;
   return "M " + cx + " " + cy +
-         " L " + x1 + " " + y1 +
-         " A " + r + " " + r + " 0 " + largeArc + " " + sweepFlag + " " + x2 + " " + y2 +
-         " Z";
+         " L " + x1.toFixed(2) + " " + y1.toFixed(2) +
+         " A " + r + " " + r + " 0 " + largeArc + " " + sweepFlag + " " +
+         x2.toFixed(2) + " " + y2.toFixed(2) + " Z";
+}
+
+// Compute the signed sweep from a1 to a2 that goes through the side
+// indicated by the unit direction (dirX, dirY). Robust against polygon
+// winding: if the SHORT signed sweep's midpoint is on the wanted side,
+// use it; otherwise take the LONG sweep (= shortSweep - 2π or + 2π).
+function sweepThrough(a1, a2, dirX, dirY) {
+  var d = a2 - a1;
+  while (d > Math.PI) d -= 2 * Math.PI;
+  while (d <= -Math.PI) d += 2 * Math.PI;
+  var midA = a1 + d / 2;
+  var dot = Math.cos(midA) * dirX + Math.sin(midA) * dirY;
+  if (dot >= 0) return d;
+  return d > 0 ? d - 2 * Math.PI : d + 2 * Math.PI;
 }
 
 function clearChildren(el) {
@@ -167,14 +174,7 @@ function makeEl(tag, attrs) {
   return el;
 }
 
-function tick() {
-  displayN += (targetN - displayN) * SPRING;
-  draw();
-  requestAnimationFrame(tick);
-}
-
 function draw() {
-  var n = targetN;
   var interior = (n - 2) * 180 / n;
   var exterior = 360 / n;
   var sumInterior = (n - 2) * 180;
@@ -193,14 +193,7 @@ function draw() {
     "\\text{Each exterior} = \\frac{360\\degree}{n} = \\textcolor{#ff4670}{" + fmt(exterior) + "\\degree}"
   );
 
-  // Spring the radius slightly so changes feel smooth even though we snap n
-  // The vertices themselves are at integer n = targetN; we scale them by
-  // a smoothing factor so the polygon "settles" after each n change.
-  var snapDist = Math.abs(displayN - targetN);
-  var settleScale = 1 - Math.min(0.06, snapDist * 0.05); // tiny breathing
-  var radius = R * settleScale;
-
-  var pts = vertices(n, radius);
+  var pts = vertices(n, R);
 
   // Polygon outline
   var polyEl = document.getElementById("poly");
@@ -236,37 +229,31 @@ function draw() {
     var cur  = pts[j];
     var next = pts[(j + 1) % n];
 
-    // Direction vectors from vertex along each adjacent side
-    var ax = prev.x - cur.x, ay = prev.y - cur.y;       // toward previous vertex
-    var bx = next.x - cur.x, by = next.y - cur.y;       // toward next vertex
+    // Side directions from cur
+    var ax = prev.x - cur.x, ay = prev.y - cur.y;
+    var bx = next.x - cur.x, by = next.y - cur.y;
     var aLen = Math.hypot(ax, ay), bLen = Math.hypot(bx, by);
     var aNx = ax / aLen, aNy = ay / aLen;
     var bNx = bx / bLen, bNy = by / bLen;
     var aAng = Math.atan2(aNy, aNx);
     var bAng = Math.atan2(bNy, bNx);
 
-    // Inward bisector direction (points into the polygon)
-    var bisX = aNx + bNx;
-    var bisY = aNy + bNy;
-    var bisLen = Math.hypot(bisX, bisY);
-    if (bisLen < 1e-6) { bisX = 0; bisY = 0; bisLen = 1; }
-    var bisNx = bisX / bisLen, bisNy = bisY / bisLen;
+    // Inward direction at this vertex of a regular polygon centred at
+    // (CX, CY) is exactly toward the centre. This is rock-solid regardless
+    // of how prev/next sit, so it never flips on slider edges.
+    var inX = (CX - cur.x), inY = (CY - cur.y);
+    var inLen = Math.hypot(inX, inY) || 1;
+    var inNx = inX / inLen, inNy = inY / inLen;
+    var outNx = -inNx, outNy = -inNy;
 
     if (showInterior) {
-      // Pie-slice arc from aAng to bAng, going the way that contains the bisector.
-      // We pick the sweep flag that makes the arc lie on the inward side.
-      // Try both sweeps and pick the one whose midpoint aligns with the bisector.
-      var midA1 = midAngle(aAng, bAng, 0);
-      var midA2 = midAngle(aAng, bAng, 1);
-      var dot1 = Math.cos(midA1) * bisNx + Math.sin(midA1) * bisNy;
-      var dot2 = Math.cos(midA2) * bisNx + Math.sin(midA2) * bisNy;
-      var sweep = (dot1 > dot2) ? 0 : 1;
-      var d = arcPath(cur.x, cur.y, ARC_R_INT, aAng, bAng, sweep);
-      intArcG.appendChild(makeEl("path", { d: d, class: "interior-arc" }));
-
-      // Interior label, placed along inward bisector
-      var lx = cur.x + bisNx * LBL_R_INT;
-      var ly = cur.y + bisNy * LBL_R_INT + 3;
+      var sweepInt = sweepThrough(aAng, bAng, inNx, inNy);
+      intArcG.appendChild(makeEl("path", {
+        d: arcPathSigned(cur.x, cur.y, ARC_R_INT, aAng, sweepInt),
+        class: "interior-arc"
+      }));
+      var lx = cur.x + inNx * LBL_R_INT;
+      var ly = cur.y + inNy * LBL_R_INT + 3;
       var lblI = makeEl("text", {
         x: lx.toFixed(2), y: ly.toFixed(2),
         "text-anchor": "middle",
@@ -277,9 +264,7 @@ function draw() {
     }
 
     if (showExterior) {
-      // Extend the previous side outward beyond the current vertex.
-      // The extension goes from cur, in the direction OPPOSITE the previous vertex
-      // (i.e. continuing the line prev -> cur past cur).
+      // Continue the prev→cur side past cur by EXT_LEN
       var extDx = -aNx, extDy = -aNy;
       var ex = cur.x + extDx * EXT_LEN;
       var ey = cur.y + extDy * EXT_LEN;
@@ -287,26 +272,14 @@ function draw() {
         x1: cur.x, y1: cur.y, x2: ex.toFixed(2), y2: ey.toFixed(2),
         class: "ext-extension"
       }));
-
-      // Exterior arc: between extension direction (extDx,extDy) and next-side direction (bNx,bNy),
-      // sweeping the short way (the exterior angle is less than 180 for convex polygons).
       var extAng = Math.atan2(extDy, extDx);
-      var nextAng = Math.atan2(bNy, bNx);
-      // Pick sweep so the arc is the minor arc (always < 180 for convex regular polygon)
-      var midE1 = midAngle(extAng, nextAng, 0);
-      var midE2 = midAngle(extAng, nextAng, 1);
-      // The exterior angle opens away from the polygon interior, i.e. along
-      // OUTWARD bisector = -bisN. Pick the midpoint with greater dot to outward.
-      var outX = -bisNx, outY = -bisNy;
-      var dotE1 = Math.cos(midE1) * outX + Math.sin(midE1) * outY;
-      var dotE2 = Math.cos(midE2) * outX + Math.sin(midE2) * outY;
-      var sweepE = (dotE1 > dotE2) ? 0 : 1;
-      var dE = arcPath(cur.x, cur.y, ARC_R_EXT, extAng, nextAng, sweepE);
-      extArcG.appendChild(makeEl("path", { d: dE, class: "exterior-arc" }));
-
-      // Exterior label, placed outward along outward bisector
-      var lxE = cur.x + outX * LBL_R_EXT;
-      var lyE = cur.y + outY * LBL_R_EXT + 3;
+      var sweepExt = sweepThrough(extAng, bAng, outNx, outNy);
+      extArcG.appendChild(makeEl("path", {
+        d: arcPathSigned(cur.x, cur.y, ARC_R_EXT, extAng, sweepExt),
+        class: "exterior-arc"
+      }));
+      var lxE = cur.x + outNx * LBL_R_EXT;
+      var lyE = cur.y + outNy * LBL_R_EXT + 3;
       var lblE = makeEl("text", {
         x: lxE.toFixed(2), y: lyE.toFixed(2),
         "text-anchor": "middle",
@@ -339,30 +312,19 @@ function draw() {
   }
 }
 
-// Given two angles a1, a2 (radians), return the midpoint angle of one of the
-// two possible arcs between them. flag=0 picks the arc going counter-clockwise
-// from a1 to a2, flag=1 picks the other.
-function midAngle(a1, a2, flag) {
-  var d = a2 - a1;
-  while (d <= 0) d += 2 * Math.PI;
-  // d is now in (0, 2pi]
-  if (flag === 0) return a1 + d / 2;
-  return a1 + d / 2 + Math.PI;
-}
-
 document.getElementById("nSlider").addEventListener("input", function(e) {
-  targetN = parseInt(e.target.value, 10);
-  document.getElementById("nVal").textContent = String(targetN);
-  // nudge displayN slightly so the spring kicks in
-  displayN = targetN + 0.5 * Math.sign(displayN - targetN || 1);
+  n = parseInt(e.target.value, 10);
+  document.getElementById("nVal").textContent = String(n);
+  draw();
   reportHeight();
 });
 
 document.getElementById("mode").addEventListener("change", function(e) {
   mode = e.target.value;
+  draw();
 });
 
-tick();
+draw();
 
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {
