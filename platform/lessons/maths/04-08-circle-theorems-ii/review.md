@@ -52,59 +52,123 @@ The chord-distance relationship and the perpendicular bisector both come from ci
 
 <div class="diagram">
 <div class="diagram-caption">RECAP: EQUAL CHORDS + PERPENDICULAR FROM CENTRE</div>
-<svg viewBox="0 0 500 220" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:520px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<circle cx="120" cy="110" r="80" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
-<line x1="60" y1="70" x2="180" y2="70" stroke="#00abfa" stroke-width="2"/>
-<line x1="60" y1="150" x2="180" y2="150" stroke="#00abfa" stroke-width="2"/>
-<line x1="120" y1="110" x2="120" y2="70" stroke="#00abfa" stroke-width="1.5" stroke-dasharray="4 3"/>
-<line x1="120" y1="110" x2="120" y2="150" stroke="#00abfa" stroke-width="1.5" stroke-dasharray="4 3"/>
-<line x1="116" y1="62" x2="122" y2="74" stroke="#0fee89" stroke-width="2"/>
-<line x1="122" y1="62" x2="128" y2="74" stroke="#0fee89" stroke-width="2"/>
-<line x1="116" y1="142" x2="122" y2="154" stroke="#0fee89" stroke-width="2"/>
-<line x1="122" y1="142" x2="128" y2="154" stroke="#0fee89" stroke-width="2"/>
-<circle cx="120" cy="110" r="3" fill="#7a7875"/>
-<text x="126" y="106" font-family="Geist Mono,monospace" font-size="11" fill="#7a7875">O</text>
-<circle cx="370" cy="110" r="80" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
-<line x1="290" y1="170" x2="450" y2="170" stroke="#00abfa" stroke-width="2"/>
-<line x1="370" y1="110" x2="370" y2="170" stroke="#00abfa" stroke-width="2"/>
-<polyline points="358,158 358,170 370,170" fill="none" stroke="#ff4670" stroke-width="1.5"/>
-<line x1="328" y1="162" x2="334" y2="174" stroke="#0fee89" stroke-width="2"/>
-<line x1="334" y1="162" x2="340" y2="174" stroke="#0fee89" stroke-width="2"/>
-<line x1="406" y1="162" x2="412" y2="174" stroke="#0fee89" stroke-width="2"/>
-<line x1="412" y1="162" x2="418" y2="174" stroke="#0fee89" stroke-width="2"/>
-<circle cx="370" cy="110" r="3" fill="#7a7875"/>
-<circle cx="370" cy="170" r="4" fill="#fff067"/>
-<text x="376" y="106" font-family="Geist Mono,monospace" font-size="11" fill="#7a7875">O</text>
-<text x="376" y="186" font-family="Geist Mono,monospace" font-size="11" fill="#fff067">M</text>
-</svg>
+<div style="display:flex;justify-content:center;padding:14px 0">
+<div style="position:relative;width:500px;height:220px;max-width:100%">
+
+  <!-- Left figure: equal chords on circle O₁ = (120, 110), r = 80.
+       Two horizontal chords at y = 70 and y = 150 (each at distance 40
+       from O₁). Half-chord = √(80² − 40²) ≈ 69.28, so each chord runs
+       from x ≈ 51 to x ≈ 189. -->
+
+  <div style="position:absolute;left:40px;top:30px;width:160px;height:160px;border-radius:50%;border:1.5px solid #3a4a5a;box-sizing:border-box"></div>
+
+  <!-- Two parallel chords -->
+  <div style="position:absolute;left:50.72px;top:68.75px;width:138.56px;height:2.5px;background:#00abfa"></div>
+  <div style="position:absolute;left:50.72px;top:148.75px;width:138.56px;height:2.5px;background:#00abfa"></div>
+
+  <!-- Distances from O₁ to each chord midpoint (dashed blue) -->
+  <div style="position:absolute;left:119.25px;top:70px;width:1.5px;height:40px;background:repeating-linear-gradient(to bottom, #00abfa 0 4px, transparent 4px 7px)"></div>
+  <div style="position:absolute;left:119.25px;top:110px;width:1.5px;height:40px;background:repeating-linear-gradient(to bottom, #00abfa 0 4px, transparent 4px 7px)"></div>
+
+  <!-- Equal-tick marks on each chord (2 per chord, vertical) -->
+  <div style="position:absolute;left:97.25px;top:64px;width:1.5px;height:12px;background:#0fee89"></div>
+  <div style="position:absolute;left:103.25px;top:64px;width:1.5px;height:12px;background:#0fee89"></div>
+  <div style="position:absolute;left:97.25px;top:144px;width:1.5px;height:12px;background:#0fee89"></div>
+  <div style="position:absolute;left:103.25px;top:144px;width:1.5px;height:12px;background:#0fee89"></div>
+
+  <!-- Centre O₁ -->
+  <div style="position:absolute;left:120px;top:110px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:126px;top:104px;font:700 11px 'Geist Mono',monospace;color:#7a7875">O</div>
+
+  <!-- Right figure: perpendicular from centre bisects the chord.
+       Circle O₂ = (370, 110), r = 80. Chord at y = 170 (distance 60 from
+       O₂). Half-chord = √(80² − 60²) ≈ 52.92, chord from x ≈ 317 to
+       x ≈ 423. Foot of perpendicular at midpoint (370, 170). -->
+
+  <div style="position:absolute;left:290px;top:30px;width:160px;height:160px;border-radius:50%;border:1.5px solid #3a4a5a;box-sizing:border-box"></div>
+
+  <!-- Chord -->
+  <div style="position:absolute;left:317.08px;top:168.75px;width:105.83px;height:2.5px;background:#00abfa"></div>
+  <!-- Perpendicular OM -->
+  <div style="position:absolute;left:368.75px;top:110px;width:2.5px;height:60px;background:#00abfa"></div>
+
+  <!-- L-marker at M = (370, 170) -->
+  <div style="position:absolute;left:380px;top:169.25px;width:10px;height:1.5px;background:#ff4670;transform-origin:0 50%;transform:rotate(-90deg);pointer-events:none"></div>
+  <div style="position:absolute;left:370px;top:159.25px;width:10px;height:1.5px;background:#ff4670;pointer-events:none"></div>
+
+  <!-- Equal-tick marks on each half of the chord -->
+  <div style="position:absolute;left:340.25px;top:164px;width:1.5px;height:12px;background:#0fee89"></div>
+  <div style="position:absolute;left:346.25px;top:164px;width:1.5px;height:12px;background:#0fee89"></div>
+  <div style="position:absolute;left:393.25px;top:164px;width:1.5px;height:12px;background:#0fee89"></div>
+  <div style="position:absolute;left:399.25px;top:164px;width:1.5px;height:12px;background:#0fee89"></div>
+
+  <!-- Centre O₂ and midpoint M -->
+  <div style="position:absolute;left:370px;top:110px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:376px;top:104px;font:700 11px 'Geist Mono',monospace;color:#7a7875">O</div>
+
+  <div style="position:absolute;left:370px;top:170px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:376px;top:184px;font:700 11px 'Geist Mono',monospace;color:#fff067">M</div>
+
+</div>
+</div>
 </div>
 
 The two-tangent picture: two right angles, two equal tangent lengths, kite shape with $OP$ as axis of symmetry.
 
 <div class="diagram">
 <div class="diagram-caption">RECAP: TWO TANGENTS, TWO RIGHT ANGLES, KITE</div>
-<svg viewBox="0 0 460 240" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;max-width:520px;height:auto" xmlns="http://www.w3.org/2000/svg">
-<circle cx="120" cy="120" r="70" fill="none" stroke="#3a4a5a" stroke-width="1.5"/>
-<line x1="120" y1="120" x2="170" y2="70" stroke="#00abfa" stroke-width="2"/>
-<line x1="120" y1="120" x2="170" y2="170" stroke="#00abfa" stroke-width="2"/>
-<line x1="170" y1="70" x2="410" y2="120" stroke="#ff822c" stroke-width="2.5"/>
-<line x1="170" y1="170" x2="410" y2="120" stroke="#ff822c" stroke-width="2.5"/>
-<line x1="120" y1="120" x2="410" y2="120" stroke="#fff067" stroke-width="2" stroke-dasharray="6 4"/>
-<polyline points="163,77 170,84 177,77" fill="none" stroke="#ff4670" stroke-width="1.5"/>
-<polyline points="163,163 170,156 177,163" fill="none" stroke="#ff4670" stroke-width="1.5"/>
-<line x1="284" y1="86" x2="290" y2="98" stroke="#0fee89" stroke-width="2"/>
-<line x1="290" y1="86" x2="296" y2="98" stroke="#0fee89" stroke-width="2"/>
-<line x1="284" y1="142" x2="290" y2="154" stroke="#0fee89" stroke-width="2"/>
-<line x1="290" y1="142" x2="296" y2="154" stroke="#0fee89" stroke-width="2"/>
-<circle cx="120" cy="120" r="3" fill="#7a7875"/>
-<circle cx="170" cy="70" r="4" fill="#fff067"/>
-<circle cx="170" cy="170" r="4" fill="#fff067"/>
-<circle cx="410" cy="120" r="4" fill="#fff067"/>
-<text x="104" y="124" font-family="Geist Mono,monospace" font-size="13" fill="#7a7875">O</text>
-<text x="176" y="64" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">A</text>
-<text x="176" y="184" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">B</text>
-<text x="418" y="124" font-family="Geist Mono,monospace" font-size="14" fill="#fff067">P</text>
-</svg>
+<div style="display:flex;justify-content:center;padding:14px 0">
+<div style="position:relative;width:460px;height:240px;max-width:100%">
+
+  <!-- Geometry (matches the kite diagram in p2): O = (130, 120), r = 70,
+       P = (410, 120), |OP| = 280, half-tangent angle ≈ 75.52°.
+       A ≈ (147.5, 52.2), B ≈ (147.5, 187.8). -->
+
+  <div style="position:absolute;left:60px;top:50px;width:140px;height:140px;border-radius:50%;border:1.5px solid #3a4a5a;box-sizing:border-box"></div>
+
+  <!-- Radii OA, OB -->
+  <div style="position:absolute;left:130px;top:118.75px;width:70px;height:2.5px;background:#00abfa;transform-origin:0 50%;transform:rotate(-75.52deg)"></div>
+  <div style="position:absolute;left:130px;top:118.75px;width:70px;height:2.5px;background:#00abfa;transform-origin:0 50%;transform:rotate(75.52deg)"></div>
+
+  <!-- Tangents AP, BP -->
+  <div style="position:absolute;left:147.5px;top:50.95px;width:271.1px;height:2.5px;background:#ff822c;transform-origin:0 50%;transform:rotate(14.48deg)"></div>
+  <div style="position:absolute;left:147.5px;top:186.55px;width:271.1px;height:2.5px;background:#ff822c;transform-origin:0 50%;transform:rotate(-14.48deg)"></div>
+
+  <!-- OP axis (dashed yellow) -->
+  <div style="position:absolute;left:130px;top:119.25px;width:280px;height:1.5px;background:repeating-linear-gradient(to right, #fff067 0 6px, transparent 6px 10px)"></div>
+
+  <!-- L-marker at A. AO direction (-cos α, sin α), AP direction (sin α, cos α)
+       where α = 75.52°. P1 = A + 10·AO ≈ (145.0, 61.9); F ≈ (154.7, 64.4);
+       P2 = A + 10·AP ≈ (157.2, 54.7). -->
+  <div style="position:absolute;left:144.99px;top:61.18px;width:10px;height:1.5px;background:#ff4670;transform-origin:0 50%;transform:rotate(14.48deg);pointer-events:none"></div>
+  <div style="position:absolute;left:154.67px;top:63.69px;width:10px;height:1.5px;background:#ff4670;transform-origin:0 50%;transform:rotate(-75.52deg);pointer-events:none"></div>
+
+  <!-- L-marker at B (mirror of A across OP). -->
+  <div style="position:absolute;left:144.99px;top:177.07px;width:10px;height:1.5px;background:#ff4670;transform-origin:0 50%;transform:rotate(-14.48deg);pointer-events:none"></div>
+  <div style="position:absolute;left:154.67px;top:174.56px;width:10px;height:1.5px;background:#ff4670;transform-origin:0 50%;transform:rotate(75.52deg);pointer-events:none"></div>
+
+  <!-- Equal-tick marks on the two tangents (both PA and PB are equal length) -->
+  <div style="position:absolute;left:283.25px;top:80px;width:1.5px;height:12px;background:#0fee89;transform-origin:50% 50%;transform:rotate(14.48deg)"></div>
+  <div style="position:absolute;left:289.25px;top:78.5px;width:1.5px;height:12px;background:#0fee89;transform-origin:50% 50%;transform:rotate(14.48deg)"></div>
+  <div style="position:absolute;left:283.25px;top:148px;width:1.5px;height:12px;background:#0fee89;transform-origin:50% 50%;transform:rotate(-14.48deg)"></div>
+  <div style="position:absolute;left:289.25px;top:149.5px;width:1.5px;height:12px;background:#0fee89;transform-origin:50% 50%;transform:rotate(-14.48deg)"></div>
+
+  <!-- Centre O -->
+  <div style="position:absolute;left:130px;top:120px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:114px;top:124px;font:700 13px 'Geist Mono',monospace;color:#7a7875">O</div>
+
+  <!-- Vertices A, B, P -->
+  <div style="position:absolute;left:147.5px;top:52.2px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:154px;top:36px;font:700 14px 'Geist Mono',monospace;color:#fff067">A</div>
+
+  <div style="position:absolute;left:147.5px;top:187.8px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:154px;top:198px;font:700 14px 'Geist Mono',monospace;color:#fff067">B</div>
+
+  <div style="position:absolute;left:410px;top:120px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:418px;top:124px;font:700 14px 'Geist Mono',monospace;color:#fff067">P</div>
+
+</div>
+</div>
 </div>
 
 ## Marking patterns at a glance
@@ -135,6 +199,59 @@ The points $A(2, 1)$, $B(8, 1)$, $C(8, 9)$ all lie on a circle.
 (b) Find the radius.
 
 (c) From an external point $P$, the tangent length to this circle is $12$ cm. Find $OP$.
+
+<div class="diagram">
+<div class="diagram-caption">A(2,1) · B(8,1) · C(8,9) ON A CIRCLE · CENTRE = INTERSECTION OF PERPENDICULAR BISECTORS</div>
+<div style="display:flex;justify-content:center;padding:14px 0">
+<div style="position:relative;width:400px;height:320px;max-width:100%">
+
+  <!-- Coord-geometry sketch. Display scale 20 px/unit; coord-origin in
+       the diagram at (60, 270). Mapping (x, y) → (60 + 20x, 270 − 20y).
+       A(2,1) → (100, 250)   B(8,1) → (220, 250)   C(8,9) → (220, 90)
+       Midpoint of AB = (5,1) → (160, 250)
+       Midpoint of BC = (8,5) → (220, 170)
+       Centre O = (5,5) → (160, 170). Radius = 5 units → 100 px display. -->
+
+  <!-- Subtle axes hint: short tick at coord-origin -->
+  <div style="position:absolute;left:60px;top:270px;width:10px;height:1.5px;background:#3a4a5a"></div>
+  <div style="position:absolute;left:58.75px;top:265px;width:1.5px;height:10px;background:#3a4a5a"></div>
+  <div style="position:absolute;left:42px;top:274px;font:700 10px 'Geist Mono',monospace;color:#3a4a5a">(0,0)</div>
+
+  <!-- Circle through A, B, C: centre O = (160, 170), r = 100. -->
+  <div style="position:absolute;left:60px;top:70px;width:200px;height:200px;border-radius:50%;border:1.5px solid #3a4a5a;box-sizing:border-box"></div>
+
+  <!-- Triangle sides AB, BC (the two chords whose perpendicular bisectors we use). -->
+  <!-- AB: A(100,250)→B(220,250), horizontal length 120. -->
+  <div style="position:absolute;left:100px;top:248.75px;width:120px;height:2.5px;background:#00abfa"></div>
+  <!-- BC: B(220,250)→C(220,90), vertical length 160. -->
+  <div style="position:absolute;left:218.75px;top:90px;width:2.5px;height:160px;background:#00abfa"></div>
+
+  <!-- Perpendicular bisector of AB: vertical dashed line at x = 160. -->
+  <div style="position:absolute;left:159.25px;top:60px;width:1.5px;height:230px;background:repeating-linear-gradient(to bottom, #0fee89 0 5px, transparent 5px 9px)"></div>
+  <!-- Perpendicular bisector of BC: horizontal dashed line at y = 170. -->
+  <div style="position:absolute;left:50px;top:169.25px;width:230px;height:1.5px;background:repeating-linear-gradient(to right, #0fee89 0 5px, transparent 5px 9px)"></div>
+
+  <!-- Vertices A, B, C with coord labels -->
+  <div style="position:absolute;left:100px;top:250px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:78px;top:258px;font:700 12px 'Geist Mono',monospace;color:#fff067">A(2,1)</div>
+
+  <div style="position:absolute;left:220px;top:250px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:228px;top:258px;font:700 12px 'Geist Mono',monospace;color:#fff067">B(8,1)</div>
+
+  <div style="position:absolute;left:220px;top:90px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:228px;top:80px;font:700 12px 'Geist Mono',monospace;color:#fff067">C(8,9)</div>
+
+  <!-- Centre O at intersection -->
+  <div style="position:absolute;left:160px;top:170px;width:10px;height:10px;border-radius:50%;background:#ff4670;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;left:130px;top:158px;font:700 12px 'Geist Mono',monospace;color:#ff4670">O(5,5)</div>
+
+  <!-- Bisector labels -->
+  <div style="position:absolute;left:166px;top:46px;font:700 11px 'Geist Mono',monospace;color:#0fee89">x = 5</div>
+  <div style="position:absolute;left:296px;top:164px;font:700 11px 'Geist Mono',monospace;color:#0fee89">y = 5</div>
+
+</div>
+</div>
+</div>
 
 **Step a: Coordinates of the centre.** Build the perpendicular bisector of two chords and intersect them.
 

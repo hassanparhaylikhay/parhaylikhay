@@ -89,6 +89,41 @@ function setAngle(which, t) {
   else                    tD = t;
 }
 
+// Magnetic snap: when the user drags an endpoint and the resulting chord
+// length lands within SNAP_TOL_PX of the OTHER chord's length, override
+// the angle to the exact equal-chord position. This makes "equal" mean
+// genuinely equal, not visually-close-but-not-quite.
+var SNAP_TOL_PX = 9;  // ~0.45 units (SCALE = 20 px per unit)
+function applySnap(which, t_user) {
+  var partnerOfDragged, otherT1, otherT2;
+  if (which === 'A')      { partnerOfDragged = tB; otherT1 = tC; otherT2 = tD; }
+  else if (which === 'B') { partnerOfDragged = tA; otherT1 = tC; otherT2 = tD; }
+  else if (which === 'C') { partnerOfDragged = tD; otherT1 = tA; otherT2 = tB; }
+  else                    { partnerOfDragged = tC; otherT1 = tA; otherT2 = tB; }
+
+  // Shorter angular separation of the OTHER chord (what we want to match).
+  var arcOther = Math.abs(N(otherT1 - otherT2));
+  if (arcOther > Math.PI) arcOther = 2*Math.PI - arcOther;
+  // Shorter angular separation of the dragged chord at the user's t.
+  var arcUser = Math.abs(N(t_user - partnerOfDragged));
+  if (arcUser > Math.PI) arcUser = 2*Math.PI - arcUser;
+
+  // Compare chord lengths in pixels (length = 2R sin(arc/2)).
+  var chordUser = 2 * R * Math.sin(arcUser / 2);
+  var chordOther = 2 * R * Math.sin(arcOther / 2);
+  if (Math.abs(chordUser - chordOther) > SNAP_TOL_PX) return t_user;
+
+  // Two angles equidistant from partnerOfDragged by arcOther; pick the one
+  // closer to t_user so the snap doesn't tug across the partner.
+  var c1 = N(partnerOfDragged + arcOther);
+  var c2 = N(partnerOfDragged - arcOther);
+  function angDist(a, b) {
+    var d = Math.abs(N(a - b));
+    return d > Math.PI ? 2*Math.PI - d : d;
+  }
+  return angDist(c1, t_user) < angDist(c2, t_user) ? c1 : c2;
+}
+
 // Drawing helpers
 function hexAlpha(hex, a) {
   var r = parseInt(hex.slice(1,3),16),
@@ -408,7 +443,7 @@ canvas.addEventListener('mousedown', function(e) {
 canvas.addEventListener('mousemove', function(e) {
   var p = getPos(e);
   if (dragging) {
-    setAngle(dragging, angleFromPos(p.x, p.y));
+    setAngle(dragging, applySnap(dragging, angleFromPos(p.x, p.y)));
     draw();
   } else {
     var prev = hovering;
@@ -444,7 +479,7 @@ canvas.addEventListener('touchmove', function(e) {
   if (!dragging) return;
   e.preventDefault();
   var p = getPos(e);
-  setAngle(dragging, angleFromPos(p.x, p.y));
+  setAngle(dragging, applySnap(dragging, angleFromPos(p.x, p.y)));
   draw();
 }, { passive: false });
 
