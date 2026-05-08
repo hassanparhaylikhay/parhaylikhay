@@ -67,8 +67,11 @@ The semicircle and tangent-radius rules: both produce a $90°$ at the action poi
   <!-- CB: C(144,54)→B(190,120), length 80.4, rotate 55.1°. -->
   <div style="position:absolute;left:144px;top:52.75px;width:80.4px;height:2.5px;background:#00abfa;transform-origin:0 50%;transform:rotate(55.1deg)"></div>
 
-  <!-- 90° wedge at C between CB (conic 145°) and CA (conic 235°). -->
-  <div style="position:absolute;left:144px;top:54px;width:30px;height:30px;border-radius:50%;background:conic-gradient(from 145deg, #ff4670 0deg 90deg, transparent 90deg);-webkit-mask:radial-gradient(circle, transparent 11px, #000 12px, #000 13px, transparent 14px);mask:radial-gradient(circle, transparent 11px, #000 12px, #000 13px, transparent 14px);transform:translate(-50%,-50%);pointer-events:none"></div>
+  <!-- Right-angle L-marker at C. P1=C+10·CA_unit ≈ (135.81, 59.74),
+       F ≈ (141.53, 67.95), P2=C+10·CB_unit ≈ (149.72, 62.21).
+       Line P1→F rotated 55.1° (CB direction); F→P2 rotated −35° (CA). -->
+  <div style="position:absolute;left:135.81px;top:58.99px;width:10px;height:1.5px;background:#ff4670;transform-origin:0 50%;transform:rotate(55.1deg);pointer-events:none"></div>
+  <div style="position:absolute;left:141.53px;top:67.20px;width:10px;height:1.5px;background:#ff4670;transform-origin:0 50%;transform:rotate(-35deg);pointer-events:none"></div>
   <div style="position:absolute;left:140px;top:80px;font:700 11px 'Geist Mono',monospace;color:#ff4670">90°</div>
 
   <div style="position:absolute;left:120px;top:120px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
@@ -93,8 +96,11 @@ The semicircle and tangent-radius rules: both produce a $90°$ at the action poi
   <!-- Tangent at T (vertical, y=40 to y=200). -->
   <div style="position:absolute;left:428.75px;top:40px;width:2.5px;height:160px;background:#ff822c"></div>
 
-  <!-- 90° wedge at T: between OT (toward O₂, conic 270°) and tangent going up (conic 0°). -->
-  <div style="position:absolute;left:430px;top:120px;width:30px;height:30px;border-radius:50%;background:conic-gradient(from 270deg, #ff4670 0deg 90deg, transparent 90deg);-webkit-mask:radial-gradient(circle, transparent 11px, #000 12px, #000 13px, transparent 14px);mask:radial-gradient(circle, transparent 11px, #000 12px, #000 13px, transparent 14px);transform:translate(-50%,-50%);pointer-events:none"></div>
+  <!-- Right-angle L-marker at T. P1=(420, 120) on OT going west,
+       F=(420, 110), P2=(430, 110) on tangent going up.
+       Line P1→F rotated −90° (vertical, up); F→P2 horizontal. -->
+  <div style="position:absolute;left:420px;top:119.25px;width:10px;height:1.5px;background:#ff4670;transform-origin:0 50%;transform:rotate(-90deg);pointer-events:none"></div>
+  <div style="position:absolute;left:420px;top:109.25px;width:10px;height:1.5px;background:#ff4670;transform-origin:0 50%;pointer-events:none"></div>
   <div style="position:absolute;left:402px;top:104px;font:700 11px 'Geist Mono',monospace;color:#ff4670">90°</div>
 
   <div style="position:absolute;left:370px;top:120px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
