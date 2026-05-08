@@ -17,8 +17,8 @@
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
 
-  .stage-outer { width:100%; max-width:440px; margin:0 auto; aspect-ratio: 440 / 420; position:relative; }
-  .stage { position:absolute; top:0; left:0; width:440px; height:420px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+  .stage-outer { width:100%; max-width:440px; margin:0 auto; aspect-ratio: 440 / 520; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:440px; height:520px; transform-origin: top left; overflow:hidden; border-radius:6px; }
 
   .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
   .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
@@ -71,7 +71,7 @@ var B   = { x: A.x, y: 2 * O.y - A.y };
 
 var stage      = document.getElementById("stage");
 var stageOuter = document.getElementById("stage-outer");
-var STAGE_W    = 440, STAGE_H = 420;
+var STAGE_W    = 440, STAGE_H = 520;
 
 function fitStage() {
   var w = stageOuter.clientWidth;
@@ -230,7 +230,8 @@ lineEl(B.x, B.y, P.x, P.y, "#ff822c", 2.5, false, 0);
 // PA from P direction → conic 298°, PB from P → conic 242°. Wedge from
 // 242° fills 56° (sweep CW reaches 298°).
 wedgeEl(P.x, P.y, 60, 242, 56, "#fff067", 0);
-texEl(P.x - 50, P.y - 6, "56°", "#fff067", 13, 0);
+// "56°" sits OUTSIDE the wedge to the west of P.
+texEl(P.x - 56, P.y - 8, "56°", "#fff067", 13, 0);
 // Centre and vertex dots + letters
 dotEl(O.x, O.y, "#7a7875", 6, 0);
 labelEl(O.x - 14, O.y + 6, "O", "#7a7875", 13, 0);
@@ -248,26 +249,25 @@ texEl(O.x - 22, (O.y + A.y)/2 - 8, "r = 7", "#00abfa", 13, 0);
 lineEl(O.x, O.y, P.x, P.y, "#fff067", 1.5, true, 1);
 // Smaller 28° wedge at P between OP (toward O, conic 270°) and PA (conic 298°).
 wedgeEl(P.x, P.y, 38, 270, 28, "#0fee89", 1);
-texEl(P.x - 38, P.y + 12, "28°", "#0fee89", 12, 1);
+// "28°" sits ABOVE the small wedge in the open space (upper-left of P).
+texEl(P.x - 28, P.y - 30, "28°", "#0fee89", 12, 1);
 
 // === Equation panel — typeset with KaTeX ===============================
-// Step 1: angle-bisection statement
+// KaTeX renders \dfrac fractions ~50 px tall, so each line needs a
+// 60-65 px slot to read without colliding with the next.
 texEl(40, 250,
   "\\angle OPA = \\dfrac{56\\degree}{2} = 28\\degree",
   "#f0eeea", 16, 1);
 
-// Step 2: tan ratio in right triangle OAP
-texEl(40, 290,
+texEl(40, 315,
   "\\tan 28\\degree = \\dfrac{OA}{PA} = \\dfrac{7}{PA}",
   "#f0eeea", 16, 2);
 
-// Step 3: solve for PA
-texEl(40, 330,
+texEl(40, 385,
   "PA = \\dfrac{7}{\\tan 28\\degree} \\approx 13.2 \\;\\text{cm}",
   "#0fee89", 18, 3);
 
-// Step 4: isosceles base angle
-texEl(40, 380,
+texEl(40, 460,
   "\\angle PAB = \\dfrac{180\\degree - 56\\degree}{2} = 62\\degree",
   "#0fee89", 18, 4);
 
