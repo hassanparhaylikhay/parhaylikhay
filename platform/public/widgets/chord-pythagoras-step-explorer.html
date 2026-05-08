@@ -206,17 +206,16 @@ labelEl(B.x + 8,  B.y + 6, "B", "#fff067", 14, 0);
 // midpoint M dot (visible from start; the perpendicular meets the chord
 // at the chord's midpoint, that's the whole point of the theorem)
 dotEl(foot.x, foot.y, "#fff067", 6, 0);
-// "5" label along the perpendicular (KaTeX so it matches the equation
-// font lower down).
-texEl(O.x + 6, O.y + d_disp/2 - 8, "5", "#00abfa", 13, 0);
+// "5" label LEFT of the perpendicular (the blue vertical column).
+texEl(O.x - 22, O.y + d_disp/2 - 8, "5", "#00abfa", 13, 0);
 // "24" label below the chord (full chord length).
 texEl(O.x - 8, foot.y + 12, "24", "#00abfa", 13, 0);
 
 // === Step 1 — half-chord = 12 ==========================================
 // Re-draw the right half of the chord in green to highlight it.
 lineEl(foot.x, foot.y, B.x, B.y, "#0fee89", 3, false, 1);
-// "12" label centred on the right half.
-texEl(foot.x + halfDisp/2 - 8, foot.y - 22, "12", "#0fee89", 13, 1);
+// "12" label UNDER the green half-chord, centred on it.
+texEl(foot.x + halfDisp/2 - 8, foot.y + 12, "12", "#0fee89", 13, 1);
 
 // === Step 2 — form right triangle (hypotenuse = r) =====================
 // Hypotenuse OB (yellow).
