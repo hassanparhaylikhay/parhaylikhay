@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Find Centre From Three Points</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+
+  .stage-outer { width:100%; max-width:440px; margin:0 auto; aspect-ratio: 440 / 340; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:440px; height:340px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+
+  .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
+  .draw-fade.drawn { opacity:1; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
+
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">step 0: three points on a circle</span>
+    <span class="step-num" id="counter">0 / 5</span>
+  </div>
+  <div class="stage-outer" id="stage-outer">
+    <div class="stage" id="stage"></div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
+  </div>
+  <p class="footer">find the centre of a circle through three known points</p>
+</div>
+
+<script>
+"use strict";
+
+// Geometry: O = (220, 170), r = 120. Three points equidistant from O.
+// A at math 220°, B at math 320°, C at math 90°.
+var O  = { x: 220, y: 170 };
+var R  = 120;
+var A  = { x: O.x + R * Math.cos(220 * Math.PI / 180), y: O.y + R * Math.sin(220 * Math.PI / 180) };
+var B  = { x: O.x + R * Math.cos(320 * Math.PI / 180), y: O.y + R * Math.sin(320 * Math.PI / 180) };
+var C  = { x: O.x + R * Math.cos( 90 * Math.PI / 180), y: O.y + R * Math.sin( 90 * Math.PI / 180) };
+var M_AB = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2 };
+var M_BC = { x: (B.x + C.x) / 2, y: (B.y + C.y) / 2 };
+
+var stage      = document.getElementById("stage");
+var stageOuter = document.getElementById("stage-outer");
+var STAGE_W    = 440, STAGE_H = 340;
+
+function fitStage() {
+  var w = stageOuter.clientWidth;
+  if (!w) return;
+  stage.style.transform = "scale(" + (w / STAGE_W) + ")";
+}
+fitStage();
+window.addEventListener("resize", fitStage);
+if (window.ResizeObserver) new ResizeObserver(fitStage).observe(stageOuter);
+
+function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
+
+function makeNode(tag, style, dataStep, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  setStyle(n, style);
+  if (dataStep != null) n.dataset.step = String(dataStep);
+  stage.appendChild(n);
+  return n;
+}
+
+function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
+  var dx = x2 - x1, dy = y2 - y1;
+  var len = Math.sqrt(dx*dx + dy*dy);
+  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  var t = thickness || 2;
+  var s = {
+    position: "absolute",
+    left: x1 + "px", top: y1 + "px",
+    width: "0px", height: t + "px",
+    transformOrigin: "0 50%",
+    transform: "translateY(" + (-t / 2) + "px) rotate(" + ang + "deg)"
+  };
+  if (dashed) {
+    s.background = "transparent";
+    s.borderTop = t + "px dashed " + color;
+    s.height = "0px";
+  } else {
+    s.background = color;
+  }
+  var node = makeNode("div", s, dataStep, "draw-line");
+  node._fullWidth = len;
+  return node;
+}
+
+function dotEl(x, y, color, size, dataStep) {
+  var sz = size || 7;
+  return makeNode("div", {
+    position: "absolute",
+    left: (x - sz/2) + "px", top: (y - sz/2) + "px",
+    width: sz + "px", height: sz + "px",
+    borderRadius: "50%",
+    background: color
+  }, dataStep, "draw-fade");
+}
+
+function labelEl(x, y, text, color, fontSize, dataStep, opts) {
+  opts = opts || {};
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontFamily: "'Geist Mono', monospace",
+    fontSize: (fontSize || 11) + "px",
+    color: color,
+    fontWeight: opts.weight || "700",
+    whiteSpace: "nowrap",
+    pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  n.textContent = text;
+  return n;
+}
+
+// === Build construction ==============================================
+
+// Faint reference circle — students don't know the centre yet, but the
+// circle outline is given (or sketched in by passing through A, B, C).
+makeNode("div", {
+  position: "absolute",
+  left: (O.x - R) + "px", top: (O.y - R) + "px",
+  width: (2*R) + "px", height: (2*R) + "px",
+  borderRadius: "50%",
+  border: "1.5px solid #1a2330",
+  pointerEvents: "none"
+});
+
+// Step 0: the three points
+dotEl(A.x, A.y, "#fff067", 8, 0);
+dotEl(B.x, B.y, "#fff067", 8, 0);
+dotEl(C.x, C.y, "#fff067", 8, 0);
+labelEl(A.x - 18, A.y - 4, "A", "#fff067", 14, 0);
+labelEl(B.x + 8,  B.y - 4, "B", "#fff067", 14, 0);
+labelEl(C.x - 4,  C.y + 8, "C", "#fff067", 14, 0);
+
+// Step 1: chord AB, midpoint M_AB
+lineEl(A.x, A.y, B.x, B.y, "#00abfa", 2.5, false, 1);
+dotEl(M_AB.x, M_AB.y, "#fff067", 7, 1);
+
+// Step 2: perpendicular bisector of AB. AB is horizontal so the
+// bisector is the vertical line x = M_AB.x. Animate top → bottom.
+lineEl(M_AB.x, 20, M_AB.x, 320, "#0fee89", 1.6, true, 2);
+
+// Step 3: chord BC, midpoint M_BC
+lineEl(B.x, B.y, C.x, C.y, "#00abfa", 2.5, false, 3);
+dotEl(M_BC.x, M_BC.y, "#fff067", 7, 3);
+
+// Step 4: perpendicular bisector of BC. Direction perpendicular to BC.
+// BC unit ≈ (−0.423, 0.906); perp unit ≈ (−0.906, −0.423) toward O.
+// Draw a line from one container edge to another along that direction.
+(function() {
+  var bcDx = C.x - B.x, bcDy = C.y - B.y;
+  var bcLen = Math.sqrt(bcDx*bcDx + bcDy*bcDy);
+  var ux = bcDx / bcLen, uy = bcDy / bcLen;
+  var nx = -uy, ny = ux;  // perpendicular unit
+  // Extend in both directions from M_BC to container edges. Use t up to
+  // 360 each way which is ample for a 440x340 stage.
+  var T = 360;
+  var x1 = M_BC.x - nx * T, y1 = M_BC.y - ny * T;
+  var x2 = M_BC.x + nx * T, y2 = M_BC.y + ny * T;
+  lineEl(x1, y1, x2, y2, "#0fee89", 1.6, true, 4);
+})();
+
+// Step 5: highlight the intersection — that is the centre.
+dotEl(O.x, O.y, "#ff4670", 10, 5);
+labelEl(O.x - 30, O.y - 6, "O = centre", "#ff4670", 12, 5);
+
+// === Step controller =================================================
+
+var STEPS = [
+  "step 0: three points on a circle",
+  "step 1: draw chord AB and mark its midpoint",
+  "step 2: perpendicular bisector of AB",
+  "step 3: draw chord BC and mark its midpoint",
+  "step 4: perpendicular bisector of BC",
+  "step 5: bisectors meet at the centre"
+];
+var step = 0, maxStep = STEPS.length - 1;
+
+var titleEl   = document.getElementById("title");
+var counterEl = document.getElementById("counter");
+var prevBtn   = document.getElementById("prev");
+var nextBtn   = document.getElementById("next");
+
+function setStep(n) {
+  step = Math.max(0, Math.min(maxStep, n));
+  titleEl.textContent = STEPS[step];
+  counterEl.textContent = step + " / " + maxStep;
+  var els = stage.querySelectorAll("[data-step]");
+  for (var i = 0; i < els.length; i++) {
+    var s = parseInt(els[i].dataset.step, 10);
+    var el = els[i];
+    if (s <= step) {
+      el.classList.add("drawn");
+      if (el._fullWidth != null) el.style.width = el._fullWidth + "px";
+    } else {
+      el.classList.remove("drawn");
+      if (el._fullWidth != null) el.style.width = "0px";
+    }
+  }
+  prevBtn.disabled = (step === 0);
+  nextBtn.disabled = (step === maxStep);
+}
+
+prevBtn.onclick = function() { setStep(step - 1); };
+nextBtn.onclick = function() { setStep(step + 1); };
+setStep(0);
+
+// === Height reporter =================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
