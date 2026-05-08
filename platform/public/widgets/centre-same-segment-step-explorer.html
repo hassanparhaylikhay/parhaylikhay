@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Tangent From External Point — Step Explorer</title>
+<title>Centre + Same Segment Step Explorer</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -15,8 +15,8 @@
   .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
-  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 380; position:relative; }
-  .stage { position:absolute; top:0; left:0; width:660px; height:380px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 360; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:660px; height:360px; transform-origin: top left; overflow:hidden; border-radius:6px; }
   .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
   .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
   .draw-fade.drawn { opacity:1; }
@@ -35,8 +35,8 @@
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
-    <span class="step-title" id="title">step 0: ∠APB = 56°, radius r = 7</span>
-    <span class="step-num" id="counter">0 / 4</span>
+    <span class="step-title" id="title">step 0: ∠AOC = 110°, B and D on major arc</span>
+    <span class="step-num" id="counter">0 / 2</span>
   </div>
   <div class="stage-outer" id="stage-outer">
     <div class="stage" id="stage"></div>
@@ -45,27 +45,32 @@
     <button class="ctl" id="prev">← prev</button>
     <button class="ctl" id="next">next →</button>
   </div>
-  <p class="footer">PA, PB tangents from P · ∠APB = 56° · r = 7 cm</p>
+  <p class="footer">centre angle 110° → inscribed angle (centre rule + same segment)</p>
 </div>
 
 <script>
 "use strict";
 
-// ∠APB = 56°, OP bisects → ∠OPA = 28°. With r = 7 cm, ∠OAP = 90°,
-// ∠AOP = 62°, |OP| = r / sin 28°. Display r = 60 px (scale 8.57 px/unit).
-var O   = { x: 110, y: 130 };
-var R_d = 60;
-var halfAngleDeg = 28;
-var halfAngleRad = halfAngleDeg * Math.PI / 180;
-var OPlen = R_d / Math.sin(halfAngleRad);   // ≈ 127.8
-var P   = { x: O.x + OPlen, y: O.y };
-var alphaRad = (90 - halfAngleDeg) * Math.PI / 180;
-var A   = { x: O.x + R_d * Math.cos(alphaRad), y: O.y - R_d * Math.sin(alphaRad) };
-var B   = { x: A.x, y: 2 * O.y - A.y };
+// Geometry — diagram in left half (x: 0..320). Circle O = (160, 170),
+// r = 100. ∠AOC = 110° symmetric about the vertical through O so each
+// radius is 55° off the downward axis: A bottom-left, C bottom-right.
+// B and D placed on the major arc (above chord AC).
+var O = { x: 160, y: 170 };
+var R_d = 100;
+function ptOnCircle(deg) {
+  var r = deg * Math.PI / 180;
+  return { x: O.x + R_d * Math.cos(r), y: O.y + R_d * Math.sin(r) };
+}
+var A = ptOnCircle(215);  // ≈ (78, 113) — wait, let me re-derive: cos 215° = -0.819, sin 215° = -0.574. A = (160-81.9, 170-57.4) = (78.1, 112.6). Hmm that's TOP-left.
+// Recompute: I want A in the LOWER half. Use math 145° instead (cos = -0.819, sin = +0.574).
+A = ptOnCircle(145);  // (78, 227)
+var C = ptOnCircle( 35); // (242, 227)
+var D = ptOnCircle(250); // (126, 76) upper-left of major arc
+var B = ptOnCircle(290); // (194, 76) upper-right of major arc
 
 var stage      = document.getElementById("stage");
 var stageOuter = document.getElementById("stage-outer");
-var STAGE_W    = 660, STAGE_H = 380;
+var STAGE_W    = 660, STAGE_H = 360;
 function fitStage() {
   var w = stageOuter.clientWidth;
   if (!w) return;
@@ -161,15 +166,8 @@ function wedgeEl(cx, cy, size, fromConicDeg, sweepDeg, color, dataStep) {
     pointerEvents: "none"
   }, dataStep, "draw-fade");
 }
-function rightAngleEl(x, y, dirX1, dirY1, dirX2, dirY2, armLen, color, dataStep) {
-  var p1x = x + dirX1*armLen, p1y = y + dirY1*armLen;
-  var p2x = x + dirX2*armLen, p2y = y + dirY2*armLen;
-  var fx  = p1x + dirX2*armLen, fy = p1y + dirY2*armLen;
-  lineEl(p1x, p1y, fx, fy, color, 1.5, false, dataStep);
-  lineEl(fx, fy, p2x, p2y, color, 1.5, false, dataStep);
-}
 
-// ===== Always visible — faint reference circle =========================
+// ===== Always visible — circle outline =================================
 makeNode("div", {
   position: "absolute",
   left: (O.x - R_d) + "px", top: (O.y - R_d) + "px",
@@ -180,66 +178,61 @@ makeNode("div", {
 });
 
 // ===== Step 0 — given configuration ====================================
+// Radii OA, OC (blue)
 lineEl(O.x, O.y, A.x, A.y, "#00abfa", 2.5, false, 0);
-lineEl(O.x, O.y, B.x, B.y, "#00abfa", 2.5, false, 0);
-lineEl(A.x, A.y, P.x, P.y, "#ff822c", 2.5, false, 0);
-lineEl(B.x, B.y, P.x, P.y, "#ff822c", 2.5, false, 0);
-
-// L-markers at A and B
-(function() {
-  function unitFromTo(p, q) {
-    var dx = q.x - p.x, dy = q.y - p.y;
-    var L = Math.sqrt(dx*dx + dy*dy);
-    return { x: dx/L, y: dy/L };
-  }
-  var aoUnit = unitFromTo(A, O), apUnit = unitFromTo(A, P);
-  rightAngleEl(A.x, A.y, aoUnit.x, aoUnit.y, apUnit.x, apUnit.y, 8, "#ff4670", 0);
-  var boUnit = unitFromTo(B, O), bpUnit = unitFromTo(B, P);
-  rightAngleEl(B.x, B.y, boUnit.x, boUnit.y, bpUnit.x, bpUnit.y, 8, "#ff4670", 0);
-})();
-
-// 56° wedge at P (between PA and PB)
-wedgeEl(P.x, P.y, 56, 242, 56, "#fff067", 0);
-texEl(P.x - 54, P.y - 8, "56°", "#fff067", 13, 0);
-
-// O, A, B, P + letters
+lineEl(O.x, O.y, C.x, C.y, "#00abfa", 2.5, false, 0);
+// 110° wedge at O between OC (conic 125°) and OA (conic 235°). Fill 110° from 125°.
+wedgeEl(O.x, O.y, 60, 125, 110, "#fff067", 0);
+texEl(O.x - 16, O.y + 14, "110°", "#fff067", 13, 0);
+// O dot
 dotEl(O.x, O.y, "#7a7875", 6, 0);
-labelEl(O.x - 14, O.y + 6, "O", "#7a7875", 13, 0);
+labelEl(O.x + 8, O.y - 16, "O", "#7a7875", 12, 0);
+// Vertices
 dotEl(A.x, A.y, "#fff067", 8, 0);
-labelEl(A.x + 8, A.y - 16, "A", "#fff067", 14, 0);
+labelEl(A.x - 18, A.y, "A", "#fff067", 14, 0);
+dotEl(C.x, C.y, "#fff067", 8, 0);
+labelEl(C.x + 8, C.y, "C", "#fff067", 14, 0);
 dotEl(B.x, B.y, "#fff067", 8, 0);
-labelEl(B.x + 8, B.y + 4, "B", "#fff067", 14, 0);
-dotEl(P.x, P.y, "#fff067", 8, 0);
-labelEl(P.x + 10, P.y - 6, "P", "#fff067", 14, 0);
+labelEl(B.x + 8, B.y - 16, "B", "#fff067", 14, 0);
+dotEl(D.x, D.y, "#fff067", 8, 0);
+labelEl(D.x - 18, D.y - 16, "D", "#fff067", 14, 0);
 
-// "r = 7" label, sitting LEFT of OA radius.
-texEl(O.x - 32, (O.y + A.y)/2 - 8, "r = 7", "#00abfa", 13, 0);
+// ===== Step 1 — ∠ADC = 55° (centre rule) ===============================
+// Add chords DA, DC (lighter to suggest construction) and 55° wedge at D.
+lineEl(D.x, D.y, A.x, A.y, "#0fee89", 2, false, 1);
+lineEl(D.x, D.y, C.x, C.y, "#0fee89", 2, false, 1);
+// Wedge at D: DC conic ≈ 142.5°, DA conic ≈ 197.65°. Fill 55° from 142.5°.
+wedgeEl(D.x, D.y, 50, 142.5, 55, "#0fee89", 1);
+texEl(D.x + 4, D.y + 14, "55°", "#0fee89", 13, 1);
 
-// ===== Step 1 — OP bisects ∠APB → ∠OPA = 28° ===========================
-lineEl(O.x, O.y, P.x, P.y, "#fff067", 1.5, true, 1);
-wedgeEl(P.x, P.y, 36, 270, 28, "#0fee89", 1);
-texEl(P.x - 28, P.y - 30, "28°", "#0fee89", 12, 1);
+// ===== Step 2 — ∠ABC = ∠ADC = 55° (same segment) =======================
+lineEl(B.x, B.y, A.x, A.y, "#0fee89", 2, false, 2);
+lineEl(B.x, B.y, C.x, C.y, "#0fee89", 2, false, 2);
+// Wedge at B: BC conic ≈ 162.35°, BA conic ≈ 217.5°. Fill 55° from 162.35°.
+wedgeEl(B.x, B.y, 50, 162.35, 55, "#0fee89", 2);
+texEl(B.x - 30, B.y + 14, "55°", "#0fee89", 13, 2);
 
-// ===== Step 4 — chord AB drawn (so △PAB reads as isosceles) ============
-lineEl(A.x, A.y, B.x, B.y, "#00abfa", 1.6, true, 4);
+// ===== Equation panel (RIGHT side) =====================================
+texEl(360, 100,
+  "\\angle ADC = \\dfrac{110\\degree}{2} = 55\\degree",
+  "#0fee89", 19, 1);
+texEl(360, 215,
+  "\\angle ABC = \\angle ADC = 55\\degree",
+  "#0fee89", 19, 2);
 
-// ===== Equation panel (RIGHT side, x ≈ 360) ============================
-texEl(360,  60, "\\angle OPA = \\dfrac{56\\degree}{2} = 28\\degree",
-      "#f0eeea", 17, 1);
-texEl(360, 145, "\\tan 28\\degree = \\dfrac{OA}{PA} = \\dfrac{7}{PA}",
-      "#f0eeea", 17, 2);
-texEl(360, 230, "PA = \\dfrac{7}{\\tan 28\\degree} \\approx 13.2 \\;\\text{cm}",
-      "#0fee89", 19, 3);
-texEl(360, 315, "\\angle PAB = \\dfrac{180\\degree - 56\\degree}{2} = 62\\degree",
-      "#0fee89", 19, 4);
+// Subtle reason hints below each equation
+texEl(360, 152,
+  "\\text{(angle at centre} = 2 \\times \\text{angle at circumference)}",
+  "#7a7875", 12, 1);
+texEl(360, 260,
+  "\\text{(angles in the same segment are equal)}",
+  "#7a7875", 12, 2);
 
 // ===== Step controller =================================================
 var STEPS = [
-  "step 0: ∠APB = 56°, radius r = 7",
-  "step 1: OP bisects ∠APB",
-  "step 2: right triangle OAP",
-  "step 3: solve for PA",
-  "step 4: isosceles △PAB → ∠PAB"
+  "step 0: ∠AOC = 110°, B and D on major arc",
+  "step 1: ∠ADC = 55° (centre rule)",
+  "step 2: ∠ABC = ∠ADC (same segment)"
 ];
 var step = 0, maxStep = STEPS.length - 1;
 var titleEl   = document.getElementById("title");

@@ -200,58 +200,7 @@ The points $A(2, 1)$, $B(8, 1)$, $C(8, 9)$ all lie on a circle.
 
 (c) From an external point $P$, the tangent length to this circle is $12$ cm. Find $OP$.
 
-<div class="diagram">
-<div class="diagram-caption">A(2,1) · B(8,1) · C(8,9) ON A CIRCLE · CENTRE = INTERSECTION OF PERPENDICULAR BISECTORS</div>
-<div style="display:flex;justify-content:center;padding:14px 0">
-<div style="position:relative;width:400px;height:320px;max-width:100%">
-
-  <!-- Coord-geometry sketch. Display scale 20 px/unit; coord-origin in
-       the diagram at (60, 270). Mapping (x, y) → (60 + 20x, 270 − 20y).
-       A(2,1) → (100, 250)   B(8,1) → (220, 250)   C(8,9) → (220, 90)
-       Midpoint of AB = (5,1) → (160, 250)
-       Midpoint of BC = (8,5) → (220, 170)
-       Centre O = (5,5) → (160, 170). Radius = 5 units → 100 px display. -->
-
-  <!-- Subtle axes hint: short tick at coord-origin -->
-  <div style="position:absolute;left:60px;top:270px;width:10px;height:1.5px;background:#3a4a5a"></div>
-  <div style="position:absolute;left:58.75px;top:265px;width:1.5px;height:10px;background:#3a4a5a"></div>
-  <div style="position:absolute;left:42px;top:274px;font:700 10px 'Geist Mono',monospace;color:#3a4a5a">(0,0)</div>
-
-  <!-- Circle through A, B, C: centre O = (160, 170), r = 100. -->
-  <div style="position:absolute;left:60px;top:70px;width:200px;height:200px;border-radius:50%;border:1.5px solid #3a4a5a;box-sizing:border-box"></div>
-
-  <!-- Triangle sides AB, BC (the two chords whose perpendicular bisectors we use). -->
-  <!-- AB: A(100,250)→B(220,250), horizontal length 120. -->
-  <div style="position:absolute;left:100px;top:248.75px;width:120px;height:2.5px;background:#00abfa"></div>
-  <!-- BC: B(220,250)→C(220,90), vertical length 160. -->
-  <div style="position:absolute;left:218.75px;top:90px;width:2.5px;height:160px;background:#00abfa"></div>
-
-  <!-- Perpendicular bisector of AB: vertical dashed line at x = 160. -->
-  <div style="position:absolute;left:159.25px;top:60px;width:1.5px;height:230px;background:repeating-linear-gradient(to bottom, #0fee89 0 5px, transparent 5px 9px)"></div>
-  <!-- Perpendicular bisector of BC: horizontal dashed line at y = 170. -->
-  <div style="position:absolute;left:50px;top:169.25px;width:230px;height:1.5px;background:repeating-linear-gradient(to right, #0fee89 0 5px, transparent 5px 9px)"></div>
-
-  <!-- Vertices A, B, C with coord labels -->
-  <div style="position:absolute;left:100px;top:250px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:78px;top:258px;font:700 12px 'Geist Mono',monospace;color:#fff067">A(2,1)</div>
-
-  <div style="position:absolute;left:220px;top:250px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:228px;top:258px;font:700 12px 'Geist Mono',monospace;color:#fff067">B(8,1)</div>
-
-  <div style="position:absolute;left:220px;top:90px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:228px;top:80px;font:700 12px 'Geist Mono',monospace;color:#fff067">C(8,9)</div>
-
-  <!-- Centre O at intersection -->
-  <div style="position:absolute;left:160px;top:170px;width:10px;height:10px;border-radius:50%;background:#ff4670;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:130px;top:158px;font:700 12px 'Geist Mono',monospace;color:#ff4670">O(5,5)</div>
-
-  <!-- Bisector labels -->
-  <div style="position:absolute;left:166px;top:46px;font:700 11px 'Geist Mono',monospace;color:#0fee89">x = 5</div>
-  <div style="position:absolute;left:296px;top:164px;font:700 11px 'Geist Mono',monospace;color:#0fee89">y = 5</div>
-
-</div>
-</div>
-</div>
+<iframe src="/widgets/circle-coord-geom-step-explorer.html" style="width:100%;max-width:696px;height:480px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
 **Step a: Coordinates of the centre.** Build the perpendicular bisector of two chords and intersect them.
 

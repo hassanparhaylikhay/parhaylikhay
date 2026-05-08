@@ -12,18 +12,14 @@
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 18px 16px; }
   .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
-
   .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
-
-  .stage-outer { width:100%; max-width:440px; margin:0 auto; aspect-ratio: 440 / 360; position:relative; }
-  .stage { position:absolute; top:0; left:0; width:440px; height:360px; transform-origin: top left; overflow:hidden; border-radius:6px; }
-
+  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 360; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:660px; height:360px; transform-origin: top left; overflow:hidden; border-radius:6px; }
   .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
   .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
   .draw-fade.drawn { opacity:1; }
-
   .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
   button.ctl {
     background:#0b1118; border:1px solid #141e2a; color:#7a7875;
@@ -33,7 +29,6 @@
   }
   button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
   button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
-
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
 </head>
@@ -56,21 +51,20 @@
 <script>
 "use strict";
 
-// Geometry — display scale 6 px per unit so the 5-12-13 triple fits.
-// Half-chord display = 72 px (12 units), distance = 30 px (5 units),
-// hypotenuse = 78 px (13 units = display radius).
-var O      = { x: 220, y: 100 };
+// Geometry — diagram lives in the LEFT half of the stage (x: 0..320),
+// equations on the RIGHT (x: 340..660). Display scale 6 px / unit so
+// the 5-12-13 triple fits cleanly.
+var O      = { x: 160, y: 100 };
 var R_disp = 78;
 var d_disp = 30;          // display perpendicular distance (= 5 units)
 var halfDisp = 72;        // display half-chord (= 12 units)
-var foot   = { x: O.x, y: O.y + d_disp };  // (220, 130)
-var A      = { x: O.x - halfDisp, y: foot.y };  // (148, 130)
-var B      = { x: O.x + halfDisp, y: foot.y };  // (292, 130)
+var foot   = { x: O.x, y: O.y + d_disp };  // (160, 130)
+var A      = { x: O.x - halfDisp, y: foot.y };
+var B      = { x: O.x + halfDisp, y: foot.y };
 
 var stage      = document.getElementById("stage");
 var stageOuter = document.getElementById("stage-outer");
-var STAGE_W    = 440, STAGE_H = 360;
-
+var STAGE_W    = 660, STAGE_H = 360;
 function fitStage() {
   var w = stageOuter.clientWidth;
   if (!w) return;
@@ -89,7 +83,6 @@ function makeNode(tag, style, dataStep, cls) {
   stage.appendChild(n);
   return n;
 }
-
 function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
   var dx = x2 - x1, dy = y2 - y1;
   var len = Math.sqrt(dx*dx + dy*dy);
@@ -113,18 +106,15 @@ function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
   node._fullWidth = len;
   return node;
 }
-
 function dotEl(x, y, color, size, dataStep) {
   var sz = size || 7;
   return makeNode("div", {
     position: "absolute",
     left: (x - sz/2) + "px", top: (y - sz/2) + "px",
     width: sz + "px", height: sz + "px",
-    borderRadius: "50%",
-    background: color
+    borderRadius: "50%", background: color
   }, dataStep, "draw-fade");
 }
-
 function labelEl(x, y, text, color, fontSize, dataStep, opts) {
   opts = opts || {};
   var n = makeNode("div", {
@@ -132,16 +122,12 @@ function labelEl(x, y, text, color, fontSize, dataStep, opts) {
     left: x + "px", top: y + "px",
     fontFamily: opts.font || "'Geist Mono', monospace",
     fontSize: (fontSize || 11) + "px",
-    color: color,
-    fontWeight: opts.weight || "700",
-    whiteSpace: "nowrap",
-    pointerEvents: "none"
+    color: color, fontWeight: opts.weight || "700",
+    whiteSpace: "nowrap", pointerEvents: "none"
   }, dataStep, "draw-fade");
   n.textContent = text;
   return n;
 }
-
-// KaTeX render helper (waits for the deferred KaTeX script if needed).
 function tryRender(target, tex) {
   if (typeof katex !== "undefined") {
     try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
@@ -150,27 +136,17 @@ function tryRender(target, tex) {
     setTimeout(function() { tryRender(target, tex); }, 50);
   }
 }
-
-// LaTeX-rendered label. Same positioning + step-fade contract as
-// labelEl, but the contents are typeset by KaTeX (so r, r², √, etc.
-// render properly as math).
 function texEl(x, y, tex, color, fontSize, dataStep) {
   var n = makeNode("div", {
     position: "absolute",
     left: x + "px", top: y + "px",
     fontSize: (fontSize || 14) + "px",
-    color: color,
-    whiteSpace: "nowrap",
-    pointerEvents: "none"
+    color: color, whiteSpace: "nowrap", pointerEvents: "none"
   }, dataStep, "draw-fade");
   tryRender(n, tex);
   return n;
 }
-
-// L-shaped right-angle marker at point (x, y) with arms going along
-// (dirX1, dirY1) and (dirX2, dirY2). armLen px each side.
 function rightAngleEl(x, y, dirX1, dirY1, dirX2, dirY2, armLen, color, dataStep) {
-  // Two-line L: from (x + d1) to corner (x + d1 + d2), corner to (x + d2).
   var p1x = x + dirX1*armLen, p1y = y + dirY1*armLen;
   var p2x = x + dirX2*armLen, p2y = y + dirY2*armLen;
   var fx  = p1x + dirX2*armLen, fy = p1y + dirY2*armLen;
@@ -178,7 +154,7 @@ function rightAngleEl(x, y, dirX1, dirY1, dirX2, dirY2, armLen, color, dataStep)
   lineEl(fx, fy, p2x, p2y, color, 1.5, false, dataStep);
 }
 
-// === Always-visible reference — faint full circle. =====================
+// ===== Always visible — faint reference circle =========================
 makeNode("div", {
   position: "absolute",
   left: (O.x - R_disp) + "px", top: (O.y - R_disp) + "px",
@@ -188,47 +164,35 @@ makeNode("div", {
   pointerEvents: "none"
 });
 
-// === Step 0 — given configuration ======================================
-// chord (full length, blue)
-lineEl(A.x, A.y, B.x, B.y, "#00abfa", 2.5, false, 0);
-// perpendicular OM (blue, drawn from O down to foot)
-lineEl(O.x, O.y, foot.x, foot.y, "#00abfa", 2.5, false, 0);
-// L-marker at foot of perpendicular
-rightAngleEl(foot.x, foot.y, 1, 0, 0, -1, 9, "#ff4670", 0);
-// O dot + label
+// ===== Step 0 — given configuration =====================================
+lineEl(A.x, A.y, B.x, B.y, "#00abfa", 2.5, false, 0);            // chord
+lineEl(O.x, O.y, foot.x, foot.y, "#00abfa", 2.5, false, 0);     // perpendicular
+rightAngleEl(foot.x, foot.y, 1, 0, 0, -1, 9, "#ff4670", 0);     // L-marker
 dotEl(O.x, O.y, "#7a7875", 6, 0);
 labelEl(O.x + 8, O.y - 14, "O", "#7a7875", 13, 0);
-// A, B endpoints
 dotEl(A.x, A.y, "#fff067", 8, 0);
 dotEl(B.x, B.y, "#fff067", 8, 0);
 labelEl(A.x - 18, A.y + 6, "A", "#fff067", 14, 0);
 labelEl(B.x + 8,  B.y + 6, "B", "#fff067", 14, 0);
-// midpoint M dot (visible from start; the perpendicular meets the chord
-// at the chord's midpoint, that's the whole point of the theorem)
 dotEl(foot.x, foot.y, "#fff067", 6, 0);
-// "5" label LEFT of the perpendicular (the blue vertical column).
-texEl(O.x - 22, O.y + d_disp/2 - 8, "5", "#00abfa", 13, 0);
-// "24" label below the chord (full chord length).
-texEl(O.x - 8, foot.y + 12, "24", "#00abfa", 13, 0);
+texEl(O.x - 22, O.y + d_disp/2 - 8, "5",  "#00abfa", 13, 0);
+texEl(O.x - 8,  foot.y + 12,        "24", "#00abfa", 13, 0);
 
-// === Step 1 — half-chord = 12 ==========================================
-// Re-draw the right half of the chord in green to highlight it.
-lineEl(foot.x, foot.y, B.x, B.y, "#0fee89", 3, false, 1);
-// "12" label UNDER the green half-chord, centred on it.
+// ===== Step 1 — half-chord = 12 ========================================
+lineEl(foot.x, foot.y, B.x, B.y, "#0fee89", 3, false, 1);       // green highlight
 texEl(foot.x + halfDisp/2 - 8, foot.y + 12, "12", "#0fee89", 13, 1);
 
-// === Step 2 — form right triangle (hypotenuse = r) =====================
-// Hypotenuse OB (yellow).
+// ===== Step 2 — form right triangle (hypotenuse = r) ===================
 lineEl(O.x, O.y, B.x, B.y, "#fff067", 2.5, false, 2);
-// "r" label on the hypotenuse, slightly above its midpoint.
 texEl((O.x + B.x)/2 + 4, (O.y + B.y)/2 - 22, "r", "#fff067", 16, 2);
 
-// === Steps 3 and 4 — equations (typeset with KaTeX) ====================
-texEl(60, 226, "\\text{Pythagoras:}\\;\\; r^2 = 5^2 + 12^2", "#f0eeea", 16, 3);
-texEl(60, 258, "r^2 = 25 + 144 = 169", "#f0eeea", 16, 4);
-texEl(60, 296, "r = \\sqrt{169} = 13 \\;\\text{cm}", "#0fee89", 19, 4);
+// ===== Equation panel (RIGHT side, x ≈ 360) ============================
+texEl(360,  60, "\\text{Pythagoras:}", "#7a7875", 13, 3);
+texEl(360,  90, "r^2 = 5^2 + 12^2",     "#f0eeea", 17, 3);
+texEl(360, 165, "r^2 = 25 + 144 = 169", "#f0eeea", 17, 4);
+texEl(360, 245, "r = \\sqrt{169} = 13 \\;\\text{cm}", "#0fee89", 20, 4);
 
-// === Step controller ===================================================
+// ===== Step controller =================================================
 var STEPS = [
   "step 0: chord = 24, perpendicular distance = 5",
   "step 1: perpendicular bisects chord → half-chord = 12",
@@ -237,12 +201,10 @@ var STEPS = [
   "step 4: solve for r"
 ];
 var step = 0, maxStep = STEPS.length - 1;
-
 var titleEl   = document.getElementById("title");
 var counterEl = document.getElementById("counter");
 var prevBtn   = document.getElementById("prev");
 var nextBtn   = document.getElementById("next");
-
 function setStep(n) {
   step = Math.max(0, Math.min(maxStep, n));
   titleEl.textContent = STEPS[step];
@@ -262,12 +224,11 @@ function setStep(n) {
   prevBtn.disabled = (step === 0);
   nextBtn.disabled = (step === maxStep);
 }
-
 prevBtn.onclick = function() { setStep(step - 1); };
 nextBtn.onclick = function() { setStep(step + 1); };
 setStep(0);
 
-// === Height reporter ===================================================
+// ===== Height reporter =================================================
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {
   if (reportScheduled) return;

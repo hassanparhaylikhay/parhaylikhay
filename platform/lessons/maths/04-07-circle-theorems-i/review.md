@@ -168,68 +168,7 @@ Find:
 
 (c) angle $BCT$ (the angle between the tangent at $C$ and chord $CB$).
 
-<div class="diagram">
-<div class="diagram-caption">AC DIAMETER · ∠CAB = 28° · D ON MAJOR ARC OF AB · TANGENT AT C THROUGH T</div>
-<div style="display:flex;justify-content:center;padding:14px 0">
-<div style="position:relative;width:480px;height:280px;max-width:100%">
-
-  <!-- Geometry: circle O = (200, 150), r = 100. AC horizontal diameter so
-       A = (100, 150), C = (300, 150).
-       ∠CAB = 28° → arc CB (not through A) = 56°. Place B on the lower
-       arc at math angle 56°: B = (200 + 100 cos 56°, 150 + 100 sin 56°)
-       ≈ (256, 233).
-       D on the major arc of chord AB (the upper arc through C). Place D
-       at math angle 250°: D ≈ (166, 56).
-       Tangent at C is vertical (perpendicular to horizontal OC). T placed
-       below C; alternate-segment angle ∠BCT = ∠BAC = 28°. -->
-
-  <div style="position:absolute;left:100px;top:50px;width:200px;height:200px;border-radius:50%;border:1.5px solid #3a4a5a;box-sizing:border-box"></div>
-
-  <!-- Diameter AC -->
-  <div style="position:absolute;left:100px;top:148.75px;width:200px;height:2.5px;background:#00abfa"></div>
-
-  <!-- Chord AB: A(100,150)→B(256,233), length 176.7, rotate 28°. -->
-  <div style="position:absolute;left:100px;top:148.75px;width:176.7px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(28deg)"></div>
-
-  <!-- Chord BC: B(256,233)→C(300,150), length 93.9, rotate −62.05°. -->
-  <div style="position:absolute;left:256px;top:231.75px;width:93.9px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(-62.05deg)"></div>
-
-  <!-- Chord AD: A(100,150)→D(166,56), length 114.9, rotate −54.93°. -->
-  <div style="position:absolute;left:100px;top:148.75px;width:114.9px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(-54.93deg)"></div>
-
-  <!-- Chord BD: B(256,233)→D(166,56), length 198.6, rotate −116.95°. -->
-  <div style="position:absolute;left:256px;top:231.75px;width:198.6px;height:2.5px;background:#7a7875;transform-origin:0 50%;transform:rotate(-116.95deg)"></div>
-
-  <!-- Tangent at C (vertical line x=300, y=20 to y=260). -->
-  <div style="position:absolute;left:298.75px;top:20px;width:2.5px;height:240px;background:#ff822c"></div>
-
-  <!-- 28° wedge at A between AC (conic 90°) and AB (conic 118°), fill 28°. -->
-  <div style="position:absolute;left:100px;top:150px;width:60px;height:60px;border-radius:50%;background:conic-gradient(from 90deg, #fff067 0deg 28deg, transparent 28deg);-webkit-mask:radial-gradient(circle, transparent 21px, #000 22px, #000 24px, transparent 25px);mask:radial-gradient(circle, transparent 21px, #000 22px, #000 24px, transparent 25px);transform:translate(-50%,-50%);pointer-events:none"></div>
-  <div style="position:absolute;left:130px;top:160px;font:700 13px 'Geist Mono',monospace;color:#fff067">28°</div>
-
-  <!-- Centre O -->
-  <div style="position:absolute;left:200px;top:150px;width:6px;height:6px;border-radius:50%;background:#7a7875;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:184px;top:138px;font:700 13px 'Geist Mono',monospace;color:#7a7875">O</div>
-
-  <!-- Vertices -->
-  <div style="position:absolute;left:100px;top:150px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:82px;top:140px;font:700 14px 'Geist Mono',monospace;color:#fff067">A</div>
-
-  <div style="position:absolute;left:256px;top:233px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:262px;top:240px;font:700 14px 'Geist Mono',monospace;color:#fff067">B</div>
-
-  <div style="position:absolute;left:300px;top:150px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:308px;top:140px;font:700 14px 'Geist Mono',monospace;color:#fff067">C</div>
-
-  <div style="position:absolute;left:166px;top:56px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:148px;top:40px;font:700 14px 'Geist Mono',monospace;color:#fff067">D</div>
-
-  <div style="position:absolute;left:300px;top:240px;width:8px;height:8px;border-radius:50%;background:#fff067;transform:translate(-50%,-50%)"></div>
-  <div style="position:absolute;left:308px;top:248px;font:700 14px 'Geist Mono',monospace;color:#fff067">T</div>
-
-</div>
-</div>
-</div>
+<iframe src="/widgets/circle-comprehensive-step-explorer.html" style="width:100%;max-width:696px;height:480px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
 **Step a: Angle $ABC$.** $AC$ is a diameter, so $\angle ABC$ subtends the diameter at $B$. By the angle-in-semicircle theorem $\angle ABC = \boxed{90°}$ (angle in a semicircle is $90°$). **[A1 for $90°$; B1 for the reason]**
 

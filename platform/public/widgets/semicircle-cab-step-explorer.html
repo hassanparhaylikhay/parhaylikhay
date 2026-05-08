@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Tangent From External Point — Step Explorer</title>
+<title>Semicircle Worked-Example Step Explorer</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -35,7 +35,7 @@
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
-    <span class="step-title" id="title">step 0: ∠APB = 56°, radius r = 7</span>
+    <span class="step-title" id="title">step 0: AB diameter, C on circle, ∠CAB = 28°</span>
     <span class="step-num" id="counter">0 / 4</span>
   </div>
   <div class="stage-outer" id="stage-outer">
@@ -45,23 +45,27 @@
     <button class="ctl" id="prev">← prev</button>
     <button class="ctl" id="next">next →</button>
   </div>
-  <p class="footer">PA, PB tangents from P · ∠APB = 56° · r = 7 cm</p>
+  <p class="footer">AB diameter · C on circle · ∠CAB = 28° · tangent at B through D</p>
 </div>
 
 <script>
 "use strict";
 
-// ∠APB = 56°, OP bisects → ∠OPA = 28°. With r = 7 cm, ∠OAP = 90°,
-// ∠AOP = 62°, |OP| = r / sin 28°. Display r = 60 px (scale 8.57 px/unit).
-var O   = { x: 110, y: 130 };
-var R_d = 60;
-var halfAngleDeg = 28;
-var halfAngleRad = halfAngleDeg * Math.PI / 180;
-var OPlen = R_d / Math.sin(halfAngleRad);   // ≈ 127.8
-var P   = { x: O.x + OPlen, y: O.y };
-var alphaRad = (90 - halfAngleDeg) * Math.PI / 180;
-var A   = { x: O.x + R_d * Math.cos(alphaRad), y: O.y - R_d * Math.sin(alphaRad) };
-var B   = { x: A.x, y: 2 * O.y - A.y };
+// Geometry — left half x: 0..320 holds the diagram, right half x: 340..660
+// holds equation lines.
+//   Circle O = (160, 130), r = 80.
+//   A = (80, 130), B = (240, 130) on horizontal diameter.
+//   ∠CAB = 28° → arc BC = 56°, so C at math angle 304°:
+//   C = (160 + 80 cos 304°, 130 + 80 sin 304°) ≈ (205, 64).
+//   Tangent at B is vertical (perpendicular to OB).
+//   D placed on the tangent above B at (240, 50).
+var O = { x: 160, y: 130 };
+var R_d = 80;
+var A = { x: O.x - R_d, y: O.y };
+var B = { x: O.x + R_d, y: O.y };
+var Cdeg = 304 * Math.PI / 180;
+var C = { x: O.x + R_d * Math.cos(Cdeg), y: O.y + R_d * Math.sin(Cdeg) };
+var D = { x: B.x, y: 50 };
 
 var stage      = document.getElementById("stage");
 var stageOuter = document.getElementById("stage-outer");
@@ -169,7 +173,7 @@ function rightAngleEl(x, y, dirX1, dirY1, dirX2, dirY2, armLen, color, dataStep)
   lineEl(fx, fy, p2x, p2y, color, 1.5, false, dataStep);
 }
 
-// ===== Always visible — faint reference circle =========================
+// ===== Always visible — circle outline =================================
 makeNode("div", {
   position: "absolute",
   left: (O.x - R_d) + "px", top: (O.y - R_d) + "px",
@@ -180,66 +184,71 @@ makeNode("div", {
 });
 
 // ===== Step 0 — given configuration ====================================
-lineEl(O.x, O.y, A.x, A.y, "#00abfa", 2.5, false, 0);
-lineEl(O.x, O.y, B.x, B.y, "#00abfa", 2.5, false, 0);
-lineEl(A.x, A.y, P.x, P.y, "#ff822c", 2.5, false, 0);
-lineEl(B.x, B.y, P.x, P.y, "#ff822c", 2.5, false, 0);
+lineEl(A.x, A.y, B.x, B.y, "#00abfa", 2.5, false, 0);  // diameter AB
+lineEl(A.x, A.y, C.x, C.y, "#7a7875", 2.0, false, 0);  // chord AC
+lineEl(B.x, B.y, C.x, C.y, "#7a7875", 2.0, false, 0);  // chord BC
+lineEl(B.x, 26, B.x, 230, "#ff822c", 2.5, false, 0);   // tangent at B (vertical)
 
-// L-markers at A and B
+// 28° wedge at A between AB (conic 90°) and AC (conic 62.15°). Fill 28° from 62°.
+wedgeEl(A.x, A.y, 56, 62, 28, "#fff067", 0);
+texEl(A.x + 18, A.y - 22, "28°", "#fff067", 13, 0);
+
+// O dot, vertex dots, letters
+dotEl(O.x, O.y, "#7a7875", 6, 0);
+labelEl(O.x - 4, O.y + 8, "O", "#7a7875", 12, 0);
+dotEl(A.x, A.y, "#fff067", 8, 0);
+labelEl(A.x - 18, A.y - 4, "A", "#fff067", 14, 0);
+dotEl(B.x, B.y, "#fff067", 8, 0);
+labelEl(B.x + 8, B.y + 6, "B", "#fff067", 14, 0);
+dotEl(C.x, C.y, "#fff067", 8, 0);
+labelEl(C.x + 8, C.y - 16, "C", "#fff067", 14, 0);
+dotEl(D.x, D.y, "#fff067", 8, 0);
+labelEl(D.x + 8, D.y - 6, "D", "#fff067", 14, 0);
+
+// ===== Step 1 — ∠ACB = 90° (semicircle) ================================
+// L-marker at C between CA and CB.
 (function() {
   function unitFromTo(p, q) {
     var dx = q.x - p.x, dy = q.y - p.y;
     var L = Math.sqrt(dx*dx + dy*dy);
     return { x: dx/L, y: dy/L };
   }
-  var aoUnit = unitFromTo(A, O), apUnit = unitFromTo(A, P);
-  rightAngleEl(A.x, A.y, aoUnit.x, aoUnit.y, apUnit.x, apUnit.y, 8, "#ff4670", 0);
-  var boUnit = unitFromTo(B, O), bpUnit = unitFromTo(B, P);
-  rightAngleEl(B.x, B.y, boUnit.x, boUnit.y, bpUnit.x, bpUnit.y, 8, "#ff4670", 0);
+  var caUnit = unitFromTo(C, A), cbUnit = unitFromTo(C, B);
+  rightAngleEl(C.x, C.y, caUnit.x, caUnit.y, cbUnit.x, cbUnit.y, 9, "#ff4670", 1);
 })();
 
-// 56° wedge at P (between PA and PB)
-wedgeEl(P.x, P.y, 56, 242, 56, "#fff067", 0);
-texEl(P.x - 54, P.y - 8, "56°", "#fff067", 13, 0);
+// ===== Step 2 — ∠ABC = 62° wedge at B (between BA and BC) ===============
+// BA from B → conic 270°; BC from B → conic 332°. Fill 62° from 270°.
+wedgeEl(B.x, B.y, 64, 270, 62, "#0fee89", 2);
+texEl(B.x - 38, B.y - 24, "62°", "#0fee89", 13, 2);
 
-// O, A, B, P + letters
-dotEl(O.x, O.y, "#7a7875", 6, 0);
-labelEl(O.x - 14, O.y + 6, "O", "#7a7875", 13, 0);
-dotEl(A.x, A.y, "#fff067", 8, 0);
-labelEl(A.x + 8, A.y - 16, "A", "#fff067", 14, 0);
-dotEl(B.x, B.y, "#fff067", 8, 0);
-labelEl(B.x + 8, B.y + 4, "B", "#fff067", 14, 0);
-dotEl(P.x, P.y, "#fff067", 8, 0);
-labelEl(P.x + 10, P.y - 6, "P", "#fff067", 14, 0);
+// ===== Step 3 — ∠ABD = 90° (tangent ⟂ radius) ==========================
+// L-marker at B between BA (going left along diameter) and BD (going up
+// along tangent).
+rightAngleEl(B.x, B.y, -1, 0, 0, -1, 9, "#ff4670", 3);
 
-// "r = 7" label, sitting LEFT of OA radius.
-texEl(O.x - 32, (O.y + A.y)/2 - 8, "r = 7", "#00abfa", 13, 0);
+// ===== Step 4 — ∠CBD = 28° at B (between BC and BD) =====================
+// BC conic 332°, BD conic 0°. Fill 28° from 332°.
+wedgeEl(B.x, B.y, 40, 332, 28, "#0fee89", 4);
+texEl(B.x + 6, B.y - 28, "28°", "#0fee89", 13, 4);
 
-// ===== Step 1 — OP bisects ∠APB → ∠OPA = 28° ===========================
-lineEl(O.x, O.y, P.x, P.y, "#fff067", 1.5, true, 1);
-wedgeEl(P.x, P.y, 36, 270, 28, "#0fee89", 1);
-texEl(P.x - 28, P.y - 30, "28°", "#0fee89", 12, 1);
-
-// ===== Step 4 — chord AB drawn (so △PAB reads as isosceles) ============
-lineEl(A.x, A.y, B.x, B.y, "#00abfa", 1.6, true, 4);
-
-// ===== Equation panel (RIGHT side, x ≈ 360) ============================
-texEl(360,  60, "\\angle OPA = \\dfrac{56\\degree}{2} = 28\\degree",
+// ===== Equation panel (RIGHT side) =====================================
+texEl(360,  60, "\\angle ACB = 90\\degree \\quad \\text{(semicircle)}",
       "#f0eeea", 17, 1);
-texEl(360, 145, "\\tan 28\\degree = \\dfrac{OA}{PA} = \\dfrac{7}{PA}",
+texEl(360, 135, "\\angle ABC = 180\\degree - 90\\degree - 28\\degree = 62\\degree",
       "#f0eeea", 17, 2);
-texEl(360, 230, "PA = \\dfrac{7}{\\tan 28\\degree} \\approx 13.2 \\;\\text{cm}",
-      "#0fee89", 19, 3);
-texEl(360, 315, "\\angle PAB = \\dfrac{180\\degree - 56\\degree}{2} = 62\\degree",
+texEl(360, 215, "\\angle ABD = 90\\degree \\quad \\text{(tangent} \\perp \\text{radius)}",
+      "#f0eeea", 17, 3);
+texEl(360, 295, "\\angle CBD = 90\\degree - 62\\degree = 28\\degree",
       "#0fee89", 19, 4);
 
 // ===== Step controller =================================================
 var STEPS = [
-  "step 0: ∠APB = 56°, radius r = 7",
-  "step 1: OP bisects ∠APB",
-  "step 2: right triangle OAP",
-  "step 3: solve for PA",
-  "step 4: isosceles △PAB → ∠PAB"
+  "step 0: AB diameter, ∠CAB = 28°",
+  "step 1: ∠ACB = 90° (angle in semicircle)",
+  "step 2: ∠ABC from triangle sum",
+  "step 3: ∠ABD = 90° (tangent ⟂ radius)",
+  "step 4: ∠CBD = ∠ABD − ∠ABC"
 ];
 var step = 0, maxStep = STEPS.length - 1;
 var titleEl   = document.getElementById("title");
