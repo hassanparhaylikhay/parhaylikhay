@@ -3,145 +3,102 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Volume Cube Explorer</title>
+<title>Volume Cube</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <style>
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 18px 16px; }
-  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 18px 18px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:24px 22px 20px; }
 
-  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:10px; }
-  .kicker { font-family:'Geist Mono',monospace; font-size:11px; letter-spacing:1.6px; text-transform:uppercase; color:#fff067; font-weight:600; }
-  .pill { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; border:1px solid #141e2a; border-radius:14px; padding:3px 10px; letter-spacing:0.4px; }
-
-  .selector { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
-  .selector button {
-    flex:1; min-width:90px;
-    background:#07090d; border:1px solid #141e2a; color:#7a7875;
-    font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600;
-    padding:8px 8px; border-radius:6px; cursor:pointer;
-    letter-spacing:0.4px;
-    transition: color 0.12s, border-color 0.12s;
-  }
-  .selector button:hover { color:#0fee89; border-color:#0fee89; }
-  .selector button.active { color:#0fee89; border-color:#0fee89; background:#0a1a14; }
-
-  .stage {
-    display:grid; grid-template-columns: 1fr 1fr; gap:14px; align-items:stretch;
+  .header {
+    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
+    letter-spacing:2px; text-transform:uppercase; text-align:center; margin-bottom:14px;
   }
 
-  .cube-wrap {
-    background:#07090d; border:1px solid #141e2a; border-radius:8px;
-    padding:14px 14px 18px; display:flex; flex-direction:column; align-items:center;
-  }
-  .cube-cap {
-    font-family:'Geist Mono',monospace; font-size:10.5px; color:#7a7875;
-    letter-spacing:0.5px; text-transform:uppercase; margin-bottom:14px; text-align:center;
-  }
   .cube-stage {
-    width:100%; max-width:260px; aspect-ratio: 1.05;
-    perspective: 900px; perspective-origin: 50% 40%;
-    position:relative;
+    width:100%; max-width:300px; margin:0 auto; aspect-ratio: 1.05;
+    perspective: 900px; perspective-origin: 50% 35%;
+    position:relative; cursor:pointer; user-select:none;
   }
   .cube {
     position:absolute; left:50%; top:50%;
-    width:64%; aspect-ratio:1;
+    width:62%; aspect-ratio:1;
     transform-style: preserve-3d;
     transform: translate(-50%, -50%) rotateX(-23deg) rotateY(-30deg);
+    transition: transform 0.25s ease;
   }
+  .cube-stage:hover .cube { transform: translate(-50%, -50%) rotateX(-23deg) rotateY(-26deg); }
   .face {
     position:absolute; inset:0;
-    border: 1.5px solid rgba(0,171,250, 0.7);
-    background: rgba(0,171,250, 0.06);
+    border: 1.5px solid #00abfa;
+    background: rgba(0,171,250,0.06);
   }
   .face .grid {
     position:absolute; inset:0;
     pointer-events:none;
     opacity:0;
-    transition: opacity 0.6s ease;
+    transition: opacity 0.7s ease;
   }
   .face .grid.shown { opacity:1; }
 
-  /* Three visible faces of an iso-style cube; shadow them so they read as 3D. */
   .face.front  { transform: translateZ(50%); }
-  .face.right  { transform: rotateY(90deg) translateZ(50%); background: rgba(0,171,250, 0.10); }
-  .face.top    { transform: rotateX(90deg) translateZ(50%); background: rgba(0,171,250, 0.04); }
+  .face.right  { transform: rotateY(90deg) translateZ(50%); background: rgba(0,171,250,0.10); }
+  .face.top    { transform: rotateX(90deg) translateZ(50%); background: rgba(0,171,250,0.04); }
 
-  .info {
-    background:#07090d; border:1px solid #141e2a; border-radius:8px;
-    padding:14px 14px; display:flex; flex-direction:column; gap:8px;
+  .center-overlay {
+    position:absolute; left:50%; top:62%; transform:translate(-50%,-50%);
+    font-family:'Geist Mono',monospace; font-size:13px; font-weight:700;
+    color:#7a7875; letter-spacing:1px; pointer-events:none;
+    text-align:center; line-height:1.4;
+    transition: opacity 0.4s ease;
   }
-  .info h4 {
-    font-family:'Geist Mono',monospace; font-size:10.5px; font-weight:600;
-    letter-spacing:1.4px; text-transform:uppercase; color:#7a7875;
+  .cube-stage.gridded .center-overlay { opacity:0; }
+
+  .equation-line {
+    text-align:center; margin-top:14px;
+    font-family:'Geist Mono',monospace; font-size:15px; color:#f0eeea;
+    line-height:1.6; min-height:24px;
   }
-  .info .step { font-size:13px; color:#c8c6be; line-height:1.5; }
-  .info .answer {
-    font-family:'Geist Mono',monospace; font-size:14px; color:#0fee89;
-    font-weight:700; padding:8px 10px;
-    background:#0a1a14; border:1px solid rgba(15,238,137,0.25); border-radius:5px;
-    text-align:center; min-height:40px; display:flex; align-items:center; justify-content:center;
+  .equation-line .ans { color:#0fee89; font-weight:700; }
+  .equation-line .small { display:block; font-size:11px; color:#7a7875; margin-top:4px; letter-spacing:0.4px; }
+
+  .pair-row {
+    display:flex; gap:6px; justify-content:center; margin-top:18px; flex-wrap:wrap;
   }
-  .info .ticker {
+  .pair-row .pair {
     font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
-    text-align:center;
+    padding:6px 12px; border-radius:14px;
+    border:1px solid #141e2a; background:transparent;
+    cursor:pointer; user-select:none; letter-spacing:0.4px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
   }
-  .info .ticker b { color:#fff067; font-weight:700; }
+  .pair-row .pair:hover { color:#00abfa; border-color:#3a4a5a; }
+  .pair-row .pair.active { color:#00abfa; border-color:#00abfa; background: rgba(0,171,250,0.08); }
 
-  .reveal-row { display:flex; justify-content:center; margin-top:14px; }
-  .reveal-btn {
-    background:#0b1118; border:1.5px solid #0fee89; color:#0fee89;
-    font-family:'Geist Mono',monospace; font-size:12.5px; font-weight:700;
-    padding:10px 22px; border-radius:6px; cursor:pointer; letter-spacing:0.5px;
-    transition: background 0.12s, color 0.12s;
-  }
-  .reveal-btn:hover { background:#0fee89; color:#07090d; }
-  .reveal-btn.on { background:#0fee89; color:#07090d; }
-
-  .footer { margin-top:14px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
-
-  @media (max-width: 540px) {
-    .stage { grid-template-columns: 1fr; }
+  .footer {
+    margin-top:14px; font-family:'Geist Mono',monospace; font-size:10px;
+    color:#3a4a5a; text-align:center; letter-spacing:0.5px;
   }
 </style>
 </head>
 <body>
 <div class="wrap" id="wrap">
-  <div class="head">
-    <span class="kicker">VOLUME = LENGTH CUBED</span>
-    <span class="pill">pick a pair, then reveal the grid</span>
-  </div>
-  <div class="selector" id="selector">
-    <button data-pair="mm-cm">mm³ ↔ cm³</button>
-    <button data-pair="cm-m" class="active">cm³ ↔ m³</button>
-  </div>
-  <div class="stage">
-    <div class="cube-wrap">
-      <div class="cube-cap" id="cubeCap">1 m × 1 m × 1 m cube</div>
-      <div class="cube-stage">
-        <div class="cube">
-          <div class="face front"><div class="grid" data-face="front"></div></div>
-          <div class="face right"><div class="grid" data-face="right"></div></div>
-          <div class="face top"><div class="grid" data-face="top"></div></div>
-        </div>
-      </div>
+  <div class="header">VOLUME = LENGTH CUBED</div>
+  <div class="cube-stage" id="stage">
+    <div class="cube">
+      <div class="face front"><div class="grid" data-face="front"></div></div>
+      <div class="face right"><div class="grid" data-face="right"></div></div>
+      <div class="face top"><div class="grid" data-face="top"></div></div>
     </div>
-    <div class="info">
-      <h4>linear conversion</h4>
-      <div class="step" id="stepLinear"></div>
-      <h4>cube both sides</h4>
-      <div class="step" id="stepCubed"></div>
-      <div class="answer" id="answer"></div>
-      <p class="ticker" id="ticker">small cubes counted: <b id="tickerNum">0</b></p>
-    </div>
+    <div class="center-overlay" id="overlay">tap to reveal</div>
   </div>
-  <div class="reveal-row">
-    <button class="reveal-btn" id="revealBtn">reveal grid</button>
+  <div class="equation-line" id="equation"></div>
+  <div class="pair-row" id="pairRow">
+    <span class="pair" data-pair="mm-cm">mm³ ↔ cm³</span>
+    <span class="pair active" data-pair="cm-m">cm³ ↔ m³</span>
   </div>
-  <p class="footer">visual proof of why volume conversion uses the CUBE of the linear factor</p>
+  <div class="footer">tap the cube to reveal the grid</div>
 </div>
 
 <script>
@@ -149,85 +106,74 @@
 
 var PAIRS = {
   "mm-cm": {
-    cubeCap: "1 cm × 1 cm × 1 cm cube",
-    big: "1 cm",
-    bigVol: "1 cm³",
+    big: "1 cm³",
     linearFactor: 10,
     gridLines: 10,
-    linearTex: "1\\;\\text{cm} = 10\\;\\text{mm}",
-    cubedTex: "1\\;\\text{cm}^3 = (10\\;\\text{mm})^3 = 10 \\times 10 \\times 10 = 1000\\;\\text{mm}^3",
-    answerTex: "1\\;\\text{cm}^3 = 1000\\;\\text{mm}^3",
+    afterEquation: '1 cm³ = 10 × 10 × 10 = <span class="ans">1000 mm³</span>',
     smallCount: 1000,
-    gridLineColor: "rgba(0,171,250,0.6)"
+    smallUnit: "mm³"
   },
   "cm-m": {
-    cubeCap: "1 m × 1 m × 1 m cube",
-    big: "1 m",
-    bigVol: "1 m³",
+    big: "1 m³",
     linearFactor: 100,
     gridLines: 100,
-    linearTex: "1\\;\\text{m} = 100\\;\\text{cm}",
-    cubedTex: "1\\;\\text{m}^3 = (100\\;\\text{cm})^3 = 100 \\times 100 \\times 100 = 1\\,000\\,000\\;\\text{cm}^3",
-    answerTex: "1\\;\\text{m}^3 = 1\\,000\\,000\\;\\text{cm}^3",
+    afterEquation: '1 m³ = 100 × 100 × 100 = <span class="ans">1,000,000 cm³</span>',
     smallCount: 1000000,
-    gridLineColor: "rgba(0,171,250,0.4)"
+    smallUnit: "cm³"
   }
 };
 
-var state = { pair: "cm-m", revealed: false, tickerAnimToken: 0 };
+var state = { pair: "cm-m", revealed: false, animToken: 0 };
 
-var grids       = document.querySelectorAll(".grid");
-var cubeCapEl   = document.getElementById("cubeCap");
-var stepLinear  = document.getElementById("stepLinear");
-var stepCubed   = document.getElementById("stepCubed");
-var answerEl    = document.getElementById("answer");
-var revealBtn   = document.getElementById("revealBtn");
-var tickerNum   = document.getElementById("tickerNum");
-var selector    = document.getElementById("selector");
-
-function tryRender(target, tex) {
-  if (typeof katex !== "undefined") {
-    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
-    catch (e) { target.textContent = tex; }
-  } else { setTimeout(function() { tryRender(target, tex); }, 50); }
-}
+var stage      = document.getElementById("stage");
+var overlay    = document.getElementById("overlay");
+var equationEl = document.getElementById("equation");
+var pairRow    = document.getElementById("pairRow");
+var grids      = document.querySelectorAll(".grid");
 
 function applyPair() {
   var p = PAIRS[state.pair];
-  cubeCapEl.textContent = p.cubeCap;
+  // Grid pattern
   for (var i = 0; i < grids.length; i++) {
     grids[i].style.background =
-      "linear-gradient(to right, " + p.gridLineColor + " 1px, transparent 1px)," +
-      "linear-gradient(to bottom, " + p.gridLineColor + " 1px, transparent 1px)";
+      "linear-gradient(to right, rgba(0,171,250,0.45) 1px, transparent 1px)," +
+      "linear-gradient(to bottom, rgba(0,171,250,0.45) 1px, transparent 1px)";
     grids[i].style.backgroundSize = (100 / p.gridLines) + "% " + (100 / p.gridLines) + "%";
     grids[i].classList.remove("shown");
   }
-  tryRender(stepLinear, p.linearTex);
-  tryRender(stepCubed, p.cubedTex);
-  tryRender(answerEl, p.answerTex);
-  tickerNum.textContent = "0";
   state.revealed = false;
-  revealBtn.classList.remove("on");
-  revealBtn.textContent = "reveal grid";
-  var btns = selector.querySelectorAll("button");
+  stage.classList.remove("gridded");
+  overlay.textContent = "tap to reveal";
+  overlay.style.opacity = "1";
+  renderEquation(0);
+  var btns = pairRow.querySelectorAll(".pair");
   for (var i = 0; i < btns.length; i++) {
     btns[i].classList.toggle("active", btns[i].dataset.pair === state.pair);
   }
   reportHeight();
 }
 
+function renderEquation(count) {
+  var p = PAIRS[state.pair];
+  if (count === 0) {
+    equationEl.innerHTML = '<span style="color:#3a4a5a">' + p.big + ' = ?</span>';
+  } else {
+    equationEl.innerHTML = p.afterEquation +
+      '<span class="small">small ' + p.smallUnit + ' counted: ' + count.toLocaleString() + '</span>';
+  }
+}
+
 function animateTicker(target, durationMs) {
-  state.tickerAnimToken++;
-  var token = state.tickerAnimToken;
+  state.animToken++;
+  var token = state.animToken;
   var start = performance.now();
-  var from = parseInt((tickerNum.textContent || "0").replace(/[^0-9]/g, ""), 10) || 0;
   function tick(now) {
-    if (token !== state.tickerAnimToken) return;
+    if (token !== state.animToken) return;
     var t = Math.min(1, (now - start) / durationMs);
     var eased = 1 - Math.pow(1 - t, 3);
-    var v = Math.floor(from + (target - from) * eased);
-    tickerNum.textContent = v.toLocaleString();
-    if (t < 1) requestAnimationFrame(tick); else tickerNum.textContent = target.toLocaleString();
+    var v = Math.floor(target * eased);
+    renderEquation(v);
+    if (t < 1) requestAnimationFrame(tick); else renderEquation(target);
   }
   requestAnimationFrame(tick);
 }
@@ -236,24 +182,23 @@ function toggleReveal() {
   state.revealed = !state.revealed;
   if (state.revealed) {
     for (var i = 0; i < grids.length; i++) grids[i].classList.add("shown");
-    revealBtn.classList.add("on");
-    revealBtn.textContent = "hide grid";
+    stage.classList.add("gridded");
     animateTicker(PAIRS[state.pair].smallCount, 1100);
   } else {
     for (var i = 0; i < grids.length; i++) grids[i].classList.remove("shown");
-    revealBtn.classList.remove("on");
-    revealBtn.textContent = "reveal grid";
-    animateTicker(0, 350);
+    stage.classList.remove("gridded");
+    state.animToken++;
+    renderEquation(0);
   }
 }
 
-selector.addEventListener("click", function(e) {
-  var btn = e.target.closest("button[data-pair]");
-  if (!btn) return;
-  state.pair = btn.dataset.pair;
+stage.addEventListener("click", toggleReveal);
+pairRow.addEventListener("click", function(e) {
+  var pairEl = e.target.closest("[data-pair]");
+  if (!pairEl) return;
+  state.pair = pairEl.dataset.pair;
   applyPair();
 });
-revealBtn.addEventListener("click", toggleReveal);
 
 applyPair();
 

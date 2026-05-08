@@ -3,240 +3,131 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Capacity ↔ Volume Explorer</title>
+<title>Capacity Converter</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 18px 16px; }
-  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 18px 18px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:28px 28px 22px; }
 
-  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; }
-  .kicker { font-family:'Geist Mono',monospace; font-size:11px; letter-spacing:1.6px; text-transform:uppercase; color:#fff067; font-weight:600; }
-  .pill { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; border:1px solid #141e2a; border-radius:14px; padding:3px 10px; letter-spacing:0.4px; }
-
-  .chain {
-    display:flex; flex-direction:column; gap:14px; margin-bottom:18px;
-  }
-  .row {
-    display:grid; grid-template-columns: 1fr auto 1fr; gap:14px; align-items:center;
-    padding:12px 14px; background:#07090d; border:1px solid #141e2a; border-radius:8px;
-  }
-  .row .left, .row .right {
-    display:flex; flex-direction:column; align-items:center; gap:6px;
-  }
-  .equals {
-    font-family:'Geist Mono',monospace; font-size:24px; font-weight:700;
-    color:#fff067;
+  .header {
+    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
+    letter-spacing:2px; text-transform:uppercase; text-align:center; margin-bottom:14px;
   }
 
-  .cube-mini {
-    width:30px; height:30px;
-    background: rgba(0,171,250,0.10);
-    border: 1.5px solid #00abfa;
-    box-shadow: 4px 4px 0 -1px rgba(0,171,250,0.25);
+  .rules {
+    text-align:center; margin-bottom:24px;
+    font-family:'Geist Mono',monospace; font-size:12px; color:#c8c6be;
+    line-height:1.85;
   }
-  .cube-medium {
-    width:60px; height:60px;
-    background: rgba(0,171,250,0.10);
-    border: 1.5px solid #00abfa;
-    box-shadow: 8px 8px 0 -1px rgba(0,171,250,0.25);
-    background-image:
-      linear-gradient(to right, rgba(0,171,250,0.4) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0,171,250,0.4) 1px, transparent 1px);
-    background-size: 10% 10%;
-  }
-  .cube-large {
-    width:90px; height:90px;
-    background: rgba(0,171,250,0.10);
-    border: 1.5px solid #00abfa;
-    box-shadow: 12px 12px 0 -1px rgba(0,171,250,0.25);
-  }
+  .rules b { color:#fff067; font-weight:600; }
+  .rules .sep { color:#3a4a5a; margin: 0 4px; }
 
-  .bottle {
-    width:40px; height:54px;
-    border:1.5px solid #ff822c;
-    border-top:none;
-    border-radius: 0 0 8px 8px;
-    background: linear-gradient(to top, #ff822c 0%, #ff822c 60%, transparent 60%, transparent 100%);
-    position:relative;
+  .input-row {
+    display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:24px;
+    flex-wrap:wrap;
   }
-  .bottle::before {
-    content:""; position:absolute;
-    top:-9px; left:8px; right:8px; height:9px;
-    background:#0b1118; border:1.5px solid #ff822c;
-    border-radius: 3px 3px 0 0;
+  .input-row .label {
+    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
+    letter-spacing:1px; text-transform:uppercase;
   }
-  .bottle.litre { width:60px; height:80px; }
-  .bottle.litre::before { top:-12px; left:14px; right:14px; height:12px; }
-  .bottle.kilo  { width:80px; height:106px; }
-  .bottle.kilo::before  { top:-14px; left:18px; right:18px; height:14px; }
-
-  .row-label {
-    font-family:'Geist Mono',monospace; font-size:11px; color:#c8c6be;
-    text-align:center; line-height:1.5;
-  }
-  .row-label b { color:#0fee89; font-weight:700; }
-  .row-label .small-note { color:#7a7875; font-size:10px; display:block; }
-
-  .converter {
-    background:#07090d; border:1px solid #141e2a; border-radius:8px;
-    padding:14px 14px 12px;
-  }
-  .converter h4 {
-    font-family:'Geist Mono',monospace; font-size:10.5px; font-weight:600;
-    letter-spacing:1.4px; text-transform:uppercase; color:#7a7875;
-    margin-bottom:10px;
-  }
-  .conv-input-row {
-    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
-  }
-  .conv-input-row label { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
-  .conv-input-row input {
+  .input-row input {
     appearance:none; -webkit-appearance:none; -moz-appearance:textfield;
-    background:#0b1118; border:1.5px solid #141e2a; border-radius:6px;
-    color:#00abfa; font-family:'Geist Mono',monospace; font-size:16px;
-    font-weight:600; padding:6px 10px; width:130px; text-align:center; outline:none;
+    background:transparent; border:0; border-bottom:1.5px solid #1a2330;
+    color:#00abfa; font-family:'Geist Mono',monospace; font-size:24px;
+    font-weight:600; padding:4px 4px; width:130px; text-align:center; outline:none;
     transition: border-color 0.15s;
   }
-  .conv-input-row input::-webkit-outer-spin-button,
-  .conv-input-row input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
-  .conv-input-row input:focus { border-color:#00abfa; box-shadow:0 0 0 3px rgba(0,171,250,0.10); }
-  .conv-input-row select {
+  .input-row input::-webkit-outer-spin-button,
+  .input-row input::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+  .input-row input:focus { border-bottom-color:#00abfa; }
+  .input-row select {
     appearance:none;
-    background:#0b1118; border:1.5px solid #141e2a; color:#f0eeea;
+    background:transparent; border:1px solid #141e2a; color:#f0eeea;
     font-family:'Geist Mono',monospace; font-size:13px; font-weight:600;
-    padding:6px 24px 6px 10px; border-radius:5px; cursor:pointer;
+    padding:8px 26px 8px 14px; border-radius:6px; cursor:pointer;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat:no-repeat; background-position:right 8px center;
+    background-repeat:no-repeat; background-position:right 10px center;
+    transition: border-color 0.12s;
   }
-  .conv-presets { display:flex; gap:5px; flex-wrap:wrap; margin-top:10px; }
-  .conv-presets button {
-    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
-    font-family:'Geist Mono',monospace; font-size:10.5px; font-weight:600;
-    padding:5px 9px; border-radius:5px; cursor:pointer;
-    letter-spacing:0.4px;
-    transition: color 0.12s, border-color 0.12s;
-  }
-  .conv-presets button:hover { color:#00abfa; border-color:#00abfa; }
+  .input-row select:hover { border-color:#3a4a5a; }
 
   .results {
-    display:grid; grid-template-columns: repeat(2, 1fr); gap:8px;
-    margin-top:12px;
+    display:grid; grid-template-columns: repeat(4, 1fr); gap:0;
+    border-top:1px solid #141e2a;
   }
-  .result-card {
-    background:#0b1118; border:1px solid #141e2a; border-radius:6px;
-    padding:8px 10px; display:flex; align-items:center; justify-content:space-between;
+  .result {
+    text-align:center; padding:18px 6px 4px;
+    border-right:1px solid #141e2a;
   }
-  .result-card .unit-key {
-    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
-    letter-spacing:0.4px;
+  .result:last-child { border-right:0; }
+  .result .v {
+    font-family:'Geist Mono',monospace; font-size:19px; font-weight:600;
+    color:#0fee89; letter-spacing:-0.3px; line-height:1.1;
+    word-break: break-word;
   }
-  .result-card .unit-val {
-    font-family:'Geist Mono',monospace; font-size:14px; font-weight:700;
-    color:#0fee89;
+  .result.dimmed .v { color:#3a4a5a; }
+  .result .u {
+    font-family:'Geist Mono',monospace; font-size:11px; color:#3a4a5a;
+    letter-spacing:1.5px; text-transform:uppercase; margin-top:6px;
   }
-  .result-card.dimmed .unit-val { color:#3a4a5a; }
 
-  .footer { margin-top:12px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+  .footer {
+    margin-top:14px; font-family:'Geist Mono',monospace; font-size:10px;
+    color:#3a4a5a; text-align:center; letter-spacing:0.5px;
+  }
+
+  @media (max-width: 480px) {
+    .results { grid-template-columns: repeat(2, 1fr); }
+    .result { border-right:0; border-bottom:1px solid #141e2a; padding:14px 6px; }
+    .result:nth-child(odd) { border-right:1px solid #141e2a; }
+    .result:nth-last-child(-n+2) { border-bottom:0; }
+    .result .v { font-size:16px; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap" id="wrap">
-  <div class="head">
-    <span class="kicker">CAPACITY ↔ VOLUME LINK</span>
-    <span class="pill">1 cm³ = 1 ml · 1 m³ = 1000 litres</span>
+  <div class="header">CAPACITY ↔ VOLUME</div>
+
+  <div class="rules">
+    <b>1 cm³ = 1 ml</b>
+    <span class="sep">·</span>
+    <b>1 litre = 1000 cm³</b>
+    <span class="sep">·</span>
+    <b>1 m³ = 1000 litres</b>
   </div>
 
-  <div class="chain">
-    <div class="row">
-      <div class="left">
-        <div class="cube-mini"></div>
-        <div class="row-label">1 cm × 1 cm × 1 cm<br><span class="small-note">a sugar cube</span></div>
-      </div>
-      <div class="equals">=</div>
-      <div class="right">
-        <div class="bottle"></div>
-        <div class="row-label"><b>1 ml</b><br><span class="small-note">a teardrop</span></div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="left">
-        <div class="cube-medium"></div>
-        <div class="row-label">10 cm × 10 cm × 10 cm<br><span class="small-note">= 1000 cm³</span></div>
-      </div>
-      <div class="equals">=</div>
-      <div class="right">
-        <div class="bottle litre"></div>
-        <div class="row-label"><b>1 litre</b><br><span class="small-note">= 1000 ml</span></div>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="left">
-        <div class="cube-large"></div>
-        <div class="row-label">1 m × 1 m × 1 m<br><span class="small-note">= 1 000 000 cm³</span></div>
-      </div>
-      <div class="equals">=</div>
-      <div class="right">
-        <div class="bottle kilo"></div>
-        <div class="row-label"><b>1000 litres</b><br><span class="small-note">= 1 m³</span></div>
-      </div>
-    </div>
+  <div class="input-row">
+    <span class="label">I have</span>
+    <input type="number" id="inp" step="any" value="5"/>
+    <select id="unitSel">
+      <option value="cm3">cm³</option>
+      <option value="ml">ml</option>
+      <option value="litre" selected>litres</option>
+      <option value="m3">m³</option>
+    </select>
   </div>
 
-  <div class="converter">
-    <h4>try a value — instant convert</h4>
-    <div class="conv-input-row">
-      <label>I have</label>
-      <input type="number" id="inp" step="any" value="5"/>
-      <select id="unitSel">
-        <option value="cm3">cm³</option>
-        <option value="ml">ml</option>
-        <option value="litre" selected>litres</option>
-        <option value="m3">m³</option>
-      </select>
-    </div>
-    <div class="conv-presets" id="presets"></div>
-    <div class="results" id="results">
-      <div class="result-card" data-key="cm3"><span class="unit-key">cm³</span><span class="unit-val">—</span></div>
-      <div class="result-card" data-key="ml"><span class="unit-key">ml</span><span class="unit-val">—</span></div>
-      <div class="result-card" data-key="litre"><span class="unit-key">litres</span><span class="unit-val">—</span></div>
-      <div class="result-card" data-key="m3"><span class="unit-key">m³</span><span class="unit-val">—</span></div>
-    </div>
+  <div class="results" id="results">
+    <div class="result" data-key="cm3"><div class="v">—</div><div class="u">cm³</div></div>
+    <div class="result" data-key="ml"><div class="v">—</div><div class="u">ml</div></div>
+    <div class="result" data-key="litre"><div class="v">—</div><div class="u">litres</div></div>
+    <div class="result" data-key="m3"><div class="v">—</div><div class="u">m³</div></div>
   </div>
 
-  <p class="footer">remember: 1 cm³ = 1 ml · 1000 cm³ = 1 litre · 1 m³ = 1000 litres</p>
+  <div class="footer">type a value · pick a unit · convert across all four</div>
 </div>
 
 <script>
 "use strict";
-
-// All values stored internally as cm³ (1 cm³ = 1 ml).
 var TO_CM3 = { cm3: 1, ml: 1, litre: 1000, m3: 1000000 };
 
-var inp     = document.getElementById("inp");
+var inp = document.getElementById("inp");
 var unitSel = document.getElementById("unitSel");
 var results = document.getElementById("results");
-var presets = document.getElementById("presets");
 
-var PRESETS = [
-  { v: 5, u: "litre", label: "5 litres" },
-  { v: 0.4, u: "m3", label: "0.4 m³" },
-  { v: 750, u: "ml", label: "750 ml" },
-  { v: 12000, u: "cm3", label: "12000 cm³" }
-];
-
-function build() {
-  for (var i = 0; i < PRESETS.length; i++) {
-    var p = PRESETS[i];
-    var b = document.createElement("button");
-    b.textContent = p.label;
-    (function(p) { b.addEventListener("click", function() { inp.value = p.v; unitSel.value = p.u; update(); }); })(p);
-    presets.appendChild(b);
-  }
-}
 function fmt(n) {
   if (!isFinite(n)) return "—";
   if (n === 0) return "0";
@@ -246,6 +137,7 @@ function fmt(n) {
   if (abs >= 0.001) return parseFloat(n.toFixed(6)).toString();
   return n.toExponential(3);
 }
+
 function update() {
   var v = parseFloat(inp.value);
   if (!isFinite(v)) v = 0;
@@ -256,17 +148,16 @@ function update() {
     litre: cm3 / 1000,
     m3:    cm3 / 1000000
   };
-  var cards = results.querySelectorAll(".result-card");
+  var cards = results.querySelectorAll(".result");
   for (var i = 0; i < cards.length; i++) {
     var key = cards[i].dataset.key;
-    cards[i].querySelector(".unit-val").textContent = fmt(values[key]);
+    cards[i].querySelector(".v").textContent = fmt(values[key]);
     cards[i].classList.toggle("dimmed", key === unitSel.value);
   }
   reportHeight();
 }
 inp.addEventListener("input", update);
 unitSel.addEventListener("change", update);
-build();
 update();
 
 // === Height reporter ====================================================
