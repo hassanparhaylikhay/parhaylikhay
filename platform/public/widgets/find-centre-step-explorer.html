@@ -189,8 +189,10 @@ dotEl(M_BC.x, M_BC.y, "#fff067", 7, 3);
 })();
 
 // Step 5: highlight the intersection — that is the centre.
+// Label sits BELOW the dot so the leading 'c' of "centre" doesn't end up
+// over the dot itself.
 dotEl(O.x, O.y, "#ff4670", 10, 5);
-labelEl(O.x - 30, O.y - 6, "O = centre", "#ff4670", 12, 5);
+labelEl(O.x - 19, O.y + 10, "centre", "#ff4670", 12, 5);
 
 // === Step controller =================================================
 
