@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Tangent From External Point — Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+
+  .stage-outer { width:100%; max-width:440px; margin:0 auto; aspect-ratio: 440 / 420; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:440px; height:420px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+
+  .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
+  .draw-fade.drawn { opacity:1; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
+
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">step 0: ∠APB = 56°, radius r = 7</span>
+    <span class="step-num" id="counter">0 / 4</span>
+  </div>
+  <div class="stage-outer" id="stage-outer">
+    <div class="stage" id="stage"></div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
+  </div>
+  <p class="footer">PA, PB tangents from P · ∠APB = 56° · r = 7 cm</p>
+</div>
+
+<script>
+"use strict";
+
+// Geometry: ∠APB = 56°, OP bisects → ∠OPA = 28°. With r = 7,
+// ∠OAP = 90° (tangent ⟂ radius), so ∠AOP = 62° and |OP| = r/sin 28°.
+// Display r = 70 px (scale 10 px / unit).
+var O   = { x: 130, y: 130 };
+var R_d = 70;
+var halfAngleDeg = 28;
+var halfAngleRad = halfAngleDeg * Math.PI / 180;
+var OPlen = R_d / Math.sin(halfAngleRad);  // ≈ 149
+var P   = { x: O.x + OPlen, y: O.y };
+var alphaRad = (90 - halfAngleDeg) * Math.PI / 180;  // ∠AOP from OP axis
+var A   = { x: O.x + R_d * Math.cos(alphaRad), y: O.y - R_d * Math.sin(alphaRad) };
+var B   = { x: A.x, y: 2 * O.y - A.y };
+
+var stage      = document.getElementById("stage");
+var stageOuter = document.getElementById("stage-outer");
+var STAGE_W    = 440, STAGE_H = 420;
+
+function fitStage() {
+  var w = stageOuter.clientWidth;
+  if (!w) return;
+  stage.style.transform = "scale(" + (w / STAGE_W) + ")";
+}
+fitStage();
+window.addEventListener("resize", fitStage);
+if (window.ResizeObserver) new ResizeObserver(fitStage).observe(stageOuter);
+
+function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
+function makeNode(tag, style, dataStep, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  setStyle(n, style);
+  if (dataStep != null) n.dataset.step = String(dataStep);
+  stage.appendChild(n);
+  return n;
+}
+
+function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
+  var dx = x2 - x1, dy = y2 - y1;
+  var len = Math.sqrt(dx*dx + dy*dy);
+  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  var t = thickness || 2;
+  var s = {
+    position: "absolute",
+    left: x1 + "px", top: y1 + "px",
+    width: "0px", height: t + "px",
+    transformOrigin: "0 50%",
+    transform: "translateY(" + (-t/2) + "px) rotate(" + ang + "deg)"
+  };
+  if (dashed) {
+    s.background = "transparent";
+    s.borderTop = t + "px dashed " + color;
+    s.height = "0px";
+  } else {
+    s.background = color;
+  }
+  var node = makeNode("div", s, dataStep, "draw-line");
+  node._fullWidth = len;
+  return node;
+}
+
+function dotEl(x, y, color, size, dataStep) {
+  var sz = size || 7;
+  return makeNode("div", {
+    position: "absolute",
+    left: (x - sz/2) + "px", top: (y - sz/2) + "px",
+    width: sz + "px", height: sz + "px",
+    borderRadius: "50%",
+    background: color
+  }, dataStep, "draw-fade");
+}
+
+function labelEl(x, y, text, color, fontSize, dataStep, opts) {
+  opts = opts || {};
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontFamily: opts.font || "'Geist Mono', monospace",
+    fontSize: (fontSize || 11) + "px",
+    color: color,
+    fontWeight: opts.weight || "700",
+    whiteSpace: "nowrap",
+    pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  n.textContent = text;
+  return n;
+}
+
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+function texEl(x, y, tex, color, fontSize, dataStep) {
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontSize: (fontSize || 14) + "px",
+    color: color,
+    whiteSpace: "nowrap",
+    pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  tryRender(n, tex);
+  return n;
+}
+
+// Conic-gradient angle wedge masked to a thin arc, parameterised the
+// same way as elsewhere in the platform (0° = north, CW).
+function wedgeEl(cx, cy, size, fromConicDeg, sweepDeg, color, dataStep) {
+  var maskInner = (size / 2) - 4;
+  var maskOuter = maskInner + 2;
+  return makeNode("div", {
+    position: "absolute",
+    left: (cx - size/2) + "px", top: (cy - size/2) + "px",
+    width: size + "px", height: size + "px",
+    borderRadius: "50%",
+    background: "conic-gradient(from " + fromConicDeg + "deg, " + color + " 0deg " + sweepDeg + "deg, transparent " + sweepDeg + "deg)",
+    WebkitMask: "radial-gradient(circle, transparent " + (maskInner-1) + "px, #000 " + maskInner + "px, #000 " + maskOuter + "px, transparent " + (maskOuter+1) + "px)",
+    mask: "radial-gradient(circle, transparent " + (maskInner-1) + "px, #000 " + maskInner + "px, #000 " + maskOuter + "px, transparent " + (maskOuter+1) + "px)",
+    pointerEvents: "none"
+  }, dataStep, "draw-fade");
+}
+
+// L-shaped right-angle marker.
+function rightAngleEl(x, y, dirX1, dirY1, dirX2, dirY2, armLen, color, dataStep) {
+  var p1x = x + dirX1*armLen, p1y = y + dirY1*armLen;
+  var p2x = x + dirX2*armLen, p2y = y + dirY2*armLen;
+  var fx  = p1x + dirX2*armLen, fy = p1y + dirY2*armLen;
+  lineEl(p1x, p1y, fx, fy, color, 1.5, false, dataStep);
+  lineEl(fx, fy, p2x, p2y, color, 1.5, false, dataStep);
+}
+
+// === Always visible — faint reference circle ============================
+makeNode("div", {
+  position: "absolute",
+  left: (O.x - R_d) + "px", top: (O.y - R_d) + "px",
+  width: (2*R_d) + "px", height: (2*R_d) + "px",
+  borderRadius: "50%",
+  border: "1.5px solid #1a2330",
+  pointerEvents: "none"
+});
+
+// === Step 0 — given configuration =======================================
+// Radii OA, OB
+lineEl(O.x, O.y, A.x, A.y, "#00abfa", 2.5, false, 0);
+lineEl(O.x, O.y, B.x, B.y, "#00abfa", 2.5, false, 0);
+// Tangents PA, PB (from external point P)
+lineEl(A.x, A.y, P.x, P.y, "#ff822c", 2.5, false, 0);
+lineEl(B.x, B.y, P.x, P.y, "#ff822c", 2.5, false, 0);
+// L-markers at A and B
+(function() {
+  var oaUnit = { x: (O.x - A.x), y: (O.y - A.y) };
+  var L = Math.sqrt(oaUnit.x*oaUnit.x + oaUnit.y*oaUnit.y);
+  oaUnit.x /= L; oaUnit.y /= L;
+  var apUnit = { x: (P.x - A.x), y: (P.y - A.y) };
+  L = Math.sqrt(apUnit.x*apUnit.x + apUnit.y*apUnit.y);
+  apUnit.x /= L; apUnit.y /= L;
+  rightAngleEl(A.x, A.y, oaUnit.x, oaUnit.y, apUnit.x, apUnit.y, 9, "#ff4670", 0);
+
+  var obUnit = { x: (O.x - B.x), y: (O.y - B.y) };
+  L = Math.sqrt(obUnit.x*obUnit.x + obUnit.y*obUnit.y);
+  obUnit.x /= L; obUnit.y /= L;
+  var bpUnit = { x: (P.x - B.x), y: (P.y - B.y) };
+  L = Math.sqrt(bpUnit.x*bpUnit.x + bpUnit.y*bpUnit.y);
+  bpUnit.x /= L; bpUnit.y /= L;
+  rightAngleEl(B.x, B.y, obUnit.x, obUnit.y, bpUnit.x, bpUnit.y, 9, "#ff4670", 0);
+})();
+// 56° wedge at P (between PA and PB).
+// PA from P direction → conic 298°, PB from P → conic 242°. Wedge from
+// 242° fills 56° (sweep CW reaches 298°).
+wedgeEl(P.x, P.y, 60, 242, 56, "#fff067", 0);
+texEl(P.x - 50, P.y - 6, "56°", "#fff067", 13, 0);
+// Centre and vertex dots + letters
+dotEl(O.x, O.y, "#7a7875", 6, 0);
+labelEl(O.x - 14, O.y + 6, "O", "#7a7875", 13, 0);
+dotEl(A.x, A.y, "#fff067", 8, 0);
+labelEl(A.x + 8, A.y - 16, "A", "#fff067", 14, 0);
+dotEl(B.x, B.y, "#fff067", 8, 0);
+labelEl(B.x + 8, B.y + 4, "B", "#fff067", 14, 0);
+dotEl(P.x, P.y, "#fff067", 8, 0);
+labelEl(P.x + 10, P.y - 6, "P", "#fff067", 14, 0);
+// "r = 7" label, sitting in the open space LEFT of the OA radius.
+texEl(O.x - 22, (O.y + A.y)/2 - 8, "r = 7", "#00abfa", 13, 0);
+
+// === Step 1 — OP bisects ∠APB → ∠OPA = 28° =============================
+// Dashed OP axis (bisector).
+lineEl(O.x, O.y, P.x, P.y, "#fff067", 1.5, true, 1);
+// Smaller 28° wedge at P between OP (toward O, conic 270°) and PA (conic 298°).
+wedgeEl(P.x, P.y, 38, 270, 28, "#0fee89", 1);
+texEl(P.x - 38, P.y + 12, "28°", "#0fee89", 12, 1);
+
+// === Equation panel — typeset with KaTeX ===============================
+// Step 1: angle-bisection statement
+texEl(40, 250,
+  "\\angle OPA = \\dfrac{56\\degree}{2} = 28\\degree",
+  "#f0eeea", 16, 1);
+
+// Step 2: tan ratio in right triangle OAP
+texEl(40, 290,
+  "\\tan 28\\degree = \\dfrac{OA}{PA} = \\dfrac{7}{PA}",
+  "#f0eeea", 16, 2);
+
+// Step 3: solve for PA
+texEl(40, 330,
+  "PA = \\dfrac{7}{\\tan 28\\degree} \\approx 13.2 \\;\\text{cm}",
+  "#0fee89", 18, 3);
+
+// Step 4: isosceles base angle
+texEl(40, 380,
+  "\\angle PAB = \\dfrac{180\\degree - 56\\degree}{2} = 62\\degree",
+  "#0fee89", 18, 4);
+
+// === Step 4 — chord AB drawn (so △PAB reads visibly as isosceles) ======
+lineEl(A.x, A.y, B.x, B.y, "#00abfa", 1.6, true, 4);
+
+// === Step controller ===================================================
+var STEPS = [
+  "step 0: ∠APB = 56°, radius r = 7",
+  "step 1: OP bisects ∠APB",
+  "step 2: right triangle OAP",
+  "step 3: solve for PA",
+  "step 4: isosceles △PAB → ∠PAB"
+];
+var step = 0, maxStep = STEPS.length - 1;
+
+var titleEl   = document.getElementById("title");
+var counterEl = document.getElementById("counter");
+var prevBtn   = document.getElementById("prev");
+var nextBtn   = document.getElementById("next");
+
+function setStep(n) {
+  step = Math.max(0, Math.min(maxStep, n));
+  titleEl.textContent = STEPS[step];
+  counterEl.textContent = step + " / " + maxStep;
+  var els = stage.querySelectorAll("[data-step]");
+  for (var i = 0; i < els.length; i++) {
+    var s = parseInt(els[i].dataset.step, 10);
+    var el = els[i];
+    if (s <= step) {
+      el.classList.add("drawn");
+      if (el._fullWidth != null) el.style.width = el._fullWidth + "px";
+    } else {
+      el.classList.remove("drawn");
+      if (el._fullWidth != null) el.style.width = "0px";
+    }
+  }
+  prevBtn.disabled = (step === 0);
+  nextBtn.disabled = (step === maxStep);
+}
+
+prevBtn.onclick = function() { setStep(step - 1); };
+nextBtn.onclick = function() { setStep(step + 1); };
+setStep(0);
+
+// === Height reporter ===================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
