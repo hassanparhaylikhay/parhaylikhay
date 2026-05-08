@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Chord Pythagoras Step Explorer</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <style>
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
@@ -139,6 +141,32 @@ function labelEl(x, y, text, color, fontSize, dataStep, opts) {
   return n;
 }
 
+// KaTeX render helper (waits for the deferred KaTeX script if needed).
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+// LaTeX-rendered label. Same positioning + step-fade contract as
+// labelEl, but the contents are typeset by KaTeX (so r, r², √, etc.
+// render properly as math).
+function texEl(x, y, tex, color, fontSize, dataStep) {
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontSize: (fontSize || 14) + "px",
+    color: color,
+    whiteSpace: "nowrap",
+    pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  tryRender(n, tex);
+  return n;
+}
+
 // L-shaped right-angle marker at point (x, y) with arms going along
 // (dirX1, dirY1) and (dirX2, dirY2). armLen px each side.
 function rightAngleEl(x, y, dirX1, dirY1, dirX2, dirY2, armLen, color, dataStep) {
@@ -178,27 +206,28 @@ labelEl(B.x + 8,  B.y + 6, "B", "#fff067", 14, 0);
 // midpoint M dot (visible from start; the perpendicular meets the chord
 // at the chord's midpoint, that's the whole point of the theorem)
 dotEl(foot.x, foot.y, "#fff067", 6, 0);
-// "5" label along the perpendicular
-labelEl(O.x + 6, O.y + d_disp/2 - 6, "5", "#00abfa", 12, 0);
-// "24" label below the chord (full chord length)
-labelEl(O.x - 8, foot.y + 14, "24", "#00abfa", 12, 0);
+// "5" label along the perpendicular (KaTeX so it matches the equation
+// font lower down).
+texEl(O.x + 6, O.y + d_disp/2 - 8, "5", "#00abfa", 13, 0);
+// "24" label below the chord (full chord length).
+texEl(O.x - 8, foot.y + 12, "24", "#00abfa", 13, 0);
 
 // === Step 1 — half-chord = 12 ==========================================
 // Re-draw the right half of the chord in green to highlight it.
 lineEl(foot.x, foot.y, B.x, B.y, "#0fee89", 3, false, 1);
-// "12" label centred on the right half
-labelEl(foot.x + halfDisp/2 - 8, foot.y - 18, "12", "#0fee89", 12, 1);
+// "12" label centred on the right half.
+texEl(foot.x + halfDisp/2 - 8, foot.y - 22, "12", "#0fee89", 13, 1);
 
 // === Step 2 — form right triangle (hypotenuse = r) =====================
 // Hypotenuse OB (yellow).
 lineEl(O.x, O.y, B.x, B.y, "#fff067", 2.5, false, 2);
 // "r" label on the hypotenuse, slightly above its midpoint.
-labelEl((O.x + B.x)/2 + 4, (O.y + B.y)/2 - 18, "r", "#fff067", 14, 2);
+texEl((O.x + B.x)/2 + 4, (O.y + B.y)/2 - 22, "r", "#fff067", 16, 2);
 
-// === Steps 3 and 4 — equations =========================================
-labelEl(60, 230, "Pythagoras: r² = 5² + 12²", "#f0eeea", 15, 3, { font: "'Geist Mono',monospace" });
-labelEl(60, 260, "         r² = 25 + 144 = 169", "#f0eeea", 15, 4, { font: "'Geist Mono',monospace" });
-labelEl(60, 300, "r = √169 = 13 cm", "#0fee89", 18, 4, { font: "'Geist Mono',monospace" });
+// === Steps 3 and 4 — equations (typeset with KaTeX) ====================
+texEl(60, 226, "\\text{Pythagoras:}\\;\\; r^2 = 5^2 + 12^2", "#f0eeea", 16, 3);
+texEl(60, 258, "r^2 = 25 + 144 = 169", "#f0eeea", 16, 4);
+texEl(60, 296, "r = \\sqrt{169} = 13 \\;\\text{cm}", "#0fee89", 19, 4);
 
 // === Step controller ===================================================
 var STEPS = [
