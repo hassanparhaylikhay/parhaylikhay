@@ -2,7 +2,7 @@
 title: 'Review and practice'
 checks:
   - q: 'Convert $7.2$ km to m.'
-    options: ["$72$ m", "$720$ m", "$7200$ m", "$72\,000$ m"]
+    options: ["$72$ m", "$720$ m", "$7200$ m", "$72000$ m"]
     correct: 2
     explain: '$1$ km $= 1000$ m. $7.2 \times 1000 = 7200$ m.'
   - q: 'A tile has area $200$ cm². How many of these tiles cover $1$ m²?'
@@ -10,7 +10,7 @@ checks:
     correct: 1
     explain: '$1$ m² $= 10\,000$ cm². Number of tiles $= 10\,000 \div 200 = 50$.'
   - q: 'Convert $4.5$ litres to cm³.'
-    options: ["$45$ cm³", "$450$ cm³", "$4500$ cm³", "$45\,000$ cm³"]
+    options: ["$45$ cm³", "$450$ cm³", "$4500$ cm³", "$45000$ cm³"]
     correct: 2
     explain: '$1$ litre $= 1000$ cm³. So $4.5 \times 1000 = 4500$ cm³.'
   - q: 'A swimming pool measures $25$ m × $12$ m × $1.5$ m. Its volume in m³ is...'
@@ -18,7 +18,7 @@ checks:
     correct: 3
     explain: 'Cuboid volume $= l \times w \times h = 25 \times 12 \times 1.5 = 450$ m³.'
   - q: 'The pool above holds how many litres?'
-    options: ["$450$ litres", "$4500$ litres", "$45\,000$ litres", "$450\,000$ litres"]
+    options: ["$450$ litres", "$4500$ litres", "$45000$ litres", "$450000$ litres"]
     correct: 3
     explain: '$1$ m³ $= 1000$ litres. $450 \times 1000 = 450\,000$ litres.'
   - q: 'A tank holds $80$ litres. Its volume in m³ is...'
