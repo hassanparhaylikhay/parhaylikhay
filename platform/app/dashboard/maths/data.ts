@@ -445,7 +445,15 @@ export const UNITS: Unit[] = [
   {
     slug: "05", title: "Mensuration", color: "#ff4670",
     topics: [
-      { slug: "01", code: "5.1", title: "Units of measure" },
+      {
+        slug: "01", code: "5.1", title: "Units of measure",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Length and mass" },
+          { slug: "p2",     label: "P2", title: "Area conversions" },
+          { slug: "p3",     label: "P3", title: "Volume and capacity" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "02", code: "5.2", title: "Area and perimeter" },
       { slug: "03", code: "5.3", title: "Circles, arcs and sectors" },
       { slug: "04", code: "5.4", title: "Surface area and volume" },

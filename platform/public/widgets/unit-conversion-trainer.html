@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Unit Conversion Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:600px; margin:0 auto; }
+
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .target-picker { display:flex; gap:6px; align-items:center; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .target-picker select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:5px 22px 5px 10px; border-radius:5px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:24px 24px 22px; }
+
+  .q-label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#3a4a5a; margin-bottom:12px; text-align:center; }
+  .q-prompt { font-size:16px; line-height:1.55; color:#c8c6be; text-align:center; margin:6px 0 8px; }
+  .q-expr { font-size:24px; color:#f0eeea; margin:6px 0 18px; text-align:center; min-height:36px; }
+
+  .answer-row { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+  .answer-row input {
+    appearance:none; width:170px; height:42px; text-align:center;
+    font-family:'Geist Mono',monospace; font-size:18px; font-weight:600;
+    background:#07090d; border:1px solid rgba(0,171,250,0.5); border-radius:8px;
+    color:#00abfa; outline:none;
+  }
+  .answer-row input:focus { border-color:#00abfa; box-shadow:0 0 0 3px rgba(0,171,250,0.12); }
+  .answer-row input.wrong { border-color:#ff4670; color:#ff4670; box-shadow:0 0 0 3px rgba(255,70,112,0.1); }
+  .answer-row input.correct { border-color:#0fee89; color:#0fee89; box-shadow:0 0 0 3px rgba(15,238,137,0.1); }
+  .answer-row .target-unit {
+    font-family:'Geist Mono',monospace; font-size:14px; color:#fff067; font-weight:700;
+    letter-spacing:0.4px;
+  }
+  .answer-row .btn-check {
+    appearance:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600;
+    padding:10px 16px; border-radius:6px; border:0; background:#00abfa; color:#07090d;
+  }
+  .hint-line { text-align:center; font-family:'Geist Mono',monospace; font-size:10.5px; color:#3a4a5a; margin-top:8px; letter-spacing:0.5px; }
+
+  .reveal { margin-top:18px; padding-top:14px; border-top:1px solid #141e2a; text-align:center; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; margin-bottom:12px; }
+  .reveal-explain .katex { font-size:1.05em; }
+  .reveal .conversion {
+    font-family:'Geist Mono',monospace; font-size:12px; color:#fff067;
+    background:#07090d; border:1px solid #141e2a; border-radius:5px;
+    padding:6px 10px; display:inline-block; margin-bottom:8px;
+  }
+
+  .controls { display:flex; gap:8px; margin-top:6px; justify-content:center; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+  .btn.primary:hover { opacity:.88; }
+
+  .progress-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .progress-row .right { color:#0fee89; }
+  .progress-row .wrong { color:#ff4670; }
+
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label" id="mode-label">UNIT CONVERSION TRAINER · 8 QUESTIONS</span>
+    <div class="target-picker">
+      <span>topic:</span>
+      <select id="topic">
+        <option value="length">length</option>
+        <option value="mass">mass</option>
+        <option value="area">area</option>
+        <option value="volume">volume</option>
+        <option value="capacity">capacity</option>
+        <option value="mixed" selected>mixed</option>
+      </select>
+    </div>
+  </div>
+  <div class="card" id="card"></div>
+  <div class="progress-row">
+    <span><b id="step-num">1</b>/<span id="step-total">8</span></span>
+    <span><span class="right">✓ <b id="right-count">0</b></span> &nbsp; <span class="wrong">✗ <b id="wrong-count">0</b></span></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randDecimal(min, max, decimals) {
+  var v = Math.random() * (max - min) + min;
+  var f = Math.pow(10, decimals);
+  return Math.round(v * f) / f;
+}
+
+// =========================================================================
+// CONVERSION FACTORS (relative to a base unit per category)
+// length base = m;  mass base = g;  area base = m²;  volume base = m³; capacity base = ml.
+// =========================================================================
+
+var FACTORS = {
+  // length (× to base m)
+  km:   { cat: "length", to: 1000,    label: "km" },
+  m:    { cat: "length", to: 1,       label: "m" },
+  cm:   { cat: "length", to: 0.01,    label: "cm" },
+  mm:   { cat: "length", to: 0.001,   label: "mm" },
+  // mass (× to base g)
+  kg:   { cat: "mass",   to: 1000,    label: "kg" },
+  g:    { cat: "mass",   to: 1,       label: "g" },
+  // area (× to base m²)
+  km2:  { cat: "area",   to: 1000000, label: "km²" },
+  m2:   { cat: "area",   to: 1,       label: "m²" },
+  cm2:  { cat: "area",   to: 0.0001,  label: "cm²" },
+  mm2:  { cat: "area",   to: 0.000001,label: "mm²" },
+  // volume (× to base m³)
+  m3:   { cat: "volume", to: 1,        label: "m³" },
+  cm3:  { cat: "volume", to: 0.000001, label: "cm³" },
+  mm3:  { cat: "volume", to: 1e-9,     label: "mm³" },
+  // capacity (× to base ml). 1 cm³ = 1 ml; 1 litre = 1000 ml; 1 m³ = 1 000 000 ml.
+  l:    { cat: "capacity", to: 1000,    label: "litres" },
+  ml:   { cat: "capacity", to: 1,       label: "ml" }
+};
+
+// Pairs that produce clean answers when generating questions.
+var PAIRS = {
+  length: [
+    { from: "km", to: "m",  factor: 1000,    valGen: function() { return randDecimal(0.5, 9.5, 1); } },
+    { from: "m",  to: "cm", factor: 100,     valGen: function() { return randDecimal(0.5, 9.5, 1); } },
+    { from: "cm", to: "mm", factor: 10,      valGen: function() { return randDecimal(1.5, 19.5, 1); } },
+    { from: "m",  to: "km", factor: 0.001,   valGen: function() { return rand(500, 9500); } },
+    { from: "cm", to: "m",  factor: 0.01,    valGen: function() { return rand(50, 950); } },
+    { from: "mm", to: "cm", factor: 0.1,     valGen: function() { return rand(15, 195); } }
+  ],
+  mass: [
+    { from: "kg", to: "g",  factor: 1000,    valGen: function() { return randDecimal(0.5, 9.5, 1); } },
+    { from: "g",  to: "kg", factor: 0.001,   valGen: function() { return rand(500, 9500); } }
+  ],
+  area: [
+    { from: "m2",  to: "cm2", factor: 10000,    valGen: function() { return randDecimal(0.5, 9.5, 1); } },
+    { from: "cm2", to: "mm2", factor: 100,      valGen: function() { return randDecimal(1.5, 19.5, 1); } },
+    { from: "km2", to: "m2",  factor: 1000000,  valGen: function() { return randDecimal(0.5, 9.5, 1); } },
+    { from: "cm2", to: "m2",  factor: 0.0001,   valGen: function() { return rand(50000, 950000); } },
+    { from: "mm2", to: "cm2", factor: 0.01,     valGen: function() { return rand(150, 9500); } }
+  ],
+  volume: [
+    { from: "m3",  to: "cm3", factor: 1000000,  valGen: function() { return randDecimal(0.1, 5, 2); } },
+    { from: "cm3", to: "mm3", factor: 1000,     valGen: function() { return randDecimal(1.5, 9.5, 1); } },
+    { from: "cm3", to: "m3",  factor: 0.000001, valGen: function() { return rand(50000, 950000); } }
+  ],
+  capacity: [
+    { from: "l",  to: "ml",  factor: 1000,   valGen: function() { return randDecimal(0.5, 9.5, 1); } },
+    { from: "ml", to: "l",   factor: 0.001,  valGen: function() { return rand(500, 9500); } },
+    { from: "m3", to: "l",   factor: 1000,   valGen: function() { return randDecimal(0.1, 5, 2); } },
+    { from: "l",  to: "cm3", factor: 1000,   valGen: function() { return randDecimal(0.5, 9.5, 1); } },
+    { from: "cm3", to: "ml",  factor: 1,      valGen: function() { return rand(50, 950); } }
+  ]
+};
+
+function genQuestion(topic) {
+  var cat = topic;
+  if (topic === "mixed") cat = pick(["length", "mass", "area", "volume", "capacity"]);
+  var pair = pick(PAIRS[cat]);
+  var v = pair.valGen();
+  // round nicely
+  var ans = v * pair.factor;
+  // reduce floating-point fuzz
+  ans = parseFloat(ans.toPrecision(12));
+  var fromLbl = FACTORS[pair.from].label;
+  var toLbl   = FACTORS[pair.to].label;
+  var why;
+  // Build the explanation text
+  if (pair.factor >= 1) {
+    why = "1 " + fromLbl + " = " + pair.factor.toLocaleString() + " " + toLbl + ", so multiply: " +
+          v + " × " + pair.factor.toLocaleString() + " = " + ans.toLocaleString() + " " + toLbl + ".";
+  } else {
+    var div = 1 / pair.factor;
+    why = "1 " + toLbl + " = " + div.toLocaleString() + " " + fromLbl + ", so divide: " +
+          v + " ÷ " + div.toLocaleString() + " = " + ans.toLocaleString() + " " + toLbl + ".";
+  }
+  // Promo text
+  var conversion;
+  if (pair.factor >= 1) {
+    conversion = "1 " + fromLbl + " = " + pair.factor.toLocaleString() + " " + toLbl;
+  } else {
+    conversion = "1 " + toLbl + " = " + (1/pair.factor).toLocaleString() + " " + fromLbl;
+  }
+  return {
+    prompt: "Convert " + v + " " + fromLbl + " to " + toLbl + ".",
+    targetUnit: toLbl,
+    answer: ans,
+    answerStr: ans.toLocaleString(),
+    check: function(s) {
+      // Accept the user's input as a number; allow commas, spaces.
+      var clean = s.replace(/,/g, "").replace(/\s+/g, "").trim();
+      if (clean === "") return false;
+      // Strip trailing unit text if user added it
+      clean = clean.replace(/[a-zA-Z²³³]+$/, "");
+      var n = parseFloat(clean);
+      if (!isFinite(n)) return false;
+      // tolerance for floating-point roundoff: relative 0.0005 plus tiny absolute
+      var tol = Math.max(Math.abs(ans) * 5e-4, 1e-9);
+      return Math.abs(n - ans) <= tol;
+    },
+    why: why,
+    conversion: conversion,
+    hint: "type the value in " + toLbl
+  };
+}
+
+function buildSet(topic, n) {
+  var out = [];
+  for (var i = 0; i < n; i++) out.push(genQuestion(topic));
+  return out;
+}
+
+var state = { idx: 0, right: 0, wrong: 0, set: [], locked: false };
+
+var cardEl = document.getElementById("card");
+var topicSel = document.getElementById("topic");
+var stepNumEl = document.getElementById("step-num");
+var rightCountEl = document.getElementById("right-count");
+var wrongCountEl = document.getElementById("wrong-count");
+
+// Read ?topic=... URL param to default the dropdown.
+(function() {
+  var urlTopic = new URLSearchParams(location.search).get("topic");
+  if (urlTopic && PAIRS[urlTopic] || urlTopic === "mixed") {
+    topicSel.value = urlTopic;
+  }
+})();
+
+topicSel.addEventListener("change", reset);
+
+function reset() {
+  state = { idx: 0, right: 0, wrong: 0, locked: false, set: buildSet(topicSel.value, 8) };
+  rightCountEl.textContent = 0;
+  wrongCountEl.textContent = 0;
+  document.getElementById("step-total").textContent = state.set.length;
+  renderQ();
+}
+
+function renderQ() {
+  if (state.idx >= state.set.length) { renderDone(); return; }
+  var q = state.set[state.idx];
+  stepNumEl.textContent = state.idx + 1;
+  state.locked = false;
+
+  cardEl.innerHTML =
+    '<p class="q-label">Convert</p>' +
+    '<p class="q-prompt" id="prompt"></p>' +
+    '<div class="answer-row">' +
+      '<input type="text" id="ans" placeholder="?"/>' +
+      '<span class="target-unit" id="targetUnit"></span>' +
+      '<button class="btn-check" id="check">Check</button>' +
+    '</div>' +
+    '<p class="hint-line">' + q.hint + '</p>' +
+    '<div id="reveal-slot"></div>';
+
+  document.getElementById("prompt").textContent = q.prompt;
+  document.getElementById("targetUnit").textContent = q.targetUnit;
+
+  var inp = document.getElementById("ans");
+  inp.addEventListener("input", function() { inp.classList.remove("wrong"); });
+  inp.addEventListener("keydown", function(e) { if (e.key === "Enter") submit(inp); });
+  document.getElementById("check").addEventListener("click", function() { submit(inp); });
+  inp.focus({ preventScroll: true });
+
+  reportHeight();
+}
+
+function submit(inp) {
+  if (state.locked) {
+    state.idx++;
+    renderQ();
+    return;
+  }
+  var raw = inp.value;
+  if (!raw.trim()) { inp.classList.add("wrong"); return; }
+  var q = state.set[state.idx];
+  var correct;
+  try { correct = q.check(raw); } catch (e) { correct = false; }
+  state.locked = true;
+
+  if (correct) state.right++; else state.wrong++;
+  rightCountEl.textContent = state.right;
+  wrongCountEl.textContent = state.wrong;
+
+  inp.classList.remove("wrong");
+  inp.classList.add(correct ? "correct" : "wrong");
+  inp.disabled = true;
+
+  var slot = document.getElementById("reveal-slot");
+  slot.innerHTML =
+    '<div class="reveal ' + (correct ? "ok" : "bad") + '">' +
+      '<p class="reveal-line">' + (correct ? "✓ CORRECT" : "✗ ANSWER: " + q.answerStr + " " + q.targetUnit) + '</p>' +
+      '<p class="conversion">' + q.conversion + '</p>' +
+      '<p class="reveal-explain">' + q.why + '</p>' +
+      '<div class="controls"><button class="btn primary" id="next">' + (state.idx < state.set.length - 1 ? "Next →" : "See result") + '</button></div>' +
+    '</div>';
+  document.getElementById("next").addEventListener("click", function() {
+    state.idx++;
+    renderQ();
+  });
+  reportHeight();
+}
+
+function renderDone() {
+  var total = state.set.length;
+  var pct = Math.round((state.right / total) * 100);
+  var msg = pct === 100 ? "Perfect — every conversion clean." :
+            pct >= 80 ? "Strong. The factors are landing." :
+            pct >= 50 ? "Decent. Re-run a single topic from the dropdown to lock the factor in." :
+            "More drill needed. Pick a single topic and grind it.";
+  cardEl.innerHTML =
+    '<div class="done-card">' +
+      '<span class="kicker">SCORE</span>' +
+      '<p class="big">' + state.right + '<span class="total"> / ' + total + '</span></p>' +
+      '<p class="sub">' + pct + '%</p>' +
+      '<p class="msg">' + msg + '</p>' +
+      '<div class="controls" style="justify-content:center;margin-top:14px"><button class="btn primary" id="retry">Retry</button></div>' +
+    '</div>';
+  document.getElementById("retry").addEventListener("click", reset);
+  stepNumEl.textContent = total;
+  reportHeight();
+}
+
+reset();
+
+// Auto-resize via postMessage
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.querySelector(".wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

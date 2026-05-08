@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Volume Conversion Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 380; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:660px; height:380px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
+  .draw-fade.drawn { opacity:1; }
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+
+  /* cuboid pieces (absolute-positioned divs inside .stage) */
+  .face-front {
+    position:absolute; left:50px; top:80px; width:60px; height:120px;
+    background: rgba(0,171,250,0.14);
+    border: 1.5px solid #00abfa;
+  }
+  .face-top {
+    position:absolute; left:50px; top:43px; width:125px; height:37px;
+    background: rgba(0,171,250,0.05);
+    border-top: 1.5px solid #00abfa;
+    border-right: 1.5px solid #00abfa;
+    clip-path: polygon(0% 100%, 48% 100%, 100% 0%, 52% 0%);
+  }
+  .face-right {
+    position:absolute; left:110px; top:43px; width:65px; height:157px;
+    background: rgba(0,171,250,0.20);
+    border-right: 1.5px solid #00abfa;
+    clip-path: polygon(0% 23.6%, 100% 0%, 100% 76.4%, 0% 100%);
+  }
+  /* edges drawn explicitly via 1.5 px divs for crispness */
+  .edge { position:absolute; background:#00abfa; pointer-events:none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">step 0: water tank — 0.4 m × 0.5 m × 0.8 m</span>
+    <span class="step-num" id="counter">0 / 3</span>
+  </div>
+  <div class="stage-outer" id="stage-outer">
+    <div class="stage" id="stage"></div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
+  </div>
+  <p class="footer">cuboid volume · cm³ via × 100³ · litres via × 1000</p>
+</div>
+
+<script>
+"use strict";
+
+var stage      = document.getElementById("stage");
+var stageOuter = document.getElementById("stage-outer");
+var STAGE_W    = 660, STAGE_H = 380;
+function fitStage() {
+  var w = stageOuter.clientWidth;
+  if (!w) return;
+  stage.style.transform = "scale(" + (w / STAGE_W) + ")";
+}
+fitStage();
+window.addEventListener("resize", fitStage);
+if (window.ResizeObserver) new ResizeObserver(fitStage).observe(stageOuter);
+
+function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
+function makeNode(tag, style, dataStep, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  setStyle(n, style);
+  if (dataStep != null) n.dataset.step = String(dataStep);
+  stage.appendChild(n);
+  return n;
+}
+function labelEl(x, y, text, color, fontSize, dataStep, opts) {
+  opts = opts || {};
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontFamily: opts.font || "'Geist Mono', monospace",
+    fontSize: (fontSize || 11) + "px",
+    color: color, fontWeight: opts.weight || "700",
+    whiteSpace: "nowrap", pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  n.textContent = text;
+  return n;
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else { setTimeout(function() { tryRender(target, tex); }, 50); }
+}
+function texEl(x, y, tex, color, fontSize, dataStep) {
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontSize: (fontSize || 14) + "px",
+    color: color, whiteSpace: "nowrap", pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  tryRender(n, tex);
+  return n;
+}
+
+// ===== Header =========================================================
+var hdr = makeNode("div", {
+  position: "absolute", left: "30px", top: "30px",
+  fontFamily: "'Geist Mono', monospace", fontSize: "11px",
+  color: "#7a7875", letterSpacing: "1.6px", textTransform: "uppercase",
+  fontWeight: "600"
+});
+hdr.textContent = "WATER TANK (0.4 m × 0.5 m × 0.8 m)";
+
+// ===== Step 0 — cuboid (always visible) ================================
+// Cuboid placed at front-top-left = (50, 80), front face 60 × 120,
+// depth offset (+65, -37). All faces drawn via clip-path divs.
+makeNode("div", {}, null, "face-front");
+makeNode("div", {}, null, "face-top");
+makeNode("div", {}, null, "face-right");
+
+// Edge polish: draw the 9 visible edges as thin blue lines so the wireframe
+// reads even without face fills. All in a uniform blue.
+function edge(x1, y1, x2, y2) {
+  var dx = x2 - x1, dy = y2 - y1;
+  var len = Math.sqrt(dx*dx + dy*dy);
+  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  makeNode("div", {
+    position: "absolute",
+    left: x1 + "px", top: y1 + "px",
+    width: len + "px", height: "1.5px",
+    background: "#00abfa",
+    transformOrigin: "0 50%",
+    transform: "translateY(-0.75px) rotate(" + ang + "deg)"
+  });
+}
+// Front face: (50, 80) (110, 80) (110, 200) (50, 200)
+edge(50, 80, 110, 80); edge(110, 80, 110, 200); edge(50, 200, 110, 200); edge(50, 80, 50, 200);
+// Back-top: (115, 43) (175, 43)
+edge(115, 43, 175, 43);
+// Diagonals from front-top corners to back-top corners
+edge(50, 80, 115, 43);   // front-top-left → back-top-left
+edge(110, 80, 175, 43);  // front-top-right → back-top-right
+// Back-right vertical: (175, 43) (175, 163)
+edge(175, 43, 175, 163);
+// Diagonal from front-bottom-right to back-bottom-right
+edge(110, 200, 175, 163);
+
+// Dimension labels (always visible)
+labelEl(70, 207, "0.4 m", "#00abfa", 12, 0);            // width below front
+labelEl(20, 132, "0.8 m", "#00abfa", 12, 0);            // height left of front
+labelEl(140, 30, "0.5 m", "#00abfa", 12, 0);            // depth (top)
+
+// ===== Step 1 — Volume in m³ ==========================================
+labelEl(60, 124, "V = 0.16 m³", "#fff067", 14, 1);
+
+// ===== Step 2 — convert to cm³ (× 10⁶) =================================
+var badge2 = makeNode("div", {
+  position: "absolute", left: "210px", top: "100px",
+  background: "#0a1a14", border: "1px solid rgba(15,238,137,0.3)",
+  borderRadius: "5px", padding: "6px 10px",
+  fontFamily: "'Geist Mono', monospace", fontSize: "12px",
+  color: "#0fee89", fontWeight: "700",
+  whiteSpace: "nowrap", lineHeight: "1.4"
+}, 2, "draw-fade");
+badge2.innerHTML = "1 m³ = 100³<br>= 1 000 000 cm³";
+
+// ===== Step 3 — convert to litres ======================================
+var badge3 = makeNode("div", {
+  position: "absolute", left: "210px", top: "180px",
+  background: "#0a1a14", border: "1px solid #ff822c",
+  borderRadius: "5px", padding: "6px 10px",
+  fontFamily: "'Geist Mono', monospace", fontSize: "12px",
+  color: "#ff822c", fontWeight: "700",
+  whiteSpace: "nowrap", lineHeight: "1.4"
+}, 3, "draw-fade");
+badge3.innerHTML = "1 m³ = 1000 litres";
+
+// ===== Equations panel (right side, x ≈ 360) ===========================
+texEl(360,  20, "\\text{(a) Volume in m}^3",
+      "#7a7875", 13, 1);
+texEl(360,  44, "V = 0.4 \\times 0.5 \\times 0.8",
+      "#f0eeea", 16, 1);
+texEl(360,  76, "= 0.16\\;\\text{m}^3",
+      "#0fee89", 19, 1);
+
+texEl(360, 116, "\\text{(b) Convert to cm}^3",
+      "#7a7875", 13, 2);
+texEl(360, 140, "V = 0.16 \\times 1\\,000\\,000",
+      "#f0eeea", 16, 2);
+texEl(360, 172, "= 160\\,000\\;\\text{cm}^3",
+      "#0fee89", 19, 2);
+
+texEl(360, 220, "\\text{(c) Express in litres}",
+      "#7a7875", 13, 3);
+texEl(360, 244, "V = 0.16 \\times 1000",
+      "#f0eeea", 16, 3);
+texEl(360, 276, "= 160\\;\\text{litres}",
+      "#0fee89", 21, 3);
+texEl(360, 320, "\\text{(M1 for }\\times 1000\\text{; A1 for } 160\\text{)}",
+      "#7a7875", 11, 3);
+
+// ===== Step controller =================================================
+var STEPS = [
+  "step 0: water tank — 0.4 m × 0.5 m × 0.8 m",
+  "step 1 (a): V = 0.4 × 0.5 × 0.8 = 0.16 m³",
+  "step 2 (b): m³ → cm³ uses ×100³ = ×1 000 000",
+  "step 3 (c): m³ → litres uses ×1000"
+];
+var step = 0, maxStep = STEPS.length - 1;
+var titleEl   = document.getElementById("title");
+var counterEl = document.getElementById("counter");
+var prevBtn   = document.getElementById("prev");
+var nextBtn   = document.getElementById("next");
+function setStep(n) {
+  step = Math.max(0, Math.min(maxStep, n));
+  titleEl.textContent = STEPS[step];
+  counterEl.textContent = step + " / " + maxStep;
+  var els = stage.querySelectorAll("[data-step]");
+  for (var i = 0; i < els.length; i++) {
+    var s = parseInt(els[i].dataset.step, 10);
+    var el = els[i];
+    if (s <= step) {
+      el.classList.add("drawn");
+    } else {
+      el.classList.remove("drawn");
+    }
+  }
+  prevBtn.disabled = (step === 0);
+  nextBtn.disabled = (step === maxStep);
+}
+prevBtn.onclick = function() { setStep(step - 1); };
+nextBtn.onclick = function() { setStep(step + 1); };
+setStep(0);
+
+// ===== Height reporter =================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

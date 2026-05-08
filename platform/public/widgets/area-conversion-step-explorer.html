@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Area Conversion Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 360; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:660px; height:360px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+  .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
+  .draw-fade.drawn { opacity:1; }
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">step 0: garden 5.2 m × 3.5 m — find area in m² and cm²</span>
+    <span class="step-num" id="counter">0 / 3</span>
+  </div>
+  <div class="stage-outer" id="stage-outer">
+    <div class="stage" id="stage"></div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
+  </div>
+  <p class="footer">find area · multiply m² by 100² to convert to cm²</p>
+</div>
+
+<script>
+"use strict";
+
+// Diagram lives in left half (x: 0..320). Right panel x: 360..660.
+// Garden rectangle: 5.2 m × 3.5 m. Display size 220 × 148 (aspect 5.2:3.5).
+//   top-left  (50, 80)    bottom-right (270, 228)
+var R = { x1: 50, y1: 80, x2: 270, y2: 228 };
+var R_W = R.x2 - R.x1, R_H = R.y2 - R.y1;
+
+var stage      = document.getElementById("stage");
+var stageOuter = document.getElementById("stage-outer");
+var STAGE_W    = 660, STAGE_H = 360;
+function fitStage() {
+  var w = stageOuter.clientWidth;
+  if (!w) return;
+  stage.style.transform = "scale(" + (w / STAGE_W) + ")";
+}
+fitStage();
+window.addEventListener("resize", fitStage);
+if (window.ResizeObserver) new ResizeObserver(fitStage).observe(stageOuter);
+
+function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
+function makeNode(tag, style, dataStep, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  setStyle(n, style);
+  if (dataStep != null) n.dataset.step = String(dataStep);
+  stage.appendChild(n);
+  return n;
+}
+function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
+  var dx = x2 - x1, dy = y2 - y1;
+  var len = Math.sqrt(dx*dx + dy*dy);
+  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  var t = thickness || 2;
+  var s = {
+    position: "absolute",
+    left: x1 + "px", top: y1 + "px",
+    width: "0px", height: t + "px",
+    transformOrigin: "0 50%",
+    transform: "translateY(" + (-t/2) + "px) rotate(" + ang + "deg)"
+  };
+  if (dashed) {
+    s.background = "transparent";
+    s.borderTop = t + "px dashed " + color;
+    s.height = "0px";
+  } else {
+    s.background = color;
+  }
+  var node = makeNode("div", s, dataStep, "draw-line");
+  node._fullWidth = len;
+  return node;
+}
+function labelEl(x, y, text, color, fontSize, dataStep, opts) {
+  opts = opts || {};
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontFamily: opts.font || "'Geist Mono', monospace",
+    fontSize: (fontSize || 11) + "px",
+    color: color, fontWeight: opts.weight || "700",
+    whiteSpace: "nowrap", pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  n.textContent = text;
+  return n;
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else { setTimeout(function() { tryRender(target, tex); }, 50); }
+}
+function texEl(x, y, tex, color, fontSize, dataStep) {
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontSize: (fontSize || 14) + "px",
+    color: color, whiteSpace: "nowrap", pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  tryRender(n, tex);
+  return n;
+}
+
+// ===== Header =========================================================
+var hdr = makeNode("div", {
+  position: "absolute", left: "30px", top: "30px",
+  fontFamily: "'Geist Mono', monospace", fontSize: "11px",
+  color: "#7a7875", letterSpacing: "1.6px", textTransform: "uppercase",
+  fontWeight: "600"
+});
+hdr.textContent = "GARDEN PLAN (5.2 m × 3.5 m)";
+
+// ===== Step 0 — rectangle outline + dimensions =========================
+// Sides drawn in blue (line elements so they animate via width).
+lineEl(R.x1, R.y1, R.x2, R.y1, "#00abfa", 2.5, false, 0); // top
+lineEl(R.x2, R.y1, R.x2, R.y2, "#00abfa", 2.5, false, 0); // right
+lineEl(R.x1, R.y2, R.x2, R.y2, "#00abfa", 2.5, false, 0); // bottom
+lineEl(R.x1, R.y1, R.x1, R.y2, "#00abfa", 2.5, false, 0); // left
+
+// Dimension labels
+labelEl((R.x1 + R.x2)/2 - 18, R.y2 + 8, "5.2 m", "#00abfa", 12, 0);
+labelEl(R.x1 - 36, (R.y1 + R.y2)/2 - 7, "3.5 m", "#00abfa", 12, 0);
+
+// ===== Step 1 — fill + area label ======================================
+// Filled body (a faint blue panel)
+makeNode("div", {
+  position: "absolute",
+  left: R.x1 + "px", top: R.y1 + "px",
+  width: R_W + "px", height: R_H + "px",
+  background: "rgba(0,171,250,0.14)",
+  pointerEvents: "none"
+}, 1, "draw-fade");
+
+// "Area = 18.2 m²" label centered
+labelEl((R.x1 + R.x2)/2 - 36, (R.y1 + R.y2)/2 - 8, "18.2 m²", "#fff067", 18, 1);
+
+// ===== Step 2 — squared factor banner ==================================
+// A small "1 m² = 10000 cm²" badge below the rectangle (or over it)
+var badge = makeNode("div", {
+  position: "absolute",
+  left: "40px", top: "260px",
+  background: "#0a1a14", border: "1px solid rgba(15,238,137,0.3)",
+  borderRadius: "5px", padding: "6px 10px",
+  fontFamily: "'Geist Mono', monospace",
+  fontSize: "12px", color: "#0fee89", fontWeight: "700",
+  letterSpacing: "0.3px",
+  whiteSpace: "nowrap"
+}, 2, "draw-fade");
+badge.textContent = "1 m = 100 cm  →  1 m² = 100² = 10 000 cm²";
+
+// ===== Step 3 — final answer label =====================================
+var finalLbl = makeNode("div", {
+  position: "absolute",
+  left: "40px", top: "300px",
+  background: "#0a1a14", border: "1px solid #0fee89",
+  borderRadius: "5px", padding: "8px 12px",
+  fontFamily: "'Geist Mono', monospace",
+  fontSize: "16px", color: "#0fee89", fontWeight: "700",
+  letterSpacing: "0.3px",
+  whiteSpace: "nowrap"
+}, 3, "draw-fade");
+finalLbl.textContent = "= 182 000 cm²";
+
+// ===== Equations panel (right side, x ≈ 360) ===========================
+texEl(360,  20, "\\text{(a) Area in m}^2",
+      "#7a7875", 13, 1);
+texEl(360,  44, "A = 5.2 \\times 3.5",
+      "#f0eeea", 16, 1);
+texEl(360,  76, "= 18.2\\;\\text{m}^2",
+      "#0fee89", 19, 1);
+
+texEl(360, 124, "\\text{(b) Convert m}^2 \\text{ to cm}^2",
+      "#7a7875", 13, 2);
+texEl(360, 148, "1\\;\\text{m} = 100\\;\\text{cm}",
+      "#fff067", 15, 2);
+texEl(360, 178, "1\\;\\text{m}^2 = 100^2 = 10\\,000\\;\\text{cm}^2",
+      "#fff067", 15, 2);
+
+texEl(360, 226, "18.2 \\times 10\\,000",
+      "#f0eeea", 16, 3);
+texEl(360, 258, "= 182\\,000\\;\\text{cm}^2",
+      "#0fee89", 21, 3);
+texEl(360, 304, "\\text{(M1 for }\\times 10\\,000\\text{; A1 for } 182\\,000\\text{)}",
+      "#7a7875", 11, 3);
+
+// ===== Step controller =================================================
+var STEPS = [
+  "step 0: garden 5.2 m × 3.5 m — find area in m² and cm²",
+  "step 1 (a): area = 5.2 × 3.5 = 18.2 m²",
+  "step 2 (b): linear factor squared — 1 m² = 10 000 cm²",
+  "step 3 (b): multiply: 18.2 × 10 000 = 182 000 cm²"
+];
+var step = 0, maxStep = STEPS.length - 1;
+var titleEl   = document.getElementById("title");
+var counterEl = document.getElementById("counter");
+var prevBtn   = document.getElementById("prev");
+var nextBtn   = document.getElementById("next");
+function setStep(n) {
+  step = Math.max(0, Math.min(maxStep, n));
+  titleEl.textContent = STEPS[step];
+  counterEl.textContent = step + " / " + maxStep;
+  var els = stage.querySelectorAll("[data-step]");
+  for (var i = 0; i < els.length; i++) {
+    var s = parseInt(els[i].dataset.step, 10);
+    var el = els[i];
+    if (s <= step) {
+      el.classList.add("drawn");
+      if (el._fullWidth != null) el.style.width = el._fullWidth + "px";
+    } else {
+      el.classList.remove("drawn");
+      if (el._fullWidth != null) el.style.width = "0px";
+    }
+  }
+  prevBtn.disabled = (step === 0);
+  nextBtn.disabled = (step === maxStep);
+}
+prevBtn.onclick = function() { setStep(step - 1); };
+nextBtn.onclick = function() { setStep(step + 1); };
+setStep(0);
+
+// ===== Height reporter =================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

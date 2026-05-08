@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Length Conversion Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 360; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:660px; height:360px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+  .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
+  .draw-fade.drawn { opacity:1; }
+  .swap { transition: opacity 0.4s ease, color 0.4s ease; }
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">step 0: 5.2 km, then 1450 m more — find total in km</span>
+    <span class="step-num" id="counter">0 / 2</span>
+  </div>
+  <div class="stage-outer" id="stage-outer">
+    <div class="stage" id="stage"></div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
+  </div>
+  <p class="footer">delivery route · convert m → km · add</p>
+</div>
+
+<script>
+"use strict";
+
+// Diagram lives in the left half (x: 0..320). Right panel x: 360..660.
+// Three points along a horizontal line:
+//   W = (30, 130)  [warehouse]   J = (230, 130) [junction]   C = (290, 130) [customer]
+// Segment 1 length 200 px ↔ 5.2 km;  segment 2 length 60 px ↔ 1.45 km (≈ visual scale).
+var W = { x: 30,  y: 130 };
+var J = { x: 230, y: 130 };
+var C = { x: 290, y: 130 };
+
+var stage      = document.getElementById("stage");
+var stageOuter = document.getElementById("stage-outer");
+var STAGE_W    = 660, STAGE_H = 360;
+function fitStage() {
+  var w = stageOuter.clientWidth;
+  if (!w) return;
+  stage.style.transform = "scale(" + (w / STAGE_W) + ")";
+}
+fitStage();
+window.addEventListener("resize", fitStage);
+if (window.ResizeObserver) new ResizeObserver(fitStage).observe(stageOuter);
+
+function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
+function makeNode(tag, style, dataStep, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  setStyle(n, style);
+  if (dataStep != null) n.dataset.step = String(dataStep);
+  stage.appendChild(n);
+  return n;
+}
+function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
+  var dx = x2 - x1, dy = y2 - y1;
+  var len = Math.sqrt(dx*dx + dy*dy);
+  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  var t = thickness || 2;
+  var s = {
+    position: "absolute",
+    left: x1 + "px", top: y1 + "px",
+    width: "0px", height: t + "px",
+    transformOrigin: "0 50%",
+    transform: "translateY(" + (-t/2) + "px) rotate(" + ang + "deg)"
+  };
+  if (dashed) {
+    s.background = "transparent";
+    s.borderTop = t + "px dashed " + color;
+    s.height = "0px";
+  } else {
+    s.background = color;
+  }
+  var node = makeNode("div", s, dataStep, "draw-line");
+  node._fullWidth = len;
+  return node;
+}
+function dotEl(x, y, color, size, dataStep) {
+  var sz = size || 7;
+  return makeNode("div", {
+    position: "absolute",
+    left: (x - sz/2) + "px", top: (y - sz/2) + "px",
+    width: sz + "px", height: sz + "px",
+    borderRadius: "50%", background: color
+  }, dataStep, "draw-fade");
+}
+function labelEl(x, y, text, color, fontSize, dataStep, opts) {
+  opts = opts || {};
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontFamily: opts.font || "'Geist Mono', monospace",
+    fontSize: (fontSize || 11) + "px",
+    color: color, fontWeight: opts.weight || "700",
+    whiteSpace: "nowrap", pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  n.textContent = text;
+  return n;
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else { setTimeout(function() { tryRender(target, tex); }, 50); }
+}
+function texEl(x, y, tex, color, fontSize, dataStep) {
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontSize: (fontSize || 14) + "px",
+    color: color, whiteSpace: "nowrap", pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  tryRender(n, tex);
+  return n;
+}
+
+// ===== Diagram (left half) =============================================
+// Always-on header
+var header = makeNode("div", {
+  position: "absolute", left: "30px", top: "30px",
+  fontFamily: "'Geist Mono', monospace", fontSize: "11px",
+  color: "#7a7875", letterSpacing: "1.6px", textTransform: "uppercase",
+  fontWeight: "600"
+});
+header.textContent = "DELIVERY ROUTE";
+
+// Segment 1 (W → J): blue thick line, length 200 px ↔ 5.2 km
+lineEl(W.x, W.y, J.x, J.y, "#00abfa", 4, false, 0);
+// Segment 2 (J → C): orange, length 60 px ↔ 1.45 km
+lineEl(J.x, J.y, C.x, C.y, "#ff822c", 4, false, 0);
+
+// Endpoints (always visible)
+dotEl(W.x, W.y, "#fff067", 9, 0);
+dotEl(J.x, J.y, "#fff067", 8, 0);
+dotEl(C.x, C.y, "#fff067", 9, 0);
+
+// Endpoint labels
+labelEl(W.x - 4, W.y + 14, "W (warehouse)", "#fff067", 11, 0);
+labelEl(J.x - 4, J.y + 14, "J", "#fff067", 12, 0);
+labelEl(C.x - 4, C.y + 14, "C (customer)", "#fff067", 11, 0);
+
+// Distance labels above the segments. Segment 2 has TWO labels (one for
+// each step) layered on top of each other; we hide one and show the other.
+labelEl((W.x + J.x)/2 - 18, W.y - 22, "5.2 km", "#00abfa", 13, 0);
+
+// Segment 2 label step-0: "1450 m" (orange)
+var lblSeg2A = labelEl((J.x + C.x)/2 - 18, J.y - 22, "1450 m", "#ff822c", 12, 0);
+lblSeg2A.classList.add("swap");
+// Segment 2 label step-1: "1.45 km" (green) — only visible from step 1 onward
+var lblSeg2B = labelEl((J.x + C.x)/2 - 22, J.y - 22, "1.45 km", "#0fee89", 12, 1);
+lblSeg2B.classList.add("swap");
+
+// Conversion arrow flowing from "1450 m" label into "1.45 km" — appears at step 1
+// Drawn as a curved-ish dashed indicator under the segment 2 label.
+labelEl((J.x + C.x)/2 - 22, J.y - 38, "÷ 1000", "#0fee89", 10, 1);
+
+// Total bar (step 2): a green bar above the route from W to C
+lineEl(W.x, W.y - 60, C.x, W.y - 60, "#0fee89", 4, false, 2);
+labelEl((W.x + C.x)/2 - 28, W.y - 80, "6.65 km total", "#0fee89", 12, 2);
+
+// Vertical drop lines from total bar to W and C (step 2)
+lineEl(W.x, W.y - 60, W.x, W.y - 8, "#0fee89", 1.4, true, 2);
+lineEl(C.x, W.y - 60, C.x, W.y - 8, "#0fee89", 1.4, true, 2);
+
+// Hide step-0 segment2 label when step >= 1 (handled in setStep via swap class).
+
+// ===== Equations panel (right side, x ≈ 360) ===========================
+texEl(360,  20, "\\text{(a) Convert } 1450\\;\\text{m to km}",
+      "#7a7875", 13, 1);
+texEl(360,  46, "1\\;\\text{km} = 1000\\;\\text{m}",
+      "#fff067", 16, 1);
+texEl(360,  78, "1450 \\div 1000 = 1.45\\;\\text{km}",
+      "#0fee89", 19, 1);
+texEl(360, 116, "\\text{(M1 for } \\div 1000 \\text{; A1 for } 1.45 \\text{)}",
+      "#7a7875", 11, 1);
+
+texEl(360, 168, "\\text{(b) Total distance}",
+      "#7a7875", 13, 2);
+texEl(360, 192, "5.2\\;\\text{km} + 1.45\\;\\text{km}",
+      "#f0eeea", 16, 2);
+texEl(360, 226, "= 6.65\\;\\text{km}",
+      "#0fee89", 21, 2);
+texEl(360, 268, "\\text{(A1 for } 6.65 \\text{ with km units)}",
+      "#7a7875", 11, 2);
+
+// ===== Step controller =================================================
+var STEPS = [
+  "step 0: 5.2 km, then 1450 m more — find total in km",
+  "step 1 (a): convert 1450 m → 1.45 km",
+  "step 2 (b): add to get total: 6.65 km"
+];
+var step = 0, maxStep = STEPS.length - 1;
+var titleEl   = document.getElementById("title");
+var counterEl = document.getElementById("counter");
+var prevBtn   = document.getElementById("prev");
+var nextBtn   = document.getElementById("next");
+function setStep(n) {
+  step = Math.max(0, Math.min(maxStep, n));
+  titleEl.textContent = STEPS[step];
+  counterEl.textContent = step + " / " + maxStep;
+  var els = stage.querySelectorAll("[data-step]");
+  for (var i = 0; i < els.length; i++) {
+    var s = parseInt(els[i].dataset.step, 10);
+    var el = els[i];
+    if (s <= step) {
+      el.classList.add("drawn");
+      if (el._fullWidth != null) el.style.width = el._fullWidth + "px";
+    } else {
+      el.classList.remove("drawn");
+      if (el._fullWidth != null) el.style.width = "0px";
+    }
+  }
+  // hide the step-0 "1450 m" label when step >= 1 (replaced by "1.45 km")
+  if (step >= 1) {
+    lblSeg2A.style.opacity = "0";
+  } else {
+    lblSeg2A.style.opacity = "1";
+  }
+  prevBtn.disabled = (step === 0);
+  nextBtn.disabled = (step === maxStep);
+}
+prevBtn.onclick = function() { setStep(step - 1); };
+nextBtn.onclick = function() { setStep(step + 1); };
+setStep(0);
+
+// ===== Height reporter =================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>

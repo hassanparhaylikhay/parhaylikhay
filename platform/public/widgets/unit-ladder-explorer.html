@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Unit Ladder Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 18px 18px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; gap:10px; }
+  .kicker { font-family:'Geist Mono',monospace; font-size:11px; letter-spacing:1.6px; text-transform:uppercase; color:#fff067; font-weight:600; }
+  .pill {
+    font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875;
+    border:1px solid #141e2a; border-radius:14px; padding:3px 10px;
+    letter-spacing:0.4px;
+  }
+
+  .ladder { display:flex; align-items:stretch; justify-content:center; gap:0; margin:6px 0 18px; flex-wrap:nowrap; }
+  .card {
+    flex:1 1 0; min-width:0;
+    background:#07090d; border:1.5px solid #141e2a; border-radius:10px;
+    padding:14px 8px 12px; cursor:pointer; user-select:none;
+    text-align:center;
+    transition: border-color 0.18s, background 0.18s, transform 0.12s;
+  }
+  .card:hover { border-color:#3a4a5a; }
+  .card.active {
+    background:#0d1822; transform:translateY(-2px);
+  }
+  .card .unit-label {
+    font-family:'Geist Mono',monospace; font-size:14px; font-weight:700;
+    letter-spacing:1px; color:#7a7875; text-transform:uppercase;
+  }
+  .card.active .unit-label { color:var(--brand); }
+  .card .unit-value {
+    font-family:'Geist Mono',monospace; font-size:18px; font-weight:600;
+    color:#f0eeea; margin-top:8px; word-break:break-all;
+    min-height:24px;
+  }
+  .card.active .unit-value { color:var(--brand); }
+
+  .arrow {
+    flex:0 0 56px; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:2px; padding:0 4px; min-width:0;
+  }
+  .arrow .factor {
+    font-family:'Geist Mono',monospace; font-size:10.5px; font-weight:700;
+    letter-spacing:0.3px; color:#0fee89; line-height:1.1;
+    background:#0b1118; padding:1px 4px; border-radius:3px;
+  }
+  .arrow .factor.dim { color:#3a4a5a; }
+  .arrow .a-line { font-family:'Geist Mono',monospace; font-size:13px; color:#3a4a5a; }
+  .arrow .factor-down { color:#ff4670; }
+
+  .input-row {
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    margin:6px 0 4px; padding:12px 14px; background:#07090d;
+    border:1px solid #141e2a; border-radius:8px;
+  }
+  .input-row label {
+    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
+    letter-spacing:0.4px; text-transform:uppercase;
+  }
+  .input-row input[type="number"] {
+    appearance:none; -webkit-appearance:none; -moz-appearance:textfield;
+    background:#0b1118; border:1.5px solid #141e2a; border-radius:6px;
+    color:var(--brand); font-family:'Geist Mono',monospace; font-size:16px;
+    font-weight:600; padding:6px 10px; width:120px; text-align:center; outline:none;
+    transition: border-color 0.15s;
+  }
+  .input-row input[type="number"]::-webkit-outer-spin-button,
+  .input-row input[type="number"]::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
+  .input-row input[type="number"]:focus { border-color:var(--brand); box-shadow:0 0 0 3px rgba(0,171,250,0.10); }
+
+  .input-row .input-unit {
+    font-family:'Geist Mono',monospace; font-size:14px; color:var(--brand);
+    font-weight:700; letter-spacing:0.5px;
+  }
+  .input-row .preset {
+    margin-left:auto; display:flex; gap:5px; flex-wrap:wrap;
+  }
+  .preset button {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:10.5px; font-weight:600;
+    padding:5px 9px; border-radius:5px; cursor:pointer;
+    letter-spacing:0.4px;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .preset button:hover { color:var(--brand); border-color:var(--brand); }
+
+  .help-row {
+    margin-top:14px; padding:10px 12px; background:#07090d;
+    border:1px solid #141e2a; border-radius:8px;
+    font-family:'Geist Mono',monospace; font-size:11.5px;
+    line-height:1.6; color:#c8c6be;
+  }
+  .help-row .h-line {
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  }
+  .help-row .h-tag { font-size:10px; color:#7a7875; letter-spacing:0.4px; text-transform:uppercase; }
+  .help-row .op { color:#0fee89; font-weight:700; }
+  .help-row .op-down { color:#ff4670; font-weight:700; }
+  .help-row .num { color:var(--brand); font-weight:700; }
+
+  .footer { margin-top:14px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+
+  @media (max-width: 540px) {
+    .arrow { flex:0 0 40px; }
+    .arrow .factor { font-size:9.5px; }
+    .card .unit-value { font-size:14px; }
+    .card { padding:10px 4px 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="kicker" id="kicker">LENGTH UNIT LADDER</span>
+    <span class="pill" id="hintPill">click a unit to set it as input</span>
+  </div>
+  <div class="ladder" id="ladder"></div>
+  <div class="input-row">
+    <label>value:</label>
+    <input type="number" id="valueInput" step="any"/>
+    <span class="input-unit" id="inputUnit">m</span>
+    <div class="preset" id="preset"></div>
+  </div>
+  <div class="help-row" id="helpRow"></div>
+  <p class="footer" id="footer">drag slider · click a unit · multiply going DOWN the ladder, divide going UP</p>
+</div>
+
+<script>
+"use strict";
+
+var qs = new URLSearchParams(location.search);
+var type = qs.get("type") || "length";
+
+// Each unit's factorToBase = how many "base" units in 1 of this unit.
+// For length, base = m. For mass, base = g.
+var TYPES = {
+  length: {
+    base: "m",
+    brand: "#00abfa",
+    units: [
+      { key: "km", label: "km", factorToBase: 1000 },
+      { key: "m",  label: "m",  factorToBase: 1 },
+      { key: "cm", label: "cm", factorToBase: 0.01 },
+      { key: "mm", label: "mm", factorToBase: 0.001 }
+    ],
+    presets: [
+      { label: "0.5 km", unit: "km", value: 0.5 },
+      { label: "4.5 m",  unit: "m",  value: 4.5 },
+      { label: "120 cm", unit: "cm", value: 120 },
+      { label: "85 mm",  unit: "mm", value: 85 }
+    ],
+    initial: { unit: "m", value: 4.5 },
+    title: "LENGTH UNIT LADDER"
+  },
+  mass: {
+    base: "g",
+    brand: "#ff822c",
+    units: [
+      { key: "kg", label: "kg", factorToBase: 1000 },
+      { key: "g",  label: "g",  factorToBase: 1 }
+    ],
+    presets: [
+      { label: "2.5 kg",  unit: "kg", value: 2.5 },
+      { label: "750 g",   unit: "g",  value: 750 },
+      { label: "0.4 kg",  unit: "kg", value: 0.4 },
+      { label: "1500 g",  unit: "g",  value: 1500 }
+    ],
+    initial: { unit: "g", value: 750 },
+    title: "MASS UNIT LADDER"
+  }
+};
+
+var T = TYPES[type] || TYPES.length;
+document.documentElement.style.setProperty("--brand", T.brand);
+document.getElementById("kicker").textContent = T.title;
+
+var ladderEl  = document.getElementById("ladder");
+var inputEl   = document.getElementById("valueInput");
+var inputUnit = document.getElementById("inputUnit");
+var presetEl  = document.getElementById("preset");
+var helpRow   = document.getElementById("helpRow");
+
+var state = { active: T.initial.unit, value: T.initial.value };
+
+function findUnit(key) { for (var i = 0; i < T.units.length; i++) if (T.units[i].key === key) return T.units[i]; return T.units[0]; }
+function baseValue() { return state.value * findUnit(state.active).factorToBase; }
+function valueIn(unit) { return baseValue() / unit.factorToBase; }
+
+function fmt(n) {
+  if (!isFinite(n)) return "—";
+  if (n === 0) return "0";
+  var abs = Math.abs(n);
+  // pick a sensible representation
+  if (abs >= 1000000) return n.toExponential(3).replace(/e\+?/, " × 10^");
+  if (abs >= 1)       return parseFloat(n.toFixed(4)).toString();
+  if (abs >= 0.001)   return parseFloat(n.toFixed(6)).toString();
+  return n.toExponential(3).replace(/e\+?/, " × 10^");
+}
+
+function buildLadder() {
+  ladderEl.innerHTML = "";
+  for (var i = 0; i < T.units.length; i++) {
+    var u = T.units[i];
+    var card = document.createElement("div");
+    card.className = "card" + (u.key === state.active ? " active" : "");
+    card.dataset.unit = u.key;
+    card.innerHTML =
+      '<div class="unit-label">' + u.label + '</div>' +
+      '<div class="unit-value">' + fmt(valueIn(u)) + '</div>';
+    card.addEventListener("click", (function(key) {
+      return function() { setActive(key); };
+    })(u.key));
+    ladderEl.appendChild(card);
+
+    if (i < T.units.length - 1) {
+      var nxt = T.units[i + 1];
+      var ratio = u.factorToBase / nxt.factorToBase;  // going right (to smaller unit): multiply by ratio
+      var arrow = document.createElement("div");
+      arrow.className = "arrow";
+      arrow.innerHTML =
+        '<span class="factor">×' + ratio.toLocaleString() + '</span>' +
+        '<span class="a-line">→ ←</span>' +
+        '<span class="factor factor-down">÷' + ratio.toLocaleString() + '</span>';
+      ladderEl.appendChild(arrow);
+    }
+  }
+}
+
+function buildPresets() {
+  presetEl.innerHTML = "";
+  for (var i = 0; i < T.presets.length; i++) {
+    var p = T.presets[i];
+    var b = document.createElement("button");
+    b.textContent = p.label;
+    (function(p) {
+      b.addEventListener("click", function() {
+        state.active = p.unit; state.value = p.value;
+        sync();
+      });
+    })(p);
+    presetEl.appendChild(b);
+  }
+}
+
+function buildHelp() {
+  // Show the "going up" / "going down" relationship for the active unit
+  var idx = -1;
+  for (var i = 0; i < T.units.length; i++) if (T.units[i].key === state.active) { idx = i; break; }
+  var lines = [];
+  if (idx > 0) {
+    var bigger = T.units[idx - 1];
+    var ratio = bigger.factorToBase / findUnit(state.active).factorToBase;
+    lines.push(
+      '<div class="h-line">' +
+        '<span class="h-tag">UP →</span>' +
+        '<span><span class="num">' + fmt(state.value) + '</span> ' + state.active + ' ' +
+          '<span class="op-down">÷ ' + ratio.toLocaleString() + '</span> = ' +
+          '<span class="num">' + fmt(state.value / ratio) + '</span> ' + bigger.label + '</span>' +
+      '</div>'
+    );
+  }
+  if (idx < T.units.length - 1) {
+    var smaller = T.units[idx + 1];
+    var ratio2 = findUnit(state.active).factorToBase / smaller.factorToBase;
+    lines.push(
+      '<div class="h-line">' +
+        '<span class="h-tag">DOWN ↓</span>' +
+        '<span><span class="num">' + fmt(state.value) + '</span> ' + state.active + ' ' +
+          '<span class="op">× ' + ratio2.toLocaleString() + '</span> = ' +
+          '<span class="num">' + fmt(state.value * ratio2) + '</span> ' + smaller.label + '</span>' +
+      '</div>'
+    );
+  }
+  helpRow.innerHTML = lines.join("");
+}
+
+function setActive(unitKey) {
+  // when changing active unit, keep the same physical quantity
+  var oldUnit = findUnit(state.active);
+  var bv = state.value * oldUnit.factorToBase;
+  var newUnit = findUnit(unitKey);
+  state.active = unitKey;
+  state.value = bv / newUnit.factorToBase;
+  sync();
+}
+
+function sync() {
+  buildLadder();
+  inputUnit.textContent = state.active;
+  inputEl.value = state.value;
+  buildHelp();
+  reportHeight();
+}
+
+inputEl.addEventListener("input", function() {
+  var v = parseFloat(inputEl.value);
+  if (isFinite(v)) {
+    state.value = v;
+    buildLadder();
+    buildHelp();
+  }
+});
+inputEl.addEventListener("change", function() {
+  if (!isFinite(parseFloat(inputEl.value))) {
+    inputEl.value = state.value;
+  }
+});
+
+buildPresets();
+sync();
+
+// === Height reporter ====================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+</script>
+</body>
+</html>
