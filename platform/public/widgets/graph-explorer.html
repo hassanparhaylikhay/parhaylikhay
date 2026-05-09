@@ -393,18 +393,66 @@ function newCurve(family) {
     params._fn = compiled.ok ? compiled.fn : null;
     params._error = compiled.ok ? null : compiled.err;
   }
+  // displayParams holds the lerped values that the graph actually uses.
+  // For custom curves, share the same reference (no numeric coefficients
+  // to lerp — only the expression's _fn matters). For other families,
+  // copy so the slider's target (params) and the rendered value
+  // (displayParams) can drift apart while the spring settles.
+  var displayParams = (family === "custom") ? params : Object.assign({}, params);
   return {
     id: STATE.nextId++,
     family: family,
     color: BRAND_COLORS[STATE.curves.length % BRAND_COLORS.length],
-    params: params
+    params: params,
+    displayParams: displayParams
   };
 }
 
 function evalCurve(curve, x) {
   var fam = FAMILIES[curve.family];
   if (!fam) return NaN;
-  try { return fam.fn(curve.params)(x); } catch (e) { return NaN; }
+  try { return fam.fn(curve.displayParams)(x); } catch (e) { return NaN; }
+}
+
+// ===== Spring animation =================================================
+// On slider input we set the TARGET (params[k]); the graph reads the
+// currently DISPLAYED value (displayParams[k]) and a RAF tick lerps
+// display toward target. Cards still show the target instantly so the
+// number under the slider stays accurate to what the user just chose.
+var SPRING_FACTOR = 0.22;
+var SPRING_EPS    = 0.005;
+var rafScheduled  = false;
+
+function startSpring() {
+  if (rafScheduled) return;
+  rafScheduled = true;
+  requestAnimationFrame(springTick);
+}
+
+function springTick() {
+  var anyMoving = false;
+  for (var i = 0; i < STATE.curves.length; i++) {
+    var c = STATE.curves[i];
+    if (c.family === "custom") continue;
+    var fam = FAMILIES[c.family];
+    for (var j = 0; j < fam.params.length; j++) {
+      var k = fam.params[j].key;
+      var tgt = c.params[k], cur = c.displayParams[k];
+      var d = tgt - cur;
+      if (Math.abs(d) > SPRING_EPS) {
+        c.displayParams[k] = cur + d * SPRING_FACTOR;
+        anyMoving = true;
+      } else if (cur !== tgt) {
+        c.displayParams[k] = tgt;
+      }
+    }
+  }
+  renderCurves();
+  renderIntersections();
+  renderCounter();
+  renderHoverLayer();
+  if (anyMoving) requestAnimationFrame(springTick);
+  else rafScheduled = false;
 }
 
 // ===== Build axes (once) ===============================================
@@ -639,7 +687,7 @@ function renderCards() {
           curve.params[pdef.key] = parseFloat(slider.value);
           val.textContent = fmtNum(curve.params[pdef.key]);
           eqn.textContent = fam.eqn(curve.params);
-          rerenderAll();
+          startSpring();
         });
         row.appendChild(name); row.appendChild(slider); row.appendChild(val);
         sliders.appendChild(row);
