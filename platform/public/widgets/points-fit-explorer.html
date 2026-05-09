@@ -245,51 +245,87 @@ function leadingTerm(coef, varStr) {
   return sign + magStr + varStr;
 }
 
-// ===== Build axes (once) ===============================================
-(function buildAxes() {
+// ===== Range helpers ===================================================
+// Aspect of the plot region (px). Both axes share the same px/unit, so
+// xrange : yrange must always equal this ratio.
+var ASPECT_RATIO = PLOT.w / PLOT.h;  // 660/360 = 11/6
+
+function tickStep(halfRange) {
+  if (halfRange <= 12) return 2;
+  if (halfRange <= 25) return 5;
+  if (halfRange <= 60) return 10;
+  return 20;
+}
+
+// Recompute XMIN/XMAX/YMIN/YMAX so all current points fit (with a small
+// buffer) AND the aspect stays locked so grid cells remain square. Never
+// shrinks below the default frame.
+var DEFAULT_X_HALF = 11, DEFAULT_Y_HALF = 6;
+
+function expandRangeToFit() {
+  var xMaxAbs = DEFAULT_X_HALF;
+  var yMaxAbs = DEFAULT_Y_HALF;
+  for (var i = 0; i < STATE.points.length; i++) {
+    var p = STATE.points[i];
+    if (!isFinite(p.x) || !isFinite(p.y)) continue;
+    if (Math.abs(p.x) + 1 > xMaxAbs) xMaxAbs = Math.abs(p.x) + 1;
+    if (Math.abs(p.y) + 1 > yMaxAbs) yMaxAbs = Math.abs(p.y) + 1;
+  }
+  // Lock aspect: take whichever demand is larger and let the other axis
+  // follow. Then snap x up to its tick step so the label nearest the edge
+  // sits on a clean number.
+  var xHalf = Math.max(xMaxAbs, yMaxAbs * ASPECT_RATIO);
+  var step  = tickStep(xHalf);
+  xHalf = Math.ceil(xHalf / step) * step;
+  var yHalf = xHalf / ASPECT_RATIO;
+  XMIN = -xHalf; XMAX = xHalf;
+  YMIN = -yHalf; YMAX = yHalf;
+}
+
+function rebuildAxes() {
   var grid  = document.getElementById("grid");
   var ticks = document.getElementById("ticks");
+  grid.innerHTML = ""; ticks.innerHTML = "";
+
   var xAxis = document.getElementById("xAxis");
   var yAxis = document.getElementById("yAxis");
-
   xAxis.setAttribute("x1", PLOT.x); xAxis.setAttribute("x2", PLOT.x + PLOT.w);
   xAxis.setAttribute("y1", yPx(0)); xAxis.setAttribute("y2", yPx(0));
   yAxis.setAttribute("x1", xPx(0)); yAxis.setAttribute("x2", xPx(0));
   yAxis.setAttribute("y1", PLOT.y); yAxis.setAttribute("y2", PLOT.y + PLOT.h);
 
-  for (var x = XMIN; x <= XMAX; x++) {
-    if (x === 0) continue;
+  var xHalf = (XMAX - XMIN) / 2, yHalf = (YMAX - YMIN) / 2;
+  var xStep = tickStep(xHalf), yStep = tickStep(yHalf);
+
+  for (var x = Math.ceil(XMIN / xStep) * xStep; x <= XMAX + 1e-9; x += xStep) {
+    if (Math.abs(x) < 1e-9) continue;
     var px = xPx(x);
     grid.appendChild(svgEl("line", {
-      "class": "grid-line" + (x % 5 === 0 ? "" : " minor"),
+      "class": "grid-line" + (Math.abs(x) % (xStep * 5) < 1e-6 ? "" : " minor"),
       x1: px, x2: px, y1: PLOT.y, y2: PLOT.y + PLOT.h
     }));
-    if (x % 2 === 0) {
-      var t = svgEl("text", {
-        "class": "axis-tick-label",
-        x: px, y: yPx(0) + 14, "text-anchor": "middle"
-      });
-      t.textContent = x;
-      ticks.appendChild(t);
-    }
+    var t = svgEl("text", {
+      "class": "axis-tick-label",
+      x: px, y: yPx(0) + 14, "text-anchor": "middle"
+    });
+    t.textContent = parseFloat(x.toFixed(2));
+    ticks.appendChild(t);
   }
-  for (var y = YMIN; y <= YMAX; y++) {
-    if (y === 0) continue;
+  for (var y = Math.ceil(YMIN / yStep) * yStep; y <= YMAX + 1e-9; y += yStep) {
+    if (Math.abs(y) < 1e-9) continue;
     var py = yPx(y);
     grid.appendChild(svgEl("line", {
-      "class": "grid-line" + (y % 5 === 0 ? "" : " minor"),
+      "class": "grid-line" + (Math.abs(y) % (yStep * 5) < 1e-6 ? "" : " minor"),
       x1: PLOT.x, x2: PLOT.x + PLOT.w, y1: py, y2: py
     }));
-    if (y % 2 === 0) {
-      var ty = svgEl("text", {
-        "class": "axis-tick-label",
-        x: xPx(0) - 6, y: py + 3, "text-anchor": "end"
-      });
-      ty.textContent = y;
-      ticks.appendChild(ty);
-    }
+    var ty = svgEl("text", {
+      "class": "axis-tick-label",
+      x: xPx(0) - 6, y: py + 3, "text-anchor": "end"
+    });
+    ty.textContent = parseFloat(y.toFixed(2));
+    ticks.appendChild(ty);
   }
-})();
+}
 
 // ===== Fits =============================================================
 function fitLinear(points) {
@@ -586,12 +622,12 @@ function renderTable() {
     (function(point, ix, iy, db) {
       ix.addEventListener("input", function() {
         var v = parseFloat(ix.value);
-        if (isFinite(v)) { point.x = v; ix.classList.remove("invalid"); renderPoints(); renderFit(); }
+        if (isFinite(v)) { point.x = v; ix.classList.remove("invalid"); rerenderGraph(); }
         else { ix.classList.add("invalid"); }
       });
       iy.addEventListener("input", function() {
         var v = parseFloat(iy.value);
-        if (isFinite(v)) { point.y = v; iy.classList.remove("invalid"); renderPoints(); renderFit(); }
+        if (isFinite(v)) { point.y = v; iy.classList.remove("invalid"); rerenderGraph(); }
         else { iy.classList.add("invalid"); }
       });
       db.addEventListener("click", function() { deletePoint(point.id); });
@@ -602,6 +638,8 @@ function renderTable() {
 }
 
 function rerenderAll() {
+  expandRangeToFit();
+  rebuildAxes();
   renderPoints();
   renderCounter();
   renderFit();
@@ -610,6 +648,8 @@ function rerenderAll() {
 }
 
 function rerenderGraph() {
+  expandRangeToFit();
+  rebuildAxes();
   renderPoints();
   renderCounter();
   renderFit();
