@@ -164,32 +164,8 @@ makeNode("div", {
 // "Area = 18.2 m²" label centered
 labelEl((R.x1 + R.x2)/2 - 36, (R.y1 + R.y2)/2 - 8, "18.2 m²", "#fff067", 18, 1);
 
-// ===== Step 2 — squared factor banner ==================================
-// A small "1 m² = 10000 cm²" badge below the rectangle (or over it)
-var badge = makeNode("div", {
-  position: "absolute",
-  left: "40px", top: "260px",
-  background: "#0a1a14", border: "1px solid rgba(15,238,137,0.3)",
-  borderRadius: "5px", padding: "6px 10px",
-  fontFamily: "'Geist Mono', monospace",
-  fontSize: "12px", color: "#0fee89", fontWeight: "700",
-  letterSpacing: "0.3px",
-  whiteSpace: "nowrap"
-}, 2, "draw-fade");
-badge.textContent = "1 m = 100 cm  →  1 m² = 100² = 10 000 cm²";
-
-// ===== Step 3 — final answer label =====================================
-var finalLbl = makeNode("div", {
-  position: "absolute",
-  left: "40px", top: "300px",
-  background: "#0a1a14", border: "1px solid #0fee89",
-  borderRadius: "5px", padding: "8px 12px",
-  fontFamily: "'Geist Mono', monospace",
-  fontSize: "16px", color: "#0fee89", fontWeight: "700",
-  letterSpacing: "0.3px",
-  whiteSpace: "nowrap"
-}, 3, "draw-fade");
-finalLbl.textContent = "= 182 000 cm²";
+// (Steps 2 and 3 only update the equation panel on the right; the diagram
+// stays as the rectangle with its area label, no extra in-diagram badges.)
 
 // ===== Equations panel (right side, x ≈ 360) ===========================
 texEl(360,  20, "\\text{(a) Area in m}^2",

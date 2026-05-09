@@ -174,27 +174,8 @@ labelEl(140, 30, "0.5 m", "#00abfa", 12, 0);            // depth (top)
 // ===== Step 1 — Volume in m³ ==========================================
 labelEl(60, 124, "V = 0.16 m³", "#fff067", 14, 1);
 
-// ===== Step 2 — convert to cm³ (× 10⁶) =================================
-var badge2 = makeNode("div", {
-  position: "absolute", left: "210px", top: "100px",
-  background: "#0a1a14", border: "1px solid rgba(15,238,137,0.3)",
-  borderRadius: "5px", padding: "6px 10px",
-  fontFamily: "'Geist Mono', monospace", fontSize: "12px",
-  color: "#0fee89", fontWeight: "700",
-  whiteSpace: "nowrap", lineHeight: "1.4"
-}, 2, "draw-fade");
-badge2.innerHTML = "1 m³ = 100³<br>= 1 000 000 cm³";
-
-// ===== Step 3 — convert to litres ======================================
-var badge3 = makeNode("div", {
-  position: "absolute", left: "210px", top: "180px",
-  background: "#0a1a14", border: "1px solid #ff822c",
-  borderRadius: "5px", padding: "6px 10px",
-  fontFamily: "'Geist Mono', monospace", fontSize: "12px",
-  color: "#ff822c", fontWeight: "700",
-  whiteSpace: "nowrap", lineHeight: "1.4"
-}, 3, "draw-fade");
-badge3.innerHTML = "1 m³ = 1000 litres";
+// (Steps 2 and 3 only update the equation panel on the right; the diagram
+// stays as the cuboid with its volume label, no extra in-diagram badges.)
 
 // ===== Equations panel (right side, x ≈ 360) ===========================
 texEl(360,  20, "\\text{(a) Volume in m}^3",
