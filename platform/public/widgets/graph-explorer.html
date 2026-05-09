@@ -41,8 +41,8 @@
   }
   .add-pill:hover { color:#fff067; border-color:#3a4a5a; }
 
-  /* SVG graph */
-  .graph-wrap { position:relative; }
+  /* SVG graph — kept square so x and y units share the same pixel length */
+  .graph-wrap { position:relative; max-width:480px; margin:0 auto; }
   svg { display:block; width:100%; height:auto; user-select:none; touch-action:none; }
   .axis-line { stroke:#3a4a5a; stroke-width:1; }
   .grid-line { stroke:#1a2330; stroke-width:1; }
@@ -171,18 +171,18 @@
   </div>
 
   <div class="graph-wrap" id="graphWrap">
-    <svg id="svg" viewBox="0 0 700 420" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <svg id="svg" viewBox="0 0 480 480" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <clipPath id="plot-clip">
-          <rect x="40" y="14" width="640" height="372"/>
+          <rect x="30" y="30" width="420" height="420"/>
         </clipPath>
       </defs>
       <g id="grid"></g>
       <line class="axis-line" id="xAxis"/>
       <line class="axis-line" id="yAxis"/>
       <g id="ticks"></g>
-      <text class="axis-title" x="680" y="394" text-anchor="end">x</text>
-      <text class="axis-title" x="34" y="20" text-anchor="end">y</text>
+      <text class="axis-title" x="466" y="468" text-anchor="end">x</text>
+      <text class="axis-title" x="22" y="22" text-anchor="end">y</text>
       <g id="curveLayer" clip-path="url(#plot-clip)"></g>
       <g id="ixLayer" clip-path="url(#plot-clip)"></g>
       <g id="hoverLayer" clip-path="url(#plot-clip)"></g>
@@ -200,9 +200,11 @@
 "use strict";
 
 // ===== Constants ========================================================
+// Square plot region so xrange and yrange share the same px/unit
+// (here, 21 px per unit: 420 px ÷ 20 units).
 var BRAND_COLORS = ["#fff067", "#00abfa", "#0fee89", "#ff4670", "#ff822c"];
-var SVG_W = 700, SVG_H = 420;
-var PLOT = { x: 40, y: 14, w: 640, h: 372 };
+var SVG_W = 480, SVG_H = 480;
+var PLOT = { x: 30, y: 30, w: 420, h: 420 };
 var XMIN = -10, XMAX = 10, YMIN = -10, YMAX = 10;
 var SAMPLES = 480;
 
