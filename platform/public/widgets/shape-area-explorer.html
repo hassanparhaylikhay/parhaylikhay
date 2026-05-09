@@ -302,8 +302,41 @@ var qs = new URLSearchParams(location.search);
 var shapeKey = qs.get("shape");
 if (!shapeKey || !SHAPES[shapeKey]) shapeKey = "rectangle";
 
-var state = { params: {} };
-SHAPES[shapeKey].sliders.forEach(function(s) { state.params[s.key] = s.default; });
+// params  = the user's target values (slider position).
+// display = the values currently shown on the diagram. A RAF tick lerps
+//           display toward params for a soft-spring feel when sliders move.
+var state = { params: {}, display: {} };
+SHAPES[shapeKey].sliders.forEach(function(s) {
+  state.params[s.key] = s.default;
+  state.display[s.key] = s.default;
+});
+
+// ===== Spring animation =================================================
+var SPRING_FACTOR = 0.22;
+var SPRING_EPS    = 0.005;
+var rafScheduled  = false;
+function startSpring() {
+  if (rafScheduled) return;
+  rafScheduled = true;
+  requestAnimationFrame(springTick);
+}
+function springTick() {
+  var anyMoving = false;
+  SHAPES[shapeKey].sliders.forEach(function(s) {
+    var k = s.key;
+    var tgt = state.params[k], cur = state.display[k];
+    var d = tgt - cur;
+    if (Math.abs(d) > SPRING_EPS) {
+      state.display[k] = cur + d * SPRING_FACTOR;
+      anyMoving = true;
+    } else if (cur !== tgt) {
+      state.display[k] = tgt;
+    }
+  });
+  render();
+  if (anyMoving) requestAnimationFrame(springTick);
+  else rafScheduled = false;
+}
 
 // ===== Render ==========================================================
 var titleEl = document.getElementById("title");
@@ -317,7 +350,7 @@ var overlaysG = document.getElementById("overlays");
 
 function render() {
   var shape = SHAPES[shapeKey];
-  var p = state.params;
+  var p = state.display;
 
   titleEl.textContent = shape.title;
   var area = shape.area(p);
@@ -397,8 +430,11 @@ function buildSliders() {
     val.className = "v"; val.textContent = fmtNum(state.params[s.key]);
     slider.addEventListener("input", function() {
       state.params[s.key] = parseFloat(slider.value);
+      // The slider's number readout shows what the user just picked
+      // (the target). The diagram and area/perimeter cards will spring
+      // toward that target via the RAF tick.
       val.textContent = fmtNum(state.params[s.key]);
-      render();
+      startSpring();
     });
     row.appendChild(name); row.appendChild(slider); row.appendChild(val);
     slidersEl.appendChild(row);
