@@ -298,6 +298,7 @@ export const UNITS: Unit[] = [
           { slug: "p1",     label: "P1", title: "Sketching linear and quadratic curves" },
           { slug: "p2",     label: "P2", title: "Sketching cubics and reciprocals" },
           { slug: "p3",     label: "P3", title: "Sketching exponentials" },
+          { slug: "p4",     label: "P4", title: "Explore: a graph playground" },
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },

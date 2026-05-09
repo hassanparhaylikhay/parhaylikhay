@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Graph Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  body { padding:14px 18px 16px; overflow-x:hidden; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:18px 20px 20px; }
+
+  .head {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:14px; gap:10px;
+  }
+  .title {
+    font-family:'Geist Mono',monospace; font-size:11px;
+    letter-spacing:1.6px; text-transform:uppercase; color:#fff067; font-weight:600;
+  }
+  .counter {
+    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
+  }
+
+  /* Add-curve picker pills */
+  .add-row {
+    display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px;
+    padding:10px 12px; background:#07090d; border:1px solid #141e2a; border-radius:8px;
+  }
+  .add-row .lbl {
+    font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875;
+    letter-spacing:1px; text-transform:uppercase; align-self:center; margin-right:4px;
+  }
+  .add-pill {
+    background:transparent; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600;
+    padding:6px 10px; border-radius:14px; cursor:pointer;
+    letter-spacing:0.4px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  .add-pill:hover { color:#fff067; border-color:#3a4a5a; }
+
+  /* SVG graph */
+  .graph-wrap { position:relative; }
+  svg { display:block; width:100%; height:auto; user-select:none; touch-action:none; }
+  .axis-line { stroke:#3a4a5a; stroke-width:1; }
+  .grid-line { stroke:#1a2330; stroke-width:1; }
+  .grid-line.minor { stroke:#141e2a; stroke-dasharray: 2 4; }
+  .axis-tick-label { font-family:'Geist Mono',monospace; font-size:9.5px; fill:#7a7875; }
+  .axis-title { font-family:'Geist Mono',monospace; font-size:10px; fill:#3a4a5a; }
+  .curve { fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .ix-dot { fill:#0fee89; opacity:0.8; }
+  .ix-dot.hot { opacity:1; }
+  .hover-line { stroke:#3a4a5a; stroke-width:1; stroke-dasharray:2 4; pointer-events:none; }
+  .hover-pt { stroke:#0b1118; stroke-width:1.5; }
+
+  /* Hover tooltip */
+  .tooltip {
+    position:absolute; pointer-events:none; opacity:0; transition: opacity 0.12s;
+    background:#0d1822; border:1px solid #1a2330; border-radius:6px;
+    padding:6px 9px; min-width:80px;
+    font-family:'Geist Mono',monospace; font-size:11px; color:#f0eeea;
+    line-height:1.45; white-space:nowrap; z-index:5;
+    transform: translate(8px, -50%);
+  }
+  .tooltip.shown { opacity:1; }
+  .tooltip .row { display:flex; align-items:center; gap:6px; }
+  .tooltip .row .swatch {
+    display:inline-block; width:8px; height:8px; border-radius:50%; flex-shrink:0;
+  }
+  .tooltip .row .yv { color:#f0eeea; font-weight:600; }
+  .tooltip .header { color:#7a7875; font-size:10px; margin-bottom:3px; letter-spacing:0.4px; }
+
+  /* Curve cards */
+  .empty-state {
+    text-align:center; padding:14px 8px;
+    font-family:'Geist Mono',monospace; font-size:11px; color:#3a4a5a;
+    letter-spacing:0.4px;
+  }
+  .curves-list {
+    display:flex; flex-direction:column; gap:8px; margin-top:14px;
+  }
+  .card {
+    background:#07090d; border:1px solid #141e2a; border-radius:8px;
+    padding:12px 14px;
+  }
+  .card .top {
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:8px;
+  }
+  .card .swatch {
+    width:10px; height:10px; border-radius:50%; flex-shrink:0;
+  }
+  .card .eqn {
+    flex:1; min-width:0;
+    font-family:'Geist Mono',monospace; font-size:13.5px; color:#f0eeea;
+    overflow-x:auto; white-space:nowrap;
+  }
+  .card .eqn .err { color:#ff4670; }
+  .card .delete {
+    background:transparent; border:0; color:#7a7875; cursor:pointer;
+    font-family:'Geist Mono',monospace; font-size:14px;
+    padding:2px 6px; border-radius:4px;
+    transition: color 0.12s, background 0.12s;
+  }
+  .card .delete:hover { color:#ff4670; background:rgba(255,70,112,0.06); }
+
+  .sliders {
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap:6px 12px;
+  }
+  .slider-row { display:flex; align-items:center; gap:8px; min-width:0; }
+  .slider-row .name {
+    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
+    min-width:14px;
+  }
+  .slider-row input[type=range] {
+    flex:1; min-width:0; appearance:none; -webkit-appearance:none;
+    height:3px; background:#141e2a; border-radius:2px; outline:none;
+  }
+  .slider-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+    background:#fff067; cursor:pointer; border:0;
+  }
+  .slider-row input[type=range]::-moz-range-thumb {
+    width:13px; height:13px; border-radius:50%; background:#fff067; cursor:pointer; border:0;
+  }
+  .slider-row .val {
+    min-width:34px; text-align:right;
+    font-family:'Geist Mono',monospace; font-size:11px; color:#f0eeea; font-weight:600;
+  }
+
+  .custom-input { display:flex; align-items:center; gap:8px; }
+  .custom-input .prefix {
+    font-family:'Geist Mono',monospace; font-size:13px; color:#7a7875;
+  }
+  .custom-input input {
+    flex:1; min-width:0; appearance:none;
+    background:#0b1118; border:1px solid #141e2a; border-radius:5px;
+    color:#f0eeea; font-family:'Geist Mono',monospace; font-size:13px;
+    padding:6px 10px; outline:none;
+    transition: border-color 0.12s;
+  }
+  .custom-input input:focus { border-color:#00abfa; }
+  .custom-input input.invalid { border-color:#ff4670; }
+
+  .footer {
+    margin-top:14px; font-family:'Geist Mono',monospace; font-size:10px;
+    color:#3a4a5a; text-align:center; letter-spacing:0.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="title">GRAPH EXPLORER</span>
+    <span class="counter" id="counter">0 curves</span>
+  </div>
+
+  <div class="add-row" id="addRow">
+    <span class="lbl">+ ADD</span>
+    <button class="add-pill" data-fam="linear">linear</button>
+    <button class="add-pill" data-fam="quadratic">quadratic</button>
+    <button class="add-pill" data-fam="cubic">cubic</button>
+    <button class="add-pill" data-fam="quartic">quartic</button>
+    <button class="add-pill" data-fam="sin">sin</button>
+    <button class="add-pill" data-fam="cos">cos</button>
+    <button class="add-pill" data-fam="tan">tan</button>
+    <button class="add-pill" data-fam="custom">custom</button>
+  </div>
+
+  <div class="graph-wrap" id="graphWrap">
+    <svg id="svg" viewBox="0 0 700 420" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <clipPath id="plot-clip">
+          <rect x="40" y="14" width="640" height="372"/>
+        </clipPath>
+      </defs>
+      <g id="grid"></g>
+      <line class="axis-line" id="xAxis"/>
+      <line class="axis-line" id="yAxis"/>
+      <g id="ticks"></g>
+      <text class="axis-title" x="680" y="394" text-anchor="end">x</text>
+      <text class="axis-title" x="34" y="20" text-anchor="end">y</text>
+      <g id="curveLayer" clip-path="url(#plot-clip)"></g>
+      <g id="ixLayer" clip-path="url(#plot-clip)"></g>
+      <g id="hoverLayer" clip-path="url(#plot-clip)"></g>
+    </svg>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+
+  <div class="empty-state" id="emptyState">tap a family above to add a curve</div>
+  <div class="curves-list" id="curvesList"></div>
+
+  <p class="footer">add up to 5 curves · drag sliders to morph · hover to read values · green dots = intersections</p>
+</div>
+
+<script>
+"use strict";
+
+// ===== Constants ========================================================
+var BRAND_COLORS = ["#fff067", "#00abfa", "#0fee89", "#ff4670", "#ff822c"];
+var SVG_W = 700, SVG_H = 420;
+var PLOT = { x: 40, y: 14, w: 640, h: 372 };
+var XMIN = -10, XMAX = 10, YMIN = -10, YMAX = 10;
+var SAMPLES = 480;
+
+function xPx(x) { return PLOT.x + (x - XMIN) / (XMAX - XMIN) * PLOT.w; }
+function yPx(y) { return PLOT.y + (1 - (y - YMIN) / (YMAX - YMIN)) * PLOT.h; }
+function pxX(px) { return XMIN + (px - PLOT.x) / PLOT.w * (XMAX - XMIN); }
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+function fmtNum(n) {
+  // 2 dp, strip trailing zeros: 1.00 → 1, 1.50 → 1.5, 0.25 → 0.25
+  var v = Math.round(n * 100) / 100;
+  if (v === 0) return "0";
+  return parseFloat(v.toFixed(2)).toString();
+}
+
+// Format a signed term like "+ 1.5x²" or "- 3x". Drops if coefficient is 0.
+function term(coef, varStr, isFirst) {
+  var v = Math.round(coef * 100) / 100;
+  if (v === 0) return "";
+  var sign = v < 0 ? "−" : (isFirst ? "" : "+");
+  var mag = Math.abs(v);
+  var magStr = (mag === 1 && varStr) ? "" : fmtNum(mag);
+  return (isFirst ? sign : " " + sign + " ") + magStr + varStr;
+}
+
+// ===== Curve families ===================================================
+var FAMILIES = {
+  linear: {
+    label: "linear",
+    params: [
+      { key: "m", default: 1, min: -5, max: 5, step: 0.1 },
+      { key: "c", default: 0, min: -10, max: 10, step: 0.1 }
+    ],
+    fn: function(p) { return function(x) { return p.m * x + p.c; }; },
+    eqn: function(p) {
+      return "y = " + term(p.m, "x", true) + term(p.c, "", false || term(p.m, "x", true) === "");
+    }
+  },
+  quadratic: {
+    label: "quadratic",
+    params: [
+      { key: "a", default: 1,   min: -3, max: 3,  step: 0.1 },
+      { key: "b", default: 0,   min: -5, max: 5,  step: 0.1 },
+      { key: "c", default: -3,  min: -10, max: 10, step: 0.1 }
+    ],
+    fn: function(p) { return function(x) { return p.a*x*x + p.b*x + p.c; }; },
+    eqn: function(p) {
+      return "y = " + term(p.a, "x²", true) + term(p.b, "x", false) + term(p.c, "", false);
+    }
+  },
+  cubic: {
+    label: "cubic",
+    params: [
+      { key: "a", default: 0.3, min: -1, max: 1, step: 0.05 },
+      { key: "b", default: 0,   min: -3, max: 3, step: 0.1 },
+      { key: "c", default: -2,  min: -5, max: 5, step: 0.1 },
+      { key: "d", default: 0,   min: -10, max: 10, step: 0.1 }
+    ],
+    fn: function(p) { return function(x) { return p.a*x*x*x + p.b*x*x + p.c*x + p.d; }; },
+    eqn: function(p) {
+      return "y = " + term(p.a, "x³", true) + term(p.b, "x²", false) + term(p.c, "x", false) + term(p.d, "", false);
+    }
+  },
+  quartic: {
+    label: "quartic",
+    params: [
+      { key: "a", default: 0.05, min: -0.3, max: 0.3, step: 0.01 },
+      { key: "b", default: -1,   min: -3, max: 3, step: 0.1 },
+      { key: "c", default: 0,    min: -10, max: 10, step: 0.1 }
+    ],
+    fn: function(p) { return function(x) { var x2 = x*x; return p.a*x2*x2 + p.b*x2 + p.c; }; },
+    eqn: function(p) {
+      return "y = " + term(p.a, "x⁴", true) + term(p.b, "x²", false) + term(p.c, "", false);
+    }
+  },
+  sin: {
+    label: "sin",
+    params: [
+      { key: "a", default: 1, min: -3, max: 3, step: 0.1 },
+      { key: "b", default: 1, min: 0.1, max: 4, step: 0.1 },
+      { key: "c", default: 0, min: -5, max: 5, step: 0.1 }
+    ],
+    fn: function(p) { return function(x) { return p.a * Math.sin(p.b * x) + p.c; }; },
+    eqn: function(p) {
+      return "y = " + fmtNum(p.a) + " sin(" + fmtNum(p.b) + "x)" + term(p.c, "", false);
+    }
+  },
+  cos: {
+    label: "cos",
+    params: [
+      { key: "a", default: 1, min: -3, max: 3, step: 0.1 },
+      { key: "b", default: 1, min: 0.1, max: 4, step: 0.1 },
+      { key: "c", default: 0, min: -5, max: 5, step: 0.1 }
+    ],
+    fn: function(p) { return function(x) { return p.a * Math.cos(p.b * x) + p.c; }; },
+    eqn: function(p) {
+      return "y = " + fmtNum(p.a) + " cos(" + fmtNum(p.b) + "x)" + term(p.c, "", false);
+    }
+  },
+  tan: {
+    label: "tan",
+    params: [
+      { key: "a", default: 1, min: -3, max: 3, step: 0.1 },
+      { key: "b", default: 1, min: 0.1, max: 3, step: 0.1 },
+      { key: "c", default: 0, min: -5, max: 5, step: 0.1 }
+    ],
+    fn: function(p) { return function(x) { return p.a * Math.tan(p.b * x) + p.c; }; },
+    eqn: function(p) {
+      return "y = " + fmtNum(p.a) + " tan(" + fmtNum(p.b) + "x)" + term(p.c, "", false);
+    }
+  },
+  custom: {
+    label: "custom",
+    custom: true,
+    params: [],
+    fn: function(p) { return p._fn || function() { return NaN; }; },
+    eqn: function(p) { return p._error ? p._error : "y = " + (p.expr || "?"); }
+  }
+};
+
+// ===== Custom equation parsing =========================================
+function preprocess(text) {
+  var t = (text || "").toLowerCase().replace(/\s+/g, "");
+  // Strip a leading "y=" if user typed it
+  t = t.replace(/^y\s*=\s*/, "");
+  // ^ → **
+  t = t.replace(/\^/g, "**");
+  // Insert implicit multiplication. SAFE rules only — no letter-letter or letter-paren rules
+  // (would break sin(x), cos(x), etc.).
+  // 1. digit followed by letter or (: 2x → 2*x, 2( → 2*(
+  t = t.replace(/(\d)([a-z(])/g, "$1*$2");
+  // 2. ) followed by digit or letter or (: )x → )*x, )( → )*( , )2 → )*2
+  t = t.replace(/\)([a-z\d(])/g, ")*$1");
+  // Replace constants
+  t = t.replace(/\bpi\b/g, "Math.PI");
+  // Lone "e" → Math.E (avoid replacing e inside identifiers like exp)
+  t = t.replace(/(^|[^a-z])e($|[^a-z])/g, "$1Math.E$2");
+  // Function names → Math.fn
+  var fns = ["sin", "cos", "tan", "asin", "acos", "atan", "log", "ln", "exp", "sqrt", "abs"];
+  for (var i = 0; i < fns.length; i++) {
+    var src = fns[i];
+    var dst = (src === "ln") ? "Math.log" : "Math." + src;
+    var re = new RegExp("\\b" + src + "\\b", "g");
+    t = t.replace(re, dst);
+  }
+  return t;
+}
+
+function compileExpr(text) {
+  var jsExpr = preprocess(text);
+  if (!jsExpr) return { ok: false, err: "empty" };
+  try {
+    var fn = new Function("x", "var y; return (" + jsExpr + ");");
+    // Sanity test at a couple of x values
+    var v0 = fn(1.5), v1 = fn(-0.7);
+    if ((v0 != null && !isFinite(v0) && !isNaN(v0)) ||
+        (v1 != null && !isFinite(v1) && !isNaN(v1))) {
+      // Accept — these are infinities at specific x's, ok for tan etc.
+    }
+    return { ok: true, fn: fn };
+  } catch (e) {
+    return { ok: false, err: "parse error" };
+  }
+}
+
+// ===== State ============================================================
+var STATE = {
+  curves: [],
+  nextId: 1,
+  hoverX: null
+};
+var MAX_CURVES = 5;
+
+function newCurve(family) {
+  var fam = FAMILIES[family];
+  if (!fam) return null;
+  var params = {};
+  if (!fam.custom) {
+    fam.params.forEach(function(pdef) { params[pdef.key] = pdef.default; });
+  } else {
+    params.expr = "x^2 - 4";
+    var compiled = compileExpr(params.expr);
+    params._fn = compiled.ok ? compiled.fn : null;
+    params._error = compiled.ok ? null : compiled.err;
+  }
+  return {
+    id: STATE.nextId++,
+    family: family,
+    color: BRAND_COLORS[STATE.curves.length % BRAND_COLORS.length],
+    params: params
+  };
+}
+
+function evalCurve(curve, x) {
+  var fam = FAMILIES[curve.family];
+  if (!fam) return NaN;
+  try { return fam.fn(curve.params)(x); } catch (e) { return NaN; }
+}
+
+// ===== Build axes (once) ===============================================
+(function buildAxes() {
+  var grid  = document.getElementById("grid");
+  var ticks = document.getElementById("ticks");
+  var xAxis = document.getElementById("xAxis");
+  var yAxis = document.getElementById("yAxis");
+
+  xAxis.setAttribute("x1", PLOT.x); xAxis.setAttribute("x2", PLOT.x + PLOT.w);
+  xAxis.setAttribute("y1", yPx(0)); xAxis.setAttribute("y2", yPx(0));
+  yAxis.setAttribute("x1", xPx(0)); yAxis.setAttribute("x2", xPx(0));
+  yAxis.setAttribute("y1", PLOT.y); yAxis.setAttribute("y2", PLOT.y + PLOT.h);
+
+  for (var x = XMIN; x <= XMAX; x++) {
+    if (x === 0) continue;
+    var px = xPx(x);
+    grid.appendChild(svgEl("line", {
+      "class": "grid-line" + (x % 5 === 0 ? "" : " minor"),
+      x1: px, x2: px, y1: PLOT.y, y2: PLOT.y + PLOT.h
+    }));
+    if (x % 2 === 0) {
+      var t = svgEl("text", {
+        "class": "axis-tick-label",
+        x: px, y: yPx(0) + 14, "text-anchor": "middle"
+      });
+      t.textContent = x;
+      ticks.appendChild(t);
+    }
+  }
+  for (var y = YMIN; y <= YMAX; y++) {
+    if (y === 0) continue;
+    var py = yPx(y);
+    grid.appendChild(svgEl("line", {
+      "class": "grid-line" + (y % 5 === 0 ? "" : " minor"),
+      x1: PLOT.x, x2: PLOT.x + PLOT.w, y1: py, y2: py
+    }));
+    if (y % 2 === 0) {
+      var ty = svgEl("text", {
+        "class": "axis-tick-label",
+        x: xPx(0) - 6, y: py + 3, "text-anchor": "end"
+      });
+      ty.textContent = y;
+      ticks.appendChild(ty);
+    }
+  }
+})();
+
+// ===== Curve path generation ===========================================
+function generatePath(curve) {
+  var d = "";
+  var lastY = null;
+  var prevValid = false;
+  for (var i = 0; i <= SAMPLES; i++) {
+    var x = XMIN + (XMAX - XMIN) * i / SAMPLES;
+    var y = evalCurve(curve, x);
+    if (!isFinite(y)) { prevValid = false; lastY = null; continue; }
+    // Break path on huge jumps (e.g. tan asymptote)
+    var hugeJump = (lastY !== null && Math.abs(y - lastY) > (YMAX - YMIN) * 1.5);
+    if (hugeJump) prevValid = false;
+    var px = xPx(x);
+    var py = yPx(Math.max(YMIN - 10, Math.min(YMAX + 10, y)));
+    d += (prevValid ? "L" : "M") + px.toFixed(1) + " " + py.toFixed(1) + " ";
+    prevValid = true;
+    lastY = y;
+  }
+  return d;
+}
+
+// ===== Intersection finding ============================================
+function findIntersections(c1, c2) {
+  var pts = [];
+  var prevG = null, prevX = null;
+  for (var i = 0; i <= SAMPLES; i++) {
+    var x = XMIN + (XMAX - XMIN) * i / SAMPLES;
+    var y1 = evalCurve(c1, x), y2 = evalCurve(c2, x);
+    if (!isFinite(y1) || !isFinite(y2)) { prevG = null; continue; }
+    var g = y1 - y2;
+    if (prevG !== null && prevG * g < 0) {
+      // Skip if either side has divergent magnitude (probably an asymptote)
+      if (Math.abs(g) < 50 && Math.abs(prevG) < 50) {
+        var a = prevX, b = x, ga = prevG, gb = g;
+        for (var k = 0; k < 30; k++) {
+          var m = (a + b) / 2;
+          var gm = evalCurve(c1, m) - evalCurve(c2, m);
+          if (!isFinite(gm)) break;
+          if (gm * ga <= 0) { b = m; gb = gm; } else { a = m; ga = gm; }
+        }
+        var rx = (a + b) / 2;
+        var ry = evalCurve(c1, rx);
+        if (isFinite(ry) && rx >= XMIN && rx <= XMAX && ry >= YMIN && ry <= YMAX) {
+          pts.push({ x: rx, y: ry });
+        }
+      }
+    }
+    prevG = g; prevX = x;
+  }
+  return pts;
+}
+
+// ===== Render ==========================================================
+var curveLayer = document.getElementById("curveLayer");
+var ixLayer    = document.getElementById("ixLayer");
+var hoverLayer = document.getElementById("hoverLayer");
+var counterEl  = document.getElementById("counter");
+var emptyState = document.getElementById("emptyState");
+var curvesList = document.getElementById("curvesList");
+var tooltip    = document.getElementById("tooltip");
+var graphWrap  = document.getElementById("graphWrap");
+var svg        = document.getElementById("svg");
+
+var allIntersections = [];
+
+function renderCurves() {
+  curveLayer.innerHTML = "";
+  for (var i = 0; i < STATE.curves.length; i++) {
+    var c = STATE.curves[i];
+    var d = generatePath(c);
+    var path = svgEl("path", {
+      "class": "curve",
+      d: d, stroke: c.color
+    });
+    curveLayer.appendChild(path);
+  }
+}
+
+function renderIntersections() {
+  ixLayer.innerHTML = "";
+  allIntersections = [];
+  for (var i = 0; i < STATE.curves.length; i++) {
+    for (var j = i + 1; j < STATE.curves.length; j++) {
+      var pts = findIntersections(STATE.curves[i], STATE.curves[j]);
+      for (var k = 0; k < pts.length; k++) {
+        allIntersections.push({ x: pts[k].x, y: pts[k].y });
+        ixLayer.appendChild(svgEl("circle", {
+          "class": "ix-dot",
+          cx: xPx(pts[k].x).toFixed(1),
+          cy: yPx(pts[k].y).toFixed(1),
+          r: 4
+        }));
+      }
+    }
+  }
+}
+
+function renderCounter() {
+  var n = STATE.curves.length;
+  counterEl.textContent = n + " curve" + (n === 1 ? "" : "s") +
+    (allIntersections.length ? " · " + allIntersections.length + " ix" : "");
+}
+
+function renderEmptyState() {
+  emptyState.style.display = STATE.curves.length === 0 ? "block" : "none";
+}
+
+function renderCards() {
+  curvesList.innerHTML = "";
+  STATE.curves.forEach(function(curve) {
+    var fam = FAMILIES[curve.family];
+    var card = document.createElement("div");
+    card.className = "card";
+
+    var top = document.createElement("div");
+    top.className = "top";
+    var swatch = document.createElement("div");
+    swatch.className = "swatch";
+    swatch.style.background = curve.color;
+    var eqn = document.createElement("div");
+    eqn.className = "eqn";
+    if (curve.family === "custom" && curve.params._error) {
+      eqn.innerHTML = '<span class="err">y = ' + (curve.params.expr || "?") + " — " + curve.params._error + "</span>";
+    } else {
+      eqn.textContent = fam.eqn(curve.params);
+    }
+    var del = document.createElement("button");
+    del.className = "delete";
+    del.textContent = "×";
+    del.title = "delete";
+    del.addEventListener("click", function() { deleteCurve(curve.id); });
+    top.appendChild(swatch); top.appendChild(eqn); top.appendChild(del);
+    card.appendChild(top);
+
+    if (fam.custom) {
+      var inputRow = document.createElement("div");
+      inputRow.className = "custom-input";
+      var prefix = document.createElement("span");
+      prefix.className = "prefix";
+      prefix.textContent = "y =";
+      var input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "x^2 - 4";
+      input.value = curve.params.expr || "";
+      input.spellcheck = false;
+      input.autocapitalize = "off";
+      input.autocomplete = "off";
+      input.addEventListener("input", function() {
+        var compiled = compileExpr(input.value);
+        curve.params.expr = input.value;
+        if (compiled.ok) {
+          curve.params._fn = compiled.fn;
+          curve.params._error = null;
+          input.classList.remove("invalid");
+          eqn.textContent = "y = " + (input.value || "?");
+          rerenderAll();
+        } else {
+          curve.params._fn = null;
+          curve.params._error = compiled.err;
+          input.classList.add("invalid");
+          eqn.innerHTML = '<span class="err">y = ' + (input.value || "?") + " — " + compiled.err + "</span>";
+          rerenderAll();
+        }
+      });
+      inputRow.appendChild(prefix); inputRow.appendChild(input);
+      card.appendChild(inputRow);
+    } else {
+      var sliders = document.createElement("div");
+      sliders.className = "sliders";
+      fam.params.forEach(function(pdef) {
+        var row = document.createElement("div");
+        row.className = "slider-row";
+        var name = document.createElement("span");
+        name.className = "name";
+        name.textContent = pdef.key;
+        var slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = pdef.min; slider.max = pdef.max; slider.step = pdef.step;
+        slider.value = curve.params[pdef.key];
+        var val = document.createElement("span");
+        val.className = "val";
+        val.textContent = fmtNum(curve.params[pdef.key]);
+        slider.addEventListener("input", function() {
+          curve.params[pdef.key] = parseFloat(slider.value);
+          val.textContent = fmtNum(curve.params[pdef.key]);
+          eqn.textContent = fam.eqn(curve.params);
+          rerenderAll();
+        });
+        row.appendChild(name); row.appendChild(slider); row.appendChild(val);
+        sliders.appendChild(row);
+      });
+      card.appendChild(sliders);
+    }
+
+    curvesList.appendChild(card);
+  });
+}
+
+function rerenderAll() {
+  renderCurves();
+  renderIntersections();
+  renderCounter();
+  renderEmptyState();
+  renderHoverLayer();
+}
+
+function rerenderEverything() {
+  rerenderAll();
+  renderCards();
+}
+
+// ===== Add / delete ====================================================
+function addCurve(family) {
+  if (STATE.curves.length >= MAX_CURVES) return;
+  // Pick the next unused color
+  var used = STATE.curves.map(function(c) { return c.color; });
+  var color = BRAND_COLORS.find(function(col) { return used.indexOf(col) === -1; }) || BRAND_COLORS[0];
+  var c = newCurve(family);
+  c.color = color;
+  STATE.curves.push(c);
+  rerenderEverything();
+  reportHeight();
+}
+
+function deleteCurve(id) {
+  STATE.curves = STATE.curves.filter(function(c) { return c.id !== id; });
+  rerenderEverything();
+  reportHeight();
+}
+
+document.getElementById("addRow").addEventListener("click", function(e) {
+  var btn = e.target.closest(".add-pill[data-fam]");
+  if (!btn) return;
+  addCurve(btn.dataset.fam);
+});
+
+// ===== Hover handling ==================================================
+function renderHoverLayer() {
+  hoverLayer.innerHTML = "";
+  if (STATE.hoverX == null || STATE.curves.length === 0) {
+    tooltip.classList.remove("shown");
+    return;
+  }
+  var x = STATE.hoverX;
+  var px = xPx(x);
+  // Vertical guide
+  hoverLayer.appendChild(svgEl("line", {
+    "class": "hover-line",
+    x1: px, x2: px, y1: PLOT.y, y2: PLOT.y + PLOT.h
+  }));
+  // Per-curve dots
+  var rows = [];
+  STATE.curves.forEach(function(c) {
+    var y = evalCurve(c, x);
+    if (!isFinite(y) || y < YMIN - 2 || y > YMAX + 2) return;
+    var py = yPx(y);
+    hoverLayer.appendChild(svgEl("circle", {
+      "class": "hover-pt", cx: px, cy: py, r: 4, fill: c.color
+    }));
+    rows.push({ color: c.color, y: y });
+  });
+
+  // Build tooltip — see if mouse near an intersection
+  var hotIxIdx = -1;
+  var hotIxDist = Infinity;
+  for (var i = 0; i < allIntersections.length; i++) {
+    var dx = xPx(allIntersections[i].x) - px;
+    if (Math.abs(dx) < hotIxDist) { hotIxDist = Math.abs(dx); hotIxIdx = i; }
+  }
+  // Show intersection tooltip if very close in x AND within y vicinity
+  var ixCircles = ixLayer.querySelectorAll(".ix-dot");
+  for (var j = 0; j < ixCircles.length; j++) ixCircles[j].classList.remove("hot");
+  if (hotIxIdx !== -1 && hotIxDist < 16) {
+    if (ixCircles[hotIxIdx]) ixCircles[hotIxIdx].classList.add("hot");
+    var ix = allIntersections[hotIxIdx];
+    tooltip.innerHTML =
+      '<div class="header">INTERSECTION</div>' +
+      '<div class="row"><span class="swatch" style="background:#0fee89"></span>' +
+      '<span class="yv">x = ' + fmtNum(ix.x) + ',&nbsp; y = ' + fmtNum(ix.y) + '</span></div>';
+    var ixPx = xPx(ix.x), ixPy = yPx(ix.y);
+    positionTooltip(ixPx, ixPy);
+    tooltip.classList.add("shown");
+    return;
+  }
+
+  if (rows.length === 0) {
+    tooltip.classList.remove("shown");
+    return;
+  }
+  var html = '<div class="header">x = ' + fmtNum(x) + '</div>';
+  rows.forEach(function(r) {
+    html += '<div class="row"><span class="swatch" style="background:' + r.color + '"></span>' +
+            '<span class="yv">y = ' + fmtNum(r.y) + '</span></div>';
+  });
+  tooltip.innerHTML = html;
+  // Position near the highest dot for the cursor's x
+  var topY = Math.min.apply(null, rows.map(function(r) { return yPx(r.y); }));
+  positionTooltip(px, topY);
+  tooltip.classList.add("shown");
+}
+
+function positionTooltip(svgX, svgY) {
+  // Convert SVG-space coords to screen-space (within graphWrap)
+  var rect = svg.getBoundingClientRect();
+  var sx = (svgX / SVG_W) * rect.width;
+  var sy = (svgY / SVG_H) * rect.height;
+  // Default position: to the right of the point
+  var tipW = tooltip.offsetWidth || 100;
+  var maxX = rect.width - tipW - 10;
+  var x = Math.min(maxX, sx + 8);
+  var y = Math.max(20, Math.min(rect.height - 30, sy));
+  tooltip.style.left = x + "px";
+  tooltip.style.top  = y + "px";
+  tooltip.style.transform = "translate(0, -50%)";
+}
+
+graphWrap.addEventListener("mousemove", function(e) {
+  var rect = svg.getBoundingClientRect();
+  var sx = (e.clientX - rect.left) / rect.width * SVG_W;
+  var sy = (e.clientY - rect.top)  / rect.height * SVG_H;
+  if (sx < PLOT.x || sx > PLOT.x + PLOT.w || sy < PLOT.y || sy > PLOT.y + PLOT.h) {
+    STATE.hoverX = null;
+    renderHoverLayer();
+    return;
+  }
+  STATE.hoverX = pxX(sx);
+  renderHoverLayer();
+});
+graphWrap.addEventListener("mouseleave", function() {
+  STATE.hoverX = null;
+  renderHoverLayer();
+});
+graphWrap.addEventListener("touchmove", function(e) {
+  if (!e.touches || !e.touches[0]) return;
+  var t = e.touches[0];
+  var rect = svg.getBoundingClientRect();
+  var sx = (t.clientX - rect.left) / rect.width * SVG_W;
+  if (sx < PLOT.x || sx > PLOT.x + PLOT.w) return;
+  STATE.hoverX = pxX(sx);
+  renderHoverLayer();
+}, { passive: true });
+
+// ===== Init: one quadratic to start =====================================
+addCurve("quadratic");
+
+// ===== Height reporter ==================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>
