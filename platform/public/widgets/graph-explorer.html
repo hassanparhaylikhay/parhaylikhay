@@ -172,17 +172,17 @@
   </div>
 
   <div class="graph-wrap" id="graphWrap">
-    <svg id="svg" viewBox="0 0 700 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <svg id="svg" viewBox="0 0 720 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <clipPath id="plot-clip">
-          <rect x="30" y="14" width="648" height="360"/>
+          <rect x="30" y="14" width="660" height="360"/>
         </clipPath>
       </defs>
       <g id="grid"></g>
       <line class="axis-line" id="xAxis"/>
       <line class="axis-line" id="yAxis"/>
       <g id="ticks"></g>
-      <text class="axis-title" x="688" y="392" text-anchor="end">x</text>
+      <text class="axis-title" x="700" y="392" text-anchor="end">x</text>
       <text class="axis-title" x="24" y="22" text-anchor="end">y</text>
       <g id="curveLayer" clip-path="url(#plot-clip)"></g>
       <g id="ixLayer" clip-path="url(#plot-clip)"></g>
@@ -201,14 +201,14 @@
 "use strict";
 
 // ===== Constants ========================================================
-// Plot width fills the wrap. y stays at -10..10; x is extended to
-// -18..18 so each axis has the same 18 px / unit (648 × 360 plot
-// inside a 700 × 400 viewBox).
+// Plot width fills the wrap; x and y share 30 px/unit so grid cells stay
+// square. xrange = 22, yrange = 12 → 660 × 360 plot inside a 720 × 400
+// viewBox.
 var BRAND_COLORS = ["#fff067", "#00abfa", "#0fee89", "#ff4670", "#ff822c"];
-var SVG_W = 700, SVG_H = 400;
-var PLOT = { x: 30, y: 14, w: 648, h: 360 };
-var XMIN = -18, XMAX = 18, YMIN = -10, YMAX = 10;
-var SAMPLES = 720;
+var SVG_W = 720, SVG_H = 400;
+var PLOT = { x: 30, y: 14, w: 660, h: 360 };
+var XMIN = -11, XMAX = 11, YMIN = -6, YMAX = 6;
+var SAMPLES = 660;
 
 function xPx(x) { return PLOT.x + (x - XMIN) / (XMAX - XMIN) * PLOT.w; }
 function yPx(y) { return PLOT.y + (1 - (y - YMIN) / (YMAX - YMIN)) * PLOT.h; }
