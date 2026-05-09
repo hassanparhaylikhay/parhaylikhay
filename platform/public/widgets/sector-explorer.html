@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sector Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  body { padding:14px 18px 16px; overflow-x:hidden; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:22px 24px 20px; }
+
+  .head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+  .title { font-family:'Geist Mono',monospace; font-size:11px; letter-spacing:1.6px; text-transform:uppercase; color:#fff067; font-weight:600; }
+  .counter { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+
+  .toggle-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:10px; margin-bottom:6px; }
+  .seg-toggle {
+    display:flex; gap:6px; padding:4px;
+    background:#07090d; border:1px solid #141e2a; border-radius:14px;
+  }
+  .seg-toggle button {
+    background:transparent; border:0; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:11px; font-weight:600;
+    padding:5px 12px; border-radius:10px; cursor:pointer;
+    letter-spacing:0.4px;
+    transition: color 0.12s, background 0.12s;
+  }
+  .seg-toggle.minor button.active { color:#0b1118; background:#fff067; }
+  .seg-toggle.major button.active { color:#0b1118; background:#ff822c; }
+  .seg-toggle.pi button.active    { color:#0b1118; background:#fff067; }
+
+  .stage-wrap { display:flex; justify-content:center; padding:8px 0 4px; }
+  svg { display:block; max-width:100%; height:auto; }
+  .circle-outline { fill:none; stroke:#3a4a5a; stroke-width:1.5; stroke-dasharray:3 3; }
+  .circle-fill    { fill:rgba(0,171,250,0.06); }
+  .sector-fill    { fill:rgba(255,240,103,0.18); stroke:#fff067; stroke-width:2; stroke-linejoin:round; }
+  .sector-fill.major { fill:rgba(255,130,44,0.18); stroke:#ff822c; }
+  .arc-stroke     { fill:none; stroke:#fff067; stroke-width:3; stroke-linecap:round; }
+  .arc-stroke.major { stroke:#ff822c; }
+  .radius-line    { stroke:#7a7875; stroke-width:1.2; }
+  .angle-marker   { fill:none; stroke:#fff067; stroke-width:1.4; }
+  .angle-marker.major { stroke:#ff822c; }
+  .label { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; }
+  .lbl-r  { fill:#7a7875; }
+  .lbl-th { fill:#fff067; }
+  .lbl-th.major { fill:#ff822c; }
+  .centre-dot { fill:#7a7875; }
+
+  .metrics { display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:18px; }
+  .metric {
+    background:#07090d; border:1px solid #141e2a; border-radius:8px;
+    padding:12px 14px; display:flex; flex-direction:column; gap:2px;
+  }
+  .metric .lbl { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:1.4px; text-transform:uppercase; }
+  .metric .v {
+    font-family:'Geist Mono',monospace; font-size:21px; font-weight:600;
+    color:#fff067; letter-spacing:-0.3px;
+  }
+  .metric .v .unit { font-size:13px; color:#7a7875; font-weight:500; margin-left:2px; }
+  .metric .formula { font-family:'Geist Mono',monospace; font-size:11px; color:#3a4a5a; margin-top:2px; }
+
+  .sliders { display:flex; flex-direction:column; gap:8px; margin-top:16px; }
+  .slider-row { display:grid; grid-template-columns: 90px 1fr 60px; gap:12px; align-items:center; }
+  .slider-row .name { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .slider-row input[type=range] {
+    appearance:none; -webkit-appearance:none;
+    width:100%; height:3px; background:#141e2a; border-radius:2px; outline:none;
+  }
+  .slider-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+    background:#00abfa; cursor:pointer; border:0;
+  }
+  .slider-row input[type=range]::-moz-range-thumb {
+    width:13px; height:13px; border-radius:50%; background:#00abfa; cursor:pointer; border:0;
+  }
+  .slider-row .v {
+    text-align:right;
+    font-family:'Geist Mono',monospace; font-size:13px; font-weight:600; color:#f0eeea;
+  }
+
+  .footer { margin-top:14px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.5px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="title">SECTOR</span>
+    <span class="counter" id="counter"></span>
+  </div>
+
+  <div class="toggle-row">
+    <div class="seg-toggle minor" id="segToggle">
+      <button data-seg="minor" class="active">minor</button>
+      <button data-seg="major">major</button>
+    </div>
+    <div class="seg-toggle pi" id="piToggle">
+      <button data-mode="pi" class="active">in terms of π</button>
+      <button data-mode="dec">decimal</button>
+    </div>
+  </div>
+
+  <div class="stage-wrap">
+    <svg id="svg" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <g id="layer-circle"></g>
+      <g id="layer-sector"></g>
+      <g id="layer-overlay"></g>
+    </svg>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <span class="lbl">Arc length</span>
+      <span class="v"><span id="arcVal">—</span> <span class="unit">cm</span></span>
+      <span class="formula">arc = (θ / 360) × 2πr</span>
+    </div>
+    <div class="metric">
+      <span class="lbl">Sector area</span>
+      <span class="v"><span id="areaVal">—</span> <span class="unit">cm²</span></span>
+      <span class="formula">A = (θ / 360) × πr²</span>
+    </div>
+  </div>
+
+  <div class="sliders" id="sliders"></div>
+
+  <p class="footer">drag radius and angle · toggle minor / major · the highlighted slice is the one being measured</p>
+</div>
+
+<script>
+"use strict";
+
+var SVG_W = 480, SVG_H = 320;
+var SVG_CX = SVG_W / 2, SVG_CY = SVG_H / 2 + 6;
+var SCALE = 22;  // px per cm
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n) {
+  if (!isFinite(n)) return "—";
+  var v = Math.round(n * 100) / 100;
+  if (v === 0) return "0";
+  return parseFloat(v.toFixed(2)).toString();
+}
+function fmtPi(coef) {
+  var v = Math.round(coef * 1000) / 1000;
+  if (v === 0) return "0";
+  if (v === 1) return "π";
+  if (v === -1) return "−π";
+  return parseFloat(v.toFixed(3)).toString() + "π";
+}
+
+// ===== State ===========================================================
+var state = {
+  params:  { r: 5,   theta: 90 },
+  display: { r: 5,   theta: 90 },
+  segment: "minor",  // or "major"
+  mode:    "pi"      // or "dec"
+};
+
+// ===== Spring animation ================================================
+var SPRING_FACTOR = 0.22, SPRING_EPS = 0.02;
+var rafScheduled = false;
+function startSpring() {
+  if (rafScheduled) return;
+  rafScheduled = true;
+  requestAnimationFrame(springTick);
+}
+function springTick() {
+  var moving = false;
+  ["r", "theta"].forEach(function(k) {
+    var d = state.params[k] - state.display[k];
+    if (Math.abs(d) > SPRING_EPS) {
+      state.display[k] += d * SPRING_FACTOR;
+      moving = true;
+    } else if (state.display[k] !== state.params[k]) {
+      state.display[k] = state.params[k];
+    }
+  });
+  render();
+  if (moving) requestAnimationFrame(springTick);
+  else rafScheduled = false;
+}
+
+// ===== Render ==========================================================
+var counterEl = document.getElementById("counter");
+var arcValEl  = document.getElementById("arcVal");
+var areaValEl = document.getElementById("areaVal");
+var lcEl  = document.getElementById("layer-circle");
+var lsEl  = document.getElementById("layer-sector");
+var loEl  = document.getElementById("layer-overlay");
+
+// Build a sector path going from start angle to end angle (in degrees, CCW
+// as math; we draw on screen so we'll convert internally).
+function sectorPath(cx, cy, rPx, startDeg, endDeg) {
+  // Convert to screen-space angle (y-flipped).
+  function pt(deg) {
+    var rad = deg * Math.PI / 180;
+    return { x: cx + rPx * Math.cos(rad), y: cy - rPx * Math.sin(rad) };
+  }
+  var p1 = pt(startDeg), p2 = pt(endDeg);
+  var sweep = endDeg - startDeg;
+  if (sweep < 0) sweep += 360;
+  var largeArc = (sweep > 180) ? 1 : 0;
+  // SVG arc: A rx ry x-axis-rot large-arc-flag sweep-flag x y
+  // sweep-flag: 0 for CCW (we draw screen-y-down so 0 corresponds to math CCW)
+  return "M" + cx.toFixed(2) + " " + cy.toFixed(2) +
+         " L" + p1.x.toFixed(2) + " " + p1.y.toFixed(2) +
+         " A" + rPx.toFixed(2) + " " + rPx.toFixed(2) +
+         " 0 " + largeArc + " 0 " +
+         p2.x.toFixed(2) + " " + p2.y.toFixed(2) +
+         " Z";
+}
+function arcOnlyPath(cx, cy, rPx, startDeg, endDeg) {
+  function pt(deg) {
+    var rad = deg * Math.PI / 180;
+    return { x: cx + rPx * Math.cos(rad), y: cy - rPx * Math.sin(rad) };
+  }
+  var p1 = pt(startDeg), p2 = pt(endDeg);
+  var sweep = endDeg - startDeg;
+  if (sweep < 0) sweep += 360;
+  var largeArc = (sweep > 180) ? 1 : 0;
+  return "M" + p1.x.toFixed(2) + " " + p1.y.toFixed(2) +
+         " A" + rPx.toFixed(2) + " " + rPx.toFixed(2) +
+         " 0 " + largeArc + " 0 " +
+         p2.x.toFixed(2) + " " + p2.y.toFixed(2);
+}
+
+function render() {
+  var r = state.display.r;
+  var theta = state.display.theta;        // user-set angle (the "minor" angle)
+  var rPx = r * SCALE;
+
+  // Clear layers
+  lcEl.innerHTML = ""; lsEl.innerHTML = ""; loEl.innerHTML = "";
+
+  // Faint full-circle outline behind everything
+  lcEl.appendChild(svgEl("circle", {
+    "class": "circle-fill", cx: SVG_CX, cy: SVG_CY, r: rPx
+  }));
+  lcEl.appendChild(svgEl("circle", {
+    "class": "circle-outline", cx: SVG_CX, cy: SVG_CY, r: rPx
+  }));
+
+  // The minor sector spans from start angle 90° (top) clockwise by theta.
+  // In math-degrees CCW from +x: start at 90° (top), end at 90° - theta.
+  // We render TWO arcs: the highlighted segment (minor or major) and the
+  // unhighlighted complement is just left as the faint outline.
+  var startDeg = 90;                          // top of circle
+  var minorEnd = 90 - theta;
+  var majorEnd = 90 + (360 - theta);          // major sweeps the other way
+
+  var isMajor = state.segment === "major";
+  var sweep = isMajor ? (360 - theta) : theta;
+  var endDeg = isMajor ? majorEnd : minorEnd;
+  // For consistency of arc direction (sweep CCW in math = CW on screen),
+  // we go from startDeg to endDeg with the SVG sweep flag tuned in
+  // sectorPath. When isMajor, endDeg > startDeg so the path travels CCW
+  // (in math), which draws the OTHER side of the circle as the highlighted
+  // slice — that's exactly what we want.
+
+  var sectorClass = "sector-fill" + (isMajor ? " major" : "");
+  var arcClass    = "arc-stroke"  + (isMajor ? " major" : "");
+
+  // The minor highlight should sweep CW (math sense: from start ↓ as theta grows).
+  // The major highlight should sweep CCW (the long way).
+  // sectorPath uses sweep-flag 0 (CCW in math) and computes large-arc-flag from sweep.
+  // For minor we want CW, so swap start/end and use sweep-flag 0 still — same path.
+  var sStart = isMajor ? startDeg : minorEnd;
+  var sEnd   = isMajor ? majorEnd : startDeg;
+
+  lsEl.appendChild(svgEl("path", {
+    "class": sectorClass,
+    d: sectorPath(SVG_CX, SVG_CY, rPx, sStart, sEnd)
+  }));
+  // Arc-only stroke on top to highlight the curve more
+  lsEl.appendChild(svgEl("path", {
+    "class": arcClass,
+    d: arcOnlyPath(SVG_CX, SVG_CY, rPx, sStart, sEnd)
+  }));
+
+  // Two radii to the sector boundary
+  function pt(deg) {
+    var rad = deg * Math.PI / 180;
+    return { x: SVG_CX + rPx * Math.cos(rad), y: SVG_CY - rPx * Math.sin(rad) };
+  }
+  var pStart = pt(startDeg), pMinorEnd = pt(minorEnd);
+  loEl.appendChild(svgEl("line", { "class": "radius-line",
+    x1: SVG_CX, y1: SVG_CY, x2: pStart.x, y2: pStart.y }));
+  loEl.appendChild(svgEl("line", { "class": "radius-line",
+    x1: SVG_CX, y1: SVG_CY, x2: pMinorEnd.x, y2: pMinorEnd.y }));
+
+  // Angle marker — small arc at the centre showing θ (or 360-θ for major)
+  var markerR = Math.min(28, rPx * 0.4);
+  var mArcStart = isMajor ? startDeg : minorEnd;
+  var mArcEnd   = isMajor ? majorEnd : startDeg;
+  loEl.appendChild(svgEl("path", {
+    "class": "angle-marker" + (isMajor ? " major" : ""),
+    d: arcOnlyPath(SVG_CX, SVG_CY, markerR, mArcStart, mArcEnd)
+  }));
+
+  // Labels: r on the start radius, θ near the centre on the appropriate side
+  var rMidpt = pt(startDeg);
+  var rLbl = svgEl("text", {
+    "class": "label lbl-r",
+    x: SVG_CX + 6, y: (SVG_CY + rMidpt.y) / 2 + 4, "text-anchor": "start"
+  });
+  rLbl.textContent = "r = " + fmtNum(r) + " cm";
+  loEl.appendChild(rLbl);
+
+  // Theta label — placed in the middle of the highlighted angle
+  var midDeg = isMajor ? (startDeg + (360 - theta) / 2)
+                       : (startDeg - theta / 2);
+  var midRad = midDeg * Math.PI / 180;
+  var tLblR  = markerR + 14;
+  var tLblX  = SVG_CX + tLblR * Math.cos(midRad);
+  var tLblY  = SVG_CY - tLblR * Math.sin(midRad);
+  var tLbl = svgEl("text", {
+    "class": "label lbl-th" + (isMajor ? " major" : ""),
+    x: tLblX, y: tLblY + 4, "text-anchor": "middle"
+  });
+  tLbl.textContent = (isMajor ? fmtNum(360 - theta) : fmtNum(theta)) + "°";
+  loEl.appendChild(tLbl);
+
+  // Centre dot
+  loEl.appendChild(svgEl("circle", { "class": "centre-dot", cx: SVG_CX, cy: SVG_CY, r: 3 }));
+
+  // Compute readouts (display values)
+  var thetaUsed = isMajor ? (360 - theta) : theta;
+  var arcCoef  = (thetaUsed / 360) * 2 * r;       // coefficient of π for arc length
+  var areaCoef = (thetaUsed / 360) * r * r;       // coefficient of π for sector area
+  if (state.mode === "pi") {
+    arcValEl.textContent  = fmtPi(arcCoef);
+    areaValEl.textContent = fmtPi(areaCoef);
+  } else {
+    arcValEl.textContent  = fmtNum(arcCoef * Math.PI);
+    areaValEl.textContent = fmtNum(areaCoef * Math.PI);
+  }
+
+  // Counter uses params (the user's chosen settings)
+  var pr = state.params.r, pth = state.params.theta;
+  var thU = isMajor ? (360 - pth) : pth;
+  counterEl.textContent = "r = " + fmtNum(pr) + " cm  ·  θ = " + fmtNum(thU) + "°";
+}
+
+// ===== Build sliders ===================================================
+function buildSliders() {
+  var slidersEl = document.getElementById("sliders");
+  slidersEl.innerHTML = "";
+  var SLIDERS = [
+    { key: "r",     label: "radius r",  min: 1,  max: 9,   step: 0.1 },
+    { key: "theta", label: "angle θ",   min: 10, max: 350, step: 1 }
+  ];
+  SLIDERS.forEach(function(s) {
+    var row = document.createElement("div");
+    row.className = "slider-row";
+    var name = document.createElement("span");
+    name.className = "name"; name.textContent = s.label;
+    var slider = document.createElement("input");
+    slider.type = "range"; slider.min = s.min; slider.max = s.max; slider.step = s.step;
+    slider.value = state.params[s.key];
+    var val = document.createElement("span");
+    val.className = "v";
+    val.textContent = (s.key === "theta") ? (fmtNum(state.params[s.key]) + "°") : fmtNum(state.params[s.key]);
+    slider.addEventListener("input", function() {
+      state.params[s.key] = parseFloat(slider.value);
+      val.textContent = (s.key === "theta") ? (fmtNum(state.params[s.key]) + "°") : fmtNum(state.params[s.key]);
+      startSpring();
+    });
+    row.appendChild(name); row.appendChild(slider); row.appendChild(val);
+    slidersEl.appendChild(row);
+  });
+}
+
+// ===== Toggle handlers =================================================
+document.getElementById("segToggle").addEventListener("click", function(e) {
+  var btn = e.target.closest("button[data-seg]");
+  if (!btn) return;
+  state.segment = btn.dataset.seg;
+  document.querySelectorAll("#segToggle button").forEach(function(b) {
+    b.classList.toggle("active", b === btn);
+  });
+  // Swap the toggle's accent colour rule
+  document.getElementById("segToggle").className = "seg-toggle " + state.segment;
+  render();
+});
+document.getElementById("piToggle").addEventListener("click", function(e) {
+  var btn = e.target.closest("button[data-mode]");
+  if (!btn) return;
+  state.mode = btn.dataset.mode;
+  document.querySelectorAll("#piToggle button").forEach(function(b) {
+    b.classList.toggle("active", b === btn);
+  });
+  render();
+});
+
+buildSliders();
+render();
+
+// ===== Height reporter ==================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sector Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; min-height:22px; gap:10px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+
+  .layout {
+    display:grid; grid-template-columns: 1fr; gap:18px; align-items:start;
+  }
+  @media (min-width: 560px) {
+    .layout { grid-template-columns: 320px 1fr; gap:22px; }
+  }
+
+  .stage-outer { width:100%; max-width:320px; margin:0 auto; aspect-ratio: 320 / 280; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:320px; height:280px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+  .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.25s; }
+  .draw-fade.drawn { opacity:1; }
+
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; }
+  .eq-group { display:flex; flex-direction:column; gap:4px;
+    opacity:0; transition: opacity 0.4s ease; transition-delay: 0.2s; }
+  .eq-group.drawn { opacity:1; }
+  .eq-line { font-family:'Geist Mono', monospace; line-height:1.5; }
+  .eq-line[data-kind="tag"]    { font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .eq-line[data-kind="hint"]   { font-size:13px; color:#fff067; }
+  .eq-line[data-kind="main"]   { font-size:15px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]    { font-size:18px; color:#0fee89; font-weight:700; }
+  .eq-line[data-kind="note"]   { font-size:11px; color:#7a7875; margin-top:4px; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:18px; align-items:center; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">step 0: sector with r = 9 cm and θ = 80°</span>
+    <span class="step-num" id="counter">0 / 4</span>
+  </div>
+  <div class="layout">
+    <div class="stage-outer" id="stage-outer">
+      <div class="stage" id="stage"></div>
+    </div>
+    <div class="equations" id="equations"></div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
+  </div>
+  <p class="footer">arc length and sector area as fractions of the full circle</p>
+</div>
+
+<script>
+"use strict";
+
+// Diagram-only stage 320 × 280. Centre at (160, 150), r = 100 px (≈ 9 cm
+// at scale ~11 px/cm). Sector angle θ = 80°, swept clockwise from the
+// upward radius.
+var CENTRE = { x: 160, y: 150 };
+var R_PX = 100;
+var theta = 80;  // degrees
+
+function ptOnCircle(deg) {
+  // deg measured CCW from +x axis (math convention), but we draw on
+  // screen so we flip y.
+  var rad = deg * Math.PI / 180;
+  return { x: CENTRE.x + R_PX * Math.cos(rad), y: CENTRE.y - R_PX * Math.sin(rad) };
+}
+var P_TOP   = ptOnCircle(90);                // (160, 50)
+var P_RIGHT = ptOnCircle(90 - theta);        // (160 + 100 sin 80°, 50 + 100 (1 - cos 80°))
+
+var stage      = document.getElementById("stage");
+var stageOuter = document.getElementById("stage-outer");
+var STAGE_W    = 320, STAGE_H = 280;
+function fitStage() {
+  var w = stageOuter.clientWidth;
+  if (!w) return;
+  stage.style.transform = "scale(" + (w / STAGE_W) + ")";
+}
+fitStage();
+window.addEventListener("resize", fitStage);
+if (window.ResizeObserver) new ResizeObserver(fitStage).observe(stageOuter);
+
+function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
+function makeNode(tag, style, dataStep, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  setStyle(n, style);
+  if (dataStep != null) n.dataset.step = String(dataStep);
+  stage.appendChild(n);
+  return n;
+}
+function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
+  var dx = x2 - x1, dy = y2 - y1;
+  var len = Math.sqrt(dx*dx + dy*dy);
+  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  var t = thickness || 2;
+  var s = {
+    position: "absolute",
+    left: x1 + "px", top: y1 + "px",
+    width: "0px", height: t + "px",
+    transformOrigin: "0 50%",
+    transform: "translateY(" + (-t/2) + "px) rotate(" + ang + "deg)"
+  };
+  if (dashed) {
+    s.background = "transparent";
+    s.borderTop = t + "px dashed " + color;
+    s.height = "0px";
+  } else {
+    s.background = color;
+  }
+  var node = makeNode("div", s, dataStep, "draw-line");
+  node._fullWidth = len;
+  return node;
+}
+function dotEl(x, y, color, size, dataStep) {
+  var sz = size || 7;
+  return makeNode("div", {
+    position: "absolute",
+    left: (x - sz/2) + "px", top: (y - sz/2) + "px",
+    width: sz + "px", height: sz + "px",
+    borderRadius: "50%", background: color
+  }, dataStep, "draw-fade");
+}
+function labelEl(x, y, text, color, fontSize, dataStep, opts) {
+  opts = opts || {};
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontFamily: opts.font || "'Geist Mono', monospace",
+    fontSize: (fontSize || 11) + "px",
+    color: color, fontWeight: opts.weight || "700",
+    whiteSpace: "nowrap", pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  n.textContent = text;
+  return n;
+}
+function tryRenderInto(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else { setTimeout(function() { tryRenderInto(target, tex); }, 50); }
+}
+function wedgeEl(cx, cy, size, fromConicDeg, sweepDeg, color, dataStep) {
+  var maskInner = (size / 2) - 4;
+  var maskOuter = maskInner + 2;
+  return makeNode("div", {
+    position: "absolute",
+    left: (cx - size/2) + "px", top: (cy - size/2) + "px",
+    width: size + "px", height: size + "px",
+    borderRadius: "50%",
+    background: "conic-gradient(from " + fromConicDeg + "deg, " + color + " 0deg " + sweepDeg + "deg, transparent " + sweepDeg + "deg)",
+    WebkitMask: "radial-gradient(circle, transparent " + (maskInner-1) + "px, #000 " + maskInner + "px, #000 " + maskOuter + "px, transparent " + (maskOuter+1) + "px)",
+    mask: "radial-gradient(circle, transparent " + (maskInner-1) + "px, #000 " + maskInner + "px, #000 " + maskOuter + "px, transparent " + (maskOuter+1) + "px)",
+    pointerEvents: "none"
+  }, dataStep, "draw-fade");
+}
+
+// ===== Step 0 — circle outline + sector wedge =========================
+// Faint full circle outline
+makeNode("div", {
+  position: "absolute",
+  left: (CENTRE.x - R_PX) + "px", top: (CENTRE.y - R_PX) + "px",
+  width: (2*R_PX) + "px", height: (2*R_PX) + "px",
+  borderRadius: "50%",
+  border: "1.5px dashed #1a2330",
+  pointerEvents: "none"
+});
+
+// Yellow filled wedge for the minor sector (θ = 80°). conic-gradient
+// starts from "from = 0deg" pointing UP, increasing CW. So the upward
+// radius is at conic 0°. To sweep 80° clockwise from there: from=0,
+// sweep=80, but we use a filled disc with the inner mask removed... no
+// actually we want the SOLID sector, not just an arc. Let me draw the
+// sector as a CSS conic gradient on a circle, no mask.
+makeNode("div", {
+  position: "absolute",
+  left: (CENTRE.x - R_PX) + "px", top: (CENTRE.y - R_PX) + "px",
+  width: (2*R_PX) + "px", height: (2*R_PX) + "px",
+  borderRadius: "50%",
+  background: "conic-gradient(from 0deg, rgba(255,240,103,0.20) 0deg " + theta + "deg, transparent " + theta + "deg)",
+  pointerEvents: "none"
+});
+// Arc highlight (use wedge ring at the boundary)
+wedgeEl(CENTRE.x, CENTRE.y, 2*R_PX + 8, 0, theta, "#fff067", 0);
+
+// Two radii (always visible)
+lineEl(CENTRE.x, CENTRE.y, P_TOP.x, P_TOP.y, "#7a7875", 1.6, false, 0);
+lineEl(CENTRE.x, CENTRE.y, P_RIGHT.x, P_RIGHT.y, "#7a7875", 1.6, false, 0);
+
+// Centre dot + endpoint dots
+dotEl(CENTRE.x, CENTRE.y, "#7a7875", 6, 0);
+labelEl(CENTRE.x - 4, CENTRE.y + 6, "O", "#7a7875", 12, 0);
+dotEl(P_TOP.x, P_TOP.y, "#fff067", 7, 0);
+labelEl(P_TOP.x - 4, P_TOP.y - 22, "A", "#fff067", 14, 0);
+dotEl(P_RIGHT.x, P_RIGHT.y, "#fff067", 7, 0);
+labelEl(P_RIGHT.x + 8, P_RIGHT.y - 4, "B", "#fff067", 14, 0);
+
+// θ label inside the wedge
+labelEl(CENTRE.x + 18, CENTRE.y - 38, "80°", "#fff067", 13, 0);
+
+// r label on the upper radius
+labelEl(CENTRE.x + 6, (CENTRE.y + P_TOP.y)/2, "r = 9 cm", "#00abfa", 12, 0);
+
+// ===== Equations panel ================================================
+function buildEquations(parentEl, groups) {
+  groups.forEach(function(g) {
+    var groupEl = document.createElement("div");
+    groupEl.className = "eq-group draw-fade";
+    groupEl.dataset.step = String(g.step);
+    g.lines.forEach(function(line) {
+      var lineEl = document.createElement("div");
+      lineEl.className = "eq-line";
+      lineEl.dataset.kind = line.kind || "main";
+      if (line.tex) {
+        var span = document.createElement("span");
+        lineEl.appendChild(span);
+        tryRenderInto(span, line.tex);
+      } else {
+        lineEl.textContent = line.text;
+      }
+      groupEl.appendChild(lineEl);
+    });
+    parentEl.appendChild(groupEl);
+  });
+}
+
+buildEquations(document.getElementById("equations"), [
+  { step: 1, lines: [
+    { kind: "tag",  text: "(a) arc length AB" },
+    { kind: "hint", tex:  "\\text{arc} = \\dfrac{\\theta}{360} \\times 2\\pi r" },
+    { kind: "main", tex:  "\\text{arc} = \\dfrac{80}{360} \\times 2\\pi \\times 9" }
+  ]},
+  { step: 2, lines: [
+    { kind: "main", tex:  "\\text{arc} = \\dfrac{2}{9} \\times 18\\pi" },
+    { kind: "ans",  tex:  "\\text{arc} = 4\\pi\\;\\text{cm}" },
+    { kind: "note", text: "(M1 for fraction × 2πr ; A1 for 4π cm)" }
+  ]},
+  { step: 3, lines: [
+    { kind: "tag",  text: "(b) sector area" },
+    { kind: "hint", tex:  "A = \\dfrac{\\theta}{360} \\times \\pi r^2" },
+    { kind: "main", tex:  "A = \\dfrac{80}{360} \\times \\pi \\times 81" }
+  ]},
+  { step: 4, lines: [
+    { kind: "main", tex:  "A = \\dfrac{2}{9} \\times 81\\pi" },
+    { kind: "ans",  tex:  "A = 18\\pi\\;\\text{cm}^2" },
+    { kind: "note", text: "(M1 for fraction × πr² ; A1 for 18π cm²)" }
+  ]}
+]);
+
+// ===== Step controller =================================================
+var STEPS = [
+  "step 0: sector with r = 9 cm and θ = 80°",
+  "step 1 (a): set up the arc length formula",
+  "step 2 (a): simplify to 4π cm",
+  "step 3 (b): set up the sector area formula",
+  "step 4 (b): simplify to 18π cm²"
+];
+var step = 0, maxStep = STEPS.length - 1;
+var titleEl   = document.getElementById("title");
+var counterEl = document.getElementById("counter");
+var prevBtn   = document.getElementById("prev");
+var nextBtn   = document.getElementById("next");
+var wrap      = document.getElementById("wrap");
+
+function setStep(n) {
+  step = Math.max(0, Math.min(maxStep, n));
+  titleEl.textContent = STEPS[step];
+  counterEl.textContent = step + " / " + maxStep;
+  var els = wrap.querySelectorAll("[data-step]");
+  for (var i = 0; i < els.length; i++) {
+    var s = parseInt(els[i].dataset.step, 10);
+    var el = els[i];
+    if (s <= step) {
+      el.classList.add("drawn");
+      if (el._fullWidth != null) el.style.width = el._fullWidth + "px";
+    } else {
+      el.classList.remove("drawn");
+      if (el._fullWidth != null) el.style.width = "0px";
+    }
+  }
+  prevBtn.disabled = (step === 0);
+  nextBtn.disabled = (step === maxStep);
+  reportHeight();
+}
+prevBtn.onclick = function() { setStep(step - 1); };
+nextBtn.onclick = function() { setStep(step + 1); };
+setStep(0);
+
+// ===== Height reporter =================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(wrap);
+</script>
+</body>
+</html>

@@ -465,7 +465,15 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "03", code: "5.3", title: "Circles, arcs and sectors" },
+      {
+        slug: "03", code: "5.3", title: "Circles, arcs and sectors",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Circle area and circumference" },
+          { slug: "p2",     label: "P2", title: "Arc length" },
+          { slug: "p3",     label: "P3", title: "Sector area" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "04", code: "5.4", title: "Surface area and volume" },
       { slug: "05", code: "5.5", title: "Compound shapes and parts of shapes" },
     ],
