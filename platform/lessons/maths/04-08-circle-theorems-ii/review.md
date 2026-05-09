@@ -200,7 +200,7 @@ The points $A(2, 1)$, $B(8, 1)$, $C(8, 9)$ all lie on a circle.
 
 (c) From an external point $P$, the tangent length to this circle is $12$ cm. Find $OP$.
 
-<iframe src="/widgets/circle-coord-geom-step-explorer.html" style="width:100%;max-width:696px;height:480px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+<iframe src="/widgets/circle-coord-geom-step-explorer.html" style="width:100%;max-width:696px;height:740px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
 **Step a: Coordinates of the centre.** Build the perpendicular bisector of two chords and intersect them.
 

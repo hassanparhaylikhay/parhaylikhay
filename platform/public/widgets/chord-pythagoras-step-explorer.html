@@ -12,15 +12,34 @@
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 18px 16px; }
   .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
-  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; min-height:22px; gap:10px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
-  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 360; position:relative; }
-  .stage { position:absolute; top:0; left:0; width:660px; height:360px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+
+  .layout {
+    display:grid; grid-template-columns: 1fr; gap:18px; align-items:start;
+  }
+  @media (min-width: 560px) {
+    .layout { grid-template-columns: 360px 1fr; gap:22px; }
+  }
+
+  .stage-outer { width:100%; max-width:360px; margin:0 auto; aspect-ratio: 360 / 220; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:360px; height:220px; transform-origin: top left; overflow:hidden; border-radius:6px; }
   .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
-  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.25s; }
   .draw-fade.drawn { opacity:1; }
-  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; }
+  .eq-group { display:flex; flex-direction:column; gap:4px;
+    opacity:0; transition: opacity 0.4s ease; transition-delay: 0.2s; }
+  .eq-group.drawn { opacity:1; }
+  .eq-line { font-family:'Geist Mono', monospace; line-height:1.5; }
+  .eq-line[data-kind="tag"]   { font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .eq-line[data-kind="main"]  { font-size:15px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]   { font-size:18px; color:#0fee89; font-weight:700; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:18px; align-items:center; }
   button.ctl {
     background:#0b1118; border:1px solid #141e2a; color:#7a7875;
     font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
@@ -38,33 +57,35 @@
     <span class="step-title" id="title">step 0: chord = 24, perpendicular distance = 5</span>
     <span class="step-num" id="counter">0 / 4</span>
   </div>
-  <div class="stage-outer" id="stage-outer">
-    <div class="stage" id="stage"></div>
+  <div class="layout">
+    <div class="stage-outer" id="stage-outer">
+      <div class="stage" id="stage"></div>
+    </div>
+    <div class="equations" id="equations"></div>
   </div>
   <div class="controls">
     <button class="ctl" id="prev">← prev</button>
     <button class="ctl" id="next">next →</button>
   </div>
-  <p class="footer">chord 24 cm · perpendicular distance 5 cm · find the radius</p>
+  <p class="footer">half-chord, distance, radius — a Pythagorean triple inside the circle</p>
 </div>
 
 <script>
 "use strict";
 
-// Geometry — diagram lives in the LEFT half of the stage (x: 0..320),
-// equations on the RIGHT (x: 340..660). Display scale 6 px / unit so
-// the 5-12-13 triple fits cleanly.
-var O      = { x: 160, y: 100 };
+// Diagram-only stage 360 × 220. Display scale 6 px / unit so the 5-12-13
+// triple fits cleanly. Centre at (180, 70), perpendicular foot at (180, 100).
+var O      = { x: 180, y: 70 };
 var R_disp = 78;
-var d_disp = 30;          // display perpendicular distance (= 5 units)
-var halfDisp = 72;        // display half-chord (= 12 units)
-var foot   = { x: O.x, y: O.y + d_disp };  // (160, 130)
+var d_disp = 30;          // 5 units
+var halfDisp = 72;        // 12 units
+var foot   = { x: O.x, y: O.y + d_disp };
 var A      = { x: O.x - halfDisp, y: foot.y };
 var B      = { x: O.x + halfDisp, y: foot.y };
 
 var stage      = document.getElementById("stage");
 var stageOuter = document.getElementById("stage-outer");
-var STAGE_W    = 660, STAGE_H = 360;
+var STAGE_W    = 360, STAGE_H = 220;
 function fitStage() {
   var w = stageOuter.clientWidth;
   if (!w) return;
@@ -128,13 +149,11 @@ function labelEl(x, y, text, color, fontSize, dataStep, opts) {
   n.textContent = text;
   return n;
 }
-function tryRender(target, tex) {
+function tryRenderInto(target, tex) {
   if (typeof katex !== "undefined") {
     try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
     catch (e) { target.textContent = tex; }
-  } else {
-    setTimeout(function() { tryRender(target, tex); }, 50);
-  }
+  } else { setTimeout(function() { tryRenderInto(target, tex); }, 50); }
 }
 function texEl(x, y, tex, color, fontSize, dataStep) {
   var n = makeNode("div", {
@@ -143,7 +162,7 @@ function texEl(x, y, tex, color, fontSize, dataStep) {
     fontSize: (fontSize || 14) + "px",
     color: color, whiteSpace: "nowrap", pointerEvents: "none"
   }, dataStep, "draw-fade");
-  tryRender(n, tex);
+  tryRenderInto(n, tex);
   return n;
 }
 function rightAngleEl(x, y, dirX1, dirY1, dirX2, dirY2, armLen, color, dataStep) {
@@ -164,10 +183,10 @@ makeNode("div", {
   pointerEvents: "none"
 });
 
-// ===== Step 0 — given configuration =====================================
+// ===== Step 0 — given configuration ====================================
 lineEl(A.x, A.y, B.x, B.y, "#00abfa", 2.5, false, 0);            // chord
-lineEl(O.x, O.y, foot.x, foot.y, "#00abfa", 2.5, false, 0);     // perpendicular
-rightAngleEl(foot.x, foot.y, 1, 0, 0, -1, 9, "#ff4670", 0);     // L-marker
+lineEl(O.x, O.y, foot.x, foot.y, "#00abfa", 2.5, false, 0);      // perpendicular
+rightAngleEl(foot.x, foot.y, 1, 0, 0, -1, 9, "#ff4670", 0);
 dotEl(O.x, O.y, "#7a7875", 6, 0);
 labelEl(O.x + 8, O.y - 14, "O", "#7a7875", 13, 0);
 dotEl(A.x, A.y, "#fff067", 8, 0);
@@ -179,18 +198,46 @@ texEl(O.x - 22, O.y + d_disp/2 - 8, "5",  "#00abfa", 13, 0);
 texEl(O.x - 8,  foot.y + 12,        "24", "#00abfa", 13, 0);
 
 // ===== Step 1 — half-chord = 12 ========================================
-lineEl(foot.x, foot.y, B.x, B.y, "#0fee89", 3, false, 1);       // green highlight
+lineEl(foot.x, foot.y, B.x, B.y, "#0fee89", 3, false, 1);
 texEl(foot.x + halfDisp/2 - 8, foot.y + 12, "12", "#0fee89", 13, 1);
 
-// ===== Step 2 — form right triangle (hypotenuse = r) ===================
+// ===== Step 2 — form right triangle ====================================
 lineEl(O.x, O.y, B.x, B.y, "#fff067", 2.5, false, 2);
 texEl((O.x + B.x)/2 + 4, (O.y + B.y)/2 - 22, "r", "#fff067", 16, 2);
 
-// ===== Equation panel (RIGHT side, x ≈ 360) ============================
-texEl(360,  80, "\\text{Pythagoras:}", "#7a7875", 13, 3);
-texEl(360, 105, "r^2 = 5^2 + 12^2",     "#f0eeea", 17, 3);
-texEl(360, 155, "r^2 = 25 + 144 = 169", "#f0eeea", 17, 4);
-texEl(360, 205, "r = \\sqrt{169} = 13 \\;\\text{cm}", "#0fee89", 20, 4);
+// ===== Equations panel (HTML flow) ====================================
+function buildEquations(parentEl, groups) {
+  groups.forEach(function(g) {
+    var groupEl = document.createElement("div");
+    groupEl.className = "eq-group draw-fade";
+    groupEl.dataset.step = String(g.step);
+    g.lines.forEach(function(line) {
+      var lineEl = document.createElement("div");
+      lineEl.className = "eq-line";
+      lineEl.dataset.kind = line.kind || "main";
+      if (line.tex) {
+        var span = document.createElement("span");
+        lineEl.appendChild(span);
+        tryRenderInto(span, line.tex);
+      } else {
+        lineEl.textContent = line.text;
+      }
+      groupEl.appendChild(lineEl);
+    });
+    parentEl.appendChild(groupEl);
+  });
+}
+
+buildEquations(document.getElementById("equations"), [
+  { step: 3, lines: [
+    { kind: "tag",  text: "Pythagoras:" },
+    { kind: "main", tex:  "r^2 = 5^2 + 12^2" },
+    { kind: "main", tex:  "r^2 = 25 + 144 = 169" }
+  ]},
+  { step: 4, lines: [
+    { kind: "ans",  tex:  "r = \\sqrt{169} = 13\\;\\text{cm}" }
+  ]}
+]);
 
 // ===== Step controller =================================================
 var STEPS = [
@@ -205,11 +252,13 @@ var titleEl   = document.getElementById("title");
 var counterEl = document.getElementById("counter");
 var prevBtn   = document.getElementById("prev");
 var nextBtn   = document.getElementById("next");
+var wrap      = document.getElementById("wrap");
+
 function setStep(n) {
   step = Math.max(0, Math.min(maxStep, n));
   titleEl.textContent = STEPS[step];
   counterEl.textContent = step + " / " + maxStep;
-  var els = stage.querySelectorAll("[data-step]");
+  var els = wrap.querySelectorAll("[data-step]");
   for (var i = 0; i < els.length; i++) {
     var s = parseInt(els[i].dataset.step, 10);
     var el = els[i];
@@ -223,6 +272,7 @@ function setStep(n) {
   }
   prevBtn.disabled = (step === 0);
   nextBtn.disabled = (step === maxStep);
+  reportHeight();
 }
 prevBtn.onclick = function() { setStep(step - 1); };
 nextBtn.onclick = function() { setStep(step + 1); };
@@ -235,7 +285,6 @@ function reportHeight() {
   reportScheduled = true;
   requestAnimationFrame(function() {
     reportScheduled = false;
-    var wrap = document.getElementById("wrap");
     if (!wrap) return;
     var rect = wrap.getBoundingClientRect();
     var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
@@ -248,6 +297,7 @@ function reportHeight() {
 }
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(wrap);
 </script>
 </body>
 </html>

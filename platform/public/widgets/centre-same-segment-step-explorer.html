@@ -12,15 +12,33 @@
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 18px 16px; }
   .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
-  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; min-height:22px; gap:10px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
-  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 360; position:relative; }
-  .stage { position:absolute; top:0; left:0; width:660px; height:360px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+
+  .layout {
+    display:grid; grid-template-columns: 1fr; gap:18px; align-items:start;
+  }
+  @media (min-width: 560px) {
+    .layout { grid-template-columns: 360px 1fr; gap:22px; }
+  }
+
+  .stage-outer { width:100%; max-width:360px; margin:0 auto; aspect-ratio: 360 / 320; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:360px; height:320px; transform-origin: top left; overflow:hidden; border-radius:6px; }
   .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
-  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.25s; }
   .draw-fade.drawn { opacity:1; }
-  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; }
+  .eq-group { display:flex; flex-direction:column; gap:4px;
+    opacity:0; transition: opacity 0.4s ease; transition-delay: 0.2s; }
+  .eq-group.drawn { opacity:1; }
+  .eq-line { font-family:'Geist Mono', monospace; line-height:1.5; }
+  .eq-line[data-kind="ans"]    { font-size:17px; color:#0fee89; font-weight:700; }
+  .eq-line[data-kind="reason"] { font-size:11px; color:#7a7875; margin-top:2px; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:18px; align-items:center; }
   button.ctl {
     background:#0b1118; border:1px solid #141e2a; color:#7a7875;
     font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
@@ -38,39 +56,39 @@
     <span class="step-title" id="title">step 0: ∠AOC = 110°, B and D on major arc</span>
     <span class="step-num" id="counter">0 / 2</span>
   </div>
-  <div class="stage-outer" id="stage-outer">
-    <div class="stage" id="stage"></div>
+  <div class="layout">
+    <div class="stage-outer" id="stage-outer">
+      <div class="stage" id="stage"></div>
+    </div>
+    <div class="equations" id="equations"></div>
   </div>
   <div class="controls">
     <button class="ctl" id="prev">← prev</button>
     <button class="ctl" id="next">next →</button>
   </div>
-  <p class="footer">centre angle 110° → inscribed angle (centre rule + same segment)</p>
+  <p class="footer">centre rule (halve) · same segment (copy)</p>
 </div>
 
 <script>
 "use strict";
 
-// Geometry — diagram in left half (x: 0..320). Circle O = (160, 170),
-// r = 100. ∠AOC = 110° symmetric about the vertical through O so each
-// radius is 55° off the downward axis: A bottom-left, C bottom-right.
-// B and D placed on the major arc (above chord AC).
-var O = { x: 160, y: 170 };
+// Diagram-only stage 360 × 320. Circle O = (180, 165), r = 100.
+// ∠AOC = 110° symmetric about the vertical through O. A,C on lower arc;
+// B,D on upper (major) arc.
+var O = { x: 180, y: 165 };
 var R_d = 100;
 function ptOnCircle(deg) {
   var r = deg * Math.PI / 180;
   return { x: O.x + R_d * Math.cos(r), y: O.y + R_d * Math.sin(r) };
 }
-var A = ptOnCircle(215);  // ≈ (78, 113) — wait, let me re-derive: cos 215° = -0.819, sin 215° = -0.574. A = (160-81.9, 170-57.4) = (78.1, 112.6). Hmm that's TOP-left.
-// Recompute: I want A in the LOWER half. Use math 145° instead (cos = -0.819, sin = +0.574).
-A = ptOnCircle(145);  // (78, 227)
-var C = ptOnCircle( 35); // (242, 227)
-var D = ptOnCircle(250); // (126, 76) upper-left of major arc
-var B = ptOnCircle(290); // (194, 76) upper-right of major arc
+var A = ptOnCircle(145); // (98, 222)
+var C = ptOnCircle( 35); // (262, 222)
+var D = ptOnCircle(250); // (146, 71)
+var B = ptOnCircle(290); // (214, 71)
 
 var stage      = document.getElementById("stage");
 var stageOuter = document.getElementById("stage-outer");
-var STAGE_W    = 660, STAGE_H = 360;
+var STAGE_W    = 360, STAGE_H = 320;
 function fitStage() {
   var w = stageOuter.clientWidth;
   if (!w) return;
@@ -134,13 +152,11 @@ function labelEl(x, y, text, color, fontSize, dataStep, opts) {
   n.textContent = text;
   return n;
 }
-function tryRender(target, tex) {
+function tryRenderInto(target, tex) {
   if (typeof katex !== "undefined") {
     try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
     catch (e) { target.textContent = tex; }
-  } else {
-    setTimeout(function() { tryRender(target, tex); }, 50);
-  }
+  } else { setTimeout(function() { tryRenderInto(target, tex); }, 50); }
 }
 function texEl(x, y, tex, color, fontSize, dataStep) {
   var n = makeNode("div", {
@@ -149,7 +165,7 @@ function texEl(x, y, tex, color, fontSize, dataStep) {
     fontSize: (fontSize || 14) + "px",
     color: color, whiteSpace: "nowrap", pointerEvents: "none"
   }, dataStep, "draw-fade");
-  tryRender(n, tex);
+  tryRenderInto(n, tex);
   return n;
 }
 function wedgeEl(cx, cy, size, fromConicDeg, sweepDeg, color, dataStep) {
@@ -178,16 +194,12 @@ makeNode("div", {
 });
 
 // ===== Step 0 — given configuration ====================================
-// Radii OA, OC (blue)
 lineEl(O.x, O.y, A.x, A.y, "#00abfa", 2.5, false, 0);
 lineEl(O.x, O.y, C.x, C.y, "#00abfa", 2.5, false, 0);
-// 110° wedge at O between OC (conic 125°) and OA (conic 235°). Fill 110° from 125°.
 wedgeEl(O.x, O.y, 60, 125, 110, "#fff067", 0);
 texEl(O.x - 16, O.y + 14, "110°", "#fff067", 13, 0);
-// O dot
 dotEl(O.x, O.y, "#7a7875", 6, 0);
 labelEl(O.x + 8, O.y - 16, "O", "#7a7875", 12, 0);
-// Vertices
 dotEl(A.x, A.y, "#fff067", 8, 0);
 labelEl(A.x - 18, A.y, "A", "#fff067", 14, 0);
 dotEl(C.x, C.y, "#fff067", 8, 0);
@@ -198,35 +210,50 @@ dotEl(D.x, D.y, "#fff067", 8, 0);
 labelEl(D.x - 18, D.y - 16, "D", "#fff067", 14, 0);
 
 // ===== Step 1 — ∠ADC = 55° (centre rule) ===============================
-// Add chords DA, DC (lighter to suggest construction) and 55° wedge at D.
 lineEl(D.x, D.y, A.x, A.y, "#0fee89", 2, false, 1);
 lineEl(D.x, D.y, C.x, C.y, "#0fee89", 2, false, 1);
-// Wedge at D: DC conic ≈ 142.5°, DA conic ≈ 197.65°. Fill 55° from 142.5°.
 wedgeEl(D.x, D.y, 50, 142.5, 55, "#0fee89", 1);
 texEl(D.x + 4, D.y + 14, "55°", "#0fee89", 13, 1);
 
 // ===== Step 2 — ∠ABC = ∠ADC = 55° (same segment) =======================
 lineEl(B.x, B.y, A.x, A.y, "#0fee89", 2, false, 2);
 lineEl(B.x, B.y, C.x, C.y, "#0fee89", 2, false, 2);
-// Wedge at B: BC conic ≈ 162.35°, BA conic ≈ 217.5°. Fill 55° from 162.35°.
 wedgeEl(B.x, B.y, 50, 162.35, 55, "#0fee89", 2);
 texEl(B.x - 30, B.y + 14, "55°", "#0fee89", 13, 2);
 
-// ===== Equation panel (RIGHT side) =====================================
-texEl(360, 100,
-  "\\angle ADC = \\dfrac{110\\degree}{2} = 55\\degree",
-  "#0fee89", 19, 1);
-texEl(360, 215,
-  "\\angle ABC = \\angle ADC = 55\\degree",
-  "#0fee89", 19, 2);
+// ===== Equations panel (HTML flow) ====================================
+function buildEquations(parentEl, groups) {
+  groups.forEach(function(g) {
+    var groupEl = document.createElement("div");
+    groupEl.className = "eq-group draw-fade";
+    groupEl.dataset.step = String(g.step);
+    g.lines.forEach(function(line) {
+      var lineEl = document.createElement("div");
+      lineEl.className = "eq-line";
+      lineEl.dataset.kind = line.kind || "main";
+      if (line.tex) {
+        var span = document.createElement("span");
+        lineEl.appendChild(span);
+        tryRenderInto(span, line.tex);
+      } else {
+        lineEl.textContent = line.text;
+      }
+      groupEl.appendChild(lineEl);
+    });
+    parentEl.appendChild(groupEl);
+  });
+}
 
-// Subtle reason hints below each equation
-texEl(360, 152,
-  "\\text{(angle at centre} = 2 \\times \\text{angle at circumference)}",
-  "#7a7875", 12, 1);
-texEl(360, 260,
-  "\\text{(angles in the same segment are equal)}",
-  "#7a7875", 12, 2);
+buildEquations(document.getElementById("equations"), [
+  { step: 1, lines: [
+    { kind: "ans",    tex: "\\angle ADC = \\dfrac{110\\degree}{2} = 55\\degree" },
+    { kind: "reason", text: "(angle at centre = 2 × angle at circumference)" }
+  ]},
+  { step: 2, lines: [
+    { kind: "ans",    tex: "\\angle ABC = \\angle ADC = 55\\degree" },
+    { kind: "reason", text: "(angles in the same segment are equal)" }
+  ]}
+]);
 
 // ===== Step controller =================================================
 var STEPS = [
@@ -239,11 +266,13 @@ var titleEl   = document.getElementById("title");
 var counterEl = document.getElementById("counter");
 var prevBtn   = document.getElementById("prev");
 var nextBtn   = document.getElementById("next");
+var wrap      = document.getElementById("wrap");
+
 function setStep(n) {
   step = Math.max(0, Math.min(maxStep, n));
   titleEl.textContent = STEPS[step];
   counterEl.textContent = step + " / " + maxStep;
-  var els = stage.querySelectorAll("[data-step]");
+  var els = wrap.querySelectorAll("[data-step]");
   for (var i = 0; i < els.length; i++) {
     var s = parseInt(els[i].dataset.step, 10);
     var el = els[i];
@@ -257,6 +286,7 @@ function setStep(n) {
   }
   prevBtn.disabled = (step === 0);
   nextBtn.disabled = (step === maxStep);
+  reportHeight();
 }
 prevBtn.onclick = function() { setStep(step - 1); };
 nextBtn.onclick = function() { setStep(step + 1); };
@@ -269,7 +299,6 @@ function reportHeight() {
   reportScheduled = true;
   requestAnimationFrame(function() {
     reportScheduled = false;
-    var wrap = document.getElementById("wrap");
     if (!wrap) return;
     var rect = wrap.getBoundingClientRect();
     var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
@@ -282,6 +311,7 @@ function reportHeight() {
 }
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(wrap);
 </script>
 </body>
 </html>

@@ -12,14 +12,37 @@
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 18px 16px; }
   .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
-  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; min-height:22px; gap:10px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
-  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 380; position:relative; }
-  .stage { position:absolute; top:0; left:0; width:660px; height:380px; transform-origin: top left; overflow:hidden; border-radius:6px; }
-  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
+
+  /* Responsive layout: stack on phone, side-by-side on desktop. */
+  .layout {
+    display:grid; grid-template-columns: 1fr; gap:18px; align-items:start;
+  }
+  @media (min-width: 560px) {
+    .layout { grid-template-columns: 360px 1fr; gap:22px; }
+  }
+
+  /* Diagram-only stage. Fixed pixel canvas, scaled responsively. */
+  .stage-outer { width:100%; max-width:360px; margin:0 auto; aspect-ratio: 360 / 360; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:360px; height:360px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.25s; }
   .draw-fade.drawn { opacity:1; }
-  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+
+  /* Equations panel — normal HTML flow with inline KaTeX. */
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; }
+  .eq-group { display:flex; flex-direction:column; gap:4px;
+    opacity:0; transition: opacity 0.4s ease; transition-delay: 0.2s; }
+  .eq-group.drawn { opacity:1; }
+  .eq-line { font-family:'Geist Mono', monospace; line-height:1.45; }
+  .eq-line[data-kind="tag"]  { font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .eq-line[data-kind="main"] { font-size:15px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]  { font-size:17px; color:#0fee89; font-weight:700; }
+  .eq-line[data-kind="note"] { font-size:11px; color:#7a7875; margin-top:4px; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:18px; align-items:center; }
   button.ctl {
     background:#0b1118; border:1px solid #141e2a; color:#7a7875;
     font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
@@ -30,12 +53,10 @@
   button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 
-  /* CSS-3D cuboid. The .cuboid-stage carries the perspective; .cuboid is
-     a zero-size point at its centre with preserve-3d. Each face is sized
-     and positioned relative to that centre, then translated outward in
-     its own local Z. W = 60 (0.4 m), H = 120 (0.8 m), D = 75 (0.5 m). */
+  /* CSS-3D cuboid. Fixed pixel translateZ values (translateZ percentages
+     are invalid CSS). W = 60 px (0.4 m), H = 120 px (0.8 m), D = 75 px (0.5 m). */
   .cuboid-stage {
-    position:absolute; left:90px; top:60px;
+    position:absolute; left:80px; top:50px;
     width:200px; height:230px;
     perspective:700px; perspective-origin:50% 35%;
   }
@@ -45,25 +66,19 @@
     transform-style:preserve-3d;
     transform: rotateX(-22deg) rotateY(-30deg);
   }
-  .face {
-    position:absolute;
-    border:1.5px solid #00abfa;
-  }
+  .face { position:absolute; border:1.5px solid #00abfa; }
   .face-front {
-    width:60px; height:120px;
-    left:-30px; top:-60px;
+    width:60px; height:120px; left:-30px; top:-60px;
     background:rgba(0,171,250,0.14);
     transform: translateZ(37.5px);
   }
   .face-right {
-    width:75px; height:120px;
-    left:-37.5px; top:-60px;
+    width:75px; height:120px; left:-37.5px; top:-60px;
     background:rgba(0,171,250,0.22);
     transform: rotateY(90deg) translateZ(30px);
   }
   .face-top {
-    width:60px; height:75px;
-    left:-30px; top:-37.5px;
+    width:60px; height:75px; left:-30px; top:-37.5px;
     background:rgba(0,171,250,0.06);
     transform: rotateX(90deg) translateZ(60px);
   }
@@ -75,8 +90,11 @@
     <span class="step-title" id="title">step 0: water tank — 0.4 m × 0.5 m × 0.8 m</span>
     <span class="step-num" id="counter">0 / 3</span>
   </div>
-  <div class="stage-outer" id="stage-outer">
-    <div class="stage" id="stage"></div>
+  <div class="layout">
+    <div class="stage-outer" id="stage-outer">
+      <div class="stage" id="stage"></div>
+    </div>
+    <div class="equations" id="equations"></div>
   </div>
   <div class="controls">
     <button class="ctl" id="prev">← prev</button>
@@ -90,7 +108,7 @@
 
 var stage      = document.getElementById("stage");
 var stageOuter = document.getElementById("stage-outer");
-var STAGE_W    = 660, STAGE_H = 380;
+var STAGE_W    = 360, STAGE_H = 360;
 function fitStage() {
   var w = stageOuter.clientWidth;
   if (!w) return;
@@ -122,36 +140,23 @@ function labelEl(x, y, text, color, fontSize, dataStep, opts) {
   n.textContent = text;
   return n;
 }
-function tryRender(target, tex) {
+function tryRenderInto(target, tex) {
   if (typeof katex !== "undefined") {
     try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
     catch (e) { target.textContent = tex; }
-  } else { setTimeout(function() { tryRender(target, tex); }, 50); }
-}
-function texEl(x, y, tex, color, fontSize, dataStep) {
-  var n = makeNode("div", {
-    position: "absolute",
-    left: x + "px", top: y + "px",
-    fontSize: (fontSize || 14) + "px",
-    color: color, whiteSpace: "nowrap", pointerEvents: "none"
-  }, dataStep, "draw-fade");
-  tryRender(n, tex);
-  return n;
+  } else { setTimeout(function() { tryRenderInto(target, tex); }, 50); }
 }
 
-// ===== Header =========================================================
+// ===== Stage header (small label inside the diagram canvas) ============
 var hdr = makeNode("div", {
-  position: "absolute", left: "30px", top: "30px",
-  fontFamily: "'Geist Mono', monospace", fontSize: "11px",
-  color: "#7a7875", letterSpacing: "1.6px", textTransform: "uppercase",
+  position: "absolute", left: "20px", top: "22px",
+  fontFamily: "'Geist Mono', monospace", fontSize: "10.5px",
+  color: "#7a7875", letterSpacing: "1.4px", textTransform: "uppercase",
   fontWeight: "600"
 });
-hdr.textContent = "WATER TANK (0.4 m × 0.5 m × 0.8 m)";
+hdr.textContent = "WATER TANK · 0.4 × 0.5 × 0.8 m";
 
 // ===== Step 0 — CSS-3D cuboid (always visible) ========================
-// Three visible faces (front, right, top) inside a perspective stage with
-// preserve-3d, rotated to give the iso-style view. Borders on each face
-// give the wireframe edges.
 var cuboidStage = makeNode("div", {}, null, "cuboid-stage");
 var cuboid = document.createElement("div");
 cuboid.className = "cuboid";
@@ -163,42 +168,56 @@ cuboidStage.appendChild(cuboid);
   cuboid.appendChild(f);
 });
 
-// Dimension labels (always visible). The CSS-3D cuboid is centred near
-// (190, 175) with the projected corners spanning roughly x:[145, 235],
-// y:[102, 248] after the iso-style rotation. Labels sit just outside.
-labelEl(186, 256, "0.4 m", "#00abfa", 12, 0);            // width — below front
-labelEl(140, 188, "0.8 m", "#00abfa", 12, 0);            // height — left of front
-labelEl(120, 102, "0.5 m", "#00abfa", 12, 0);            // depth — above the back-top edge
+// Dimension labels. The cuboid is centred at (180, 165) in this stage
+// (left:80, top:50 and width:200, height:230 → centre 180,165).
+labelEl(176, 246, "0.4 m", "#00abfa", 12, 0);            // width — below front
+labelEl(130, 178, "0.8 m", "#00abfa", 12, 0);            // height — left of front
+labelEl(110,  92, "0.5 m", "#00abfa", 12, 0);            // depth — above back-top edge
 
-// ===== Step 1 — Volume in m³ ==========================================
-labelEl(168, 180, "V = 0.16 m³", "#fff067", 14, 1);
+// ===== Step 1 — Volume label inside the diagram =======================
+labelEl(158, 170, "V = 0.16 m³", "#fff067", 14, 1);
 
-// (Steps 2 and 3 only update the equation panel on the right; the diagram
-// stays as the cuboid with its volume label, no extra in-diagram badges.)
+// ===== Equations panel (HTML flow) ====================================
+function buildEquations(parentEl, groups) {
+  groups.forEach(function(g) {
+    var groupEl = document.createElement("div");
+    groupEl.className = "eq-group draw-fade";
+    groupEl.dataset.step = String(g.step);
+    g.lines.forEach(function(line) {
+      var lineEl = document.createElement("div");
+      lineEl.className = "eq-line";
+      lineEl.dataset.kind = line.kind || "main";
+      if (line.tex) {
+        var span = document.createElement("span");
+        lineEl.appendChild(span);
+        tryRenderInto(span, line.tex);
+      } else {
+        lineEl.textContent = line.text;
+      }
+      groupEl.appendChild(lineEl);
+    });
+    parentEl.appendChild(groupEl);
+  });
+}
 
-// ===== Equations panel (right side, x ≈ 360) ===========================
-texEl(360,  20, "\\text{(a) Volume in m}^3",
-      "#7a7875", 13, 1);
-texEl(360,  44, "V = 0.4 \\times 0.5 \\times 0.8",
-      "#f0eeea", 16, 1);
-texEl(360,  76, "= 0.16\\;\\text{m}^3",
-      "#0fee89", 19, 1);
-
-texEl(360, 116, "\\text{(b) Convert to cm}^3",
-      "#7a7875", 13, 2);
-texEl(360, 140, "V = 0.16 \\times 1\\,000\\,000",
-      "#f0eeea", 16, 2);
-texEl(360, 172, "= 160\\,000\\;\\text{cm}^3",
-      "#0fee89", 19, 2);
-
-texEl(360, 220, "\\text{(c) Express in litres}",
-      "#7a7875", 13, 3);
-texEl(360, 244, "V = 0.16 \\times 1000",
-      "#f0eeea", 16, 3);
-texEl(360, 276, "= 160\\;\\text{litres}",
-      "#0fee89", 21, 3);
-texEl(360, 320, "\\text{(M1 for }\\times 1000\\text{; A1 for } 160\\text{)}",
-      "#7a7875", 11, 3);
+buildEquations(document.getElementById("equations"), [
+  { step: 1, lines: [
+    { kind: "tag",  text: "(a) Volume in m³" },
+    { kind: "main", tex:  "V = 0.4 \\times 0.5 \\times 0.8" },
+    { kind: "ans",  tex:  "= 0.16\\;\\text{m}^3" }
+  ]},
+  { step: 2, lines: [
+    { kind: "tag",  text: "(b) Convert to cm³" },
+    { kind: "main", tex:  "V = 0.16 \\times 1\\,000\\,000" },
+    { kind: "ans",  tex:  "= 160\\,000\\;\\text{cm}^3" }
+  ]},
+  { step: 3, lines: [
+    { kind: "tag",  text: "(c) Express in litres" },
+    { kind: "main", tex:  "V = 0.16 \\times 1000" },
+    { kind: "ans",  tex:  "= 160\\;\\text{litres}" },
+    { kind: "note", text: "(M1 for × 1000 ; A1 for 160)" }
+  ]}
+]);
 
 // ===== Step controller =================================================
 var STEPS = [
@@ -212,11 +231,14 @@ var titleEl   = document.getElementById("title");
 var counterEl = document.getElementById("counter");
 var prevBtn   = document.getElementById("prev");
 var nextBtn   = document.getElementById("next");
+var wrap      = document.getElementById("wrap");
+
 function setStep(n) {
   step = Math.max(0, Math.min(maxStep, n));
   titleEl.textContent = STEPS[step];
   counterEl.textContent = step + " / " + maxStep;
-  var els = stage.querySelectorAll("[data-step]");
+  // Show/hide all data-step elements anywhere in the wrap (stage + equations).
+  var els = wrap.querySelectorAll("[data-step]");
   for (var i = 0; i < els.length; i++) {
     var s = parseInt(els[i].dataset.step, 10);
     var el = els[i];
@@ -228,6 +250,7 @@ function setStep(n) {
   }
   prevBtn.disabled = (step === 0);
   nextBtn.disabled = (step === maxStep);
+  reportHeight();
 }
 prevBtn.onclick = function() { setStep(step - 1); };
 nextBtn.onclick = function() { setStep(step + 1); };
@@ -240,7 +263,6 @@ function reportHeight() {
   reportScheduled = true;
   requestAnimationFrame(function() {
     reportScheduled = false;
-    var wrap = document.getElementById("wrap");
     if (!wrap) return;
     var rect = wrap.getBoundingClientRect();
     var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
@@ -253,6 +275,7 @@ function reportHeight() {
 }
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(wrap);
 </script>
 </body>
 </html>

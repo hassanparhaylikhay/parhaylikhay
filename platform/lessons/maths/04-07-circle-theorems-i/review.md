@@ -168,7 +168,7 @@ Find:
 
 (c) angle $BCT$ (the angle between the tangent at $C$ and chord $CB$).
 
-<iframe src="/widgets/circle-comprehensive-step-explorer.html" style="width:100%;max-width:696px;height:480px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+<iframe src="/widgets/circle-comprehensive-step-explorer.html" style="width:100%;max-width:696px;height:780px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
 **Step a: Angle $ABC$.** $AC$ is a diameter, so $\angle ABC$ subtends the diameter at $B$. By the angle-in-semicircle theorem $\angle ABC = \boxed{90°}$ (angle in a semicircle is $90°$). **[A1 for $90°$; B1 for the reason]**
 

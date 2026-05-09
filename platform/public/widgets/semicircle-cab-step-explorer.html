@@ -12,15 +12,34 @@
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 18px 16px; }
   .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
-  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; min-height:22px; gap:10px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
-  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 380; position:relative; }
-  .stage { position:absolute; top:0; left:0; width:660px; height:380px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+
+  .layout {
+    display:grid; grid-template-columns: 1fr; gap:18px; align-items:start;
+  }
+  @media (min-width: 560px) {
+    .layout { grid-template-columns: 360px 1fr; gap:22px; }
+  }
+
+  .stage-outer { width:100%; max-width:360px; margin:0 auto; aspect-ratio: 360 / 260; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:360px; height:260px; transform-origin: top left; overflow:hidden; border-radius:6px; }
   .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
-  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.25s; }
   .draw-fade.drawn { opacity:1; }
-  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; }
+  .eq-group { display:flex; flex-direction:column; gap:4px;
+    opacity:0; transition: opacity 0.4s ease; transition-delay: 0.2s; }
+  .eq-group.drawn { opacity:1; }
+  .eq-line { font-family:'Geist Mono', monospace; line-height:1.5; }
+  .eq-line[data-kind="main"] { font-size:15px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]  { font-size:17px; color:#0fee89; font-weight:700; }
+  .eq-line[data-kind="reason"] { font-size:11px; color:#7a7875; margin-top:2px; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:18px; align-items:center; }
   button.ctl {
     background:#0b1118; border:1px solid #141e2a; color:#7a7875;
     font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
@@ -38,8 +57,11 @@
     <span class="step-title" id="title">step 0: AB diameter, C on circle, ∠CAB = 28°</span>
     <span class="step-num" id="counter">0 / 4</span>
   </div>
-  <div class="stage-outer" id="stage-outer">
-    <div class="stage" id="stage"></div>
+  <div class="layout">
+    <div class="stage-outer" id="stage-outer">
+      <div class="stage" id="stage"></div>
+    </div>
+    <div class="equations" id="equations"></div>
   </div>
   <div class="controls">
     <button class="ctl" id="prev">← prev</button>
@@ -51,14 +73,10 @@
 <script>
 "use strict";
 
-// Geometry — left half x: 0..320 holds the diagram, right half x: 340..660
-// holds equation lines.
-//   Circle O = (160, 130), r = 80.
-//   A = (80, 130), B = (240, 130) on horizontal diameter.
-//   ∠CAB = 28° → arc BC = 56°, so C at math angle 304°:
-//   C = (160 + 80 cos 304°, 130 + 80 sin 304°) ≈ (205, 64).
-//   Tangent at B is vertical (perpendicular to OB).
-//   D placed on the tangent above B at (240, 50).
+// Diagram-only stage 360 × 260. Circle O = (160, 130), r = 80.
+// A = (80, 130), B = (240, 130) on horizontal diameter.
+// ∠CAB = 28° → C at math angle 304° ≈ (205, 64).
+// Tangent at B vertical; D on tangent above B at (240, 50).
 var O = { x: 160, y: 130 };
 var R_d = 80;
 var A = { x: O.x - R_d, y: O.y };
@@ -69,7 +87,7 @@ var D = { x: B.x, y: 50 };
 
 var stage      = document.getElementById("stage");
 var stageOuter = document.getElementById("stage-outer");
-var STAGE_W    = 660, STAGE_H = 380;
+var STAGE_W    = 360, STAGE_H = 260;
 function fitStage() {
   var w = stageOuter.clientWidth;
   if (!w) return;
@@ -133,13 +151,11 @@ function labelEl(x, y, text, color, fontSize, dataStep, opts) {
   n.textContent = text;
   return n;
 }
-function tryRender(target, tex) {
+function tryRenderInto(target, tex) {
   if (typeof katex !== "undefined") {
     try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
     catch (e) { target.textContent = tex; }
-  } else {
-    setTimeout(function() { tryRender(target, tex); }, 50);
-  }
+  } else { setTimeout(function() { tryRenderInto(target, tex); }, 50); }
 }
 function texEl(x, y, tex, color, fontSize, dataStep) {
   var n = makeNode("div", {
@@ -148,7 +164,7 @@ function texEl(x, y, tex, color, fontSize, dataStep) {
     fontSize: (fontSize || 14) + "px",
     color: color, whiteSpace: "nowrap", pointerEvents: "none"
   }, dataStep, "draw-fade");
-  tryRender(n, tex);
+  tryRenderInto(n, tex);
   return n;
 }
 function wedgeEl(cx, cy, size, fromConicDeg, sweepDeg, color, dataStep) {
@@ -206,7 +222,6 @@ dotEl(D.x, D.y, "#fff067", 8, 0);
 labelEl(D.x + 8, D.y - 6, "D", "#fff067", 14, 0);
 
 // ===== Step 1 — ∠ACB = 90° (semicircle) ================================
-// L-marker at C between CA and CB.
 (function() {
   function unitFromTo(p, q) {
     var dx = q.x - p.x, dy = q.y - p.y;
@@ -217,30 +232,59 @@ labelEl(D.x + 8, D.y - 6, "D", "#fff067", 14, 0);
   rightAngleEl(C.x, C.y, caUnit.x, caUnit.y, cbUnit.x, cbUnit.y, 9, "#ff4670", 1);
 })();
 
-// ===== Step 2 — ∠ABC = 62° wedge at B (between BA and BC) ===============
-// BA from B → conic 270°; BC from B → conic 332°. Fill 62° from 270°.
+// ===== Step 2 — ∠ABC = 62° wedge at B ==================================
 wedgeEl(B.x, B.y, 64, 270, 62, "#0fee89", 2);
 texEl(B.x - 38, B.y - 24, "62°", "#0fee89", 13, 2);
 
 // ===== Step 3 — ∠ABD = 90° (tangent ⟂ radius) ==========================
-// L-marker at B between BA (going left along diameter) and BD (going up
-// along tangent).
 rightAngleEl(B.x, B.y, -1, 0, 0, -1, 9, "#ff4670", 3);
 
-// ===== Step 4 — ∠CBD = 28° at B (between BC and BD) =====================
-// BC conic 332°, BD conic 0°. Fill 28° from 332°.
+// ===== Step 4 — ∠CBD = 28° at B ========================================
 wedgeEl(B.x, B.y, 40, 332, 28, "#0fee89", 4);
 texEl(B.x + 6, B.y - 28, "28°", "#0fee89", 13, 4);
 
-// ===== Equation panel (RIGHT side) =====================================
-texEl(360,  70, "\\angle ACB = 90\\degree \\quad \\text{(semicircle)}",
-      "#f0eeea", 17, 1);
-texEl(360, 120, "\\angle ABC = 180\\degree - 90\\degree - 28\\degree = 62\\degree",
-      "#f0eeea", 17, 2);
-texEl(360, 170, "\\angle ABD = 90\\degree \\quad \\text{(tangent} \\perp \\text{radius)}",
-      "#f0eeea", 17, 3);
-texEl(360, 220, "\\angle CBD = 90\\degree - 62\\degree = 28\\degree",
-      "#0fee89", 19, 4);
+// ===== Equations panel (HTML flow) ====================================
+function buildEquations(parentEl, groups) {
+  groups.forEach(function(g) {
+    var groupEl = document.createElement("div");
+    groupEl.className = "eq-group draw-fade";
+    groupEl.dataset.step = String(g.step);
+    g.lines.forEach(function(line) {
+      var lineEl = document.createElement("div");
+      lineEl.className = "eq-line";
+      lineEl.dataset.kind = line.kind || "main";
+      if (line.tex) {
+        var span = document.createElement("span");
+        lineEl.appendChild(span);
+        tryRenderInto(span, line.tex);
+      } else {
+        lineEl.textContent = line.text;
+      }
+      groupEl.appendChild(lineEl);
+    });
+    parentEl.appendChild(groupEl);
+  });
+}
+
+buildEquations(document.getElementById("equations"), [
+  { step: 1, lines: [
+    { kind: "ans", tex: "\\angle ACB = 90\\degree" },
+    { kind: "reason", text: "(angle in semicircle)" }
+  ]},
+  { step: 2, lines: [
+    { kind: "main", tex: "\\angle ABC = 180\\degree - 90\\degree - 28\\degree" },
+    { kind: "ans",  tex: "= 62\\degree" },
+    { kind: "reason", text: "(triangle angle sum)" }
+  ]},
+  { step: 3, lines: [
+    { kind: "ans", tex: "\\angle ABD = 90\\degree" },
+    { kind: "reason", text: "(tangent ⟂ radius)" }
+  ]},
+  { step: 4, lines: [
+    { kind: "main", tex: "\\angle CBD = 90\\degree - 62\\degree" },
+    { kind: "ans",  tex: "= 28\\degree" }
+  ]}
+]);
 
 // ===== Step controller =================================================
 var STEPS = [
@@ -255,11 +299,13 @@ var titleEl   = document.getElementById("title");
 var counterEl = document.getElementById("counter");
 var prevBtn   = document.getElementById("prev");
 var nextBtn   = document.getElementById("next");
+var wrap      = document.getElementById("wrap");
+
 function setStep(n) {
   step = Math.max(0, Math.min(maxStep, n));
   titleEl.textContent = STEPS[step];
   counterEl.textContent = step + " / " + maxStep;
-  var els = stage.querySelectorAll("[data-step]");
+  var els = wrap.querySelectorAll("[data-step]");
   for (var i = 0; i < els.length; i++) {
     var s = parseInt(els[i].dataset.step, 10);
     var el = els[i];
@@ -273,6 +319,7 @@ function setStep(n) {
   }
   prevBtn.disabled = (step === 0);
   nextBtn.disabled = (step === maxStep);
+  reportHeight();
 }
 prevBtn.onclick = function() { setStep(step - 1); };
 nextBtn.onclick = function() { setStep(step + 1); };
@@ -285,7 +332,6 @@ function reportHeight() {
   reportScheduled = true;
   requestAnimationFrame(function() {
     reportScheduled = false;
-    var wrap = document.getElementById("wrap");
     if (!wrap) return;
     var rect = wrap.getBoundingClientRect();
     var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
@@ -298,6 +344,7 @@ function reportHeight() {
 }
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(wrap);
 </script>
 </body>
 </html>

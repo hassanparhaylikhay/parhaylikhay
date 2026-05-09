@@ -12,16 +12,37 @@
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 18px 16px; }
   .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
-  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; min-height:22px; gap:10px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; min-height:22px; gap:10px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
-  .stage-outer { width:100%; max-width:660px; margin:0 auto; aspect-ratio: 660 / 360; position:relative; }
-  .stage { position:absolute; top:0; left:0; width:660px; height:360px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+
+  .layout {
+    display:grid; grid-template-columns: 1fr; gap:18px; align-items:start;
+  }
+  @media (min-width: 560px) {
+    .layout { grid-template-columns: 360px 1fr; gap:22px; }
+  }
+
+  .stage-outer { width:100%; max-width:360px; margin:0 auto; aspect-ratio: 360 / 240; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:360px; height:240px; transform-origin: top left; overflow:hidden; border-radius:6px; }
   .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
-  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.35s; }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.25s; }
   .draw-fade.drawn { opacity:1; }
   .swap { transition: opacity 0.4s ease, color 0.4s ease; }
-  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; }
+  .eq-group { display:flex; flex-direction:column; gap:4px;
+    opacity:0; transition: opacity 0.4s ease; transition-delay: 0.2s; }
+  .eq-group.drawn { opacity:1; }
+  .eq-line { font-family:'Geist Mono', monospace; line-height:1.45; }
+  .eq-line[data-kind="tag"]  { font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .eq-line[data-kind="main"] { font-size:15px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]  { font-size:17px; color:#0fee89; font-weight:700; }
+  .eq-line[data-kind="hint"] { font-size:13px; color:#fff067; }
+  .eq-line[data-kind="note"] { font-size:11px; color:#7a7875; margin-top:4px; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:18px; align-items:center; }
   button.ctl {
     background:#0b1118; border:1px solid #141e2a; color:#7a7875;
     font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
@@ -39,8 +60,11 @@
     <span class="step-title" id="title">step 0: 5.2 km, then 1450 m more — find total in km</span>
     <span class="step-num" id="counter">0 / 2</span>
   </div>
-  <div class="stage-outer" id="stage-outer">
-    <div class="stage" id="stage"></div>
+  <div class="layout">
+    <div class="stage-outer" id="stage-outer">
+      <div class="stage" id="stage"></div>
+    </div>
+    <div class="equations" id="equations"></div>
   </div>
   <div class="controls">
     <button class="ctl" id="prev">← prev</button>
@@ -52,17 +76,16 @@
 <script>
 "use strict";
 
-// Diagram lives in the left half (x: 0..320). Right panel x: 360..660.
-// Three points along a horizontal line:
-//   W = (30, 130)  [warehouse]   J = (230, 130) [junction]   C = (290, 130) [customer]
-// Segment 1 length 200 px ↔ 5.2 km;  segment 2 length 60 px ↔ 1.45 km (≈ visual scale).
-var W = { x: 30,  y: 130 };
-var J = { x: 230, y: 130 };
-var C = { x: 290, y: 130 };
+// Diagram-only stage 360 × 240. Three points along a horizontal road:
+//   W = (40, 130) [warehouse], J = (240, 130) [junction], C = (300, 130) [customer]
+// Segment 1 length 200 px ↔ 5.2 km;  segment 2 length 60 px ↔ 1.45 km.
+var W = { x: 40,  y: 130 };
+var J = { x: 240, y: 130 };
+var C = { x: 300, y: 130 };
 
 var stage      = document.getElementById("stage");
 var stageOuter = document.getElementById("stage-outer");
-var STAGE_W    = 660, STAGE_H = 360;
+var STAGE_W    = 360, STAGE_H = 240;
 function fitStage() {
   var w = stageOuter.clientWidth;
   if (!w) return;
@@ -126,91 +149,90 @@ function labelEl(x, y, text, color, fontSize, dataStep, opts) {
   n.textContent = text;
   return n;
 }
-function tryRender(target, tex) {
+function tryRenderInto(target, tex) {
   if (typeof katex !== "undefined") {
     try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
     catch (e) { target.textContent = tex; }
-  } else { setTimeout(function() { tryRender(target, tex); }, 50); }
-}
-function texEl(x, y, tex, color, fontSize, dataStep) {
-  var n = makeNode("div", {
-    position: "absolute",
-    left: x + "px", top: y + "px",
-    fontSize: (fontSize || 14) + "px",
-    color: color, whiteSpace: "nowrap", pointerEvents: "none"
-  }, dataStep, "draw-fade");
-  tryRender(n, tex);
-  return n;
+  } else { setTimeout(function() { tryRenderInto(target, tex); }, 50); }
 }
 
-// ===== Diagram (left half) =============================================
-// Always-on header
-var header = makeNode("div", {
-  position: "absolute", left: "30px", top: "30px",
-  fontFamily: "'Geist Mono', monospace", fontSize: "11px",
-  color: "#7a7875", letterSpacing: "1.6px", textTransform: "uppercase",
+// ===== Diagram =========================================================
+var hdr = makeNode("div", {
+  position: "absolute", left: "20px", top: "22px",
+  fontFamily: "'Geist Mono', monospace", fontSize: "10.5px",
+  color: "#7a7875", letterSpacing: "1.4px", textTransform: "uppercase",
   fontWeight: "600"
 });
-header.textContent = "DELIVERY ROUTE";
+hdr.textContent = "DELIVERY ROUTE";
 
-// Segment 1 (W → J): blue thick line, length 200 px ↔ 5.2 km
+// Segment 1 (W → J): blue
 lineEl(W.x, W.y, J.x, J.y, "#00abfa", 4, false, 0);
-// Segment 2 (J → C): orange, length 60 px ↔ 1.45 km
+// Segment 2 (J → C): orange
 lineEl(J.x, J.y, C.x, C.y, "#ff822c", 4, false, 0);
 
-// Endpoints (always visible)
+// Endpoints
 dotEl(W.x, W.y, "#fff067", 9, 0);
 dotEl(J.x, J.y, "#fff067", 8, 0);
 dotEl(C.x, C.y, "#fff067", 9, 0);
 
-// Endpoint labels
 labelEl(W.x - 4, W.y + 14, "W (warehouse)", "#fff067", 11, 0);
 labelEl(J.x - 4, J.y + 14, "J", "#fff067", 12, 0);
 labelEl(C.x - 4, C.y + 14, "C (customer)", "#fff067", 11, 0);
 
-// Distance labels above the segments. Segment 2 has TWO labels (one for
-// each step) layered on top of each other; we hide one and show the other.
 labelEl((W.x + J.x)/2 - 18, W.y - 22, "5.2 km", "#00abfa", 13, 0);
 
-// Segment 2 label step-0: "1450 m" (orange)
 var lblSeg2A = labelEl((J.x + C.x)/2 - 18, J.y - 22, "1450 m", "#ff822c", 12, 0);
 lblSeg2A.classList.add("swap");
-// Segment 2 label step-1: "1.45 km" (green) — only visible from step 1 onward
 var lblSeg2B = labelEl((J.x + C.x)/2 - 22, J.y - 22, "1.45 km", "#0fee89", 12, 1);
 lblSeg2B.classList.add("swap");
 
-// Conversion arrow flowing from "1450 m" label into "1.45 km" — appears at step 1
-// Drawn as a curved-ish dashed indicator under the segment 2 label.
 labelEl((J.x + C.x)/2 - 22, J.y - 38, "÷ 1000", "#0fee89", 10, 1);
 
-// Total bar (step 2): a green bar above the route from W to C
+// Total bar (step 2)
 lineEl(W.x, W.y - 60, C.x, W.y - 60, "#0fee89", 4, false, 2);
 labelEl((W.x + C.x)/2 - 28, W.y - 80, "6.65 km total", "#0fee89", 12, 2);
 
-// Vertical drop lines from total bar to W and C (step 2)
+// Vertical drop lines (step 2)
 lineEl(W.x, W.y - 60, W.x, W.y - 8, "#0fee89", 1.4, true, 2);
 lineEl(C.x, W.y - 60, C.x, W.y - 8, "#0fee89", 1.4, true, 2);
 
-// Hide step-0 segment2 label when step >= 1 (handled in setStep via swap class).
+// ===== Equations panel (HTML flow) ====================================
+function buildEquations(parentEl, groups) {
+  groups.forEach(function(g) {
+    var groupEl = document.createElement("div");
+    groupEl.className = "eq-group draw-fade";
+    groupEl.dataset.step = String(g.step);
+    g.lines.forEach(function(line) {
+      var lineEl = document.createElement("div");
+      lineEl.className = "eq-line";
+      lineEl.dataset.kind = line.kind || "main";
+      if (line.tex) {
+        var span = document.createElement("span");
+        lineEl.appendChild(span);
+        tryRenderInto(span, line.tex);
+      } else {
+        lineEl.textContent = line.text;
+      }
+      groupEl.appendChild(lineEl);
+    });
+    parentEl.appendChild(groupEl);
+  });
+}
 
-// ===== Equations panel (right side, x ≈ 360) ===========================
-texEl(360,  20, "\\text{(a) Convert } 1450\\;\\text{m to km}",
-      "#7a7875", 13, 1);
-texEl(360,  46, "1\\;\\text{km} = 1000\\;\\text{m}",
-      "#fff067", 16, 1);
-texEl(360,  78, "1450 \\div 1000 = 1.45\\;\\text{km}",
-      "#0fee89", 19, 1);
-texEl(360, 116, "\\text{(M1 for } \\div 1000 \\text{; A1 for } 1.45 \\text{)}",
-      "#7a7875", 11, 1);
-
-texEl(360, 168, "\\text{(b) Total distance}",
-      "#7a7875", 13, 2);
-texEl(360, 192, "5.2\\;\\text{km} + 1.45\\;\\text{km}",
-      "#f0eeea", 16, 2);
-texEl(360, 226, "= 6.65\\;\\text{km}",
-      "#0fee89", 21, 2);
-texEl(360, 268, "\\text{(A1 for } 6.65 \\text{ with km units)}",
-      "#7a7875", 11, 2);
+buildEquations(document.getElementById("equations"), [
+  { step: 1, lines: [
+    { kind: "tag",  text: "(a) Convert 1450 m to km" },
+    { kind: "hint", tex:  "1\\;\\text{km} = 1000\\;\\text{m}" },
+    { kind: "ans",  tex:  "1450 \\div 1000 = 1.45\\;\\text{km}" },
+    { kind: "note", text: "(M1 for ÷ 1000 ; A1 for 1.45)" }
+  ]},
+  { step: 2, lines: [
+    { kind: "tag",  text: "(b) Total distance" },
+    { kind: "main", tex:  "5.2\\;\\text{km} + 1.45\\;\\text{km}" },
+    { kind: "ans",  tex:  "= 6.65\\;\\text{km}" },
+    { kind: "note", text: "(A1 for 6.65 with km units)" }
+  ]}
+]);
 
 // ===== Step controller =================================================
 var STEPS = [
@@ -223,11 +245,13 @@ var titleEl   = document.getElementById("title");
 var counterEl = document.getElementById("counter");
 var prevBtn   = document.getElementById("prev");
 var nextBtn   = document.getElementById("next");
+var wrap      = document.getElementById("wrap");
+
 function setStep(n) {
   step = Math.max(0, Math.min(maxStep, n));
   titleEl.textContent = STEPS[step];
   counterEl.textContent = step + " / " + maxStep;
-  var els = stage.querySelectorAll("[data-step]");
+  var els = wrap.querySelectorAll("[data-step]");
   for (var i = 0; i < els.length; i++) {
     var s = parseInt(els[i].dataset.step, 10);
     var el = els[i];
@@ -239,14 +263,11 @@ function setStep(n) {
       if (el._fullWidth != null) el.style.width = "0px";
     }
   }
-  // hide the step-0 "1450 m" label when step >= 1 (replaced by "1.45 km")
-  if (step >= 1) {
-    lblSeg2A.style.opacity = "0";
-  } else {
-    lblSeg2A.style.opacity = "1";
-  }
+  if (step >= 1) lblSeg2A.style.opacity = "0";
+  else           lblSeg2A.style.opacity = "1";
   prevBtn.disabled = (step === 0);
   nextBtn.disabled = (step === maxStep);
+  reportHeight();
 }
 prevBtn.onclick = function() { setStep(step - 1); };
 nextBtn.onclick = function() { setStep(step + 1); };
@@ -259,7 +280,6 @@ function reportHeight() {
   reportScheduled = true;
   requestAnimationFrame(function() {
     reportScheduled = false;
-    var wrap = document.getElementById("wrap");
     if (!wrap) return;
     var rect = wrap.getBoundingClientRect();
     var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
@@ -272,6 +292,7 @@ function reportHeight() {
 }
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(wrap);
 </script>
 </body>
 </html>
