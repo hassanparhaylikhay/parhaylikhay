@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Trapezium Area Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; min-height:22px; gap:10px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+
+  .layout {
+    display:grid; grid-template-columns: 1fr; gap:18px; align-items:start;
+  }
+  @media (min-width: 560px) {
+    .layout { grid-template-columns: 360px 1fr; gap:22px; }
+  }
+
+  .stage-outer { width:100%; max-width:360px; margin:0 auto; aspect-ratio: 360 / 240; position:relative; }
+  .stage { position:absolute; top:0; left:0; width:360px; height:240px; transform-origin: top left; overflow:hidden; border-radius:6px; }
+  .draw-line { transition: width 0.7s cubic-bezier(0.4, 0.1, 0.4, 1); }
+  .draw-fade { opacity:0; transition: opacity 0.35s ease; transition-delay: 0.25s; }
+  .draw-fade.drawn { opacity:1; }
+
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; }
+  .eq-group { display:flex; flex-direction:column; gap:4px;
+    opacity:0; transition: opacity 0.4s ease; transition-delay: 0.2s; }
+  .eq-group.drawn { opacity:1; }
+  .eq-line { font-family:'Geist Mono', monospace; line-height:1.5; }
+  .eq-line[data-kind="tag"]    { font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .eq-line[data-kind="hint"]   { font-size:13px; color:#fff067; }
+  .eq-line[data-kind="main"]   { font-size:15px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]    { font-size:18px; color:#0fee89; font-weight:700; }
+  .eq-line[data-kind="note"]   { font-size:11px; color:#7a7875; margin-top:4px; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:18px; align-items:center; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">step 0: trapezium with parallel sides 8 cm, 12 cm and height 5 cm</span>
+    <span class="step-num" id="counter">0 / 3</span>
+  </div>
+  <div class="layout">
+    <div class="stage-outer" id="stage-outer">
+      <div class="stage" id="stage"></div>
+    </div>
+    <div class="equations" id="equations"></div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
+  </div>
+  <p class="footer">trapezium area · ½ × (a + b) × perpendicular height</p>
+</div>
+
+<script>
+"use strict";
+
+// Diagram-only stage 360 × 240. Trapezium: bottom (b=12) at y=190, top (a=8)
+// at y=70, top offset 2 cm right. Scale 16 px / cm.
+// Bottom-left  BL = (40, 190)
+// Bottom-right BR = (40 + 192, 190) = (232, 190)
+// Top-left     TL = (40 + 32, 70)   = (72, 70)
+// Top-right    TR = (72 + 128, 70)  = (200, 70)
+var BL = { x: 40,  y: 190 };
+var BR = { x: 232, y: 190 };
+var TL = { x: 72,  y: 70 };
+var TR = { x: 200, y: 70 };
+
+var stage      = document.getElementById("stage");
+var stageOuter = document.getElementById("stage-outer");
+var STAGE_W    = 360, STAGE_H = 240;
+function fitStage() {
+  var w = stageOuter.clientWidth;
+  if (!w) return;
+  stage.style.transform = "scale(" + (w / STAGE_W) + ")";
+}
+fitStage();
+window.addEventListener("resize", fitStage);
+if (window.ResizeObserver) new ResizeObserver(fitStage).observe(stageOuter);
+
+function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
+function makeNode(tag, style, dataStep, cls) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  setStyle(n, style);
+  if (dataStep != null) n.dataset.step = String(dataStep);
+  stage.appendChild(n);
+  return n;
+}
+function lineEl(x1, y1, x2, y2, color, thickness, dashed, dataStep) {
+  var dx = x2 - x1, dy = y2 - y1;
+  var len = Math.sqrt(dx*dx + dy*dy);
+  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  var t = thickness || 2;
+  var s = {
+    position: "absolute",
+    left: x1 + "px", top: y1 + "px",
+    width: "0px", height: t + "px",
+    transformOrigin: "0 50%",
+    transform: "translateY(" + (-t/2) + "px) rotate(" + ang + "deg)"
+  };
+  if (dashed) {
+    s.background = "transparent";
+    s.borderTop = t + "px dashed " + color;
+    s.height = "0px";
+  } else {
+    s.background = color;
+  }
+  var node = makeNode("div", s, dataStep, "draw-line");
+  node._fullWidth = len;
+  return node;
+}
+function dotEl(x, y, color, size, dataStep) {
+  var sz = size || 7;
+  return makeNode("div", {
+    position: "absolute",
+    left: (x - sz/2) + "px", top: (y - sz/2) + "px",
+    width: sz + "px", height: sz + "px",
+    borderRadius: "50%", background: color
+  }, dataStep, "draw-fade");
+}
+function labelEl(x, y, text, color, fontSize, dataStep, opts) {
+  opts = opts || {};
+  var n = makeNode("div", {
+    position: "absolute",
+    left: x + "px", top: y + "px",
+    fontFamily: opts.font || "'Geist Mono', monospace",
+    fontSize: (fontSize || 11) + "px",
+    color: color, fontWeight: opts.weight || "700",
+    whiteSpace: "nowrap", pointerEvents: "none"
+  }, dataStep, "draw-fade");
+  n.textContent = text;
+  return n;
+}
+function tryRenderInto(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else { setTimeout(function() { tryRenderInto(target, tex); }, 50); }
+}
+function rightAngleEl(x, y, dirX1, dirY1, dirX2, dirY2, armLen, color, dataStep) {
+  var p1x = x + dirX1*armLen, p1y = y + dirY1*armLen;
+  var p2x = x + dirX2*armLen, p2y = y + dirY2*armLen;
+  var fx  = p1x + dirX2*armLen, fy = p1y + dirY2*armLen;
+  lineEl(p1x, p1y, fx, fy, color, 1.4, false, dataStep);
+  lineEl(fx, fy, p2x, p2y, color, 1.4, false, dataStep);
+}
+
+// ===== Step 0 — trapezium given =======================================
+// All four sides drawn in light grey; the parallel sides will get
+// highlighted in step 1.
+lineEl(BL.x, BL.y, BR.x, BR.y, "#7a7875", 2, false, 0); // bottom (b)
+lineEl(TL.x, TL.y, TR.x, TR.y, "#7a7875", 2, false, 0); // top    (a)
+lineEl(BL.x, BL.y, TL.x, TL.y, "#7a7875", 2, false, 0); // left slant
+lineEl(TR.x, TR.y, BR.x, BR.y, "#7a7875", 2, false, 0); // right slant
+
+// Vertices
+dotEl(BL.x, BL.y, "#fff067", 7, 0);
+dotEl(BR.x, BR.y, "#fff067", 7, 0);
+dotEl(TL.x, TL.y, "#fff067", 7, 0);
+dotEl(TR.x, TR.y, "#fff067", 7, 0);
+
+// Side length labels (always visible)
+labelEl((BL.x + BR.x)/2 - 22, BR.y + 10, "b = 12 cm", "#7a7875", 12, 0);
+labelEl((TL.x + TR.x)/2 - 18, TL.y - 22,  "a = 8 cm",  "#7a7875", 12, 0);
+
+// ===== Step 1 — highlight the parallel sides ===========================
+// Re-draw the two parallel sides in blue on top.
+lineEl(BL.x, BL.y, BR.x, BR.y, "#00abfa", 2.5, false, 1);
+lineEl(TL.x, TL.y, TR.x, TR.y, "#00abfa", 2.5, false, 1);
+
+// ===== Step 2 — perpendicular height ===================================
+// Draw a dashed perpendicular from TL straight down to the bottom side.
+lineEl(TL.x, TL.y, TL.x, BL.y, "#ff4670", 1.6, true, 2);
+labelEl(TL.x + 6, (TL.y + BL.y)/2 - 4, "h = 5 cm", "#ff4670", 12, 2);
+// L-marker at the foot
+rightAngleEl(TL.x, BL.y, 1, 0, 0, -1, 8, "#ff4670", 2);
+
+// ===== Equations panel ================================================
+function buildEquations(parentEl, groups) {
+  groups.forEach(function(g) {
+    var groupEl = document.createElement("div");
+    groupEl.className = "eq-group draw-fade";
+    groupEl.dataset.step = String(g.step);
+    g.lines.forEach(function(line) {
+      var lineEl = document.createElement("div");
+      lineEl.className = "eq-line";
+      lineEl.dataset.kind = line.kind || "main";
+      if (line.tex) {
+        var span = document.createElement("span");
+        lineEl.appendChild(span);
+        tryRenderInto(span, line.tex);
+      } else {
+        lineEl.textContent = line.text;
+      }
+      groupEl.appendChild(lineEl);
+    });
+    parentEl.appendChild(groupEl);
+  });
+}
+
+buildEquations(document.getElementById("equations"), [
+  { step: 1, lines: [
+    { kind: "tag",  text: "spot the parallel sides" },
+    { kind: "main", tex:  "a = 8\\;\\text{cm},\\quad b = 12\\;\\text{cm}" }
+  ]},
+  { step: 2, lines: [
+    { kind: "tag",  text: "drop the perpendicular height" },
+    { kind: "main", tex:  "h = 5\\;\\text{cm}" },
+    { kind: "note", text: "h is the perpendicular distance between the two parallel sides — not a slant" }
+  ]},
+  { step: 3, lines: [
+    { kind: "hint", tex:  "A = \\tfrac{1}{2}(a + b) \\times h" },
+    { kind: "main", tex:  "A = \\tfrac{1}{2}(8 + 12) \\times 5" },
+    { kind: "ans",  tex:  "A = 50\\;\\text{cm}^2" },
+    { kind: "note", text: "(M1 for the formula; A1 for 50 with cm² units)" }
+  ]}
+]);
+
+// ===== Step controller =================================================
+var STEPS = [
+  "step 0: trapezium with parallel sides 8 cm, 12 cm and height 5 cm",
+  "step 1: identify the parallel sides a and b",
+  "step 2: drop the perpendicular height h",
+  "step 3: A = ½(a + b) × h = 50 cm²"
+];
+var step = 0, maxStep = STEPS.length - 1;
+var titleEl   = document.getElementById("title");
+var counterEl = document.getElementById("counter");
+var prevBtn   = document.getElementById("prev");
+var nextBtn   = document.getElementById("next");
+var wrap      = document.getElementById("wrap");
+
+function setStep(n) {
+  step = Math.max(0, Math.min(maxStep, n));
+  titleEl.textContent = STEPS[step];
+  counterEl.textContent = step + " / " + maxStep;
+  var els = wrap.querySelectorAll("[data-step]");
+  for (var i = 0; i < els.length; i++) {
+    var s = parseInt(els[i].dataset.step, 10);
+    var el = els[i];
+    if (s <= step) {
+      el.classList.add("drawn");
+      if (el._fullWidth != null) el.style.width = el._fullWidth + "px";
+    } else {
+      el.classList.remove("drawn");
+      if (el._fullWidth != null) el.style.width = "0px";
+    }
+  }
+  prevBtn.disabled = (step === 0);
+  nextBtn.disabled = (step === maxStep);
+  reportHeight();
+}
+prevBtn.onclick = function() { setStep(step - 1); };
+nextBtn.onclick = function() { setStep(step + 1); };
+setStep(0);
+
+// ===== Height reporter =================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(wrap);
+</script>
+</body>
+</html>

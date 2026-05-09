@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Shape Area &amp; Perimeter Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  body { padding:14px 18px 16px; overflow-x:hidden; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:22px 24px 20px; }
+
+  .head {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:10px; margin-bottom:8px;
+  }
+  .title {
+    font-family:'Geist Mono',monospace; font-size:11px;
+    letter-spacing:1.6px; text-transform:uppercase; color:#fff067; font-weight:600;
+  }
+  .counter { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+
+  .stage-wrap { display:flex; justify-content:center; padding:8px 0 0; }
+  svg { display:block; max-width:100%; height:auto; }
+  .shape-fill { fill:rgba(0,171,250,0.10); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
+  .side-lbl { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; fill:#00abfa; }
+  .perp-height { stroke:#ff4670; stroke-width:1.4; stroke-dasharray:4 3; }
+  .perp-label { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; fill:#ff4670; }
+  .l-marker { stroke:#ff4670; stroke-width:1.2; fill:none; }
+  .vertex { fill:#fff067; }
+
+  .metrics {
+    display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:18px;
+  }
+  .metric {
+    background:#07090d; border:1px solid #141e2a; border-radius:8px;
+    padding:12px 14px;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .metric .lbl {
+    font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875;
+    letter-spacing:1.4px; text-transform:uppercase;
+  }
+  .metric .v {
+    font-family:'Geist Mono',monospace; font-size:22px; font-weight:600;
+    color:#fff067; letter-spacing:-0.4px;
+  }
+  .metric .v .unit {
+    font-size:13px; color:#7a7875; font-weight:500; margin-left:2px;
+  }
+  .metric .formula {
+    font-family:'Geist Mono',monospace; font-size:11px; color:#3a4a5a;
+    margin-top:2px;
+  }
+
+  .sliders { display:flex; flex-direction:column; gap:8px; margin-top:16px; }
+  .slider-row { display:grid; grid-template-columns: 90px 1fr 50px; gap:12px; align-items:center; }
+  .slider-row .name {
+    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
+    letter-spacing:0.4px;
+  }
+  .slider-row input[type=range] {
+    appearance:none; -webkit-appearance:none;
+    width:100%; height:3px; background:#141e2a; border-radius:2px; outline:none;
+  }
+  .slider-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:13px; height:13px; border-radius:50%;
+    background:#00abfa; cursor:pointer; border:0;
+  }
+  .slider-row input[type=range]::-moz-range-thumb {
+    width:13px; height:13px; border-radius:50%; background:#00abfa; cursor:pointer; border:0;
+  }
+  .slider-row .v {
+    text-align:right;
+    font-family:'Geist Mono',monospace; font-size:13px; font-weight:600; color:#f0eeea;
+  }
+
+  .footer {
+    margin-top:14px; font-family:'Geist Mono',monospace; font-size:10px;
+    color:#3a4a5a; text-align:center; letter-spacing:0.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="title" id="title">RECTANGLE</span>
+    <span class="counter" id="counter"></span>
+  </div>
+
+  <div class="stage-wrap">
+    <svg id="svg" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <g id="shape"></g>
+      <g id="overlays"></g>
+    </svg>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <span class="lbl">Area</span>
+      <span class="v"><span id="areaVal">—</span><span class="unit">cm²</span></span>
+      <span class="formula" id="areaFormula"></span>
+    </div>
+    <div class="metric">
+      <span class="lbl">Perimeter</span>
+      <span class="v"><span id="perimeterVal">—</span><span class="unit">cm</span></span>
+      <span class="formula" id="perimeterFormula"></span>
+    </div>
+  </div>
+
+  <div class="sliders" id="sliders"></div>
+
+  <p class="footer" id="footer">drag the sliders · the area and perimeter update live</p>
+</div>
+
+<script>
+"use strict";
+
+var SVG_W = 480, SVG_H = 320;
+var SVG_CX = SVG_W / 2, SVG_CY = SVG_H / 2;
+var SCALE = 22;  // px per cm
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+
+function fmtNum(n) {
+  if (!isFinite(n)) return "—";
+  var v = Math.round(n * 100) / 100;
+  if (v === 0) return "0";
+  return parseFloat(v.toFixed(2)).toString();
+}
+
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+// ===== Shape definitions ===============================================
+var SHAPES = {
+  rectangle: {
+    title: "RECTANGLE",
+    sliders: [
+      { key: "l", label: "length l",   min: 1, max: 14, step: 0.5, default: 8 },
+      { key: "w", label: "width w",    min: 1, max: 10, step: 0.5, default: 5 }
+    ],
+    area: function(p) { return p.l * p.w; },
+    perimeter: function(p) { return 2 * (p.l + p.w); },
+    areaFormula: "A = l × w",
+    perimeterFormula: "P = 2(l + w)",
+    geom: function(p) {
+      var lp = p.l * SCALE, wp = p.w * SCALE;
+      var x0 = SVG_CX - lp / 2, y0 = SVG_CY - wp / 2;
+      return {
+        polygon: [
+          [x0, y0], [x0 + lp, y0], [x0 + lp, y0 + wp], [x0, y0 + wp]
+        ],
+        sideLabels: [
+          { x: x0 + lp / 2, y: y0 - 8,         anchor: "middle", text: "l = " + fmtNum(p.l) },
+          { x: x0 + lp + 12, y: y0 + wp / 2 + 4, anchor: "start",  text: "w = " + fmtNum(p.w) }
+        ]
+      };
+    }
+  },
+
+  triangle: {
+    title: "TRIANGLE",
+    sliders: [
+      { key: "b",      label: "base b",    min: 2,  max: 14, step: 0.5, default: 8 },
+      { key: "h",      label: "height h",  min: 1,  max: 10, step: 0.5, default: 6 },
+      { key: "xshift", label: "lean ←/→",  min: -4, max: 4,  step: 0.5, default: 0 }
+    ],
+    area: function(p) { return 0.5 * p.b * p.h; },
+    perimeter: function(p) {
+      var L = Math.sqrt(Math.pow(p.b/2 + p.xshift, 2) + p.h*p.h);
+      var R = Math.sqrt(Math.pow(p.b/2 - p.xshift, 2) + p.h*p.h);
+      return p.b + L + R;
+    },
+    areaFormula: "A = ½ × b × h",
+    perimeterFormula: "P = sum of three sides",
+    geom: function(p) {
+      var bp = p.b * SCALE, hp = p.h * SCALE;
+      var by = SVG_CY + hp / 2;
+      var ty = SVG_CY - hp / 2;
+      var ax = SVG_CX + p.xshift * SCALE;
+      var lx = SVG_CX - bp / 2, rx = SVG_CX + bp / 2;
+      var L = Math.sqrt(Math.pow(p.b/2 + p.xshift, 2) + p.h*p.h);
+      var R = Math.sqrt(Math.pow(p.b/2 - p.xshift, 2) + p.h*p.h);
+      // Apex projects onto base at x = ax. If ax is OUTSIDE [lx, rx],
+      // the perpendicular foot is outside the triangle — height is still
+      // valid but the dashed line will sit outside the silhouette.
+      return {
+        polygon: [[lx, by], [rx, by], [ax, ty]],
+        sideLabels: [
+          { x: (lx + rx) / 2, y: by + 18,                anchor: "middle", text: "b = " + fmtNum(p.b) },
+          { x: (lx + ax) / 2 - 14, y: (by + ty) / 2 + 4, anchor: "end",    text: fmtNum(L) },
+          { x: (rx + ax) / 2 + 14, y: (by + ty) / 2 + 4, anchor: "start",  text: fmtNum(R) }
+        ],
+        perpHeight: {
+          x1: ax, y1: ty, x2: ax, y2: by,
+          label: { x: ax + 8, y: SVG_CY + 4, text: "h = " + fmtNum(p.h) },
+          foot:  { x: ax, y: by, baseDir: { x: 1, y: 0 }, perpDir: { x: 0, y: -1 } }
+        }
+      };
+    }
+  },
+
+  parallelogram: {
+    title: "PARALLELOGRAM",
+    sliders: [
+      { key: "b",     label: "base b",   min: 3, max: 12, step: 0.5, default: 8 },
+      { key: "h",     label: "height h", min: 1, max: 8,  step: 0.5, default: 5 },
+      { key: "slant", label: "slant",    min: -4, max: 4, step: 0.5, default: 2.5 }
+    ],
+    area: function(p) { return p.b * p.h; },
+    perimeter: function(p) {
+      var s = Math.sqrt(p.slant * p.slant + p.h * p.h);
+      return 2 * (p.b + s);
+    },
+    areaFormula: "A = b × h",
+    perimeterFormula: "P = 2(b + slant side)",
+    geom: function(p) {
+      var bp = p.b * SCALE, hp = p.h * SCALE, sp = p.slant * SCALE;
+      var by = SVG_CY + hp / 2, ty = SVG_CY - hp / 2;
+      var x0 = SVG_CX - bp / 2 - sp / 2;
+      // Bottom-left, bottom-right, top-right, top-left
+      var pts = [
+        [x0, by],
+        [x0 + bp, by],
+        [x0 + bp + sp, ty],
+        [x0 + sp, ty]
+      ];
+      var s = Math.sqrt(p.slant * p.slant + p.h * p.h);
+      // Perpendicular height drawn from top-left vertex straight down.
+      var topLeft = pts[3];
+      var footX = topLeft[0];
+      // The foot lands on the bottom side IF x0 ≤ footX ≤ x0+bp.
+      // Show with dashed line + L-marker.
+      return {
+        polygon: pts,
+        sideLabels: [
+          { x: x0 + bp / 2, y: by + 18,                              anchor: "middle", text: "b = " + fmtNum(p.b) },
+          { x: x0 + bp + sp / 2 + (p.slant >= 0 ? 14 : -14), y: SVG_CY + 4, anchor: p.slant >= 0 ? "start" : "end", text: fmtNum(s) }
+        ],
+        perpHeight: {
+          x1: footX, y1: ty,
+          x2: footX, y2: by,
+          label: { x: footX + (p.slant >= 0 ? -16 : 8), y: SVG_CY + 4, anchor: p.slant >= 0 ? "end" : "start", text: "h = " + fmtNum(p.h) },
+          foot:  { x: footX, y: by, baseDir: { x: 1, y: 0 }, perpDir: { x: 0, y: -1 } }
+        }
+      };
+    }
+  },
+
+  trapezium: {
+    title: "TRAPEZIUM",
+    sliders: [
+      { key: "a",   label: "top a",     min: 1, max: 10, step: 0.5, default: 4 },
+      { key: "b",   label: "bottom b",  min: 3, max: 14, step: 0.5, default: 9 },
+      { key: "h",   label: "height h",  min: 1, max: 8,  step: 0.5, default: 5 },
+      { key: "off", label: "top offset", min: -3, max: 5, step: 0.5, default: 1 }
+    ],
+    area: function(p) { return 0.5 * (p.a + p.b) * p.h; },
+    perimeter: function(p) {
+      var leftS  = Math.sqrt(p.off * p.off + p.h * p.h);
+      var rightS = Math.sqrt(Math.pow(p.b - p.off - p.a, 2) + p.h * p.h);
+      return p.a + p.b + leftS + rightS;
+    },
+    areaFormula: "A = ½ (a + b) × h",
+    perimeterFormula: "P = a + b + two slants",
+    geom: function(p) {
+      var ap = p.a * SCALE, bp = p.b * SCALE, hp = p.h * SCALE, op = p.off * SCALE;
+      var by = SVG_CY + hp / 2, ty = SVG_CY - hp / 2;
+      var x0 = SVG_CX - bp / 2;
+      var pts = [
+        [x0, by],
+        [x0 + bp, by],
+        [x0 + op + ap, ty],
+        [x0 + op, ty]
+      ];
+      var leftS  = Math.sqrt(p.off * p.off + p.h * p.h);
+      var rightS = Math.sqrt(Math.pow(p.b - p.off - p.a, 2) + p.h * p.h);
+      return {
+        polygon: pts,
+        sideLabels: [
+          { x: x0 + bp / 2, y: by + 18,                  anchor: "middle", text: "b = " + fmtNum(p.b) },
+          { x: x0 + op + ap / 2, y: ty - 8,              anchor: "middle", text: "a = " + fmtNum(p.a) }
+        ],
+        perpHeight: {
+          x1: x0 + op, y1: ty,
+          x2: x0 + op, y2: by,
+          label: { x: x0 + op + 8, y: SVG_CY + 4, anchor: "start", text: "h = " + fmtNum(p.h) },
+          foot:  { x: x0 + op, y: by, baseDir: { x: 1, y: 0 }, perpDir: { x: 0, y: -1 } }
+        }
+      };
+    }
+  }
+};
+
+// ===== State ===========================================================
+var qs = new URLSearchParams(location.search);
+var shapeKey = qs.get("shape");
+if (!shapeKey || !SHAPES[shapeKey]) shapeKey = "rectangle";
+
+var state = { params: {} };
+SHAPES[shapeKey].sliders.forEach(function(s) { state.params[s.key] = s.default; });
+
+// ===== Render ==========================================================
+var titleEl = document.getElementById("title");
+var counterEl = document.getElementById("counter");
+var areaValEl = document.getElementById("areaVal");
+var areaFormulaEl = document.getElementById("areaFormula");
+var perimValEl = document.getElementById("perimeterVal");
+var perimFormulaEl = document.getElementById("perimeterFormula");
+var shapeG = document.getElementById("shape");
+var overlaysG = document.getElementById("overlays");
+
+function render() {
+  var shape = SHAPES[shapeKey];
+  var p = state.params;
+
+  titleEl.textContent = shape.title;
+  var area = shape.area(p);
+  var perim = shape.perimeter(p);
+  areaValEl.textContent = fmtNum(area);
+  perimValEl.textContent = fmtNum(perim);
+  areaFormulaEl.textContent = shape.areaFormula;
+  perimFormulaEl.textContent = shape.perimeterFormula;
+  counterEl.textContent = "A = " + fmtNum(area) + " cm²  ·  P = " + fmtNum(perim) + " cm";
+
+  shapeG.innerHTML = "";
+  overlaysG.innerHTML = "";
+
+  var g = shape.geom(p);
+  var pointsStr = g.polygon.map(function(pt) {
+    return pt[0].toFixed(1) + "," + pt[1].toFixed(1);
+  }).join(" ");
+  shapeG.appendChild(svgEl("polygon", { "class": "shape-fill", points: pointsStr }));
+
+  // Vertex dots
+  g.polygon.forEach(function(pt) {
+    overlaysG.appendChild(svgEl("circle", {
+      "class": "vertex", cx: pt[0].toFixed(1), cy: pt[1].toFixed(1), r: 3
+    }));
+  });
+
+  // Side labels
+  g.sideLabels.forEach(function(lbl) {
+    var t = svgEl("text", {
+      "class": "side-lbl", x: lbl.x, y: lbl.y, "text-anchor": lbl.anchor || "middle"
+    });
+    t.textContent = lbl.text;
+    overlaysG.appendChild(t);
+  });
+
+  // Perpendicular height line + L-marker + label
+  if (g.perpHeight) {
+    var ph = g.perpHeight;
+    overlaysG.appendChild(svgEl("line", {
+      "class": "perp-height", x1: ph.x1, y1: ph.y1, x2: ph.x2, y2: ph.y2
+    }));
+    if (ph.foot) {
+      var foot = ph.foot, sz = 8;
+      var p1x = foot.x + foot.baseDir.x * sz, p1y = foot.y + foot.baseDir.y * sz;
+      var fx  = foot.x + foot.baseDir.x * sz + foot.perpDir.x * sz;
+      var fy  = foot.y + foot.baseDir.y * sz + foot.perpDir.y * sz;
+      var p2x = foot.x + foot.perpDir.x * sz, p2y = foot.y + foot.perpDir.y * sz;
+      overlaysG.appendChild(svgEl("polyline", {
+        "class": "l-marker",
+        points: p1x + "," + p1y + " " + fx + "," + fy + " " + p2x + "," + p2y
+      }));
+    }
+    if (ph.label) {
+      var hl = svgEl("text", {
+        "class": "perp-label", x: ph.label.x, y: ph.label.y,
+        "text-anchor": ph.label.anchor || "start"
+      });
+      hl.textContent = ph.label.text;
+      overlaysG.appendChild(hl);
+    }
+  }
+}
+
+// ===== Build sliders ===================================================
+function buildSliders() {
+  var slidersEl = document.getElementById("sliders");
+  slidersEl.innerHTML = "";
+  SHAPES[shapeKey].sliders.forEach(function(s) {
+    var row = document.createElement("div");
+    row.className = "slider-row";
+    var name = document.createElement("span");
+    name.className = "name"; name.textContent = s.label;
+    var slider = document.createElement("input");
+    slider.type = "range"; slider.min = s.min; slider.max = s.max; slider.step = s.step;
+    slider.value = state.params[s.key];
+    var val = document.createElement("span");
+    val.className = "v"; val.textContent = fmtNum(state.params[s.key]);
+    slider.addEventListener("input", function() {
+      state.params[s.key] = parseFloat(slider.value);
+      val.textContent = fmtNum(state.params[s.key]);
+      render();
+    });
+    row.appendChild(name); row.appendChild(slider); row.appendChild(val);
+    slidersEl.appendChild(row);
+  });
+}
+
+buildSliders();
+render();
+
+// ===== Height reporter ==================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>
