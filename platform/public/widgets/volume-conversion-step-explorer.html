@@ -30,27 +30,43 @@
   button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 
-  /* cuboid pieces (absolute-positioned divs inside .stage) */
-  .face-front {
-    position:absolute; left:50px; top:80px; width:60px; height:120px;
-    background: rgba(0,171,250,0.14);
-    border: 1.5px solid #00abfa;
+  /* CSS-3D cuboid. The .cuboid-stage carries the perspective; .cuboid is
+     a zero-size point at its centre with preserve-3d. Each face is sized
+     and positioned relative to that centre, then translated outward in
+     its own local Z. W = 60 (0.4 m), H = 120 (0.8 m), D = 75 (0.5 m). */
+  .cuboid-stage {
+    position:absolute; left:90px; top:60px;
+    width:200px; height:230px;
+    perspective:700px; perspective-origin:50% 35%;
   }
-  .face-top {
-    position:absolute; left:50px; top:43px; width:125px; height:37px;
-    background: rgba(0,171,250,0.05);
-    border-top: 1.5px solid #00abfa;
-    border-right: 1.5px solid #00abfa;
-    clip-path: polygon(0% 100%, 48% 100%, 100% 0%, 52% 0%);
+  .cuboid {
+    position:absolute; left:50%; top:50%;
+    width:0; height:0;
+    transform-style:preserve-3d;
+    transform: rotateX(-22deg) rotateY(-30deg);
+  }
+  .face {
+    position:absolute;
+    border:1.5px solid #00abfa;
+  }
+  .face-front {
+    width:60px; height:120px;
+    left:-30px; top:-60px;
+    background:rgba(0,171,250,0.14);
+    transform: translateZ(37.5px);
   }
   .face-right {
-    position:absolute; left:110px; top:43px; width:65px; height:157px;
-    background: rgba(0,171,250,0.20);
-    border-right: 1.5px solid #00abfa;
-    clip-path: polygon(0% 23.6%, 100% 0%, 100% 76.4%, 0% 100%);
+    width:75px; height:120px;
+    left:-37.5px; top:-60px;
+    background:rgba(0,171,250,0.22);
+    transform: rotateY(90deg) translateZ(30px);
   }
-  /* edges drawn explicitly via 1.5 px divs for crispness */
-  .edge { position:absolute; background:#00abfa; pointer-events:none; }
+  .face-top {
+    width:60px; height:75px;
+    left:-30px; top:-37.5px;
+    background:rgba(0,171,250,0.06);
+    transform: rotateX(90deg) translateZ(60px);
+  }
 </style>
 </head>
 <body>
@@ -132,47 +148,30 @@ var hdr = makeNode("div", {
 });
 hdr.textContent = "WATER TANK (0.4 m × 0.5 m × 0.8 m)";
 
-// ===== Step 0 — cuboid (always visible) ================================
-// Cuboid placed at front-top-left = (50, 80), front face 60 × 120,
-// depth offset (+65, -37). All faces drawn via clip-path divs.
-makeNode("div", {}, null, "face-front");
-makeNode("div", {}, null, "face-top");
-makeNode("div", {}, null, "face-right");
+// ===== Step 0 — CSS-3D cuboid (always visible) ========================
+// Three visible faces (front, right, top) inside a perspective stage with
+// preserve-3d, rotated to give the iso-style view. Borders on each face
+// give the wireframe edges.
+var cuboidStage = makeNode("div", {}, null, "cuboid-stage");
+var cuboid = document.createElement("div");
+cuboid.className = "cuboid";
+cuboidStage.appendChild(cuboid);
 
-// Edge polish: draw the 9 visible edges as thin blue lines so the wireframe
-// reads even without face fills. All in a uniform blue.
-function edge(x1, y1, x2, y2) {
-  var dx = x2 - x1, dy = y2 - y1;
-  var len = Math.sqrt(dx*dx + dy*dy);
-  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
-  makeNode("div", {
-    position: "absolute",
-    left: x1 + "px", top: y1 + "px",
-    width: len + "px", height: "1.5px",
-    background: "#00abfa",
-    transformOrigin: "0 50%",
-    transform: "translateY(-0.75px) rotate(" + ang + "deg)"
-  });
-}
-// Front face: (50, 80) (110, 80) (110, 200) (50, 200)
-edge(50, 80, 110, 80); edge(110, 80, 110, 200); edge(50, 200, 110, 200); edge(50, 80, 50, 200);
-// Back-top: (115, 43) (175, 43)
-edge(115, 43, 175, 43);
-// Diagonals from front-top corners to back-top corners
-edge(50, 80, 115, 43);   // front-top-left → back-top-left
-edge(110, 80, 175, 43);  // front-top-right → back-top-right
-// Back-right vertical: (175, 43) (175, 163)
-edge(175, 43, 175, 163);
-// Diagonal from front-bottom-right to back-bottom-right
-edge(110, 200, 175, 163);
+["face face-front", "face face-right", "face face-top"].forEach(function(cls) {
+  var f = document.createElement("div");
+  f.className = cls;
+  cuboid.appendChild(f);
+});
 
-// Dimension labels (always visible)
-labelEl(70, 207, "0.4 m", "#00abfa", 12, 0);            // width below front
-labelEl(20, 132, "0.8 m", "#00abfa", 12, 0);            // height left of front
-labelEl(140, 30, "0.5 m", "#00abfa", 12, 0);            // depth (top)
+// Dimension labels (always visible). The CSS-3D cuboid is centred near
+// (190, 175) with the projected corners spanning roughly x:[145, 235],
+// y:[102, 248] after the iso-style rotation. Labels sit just outside.
+labelEl(186, 256, "0.4 m", "#00abfa", 12, 0);            // width — below front
+labelEl(140, 188, "0.8 m", "#00abfa", 12, 0);            // height — left of front
+labelEl(120, 102, "0.5 m", "#00abfa", 12, 0);            // depth — above the back-top edge
 
 // ===== Step 1 — Volume in m³ ==========================================
-labelEl(60, 124, "V = 0.16 m³", "#fff067", 14, 1);
+labelEl(168, 180, "V = 0.16 m³", "#fff067", 14, 1);
 
 // (Steps 2 and 3 only update the equation panel on the right; the diagram
 // stays as the cuboid with its volume label, no extra in-diagram badges.)
