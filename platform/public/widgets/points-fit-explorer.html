@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Points & Fit Explorer</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <style>
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
@@ -33,47 +35,33 @@
   .pt-mark line { stroke:#fff067; stroke-width:1.8; stroke-linecap:round; }
   .pt-mark { cursor:pointer; }
   .pt-mark:hover line { stroke:#ff4670; }
-  .fit-curve { fill:none; stroke:#0fee89; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .fit-curve { fill:none; stroke:#ff4670; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
   #clickArea { cursor:crosshair; }
 
-  /* Fit picker */
-  .fit-row {
-    display:flex; gap:6px; flex-wrap:wrap; margin-top:14px;
-    padding:10px 12px; background:#07090d; border:1px solid #141e2a; border-radius:8px;
-    align-items:center;
-  }
-  .fit-row .lbl {
-    font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875;
-    letter-spacing:1px; text-transform:uppercase; margin-right:4px;
-  }
-  .fit-pill {
-    background:transparent; border:1px solid #141e2a; color:#7a7875;
-    font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600;
-    padding:6px 10px; border-radius:14px; cursor:pointer;
-    letter-spacing:0.4px;
-    transition: color 0.12s, border-color 0.12s, background 0.12s;
-  }
-  .fit-pill:hover { color:#0fee89; border-color:#3a4a5a; }
-  .fit-pill.active { color:#0fee89; border-color:#0fee89; background:rgba(15,238,137,0.08); }
-
-  /* Equation readout */
+  /* Equation readout — auto-detected best fit, in KaTeX */
   .eqn-row {
-    margin-top:10px; padding:10px 14px;
-    background:#0a1a14; border:1px solid rgba(15,238,137,0.18); border-radius:6px;
-    display:flex; flex-direction:column; gap:3px; min-height:46px;
+    margin-top:14px; padding:14px 16px;
+    background:rgba(255,70,112,0.06); border:1px solid rgba(255,70,112,0.22); border-radius:8px;
+    display:flex; flex-direction:column; gap:6px; min-height:60px;
     justify-content:center;
   }
+  .eqn-row .label {
+    font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875;
+    letter-spacing:1.4px; text-transform:uppercase;
+  }
   .eqn-row .formula {
-    font-family:'Geist Mono',monospace; font-size:14px; color:#0fee89;
-    font-weight:600; word-break:break-word;
+    font-size:18px; color:#ff4670; font-weight:600; word-break:break-word;
+    line-height:1.3;
+  }
+  .eqn-row .formula.text-only {
+    font-family:'Geist Mono',monospace; font-size:13.5px;
   }
   .eqn-row .stat {
     font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
   }
-  .eqn-row.warn { background:#1a1a0e; border-color:rgba(255,240,103,0.2); }
-  .eqn-row.warn .formula { color:#fff067; }
   .eqn-row.idle { background:#07090d; border-color:#141e2a; }
   .eqn-row.idle .formula { color:#7a7875; }
+  .eqn-row.idle .label { color:#3a4a5a; }
 
   /* Points table */
   .points-section { margin-top:14px; }
@@ -168,19 +156,9 @@
     </svg>
   </div>
 
-  <div class="fit-row" id="fitRow">
-    <span class="lbl">FIT</span>
-    <button class="fit-pill active" data-fit="smooth">smooth</button>
-    <button class="fit-pill" data-fit="linear">linear</button>
-    <button class="fit-pill" data-fit="quadratic">quadratic</button>
-    <button class="fit-pill" data-fit="cubic">cubic</button>
-    <button class="fit-pill" data-fit="exp">exponential</button>
-    <button class="fit-pill" data-fit="recip">reciprocal</button>
-    <button class="fit-pill" data-fit="none">none</button>
-  </div>
-
   <div class="eqn-row idle" id="eqnRow">
-    <div class="formula" id="formula">add some points</div>
+    <div class="label" id="eqnLabel">CURVE THROUGH POINTS</div>
+    <div class="formula text-only" id="formula">add some points</div>
     <div class="stat" id="stat"></div>
   </div>
 
@@ -196,7 +174,7 @@
     </div>
   </div>
 
-  <p class="footer">tap grid · type values · pick a fit · green curve = best fit</p>
+  <p class="footer">tap grid · type values · the curve and equation update live</p>
 </div>
 
 <script>
@@ -493,9 +471,85 @@ function rSquared(points, fn) {
 // ===== State ============================================================
 var STATE = {
   points: [],
-  fit: "smooth",
   nextId: 1
 };
+
+// ===== Auto-detect best fit family =====================================
+// Try linear → quadratic → cubic; pick the simplest with R² ≥ THRESH.
+// If none qualify, also try exponential and reciprocal. Otherwise fall
+// back to a Catmull-Rom spline through the points (no equation).
+var R2_THRESH = 0.985;
+
+function tex_coef_lead(v, varStr) {
+  // Leading term, no implicit + sign; suppress "1" coefficient when
+  // there's a variable.
+  v = Math.round(v * 100) / 100;
+  if (v === 0) return "0";
+  var sign = v < 0 ? "-" : "";
+  var mag = Math.abs(v);
+  if (mag === 1 && varStr) return sign + varStr;
+  return sign + fmtNum(mag) + varStr;
+}
+function tex_coef_signed(v, varStr) {
+  v = Math.round(v * 100) / 100;
+  if (v === 0) return "";
+  var sign = v < 0 ? " - " : " + ";
+  var mag = Math.abs(v);
+  if (mag === 1 && varStr) return sign + varStr;
+  return sign + fmtNum(mag) + varStr;
+}
+
+function texForFit(kind, fit) {
+  var c = fit.coefs;
+  switch (kind) {
+    case "linear":
+      return "y = " + tex_coef_lead(c.m, "x") + tex_coef_signed(c.c, "");
+    case "quadratic":
+      return "y = " + tex_coef_lead(c.a, "x^2") + tex_coef_signed(c.b, "x") + tex_coef_signed(c.c, "");
+    case "cubic":
+      return "y = " + tex_coef_lead(c.a, "x^3") + tex_coef_signed(c.b, "x^2") + tex_coef_signed(c.c, "x") + tex_coef_signed(c.d, "");
+    case "exponential":
+      return "y = " + fmtNum(c.a) + " \\cdot " + fmtNum(c.r) + "^{x}";
+    case "reciprocal":
+      return "y = \\dfrac{" + fmtNum(c.a) + "}{x}" + tex_coef_signed(c.b, "");
+  }
+  return "";
+}
+
+function findBestFit(points) {
+  if (points.length === 0) return { kind: "none", message: "add some points to draw a curve" };
+  if (points.length === 1) return { kind: "none", message: "add at least one more point" };
+
+  function tryFit(name, fit) {
+    if (!fit) return null;
+    var r2 = rSquared(points, fit.fn);
+    return (r2 == null) ? null : { kind: name, fit: fit, r2: r2 };
+  }
+
+  var lin  = tryFit("linear",      fitLinear(points));
+  var quad = points.length >= 3 ? tryFit("quadratic", fitQuadratic(points)) : null;
+  var cub  = points.length >= 4 ? tryFit("cubic",     fitCubic(points))     : null;
+  var exp  = tryFit("exponential", fitExponential(points));
+  var rec  = tryFit("reciprocal",  fitReciprocal(points));
+
+  // Start with the simplest acceptable family and only promote to a
+  // higher-order one if R² genuinely improves. With N=order+1 a polynomial
+  // hits R²=1 for free (overfit) — the IMPROVEMENT guard filters that out.
+  var IMPROVEMENT = 0.01;
+  var best = (lin && lin.r2 >= R2_THRESH) ? lin : null;
+  function promote(c) {
+    if (!c || c.r2 < R2_THRESH) return;
+    if (!best || c.r2 > best.r2 + IMPROVEMENT) best = c;
+  }
+  promote(quad);
+  promote(cub);
+  promote(exp);
+  promote(rec);
+
+  if (best) return best;
+  // No clean family fits → fall back to a smooth spline (no equation).
+  return { kind: "spline" };
+}
 
 // ===== Render ===========================================================
 var fitLayer  = document.getElementById("fitLayer");
@@ -533,67 +587,64 @@ function renderCounter() {
 
 function renderFit() {
   fitLayer.innerHTML = "";
-  if (STATE.fit === "none") {
-    formulaEl.textContent = STATE.points.length === 0 ? "add some points" : "no fit selected";
-    statEl.textContent = "";
-    eqnRow.className = "eqn-row idle";
-    return;
-  }
-  if (STATE.points.length === 0) {
-    formulaEl.textContent = "add some points";
+
+  var best = findBestFit(STATE.points);
+
+  // ---- 0 or 1 point: idle card, no curve ------------------------------
+  if (best.kind === "none") {
+    formulaEl.classList.add("text-only");
+    formulaEl.textContent = best.message;
     statEl.textContent = "";
     eqnRow.className = "eqn-row idle";
     return;
   }
 
-  if (STATE.fit === "smooth") {
+  // ---- spline fallback: no equation, just a smooth visual curve -------
+  if (best.kind === "spline") {
     var d = smoothPath(STATE.points);
-    if (d) {
-      fitLayer.appendChild(svgEl("path", { "class": "fit-curve", d: d }));
-      formulaEl.textContent = "smooth curve through " + STATE.points.length + " point" + (STATE.points.length === 1 ? "" : "s");
-      statEl.textContent = "Catmull-Rom interpolation · use this when the question says \"draw a smooth curve\"";
-      eqnRow.className = "eqn-row";
-    } else {
-      formulaEl.textContent = "need at least 2 points";
-      statEl.textContent = "";
-      eqnRow.className = "eqn-row warn";
-    }
+    if (d) fitLayer.appendChild(svgEl("path", { "class": "fit-curve", d: d }));
+    formulaEl.classList.add("text-only");
+    formulaEl.textContent = "smooth curve through " + STATE.points.length + " points";
+    statEl.textContent = "no clean polynomial / exponential / reciprocal family fits these points";
+    eqnRow.className = "eqn-row";
     return;
   }
 
-  var result = null, minN = 2, hint = "";
-  switch (STATE.fit) {
-    case "linear":    result = fitLinear(STATE.points);     minN = 2; break;
-    case "quadratic": result = fitQuadratic(STATE.points);  minN = 3; break;
-    case "cubic":     result = fitCubic(STATE.points);      minN = 4; break;
-    case "exp":       result = fitExponential(STATE.points); minN = 2; hint = "positive-y "; break;
-    case "recip":     result = fitReciprocal(STATE.points); minN = 2; hint = "non-zero-x "; break;
-  }
-
-  if (!result) {
-    formulaEl.textContent = "need at least " + minN + " " + hint + "point" + (minN === 1 ? "" : "s");
-    statEl.textContent = "";
-    eqnRow.className = "eqn-row warn";
-    return;
-  }
-
-  // Render the fit curve
+  // ---- A fitted family with an equation -------------------------------
+  // Draw the curve
   var pathD = "";
   var prevValid = false;
   var SAMPLES = 720;
   for (var i = 0; i <= SAMPLES; i++) {
     var x = XMIN + (XMAX - XMIN) * i / SAMPLES;
     var y;
-    try { y = result.fn(x); } catch (e) { prevValid = false; continue; }
-    if (!isFinite(y) || y < YMIN - 12 || y > YMAX + 12) { prevValid = false; continue; }
+    try { y = best.fit.fn(x); } catch (e) { prevValid = false; continue; }
+    if (!isFinite(y) || y < YMIN - 50 || y > YMAX + 50) { prevValid = false; continue; }
     pathD += (prevValid ? "L" : "M") + xPx(x).toFixed(1) + " " + yPx(y).toFixed(1) + " ";
     prevValid = true;
   }
   if (pathD) fitLayer.appendChild(svgEl("path", { "class": "fit-curve", d: pathD }));
 
-  formulaEl.textContent = result.eqn;
-  var r2 = rSquared(STATE.points, result.fn);
-  statEl.textContent = r2 != null ? "R² = " + fmtNum(r2) + " · 1.00 = perfect fit" : "";
+  // Render KaTeX into the formula element
+  var tex = texForFit(best.kind, best.fit);
+  formulaEl.classList.remove("text-only");
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, formulaEl, { throwOnError: false, output: "html" }); }
+    catch (e) { formulaEl.textContent = best.fit.eqn; }
+  } else {
+    // KaTeX hasn't loaded yet — try again shortly
+    formulaEl.textContent = best.fit.eqn;
+    setTimeout(function() {
+      if (typeof katex !== "undefined") {
+        try { katex.render(tex, formulaEl, { throwOnError: false, output: "html" }); } catch (e) {}
+      }
+    }, 60);
+  }
+
+  var r2 = best.r2;
+  statEl.textContent =
+    "best fit: " + best.kind +
+    (r2 != null ? "  ·  R² = " + fmtNum(r2) : "");
   eqnRow.className = "eqn-row";
 }
 
@@ -684,16 +735,6 @@ clickArea.addEventListener("click", function(e) {
   // Avoid stacking duplicates
   if (STATE.points.some(function(p) { return p.x === x && p.y === y; })) return;
   addPoint(x, y);
-});
-
-document.getElementById("fitRow").addEventListener("click", function(e) {
-  var btn = e.target.closest(".fit-pill[data-fit]");
-  if (!btn) return;
-  STATE.fit = btn.dataset.fit;
-  document.querySelectorAll(".fit-pill").forEach(function(b) {
-    b.classList.toggle("active", b === btn);
-  });
-  renderFit();
 });
 
 document.getElementById("addBtn").addEventListener("click", function() {
