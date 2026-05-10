@@ -420,14 +420,19 @@ function buildPyramid() {
   s += '<path d="M' + (ax + sBase) + ' ' + cy + ' L' + (ax + sBase + dx) + ' ' + (cy + dy) + ' L' + apex.x + ' ' + apex.y + ' Z" fill="rgba(0,171,250,0.10)" stroke="' + COL.blue + '" stroke-width="1.4"/>';
   // Front-left face
   s += '<path d="M' + ax + ' ' + cy + ' L' + (ax + sBase) + ' ' + cy + ' L' + apex.x + ' ' + apex.y + ' Z" fill="rgba(0,171,250,0.22)" stroke="' + COL.blue + '" stroke-width="1.5"/>';
-  // base front edge
-  s += '<line x1="' + ax + '" y1="' + cy + '" x2="' + (ax + dx) + '" y2="' + (cy + dy) + '" stroke="' + COL.yellow + '" stroke-width="1.3"/>';
+  // Perpendicular height: dashed line from apex straight down to the base
+  // centre. Base centre in oblique projection = average of the four corners.
+  var baseCx = ax + sBase/2 + dx/2;
+  var baseCy = cy + dy/2;
+  s += '<line x1="' + apex.x + '" y1="' + apex.y + '" x2="' + baseCx + '" y2="' + baseCy + '" stroke="' + COL.orange + '" stroke-width="1.2" stroke-dasharray="3 3"/>';
   s += '</svg>';
 
   var svg3dWith = function() {
     var svgEle = mountSVG(s);
     svgKaTeX(svgEle, ax + sBase/2, cy + 11, "s", COL.yellow, "center");
-    svgKaTeX(svgEle, apex.x + 8, (apex.y + cy)/2, "h", COL.blue, "left");
+    // h label: centred just LEFT of the dashed perpendicular line
+    var hMidY = (apex.y + baseCy) / 2;
+    svgKaTeX(svgEle, apex.x - 12, hMidY, "h", COL.orange, "center");
     return svgEle;
   };
 
@@ -485,8 +490,10 @@ function buildCone() {
   var svg3dWith = function() {
     var svgEle = mountSVG(s);
     svgKaTeX(svgEle, cx + r/2, baseY + 11, "r", COL.yellow, "center");
-    svgKaTeX(svgEle, cx - 6, (apexY + baseY)/2, "h", COL.orange, "right");
-    svgKaTeX(svgEle, cx + r*0.65, (apexY + baseY)/2 - 6, "l", COL.pink, "left");
+    // h label: centred just LEFT of the dashed perpendicular line at cx
+    svgKaTeX(svgEle, cx - 12, (apexY + baseY)/2, "h", COL.orange, "center");
+    // l label: clearly to the right of the slant line
+    svgKaTeX(svgEle, cx + r*0.55 + 14, (apexY + baseY)/2, "l", COL.pink, "center");
     return svgEle;
   };
 
@@ -500,14 +507,18 @@ function buildCone() {
   var p2 = { x: ncx + slant * Math.cos(endA   * Math.PI/180), y: ncy - slant * Math.sin(endA   * Math.PI/180) };
   var n = '<svg viewBox="0 0 200 140" width="200" height="140">';
   n += '<path d="M' + ncx + ' ' + ncy + ' L' + p1.x.toFixed(1) + ' ' + p1.y.toFixed(1) + ' A' + slant + ' ' + slant + ' 0 0 1 ' + p2.x.toFixed(1) + ' ' + p2.y.toFixed(1) + ' Z" fill="rgba(0,171,250,0.20)" stroke="' + COL.blue + '" stroke-width="1.5"/>';
-  // base circle below
-  n += '<circle cx="' + ncx + '" cy="' + (ncy + slant + 16) + '" r="14" fill="rgba(255,240,103,0.20)" stroke="' + COL.yellow + '" stroke-width="1.4"/>';
+  // base circle: close to the sector. The sector's bottom-most point is at
+  // (ncx, ncy + slant) when the arc bulges through the bottom, so place the
+  // circle just below that point with a small gap.
+  var circleR = 13;
+  var circleCy = ncy + slant + circleR + 4;
+  n += '<circle cx="' + ncx + '" cy="' + circleCy + '" r="' + circleR + '" fill="rgba(255,240,103,0.20)" stroke="' + COL.yellow + '" stroke-width="1.4"/>';
   n += '</svg>';
 
   var svgNetWith = function() {
     var svgEle = mountSVG(n);
     svgKaTeX(svgEle, ncx, ncy + slant*0.55, "\\pi r l", COL.blue, "center");
-    svgKaTeX(svgEle, ncx, ncy + slant + 16, "\\pi r^{2}", COL.yellow, "center");
+    svgKaTeX(svgEle, ncx, circleCy, "\\pi r^{2}", COL.yellow, "center");
     return svgEle;
   };
 
