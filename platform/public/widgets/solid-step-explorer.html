@@ -567,14 +567,107 @@ function buildSectorToCone(p) {
   });
   g.appendChild(coneBase);
 
-  // Sector R label along the LEFT slant edge (from apex to pLeft)
-  svgKaTeXLabel(g,
+  // === Arc edge (separate path, just the curve) so it can be highlighted ===
+  var arcEdge = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + pLeft.x.toFixed(2) + " " + pLeft.y.toFixed(2) +
+       " A " + sectorRpx + " " + sectorRpx + " 0 " + large + " 0 " +
+       pRight.x.toFixed(2) + " " + pRight.y.toFixed(2),
+    fill: "none", stroke: COL.pink, "stroke-width": 3, "stroke-linecap": "round"
+  });
+  g.appendChild(arcEdge);
+
+  // === Annotation labels (each rendered as its own SVG group so they can be
+  // shown / fade / highlighted per step independently of the shapes) ===
+  // The naming convention: each label is exposed as a part under "lbl-…"
+  // so the preset can list it in show / fade / highlight.
+
+  function makeLabelGroup(x, y, tex, color, alignment) {
+    var grp = svgEl("g", { "class": "shape-part" });
+    var fo = svgEl("foreignObject", {
+      x: (x - 60), y: (y - 12), width: 120, height: 24,
+      style: "overflow:visible; pointer-events:none"
+    });
+    var div = document.createElement("div");
+    div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+    div.className = "lbl-host";
+    div.style.color = color || "#f0eeea";
+    div.style.width = "100%"; div.style.height = "100%";
+    div.style.display = "flex"; div.style.alignItems = "center";
+    div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+    fo.appendChild(div);
+    grp.appendChild(fo);
+    g.appendChild(grp);
+    tryRender(div, tex);
+    return grp;
+  }
+
+  // R label (sector radius) along the LEFT slant — visible from step 1
+  var lblR = makeLabelGroup(
     (cx + pLeft.x) / 2 - 14, (apexY + pLeft.y) / 2,
     "R = " + p.sectorR, COL.yellow, "right");
-  // θ label inside the sector, near the apex
-  svgKaTeXLabel(g, cx + 14, apexY + 22, p.theta + "°", COL.green, "left");
+  // θ label inside the sector — visible from step 1
+  var lblTheta = makeLabelGroup(cx + 14, apexY + 22,
+    p.theta + "°", COL.green, "left");
 
-  return { sector: sector, coneBody: coneBody, coneBase: coneBase };
+  // Arc length label — sits just BELOW the arc's midpoint. Hidden by default;
+  // shown when the step computes the arc length. The TeX is
+  // \tfrac{θ}{360} × 2πR formatted via fraction for the specific example;
+  // for the canonical (R=8, θ=75) we show the result 10π/3.
+  var arcMidX = cx;                                 // arc is symmetric around x=cx
+  var arcMidY = apexY + sectorRpx + 12;             // a few pixels below the arc apex
+  var arcTex = (p.arcTex || "\\text{arc} = " + arcLengthTex(p.sectorR, p.theta));
+  var lblArc = makeLabelGroup(arcMidX, arcMidY, arcTex, COL.pink, "center");
+  lblArc.classList.add("hidden");
+
+  // Cone base radius label (sits right of the cone's base ellipse)
+  var lblConeR = makeLabelGroup(cx + coneRpx + 14, coneBaseY,
+    "r = " + (p.coneRTex || fmtNum(coneR_cm)), COL.yellow, "left");
+  lblConeR.classList.add("hidden");
+
+  // Cone height label (sits along the central axis at midheight, on the LEFT)
+  var lblConeH = makeLabelGroup(cx - 14, (apexY + coneBaseY) / 2,
+    "h = " + (p.coneHTex || fmtNum(coneH_cm)), COL.orange, "right");
+  lblConeH.classList.add("hidden");
+
+  // Slant-as-cone label: when the cone appears, show that the sector radius
+  // R has become the cone slant l. Sits along the cone's RIGHT slant edge.
+  var lblConeL = makeLabelGroup(
+    (cx + (cx + coneRpx)) / 2 + 12, (apexY + coneBaseY) / 2 - 6,
+    "l = " + p.sectorR, COL.pink, "left");
+  lblConeL.classList.add("hidden");
+
+  return {
+    sector: sector,
+    arcEdge: arcEdge,
+    coneBody: coneBody,
+    coneBase: coneBase,
+    lblR: lblR,
+    lblTheta: lblTheta,
+    lblArc: lblArc,
+    lblConeR: lblConeR,
+    lblConeH: lblConeH,
+    lblConeL: lblConeL
+  };
+}
+
+// Helper: arc length as a TeX string for a generic (R, θ). For the specific
+// example (R=8, θ=75) this returns "10\\pi / 3" rather than the decimal.
+function arcLengthTex(R, theta) {
+  // Compute the rational coefficient of π (in lowest terms if integer-friendly)
+  // arc = (θ / 360) × 2πR = (θ × R / 180) × π
+  // For (R=8, θ=75): 75 × 8 / 180 = 600 / 180 = 10/3.
+  var num = theta * R;
+  var den = 180;
+  var g = gcd(num, den);
+  num /= g; den /= g;
+  if (den === 1) return num + "\\pi";
+  return "\\tfrac{" + num + "\\pi}{" + den + "}";
+}
+function gcd(a, b) {
+  a = Math.abs(Math.round(a)); b = Math.abs(Math.round(b));
+  while (b) { var t = b; b = a % b; a = t; }
+  return a || 1;
 }
 
 // 5.5 review's comprehensive composite: cylinder on top of a hemisphere,
@@ -952,44 +1045,50 @@ var PRESETS = {
   "sector-to-cone": {
     title: "Sector folded into a cone",
     builder: buildSectorToCone,
-    params: { sectorR: 8, theta: 75 },
+    params: {
+      sectorR: 8, theta: 75,
+      coneRTex: "\\tfrac{5}{3}",
+      coneHTex: "\\tfrac{\\sqrt{551}}{3}"
+    },
     footer: "Cambridge Summer 2023 Paper 22, Q8(b)",
     steps: [
       {
-        show: ["sector"],
+        show: ["sector", "lblR", "lblTheta"],
         eqs: [
           { kind: "tag", text: "STEP 1: A SECTOR (RADIUS 8, ANGLE 75°)" },
           { kind: "hint", text: "we'll roll it into a cone — the sector's two straight edges meet" }
         ]
       },
       {
-        show: ["sector"],
-        highlight: ["sector"],
+        show: ["sector", "arcEdge", "lblR", "lblTheta", "lblArc"],
+        highlight: ["arcEdge"],
         eqs: [
           { kind: "tag", text: "STEP 2: ARC LENGTH (BECOMES CONE'S BASE CIRCUMFERENCE)" },
+          { kind: "hint", text: "the pink arc is the part being measured" },
           { kind: "main", tex: "\\text{arc} = \\tfrac{75}{360} \\times 2\\pi(8) = \\tfrac{10\\pi}{3}\\;\\text{cm}" }
         ]
       },
       {
-        show: ["sector", "coneBody", "coneBase"],
-        fade: ["sector"],
-        highlight: ["coneBase"],
+        show: ["sector", "coneBody", "coneBase", "lblR", "lblTheta", "lblConeR"],
+        fade: ["sector", "lblR", "lblTheta"],
+        highlight: ["coneBase", "lblConeR"],
         eqs: [
           { kind: "tag", text: "STEP 3: CONE BASE RADIUS" },
-          { kind: "main", tex: "2\\pi r = \\tfrac{10\\pi}{3} \\Rightarrow r = \\tfrac{5}{3}\\;\\text{cm}" },
-          { kind: "hint", text: "the original sector radius R = 8 becomes the cone slant l = 8" }
+          { kind: "hint", text: "the arc became the base circumference: 2πr = 10π/3" },
+          { kind: "main", tex: "r = \\tfrac{10\\pi/3}{2\\pi} = \\tfrac{5}{3}\\;\\text{cm}" },
+          { kind: "note", text: "the original sector radius R = 8 has become the cone's slant l = 8" }
         ]
       },
       {
-        show: ["coneBody", "coneBase"],
-        highlight: ["coneBody"],
+        show: ["coneBody", "coneBase", "lblConeR", "lblConeH", "lblConeL"],
+        highlight: ["coneBody", "lblConeH"],
         eqs: [
           { kind: "tag", text: "STEP 4: CONE HEIGHT (PYTHAGORAS)" },
           { kind: "main", tex: "h = \\sqrt{l^{2} - r^{2}} = \\sqrt{64 - \\tfrac{25}{9}} = \\tfrac{\\sqrt{551}}{3}" }
         ]
       },
       {
-        show: ["coneBody", "coneBase"],
+        show: ["coneBody", "coneBase", "lblConeR", "lblConeH"],
         highlight: ["coneBody"],
         eqs: [
           { kind: "tag", text: "STEP 5: VOLUME" },
