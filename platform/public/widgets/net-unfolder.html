@@ -324,25 +324,28 @@ function buildCube() {
 function buildCuboid() {
   document.getElementById("title").textContent = "CUBOID";
   document.getElementById("footer").textContent = "3 pairs of rectangles · SA = 2(lw + lh + wh)";
-  var L = 115, W = 90, H = 70;  // length, width, height in px
-  var c = COL.yellow;
-  // Front: lh
-  scene.appendChild(rectFace(L, H, c, "lh"));
-  // Top: lw
+  var L = 115, W = 90, H = 70;
+  // Match the cuboid-explorer's palette: front/back blue, top/bottom pink, left/right orange.
+  var cFB = COL.blue;
+  var cTB = COL.pink;
+  var cLR = COL.orange;
+  // Front: lh (blue)
+  scene.appendChild(rectFace(L, H, cFB, "lh"));
+  // Top: lw (pink)
   var hTop = trackHinge(hinge(scene, -90, "X", 0, -H/2, 0));
-  hTop.appendChild(rectFace(L, W, c, "lw", "bottom"));
-  // Bottom: lw
+  hTop.appendChild(rectFace(L, W, cTB, "lw", "bottom"));
+  // Bottom: lw (pink)
   var hBot = trackHinge(hinge(scene, 90, "X", 0, H/2, 0));
-  hBot.appendChild(rectFace(L, W, c, "lw", "top"));
-  // Left: wh
+  hBot.appendChild(rectFace(L, W, cTB, "lw", "top"));
+  // Left: wh (orange)
   var hLeft = trackHinge(hinge(scene, 90, "Y", -L/2, 0, 0));
-  hLeft.appendChild(rectFace(W, H, c, "wh", "right"));
-  // Right: wh
+  hLeft.appendChild(rectFace(W, H, cLR, "wh", "right"));
+  // Right: wh (orange)
   var hRight = trackHinge(hinge(scene, -90, "Y", L/2, 0, 0));
-  hRight.appendChild(rectFace(W, H, c, "wh", "left"));
-  // Back: lh
+  hRight.appendChild(rectFace(W, H, cLR, "wh", "left"));
+  // Back: lh (blue)
   var hBack = trackHinge(hinge(hRight, -90, "Y", W, 0, 0));
-  hBack.appendChild(rectFace(L, H, c, "lh", "left"));
+  hBack.appendChild(rectFace(L, H, cFB, "lh", "left"));
 }
 
 function buildPrism() {
@@ -362,15 +365,17 @@ function buildTriangularPrism() {
   var scale = Math.min(420 / netWcm, 320 / netHcm);
   var a = aCm * scale, b = bCm * scale, L = Lcm * scale, hyp = hCm * scale;
   document.getElementById("footer").textContent = "2 triangle caps (½bh) + 3 side rectangles";
-  var c = COL.green;
+  // Match the prism-explorer: cross-section caps in blue, side rectangles in orange.
+  var cCap  = COL.blue;
+  var cSide = COL.orange;
   var yOff = (a + hyp) / 2;
 
-  var bottomEl = rectFace(L, b, c, "bL");
+  var bottomEl = rectFace(L, b, cSide, "bL");
   bottomEl.style.top = (-b/2 + yOff) + "px";
   scene.appendChild(bottomEl);
 
   var hSide1 = trackHinge(hinge(scene, -90, "X", 0, -b/2 + yOff, 0));
-  hSide1.appendChild(rectFace(L, a, c, "aL", "bottom"));
+  hSide1.appendChild(rectFace(L, a, cSide, "aL", "bottom"));
 
   var wrapDeg = 180 - Math.acos(a / hyp) * 180 / Math.PI;
   var hSide2 = document.createElement("div");
@@ -379,15 +384,15 @@ function buildTriangularPrism() {
   hSide2.style.transform = "translate3d(0px," + (-a) + "px,0px) " + hSide2.dataset.foldedRotate;
   hSide1.appendChild(hSide2);
   allHinges.push(hSide2);
-  hSide2.appendChild(rectFace(L, hyp, c, "cL", "bottom"));
+  hSide2.appendChild(rectFace(L, hyp, cSide, "cL", "bottom"));
 
-  // Triangle caps with the area formula
+  // Triangle caps with the area formula (cross-section colour)
   var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, yOff, 0));
-  var capL = triFace(a, b, c, "\\tfrac{1}{2}bh", "100% 0%, 100% 100%, 0% 0%", "right");
+  var capL = triFace(a, b, cCap, "\\tfrac{1}{2}bh", "100% 0%, 100% 100%, 0% 0%", "right");
   hCapL.appendChild(capL);
 
   var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, yOff, 0));
-  var capR = triFace(a, b, c, "\\tfrac{1}{2}bh", "0% 0%, 0% 100%, 100% 0%", "left");
+  var capR = triFace(a, b, cCap, "\\tfrac{1}{2}bh", "0% 0%, 0% 100%, 100% 0%", "left");
   hCapR.appendChild(capR);
 }
 
@@ -404,7 +409,9 @@ function buildTrapezoidalPrism() {
   var scale = Math.min(380 / netWcm, 300 / netHcm);
   var a = aCm * scale, b = bCm * scale, h = hCm * scale, L = Lcm * scale, s = sCm * scale;
   document.getElementById("footer").textContent = "2 trapezium caps (½(a+b)h) + 4 side rectangles";
-  var c = COL.green;
+  // Match the prism-explorer: cross-section caps in blue, side rectangles in orange.
+  var cCap  = COL.blue;
+  var cSide = COL.orange;
 
   // Centre the unrolled rectangle stack vertically. Total upward extent from
   // the bottom rectangle's centre = (b/2 + s + a + s + b/2 - b) = s + a + s + b/2.
@@ -414,7 +421,7 @@ function buildTrapezoidalPrism() {
   var bottomCY = (towerH - b) / 2;  // y of the bottom rectangle's centre (positive = below origin)
 
   // Bottom (b-side) rectangle
-  var bottomEl = rectFace(L, b, c, "bL");
+  var bottomEl = rectFace(L, b, cSide, "bL");
   bottomEl.style.top = (-b/2 + bottomCY) + "px";
   scene.appendChild(bottomEl);
 
@@ -430,7 +437,7 @@ function buildTrapezoidalPrism() {
 
   // First slant rectangle (sL): hinged at bottom rect's top edge.
   var hSlant1 = trackHinge(hinge(scene, -wrap1, "X", 0, -b/2 + bottomCY, 0));
-  hSlant1.appendChild(rectFace(L, s, c, "sL", "bottom"));
+  hSlant1.appendChild(rectFace(L, s, cSide, "sL", "bottom"));
 
   // Top rectangle (aL): hinged at slant1's top edge.
   var hTop = document.createElement("div");
@@ -439,7 +446,7 @@ function buildTrapezoidalPrism() {
   hTop.style.transform = "translate3d(0px," + (-s) + "px,0px) " + hTop.dataset.foldedRotate;
   hSlant1.appendChild(hTop);
   allHinges.push(hTop);
-  hTop.appendChild(rectFace(L, a, c, "aL", "bottom"));
+  hTop.appendChild(rectFace(L, a, cSide, "aL", "bottom"));
 
   // Second slant rectangle (sL): hinged at top's top edge.
   var hSlant2 = document.createElement("div");
@@ -448,7 +455,7 @@ function buildTrapezoidalPrism() {
   hSlant2.style.transform = "translate3d(0px," + (-a) + "px,0px) " + hSlant2.dataset.foldedRotate;
   hTop.appendChild(hSlant2);
   allHinges.push(hSlant2);
-  hSlant2.appendChild(rectFace(L, s, c, "sL", "bottom"));
+  hSlant2.appendChild(rectFace(L, s, cSide, "sL", "bottom"));
 
   // Caps: trapezium clipped from an h×b bounding box (width = perpendicular
   // height of the trapezium, height = the b-side). The b-side runs along ONE
@@ -471,12 +478,12 @@ function buildTrapezoidalPrism() {
 
   // LEFT cap: hinges at bottom rect's LEFT short edge.
   var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, bottomCY, 0));
-  var capL = triFace(h, b, c, "\\tfrac{1}{2}(a+b)h", leftCapClip, "right");
+  var capL = triFace(h, b, cCap, "\\tfrac{1}{2}(a+b)h", leftCapClip, "right");
   hCapL.appendChild(capL);
 
   // RIGHT cap: hinges at bottom rect's RIGHT short edge.
   var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, bottomCY, 0));
-  var capR = triFace(h, b, c, "\\tfrac{1}{2}(a+b)h", rightCapClip, "left");
+  var capR = triFace(h, b, cCap, "\\tfrac{1}{2}(a+b)h", rightCapClip, "left");
   hCapR.appendChild(capR);
 }
 
@@ -492,14 +499,12 @@ function buildCylinder() {
   var r = 48;
   var H = 110;
   var circ = 2 * Math.PI * r;
-  var c = COL.pink;
+  // Match the cylinder-explorer: side surface in blue, end circles in pink.
+  var cSide = COL.blue;
+  var cCap  = COL.pink;
 
-  // The curved side is approximated by N slats. Each slat smoothly animates
-  // between its circumferential position (folded state) and a position along
-  // the unrolled flat rectangle (flat state). CSS transitions interpolate the
-  // transform matrix so the slats sweep open from cylinder to flat strip.
   var N = 28;
-  var slatW = (circ / N) + 1;  // small overlap to avoid hairline gaps
+  var slatW = (circ / N) + 1;
   var cylinderSlats = [];
   for (var i = 0; i < N; i++) {
     var theta = (i / N) * 360;
@@ -512,9 +517,9 @@ function buildCylinder() {
       top: (-H / 2) + "px",
       width: slatW + "px",
       height: H + "px",
-      background: fillOf(c),
-      borderLeft: "0.5px solid " + c,
-      borderRight: "0.5px solid " + c,
+      background: fillOf(cSide),
+      borderLeft: "0.5px solid " + cSide,
+      borderRight: "0.5px solid " + cSide,
       transition: "transform 1.4s cubic-bezier(0.4, 0.1, 0.4, 1)"
     });
     // Folded: at angular position theta around cylinder axis (axis = y), facing outward.
@@ -529,9 +534,7 @@ function buildCylinder() {
     cylinderSlats.push(slat);
   }
 
-  // Top circle: animate directly between two states (no hinge wrapper, since
-  // the geometry of capping the cylinder vs sitting above the rectangle isn't
-  // a single rotation about an edge).
+  // Top circle (cap colour)
   var topCircle = document.createElement("div");
   topCircle.className = "face cyl-cap-top";
   setStyle(topCircle, {
@@ -540,15 +543,15 @@ function buildCylinder() {
     top: (-r) + "px",
     width: (2 * r) + "px",
     height: (2 * r) + "px",
-    background: fillOf(c),
-    border: "1.5px solid " + c,
+    background: fillOf(cCap),
+    border: "1.5px solid " + cCap,
     borderRadius: "50%",
     transition: "transform 1.4s cubic-bezier(0.4, 0.1, 0.4, 1)"
   });
   topCircle.dataset.folded3d = "translate3d(0px," + (-H / 2) + "px,0px) rotateX(90deg)";
   topCircle.dataset.flat3d   = "translate3d(0px," + (-H / 2 - r) + "px,0px) rotateX(0deg)";
   topCircle.style.transform = topCircle.dataset.folded3d;
-  topCircle.appendChild(makeKaTeXLabel("\\pi r^{2}", c));
+  topCircle.appendChild(makeKaTeXLabel("\\pi r^{2}", cCap));
   scene.appendChild(topCircle);
 
   var botCircle = document.createElement("div");
@@ -559,26 +562,25 @@ function buildCylinder() {
     top: (-r) + "px",
     width: (2 * r) + "px",
     height: (2 * r) + "px",
-    background: fillOf(c),
-    border: "1.5px solid " + c,
+    background: fillOf(cCap),
+    border: "1.5px solid " + cCap,
     borderRadius: "50%",
     transition: "transform 1.4s cubic-bezier(0.4, 0.1, 0.4, 1)"
   });
   botCircle.dataset.folded3d = "translate3d(0px," + (H / 2) + "px,0px) rotateX(-90deg)";
   botCircle.dataset.flat3d   = "translate3d(0px," + (H / 2 + r) + "px,0px) rotateX(0deg)";
   botCircle.style.transform = botCircle.dataset.folded3d;
-  botCircle.appendChild(makeKaTeXLabel("\\pi r^{2}", c));
+  botCircle.appendChild(makeKaTeXLabel("\\pi r^{2}", cCap));
   scene.appendChild(botCircle);
 
-  // Side label for the curved surface — appears at the centre of the unrolled
-  // rectangle when flat. Its parent is the scene; CSS handles visibility.
+  // Side label for the curved surface (side colour)
   var sideLabel = document.createElement("div");
   sideLabel.className = "face-label";
   sideLabel.style.position = "absolute";
   sideLabel.style.left = "0";
   sideLabel.style.top = "0";
   sideLabel.style.transform = "translate(-50%, -50%)";
-  sideLabel.style.color = c;
+  sideLabel.style.color = cSide;
   tryRenderKaTeX(sideLabel, "2\\pi r h");
   scene.appendChild(sideLabel);
 }
@@ -589,25 +591,27 @@ function buildPyramid() {
   var s = 100;
   var H = 110;
   var slant = Math.sqrt((s/2)*(s/2) + H*H);
-  var c = COL.orange;
+  // Pair with the cone palette since both share the p5 page: base yellow, sides blue.
+  var cBase = COL.yellow;
+  var cSide = COL.blue;
   var foldDeg = 180 - Math.atan2(H, s/2) * 180 / Math.PI;
 
-  // Base square: s²
-  scene.appendChild(rectFace(s, s, c, "s^{2}"));
+  // Base square: s² (yellow)
+  scene.appendChild(rectFace(s, s, cBase, "s^{2}"));
   var triTex = "\\tfrac{1}{2} s l";
 
-  // 4 triangular sides
+  // 4 triangular sides (blue)
   var hN = trackHinge(hinge(scene, -foldDeg, "X", 0, -s/2, 0));
-  hN.appendChild(triFace(s, slant, c, triTex, "50% 0%, 0% 100%, 100% 100%", "bottom"));
+  hN.appendChild(triFace(s, slant, cSide, triTex, "50% 0%, 0% 100%, 100% 100%", "bottom"));
 
   var hS = trackHinge(hinge(scene, foldDeg, "X", 0, s/2, 0));
-  hS.appendChild(triFace(s, slant, c, triTex, "0% 0%, 100% 0%, 50% 100%", "top"));
+  hS.appendChild(triFace(s, slant, cSide, triTex, "0% 0%, 100% 0%, 50% 100%", "top"));
 
   var hW = trackHinge(hinge(scene, foldDeg, "Y", -s/2, 0, 0));
-  hW.appendChild(triFace(slant, s, c, triTex, "0% 50%, 100% 0%, 100% 100%", "right"));
+  hW.appendChild(triFace(slant, s, cSide, triTex, "0% 50%, 100% 0%, 100% 100%", "right"));
 
   var hE = trackHinge(hinge(scene, -foldDeg, "Y", s/2, 0, 0));
-  hE.appendChild(triFace(slant, s, c, triTex, "100% 50%, 0% 0%, 0% 100%", "left"));
+  hE.appendChild(triFace(slant, s, cSide, triTex, "100% 50%, 0% 0%, 0% 100%", "left"));
 }
 
 function buildCone() {
@@ -621,8 +625,11 @@ function buildCone() {
   var scale = Math.min(420 / (2 * slantCm), 320 / (slantCm + 2 * rCm + 10));
   var r = rCm * scale, H = hCm * scale, slant = slantCm * scale;
   document.getElementById("footer").textContent =
-    "1 circular base (r=" + rCm + ") + 1 sector (radius = slant " + Math.round(slantCm) + ")";
-  var c = COL.blue;
+    "1 circular base (πr²) + 1 sector (curved SA = πrl)";
+  // Match the cone-explorer: curved surface in blue, base circle in yellow.
+  var cSide = COL.blue;
+  var cBase = COL.yellow;
+  var c = cSide; // legacy variable used for the slat fills below
 
   // Cone half-angle (between axis and slant edge) — the slat tilt from vertical.
   var alphaCone = Math.atan2(r, H) * 180 / Math.PI;
@@ -675,8 +682,7 @@ function buildCone() {
     scene.appendChild(slat);
   }
 
-  // Base circle: animates between cone base position (xz plane at y=H/2) and flat
-  // net position (below the sector, in xy plane).
+  // Base circle (yellow — matches cone-explorer's base-front)
   var baseCircle = document.createElement("div");
   baseCircle.className = "face cone-base";
   setStyle(baseCircle, {
@@ -686,25 +692,24 @@ function buildCone() {
     width: (2 * r) + "px",
     height: (2 * r) + "px",
     borderRadius: "50%",
-    border: "1.5px solid " + c,
-    background: fillOf(c),
+    border: "1.5px solid " + cBase,
+    background: fillOf(cBase),
     transition: "transform 1.4s cubic-bezier(0.4, 0.1, 0.4, 1)"
   });
   baseCircle.dataset.folded3d = "translate3d(0px," + (H / 2) + "px,0px) rotateX(90deg)";
   baseCircle.dataset.flat3d = "translate3d(0px," + (-yOff + slant + r) + "px,0px) rotateX(0deg)";
   baseCircle.style.transform = baseCircle.dataset.folded3d;
-  baseCircle.appendChild(makeKaTeXLabel("\\pi r^{2}", c));
+  baseCircle.appendChild(makeKaTeXLabel("\\pi r^{2}", cBase));
   scene.appendChild(baseCircle);
 
-  // Sector label (curved surface area = πrl) — appears at the centre of the
-  // unrolled sector when flat. Parent is the scene; CSS controls visibility.
+  // Sector label (blue — matches the curved surface)
   var sectorLabel = document.createElement("div");
   sectorLabel.className = "face-label";
   sectorLabel.style.position = "absolute";
   sectorLabel.style.left = "0";
   sectorLabel.style.top = (-yOff + slant * 0.55) + "px";
   sectorLabel.style.transform = "translate(-50%, -50%)";
-  sectorLabel.style.color = c;
+  sectorLabel.style.color = cSide;
   tryRenderKaTeX(sectorLabel, "\\pi r l");
   scene.appendChild(sectorLabel);
 }
