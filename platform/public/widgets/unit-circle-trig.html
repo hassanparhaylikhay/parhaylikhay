@@ -21,24 +21,7 @@
   .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
   .lbl-host .katex { font-size:1em; }
 
-  .ratios { display:flex; flex-direction:column; gap:6px; padding:12px 6px 6px; border-top:1px solid #141e2a; margin-top:6px; }
-  .ratio-row {
-    display:grid;
-    grid-template-columns: 60px 1fr 90px;
-    align-items:center;
-    gap:10px;
-    font-size:14.5px;
-    line-height:1.2;
-  }
-  .ratio-row .name { font-family:'Geist Mono',monospace; font-weight:700; text-align:right; }
-  .ratio-row.sin .name { color:#ff822c; }
-  .ratio-row.cos .name { color:#00abfa; }
-  .ratio-row.tan .name { color:#fff067; }
-  .ratio-row .formula { font-size:13.5px; color:#c8c6be; }
-  .ratio-row .formula .katex { font-size:1em; }
-  .ratio-row .value { font-family:'Geist Mono',monospace; font-weight:700; font-size:15px; text-align:right; color:#f0eeea; }
-
-  .controls { display:flex; flex-direction:column; gap:8px; padding:12px 4px 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .controls { display:flex; flex-direction:column; gap:8px; padding:14px 4px 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; border-top:1px solid #141e2a; margin-top:6px; }
   .row { display:flex; align-items:center; gap:10px; }
   .row .name { font-weight:600; min-width:60px; color:#f0eeea; }
   .row input[type=range] {
@@ -53,15 +36,6 @@
   }
   .row .val { min-width:46px; text-align:right; color:#f0eeea; font-weight:600; font-size:12.5px; }
 
-  .insight {
-    margin-top:12px; padding:9px 12px;
-    background:rgba(15,238,137,0.06); border:1px solid rgba(15,238,137,0.18); border-radius:6px;
-    font-size:12px; color:#0fee89; line-height:1.5;
-    font-family:'Geist Mono',monospace; letter-spacing:0.2px;
-  }
-
-  .footer { margin-top:10px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
-
   .vertex-handle { cursor:grab; transition: r 0.15s ease; }
   .vertex-handle:active { cursor:grabbing; }
   .vertex-handle:hover { r:11; }
@@ -74,7 +48,7 @@
     <span class="meta">drag the point · or use the slider</span>
   </div>
 
-  <svg id="stage" viewBox="0 0 660 360" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <svg id="stage" viewBox="0 0 660 380" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
     <g id="g-grid"></g>
     <g id="g-wave-static"></g>
     <g id="g-wave-trace"></g>
@@ -83,35 +57,13 @@
     <g id="g-handles"></g>
   </svg>
 
-  <div class="ratios">
-    <div class="ratio-row sin">
-      <span class="name">sin θ</span>
-      <span class="formula">= vertical reach (height of the point)</span>
-      <span class="value" id="v-sin"></span>
-    </div>
-    <div class="ratio-row cos">
-      <span class="name">cos θ</span>
-      <span class="formula">= horizontal reach (foot under the point)</span>
-      <span class="value" id="v-cos"></span>
-    </div>
-    <div class="ratio-row tan">
-      <span class="name">tan θ</span>
-      <span class="formula">= sin θ ÷ cos θ (slope of the radius)</span>
-      <span class="value" id="v-tan"></span>
-    </div>
-  </div>
-
   <div class="controls">
     <div class="row">
       <span class="name">angle θ</span>
-      <input type="range" id="thetaSlider" min="0" max="90" step="0.5" value="35"/>
+      <input type="range" id="thetaSlider" min="0" max="360" step="1" value="35"/>
       <span class="val" id="thetaVal"></span>
     </div>
   </div>
-
-  <div class="insight">on a circle of radius 1, sin θ and cos θ are literally the y- and x-coordinates of the point. that's all they are.</div>
-
-  <p class="footer">the right triangle inside the circle (origin, foot, point) has hyp = 1, opp = sin θ, adj = cos θ — that's why SOH-CAH-TOA works</p>
 </div>
 
 <script>
@@ -168,14 +120,18 @@ function svgKaTeXLabel(parent, x, y, tex, color, alignment, fontSizePx) {
 }
 
 // ===== Geometry =====
-var SVG_W = 660, SVG_H = 360;
-var CX = 150, CY = 180, R = 105;  // circle centre + radius (px)
-
-// Wave panel coordinates (right of the circle)
-var WX = 290, WY = 50, WW = 340, WH = 270;  // panel box
-var WCY = 320;  // y-coord of the y=0 baseline (bottom of panel)
-var WSCALE = 90;  // px per unit on y-axis (so y=1 at 230, y=3 at 50)
-var WMAX_Y = 3;  // clip tan above this
+// CRITICAL: WSCALE === R so the wave panel and the unit circle use the
+// SAME px-per-unit. That makes the dashed connecting line meaningful —
+// the height on the circle equals the height on the wave panel.
+var SVG_W = 660, SVG_H = 380;
+var CX = 110, CY = 190, R = 90;        // circle centre + radius (px)
+// Wave panel — right of the circle, y=0 baseline at WCY, full ±WMAX_Y range
+var WX = 230, WW = 410;                // panel x extent
+var WCY = CY;                          // y=0 baseline ALIGNED with circle centre
+var WSCALE = R;                        // px per unit on y-axis = circle radius (matched scales)
+var WMAX_Y = 2;                        // clip tan beyond this (panel y range = ±2 units)
+var WY = WCY - WMAX_Y * WSCALE;        // top of panel
+var WH = 2 * WMAX_Y * WSCALE;          // panel height
 
 // State
 var params  = { theta: 35 };  // degrees
@@ -190,9 +146,9 @@ var gFig  = document.getElementById("g-figure");
 var gLbl  = document.getElementById("g-labels");
 var gHnd  = document.getElementById("g-handles");
 
-// θ-deg → x in wave panel
-function xWave(thetaDeg) { return WX + (thetaDeg / 90) * WW; }
-// y-value (-WMAX_Y..WMAX_Y) → y in wave panel
+// θ-deg → x in wave panel (0° to 360°)
+function xWave(thetaDeg) { return WX + (thetaDeg / 360) * WW; }
+// y-value → y in wave panel
 function yWave(v) { return WCY - v * WSCALE; }
 
 function renderStaticGrid() {
@@ -206,13 +162,16 @@ function renderStaticGrid() {
     x1: CX, y1: CY - R - 22, x2: CX, y2: CY + R + 22,
     stroke: COL.faint, "stroke-width": 1
   }));
-  svgKaTeXLabel(gGrid, CX + R, CY + 16, "1", COL.grey, "center", 11);
-  svgKaTeXLabel(gGrid, CX - 12, CY - R, "1", COL.grey, "center", 11);
+  // ±1 axis ticks
+  svgKaTeXLabel(gGrid, CX + R, CY + 14, "1",   COL.grey, "center", 10);
+  svgKaTeXLabel(gGrid, CX - R, CY + 14, "-1",  COL.grey, "center", 10);
+  svgKaTeXLabel(gGrid, CX - 14, CY - R, "1",   COL.grey, "center", 10);
+  svgKaTeXLabel(gGrid, CX - 14, CY + R, "-1",  COL.grey, "center", 10);
 
   // Unit circle
   gGrid.appendChild(svgEl("circle", {
     cx: CX, cy: CY, r: R,
-    fill: "rgba(255,240,103,0.04)", stroke: COL.faint, "stroke-width": 1.4
+    fill: "rgba(255,240,103,0.03)", stroke: COL.faint, "stroke-width": 1.4
   }));
 }
 
@@ -222,52 +181,58 @@ function renderStaticWavePanel() {
   // Panel border
   gWaveStatic.appendChild(svgEl("rect", {
     x: WX, y: WY, width: WW, height: WH,
-    fill: "rgba(15,30,46,0.4)", stroke: COL.faint, "stroke-width": 1
+    fill: "rgba(15,30,46,0.35)", stroke: COL.faint, "stroke-width": 1
   }));
 
-  // y=0 baseline
+  // y=0 baseline (centre of panel, aligned with circle's x-axis)
   gWaveStatic.appendChild(svgEl("line", {
     x1: WX, y1: WCY, x2: WX + WW, y2: WCY,
     stroke: COL.faint, "stroke-width": 1
   }));
-  // y=1 dashed reference line
+  // y=±1 dashed reference lines
   gWaveStatic.appendChild(svgEl("line", {
     x1: WX, y1: yWave(1), x2: WX + WW, y2: yWave(1),
-    stroke: COL.faint, "stroke-width": 0.7, "stroke-dasharray": "3 3", opacity: 0.6
+    stroke: COL.faint, "stroke-width": 0.7, "stroke-dasharray": "3 3", opacity: 0.5
   }));
-  // y=2 dashed reference line
   gWaveStatic.appendChild(svgEl("line", {
-    x1: WX, y1: yWave(2), x2: WX + WW, y2: yWave(2),
-    stroke: COL.faint, "stroke-width": 0.6, "stroke-dasharray": "3 3", opacity: 0.4
+    x1: WX, y1: yWave(-1), x2: WX + WW, y2: yWave(-1),
+    stroke: COL.faint, "stroke-width": 0.7, "stroke-dasharray": "3 3", opacity: 0.5
   }));
 
-  // x-axis tick marks at 0, 30, 45, 60, 90
-  [0, 30, 45, 60, 90].forEach(function(deg) {
+  // x-axis tick marks at 0, 90, 180, 270, 360
+  [0, 90, 180, 270, 360].forEach(function(deg) {
     var x = xWave(deg);
     gWaveStatic.appendChild(svgEl("line", {
-      x1: x, y1: WCY - 3, x2: x, y2: WCY + 4,
+      x1: x, y1: WCY - 4, x2: x, y2: WCY + 5,
       stroke: COL.faint, "stroke-width": 1
     }));
     var t = svgEl("text", {
-      x: x, y: WCY + 14, "text-anchor": "middle",
+      x: x, y: WCY + 16, "text-anchor": "middle",
       "font-family": "Geist Mono, monospace", "font-size": "10", fill: COL.grey
     });
     t.textContent = deg + "°";
     gWaveStatic.appendChild(t);
   });
+  // 90°/270° vertical guides where tan asymptotes — extra-faint
+  [90, 270].forEach(function(deg) {
+    var x = xWave(deg);
+    gWaveStatic.appendChild(svgEl("line", {
+      x1: x, y1: WY, x2: x, y2: WY + WH,
+      stroke: COL.faint, "stroke-width": 0.6, "stroke-dasharray": "2 4", opacity: 0.35
+    }));
+  });
 
-  // y-axis labels (1 and 2)
-  svgKaTeXLabel(gWaveStatic, WX - 14, yWave(1), "1", COL.grey, "center", 10);
-  svgKaTeXLabel(gWaveStatic, WX - 14, yWave(2), "2", COL.grey, "center", 10);
+  // y-axis labels (±1)
+  svgKaTeXLabel(gWaveStatic, WX - 12, yWave(1),  "1",  COL.grey, "center", 10);
+  svgKaTeXLabel(gWaveStatic, WX - 14, yWave(-1), "-1", COL.grey, "center", 10);
 
-  // ===== Static (faint) full-range curves =====
-  function buildCurvePath(fn, dashed) {
+  // ===== Static (faint) full-range curves over 0-360° =====
+  function buildCurvePath(fn) {
     var d = "";
-    var first = true;
-    var lastValid = false;
-    var STEPS = 240;
+    var first = true, lastValid = false;
+    var STEPS = 720;  // 0.5° resolution
     for (var i = 0; i <= STEPS; i++) {
-      var deg = (i / STEPS) * 90;
+      var deg = (i / STEPS) * 360;
       var rad = deg * Math.PI / 180;
       var v = fn(rad);
       if (!isFinite(v) || Math.abs(v) > WMAX_Y) {
@@ -282,28 +247,25 @@ function renderStaticWavePanel() {
     return d;
   }
 
-  // sin θ curve (orange, faint)
   gWaveStatic.appendChild(svgEl("path", {
     d: buildCurvePath(Math.sin),
-    fill: "none", stroke: COL.orange, "stroke-width": 1.3, opacity: 0.25
+    fill: "none", stroke: COL.orange, "stroke-width": 1.3, opacity: 0.22
   }));
-  // cos θ curve (blue, faint)
   gWaveStatic.appendChild(svgEl("path", {
     d: buildCurvePath(Math.cos),
-    fill: "none", stroke: COL.blue, "stroke-width": 1.3, opacity: 0.25
+    fill: "none", stroke: COL.blue, "stroke-width": 1.3, opacity: 0.22
   }));
-  // tan θ curve (yellow, faint, clipped at WMAX_Y)
   gWaveStatic.appendChild(svgEl("path", {
     d: buildCurvePath(Math.tan),
-    fill: "none", stroke: COL.yellow, "stroke-width": 1.3, opacity: 0.20
+    fill: "none", stroke: COL.yellow, "stroke-width": 1.3, opacity: 0.18
   }));
 
   // Curve legends in upper-left of panel
-  var legendY = WY + 14;
+  var legendX = WX + 10, legendY0 = WY + 14;
   function legend(label, color, dy) {
     var t = svgEl("text", {
-      x: WX + 8, y: legendY + dy,
-      "font-family": "Geist Mono, monospace", "font-size": "10",
+      x: legendX, y: legendY0 + dy,
+      "font-family": "Geist Mono, monospace", "font-size": "11",
       "font-weight": "700", fill: color
     });
     t.textContent = label;
@@ -325,9 +287,13 @@ function render() {
 
   var theta = display.theta;
   var thetaRad = theta * Math.PI / 180;
-  // Point P on the unit circle (in SVG coords: y inverted)
-  var Px = CX + R * Math.cos(thetaRad);
-  var Py = CY - R * Math.sin(thetaRad);
+  var sinV = Math.sin(thetaRad);
+  var cosV = Math.cos(thetaRad);
+  var tanV = Math.tan(thetaRad);
+
+  // Point P on the unit circle (SVG y inverted)
+  var Px = CX + R * cosV;
+  var Py = CY - R * sinV;
   // Foot of perpendicular from P to x-axis
   var Fx = Px;
   var Fy = CY;
@@ -342,76 +308,70 @@ function render() {
     x1: Fx, y1: Fy, x2: Px, y2: Py,
     stroke: COL.orange, "stroke-width": 5, "stroke-linecap": "round"
   }));
-  // ===== Radius (pink, from origin to P, hypotenuse of the inner triangle) =====
+  // ===== Radius (pink, hypotenuse of the inner right triangle) =====
   gFig.appendChild(svgEl("line", {
     x1: CX, y1: CY, x2: Px, y2: Py,
     stroke: COL.pink, "stroke-width": 3, "stroke-linecap": "round"
   }));
 
-  // Right-angle marker at the foot
-  if (theta > 4 && theta < 86) {
-    var ra = 10;
-    var dx = (Px > CX) ? -1 : 1;
+  // Right-angle marker at the foot, quadrant-aware (L points INTO the triangle)
+  // Direction from foot toward origin (along cos segment) and toward P (along sin segment)
+  var raLen = 9;
+  // Need to nudge the L corner inward by raLen along both directions, then draw the two arms
+  // Direction toward origin from foot: sign of (CX - Fx)
+  var towardOrgX = (cosV >= 0) ? -1 : 1;  // if foot is to the right of origin, "toward origin" is -x
+  // Direction toward P from foot: sign of (Py - Fy) inverted because SVG y-down → "up screen" = -y
+  var towardPY = (sinV >= 0) ? -1 : 1;     // if P is above x-axis, "toward P" in SVG is -y
+  if (Math.abs(sinV) > 0.05 && Math.abs(cosV) > 0.05) {
+    var corner = { x: Fx + towardOrgX * raLen, y: Fy + towardPY * raLen };
     gFig.appendChild(svgEl("path", {
-      d: "M " + (Fx + dx * ra) + " " + Fy +
-         " L " + (Fx + dx * ra) + " " + (Fy - ra) +
-         " L " + Fx + " " + (Fy - ra),
+      d: "M " + (Fx + towardOrgX * raLen) + " " + Fy +
+         " L " + corner.x + " " + corner.y +
+         " L " + Fx + " " + (Fy + towardPY * raLen),
       fill: "none", stroke: COL.yellow, "stroke-width": 1.4, opacity: 0.7
     }));
   }
 
-  // Angle arc at origin
-  var arcR = 30;
-  var arcEndX = CX + arcR * Math.cos(thetaRad);
-  var arcEndY = CY - arcR * Math.sin(thetaRad);
+  // Angle arc at origin — sweep from positive x-axis CCW to current θ
+  var arcR = 26;
+  var arcEndX = CX + arcR * cosV;
+  var arcEndY = CY - arcR * sinV;
+  // For SVG arc with y-down: sweep-flag 0 traces CCW visually (which matches math CCW for positive θ)
+  // large-arc-flag = 1 when |θ| > 180°
+  var largeArc = (theta > 180 || theta < -180) ? 1 : 0;
   gFig.appendChild(svgEl("path", {
     d: "M " + (CX + arcR) + " " + CY +
-       " A " + arcR + " " + arcR + " 0 0 0 " + arcEndX + " " + arcEndY,
+       " A " + arcR + " " + arcR + " 0 " + largeArc + " 0 " + arcEndX + " " + arcEndY,
     fill: "none", stroke: COL.yellow, "stroke-width": 2.2
   }));
-  // θ label
-  var labMidX = CX + (arcR + 16) * Math.cos(thetaRad / 2);
-  var labMidY = CY - (arcR + 16) * Math.sin(thetaRad / 2);
-  svgKaTeXLabel(gLbl, labMidX, labMidY,
-    "{\\color{" + COL.yellow + "}\\theta = " + Math.round(theta) + "°}", null, "center", 13);
+  // θ label — position at the angular midpoint, offset outward
+  var midA = thetaRad / 2;
+  var labR = arcR + 18;
+  svgKaTeXLabel(gLbl, CX + labR * Math.cos(midA), CY - labR * Math.sin(midA),
+    "{\\color{" + COL.yellow + "}\\theta = " + Math.round(theta) + "°}", null, "center", 12);
 
-  // Side labels
-  // cos θ label below the cos segment
-  svgKaTeXLabel(gLbl, (CX + Fx) / 2, Fy + 18,
-    "{\\color{" + COL.blue + "}\\cos\\theta = " + fmtNum(Math.cos(thetaRad), 3) + "}", null, "center", 12);
-  // sin θ label right of the sin segment
-  svgKaTeXLabel(gLbl, Fx + 50, (Fy + Py) / 2,
-    "{\\color{" + COL.orange + "}\\sin\\theta = " + fmtNum(Math.sin(thetaRad), 3) + "}", null, "center", 12);
-
-  // Hypotenuse-of-1 label outside the radius
-  var midR = { x: (CX + Px) / 2, y: (CY + Py) / 2 };
-  // outward normal (away from foot)
-  var rVec = { x: Px - CX, y: Py - CY };
-  var rLen = Math.sqrt(rVec.x*rVec.x + rVec.y*rVec.y) || 1;
-  var outX = -rVec.y / rLen, outY = rVec.x / rLen;
-  // Make sure outward is the side OPPOSITE the foot
-  var toFootX = Fx - midR.x, toFootY = Fy - midR.y;
-  if (outX * toFootX + outY * toFootY > 0) { outX = -outX; outY = -outY; }
-  svgKaTeXLabel(gLbl, midR.x + outX * 22, midR.y + outY * 22,
-    "{\\color{" + COL.pink + "}r = 1}", null, "center", 12);
+  // Side labels — placed OUTSIDE the segments (won't render if the segment is too short)
+  if (Math.abs(cosV) > 0.18) {
+    svgKaTeXLabel(gLbl, (CX + Fx) / 2, Fy + (sinV >= 0 ? 18 : -18),
+      "{\\color{" + COL.blue + "}\\cos\\theta = " + fmtNum(cosV, 3) + "}", null, "center", 11);
+  }
+  if (Math.abs(sinV) > 0.18) {
+    svgKaTeXLabel(gLbl, Fx + (cosV >= 0 ? 50 : -50), (Fy + Py) / 2,
+      "{\\color{" + COL.orange + "}\\sin\\theta = " + fmtNum(sinV, 3) + "}", null, "center", 11);
+  }
 
   // Point P (yellow, draggable)
-  var phHandle = svgEl("circle", {
+  gHnd.appendChild(svgEl("circle", {
     "class": "vertex-handle", id: "handle-p",
     cx: Px, cy: Py, r: 8,
     fill: COL.yellow, stroke: "#0b1118", "stroke-width": 2
-  });
-  gHnd.appendChild(phHandle);
+  }));
 
-  // ===== Wave panel: traced (active) portion of each curve from 0 to current θ =====
-  var sinV = Math.sin(thetaRad);
-  var cosV = Math.cos(thetaRad);
-  var tanV = Math.tan(thetaRad);
-
+  // ===== Wave panel: traced (bright) portion of each curve from 0 to current θ =====
   function tracePath(fn) {
     var d = "";
     var first = true, lastValid = false;
-    var STEPS = Math.max(8, Math.ceil(theta * 2.5));
+    var STEPS = Math.max(16, Math.ceil(theta * 2));
     for (var i = 0; i <= STEPS; i++) {
       var deg = (i / STEPS) * theta;
       var rad = deg * Math.PI / 180;
@@ -444,11 +404,12 @@ function render() {
     stroke: COL.faint, "stroke-width": 0.8, "stroke-dasharray": "3 3", opacity: 0.6
   }));
 
-  // Dashed connecting line from circle's point to the cursor's sin-dot (visual link)
+  // Dashed connecting lines from the circle's point to the wave panel
+  // (matched scales mean these go horizontally across at the same y)
   var sinDotY = yWave(sinV);
   gWaveTrace.appendChild(svgEl("line", {
     x1: Px, y1: Py, x2: cursorX, y2: sinDotY,
-    stroke: COL.orange, "stroke-width": 0.8, "stroke-dasharray": "2 4", opacity: 0.35
+    stroke: COL.orange, "stroke-width": 0.8, "stroke-dasharray": "2 4", opacity: 0.4
   }));
 
   // Dots at the current value of each curve
@@ -463,11 +424,6 @@ function render() {
   if (Math.abs(tanV) <= WMAX_Y) {
     dot(cursorX, yWave(tanV), COL.yellow);
   }
-
-  // Update bottom readouts
-  document.getElementById("v-sin").textContent = "= " + fmtNum(sinV, 3);
-  document.getElementById("v-cos").textContent = "= " + fmtNum(cosV, 3);
-  document.getElementById("v-tan").textContent = "= " + fmtNum(tanV, 3);
 }
 
 // Slider wiring
@@ -518,7 +474,7 @@ stage.addEventListener("pointermove", function(evt) {
   var pt = svgPointFromEvent(evt);
   var dx = pt.x - CX, dy = -(pt.y - CY);
   var ang = Math.atan2(dy, dx) * 180 / Math.PI;
-  ang = Math.max(0, Math.min(90, ang));
+  if (ang < 0) ang += 360;  // 0 to 360 (CCW from positive x-axis)
   params.theta = ang;
   display.theta = ang;
   thetaSlider.value = ang;
