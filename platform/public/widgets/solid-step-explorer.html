@@ -484,74 +484,91 @@ function buildCuboidDrilled(p) {
 }
 
 function buildSectorToCone(p) {
-  // p: { sectorR, theta }  (sector being rolled into a cone)
+  // p: { sectorR, theta }
+  // The sector and the cone share the SAME apex point. As we step from
+  // sector → cone, the sector fades while the cone fades in over the same
+  // space, reading visually as the sector rolling up.
   var sectorR = p.sectorR, theta = p.theta;
-  var s = 12;
+  var s = 14;
   var sectorRpx = sectorR * s;
-  var cx = SVG_W / 2, cy = SVG_H/2 + 10;
-  // Sector apex at (cx, 30), arc opens downward
-  var apexY = 30;
-  var startA = 90 + theta/2;
-  var endA = 90 - theta/2;
-  function pt(deg) {
-    var rad = deg * Math.PI / 180;
-    return { x: cx + sectorRpx * Math.cos(rad), y: apexY + 50 - sectorRpx * Math.sin(rad) - 50 + 50 };
+  var cx = SVG_W / 2;
+
+  // Cone derived geometry
+  var coneR_cm  = sectorR * theta / 360;
+  var coneRpx   = coneR_cm * s;
+  var coneRyPx  = coneRpx * ELLIPSE_RATIO;
+  var coneH_cm  = Math.sqrt(sectorR * sectorR - coneR_cm * coneR_cm);
+  var coneHPx   = coneH_cm * s;
+
+  // Apex sits above the centre. The sector arc reaches y = apexY + sectorRpx;
+  // the cone base reaches y = apexY + coneHPx. We'll fit BOTH inside the SVG
+  // by using the LARGER vertical extent.
+  var TOP_PAD = 22, BOT_PAD = 28;
+  var maxExtent = Math.max(sectorRpx, coneHPx);
+  var avail = SVG_H - TOP_PAD - BOT_PAD;
+  if (maxExtent > avail) {
+    var k = avail / maxExtent;
+    sectorRpx *= k; coneRpx *= k; coneRyPx *= k; coneHPx *= k;
   }
-  // Simpler: place apex at (cx, 30); arc points at angles startA, endA from there
+  var apexY = TOP_PAD;
+  var sectorArcY = apexY + sectorRpx;
+  var coneBaseY  = apexY + coneHPx;
+
+  // Sector arc endpoints. Math angles measured CCW from +x; SVG y is down,
+  // so an angle of 90° in math (cos=0, sin=1) maps to y = apexY + r — i.e.
+  // STRAIGHT DOWN on screen. For a sector centred straight down spanning θ:
+  //   leftAngle  = 90° + θ/2  (visually left of the down axis)
+  //   rightAngle = 90° − θ/2  (visually right)
   function ptFromApex(deg, r) {
     var rad = deg * Math.PI / 180;
     return { x: cx + r * Math.cos(rad), y: apexY + r * Math.sin(rad) };
   }
-  // We want the sector apex at TOP, sector arc at BOTTOM. Use angles where 90° is straight down.
-  var leftAngle = 270 - theta/2;
-  var rightAngle = 270 + theta/2;
-  var pLeft = ptFromApex(leftAngle, sectorRpx);
+  var leftAngle  = 90 + theta/2;
+  var rightAngle = 90 - theta/2;
+  var pLeft  = ptFromApex(leftAngle,  sectorRpx);
   var pRight = ptFromApex(rightAngle, sectorRpx);
-  var large = (theta > 180) ? 1 : 0;
+  var large  = (theta > 180) ? 1 : 0;
 
   var g = document.getElementById("g-shape");
   g.innerHTML = "";
 
-  // Sector (yellow fan)
+  // Sector (yellow fan, apex up, arc opens down)
+  // sweep-flag = 1 (CW in SVG y-down) so the short arc bulges DOWNWARD,
+  // away from the apex.
   var sector = svgEl("path", {
     "class": "shape-part",
     d: "M " + cx + " " + apexY +
-       " L " + pLeft.x + " " + pLeft.y +
-       " A " + sectorRpx + " " + sectorRpx + " 0 " + large + " 1 " + pRight.x + " " + pRight.y + " Z",
+       " L " + pLeft.x.toFixed(2) + " " + pLeft.y.toFixed(2) +
+       " A " + sectorRpx + " " + sectorRpx + " 0 " + large + " 1 " +
+       pRight.x.toFixed(2) + " " + pRight.y.toFixed(2) + " Z",
     fill: "rgba(255,240,103,0.20)", stroke: COL.yellow, "stroke-width": 2, "stroke-linejoin": "round"
   });
   g.appendChild(sector);
 
-  // Sector radius label
-  svgKaTeXLabel(g, cx - 14, (apexY + pLeft.y) / 2, "R = " + p.sectorR, COL.yellow, "right");
-  // Theta label inside the apex
-  svgKaTeXLabel(g, cx + 16, apexY + 18, p.theta + "°", COL.green, "left");
-
-  // After: a cone forms with slant = sectorR and base radius = R*theta/360
-  // We'll show this when stepping through
-  var coneR = sectorR * theta / 360;
-  var coneRpx = (p.sectorR * theta / 360) * s;
-  var coneSlantPx = sectorRpx;
-  var coneH_cm = Math.sqrt(p.sectorR * p.sectorR - (p.sectorR * theta / 360) * (p.sectorR * theta / 360));
-  var coneHPx = coneH_cm * s;
-  // Position cone below/right of sector
-  var coneCx = cx + 70;
-  var coneApexY = apexY + 30;
-  var coneBaseY = coneApexY + coneHPx;
+  // Cone body — same apex point. Drawn on top, hidden initially.
   var coneBody = svgEl("path", {
     "class": "shape-part hidden",
-    d: "M " + coneCx + " " + coneApexY +
-       " L " + (coneCx - coneRpx) + " " + coneBaseY +
-       " A " + coneRpx + " " + (coneRpx*ELLIPSE_RATIO) + " 0 0 0 " + (coneCx + coneRpx) + " " + coneBaseY + " Z",
+    d: "M " + cx + " " + apexY +
+       " L " + (cx - coneRpx) + " " + coneBaseY +
+       " A " + coneRpx + " " + coneRyPx + " 0 0 0 " + (cx + coneRpx) + " " + coneBaseY + " Z",
     fill: "url(#coneGrad)", stroke: COL.orange, "stroke-width": 2, "stroke-linejoin": "round"
   });
   g.appendChild(coneBody);
+
+  // Cone base ellipse (yellow, full ellipse — front + back)
   var coneBase = svgEl("ellipse", {
     "class": "shape-part hidden",
-    cx: coneCx, cy: coneBaseY, rx: coneRpx, ry: coneRpx*ELLIPSE_RATIO,
-    fill: "none", stroke: COL.yellow, "stroke-width": 1, "stroke-dasharray": "3 3"
+    cx: cx, cy: coneBaseY, rx: coneRpx, ry: coneRyPx,
+    fill: "rgba(255,240,103,0.20)", stroke: COL.yellow, "stroke-width": 1.5
   });
   g.appendChild(coneBase);
+
+  // Sector R label along the LEFT slant edge (from apex to pLeft)
+  svgKaTeXLabel(g,
+    (cx + pLeft.x) / 2 - 14, (apexY + pLeft.y) / 2,
+    "R = " + p.sectorR, COL.yellow, "right");
+  // θ label inside the sector, near the apex
+  svgKaTeXLabel(g, cx + 14, apexY + 22, p.theta + "°", COL.green, "left");
 
   return { sector: sector, coneBody: coneBody, coneBase: coneBase };
 }
