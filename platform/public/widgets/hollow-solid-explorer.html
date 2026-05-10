@@ -231,10 +231,16 @@ function render() {
   if (state.solid === "cuboid-cyl") {
     var L = state.display.L, W = state.display.W, H = 6;
     var rh = state.display.rh;
-    var sc = 16; var dx = 22, dy = -14;
-    var Lp = L*sc, Wp = W*sc*0.85, Hp = H*sc;
-    var ax = cx - Lp/2 - Wp*0.3;
-    var ay = cy + Hp/2;
+    var sc = 16;
+    // Depth offset for the oblique projection scales with W: deeper W → larger
+    // (dx, dy). The previous build used hardcoded dx = 22 / dy = −14 regardless
+    // of W, so changing W only re-anchored the cuboid (the visible depth never
+    // moved with the slider).
+    var dx = W * sc * 0.55;
+    var dy = -W * sc * 0.35;
+    var Lp = L*sc, Hp = H*sc;
+    var ax = cx - (Lp + dx) / 2;
+    var ay = cy + (Hp + Math.abs(dy)) / 2 - Math.abs(dy);
 
     // Back face
     gShape.appendChild(svgEl("path", {
