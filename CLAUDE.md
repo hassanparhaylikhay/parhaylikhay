@@ -6,18 +6,19 @@
 
 ## Session-tested conventions (read these BEFORE editing lessons or widgets)
 
-The user's auto-memory at `~/.claude/projects/-Users-hassanahmad-Desktop-ParhayLikhay/memory/` has three durable convention files captured from real bugs the user has caught one or more times. Read whichever applies before making changes:
+The user's auto-memory at `~/.claude/projects/-Users-hassanahmad-Desktop-ParhayLikhay/memory/` has four durable convention files. Read whichever applies before making changes:
 
 - **`preflight-checklist.md`** — single entry point with the three most common bug categories and audit greps. Read this first every session.
+- **`design-philosophy.md`** — the AMBITION. Smooth widgets via spring lerp (params/display state, SPRING_FACTOR 0.22; every state change animates). Apple-style focused decluttered UI; hide controls/labels until they're relevant. Aggressive colour coding — every variable gets a consistent brand colour across diagram, formula, and prose; reference cards use a different colour per row; `\textcolor{}` inside inline math for prose-level highlighting. Step-explorer recipe: step 1 = build the shape, each later step highlights ONE thing visually with a pulsing drop-shadow keyed to stroke colour; equations cascade in. Go overboard with visuals — multi-widget pages are good ("when in doubt, ship one more visual"); 600-line widgets for one worked example are fine. Expert-pedagogy lesson arc: why-this-matters → what-it-actually-is → see-it → build-the-formula → worked-example with mark scheme → common-mistakes → summary. Inspiring curiosity: lead with questions, callout surprising results, no fake enthusiasm.
 - **`lesson-conventions.md`** — worked-example regex rules (WE heading must start `## Worked example`; body must end with `Full marks $= N$.` with period right after `$`); YAML JSON-array vs single-quoted escape rules; em dashes banned; `\sum` not allowed; `\(...\)` for math inside HTML diagram blocks; Cambridge paper references in plain English.
-- **`widget-conventions.md`** — SVG arc sweep flag (`sweep = 0` for an apex-up fan); math angles use `90 ± θ/2` not `270` for screen-down sectors in y-down SVG; svgKaTeXLabel alignment anchors text edges at `x ± 50`, NOT at x; auto-fit pattern for figures that overflow; KaTeX everywhere via foreignObject; step explorer pattern (step 1 = build the shape, each subsequent step highlights what's being computed); cuboid depth `(dx, dy)` MUST scale with W.
+- **`widget-conventions.md`** — SVG arc sweep flag (`sweep = 0` for an apex-up fan); math angles use `90 ± θ/2` not `270` for screen-down sectors in y-down SVG; svgKaTeXLabel alignment anchors text edges at `x ± 50`, NOT at x; auto-fit pattern for figures that overflow; KaTeX everywhere via foreignObject; step explorer pattern; cuboid depth `(dx, dy)` MUST scale with W; frustum back-half ellipse for 3D look.
 
 When a user reports a buggy widget by screenshot, check first:
 1. SVG arc sweep flag (arc bulging the wrong direction → bow-tie / arrow shape)
 2. Hardcoded dimension that doesn't respond to a slider
 3. Label alignment misanchored (text inside the shape vs outside)
 
-When the user says "make it visual" / "more like a video": don't just add text — each step needs a visible change to the shape.
+When the user says "make it visual" / "more like a video" / "needs to be smoother": don't just add text — every state change needs a visible animation, every step needs a visual highlight, every shape transformation should morph continuously rather than swap.
 
 ---
 
@@ -26,8 +27,7 @@ When the user says "make it visual" / "more like a video": don't just add text �
 **Name:** Parhaylikhay
 **Audience:** Cambridge O-Level students in Pakistan (typically ages 14–16)
 **Subjects:** Mathematics and Physics
-**Hosting:** Circle.so
-**Widgets hosted on:** Codepen, embedded into Circle.so via Iframely
+**Hosting:** Next.js and Vercel
 **Goal:** Deliver marking-scheme-aware lessons that help students score marks — not just understand concepts.
 
 ---
