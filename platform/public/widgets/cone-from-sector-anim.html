@@ -5,261 +5,277 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Sector → Cone Animation</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <style>
-  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
-  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 18px 16px; }
-  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 14px; }
-  .head {
-    display:flex; justify-content:space-between; align-items:center;
-    margin-bottom:10px; gap:12px; min-height:22px;
-  }
-  .title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; }
-  .stage {
-    width:100%; max-width:420px; aspect-ratio: 5 / 4; margin:0 auto;
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; min-height:22px; gap:10px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
+
+  .stage-outer {
+    width:100%;
+    max-width:480px;
+    margin:0 auto;
+    aspect-ratio: 480 / 360;
     position:relative;
   }
-  svg { display:block; width:100%; height:100%; overflow:visible; }
-  .legend {
-    display:flex; gap:14px; justify-content:center;
-    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
-    margin-top:6px; flex-wrap:wrap;
+  .stage {
+    position:absolute;
+    inset:0;
+    perspective:1200px;
+    overflow:hidden;
+    border-radius:6px;
   }
-  .legend .item { display:flex; align-items:center; gap:5px; }
-  .legend .swatch {
-    display:inline-block; width:10px; height:10px; border-radius:2px;
+  .scene {
+    position:absolute;
+    left:50%; top:50%;
+    width:0; height:0;
+    transform-style: preserve-3d;
+    /* Folded (cone) state: tilted 3D view */
+    transform: rotateX(-22deg) rotateY(28deg);
+    transition: transform 1.6s cubic-bezier(0.4, 0.1, 0.4, 1);
   }
-  .controls { display:flex; gap:8px; justify-content:center; margin-top:10px; }
+  /* Flat state: top-down view */
+  .stage.is-flat .scene { transform: rotateX(0deg) rotateY(0deg); }
+
+  /* Slats and the base circle: each has its own transform with the same transition */
+  .face {
+    position:absolute;
+    transform-style: preserve-3d;
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+  }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
   button.ctl {
     background:#0b1118; border:1px solid #141e2a; color:#7a7875;
     font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
-    padding:7px 14px; border-radius:6px; cursor:pointer; min-width:90px;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:110px;
     transition: color 0.12s, border-color 0.12s;
   }
   button.ctl:hover { color:#fff067; border-color:#fff067; }
   .progress {
     width:100%; height:3px; background:#141e2a; border-radius:2px;
-    margin:8px auto 0; overflow:hidden;
+    margin:10px auto 0; overflow:hidden;
   }
   .progress-fill {
-    height:100%; background: linear-gradient(90deg, #fff067, #ff822c);
+    height:100%; background: linear-gradient(90deg, #fff067, #00abfa);
     width:0%;
+    transition: width 0.3s linear;
   }
+
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
-  .lbl-host { font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600; line-height:1; }
-  .lbl-host .katex { font-size:1em; }
 </style>
 </head>
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
-    <span class="title" id="title-text">SECTOR → CONE · LIVE FOLD</span>
-    <span class="title" id="phase-text" style="color:#7a7875">phase: flat sector</span>
+    <span class="step-title">SECTOR → CONE · LIVE FOLD</span>
+    <span class="meta" id="state-text">FLAT SECTOR</span>
   </div>
-
-  <div class="stage" id="stage">
-    <svg viewBox="0 0 480 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="morphFill" x1="0" y1="0" x2="0" y2="1">
-          <stop id="morphStop1" offset="0%" stop-color="rgba(255,240,103,0.30)"/>
-          <stop id="morphStop2" offset="100%" stop-color="rgba(255,240,103,0.20)"/>
-        </linearGradient>
-      </defs>
-      <!-- The morphing shape: same path topology (M ... L ... A ... Z) for both endpoints -->
-      <path id="morph-path" d="" fill="url(#morphFill)" stroke="#fff067" stroke-width="2" stroke-linejoin="round"/>
-      <!-- Cone base ellipse (only visible at the end) -->
-      <ellipse id="cone-base" cx="240" cy="0" rx="0" ry="0" fill="none" stroke="#fff067" stroke-width="1.5" opacity="0"/>
-      <!-- "fold seam" guide that appears mid-animation: the two straight edges of the sector meeting -->
-      <line id="seam" x1="0" y1="0" x2="0" y2="0" stroke="#ff4670" stroke-width="1.5" stroke-dasharray="4 3" opacity="0"/>
-      <g id="g-labels"></g>
-    </svg>
+  <div class="stage-outer">
+    <div class="stage" id="stage">
+      <div class="scene" id="scene"></div>
+    </div>
   </div>
-
   <div class="progress"><div class="progress-fill" id="progress-fill"></div></div>
-
-  <div class="legend">
-    <div class="item"><span class="swatch" style="background:#fff067"></span><span>sector apex stays put</span></div>
-    <div class="item"><span class="swatch" style="background:#ff4670"></span><span>straight edges fold together</span></div>
-    <div class="item"><span class="swatch" style="background:#ff822c"></span><span>arc becomes the base circle</span></div>
-  </div>
-
   <div class="controls">
-    <button class="ctl" id="replay">▶ replay</button>
-    <button class="ctl" id="pause">⏸ pause</button>
+    <button class="ctl" id="toggle">→ fold into cone</button>
+    <button class="ctl" id="autoplay">⏸ pause loop</button>
   </div>
-  <p class="footer">apex stays · straight edges meet · arc curls into a circle of circumference 2πr</p>
+  <p class="footer">N triangular slats sweep from the unrolled sector into the curved surface of the cone. Apex stays put; the base circle hinges into place.</p>
 </div>
 
 <script>
 "use strict";
 
-// Sector parameters (Cambridge example: R = 8, θ = 75°)
-var SECTOR_R_CM = 8;
-var THETA = 75;
-var SCALE = 22;
+var COL = {
+  blue:   "#00abfa",
+  yellow: "#fff067",
+  orange: "#ff822c",
+  pink:   "#ff4670",
+  faint:  "#3a4a5a"
+};
 
-var COL = { yellow: "#fff067", orange: "#ff822c", pink: "#ff4670", grey: "#7a7875" };
-var SVG_W = 480, SVG_H = 400;
-var cx = SVG_W / 2;
-var apexY = 50;
+function fillOf(hex, alpha) {
+  alpha = alpha == null ? 0.18 : alpha;
+  var r = parseInt(hex.slice(1,3),16);
+  var g = parseInt(hex.slice(3,5),16);
+  var b = parseInt(hex.slice(5,7),16);
+  return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+}
+function setStyle(el, s) { for (var k in s) el.style[k] = s[k]; }
 
-// Geometry constants
-var sectorRpx = SECTOR_R_CM * SCALE;             // sector radius in px (also cone slant)
-var coneR_cm  = SECTOR_R_CM * THETA / 360;        // cone base radius (cm)
-var coneR_px  = coneR_cm * SCALE;                 // cone base radius (px)
-var coneRyPx  = coneR_px * 0.32;                  // foreshortened ellipse for the cone base
-var coneH_cm  = Math.sqrt(SECTOR_R_CM * SECTOR_R_CM - coneR_cm * coneR_cm);
-var coneH_px  = coneH_cm * SCALE;                 // cone height (px)
+// Cone parameters: same defaults as the Cambridge example (slant 8, base
+// circumference = 10π/3 → base radius = 5/3). We pick a stage-friendly
+// rendering by using "natural" cm values that fit nicely.
+var rCm = 4;        // cone base radius for visual rendering
+var hCm = 9;        // cone height
+var slantCm = Math.sqrt(rCm * rCm + hCm * hCm);  // = √97
 
-// Auto-fit: ensure both extents fit
-var TOP_PAD = 50, BOT_PAD = 30;
-var avail = SVG_H - TOP_PAD - BOT_PAD;
-var maxExtent = Math.max(sectorRpx, coneH_px);
-if (maxExtent > avail) {
-  var fit = avail / maxExtent;
-  sectorRpx *= fit;
-  coneR_px  *= fit;
-  coneRyPx  *= fit;
-  coneH_px  *= fit;
+// Stage size (matches the perspective + 480x360 aspect ratio used by net-unfolder)
+var STAGE_W = 480, STAGE_H = 360;
+
+var scene = document.getElementById("scene");
+var stage = document.getElementById("stage");
+
+// Auto-scale so the unrolled sector + base circle fit in the stage with margin.
+// The unrolled net spans: width ≈ 2 × slant × sin(α/2), height ≈ slant + 2r + gap.
+// Use the same conservative scale as net-unfolder.
+var scale = Math.min(420 / (2 * slantCm), 320 / (slantCm + 2 * rCm + 10));
+var r = rCm * scale, H = hCm * scale, slant = slantCm * scale;
+
+// Cone half-angle (between axis and slant edge) — slat's tilt from vertical when folded
+var alphaCone = Math.atan2(r, H) * 180 / Math.PI;
+// Sector angle for the unrolled net (360° × r / slant)
+var sectorAngleDeg = (2 * Math.PI * r / slant) * 180 / Math.PI;
+
+// Centre the net vertically: net spans from -yOff to -yOff + slant + 2r
+var yOff = (slant + 2 * r) / 2;
+
+var N = 36;
+var slatW = 2 * Math.PI * r / N + 1.5;  // small overlap to avoid hairline gaps
+var allParts = [];
+
+// ===== Build the cone slats =====
+for (var i = 0; i < N; i++) {
+  var thetaDeg = (i + 0.5) / N * 360;
+  var thetaRad = thetaDeg * Math.PI / 180;
+  var alphaDeg = (i + 0.5) / N * sectorAngleDeg - sectorAngleDeg / 2;
+  var alphaRad = alphaDeg * Math.PI / 180;
+
+  var slat = document.createElement("div");
+  slat.className = "face cone-slat";
+  setStyle(slat, {
+    position: "absolute",
+    left: (-slatW / 2) + "px",
+    top: (-slant / 2) + "px",
+    width: slatW + "px",
+    height: slant + "px",
+    background: fillOf(COL.blue, 0.20),
+    clipPath: "polygon(50% 0%, 0% 100%, 100% 100%)",
+    outline: "0.5px solid " + COL.blue,
+    outlineOffset: "-0.5px",
+    transition: "transform 1.6s cubic-bezier(0.4, 0.1, 0.4, 1), background 1.6s ease, outline-color 1.6s ease"
+  });
+
+  // Folded transform: slat sits on the cone's curved surface
+  var foldedTx = r * Math.cos(thetaRad) / 2;
+  var foldedTz = r * Math.sin(thetaRad) / 2;
+  slat.dataset.folded3d =
+    "translate3d(" + foldedTx + "px,0px," + foldedTz + "px) " +
+    "rotateY(" + (-thetaDeg) + "deg) rotateZ(" + (-alphaCone) + "deg)";
+
+  // Flat transform: slat sits in the unrolled sector
+  var flatTx = Math.sin(alphaRad) * slant / 2;
+  var flatTy = -yOff + Math.cos(alphaRad) * slant / 2;
+  slat.dataset.flat3d =
+    "translate3d(" + flatTx + "px," + flatTy + "px,0px) rotateZ(" + (-alphaDeg) + "deg)";
+
+  // Start in the FLAT state (this is the reverse of the net-unfolder)
+  slat.style.transform = slat.dataset.flat3d;
+  scene.appendChild(slat);
+  allParts.push(slat);
 }
 
-var morphPath = document.getElementById("morph-path");
-var coneBase  = document.getElementById("cone-base");
-var seam      = document.getElementById("seam");
-var phaseText = document.getElementById("phase-text");
+// ===== Build the base circle =====
+var baseCircle = document.createElement("div");
+baseCircle.className = "face cone-base";
+setStyle(baseCircle, {
+  position: "absolute",
+  left: (-r) + "px",
+  top: (-r) + "px",
+  width: (2 * r) + "px",
+  height: (2 * r) + "px",
+  borderRadius: "50%",
+  border: "1.5px solid " + COL.yellow,
+  background: fillOf(COL.yellow, 0.20),
+  transition: "transform 1.6s cubic-bezier(0.4, 0.1, 0.4, 1)"
+});
+baseCircle.dataset.folded3d = "translate3d(0px," + (H / 2) + "px,0px) rotateX(90deg)";
+baseCircle.dataset.flat3d   = "translate3d(0px," + (-yOff + slant + r) + "px,0px) rotateX(0deg)";
+// Start in the FLAT state
+baseCircle.style.transform = baseCircle.dataset.flat3d;
+scene.appendChild(baseCircle);
+allParts.push(baseCircle);
+
+// ===== Toggle controller =====
+var toggleBtn = document.getElementById("toggle");
+var autoplayBtn = document.getElementById("autoplay");
+var stateEl = document.getElementById("state-text");
 var progressFill = document.getElementById("progress-fill");
 
-// Sector vertices (apex at top, arc opens down). Math angle 90° = straight
-// down in SVG y-down (since cos=0, sin=1).
-function ptOnSector(theta_deg, r) {
-  var rad = theta_deg * Math.PI / 180;
-  return { x: cx + r * Math.cos(rad), y: apexY + r * Math.sin(rad) };
-}
-var sectorLeft  = ptOnSector(90 + THETA/2, sectorRpx);
-var sectorRight = ptOnSector(90 - THETA/2, sectorRpx);
+// Start in the flat (sector) state, since the lesson is showing how a
+// SECTOR ROLLS INTO a cone — opposite of the net-unfolder.
+var isFlat = true;
+stage.classList.add("is-flat");
 
-// Cone front vertices (apex up, base ellipse at the bottom)
-var coneBaseY = apexY + coneH_px;
-var coneLeft  = { x: cx - coneR_px, y: coneBaseY };
-var coneRight = { x: cx + coneR_px, y: coneBaseY };
-
-// Linear interpolation between two points
-function lerpPt(a, b, t) {
-  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
-}
-function lerp(a, b, t) { return a + (b - a) * t; }
-
-// Compute the morph path at parameter t in [0, 1]
-//   t = 0 → flat sector
-//   t = 1 → cone (front silhouette)
-// We morph both arc endpoints AND the arc rx/ry. The arc structure is the
-// same in both cases (large=0, sweep=0).
-function morphD(t) {
-  var pL = lerpPt(sectorLeft,  coneLeft,  t);
-  var pR = lerpPt(sectorRight, coneRight, t);
-  var rx = lerp(sectorRpx, coneR_px, t);
-  var ry = lerp(sectorRpx, coneRyPx, t); // sector → cone-base ellipse minor radius
-  return "M " + cx.toFixed(2) + " " + apexY.toFixed(2) +
-         " L " + pL.x.toFixed(2) + " " + pL.y.toFixed(2) +
-         " A " + rx.toFixed(2) + " " + ry.toFixed(2) + " 0 0 0 " +
-         pR.x.toFixed(2) + " " + pR.y.toFixed(2) + " Z";
-}
-
-function setT(t) {
-  // Phase labels
-  var phase;
-  if (t < 0.05)      phase = "flat sector (R = " + SECTOR_R_CM + ", θ = " + THETA + "°)";
-  else if (t < 0.45) phase = "rolling: straight edges sweeping in";
-  else if (t < 0.85) phase = "almost a cone — arc curls into a circle";
-  else               phase = "cone (l = " + SECTOR_R_CM + ", r = 5/3, h = √551 / 3)";
-  phaseText.textContent = "phase: " + phase;
-
-  morphPath.setAttribute("d", morphD(t));
-  // Cone base ellipse fades in over the second half
-  var baseOp = Math.max(0, (t - 0.55) / 0.45);
-  coneBase.setAttribute("cx", cx);
-  coneBase.setAttribute("cy", coneBaseY);
-  coneBase.setAttribute("rx", coneR_px);
-  coneBase.setAttribute("ry", coneRyPx);
-  coneBase.setAttribute("opacity", baseOp.toFixed(3));
-  // Seam line (the join where the two sector edges meet) is most visible mid-roll
-  // It runs along the cone's right slant (the seam after rolling).
-  var seamVis = Math.max(0, 1 - Math.abs(t - 0.5) * 4); // peak at t=0.5
-  seam.setAttribute("x1", cx);
-  seam.setAttribute("y1", apexY);
-  seam.setAttribute("x2", lerp(sectorRight.x, coneRight.x, t));
-  seam.setAttribute("y2", lerp(sectorRight.y, coneRight.y, t));
-  seam.setAttribute("opacity", seamVis.toFixed(3));
-
-  // Update the gradient: sector is yellow, cone is more orange
-  document.getElementById("morphStop1").setAttribute("stop-color",
-    "rgba(255," + Math.round(240 - t*110) + "," + Math.round(103 - t*60) + "," + (0.30 - t*0.05) + ")");
-  document.getElementById("morphStop2").setAttribute("stop-color",
-    "rgba(255," + Math.round(240 - t*110) + "," + Math.round(103 - t*60) + "," + (0.20 - t*0.04) + ")");
-  morphPath.setAttribute("stroke", t < 0.5 ? "#fff067" : "#ff822c");
-
-  progressFill.style.width = (t * 100).toFixed(2) + "%";
-}
-
-// Animation runtime
-var DURATION_MS = 3500;
-var HOLD_MS     = 1200;  // hold at the end before looping
-var startTime = 0;
-var animState = "playing"; // "playing" | "holding" | "paused"
-var rafId = null;
-
-function tick(now) {
-  if (animState === "paused") return;
-  if (!startTime) startTime = now;
-  var elapsed = now - startTime;
-  if (elapsed < DURATION_MS) {
-    var t = elapsed / DURATION_MS;
-    // Ease-in-out for a smoother roll
-    var eased = t < 0.5 ? 2*t*t : -1 + (4 - 2*t) * t;
-    setT(eased);
-    rafId = requestAnimationFrame(tick);
-  } else if (elapsed < DURATION_MS + HOLD_MS) {
-    setT(1);
-    animState = "holding";
-    rafId = requestAnimationFrame(tick);
+function setView(flat) {
+  isFlat = flat;
+  if (flat) {
+    stage.classList.add("is-flat");
+    toggleBtn.textContent = "→ fold into cone";
+    stateEl.textContent = "FLAT SECTOR";
+    allParts.forEach(function(el) { el.style.transform = el.dataset.flat3d; });
   } else {
-    // Restart
-    startTime = now;
-    animState = "playing";
-    setT(0);
-    rafId = requestAnimationFrame(tick);
+    stage.classList.remove("is-flat");
+    toggleBtn.textContent = "← unroll back to sector";
+    stateEl.textContent = "FOLDED CONE";
+    allParts.forEach(function(el) { el.style.transform = el.dataset.folded3d; });
   }
 }
+toggleBtn.onclick = function() { setView(!isFlat); resetAutoplayTimer(); };
 
-function start() {
-  startTime = 0;
-  animState = "playing";
-  if (rafId) cancelAnimationFrame(rafId);
-  rafId = requestAnimationFrame(tick);
+// ===== Autoplay loop =====
+var FOLD_DURATION_MS = 1600;
+var HOLD_MS = 1400;
+var autoplayActive = true;
+var autoplayTimer = null;
+var phaseStart = 0;
+var progressRaf = null;
+
+function scheduleNext() {
+  if (autoplayTimer) clearTimeout(autoplayTimer);
+  if (!autoplayActive) return;
+  phaseStart = performance.now();
+  // Tick the progress bar during the fold animation
+  cancelAnimationFrame(progressRaf);
+  function tickProgress() {
+    var elapsed = performance.now() - phaseStart;
+    var frac = Math.min(1, elapsed / FOLD_DURATION_MS);
+    progressFill.style.width = (frac * 100) + "%";
+    if (frac < 1 && autoplayActive) progressRaf = requestAnimationFrame(tickProgress);
+  }
+  progressRaf = requestAnimationFrame(tickProgress);
+  autoplayTimer = setTimeout(function() {
+    setView(!isFlat);
+    autoplayTimer = setTimeout(scheduleNext, HOLD_MS);
+  }, FOLD_DURATION_MS + HOLD_MS);
 }
 
-document.getElementById("replay").addEventListener("click", start);
-document.getElementById("pause").addEventListener("click", function() {
-  if (animState === "paused") {
-    // Resume — adjust startTime so elapsed continues from where we paused
-    startTime = performance.now() - (pausedElapsed || 0);
-    animState = "playing";
-    rafId = requestAnimationFrame(tick);
-    this.textContent = "⏸ pause";
-  } else {
-    pausedElapsed = performance.now() - startTime;
-    animState = "paused";
-    this.textContent = "▶ resume";
-  }
-});
-var pausedElapsed = 0;
+function resetAutoplayTimer() {
+  if (autoplayTimer) clearTimeout(autoplayTimer);
+  cancelAnimationFrame(progressRaf);
+  if (autoplayActive) scheduleNext();
+}
 
-setT(0);
-start();
+autoplayBtn.onclick = function() {
+  autoplayActive = !autoplayActive;
+  autoplayBtn.textContent = autoplayActive ? "⏸ pause loop" : "▶ resume loop";
+  if (autoplayActive) scheduleNext();
+  else { if (autoplayTimer) clearTimeout(autoplayTimer); cancelAnimationFrame(progressRaf); }
+};
 
-// Height reporter
+// First flip happens after the initial hold so the viewer sees the flat sector first
+setTimeout(function() {
+  setView(false);  // fold into cone
+  setTimeout(scheduleNext, FOLD_DURATION_MS + HOLD_MS);
+}, 800);
+
+// ===== Height reporter =====
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {
   if (reportScheduled) return;
