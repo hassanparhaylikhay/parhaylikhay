@@ -1,0 +1,23 @@
+# GitHub Pages serves the legacy landing site at the repo root (index.html,
+# landing.html, the standalone widgets). The Next.js application under
+# platform/ is deployed separately on Vercel and must NOT go through Jekyll —
+# its markdown files use $...$ math, KaTeX color macros like {\color{#00abfa}…},
+# and \sqrt{{...}} which collide with Liquid templating.
+exclude:
+  - platform/
+  - manipulatives/
+  - marking-knowledge/
+  - quadratic-graphs/
+  - maths-past-papers/
+  - media/
+  - memory/
+  - node_modules/
+  - "*.py"
+  - "*.md"
+  - CLAUDE.md
+  - MANIM_SKILL.md
+  - CINDY_SKILL.md
+  - CINDY_PATTERNS.md
+  - MANIPULATIVE_SKILL.md
+  - MARKING_SKILL.md
+  - 4024-syllabus.pdf
