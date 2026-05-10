@@ -555,16 +555,16 @@
    border element next to a sibling that holds the content X. Neither
    has a `.boxed` class. We tag the enclosing `.katex` with
    `.has-boxed-answer` at runtime (LessonBody useEffect), then this
-   rule colours the whole boxed expression green. The `*` selector
-   ensures the inner text content also goes green; the .fbox-specific
-   rule handles the border + background. */
+   rule keeps the whole boxed expression in the default light text
+   colour and just gives the border a subtle neutral outline so the
+   answer is recognisable without screaming green. */
 .lesson-prose .katex.has-boxed-answer,
 .lesson-prose .katex.has-boxed-answer * {
-  color: #0fee89 !important;
+  color: #f0eeea !important;
 }
 .lesson-prose .katex.has-boxed-answer .fbox {
-  border-color: #0fee89 !important;
-  background: rgba(15, 238, 137, 0.10) !important;
+  border-color: #3a4a5a !important;
+  background: rgba(255, 255, 255, 0.03) !important;
 }
 
 /* ─────────────────────────────────────────────────────
