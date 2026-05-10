@@ -27,10 +27,10 @@ checks:
 
 A short walkthrough of the unit so far:
 
-- **[p1](p1)** showed the gap: Pythagoras handles two-sides cases but is stuck when given one side and one angle. Trigonometry fills that gap.
-- **[p2](p2)** introduced sin, cos, tan as **ratios** that depend only on the angle. Naming opp/adj/hyp relative to a chosen angle is the first step.
-- **[p3](p3)** used the ratios to find a missing side. Decision: which pair of sides is involved → which ratio. If the unknown is in the denominator, divide instead of multiply.
-- **[p4](p4)** reversed the process: given two sides, recover the angle using $\sin^{-1}$, $\cos^{-1}$, $\tan^{-1}$.
+- The gap: Pythagoras handles two-sides cases but is stuck when given one side and one angle. Trigonometry fills that gap.
+- sin, cos, tan are **ratios** that depend only on the angle. Naming opp/adj/hyp relative to a chosen angle is the first step.
+- To find a missing side: identify the pair of sides involved → pick the ratio. If the unknown is in the denominator, divide instead of multiply.
+- To find a missing angle: given two sides, recover the angle using $\sin^{-1}$, $\cos^{-1}$, or $\tan^{-1}$.
 
 ## SOH-CAH-TOA at a glance
 
@@ -115,6 +115,6 @@ Run it a few times to lock the ratio-picking habit.
 
 ## Where this goes next
 
-[Unit 6.3](../06-03-non-right-triangles/p1) covers triangles that are NOT right-angled. The sine rule and cosine rule generalise sin, cos, tan to any triangle, and you'll see when to reach for each. [Unit 6.4](../06-04-3d-trigonometry/p1) extends the same logic into 3D, where the trick is to find the right 2D triangle living inside a 3D solid.
+The next sub-topic covers triangles that are NOT right-angled. The sine rule and cosine rule generalise sin, cos, tan to any triangle, and you'll see when to reach for each. After that, the same logic extends into 3D, where the trick is to find the right 2D triangle living inside a 3D solid.
 
 Bearings, angles of elevation and depression, and 2D problem-solving with right triangles are coming in Parts 5 and 6 of this unit. They aren't in this review yet, so focus the trainer below on the four sub-topics covered so far.

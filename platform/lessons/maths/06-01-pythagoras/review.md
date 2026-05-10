@@ -27,10 +27,10 @@ checks:
 
 A short walkthrough of the unit. Each part built on the last:
 
-- **[p1](p1)** introduced the theorem visually with three squares on the sides of a right triangle. The blue square plus orange square always equals the pink square, no matter how the triangle is shaped, as long as one angle stays at $90°$.
-- **[p2](p2)** locked in the routine for finding the hypotenuse: $c = \sqrt{a^{2} + b^{2}}$. Four steps: write, substitute, square and add, square root.
-- **[p3](p3)** showed the leg-finding case: $a = \sqrt{c^{2} - b^{2}}$. The sign flip from add to subtract is where students lose marks.
-- **[p4](p4)** put Pythagoras into context. Real Cambridge questions hide the right triangle inside a rectangle, isosceles, ladder, or coordinate grid. Spot it, draw it, label it, then apply.
+- The theorem itself was introduced visually with three squares on the sides of a right triangle. The blue square plus orange square always equals the pink square, no matter how the triangle is shaped, as long as one angle stays at $90°$.
+- The routine for finding the hypotenuse: $c = \sqrt{a^{2} + b^{2}}$. Four steps: write, substitute, square and add, square root.
+- The leg-finding case: $a = \sqrt{c^{2} - b^{2}}$. The sign flip from add to subtract is where students lose marks.
+- Pythagoras in context: real Cambridge questions hide the right triangle inside a rectangle, isosceles, ladder, or coordinate grid. Spot it, draw it, label it, then apply.
 
 ## The three forms of Pythagoras at a glance
 
@@ -99,7 +99,7 @@ The marking sequence to notice: each part reuses an answer from the previous one
 
 ## Common mistakes (across the unit)
 
-- **Pythagoras on a non-right triangle.** It only works when there is a $90°$ angle. For other triangles, use the sine or cosine rule (covered in [Unit 6.3](../06-03-non-right-triangles/p1)).
+- **Pythagoras on a non-right triangle.** It only works when there is a $90°$ angle. For other triangles, use the sine or cosine rule.
 - **Adding when subtracting**, or vice versa. Always identify the hypotenuse first.
 - **Premature rounding.** Keep the calculator value full to the final step.
 - **Missing the hidden right triangle.** Train your eye to spot rectangles, isosceles altitudes, walls, and coordinate grids.
@@ -107,6 +107,6 @@ The marking sequence to notice: each part reuses an answer from the previous one
 
 ## Where Pythagoras goes next
 
-Pythagoras is the foundation of [Unit 6.2](../06-02-right-angled-triangles/p1) (sin, cos, tan), where you will need it whenever a right triangle is missing one side AND one angle. It is also the spine of [Unit 6.4](../06-04-3d-trigonometry/p1) (3D problems), where space diagonals and slant heights are found by applying Pythagoras twice.
+Pythagoras is the foundation of right-angled trigonometry, where you will need it whenever a right triangle is missing one side AND one angle. It is also the spine of 3D problems, where space diagonals and slant heights are found by applying Pythagoras twice.
 
 Hold this unit's recipe steady, and the rest of trigonometry rests on solid ground.
