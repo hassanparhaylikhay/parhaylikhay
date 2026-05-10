@@ -239,6 +239,7 @@ const WIDGETS: Record<string, WidgetSpec> = {
   "06-02-p2":     { url: "/widgets/trig-trainer.html?topic=identify", height: 620 },
   "06-02-p3":     { url: "/widgets/trig-trainer.html?topic=side",     height: 620 },
   "06-02-p4":     { url: "/widgets/trig-trainer.html?topic=angle",    height: 620 },
+  "06-02-review": { url: "/widgets/trig-trainer.html?topic=mixed",    height: 620 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {
