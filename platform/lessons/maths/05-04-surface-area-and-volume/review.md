@@ -55,44 +55,44 @@ If you've worked through P1 to P6 you can:
 <div class="diagram-caption">SURFACE AREA AND VOLUME · REFERENCE</div>
 <div style="font-size:14px;line-height:1.85;padding:14px 18px">
 
-<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">CUBOID</span> &nbsp;
-\({\color{#0fee89}V = l \times w \times h}\) &nbsp;·&nbsp;
-\({\color{#0fee89}\text{SA} = 2(lw + lh + wh)}\)
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#00abfa;font-weight:700">CUBOID</span> &nbsp;
+\({\color{#00abfa}V = l \times w \times h}\) &nbsp;·&nbsp;
+\({\color{#00abfa}\text{SA} = 2(lw + lh + wh)}\)
 <div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">volume given via prism formula · SA NOT given</div>
 </div>
 
 <div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">PRISM</span> &nbsp;
-\({\color{#0fee89}V = A_\text{cross} \times L}\)
+\({\color{#fff067}V = A_\text{cross} \times L}\)
 <div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">cross-section area × length · GIVEN on the formula sheet</div>
 </div>
 
-<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">CYLINDER</span> &nbsp;
-\({\color{#0fee89}V = \pi r^{2} h}\) &nbsp;·&nbsp;
-\({\color{#0fee89}\text{curved} = 2\pi r h}\)
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#ff822c;font-weight:700">CYLINDER</span> &nbsp;
+\({\color{#ff822c}V = \pi r^{2} h}\) &nbsp;·&nbsp;
+\({\color{#ff822c}\text{curved} = 2\pi r h}\)
 <div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">total SA = curved + 2πr² (two end-circles, you add them)</div>
 </div>
 
-<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">SPHERE</span> &nbsp;
-\({\color{#0fee89}V = \tfrac{4}{3}\pi r^{3}}\) &nbsp;·&nbsp;
-\({\color{#0fee89}\text{SA} = 4\pi r^{2}}\)
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#ff4670;font-weight:700">SPHERE</span> &nbsp;
+\({\color{#ff4670}V = \tfrac{4}{3}\pi r^{3}}\) &nbsp;·&nbsp;
+\({\color{#ff4670}\text{SA} = 4\pi r^{2}}\)
 <div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">both formulas GIVEN · hemisphere = half of each</div>
 </div>
 
-<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">HEMISPHERE</span> &nbsp;
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#0fee89;font-weight:700">HEMISPHERE</span> &nbsp;
 \({\color{#0fee89}V = \tfrac{2}{3}\pi r^{3}}\) &nbsp;·&nbsp;
 \({\color{#0fee89}\text{curved} = 2\pi r^{2}}\)
 <div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">solid hemisphere total SA = 3πr² (curved + flat base πr²)</div>
 </div>
 
-<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">PYRAMID</span> &nbsp;
-\({\color{#0fee89}V = \tfrac{1}{3} \times A_\text{base} \times h}\)
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#00abfa;font-weight:700">PYRAMID</span> &nbsp;
+\({\color{#00abfa}V = \tfrac{1}{3} \times A_\text{base} \times h}\)
 <div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">h is the perpendicular height (not slant) · GIVEN</div>
 </div>
 
-<div><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">CONE</span> &nbsp;
-\({\color{#0fee89}V = \tfrac{1}{3}\pi r^{2} h}\) &nbsp;·&nbsp;
-\({\color{#0fee89}\text{curved} = \pi r l}\) &nbsp;·&nbsp;
-\({\color{#fff067}l = \sqrt{r^{2} + h^{2}}}\)
+<div><span style="font-family:var(--font-geist-mono),monospace;color:#ff822c;font-weight:700">CONE</span> &nbsp;
+\({\color{#ff822c}V = \tfrac{1}{3}\pi r^{2} h}\) &nbsp;·&nbsp;
+\({\color{#ff822c}\text{curved} = \pi r l}\) &nbsp;·&nbsp;
+\({\color{#ff4670}l = \sqrt{r^{2} + h^{2}}}\)
 <div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">total SA = πrl + πr² (closed cone) · slant from Pythagoras</div>
 </div>
 

@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Net Unfolder</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <style>
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   html, body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
@@ -68,16 +70,21 @@
     backface-visibility: visible;
     -webkit-backface-visibility: visible;
   }
-  .face .face-label {
+  .face-label {
     position:absolute; left:50%; top:50%;
     transform: translate(-50%, -50%);
-    font-family:'Geist Mono', monospace;
-    font-size:11px;
+    font-size:14px;
     font-weight:600;
-    color:rgba(11,17,24,0.75);
     pointer-events:none;
-    text-transform:uppercase;
-    letter-spacing:0.4px;
+    line-height:1;
+    opacity:0;
+    transition: opacity 0.35s ease;
+    text-shadow: 0 0 6px rgba(11,17,24,0.7);
+  }
+  .face-label .katex { font-size: 1em; }
+  .stage.is-flat .face-label {
+    opacity: 1;
+    transition: opacity 0.45s ease 1.4s;
   }
 
   .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
@@ -104,6 +111,11 @@
     </div>
   </div>
   <div class="controls">
+    <select id="cross-sel" style="display:none;background:#0b1118;border:1px solid #141e2a;color:#f0eeea;font-family:'Geist Mono',monospace;font-size:12px;padding:7px 22px 7px 12px;border-radius:6px;cursor:pointer">
+      <option value="triangle" selected>triangle</option>
+      <option value="trapezium">trapezium</option>
+      <option value="rectangle">rectangle</option>
+    </select>
     <button class="ctl" id="toggle">unfold →</button>
   </div>
   <p class="footer" id="footer">click to unfold the solid into its net</p>
@@ -142,13 +154,37 @@ function setStyle(el, s) {
   }
 }
 
+// KaTeX render helper. Falls back to plain text if KaTeX is not yet loaded.
+function tryRenderKaTeX(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRenderKaTeX(target, tex); }, 50);
+  }
+}
+
+// Build a face label that renders KaTeX inside a positioned div. Used as the
+// 4th argument to rectFace / triFace builders (they call this to materialise
+// the label DOM). Pass null to skip labelling.
+function makeKaTeXLabel(tex, color) {
+  if (!tex) return null;
+  var lab = document.createElement("div");
+  lab.className = "face-label";
+  lab.style.color = color;
+  tryRenderKaTeX(lab, tex);
+  return lab;
+}
+
 // Make a rectangular face div centred at its parent's local origin.
 // hingeAttach: which edge of the face is on the parent's transform-origin.
 //   "bottom" -> face extends upward in -y from its bottom edge
 //   "top"    -> face extends downward in +y
 //   "left"   -> face extends rightward in +x
 //   "right"  -> face extends leftward in -x
-function rectFace(w, h, color, label, hingeAttach) {
+// 4th argument is now a KaTeX string (or null). The label appears AFTER unfold
+// (CSS controls visibility) and shows the area formula for that face.
+function rectFace(w, h, color, tex, hingeAttach) {
   var el = document.createElement("div");
   el.className = "face";
   // Local positioning: place the face so its hinge edge is at (0, 0, 0).
@@ -166,13 +202,8 @@ function rectFace(w, h, color, label, hingeAttach) {
     background: fillOf(color),
     border: "1.5px solid " + color
   });
-  if (label) {
-    var lab = document.createElement("div");
-    lab.className = "face-label";
-    lab.textContent = label;
-    lab.style.color = color;
-    el.appendChild(lab);
-  }
+  var lab = makeKaTeXLabel(tex, color);
+  if (lab) el.appendChild(lab);
   return el;
 }
 
@@ -182,7 +213,7 @@ function rectFace(w, h, color, label, hingeAttach) {
 //      faces still have a clean stroke in 3D — clip-path on a div
 //      clips its outline to the bounding box, leaving slanted edges
 //      invisible).
-function triFace(w, h, color, label, points, hingeAttach) {
+function triFace(w, h, color, tex, points, hingeAttach) {
   var wrapper = document.createElement("div");
   wrapper.className = "face";
   var off = { left: 0, top: 0 };
@@ -239,13 +270,8 @@ function triFace(w, h, color, label, points, hingeAttach) {
     wrapper.appendChild(line);
   }
 
-  if (label) {
-    var lab = document.createElement("div");
-    lab.className = "face-label";
-    lab.textContent = label;
-    lab.style.color = color;
-    wrapper.appendChild(lab);
-  }
+  var lab = makeKaTeXLabel(tex, color);
+  if (lab) wrapper.appendChild(lab);
   return wrapper;
 }
 
@@ -278,102 +304,74 @@ function trackHinge(h) { allHinges.push(h); return h; }
 
 function buildCube() {
   document.getElementById("title").textContent = "CUBE";
-  document.getElementById("footer").textContent = "6 square faces unfold into a cross-shaped net";
+  document.getElementById("footer").textContent = "6 squares of area s² · total SA = 6s²";
   var s = 100;
   var c = COL.blue;
-  // Front face: anchor at scene origin, in the xy plane (z=0)
-  var front = rectFace(s, s, c, "front");
-  scene.appendChild(front);
-
-  // Top: hinge at front's top edge (y = -s/2), folded by rotating -90 about x
-  // (rotating UP toward viewer in CSS y-down means rotateX(+90) brings top up)
+  var tex = "s^{2}";
+  scene.appendChild(rectFace(s, s, c, tex));
   var hTop = trackHinge(hinge(scene, -90, "X", 0, -s/2, 0));
-  hTop.appendChild(rectFace(s, s, c, "top", "bottom"));
-
-  // Bottom: hinge at front's bottom edge, fold +90
+  hTop.appendChild(rectFace(s, s, c, tex, "bottom"));
   var hBot = trackHinge(hinge(scene, 90, "X", 0, s/2, 0));
-  hBot.appendChild(rectFace(s, s, c, "bottom", "top"));
-
-  // Left: hinge at front's left edge, fold +90 about y
+  hBot.appendChild(rectFace(s, s, c, tex, "top"));
   var hLeft = trackHinge(hinge(scene, 90, "Y", -s/2, 0, 0));
-  hLeft.appendChild(rectFace(s, s, c, "left", "right"));
-
-  // Right: hinge at front's right edge, fold -90 about y
+  hLeft.appendChild(rectFace(s, s, c, tex, "right"));
   var hRight = trackHinge(hinge(scene, -90, "Y", s/2, 0, 0));
-  hRight.appendChild(rectFace(s, s, c, "right", "left"));
-
-  // Back: hinge at right's outer edge (after right is in cube position)
-  // In the right face's local frame, after rotation the outer edge is at (s, 0, 0)
-  // relative to the hinge. The back face hinges there with a -90 fold.
+  hRight.appendChild(rectFace(s, s, c, tex, "left"));
   var hBack = trackHinge(hinge(hRight, -90, "Y", s, 0, 0));
-  hBack.appendChild(rectFace(s, s, c, "back", "left"));
+  hBack.appendChild(rectFace(s, s, c, tex, "left"));
 }
 
 function buildCuboid() {
   document.getElementById("title").textContent = "CUBOID";
-  document.getElementById("footer").textContent = "3 pairs of rectangles: 2 of 5x4, 2 of 5x3, 2 of 4x3";
+  document.getElementById("footer").textContent = "3 pairs of rectangles · SA = 2(lw + lh + wh)";
   var L = 115, W = 90, H = 70;  // length, width, height in px
   var c = COL.yellow;
-  // Front face: L wide, H tall, in xy plane at z=0
-  var front = rectFace(L, H, c, L + " x " + H);
-  scene.appendChild(front);
-
-  // Top: above front. Width L x depth W.
+  // Front: lh
+  scene.appendChild(rectFace(L, H, c, "lh"));
+  // Top: lw
   var hTop = trackHinge(hinge(scene, -90, "X", 0, -H/2, 0));
-  hTop.appendChild(rectFace(L, W, c, L + " x " + W, "bottom"));
-
-  // Bottom
+  hTop.appendChild(rectFace(L, W, c, "lw", "bottom"));
+  // Bottom: lw
   var hBot = trackHinge(hinge(scene, 90, "X", 0, H/2, 0));
-  hBot.appendChild(rectFace(L, W, c, L + " x " + W, "top"));
-
-  // Left: H tall, W deep
+  hBot.appendChild(rectFace(L, W, c, "lw", "top"));
+  // Left: wh
   var hLeft = trackHinge(hinge(scene, 90, "Y", -L/2, 0, 0));
-  hLeft.appendChild(rectFace(W, H, c, W + " x " + H, "right"));
-
-  // Right: H tall, W deep
+  hLeft.appendChild(rectFace(W, H, c, "wh", "right"));
+  // Right: wh
   var hRight = trackHinge(hinge(scene, -90, "Y", L/2, 0, 0));
-  hRight.appendChild(rectFace(W, H, c, W + " x " + H, "left"));
-
-  // Back: hinged on right's outer edge
+  hRight.appendChild(rectFace(W, H, c, "wh", "left"));
+  // Back: lh
   var hBack = trackHinge(hinge(hRight, -90, "Y", W, 0, 0));
-  hBack.appendChild(rectFace(L, H, c, L + " x " + H, "left"));
+  hBack.appendChild(rectFace(L, H, c, "lh", "left"));
 }
 
 function buildPrism() {
+  // Read cross-section choice from URL or in-widget selector
+  var cross = (qs.get("cross") || (document.getElementById("cross-sel") && document.getElementById("cross-sel").value) || "triangle").toLowerCase();
+  if (cross === "trapezium") return buildTrapezoidalPrism();
+  if (cross === "rectangle") return buildRectangularPrism();
+  return buildTriangularPrism();
+}
+
+function buildTriangularPrism() {
   document.getElementById("title").textContent = "TRIANGULAR PRISM";
-  // Cross-section legs and prism length in cm (URL-configurable).
-  var aCm = parseFloat(qs.get("a")) || 5;   // a-leg (vertical)
-  var bCm = parseFloat(qs.get("b")) || 8;   // b-leg (horizontal)
-  var Lcm = parseFloat(qs.get("L")) || 12;  // prism length
+  var aCm = 5, bCm = 8, Lcm = 12;
   var hCm = Math.sqrt(aCm * aCm + bCm * bCm);
-  // Auto-scale so the unfolded net (width = L + 2a, height = b + a + hyp) fits
-  // the 480x360 stage with ~15% margin.
   var netWcm = Lcm + 2 * aCm;
   var netHcm = bCm + aCm + hCm;
   var scale = Math.min(420 / netWcm, 320 / netHcm);
   var a = aCm * scale, b = bCm * scale, L = Lcm * scale, hyp = hCm * scale;
-  document.getElementById("footer").textContent =
-    "2 triangles (" + aCm + "-" + bCm + "-" + Math.round(hCm) +
-    ") + 3 rectangles (length " + Lcm + ")";
+  document.getElementById("footer").textContent = "2 triangle caps (½bh) + 3 side rectangles";
   var c = COL.green;
-
-  // The net extends upward from the bottom rectangle by (a + hyp). To keep
-  // the whole figure visually centred in the stage, translate everything
-  // DOWN by (a + hyp)/2 so the bounding box of the net spans symmetrically
-  // around the scene origin.
   var yOff = (a + hyp) / 2;
 
-  // Bottom (b-leg side) rectangle: anchor in xy plane at z=0
-  var bottomEl = rectFace(L, b, c, Lcm + " x " + bCm);
+  var bottomEl = rectFace(L, b, c, "bL");
   bottomEl.style.top = (-b/2 + yOff) + "px";
   scene.appendChild(bottomEl);
 
-  // a-leg side: hinged at bottom's TOP edge (y = -b/2 + yOff). Folds back -90 about x.
   var hSide1 = trackHinge(hinge(scene, -90, "X", 0, -b/2 + yOff, 0));
-  hSide1.appendChild(rectFace(L, a, c, Lcm + " x " + aCm, "bottom"));
+  hSide1.appendChild(rectFace(L, a, c, "aL", "bottom"));
 
-  // Hypotenuse side: hinged at the top edge of the a-leg side. Wrap angle =
-  // 180 - top-vertex-angle of the cross-section (= 180 - acos(a/hyp)).
   var wrapDeg = 180 - Math.acos(a / hyp) * 180 / Math.PI;
   var hSide2 = document.createElement("div");
   hSide2.className = "hinge";
@@ -381,43 +379,113 @@ function buildPrism() {
   hSide2.style.transform = "translate3d(0px," + (-a) + "px,0px) " + hSide2.dataset.foldedRotate;
   hSide1.appendChild(hSide2);
   allHinges.push(hSide2);
-  hSide2.appendChild(rectFace(L, hyp, c, Lcm + " x " + Math.round(hCm), "bottom"));
+  hSide2.appendChild(rectFace(L, hyp, c, "cL", "bottom"));
 
-  // Caps: triangle in cross-section (right angle between a and b legs).
-  // Hinges at the bottom rectangle's left and right edges (y = yOff).
-  // Each side of the triangle gets its OWN label (a-leg, b-leg, hypotenuse).
-  function edgeLab(text, color, x, y) {
-    var lab = document.createElement("div");
-    lab.className = "face-label";
-    lab.style.left = x + "px";
-    lab.style.top = y + "px";
-    lab.style.color = color;
-    lab.textContent = text;
-    return lab;
-  }
-  var hypLbl = Math.round(hCm * 100) / 100;
-  // LEFT cap: vertices (a,0), (a,b), (0,0). Right angle at top-right.
-  // a-leg = top edge; b-leg = right edge (hinge); hypotenuse = diagonal.
+  // Triangle caps with the area formula
   var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, yOff, 0));
-  var capL = triFace(a, b, c, null, "100% 0%, 100% 100%, 0% 0%", "right");
+  var capL = triFace(a, b, c, "\\tfrac{1}{2}bh", "100% 0%, 100% 100%, 0% 0%", "right");
   hCapL.appendChild(capL);
-  capL.appendChild(edgeLab(aCm, c, a/2, 9));            // a-leg on top edge
-  capL.appendChild(edgeLab(bCm, c, a - 11, b/2));       // b-leg on right edge
-  capL.appendChild(edgeLab(hypLbl, c, 2*a/3, b/3));     // hypotenuse near centroid
 
-  // RIGHT cap: vertices (0,0), (0,b), (a,0). Right angle at top-left.
-  // a-leg = top edge; b-leg = left edge (hinge); hypotenuse = diagonal.
   var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, yOff, 0));
-  var capR = triFace(a, b, c, null, "0% 0%, 0% 100%, 100% 0%", "left");
+  var capR = triFace(a, b, c, "\\tfrac{1}{2}bh", "0% 0%, 0% 100%, 100% 0%", "left");
   hCapR.appendChild(capR);
-  capR.appendChild(edgeLab(aCm, c, a/2, 9));            // a-leg on top edge
-  capR.appendChild(edgeLab(bCm, c, 11, b/2));           // b-leg on left edge
-  capR.appendChild(edgeLab(hypLbl, c, a/3, b/3));       // hypotenuse near centroid
+}
+
+function buildTrapezoidalPrism() {
+  document.getElementById("title").textContent = "TRAPEZOIDAL PRISM";
+  // Isosceles trapezium cross-section: parallel sides a (top) and b (bottom > a),
+  // perpendicular height h. Slant side length s.
+  var aCm = 5, bCm = 9, hCm = 5, Lcm = 11;
+  var sCm = Math.sqrt(((bCm - aCm) / 2) * ((bCm - aCm) / 2) + hCm * hCm);
+  // Auto-scale so the unrolled net (width L + 2b for caps; height b+2s+a stacked
+  // rectangles) fits the 480×360 stage with a margin.
+  var netWcm = Lcm + 2 * bCm;
+  var netHcm = bCm + 2 * sCm + aCm;
+  var scale = Math.min(380 / netWcm, 300 / netHcm);
+  var a = aCm * scale, b = bCm * scale, h = hCm * scale, L = Lcm * scale, s = sCm * scale;
+  document.getElementById("footer").textContent = "2 trapezium caps (½(a+b)h) + 4 side rectangles";
+  var c = COL.green;
+
+  // Centre the unrolled rectangle stack vertically. Total upward extent from
+  // the bottom rectangle's centre = (b/2 + s + a + s + b/2 - b) = s + a + s + b/2.
+  // Simpler: tower height = b + s + a + s; centre tower around scene y=0 by
+  // shifting the bottom rectangle DOWN by (s + a + s) / 2.
+  var towerH = b + 2 * s + a;
+  var bottomCY = (towerH - b) / 2;  // y of the bottom rectangle's centre (positive = below origin)
+
+  // Bottom (b-side) rectangle
+  var bottomEl = rectFace(L, b, c, "bL");
+  bottomEl.style.top = (-b/2 + bottomCY) + "px";
+  scene.appendChild(bottomEl);
+
+  // alpha = interior angle at the bottom-right vertex of the trapezium
+  // = angle between the b-side and the slant side. For b > a:
+  //   alpha = arctan(h / ((b-a)/2))
+  // For b == a (rectangle) it is 90°.
+  var alpha;
+  if (bCm > aCm) alpha = Math.atan2(hCm, (bCm - aCm) / 2) * 180 / Math.PI;
+  else alpha = 90;
+  var wrap1 = 180 - alpha;  // bottom→slant fold
+  var wrap2 = alpha;        // slant→top fold
+
+  // First slant rectangle (sL): hinged at bottom rect's top edge.
+  var hSlant1 = trackHinge(hinge(scene, -wrap1, "X", 0, -b/2 + bottomCY, 0));
+  hSlant1.appendChild(rectFace(L, s, c, "sL", "bottom"));
+
+  // Top rectangle (aL): hinged at slant1's top edge.
+  var hTop = document.createElement("div");
+  hTop.className = "hinge";
+  hTop.dataset.foldedRotate = "rotateX(-" + wrap2 + "deg)";
+  hTop.style.transform = "translate3d(0px," + (-s) + "px,0px) " + hTop.dataset.foldedRotate;
+  hSlant1.appendChild(hTop);
+  allHinges.push(hTop);
+  hTop.appendChild(rectFace(L, a, c, "aL", "bottom"));
+
+  // Second slant rectangle (sL): hinged at top's top edge.
+  var hSlant2 = document.createElement("div");
+  hSlant2.className = "hinge";
+  hSlant2.dataset.foldedRotate = "rotateX(-" + wrap2 + "deg)";
+  hSlant2.style.transform = "translate3d(0px," + (-a) + "px,0px) " + hSlant2.dataset.foldedRotate;
+  hTop.appendChild(hSlant2);
+  allHinges.push(hSlant2);
+  hSlant2.appendChild(rectFace(L, s, c, "sL", "bottom"));
+
+  // Caps: trapezium clipped from a b×h bounding box. Vertex coords in pct of bbox:
+  //   bottom-left:  (0, 100)
+  //   bottom-right: (100, 100)
+  //   top-right:    ((b-(b-a)/2)/b * 100, 0)
+  //   top-left:     (((b-a)/2)/b * 100, 0)
+  var topRightPct = ((b - (b - a) / 2) / b * 100).toFixed(2);
+  var topLeftPct  = (((b - a) / 2) / b * 100).toFixed(2);
+  var trapClip = "0% 100%, 100% 100%, " + topRightPct + "% 0%, " + topLeftPct + "% 0%";
+
+  // LEFT cap: hinged at the bottom rect's LEFT short edge (x=-L/2, y=bottomCY).
+  // The cap face has size b × h. hingeAttach="right" puts the face's RIGHT edge
+  // on the hinge — but we want the cap's BOTTOM edge (the b-side) on the hinge.
+  // To rotate the cap properly when folded, the hinge is rotated 90° about Y AND
+  // we also need the cap to be oriented so its long axis aligns with the bottom
+  // rect. We accomplish this by hinging on the cap's right edge AND rotating the
+  // face's local coordinate system 90° via an extra wrapper.
+  // Simpler approach: keep the cap oriented vertically, but treat the hinge
+  // origin as where the b-side connects.
+  var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, bottomCY, 0));
+  var capL = triFace(b, h, c, "\\tfrac{1}{2}(a+b)h", trapClip, "right");
+  hCapL.appendChild(capL);
+
+  var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, bottomCY, 0));
+  var capR = triFace(b, h, c, "\\tfrac{1}{2}(a+b)h", trapClip, "left");
+  hCapR.appendChild(capR);
+}
+
+function buildRectangularPrism() {
+  // A rectangular prism is just a cuboid — reuse that builder.
+  buildCuboid();
+  document.getElementById("title").textContent = "RECTANGULAR PRISM (CUBOID)";
 }
 
 function buildCylinder() {
   document.getElementById("title").textContent = "CYLINDER";
-  document.getElementById("footer").textContent = "2 circular ends + a rectangle of width = circumference 2πr";
+  document.getElementById("footer").textContent = "2 circles (πr²) + 1 rectangle (2πrh)";
   var r = 48;
   var H = 110;
   var circ = 2 * Math.PI * r;
@@ -477,6 +545,7 @@ function buildCylinder() {
   topCircle.dataset.folded3d = "translate3d(0px," + (-H / 2) + "px,0px) rotateX(90deg)";
   topCircle.dataset.flat3d   = "translate3d(0px," + (-H / 2 - r) + "px,0px) rotateX(0deg)";
   topCircle.style.transform = topCircle.dataset.folded3d;
+  topCircle.appendChild(makeKaTeXLabel("\\pi r^{2}", c));
   scene.appendChild(topCircle);
 
   var botCircle = document.createElement("div");
@@ -495,44 +564,47 @@ function buildCylinder() {
   botCircle.dataset.folded3d = "translate3d(0px," + (H / 2) + "px,0px) rotateX(-90deg)";
   botCircle.dataset.flat3d   = "translate3d(0px," + (H / 2 + r) + "px,0px) rotateX(0deg)";
   botCircle.style.transform = botCircle.dataset.folded3d;
+  botCircle.appendChild(makeKaTeXLabel("\\pi r^{2}", c));
   scene.appendChild(botCircle);
+
+  // Side label for the curved surface — appears at the centre of the unrolled
+  // rectangle when flat. Its parent is the scene; CSS handles visibility.
+  var sideLabel = document.createElement("div");
+  sideLabel.className = "face-label";
+  sideLabel.style.position = "absolute";
+  sideLabel.style.left = "0";
+  sideLabel.style.top = "0";
+  sideLabel.style.transform = "translate(-50%, -50%)";
+  sideLabel.style.color = c;
+  tryRenderKaTeX(sideLabel, "2\\pi r h");
+  scene.appendChild(sideLabel);
 }
 
 function buildPyramid() {
   document.getElementById("title").textContent = "SQUARE-BASED PYRAMID";
-  document.getElementById("footer").textContent = "1 square base + 4 triangular faces meeting at the apex";
+  document.getElementById("footer").textContent = "1 square base (s²) + 4 triangle sides (½sl)";
   var s = 100;
   var H = 110;
   var slant = Math.sqrt((s/2)*(s/2) + H*H);
   var c = COL.orange;
-  // Fold angle for each side: 180 - atan2(H, s/2). The face has to rotate PAST
-  // 90 degrees because for H > s/2 the face leans inward toward the apex.
-  // Verified: with foldDeg = 180 - atan2(H, s/2) all four apexes converge at
-  // (0, 0, H) — the pyramid apex above the base centre.
   var foldDeg = 180 - Math.atan2(H, s/2) * 180 / Math.PI;
 
-  // Base square anchor
-  scene.appendChild(rectFace(s, s, c, "base " + s));
+  // Base square: s²
+  scene.appendChild(rectFace(s, s, c, "s^{2}"));
+  var triTex = "\\tfrac{1}{2} s l";
 
-  // Top side (north): triangle width=s, height=slant, apex at top, base at bottom.
-  // Hinge attaches face's bottom edge to base's top edge.
+  // 4 triangular sides
   var hN = trackHinge(hinge(scene, -foldDeg, "X", 0, -s/2, 0));
-  hN.appendChild(triFace(s, slant, c, "side", "50% 0%, 0% 100%, 100% 100%", "bottom"));
+  hN.appendChild(triFace(s, slant, c, triTex, "50% 0%, 0% 100%, 100% 100%", "bottom"));
 
-  // Bottom side (south): triangle apex at the bottom-centre (pointing AWAY from base).
-  // hingeAttach="top" means face top edge is at hinge -> base of triangle (top of clip)
-  // sits on the base square's bottom edge.
   var hS = trackHinge(hinge(scene, foldDeg, "X", 0, s/2, 0));
-  hS.appendChild(triFace(s, slant, c, "side", "0% 0%, 100% 0%, 50% 100%", "top"));
+  hS.appendChild(triFace(s, slant, c, triTex, "0% 0%, 100% 0%, 50% 100%", "top"));
 
-  // Left side (west): triangle width=slant, height=s, apex at left-centre
-  // pointing outward to the left. Base of triangle is the right edge.
   var hW = trackHinge(hinge(scene, foldDeg, "Y", -s/2, 0, 0));
-  hW.appendChild(triFace(slant, s, c, "side", "0% 50%, 100% 0%, 100% 100%", "right"));
+  hW.appendChild(triFace(slant, s, c, triTex, "0% 50%, 100% 0%, 100% 100%", "right"));
 
-  // Right side (east): apex at right-centre.
   var hE = trackHinge(hinge(scene, -foldDeg, "Y", s/2, 0, 0));
-  hE.appendChild(triFace(slant, s, c, "side", "100% 50%, 0% 0%, 0% 100%", "left"));
+  hE.appendChild(triFace(slant, s, c, triTex, "100% 50%, 0% 0%, 0% 100%", "left"));
 }
 
 function buildCone() {
@@ -618,7 +690,20 @@ function buildCone() {
   baseCircle.dataset.folded3d = "translate3d(0px," + (H / 2) + "px,0px) rotateX(90deg)";
   baseCircle.dataset.flat3d = "translate3d(0px," + (-yOff + slant + r) + "px,0px) rotateX(0deg)";
   baseCircle.style.transform = baseCircle.dataset.folded3d;
+  baseCircle.appendChild(makeKaTeXLabel("\\pi r^{2}", c));
   scene.appendChild(baseCircle);
+
+  // Sector label (curved surface area = πrl) — appears at the centre of the
+  // unrolled sector when flat. Parent is the scene; CSS controls visibility.
+  var sectorLabel = document.createElement("div");
+  sectorLabel.className = "face-label";
+  sectorLabel.style.position = "absolute";
+  sectorLabel.style.left = "0";
+  sectorLabel.style.top = (-yOff + slant * 0.55) + "px";
+  sectorLabel.style.transform = "translate(-50%, -50%)";
+  sectorLabel.style.color = c;
+  tryRenderKaTeX(sectorLabel, "\\pi r l");
+  scene.appendChild(sectorLabel);
 }
 
 // Apply the requested solid
@@ -630,7 +715,30 @@ var BUILDERS = {
   pyramid: buildPyramid,
   cone: buildCone
 };
-(BUILDERS[SOLID] || buildCube)();
+
+function rebuildSolid() {
+  scene.innerHTML = "";
+  allHinges = [];
+  (BUILDERS[SOLID] || buildCube)();
+}
+
+// Show the cross-section selector when solid=prism, and rebuild on change.
+var crossSelEl = document.getElementById("cross-sel");
+if (SOLID === "prism") {
+  crossSelEl.style.display = "inline-block";
+  // Pre-set from URL ?cross= if provided
+  var initialCross = (qs.get("cross") || "triangle").toLowerCase();
+  if (["triangle", "trapezium", "rectangle"].indexOf(initialCross) !== -1) {
+    crossSelEl.value = initialCross;
+  }
+  crossSelEl.addEventListener("change", function() {
+    rebuildSolid();
+    // Re-apply the current fold state after rebuild
+    updateView();
+  });
+}
+
+rebuildSolid();
 
 // === Toggle controller ===============================================
 
