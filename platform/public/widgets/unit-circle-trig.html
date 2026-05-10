@@ -74,8 +74,10 @@
     <span class="meta">drag the point · or use the slider</span>
   </div>
 
-  <svg id="stage" viewBox="0 0 480 360" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <svg id="stage" viewBox="0 0 660 360" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
     <g id="g-grid"></g>
+    <g id="g-wave-static"></g>
+    <g id="g-wave-trace"></g>
     <g id="g-figure"></g>
     <g id="g-labels"></g>
     <g id="g-handles"></g>
@@ -166,8 +168,14 @@ function svgKaTeXLabel(parent, x, y, tex, color, alignment, fontSizePx) {
 }
 
 // ===== Geometry =====
-var SVG_W = 480, SVG_H = 360;
-var CX = 200, CY = 200, R = 130;  // circle centre + radius (px)
+var SVG_W = 660, SVG_H = 360;
+var CX = 150, CY = 180, R = 105;  // circle centre + radius (px)
+
+// Wave panel coordinates (right of the circle)
+var WX = 290, WY = 50, WW = 340, WH = 270;  // panel box
+var WCY = 320;  // y-coord of the y=0 baseline (bottom of panel)
+var WSCALE = 90;  // px per unit on y-axis (so y=1 at 230, y=3 at 50)
+var WMAX_Y = 3;  // clip tan above this
 
 // State
 var params  = { theta: 35 };  // degrees
@@ -176,22 +184,28 @@ var SPRING_FACTOR = 0.22, SPRING_EPS = 0.005;
 
 var stage = document.getElementById("stage");
 var gGrid = document.getElementById("g-grid");
+var gWaveStatic = document.getElementById("g-wave-static");
+var gWaveTrace  = document.getElementById("g-wave-trace");
 var gFig  = document.getElementById("g-figure");
 var gLbl  = document.getElementById("g-labels");
 var gHnd  = document.getElementById("g-handles");
 
+// θ-deg → x in wave panel
+function xWave(thetaDeg) { return WX + (thetaDeg / 90) * WW; }
+// y-value (-WMAX_Y..WMAX_Y) → y in wave panel
+function yWave(v) { return WCY - v * WSCALE; }
+
 function renderStaticGrid() {
   gGrid.innerHTML = "";
-  // Axes
+  // ===== Unit-circle side: axes =====
   gGrid.appendChild(svgEl("line", {
-    x1: CX - R - 26, y1: CY, x2: CX + R + 26, y2: CY,
+    x1: CX - R - 22, y1: CY, x2: CX + R + 22, y2: CY,
     stroke: COL.faint, "stroke-width": 1
   }));
   gGrid.appendChild(svgEl("line", {
-    x1: CX, y1: CY - R - 26, x2: CX, y2: CY + R + 26,
+    x1: CX, y1: CY - R - 22, x2: CX, y2: CY + R + 22,
     stroke: COL.faint, "stroke-width": 1
   }));
-  // Tick labels for axes (at +1 and -1 ish, since we restrict θ to acute we only need the +1 axis labels really)
   svgKaTeXLabel(gGrid, CX + R, CY + 16, "1", COL.grey, "center", 11);
   svgKaTeXLabel(gGrid, CX - 12, CY - R, "1", COL.grey, "center", 11);
 
@@ -201,12 +215,113 @@ function renderStaticGrid() {
     fill: "rgba(255,240,103,0.04)", stroke: COL.faint, "stroke-width": 1.4
   }));
 }
+
+function renderStaticWavePanel() {
+  gWaveStatic.innerHTML = "";
+
+  // Panel border
+  gWaveStatic.appendChild(svgEl("rect", {
+    x: WX, y: WY, width: WW, height: WH,
+    fill: "rgba(15,30,46,0.4)", stroke: COL.faint, "stroke-width": 1
+  }));
+
+  // y=0 baseline
+  gWaveStatic.appendChild(svgEl("line", {
+    x1: WX, y1: WCY, x2: WX + WW, y2: WCY,
+    stroke: COL.faint, "stroke-width": 1
+  }));
+  // y=1 dashed reference line
+  gWaveStatic.appendChild(svgEl("line", {
+    x1: WX, y1: yWave(1), x2: WX + WW, y2: yWave(1),
+    stroke: COL.faint, "stroke-width": 0.7, "stroke-dasharray": "3 3", opacity: 0.6
+  }));
+  // y=2 dashed reference line
+  gWaveStatic.appendChild(svgEl("line", {
+    x1: WX, y1: yWave(2), x2: WX + WW, y2: yWave(2),
+    stroke: COL.faint, "stroke-width": 0.6, "stroke-dasharray": "3 3", opacity: 0.4
+  }));
+
+  // x-axis tick marks at 0, 30, 45, 60, 90
+  [0, 30, 45, 60, 90].forEach(function(deg) {
+    var x = xWave(deg);
+    gWaveStatic.appendChild(svgEl("line", {
+      x1: x, y1: WCY - 3, x2: x, y2: WCY + 4,
+      stroke: COL.faint, "stroke-width": 1
+    }));
+    var t = svgEl("text", {
+      x: x, y: WCY + 14, "text-anchor": "middle",
+      "font-family": "Geist Mono, monospace", "font-size": "10", fill: COL.grey
+    });
+    t.textContent = deg + "°";
+    gWaveStatic.appendChild(t);
+  });
+
+  // y-axis labels (1 and 2)
+  svgKaTeXLabel(gWaveStatic, WX - 14, yWave(1), "1", COL.grey, "center", 10);
+  svgKaTeXLabel(gWaveStatic, WX - 14, yWave(2), "2", COL.grey, "center", 10);
+
+  // ===== Static (faint) full-range curves =====
+  function buildCurvePath(fn, dashed) {
+    var d = "";
+    var first = true;
+    var lastValid = false;
+    var STEPS = 240;
+    for (var i = 0; i <= STEPS; i++) {
+      var deg = (i / STEPS) * 90;
+      var rad = deg * Math.PI / 180;
+      var v = fn(rad);
+      if (!isFinite(v) || Math.abs(v) > WMAX_Y) {
+        lastValid = false;
+        continue;
+      }
+      var x = xWave(deg), y = yWave(v);
+      if (first || !lastValid) { d += "M " + x + " " + y + " "; first = false; }
+      else d += "L " + x + " " + y + " ";
+      lastValid = true;
+    }
+    return d;
+  }
+
+  // sin θ curve (orange, faint)
+  gWaveStatic.appendChild(svgEl("path", {
+    d: buildCurvePath(Math.sin),
+    fill: "none", stroke: COL.orange, "stroke-width": 1.3, opacity: 0.25
+  }));
+  // cos θ curve (blue, faint)
+  gWaveStatic.appendChild(svgEl("path", {
+    d: buildCurvePath(Math.cos),
+    fill: "none", stroke: COL.blue, "stroke-width": 1.3, opacity: 0.25
+  }));
+  // tan θ curve (yellow, faint, clipped at WMAX_Y)
+  gWaveStatic.appendChild(svgEl("path", {
+    d: buildCurvePath(Math.tan),
+    fill: "none", stroke: COL.yellow, "stroke-width": 1.3, opacity: 0.20
+  }));
+
+  // Curve legends in upper-left of panel
+  var legendY = WY + 14;
+  function legend(label, color, dy) {
+    var t = svgEl("text", {
+      x: WX + 8, y: legendY + dy,
+      "font-family": "Geist Mono, monospace", "font-size": "10",
+      "font-weight": "700", fill: color
+    });
+    t.textContent = label;
+    gWaveStatic.appendChild(t);
+  }
+  legend("sin θ", COL.orange, 0);
+  legend("cos θ", COL.blue, 14);
+  legend("tan θ", COL.yellow, 28);
+}
+
 renderStaticGrid();
+renderStaticWavePanel();
 
 function render() {
   gFig.innerHTML = "";
   gLbl.innerHTML = "";
   gHnd.innerHTML = "";
+  gWaveTrace.innerHTML = "";
 
   var theta = display.theta;
   var thetaRad = theta * Math.PI / 180;
@@ -288,10 +403,68 @@ function render() {
   });
   gHnd.appendChild(phHandle);
 
-  // Update bottom readouts
+  // ===== Wave panel: traced (active) portion of each curve from 0 to current θ =====
   var sinV = Math.sin(thetaRad);
   var cosV = Math.cos(thetaRad);
   var tanV = Math.tan(thetaRad);
+
+  function tracePath(fn) {
+    var d = "";
+    var first = true, lastValid = false;
+    var STEPS = Math.max(8, Math.ceil(theta * 2.5));
+    for (var i = 0; i <= STEPS; i++) {
+      var deg = (i / STEPS) * theta;
+      var rad = deg * Math.PI / 180;
+      var v = fn(rad);
+      if (!isFinite(v) || Math.abs(v) > WMAX_Y) { lastValid = false; continue; }
+      var x = xWave(deg), y = yWave(v);
+      if (first || !lastValid) { d += "M " + x + " " + y + " "; first = false; }
+      else d += "L " + x + " " + y + " ";
+      lastValid = true;
+    }
+    return d;
+  }
+  gWaveTrace.appendChild(svgEl("path", {
+    d: tracePath(Math.sin),
+    fill: "none", stroke: COL.orange, "stroke-width": 2.5, opacity: 0.95
+  }));
+  gWaveTrace.appendChild(svgEl("path", {
+    d: tracePath(Math.cos),
+    fill: "none", stroke: COL.blue, "stroke-width": 2.5, opacity: 0.95
+  }));
+  gWaveTrace.appendChild(svgEl("path", {
+    d: tracePath(Math.tan),
+    fill: "none", stroke: COL.yellow, "stroke-width": 2.5, opacity: 0.95
+  }));
+
+  // Cursor: vertical line at current θ
+  var cursorX = xWave(theta);
+  gWaveTrace.appendChild(svgEl("line", {
+    x1: cursorX, y1: WY, x2: cursorX, y2: WY + WH,
+    stroke: COL.faint, "stroke-width": 0.8, "stroke-dasharray": "3 3", opacity: 0.6
+  }));
+
+  // Dashed connecting line from circle's point to the cursor's sin-dot (visual link)
+  var sinDotY = yWave(sinV);
+  gWaveTrace.appendChild(svgEl("line", {
+    x1: Px, y1: Py, x2: cursorX, y2: sinDotY,
+    stroke: COL.orange, "stroke-width": 0.8, "stroke-dasharray": "2 4", opacity: 0.35
+  }));
+
+  // Dots at the current value of each curve
+  function dot(x, y, color) {
+    gWaveTrace.appendChild(svgEl("circle", {
+      cx: x, cy: y, r: 4,
+      fill: color, stroke: "#0b1118", "stroke-width": 1.5
+    }));
+  }
+  dot(cursorX, sinDotY, COL.orange);
+  dot(cursorX, yWave(cosV), COL.blue);
+  if (Math.abs(tanV) <= WMAX_Y) {
+    dot(cursorX, yWave(tanV), COL.yellow);
+  }
+
+  // Update bottom readouts
   document.getElementById("v-sin").textContent = "= " + fmtNum(sinV, 3);
   document.getElementById("v-cos").textContent = "= " + fmtNum(cosV, 3);
   document.getElementById("v-tan").textContent = "= " + fmtNum(tanV, 3);
