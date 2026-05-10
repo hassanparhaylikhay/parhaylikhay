@@ -486,7 +486,16 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "05", code: "5.5", title: "Compound shapes and parts of shapes" },
+      {
+        slug: "05", code: "5.5", title: "Compound shapes and parts of shapes",
+        parts: [
+          { slug: "p1",     label: "P1", title: "2D compound shapes" },
+          { slug: "p2",     label: "P2", title: "Parts with circular curves" },
+          { slug: "p3",     label: "P3", title: "3D compound solids" },
+          { slug: "p4",     label: "P4", title: "Frustums and hollow solids" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
     ],
   },
   {

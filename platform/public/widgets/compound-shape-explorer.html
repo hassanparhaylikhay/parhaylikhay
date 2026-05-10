@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Compound Shape Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+
+  .formulas { display:flex; flex-direction:column; gap:4px; align-items:center; margin-bottom:10px; }
+  .formula { font-size:14px; color:#f0eeea; line-height:1.3; }
+  .formula .katex { font-size:1em; }
+
+  .controls {
+    display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:0 4px;
+    font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap;
+  }
+  .toggle-row { display:flex; align-items:center; gap:8px; }
+  .toggle-row .name { color:#fff067; font-weight:600; }
+  .toggle-row select {
+    background:#141e2a; color:#f0eeea; border:1px solid #3a4a5a; border-radius:4px;
+    padding:3px 6px; font-family:'Geist Mono',monospace; font-size:11px; outline:none; cursor:pointer;
+  }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="formulas">
+    <span class="formula" id="fA"></span>
+    <span class="formula" id="fP"></span>
+  </div>
+
+  <div class="controls">
+    <div class="toggle-row">
+      <span class="name">shape</span>
+      <select id="shapeSel">
+        <option value="L" selected>L-shape</option>
+        <option value="T">T-shape</option>
+        <option value="plus">plus / cross</option>
+        <option value="rectTri">rectangle − triangle</option>
+        <option value="rectSemi">rectangle − semicircle</option>
+        <option value="track">running track</option>
+      </select>
+    </div>
+    <div class="toggle-row">
+      <span class="name">method</span>
+      <select id="modeSel">
+        <option value="combined" selected>combined view</option>
+        <option value="decompose">decomposed</option>
+      </select>
+    </div>
+  </div>
+
+  <svg id="svg" viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-shape"></g>
+  </svg>
+
+  <p class="footer">decompose, sum or subtract · perimeter is the outline only</p>
+</div>
+
+<script>
+"use strict";
+
+var SVG_W = 480, SVG_H = 280;
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n) {
+  if (!isFinite(n)) return "—";
+  var v = Math.round(n * 100) / 100;
+  if (v === 0) return "0";
+  return parseFloat(v.toFixed(2)).toString();
+}
+function texCoefPi(coef) {
+  var v = Math.round(coef * 1000) / 1000;
+  if (v === 0) return "0";
+  if (v === 1) return "\\pi";
+  return parseFloat(v.toFixed(3)).toString() + "\\pi";
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment) {
+  var fo = svgEl("foreignObject", {
+    x: (x - 50), y: (y - 12), width: 100, height: 24,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  div.style.color = color || "#f0eeea";
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+var COL = {
+  blue: "#00abfa", yellow: "#fff067", orange: "#ff822c",
+  green: "#0fee89", pink: "#ff4670", grey: "#7a7875", faint: "#3a4a5a"
+};
+
+// =====================================================================
+// Each shape returns: paths to draw, area calculation, perimeter calc.
+// All units in cm, all coordinates in viewBox px.
+// =====================================================================
+var SHAPES = {
+  L: function() {
+    var L = 10, H = 8, cutW = 5, cutH = 4;  // cm dimensions
+    var s = 18;  // px per cm
+    var x0 = SVG_W/2 - L*s/2, y0 = SVG_H/2 - H*s/2;
+    return {
+      title: "L-shape: outer 10×8 with 5×4 corner cut",
+      // Polygon outline (px)
+      outline: [
+        [x0, y0+H*s], [x0, y0], [x0+L*s, y0], [x0+L*s, y0+cutH*s],
+        [x0+(L-cutW)*s, y0+cutH*s], [x0+(L-cutW)*s, y0+H*s]
+      ],
+      cutPiece: [[x0+(L-cutW)*s, y0], [x0+L*s, y0], [x0+L*s, y0+cutH*s], [x0+(L-cutW)*s, y0+cutH*s]],
+      bounding: [[x0, y0], [x0+L*s, y0], [x0+L*s, y0+H*s], [x0, y0+H*s]],
+      labels: [
+        { x: x0 + L*s/2, y: y0 + H*s + 14, tex: "10", c: COL.blue, a: "center" },
+        { x: x0 - 12, y: y0 + H*s/2, tex: "8", c: COL.blue, a: "right" },
+        { x: x0 + (L - cutW/2)*s, y: y0 - 12, tex: "5", c: COL.pink, a: "center" },
+        { x: x0 + L*s + 12, y: y0 + cutH*s/2, tex: "4", c: COL.pink, a: "left" }
+      ],
+      areaTex:  "10 \\times 8 - 5 \\times 4",
+      areaVal:  10*8 - 5*4,
+      perimTex: "10 + 4 + 5 + 4 + 5 + 8",
+      perimVal: 10 + 4 + 5 + 4 + 5 + 8,
+      colors: { fill: "rgba(0,171,250,0.18)", stroke: COL.blue, cut: COL.pink }
+    };
+  },
+  T: function() {
+    var capW = 10, capH = 3, stemW = 3, stemH = 6;
+    var s = 18;
+    var cx = SVG_W/2, cy = SVG_H/2 - 16;
+    var capX = cx - capW*s/2, capY = cy - (capH + stemH)*s/2;
+    var stemX = cx - stemW*s/2, stemY = capY + capH*s;
+    return {
+      title: "T-shape: 10×3 cap on a 3×6 stem",
+      outline: [
+        [capX, capY], [capX + capW*s, capY], [capX + capW*s, capY + capH*s],
+        [stemX + stemW*s, capY + capH*s], [stemX + stemW*s, stemY + stemH*s],
+        [stemX, stemY + stemH*s], [stemX, capY + capH*s], [capX, capY + capH*s]
+      ],
+      // Decomposition: cap + stem
+      pieces: [
+        { d: [[capX, capY], [capX + capW*s, capY], [capX + capW*s, capY + capH*s], [capX, capY + capH*s]], color: COL.blue },
+        { d: [[stemX, capY + capH*s], [stemX + stemW*s, capY + capH*s], [stemX + stemW*s, stemY + stemH*s], [stemX, stemY + stemH*s]], color: COL.orange }
+      ],
+      labels: [
+        { x: capX + capW*s/2, y: capY - 14, tex: "10", c: COL.blue, a: "center" },
+        { x: capX - 12, y: capY + capH*s/2, tex: "3", c: COL.blue, a: "right" },
+        { x: stemX - 12, y: stemY + stemH*s/2, tex: "3", c: COL.orange, a: "right" },
+        { x: stemX + stemW*s + 12, y: stemY + stemH*s/2, tex: "6", c: COL.orange, a: "left" }
+      ],
+      areaTex:  "10 \\times 3 + 3 \\times 6",
+      areaVal:  30 + 18,
+      perimTex: "10 + 3 + 3.5 + 6 + 3 + 6 + 3.5 + 3",
+      perimVal: 10 + 3 + 3.5 + 6 + 3 + 6 + 3.5 + 3,
+      colors: { fill: "rgba(0,171,250,0.18)", stroke: COL.blue }
+    };
+  },
+  plus: function() {
+    var armL = 9, armW = 3;
+    var s = 18;
+    var cx = SVG_W/2, cy = SVG_H/2;
+    return {
+      title: "Plus / cross: two 9×3 strips overlapping at the centre",
+      outline: [
+        [cx-armL*s/2, cy-armW*s/2], [cx-armW*s/2, cy-armW*s/2],
+        [cx-armW*s/2, cy-armL*s/2], [cx+armW*s/2, cy-armL*s/2],
+        [cx+armW*s/2, cy-armW*s/2], [cx+armL*s/2, cy-armW*s/2],
+        [cx+armL*s/2, cy+armW*s/2], [cx+armW*s/2, cy+armW*s/2],
+        [cx+armW*s/2, cy+armL*s/2], [cx-armW*s/2, cy+armL*s/2],
+        [cx-armW*s/2, cy+armW*s/2], [cx-armL*s/2, cy+armW*s/2]
+      ],
+      pieces: [
+        { d: [[cx-armL*s/2, cy-armW*s/2], [cx+armL*s/2, cy-armW*s/2], [cx+armL*s/2, cy+armW*s/2], [cx-armL*s/2, cy+armW*s/2]], color: COL.blue },
+        { d: [[cx-armW*s/2, cy-armL*s/2], [cx+armW*s/2, cy-armL*s/2], [cx+armW*s/2, cy+armL*s/2], [cx-armW*s/2, cy+armL*s/2]], color: COL.orange }
+      ],
+      labels: [
+        { x: cx + armL*s/2 + 14, y: cy, tex: "9", c: COL.blue, a: "left" },
+        { x: cx, y: cy - armL*s/2 - 14, tex: "9", c: COL.orange, a: "center" },
+        { x: cx + armW*s/2 + 12, y: cy + armL*s/2 - 6, tex: "3", c: COL.orange, a: "left" }
+      ],
+      areaTex:  "9 \\times 3 + 9 \\times 3 - 3 \\times 3",
+      areaVal:  27 + 27 - 9,
+      perimTex: "12 \\times 3",
+      perimVal: 36,
+      colors: { fill: "rgba(0,171,250,0.18)", stroke: COL.blue }
+    };
+  },
+  rectTri: function() {
+    // 12 × 8 rectangle with a 4-3-5 right triangle cut from top-right
+    var W = 12, H = 8, triW = 4, triH = 3;
+    var s = 22;
+    var cx = SVG_W/2, cy = SVG_H/2;
+    var x0 = cx - W*s/2, y0 = cy - H*s/2;
+    return {
+      title: "Rectangle 12×8 with a right triangle (legs 4 and 3) cut",
+      outline: [
+        [x0, y0], [x0+(W-triW)*s, y0], [x0+W*s, y0+triH*s],
+        [x0+W*s, y0+H*s], [x0, y0+H*s]
+      ],
+      cutPiece: [[x0+(W-triW)*s, y0], [x0+W*s, y0], [x0+W*s, y0+triH*s]],
+      bounding: [[x0, y0], [x0+W*s, y0], [x0+W*s, y0+H*s], [x0, y0+H*s]],
+      labels: [
+        { x: cx, y: y0 + H*s + 14, tex: "12", c: COL.blue, a: "center" },
+        { x: x0 - 12, y: cy, tex: "8", c: COL.blue, a: "right" },
+        { x: x0+(W-triW/2)*s, y: y0 - 12, tex: "4", c: COL.pink, a: "center" },
+        { x: x0+W*s + 12, y: y0 + triH*s/2, tex: "3", c: COL.pink, a: "left" }
+      ],
+      areaTex:  "12 \\times 8 - \\tfrac{1}{2}(4)(3)",
+      areaVal:  96 - 6,
+      perimTex: "12 + 5 + 5 + 8 + 8",
+      perimVal: 12 + 5 + 5 + 8 + 8,
+      colors: { fill: "rgba(0,171,250,0.18)", stroke: COL.blue, cut: COL.pink }
+    };
+  },
+  rectSemi: function() {
+    // 16 × 10 rectangle with a semicircle (radius 5) cut from the centre of the bottom edge
+    var W = 16, H = 10, r = 5;
+    var s = 22;
+    var cx = SVG_W/2, cy = SVG_H/2;
+    var x0 = cx - W*s/2, y0 = cy - H*s/2;
+    return {
+      title: "Rectangle 16×10 with a semicircle (r=5) cut from the bottom",
+      // outline: bottom-left, up-left, top-left, top-right, down-right, semicircle ARC back to bottom-left's right side
+      outline: [
+        [x0, y0], [x0+W*s, y0], [x0+W*s, y0+H*s], [cx + r*s, y0+H*s],
+        [cx - r*s, y0+H*s], [x0, y0+H*s]
+      ],
+      // Drawing override needed since outline has an arc; use a custom path generator
+      customPath: function() {
+        return "M " + x0 + " " + y0 +
+               " L " + (x0+W*s) + " " + y0 +
+               " L " + (x0+W*s) + " " + (y0+H*s) +
+               " L " + (cx + r*s) + " " + (y0+H*s) +
+               " A " + (r*s) + " " + (r*s) + " 0 0 1 " + (cx - r*s) + " " + (y0+H*s) +
+               " L " + x0 + " " + (y0+H*s) + " Z";
+      },
+      cutPath: "M " + (cx - r*s) + " " + (y0+H*s) +
+               " A " + (r*s) + " " + (r*s) + " 0 0 0 " + (cx + r*s) + " " + (y0+H*s) +
+               " Z",
+      bounding: [[x0, y0], [x0+W*s, y0], [x0+W*s, y0+H*s], [x0, y0+H*s]],
+      labels: [
+        { x: cx, y: y0 - 14, tex: "16", c: COL.blue, a: "center" },
+        { x: x0 - 12, y: cy, tex: "10", c: COL.blue, a: "right" },
+        { x: cx, y: y0 + H*s + 22, tex: "r = 5", c: COL.pink, a: "center" }
+      ],
+      areaTex:  "16 \\times 10 - \\tfrac{1}{2}\\pi(5)^{2}",
+      areaCoef: { rational: 160, pi: -12.5 },
+      areaVal:  160 - 12.5*Math.PI,
+      perimTex: "16 + 10 + 10 + 6 + 5\\pi + 6",
+      // Bottom: 16 - 2*5 = 6 (one side) + 5π (arc) + 6 (other side)? Actually no — the bottom edge BEFORE the cut had length 16. After the semicircle is cut, the two remaining flat parts are each 3 (=(16-10)/2). Plus the arc 5π. Then up the right (10), top (16), down the left (10).
+      perimCustom: { rational: 16 + 10 + 10 + 3 + 3, pi: 5 },
+      perimVal: 16 + 10 + 10 + 6 + 5*Math.PI,
+      colors: { fill: "rgba(0,171,250,0.18)", stroke: COL.blue, cut: COL.pink }
+    };
+  },
+  track: function() {
+    // Running track: 14 × 6 rectangle with a semicircle on each short end (radius 3)
+    var W = 14, H = 6, r = 3;
+    var s = 22;
+    var cx = SVG_W/2, cy = SVG_H/2;
+    var x0 = cx - W*s/2, y0 = cy - H*s/2;
+    return {
+      title: "Running track: rectangle 14×6 with two semicircular ends (r=3)",
+      customPath: function() {
+        // bottom-left → bottom-right → semicircle (right) → top-right → top-left → semicircle (left)
+        return "M " + x0 + " " + (y0+H*s) +
+               " L " + (x0+W*s) + " " + (y0+H*s) +
+               " A " + (r*s) + " " + (r*s) + " 0 0 0 " + (x0+W*s) + " " + y0 +
+               " L " + x0 + " " + y0 +
+               " A " + (r*s) + " " + (r*s) + " 0 0 0 " + x0 + " " + (y0+H*s) + " Z";
+      },
+      labels: [
+        { x: cx, y: cy, tex: "14 \\times 6", c: COL.blue, a: "center" },
+        { x: x0+W*s + 22, y: cy, tex: "r = 3", c: COL.orange, a: "left" }
+      ],
+      areaTex:  "14 \\times 6 + \\pi(3)^{2}",
+      areaCoef: { rational: 84, pi: 9 },
+      areaVal:  84 + 9*Math.PI,
+      perimTex: "14 + 14 + 2\\pi(3)",
+      perimCustom: { rational: 28, pi: 6 },
+      perimVal: 28 + 6*Math.PI,
+      colors: { fill: "rgba(0,171,250,0.18)", stroke: COL.blue }
+    };
+  }
+};
+
+var state = {
+  shape: "L",
+  mode: "combined"
+};
+
+var fA = document.getElementById("fA");
+var fP = document.getElementById("fP");
+var gShape = document.getElementById("g-shape");
+
+function polygonD(pts) {
+  return "M" + pts.map(function(p) { return p[0].toFixed(2) + " " + p[1].toFixed(2); }).join(" L") + " Z";
+}
+
+function render() {
+  gShape.innerHTML = "";
+  var def = SHAPES[state.shape]();
+
+  // 1. Bounding rectangle (faint dashed) when in decompose mode for subtractive shapes
+  if (state.mode === "decompose" && def.bounding) {
+    gShape.appendChild(svgEl("path", {
+      d: polygonD(def.bounding),
+      fill: "rgba(0,171,250,0.05)", stroke: COL.faint, "stroke-width": 1, "stroke-dasharray": "3 3"
+    }));
+  }
+  // 2. Cut piece (faint pink dashed) in decompose mode
+  if (state.mode === "decompose" && def.cutPiece) {
+    gShape.appendChild(svgEl("path", {
+      d: polygonD(def.cutPiece),
+      fill: "rgba(255,70,112,0.10)", stroke: def.colors.cut || COL.pink, "stroke-width": 1.4, "stroke-dasharray": "4 3"
+    }));
+  }
+  if (state.mode === "decompose" && def.cutPath) {
+    gShape.appendChild(svgEl("path", {
+      d: def.cutPath,
+      fill: "rgba(255,70,112,0.10)", stroke: def.colors.cut || COL.pink, "stroke-width": 1.4, "stroke-dasharray": "4 3"
+    }));
+  }
+  // 3. The compound shape itself
+  var dPath;
+  if (def.customPath) {
+    dPath = def.customPath();
+  } else {
+    dPath = polygonD(def.outline);
+  }
+  if (state.mode === "decompose" && def.pieces) {
+    // Draw each piece in its own color
+    def.pieces.forEach(function(p) {
+      gShape.appendChild(svgEl("path", {
+        d: polygonD(p.d),
+        fill: hexToRGBA(p.color, 0.20),
+        stroke: p.color, "stroke-width": 1.6, "stroke-linejoin": "round"
+      }));
+    });
+  } else {
+    gShape.appendChild(svgEl("path", {
+      d: dPath,
+      fill: def.colors.fill, stroke: def.colors.stroke, "stroke-width": 2, "stroke-linejoin": "round"
+    }));
+  }
+
+  // 4. Labels
+  if (def.labels) {
+    def.labels.forEach(function(lbl) {
+      svgKaTeXLabel(gShape, lbl.x, lbl.y, lbl.tex, lbl.c, lbl.a);
+    });
+  }
+
+  // 5. Title at top
+  var title = svgEl("text", {
+    x: SVG_W/2, y: 16, "text-anchor": "middle",
+    "font-family": "Geist Mono,monospace", "font-size": 11,
+    fill: COL.grey, "letter-spacing": 0.5
+  });
+  title.textContent = def.title;
+  gShape.appendChild(title);
+
+  // 6. Formula bar
+  var areaValueTex;
+  if (def.areaCoef) {
+    areaValueTex = (def.areaCoef.rational !== 0 ? def.areaCoef.rational : "") +
+                   (def.areaCoef.pi !== 0 ? (def.areaCoef.pi > 0 && def.areaCoef.rational !== 0 ? " + " : "") + texCoefPi(def.areaCoef.pi) : "");
+    if (areaValueTex.startsWith(" + ")) areaValueTex = areaValueTex.slice(3);
+    if (areaValueTex === "") areaValueTex = "0";
+  } else {
+    areaValueTex = fmtNum(def.areaVal);
+  }
+  tryRender(fA,
+    "{\\color{#00abfa}A} = " + def.areaTex + " = {\\color{#00abfa}" + areaValueTex + "}\\;\\text{cm}^{2}");
+
+  var perimValueTex;
+  if (def.perimCustom) {
+    perimValueTex = (def.perimCustom.rational !== 0 ? def.perimCustom.rational : "") +
+                    (def.perimCustom.pi !== 0 ? (def.perimCustom.pi > 0 && def.perimCustom.rational !== 0 ? " + " : "") + texCoefPi(def.perimCustom.pi) : "");
+    if (perimValueTex.startsWith(" + ")) perimValueTex = perimValueTex.slice(3);
+    if (perimValueTex === "") perimValueTex = "0";
+  } else {
+    perimValueTex = fmtNum(def.perimVal);
+  }
+  tryRender(fP,
+    "{\\color{#fff067}P} = " + def.perimTex + " = {\\color{#fff067}" + perimValueTex + "}\\;\\text{cm}");
+}
+
+function hexToRGBA(hex, a) {
+  var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+}
+
+document.getElementById("shapeSel").addEventListener("change", function() {
+  state.shape = this.value;
+  render();
+});
+document.getElementById("modeSel").addEventListener("change", function() {
+  state.mode = this.value;
+  render();
+});
+
+render();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>

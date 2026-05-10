@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Frustum Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+
+  .formulas { display:flex; flex-direction:column; gap:4px; align-items:center; margin-bottom:10px; }
+  .formula { font-size:13.5px; color:#f0eeea; line-height:1.3; }
+  .formula .katex { font-size:1em; }
+
+  .controls {
+    display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:0 4px;
+    font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap;
+  }
+  .row { display:flex; align-items:center; gap:8px; min-width:170px; flex:1; }
+  .row .name { color:#fff067; font-weight:600; min-width:14px; }
+  .row input[type=range] {
+    flex:1; min-width:60px; appearance:none; -webkit-appearance:none;
+    height:3px; background:#141e2a; border-radius:2px; outline:none;
+  }
+  .row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:#fff067; cursor:pointer; border:0;
+  }
+  .row input[type=range]::-moz-range-thumb {
+    width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0;
+  }
+  .row .val { min-width:30px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="formulas">
+    <span class="formula" id="fSimilar"></span>
+    <span class="formula" id="fV"></span>
+    <span class="formula" id="fSA"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">R</span>
+      <input type="range" id="RSlider" min="3" max="9" value="6" step="0.1"/>
+      <span class="val" id="RVal">6</span>
+    </div>
+    <div class="row">
+      <span class="name">H</span>
+      <input type="range" id="HSlider" min="6" max="14" value="12" step="0.1"/>
+      <span class="val" id="HVal">12</span>
+    </div>
+    <div class="row">
+      <span class="name">cut</span>
+      <input type="range" id="hSlider" min="2" max="10" value="6" step="0.1"/>
+      <span class="val" id="hVal">6</span>
+    </div>
+  </div>
+
+  <svg id="svg" viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="frusBlueGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="rgba(0,171,250,0.10)"/>
+        <stop offset="50%" stop-color="rgba(0,171,250,0.30)"/>
+        <stop offset="100%" stop-color="rgba(0,171,250,0.10)"/>
+      </linearGradient>
+      <linearGradient id="frusPinkGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="rgba(255,70,112,0.10)"/>
+        <stop offset="50%" stop-color="rgba(255,70,112,0.30)"/>
+        <stop offset="100%" stop-color="rgba(255,70,112,0.10)"/>
+      </linearGradient>
+    </defs>
+    <g id="g-frus"></g>
+  </svg>
+
+  <p class="footer">drag R, H, and the cut height · the small (pink) cone is removed; the frustum is what remains</p>
+</div>
+
+<script>
+"use strict";
+
+var SVG_W = 480, SVG_H = 280;
+var SCALE = 12;
+var ELLIPSE_RATIO = 0.32;
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n) {
+  if (!isFinite(n)) return "—";
+  var v = Math.round(n * 100) / 100;
+  if (v === 0) return "0";
+  return parseFloat(v.toFixed(2)).toString();
+}
+function texCoefPi(coef) {
+  var v = Math.round(coef * 1000) / 1000;
+  if (v === 0) return "0";
+  if (v === 1) return "\\pi";
+  return parseFloat(v.toFixed(3)).toString() + "\\pi";
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment) {
+  var fo = svgEl("foreignObject", {
+    x: (x - 50), y: (y - 12), width: 100, height: 24,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  div.style.color = color || "#f0eeea";
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+var COL = {
+  blue: "#00abfa", yellow: "#fff067", orange: "#ff822c",
+  green: "#0fee89", pink: "#ff4670", grey: "#7a7875", faint: "#3a4a5a"
+};
+
+var state = {
+  params:  { R: 6, H: 12, h: 6 },
+  display: { R: 6, H: 12, h: 6 }
+};
+var SPRING_FACTOR = 0.22, SPRING_EPS = 0.005, rafScheduled = false;
+function startSpring() { if (!rafScheduled) { rafScheduled = true; requestAnimationFrame(springTick); } }
+function springTick() {
+  var moving = false;
+  ["R","H","h"].forEach(function(k) {
+    var d = state.params[k] - state.display[k];
+    if (Math.abs(d) > SPRING_EPS) { state.display[k] += d * SPRING_FACTOR; moving = true; }
+    else state.display[k] = state.params[k];
+  });
+  // Constrain h ≤ H - 1
+  if (state.display.h > state.display.H - 1) state.display.h = state.display.H - 1;
+  render();
+  if (moving) requestAnimationFrame(springTick);
+  else rafScheduled = false;
+}
+
+var fSimilar = document.getElementById("fSimilar");
+var fV = document.getElementById("fV");
+var fSA = document.getElementById("fSA");
+var gFrus = document.getElementById("g-frus");
+
+function render() {
+  var R = state.display.R;
+  var H = state.display.H;
+  var hCut = Math.min(state.display.h, H - 0.5);  // cut height of the small cone (from apex)
+  // Small cone: similar to the original, with height hCut and radius r = R * (hCut/H)
+  var r = R * (hCut / H);
+  var hFrus = H - hCut;  // frustum height
+
+  // Auto-fit
+  var PAD = 18;
+  var available = SVG_H - 2 * PAD;
+  var Hpx = Math.min(H * SCALE, available);
+  var fit = Hpx / (H * SCALE);
+  var Rpx = R * SCALE * fit;
+  var hCutPx = hCut * SCALE * fit;
+  var rPx = r * SCALE * fit;
+  var ryPx = Rpx * ELLIPSE_RATIO;
+  var rySmallPx = rPx * ELLIPSE_RATIO;
+
+  var cx = SVG_W / 2;
+  var apexY = (SVG_H - Hpx) / 2;
+  var bottomY = apexY + Hpx;
+  var cutY = apexY + hCutPx;
+
+  gFrus.innerHTML = "";
+
+  // Full cone outline (faint dashed) for reference
+  gFrus.appendChild(svgEl("path", {
+    d: "M " + cx + " " + apexY +
+       " L " + (cx - Rpx) + " " + bottomY +
+       " A " + Rpx + " " + ryPx + " 0 0 0 " + (cx + Rpx) + " " + bottomY + " Z",
+    fill: "none", stroke: COL.faint, "stroke-width": 1, "stroke-dasharray": "3 3"
+  }));
+
+  // Small cone (pink) — being removed
+  gFrus.appendChild(svgEl("path", {
+    d: "M " + cx + " " + apexY +
+       " L " + (cx - rPx) + " " + cutY +
+       " A " + rPx + " " + rySmallPx + " 0 0 0 " + (cx + rPx) + " " + cutY + " Z",
+    fill: "url(#frusPinkGrad)",
+    stroke: COL.pink, "stroke-width": 2, "stroke-linejoin": "round"
+  }));
+
+  // Frustum (blue) — what's left
+  // Path: from (cx-Rpx, bottomY) up the slant to (cx-rPx, cutY), arc across the top,
+  // down the right slant to (cx+Rpx, bottomY), arc across the bottom back.
+  var frusD =
+    "M " + (cx - Rpx) + " " + bottomY +
+    " L " + (cx - rPx) + " " + cutY +
+    " A " + rPx + " " + rySmallPx + " 0 0 0 " + (cx + rPx) + " " + cutY +
+    " L " + (cx + Rpx) + " " + bottomY +
+    " A " + Rpx + " " + ryPx + " 0 0 0 " + (cx - Rpx) + " " + bottomY + " Z";
+  gFrus.appendChild(svgEl("path", {
+    d: frusD,
+    fill: "url(#frusBlueGrad)",
+    stroke: COL.blue, "stroke-width": 2, "stroke-linejoin": "round"
+  }));
+
+  // Top circle of frustum (yellow — the cut where the tip used to be)
+  gFrus.appendChild(svgEl("ellipse", {
+    cx: cx, cy: cutY, rx: rPx, ry: rySmallPx,
+    fill: "rgba(255,240,103,0.22)", stroke: COL.yellow, "stroke-width": 1.5
+  }));
+  // Back half of bottom (dashed)
+  gFrus.appendChild(svgEl("ellipse", {
+    cx: cx, cy: bottomY, rx: Rpx, ry: ryPx,
+    fill: "none", stroke: COL.faint, "stroke-width": 1, "stroke-dasharray": "3 3"
+  }));
+
+  // Labels
+  svgKaTeXLabel(gFrus, cx + Rpx + 14, bottomY, "R = " + fmtNum(R), COL.blue, "left");
+  svgKaTeXLabel(gFrus, cx + rPx + 14, cutY, "r = " + fmtNum(r), COL.yellow, "left");
+  svgKaTeXLabel(gFrus, cx - 14, (apexY + cutY)/2, "h = " + fmtNum(hCut), COL.pink, "right");
+  svgKaTeXLabel(gFrus, cx - 14, (cutY + bottomY)/2, "H - h = " + fmtNum(hFrus), COL.blue, "right");
+
+  // KaTeX formulas
+  tryRender(fSimilar,
+    "\\text{similar:}\\;\\;{\\color{#ff4670}r = \\dfrac{h}{H}\\,R} = " +
+    "\\dfrac{" + fmtNum(hCut) + "}{" + fmtNum(H) + "} \\times " + fmtNum(R) +
+    " = {\\color{#ff4670}" + fmtNum(r) + "}");
+
+  var Vlarge = (1/3) * R * R * H;
+  var Vsmall = (1/3) * r * r * hCut;
+  var Vfrus = Vlarge - Vsmall;
+  tryRender(fV,
+    "{\\color{#00abfa}V_{\\text{frustum}}} = \\tfrac{1}{3}\\pi R^{2} H - \\tfrac{1}{3}\\pi r^{2} h = " +
+    "{\\color{#00abfa}" + texCoefPi(Vfrus) + "}\\;\\text{cm}^{3}");
+
+  // SA: large curved + small curved + annular ring + bottom (assume open top for clarity, or include both)
+  // Frustum SA = curved-large - curved-small + annular + bottom
+  // But let's compute as: frustum's exposed surfaces when it's the "top removed" cone:
+  //   outer slant strip: π(R+r)·l_slant where l_slant = √((R-r)² + (H-h)²)
+  //   bottom circle: πR²
+  //   top ring (cut): πr²  (the new small circle exposed)
+  // Standard frustum-SA approach: use the slant and the two radii.
+  var lSlant = Math.sqrt((R - r) * (R - r) + (H - hCut) * (H - hCut));
+  var SAcoef = (R + r) * lSlant + R * R + r * r;
+  tryRender(fSA,
+    "{\\color{#fff067}\\text{SA}} = \\pi(R + r)\\,l + \\pi R^{2} + \\pi r^{2} = " +
+    "{\\color{#fff067}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}\\;\\;(l = " + fmtNum(lSlant) + ")");
+}
+
+document.getElementById("RSlider").addEventListener("input", function() {
+  state.params.R = parseFloat(this.value);
+  document.getElementById("RVal").textContent = fmtNum(state.params.R);
+  startSpring();
+});
+document.getElementById("HSlider").addEventListener("input", function() {
+  state.params.H = parseFloat(this.value);
+  document.getElementById("HVal").textContent = fmtNum(state.params.H);
+  // Re-clamp h to H - 0.5
+  if (state.params.h > state.params.H - 0.5) {
+    state.params.h = Math.max(0.5, state.params.H - 0.5);
+    document.getElementById("hSlider").value = state.params.h;
+    document.getElementById("hVal").textContent = fmtNum(state.params.h);
+  }
+  startSpring();
+});
+document.getElementById("hSlider").addEventListener("input", function() {
+  state.params.h = parseFloat(this.value);
+  document.getElementById("hVal").textContent = fmtNum(state.params.h);
+  startSpring();
+});
+
+render();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>

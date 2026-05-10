@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Hollow / Drilled Solid Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+
+  .formulas { display:flex; flex-direction:column; gap:4px; align-items:center; margin-bottom:10px; }
+  .formula { font-size:13.5px; color:#f0eeea; line-height:1.3; }
+  .formula .katex { font-size:1em; }
+
+  .controls {
+    display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:0 4px;
+    font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap;
+  }
+  .row { display:flex; align-items:center; gap:8px; min-width:170px; flex:1; }
+  .row .name { color:#fff067; font-weight:600; min-width:14px; }
+  .row input[type=range] {
+    flex:1; min-width:60px; appearance:none; -webkit-appearance:none;
+    height:3px; background:#141e2a; border-radius:2px; outline:none;
+  }
+  .row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:#fff067; cursor:pointer; border:0;
+  }
+  .row input[type=range]::-moz-range-thumb {
+    width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0;
+  }
+  .row .val { min-width:30px; text-align:right; color:#f0eeea; font-weight:600; }
+  .toggle-row { display:flex; align-items:center; gap:8px; }
+  .toggle-row .name { color:#fff067; font-weight:600; }
+  .toggle-row select {
+    background:#141e2a; color:#f0eeea; border:1px solid #3a4a5a; border-radius:4px;
+    padding:3px 6px; font-family:'Geist Mono',monospace; font-size:11px; outline:none; cursor:pointer;
+  }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="formulas">
+    <span class="formula" id="fV"></span>
+    <span class="formula" id="fSA"></span>
+  </div>
+
+  <div class="controls">
+    <div class="toggle-row">
+      <span class="name">solid</span>
+      <select id="solidSel">
+        <option value="cuboid-cyl" selected>cuboid + cylindrical hole</option>
+        <option value="cyl-cyl">cylinder + cylindrical hole</option>
+        <option value="hollow-sphere">hollow sphere (shell)</option>
+      </select>
+    </div>
+    <div class="row" id="param1Row"></div>
+    <div class="row" id="param2Row"></div>
+    <div class="row" id="param3Row"></div>
+  </div>
+
+  <svg id="svg" viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="hsphereGrad" cx="38%" cy="32%" r="65%">
+        <stop offset="0%" stop-color="rgba(0,171,250,0.50)"/>
+        <stop offset="60%" stop-color="rgba(0,171,250,0.18)"/>
+        <stop offset="100%" stop-color="rgba(0,171,250,0.05)"/>
+      </radialGradient>
+      <linearGradient id="hsBlueGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="rgba(0,171,250,0.10)"/>
+        <stop offset="50%" stop-color="rgba(0,171,250,0.30)"/>
+        <stop offset="100%" stop-color="rgba(0,171,250,0.10)"/>
+      </linearGradient>
+    </defs>
+    <g id="g-shape"></g>
+  </svg>
+
+  <p class="footer">drilling a hole removes volume but usually INCREASES surface area</p>
+</div>
+
+<script>
+"use strict";
+
+var SVG_W = 480, SVG_H = 280;
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n) {
+  if (!isFinite(n)) return "—";
+  var v = Math.round(n * 100) / 100;
+  if (v === 0) return "0";
+  return parseFloat(v.toFixed(2)).toString();
+}
+function texCoefPi(coef) {
+  var v = Math.round(coef * 1000) / 1000;
+  if (v === 0) return "0";
+  if (v === 1) return "\\pi";
+  return parseFloat(v.toFixed(3)).toString() + "\\pi";
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment) {
+  var fo = svgEl("foreignObject", {
+    x: (x - 50), y: (y - 12), width: 100, height: 24,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  div.style.color = color || "#f0eeea";
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+var COL = {
+  blue: "#00abfa", yellow: "#fff067", orange: "#ff822c",
+  green: "#0fee89", pink: "#ff4670", grey: "#7a7875", faint: "#3a4a5a"
+};
+
+var SOLIDS = {
+  "cuboid-cyl": {
+    params: [
+      { key: "L", label: "L", min: 6, max: 14, step: 0.5, def: 10 },
+      { key: "W", label: "W", min: 4, max: 10, step: 0.5, def: 8 },
+      { key: "rh", label: "r", min: 1, max: 3, step: 0.1, def: 2 }
+    ]
+  },
+  "cyl-cyl": {
+    params: [
+      { key: "Ro", label: "R", min: 3, max: 6, step: 0.1, def: 5 },
+      { key: "Ri", label: "r", min: 1, max: 2.5, step: 0.1, def: 2 },
+      { key: "Hc", label: "h", min: 4, max: 12, step: 0.5, def: 8 }
+    ]
+  },
+  "hollow-sphere": {
+    params: [
+      { key: "Ro", label: "R", min: 3, max: 7, step: 0.1, def: 5 },
+      { key: "Ri", label: "r", min: 1, max: 4.5, step: 0.1, def: 3 },
+      null
+    ]
+  }
+};
+
+var state = {
+  solid: "cuboid-cyl",
+  params: {},
+  display: {}
+};
+function initParams() {
+  var sd = SOLIDS[state.solid].params;
+  state.params = {}; state.display = {};
+  sd.forEach(function(p) {
+    if (!p) return;
+    state.params[p.key] = p.def;
+    state.display[p.key] = p.def;
+  });
+}
+
+var SPRING_FACTOR = 0.22, SPRING_EPS = 0.005, rafScheduled = false;
+function startSpring() { if (!rafScheduled) { rafScheduled = true; requestAnimationFrame(springTick); } }
+function springTick() {
+  var moving = false;
+  for (var k in state.params) {
+    if (!Object.prototype.hasOwnProperty.call(state.params, k)) continue;
+    var d = state.params[k] - state.display[k];
+    if (Math.abs(d) > SPRING_EPS) { state.display[k] += d * SPRING_FACTOR; moving = true; }
+    else state.display[k] = state.params[k];
+  }
+  render();
+  if (moving) requestAnimationFrame(springTick);
+  else rafScheduled = false;
+}
+
+var fV = document.getElementById("fV");
+var fSA = document.getElementById("fSA");
+var gShape = document.getElementById("g-shape");
+
+function buildParamRows() {
+  var sd = SOLIDS[state.solid].params;
+  ["param1Row", "param2Row", "param3Row"].forEach(function(rowId, i) {
+    var rowEl = document.getElementById(rowId);
+    rowEl.innerHTML = "";
+    var p = sd[i];
+    if (!p) { rowEl.style.display = "none"; return; }
+    rowEl.style.display = "flex";
+    rowEl.innerHTML =
+      '<span class="name">' + p.label + '</span>' +
+      '<input type="range" min="' + p.min + '" max="' + p.max + '" value="' + state.params[p.key] + '" step="' + p.step + '"/>' +
+      '<span class="val">' + fmtNum(state.params[p.key]) + '</span>';
+    var slider = rowEl.querySelector("input");
+    var val = rowEl.querySelector(".val");
+    slider.addEventListener("input", (function(key, valEl) {
+      return function() {
+        state.params[key] = parseFloat(slider.value);
+        valEl.textContent = fmtNum(state.params[key]);
+        startSpring();
+      };
+    })(p.key, val));
+  });
+}
+
+function render() {
+  gShape.innerHTML = "";
+  var cx = SVG_W/2, cy = SVG_H/2 + 6;
+
+  if (state.solid === "cuboid-cyl") {
+    var L = state.display.L, W = state.display.W, H = 6;
+    var rh = state.display.rh;
+    var sc = 16; var dx = 22, dy = -14;
+    var Lp = L*sc, Wp = W*sc*0.85, Hp = H*sc;
+    var ax = cx - Lp/2 - Wp*0.3;
+    var ay = cy + Hp/2;
+
+    // Back face
+    gShape.appendChild(svgEl("path", {
+      d: "M " + (ax+dx) + " " + (ay+dy) + " L " + (ax+dx+Lp) + " " + (ay+dy) + " L " + (ax+dx+Lp) + " " + (ay+dy-Hp) + " L " + (ax+dx) + " " + (ay+dy-Hp) + " Z",
+      fill: "rgba(0,171,250,0.06)", stroke: COL.faint, "stroke-width": 1, "stroke-dasharray": "3 3"
+    }));
+    // Top face
+    gShape.appendChild(svgEl("path", {
+      d: "M " + ax + " " + (ay-Hp) + " L " + (ax+Lp) + " " + (ay-Hp) + " L " + (ax+Lp+dx) + " " + (ay-Hp+dy) + " L " + (ax+dx) + " " + (ay-Hp+dy) + " Z",
+      fill: "rgba(0,171,250,0.20)", stroke: COL.blue, "stroke-width": 1.5
+    }));
+    // Right face
+    gShape.appendChild(svgEl("path", {
+      d: "M " + (ax+Lp) + " " + ay + " L " + (ax+Lp) + " " + (ay-Hp) + " L " + (ax+Lp+dx) + " " + (ay-Hp+dy) + " L " + (ax+Lp+dx) + " " + (ay+dy) + " Z",
+      fill: "rgba(0,171,250,0.10)", stroke: COL.blue, "stroke-width": 1.5
+    }));
+    // Front face
+    gShape.appendChild(svgEl("path", {
+      d: "M " + ax + " " + ay + " L " + (ax+Lp) + " " + ay + " L " + (ax+Lp) + " " + (ay-Hp) + " L " + ax + " " + (ay-Hp) + " Z",
+      fill: "rgba(0,171,250,0.18)", stroke: COL.blue, "stroke-width": 1.6
+    }));
+    // Cylindrical hole on the top face: an ellipse centred on the top face, with a dashed
+    // bottom ellipse showing where the hole exits the bottom.
+    var holeXTop = ax + Lp/2 + dx/2;
+    var holeYTop = ay - Hp + dy/2;
+    var rPx = rh * sc;
+    var ryEll = rPx * 0.32;
+    gShape.appendChild(svgEl("ellipse", {
+      cx: holeXTop, cy: holeYTop, rx: rPx, ry: ryEll,
+      fill: "rgba(255,70,112,0.30)", stroke: COL.pink, "stroke-width": 1.5
+    }));
+    // Visible part of hole inside the cuboid (vertical lines on the side as guides)
+    gShape.appendChild(svgEl("line", {
+      x1: holeXTop - rPx, y1: holeYTop, x2: holeXTop - rPx, y2: holeYTop + Hp,
+      stroke: COL.pink, "stroke-width": 1.2, "stroke-dasharray": "3 3"
+    }));
+    gShape.appendChild(svgEl("line", {
+      x1: holeXTop + rPx, y1: holeYTop, x2: holeXTop + rPx, y2: holeYTop + Hp,
+      stroke: COL.pink, "stroke-width": 1.2, "stroke-dasharray": "3 3"
+    }));
+    // Bottom dashed circle (hole exits the bottom)
+    gShape.appendChild(svgEl("ellipse", {
+      cx: holeXTop, cy: holeYTop + Hp, rx: rPx, ry: ryEll,
+      fill: "none", stroke: COL.pink, "stroke-width": 1, "stroke-dasharray": "3 3"
+    }));
+
+    // Labels
+    svgKaTeXLabel(gShape, ax + Lp/2, ay + 14, "L = " + fmtNum(L), COL.blue, "center");
+    svgKaTeXLabel(gShape, ax - 12, ay - Hp/2, "h = " + fmtNum(H), COL.blue, "right");
+    svgKaTeXLabel(gShape, ax + Lp + dx/2 + 8, ay - Hp + dy/2 - 8, "W = " + fmtNum(W), COL.blue, "left");
+    svgKaTeXLabel(gShape, holeXTop + rPx + 10, holeYTop, "r = " + fmtNum(rh), COL.pink, "left");
+
+    // Volume + SA
+    var Vbox = L * W * H;
+    var Vhole = Math.PI * rh * rh * H;
+    var SAbox = 2 * (L*W + L*H + W*H);
+    var SAremoved = 2 * Math.PI * rh * rh;  // top + bottom circles removed
+    var SAadded = 2 * Math.PI * rh * H;     // inner cylindrical wall
+    var SAcoefRational = SAbox;
+    var SAcoefPi = -2*rh*rh + 2*rh*H;
+    tryRender(fV,
+      "{\\color{#00abfa}V} = LWh - \\pi r^{2} h = " + fmtNum(Vbox) + " - " + texCoefPi(rh*rh*H) +
+      " = {\\color{#00abfa}" + fmtNum(Vbox) + " - " + texCoefPi(rh*rh*H) + "}\\;\\text{cm}^{3}");
+    tryRender(fSA,
+      "{\\color{#fff067}\\text{SA}} = 2(LW + Lh + Wh) - 2\\pi r^{2} + 2\\pi r h = " +
+      "{\\color{#fff067}" + fmtNum(SAcoefRational) + " + " + texCoefPi(SAcoefPi) + "}\\;\\text{cm}^{2}");
+  } else if (state.solid === "cyl-cyl") {
+    var Ro = state.display.Ro, Ri = state.display.Ri, Hc = state.display.Hc;
+    if (Ri >= Ro) Ri = Ro - 0.3;
+    var sc = 16;
+    var RoPx = Ro * sc, RiPx = Ri * sc, HcPx = Hc * sc;
+    var ryO = RoPx * 0.32, ryI = RiPx * 0.32;
+    var topY = (SVG_H - HcPx) / 2;
+    var botY = topY + HcPx;
+
+    // Outer cylinder body
+    var outerD =
+      "M " + (cx - RoPx) + " " + topY +
+      " L " + (cx - RoPx) + " " + botY +
+      " A " + RoPx + " " + ryO + " 0 0 0 " + (cx + RoPx) + " " + botY +
+      " L " + (cx + RoPx) + " " + topY +
+      " A " + RoPx + " " + ryO + " 0 0 1 " + (cx - RoPx) + " " + topY + " Z";
+    gShape.appendChild(svgEl("path", {
+      d: outerD, fill: "url(#hsBlueGrad)", stroke: COL.blue, "stroke-width": 2
+    }));
+    // Top annulus: outer ellipse minus inner ellipse fill
+    gShape.appendChild(svgEl("ellipse", {
+      cx: cx, cy: topY, rx: RoPx, ry: ryO,
+      fill: "rgba(255,240,103,0.18)", stroke: COL.yellow, "stroke-width": 1.5
+    }));
+    // Inner hole (pink)
+    gShape.appendChild(svgEl("ellipse", {
+      cx: cx, cy: topY, rx: RiPx, ry: ryI,
+      fill: "rgba(255,70,112,0.30)", stroke: COL.pink, "stroke-width": 1.5
+    }));
+    // Inner walls (dashed pink lines for the hole's vertical edges)
+    gShape.appendChild(svgEl("line", {
+      x1: cx - RiPx, y1: topY, x2: cx - RiPx, y2: botY,
+      stroke: COL.pink, "stroke-width": 1, "stroke-dasharray": "3 3"
+    }));
+    gShape.appendChild(svgEl("line", {
+      x1: cx + RiPx, y1: topY, x2: cx + RiPx, y2: botY,
+      stroke: COL.pink, "stroke-width": 1, "stroke-dasharray": "3 3"
+    }));
+    // Bottom dashed
+    gShape.appendChild(svgEl("ellipse", {
+      cx: cx, cy: botY, rx: RoPx, ry: ryO,
+      fill: "none", stroke: COL.faint, "stroke-width": 1, "stroke-dasharray": "3 3"
+    }));
+    gShape.appendChild(svgEl("ellipse", {
+      cx: cx, cy: botY, rx: RiPx, ry: ryI,
+      fill: "none", stroke: COL.pink, "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0.6
+    }));
+
+    // Labels
+    svgKaTeXLabel(gShape, cx + RoPx + 14, (topY + botY)/2, "h = " + fmtNum(Hc), COL.blue, "left");
+    svgKaTeXLabel(gShape, cx + RoPx*0.6, topY - 12, "R = " + fmtNum(Ro), COL.yellow, "center");
+    svgKaTeXLabel(gShape, cx, topY - 24, "r = " + fmtNum(Ri), COL.pink, "center");
+
+    var Vouter = Ro*Ro*Hc;  // π coef
+    var Vhole = Ri*Ri*Hc;
+    var Vshell = Vouter - Vhole;
+    tryRender(fV,
+      "{\\color{#00abfa}V} = \\pi R^{2} h - \\pi r^{2} h = \\pi h(R^{2} - r^{2}) = " +
+      "{\\color{#00abfa}" + texCoefPi(Vshell) + "}\\;\\text{cm}^{3}");
+    // SA: outer curved + inner curved + 2 annular ends
+    var SAouter = 2 * Ro * Hc;        // 2πRh
+    var SAinner = 2 * Ri * Hc;        // 2πrh
+    var SAends  = 2 * (Ro*Ro - Ri*Ri); // 2π(R² - r²)
+    var SAtot = SAouter + SAinner + SAends;
+    tryRender(fSA,
+      "{\\color{#fff067}\\text{SA}} = 2\\pi R h + 2\\pi r h + 2\\pi(R^{2} - r^{2}) = " +
+      "{\\color{#fff067}" + texCoefPi(SAtot) + "}\\;\\text{cm}^{2}");
+  } else if (state.solid === "hollow-sphere") {
+    var Ro = state.display.Ro, Ri = state.display.Ri;
+    if (Ri >= Ro) Ri = Ro - 0.3;
+    var sc = 18;
+    var RoPx = Ro * sc, RiPx = Ri * sc;
+
+    // Outer sphere with radial gradient
+    gShape.appendChild(svgEl("circle", {
+      cx: cx, cy: cy, r: RoPx,
+      fill: "url(#hsphereGrad)", stroke: COL.blue, "stroke-width": 2
+    }));
+    // Equator hint
+    gShape.appendChild(svgEl("ellipse", {
+      cx: cx, cy: cy, rx: RoPx, ry: RoPx*0.3,
+      fill: "none", stroke: COL.faint, "stroke-width": 1, "stroke-dasharray": "3 3"
+    }));
+    // Inner hollow sphere (dashed pink to suggest cavity)
+    gShape.appendChild(svgEl("circle", {
+      cx: cx, cy: cy, r: RiPx,
+      fill: "rgba(255,70,112,0.10)", stroke: COL.pink, "stroke-width": 1.4, "stroke-dasharray": "4 3"
+    }));
+    // R and r labels
+    gShape.appendChild(svgEl("line", {
+      x1: cx, y1: cy, x2: cx + RoPx*0.7071, y2: cy - RoPx*0.7071,
+      stroke: COL.yellow, "stroke-width": 1.5
+    }));
+    gShape.appendChild(svgEl("line", {
+      x1: cx, y1: cy, x2: cx - RiPx*0.7071, y2: cy + RiPx*0.7071,
+      stroke: COL.pink, "stroke-width": 1.5
+    }));
+    svgKaTeXLabel(gShape, cx + RoPx*0.4, cy - RoPx*0.42 - 8, "R = " + fmtNum(Ro), COL.yellow, "center");
+    svgKaTeXLabel(gShape, cx - RiPx*0.4, cy + RiPx*0.42 + 8, "r = " + fmtNum(Ri), COL.pink, "center");
+    gShape.appendChild(svgEl("circle", { cx: cx, cy: cy, r: 2.5, fill: COL.grey }));
+
+    var Vshell = (4/3) * (Ro*Ro*Ro - Ri*Ri*Ri);
+    var SAouter = 4 * Ro * Ro;
+    var SAinner = 4 * Ri * Ri;
+    tryRender(fV,
+      "{\\color{#00abfa}V} = \\tfrac{4}{3}\\pi(R^{3} - r^{3}) = " +
+      "{\\color{#00abfa}" + texCoefPi(Vshell) + "}\\;\\text{cm}^{3}");
+    tryRender(fSA,
+      "{\\color{#fff067}\\text{SA}} = 4\\pi R^{2} + 4\\pi r^{2} = " +
+      "{\\color{#fff067}" + texCoefPi(SAouter + SAinner) + "}\\;\\text{cm}^{2}");
+  }
+}
+
+document.getElementById("solidSel").addEventListener("change", function() {
+  state.solid = this.value;
+  initParams();
+  buildParamRows();
+  render();
+});
+
+initParams();
+buildParamRows();
+render();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>

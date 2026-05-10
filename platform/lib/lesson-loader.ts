@@ -75,6 +75,7 @@ const LESSON_FOLDERS: Record<string, string> = {
   "05-02": "05-02-area-and-perimeter",
   "05-03": "05-03-circles-arcs-sectors",
   "05-04": "05-04-surface-area-and-volume",
+  "05-05": "05-05-compound-shapes",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
@@ -222,6 +223,11 @@ const WIDGETS: Record<string, WidgetSpec> = {
   "05-04-p5":     { url: "/widgets/volume-trainer.html?topic=cone",     height: 600 },
   "05-04-p6":     { url: "/widgets/volume-trainer.html?topic=mixed",    height: 600 },
   "05-04-review": { url: "/widgets/volume-trainer.html?topic=mixed",    height: 600 },
+  "05-05-p1":     { url: "/widgets/compound-shapes-trainer.html?topic=area2d",     height: 600 },
+  "05-05-p2":     { url: "/widgets/compound-shapes-trainer.html?topic=parts",      height: 600 },
+  "05-05-p3":     { url: "/widgets/compound-shapes-trainer.html?topic=compound3d", height: 600 },
+  "05-05-p4":     { url: "/widgets/compound-shapes-trainer.html?topic=frustum",    height: 600 },
+  "05-05-review": { url: "/widgets/compound-shapes-trainer.html?topic=mixed",      height: 600 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {
