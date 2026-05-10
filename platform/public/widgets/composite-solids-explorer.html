@@ -188,18 +188,36 @@ var gShape = document.getElementById("g-shape");
 
 function render() {
   var r = state.display.r, hSec = state.display.h;
-  var rPx = r * SCALE_R;
-  var ryPx = rPx * ELLIPSE_RATIO;
-  var hPx = hSec * SCALE_H;
   var cx = SVG_W / 2;
+
+  // Auto-scale every pixel dimension so the figure fits inside the SVG
+  // vertically. Natural extent depends on composite type. After scaling,
+  // rPx + hPx + hConePx (etc) are guaranteed to fit within SVG_H minus
+  // PAD on each side.
+  var PAD = 14;
+  var available = SVG_H - 2 * PAD;
+  var rPxNat   = r * SCALE_R;
+  var hPxNat   = hSec * SCALE_H;
+  var hConeNat = 1.5 * r * SCALE_H;   // used by cyl-cone
+
+  var naturalH;
+  if (state.kind === "hemi-cone")     naturalH = rPxNat + hPxNat;     // hemisphere + cone
+  else if (state.kind === "cyl-cone") naturalH = hPxNat + hConeNat;   // cylinder + cone
+  else                                 naturalH = hPxNat + rPxNat;     // cylinder + dome
+
+  var fit  = (naturalH > available) ? available / naturalH : 1;
+  var rPx     = rPxNat   * fit;
+  var hPx     = hPxNat   * fit;
+  var hConePx = hConeNat * fit;
+  var ryPx    = rPx * ELLIPSE_RATIO;
 
   gShape.innerHTML = "";
 
   if (state.kind === "hemi-cone") {
-    // ===== Hemisphere (bottom, dome facing down) + Cone (top) =====
     // Hemisphere dome curves DOWN; flat side faces UP, cone sits on it.
-    var hemiCenterY = SVG_H - 70;
-    var hemiBottomY = hemiCenterY + rPx;
+    // Pin the bottom of the hemisphere to (SVG_H - PAD), then place the
+    // hemisphere centre rPx above that, then the cone apex hPx above that.
+    var hemiCenterY = SVG_H - PAD - rPx;
     var coneApexY   = hemiCenterY - hPx;
     var leftX  = cx - rPx;
     var rightX = cx + rPx;
@@ -255,11 +273,9 @@ function render() {
       "{\\color{#fff067}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}\\;\\;(l=" + fmtNum(l) + ")");
   } else if (state.kind === "cyl-cone") {
     // ===== Cylinder (bottom) + Cone (top) =====
-    var hCone = 1.5 * r;
-    var hConePx = hCone * SCALE_H;
-    var hCylPx  = hPx;
-    var cylBottomY = SVG_H - 50;
-    var cylTopY    = cylBottomY - hCylPx;
+    var hCone = 1.5 * r;                // cm value (for the label)
+    var cylBottomY = SVG_H - PAD;
+    var cylTopY    = cylBottomY - hPx;
     var coneApexY  = cylTopY - hConePx;
     var leftX = cx - rPx, rightX = cx + rPx;
 
@@ -324,7 +340,7 @@ function render() {
   } else {
     // ===== Cylinder (bottom) + Hemisphere DOME (top) =====
     // Dome is a true 3D-looking dome via radial gradient + foreshortened equator hint.
-    var cylBottomY = SVG_H - 50;
+    var cylBottomY = SVG_H - PAD;
     var cylTopY    = cylBottomY - hPx;
     var domeTopY   = cylTopY - rPx;
     var leftX = cx - rPx, rightX = cx + rPx;
