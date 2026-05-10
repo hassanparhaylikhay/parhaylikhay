@@ -511,7 +511,16 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "02", code: "6.2", title: "Right-angled triangles" },
+      {
+        slug: "02", code: "6.2", title: "Right-angled triangles",
+        parts: [
+          { slug: "p1",     label: "P1", title: "When Pythagoras isn't enough" },
+          { slug: "p2",     label: "P2", title: "Sin, cos, tan: what they actually are" },
+          { slug: "p3",     label: "P3", title: "Finding a missing side" },
+          { slug: "p4",     label: "P4", title: "Finding a missing angle" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "03", code: "6.3", title: "Non-right-angled triangles" },
       { slug: "04", code: "6.4", title: "Pythagoras and trigonometry in 3D" },
     ],

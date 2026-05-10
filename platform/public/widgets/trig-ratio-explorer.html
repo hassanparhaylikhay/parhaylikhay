@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Trig Ratio Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .ratios { display:flex; flex-direction:column; gap:6px; padding:12px 6px 6px; border-top:1px solid #141e2a; margin-top:6px; }
+  .ratio-row {
+    display:grid;
+    grid-template-columns: 40px 1fr 80px;
+    align-items:center;
+    gap:10px;
+    font-size:14.5px;
+    line-height:1.2;
+  }
+  .ratio-row .name {
+    font-family:'Geist Mono',monospace;
+    font-weight:700;
+    text-align:right;
+  }
+  .ratio-row.sin .name { color:#ff822c; }
+  .ratio-row.cos .name { color:#00abfa; }
+  .ratio-row.tan .name { color:#fff067; }
+  .ratio-row .formula { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .ratio-row .value {
+    font-family:'Geist Mono',monospace;
+    font-weight:700; font-size:15px;
+    text-align:right;
+    color:#f0eeea;
+    transition: color 0.4s ease;
+  }
+  .ratio-row.lock-flash .value { color:#0fee89; }
+  .ratio-row .katex { font-size:1em; }
+
+  .controls { display:flex; flex-direction:column; gap:8px; padding:12px 4px 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:10px; }
+  .row .name { font-weight:600; min-width:60px; color:#f0eeea; }
+  .row input[type=range] {
+    flex:1; appearance:none; -webkit-appearance:none;
+    height:3px; background:#141e2a; border-radius:2px; outline:none;
+  }
+  .row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%; cursor:pointer; border:0; background:#fff067;
+  }
+  .row input[type=range]::-moz-range-thumb {
+    width:14px; height:14px; border-radius:50%; cursor:pointer; border:0; background:#fff067;
+  }
+  .row.size-row input[type=range]::-webkit-slider-thumb { background:#ff4670; }
+  .row.size-row input[type=range]::-moz-range-thumb { background:#ff4670; }
+  .row .val { min-width:46px; text-align:right; color:#f0eeea; font-weight:600; font-size:12.5px; }
+
+  .insight {
+    margin-top:12px; padding:9px 12px;
+    background:rgba(15,238,137,0.06); border:1px solid rgba(15,238,137,0.18); border-radius:6px;
+    font-size:12px; color:#0fee89; line-height:1.5;
+    font-family:'Geist Mono',monospace; letter-spacing:0.2px;
+  }
+
+  .footer { margin-top:10px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">SOH-CAH-TOA · LIVE TRIG RATIOS</span>
+    <span class="meta" id="meta">drag the angle · resize the triangle</span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-figure"></g>
+    <g id="g-labels"></g>
+    <g id="g-ghost"></g>
+  </svg>
+
+  <div class="ratios">
+    <div class="ratio-row sin" id="row-sin">
+      <span class="name">sin θ</span>
+      <span class="formula" id="f-sin"></span>
+      <span class="value" id="v-sin"></span>
+    </div>
+    <div class="ratio-row cos" id="row-cos">
+      <span class="name">cos θ</span>
+      <span class="formula" id="f-cos"></span>
+      <span class="value" id="v-cos"></span>
+    </div>
+    <div class="ratio-row tan" id="row-tan">
+      <span class="name">tan θ</span>
+      <span class="formula" id="f-tan"></span>
+      <span class="value" id="v-tan"></span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="row angle-row">
+      <span class="name">angle θ</span>
+      <input type="range" id="angleSlider" min="10" max="80" step="1" value="35"/>
+      <span class="val" id="angleVal"></span>
+    </div>
+    <div class="row size-row">
+      <span class="name">scale</span>
+      <input type="range" id="sizeSlider" min="0.6" max="1.5" step="0.01" value="1"/>
+      <span class="val" id="sizeVal"></span>
+    </div>
+  </div>
+
+  <div class="insight" id="insight">resize the triangle: opp, adj, hyp all change but the three ratios stay locked. that's the whole idea — sin/cos/tan depend ONLY on the angle.</div>
+
+  <p class="footer">opposite is across from θ · adjacent is next to θ · hypotenuse is the longest, opposite the right angle</p>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:   "#00abfa",
+  yellow: "#fff067",
+  orange: "#ff822c",
+  green:  "#0fee89",
+  pink:   "#ff4670",
+  faint:  "#3a4a5a",
+  grey:   "#7a7875",
+  off:    "#f0eeea"
+};
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n, dp) {
+  if (!isFinite(n)) return "—";
+  if (dp == null) dp = 2;
+  var v = +n.toFixed(dp);
+  return parseFloat(v.toFixed(dp)).toString();
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment, fontSizePx) {
+  var W = 120, H = 28;
+  var fo = svgEl("foreignObject", {
+    x: (x - W/2), y: (y - H/2), width: W, height: H,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  if (fontSizePx) div.style.fontSize = fontSizePx + "px";
+  div.style.color = color || COL.off;
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+// ===== State =====
+var SVG_W = 480, SVG_H = 320;
+var BASE_HYP = 200;  // px at scale = 1.0
+var params  = { theta: 35, scale: 1.0 };
+var display = { theta: 35, scale: 1.0 };
+var SPRING_FACTOR = 0.22, SPRING_EPS = 0.005;
+var lastTheta = 35;
+
+var stage = document.getElementById("stage");
+var gFig = document.getElementById("g-figure");
+var gLbl = document.getElementById("g-labels");
+var gGhost = document.getElementById("g-ghost");
+
+function render() {
+  gFig.innerHTML = "";
+  gLbl.innerHTML = "";
+  gGhost.innerHTML = "";
+
+  var theta = display.theta;
+  var thetaRad = theta * Math.PI / 180;
+  var L = BASE_HYP * display.scale;
+  var adj = L * Math.cos(thetaRad);
+  var opp = L * Math.sin(thetaRad);
+
+  // Centre of stage
+  var cx = SVG_W / 2;
+  var cy = 170;  // shift down a bit to leave room for hyp label up top
+
+  // Anchor: place the right-angle vertex (P_R) such that the triangle is centred
+  var Pr = { x: cx + adj/2, y: cy + opp/2 };  // bottom-right
+  var Pl = { x: Pr.x - adj, y: Pr.y };        // bottom-left (angle θ here)
+  var Pt = { x: Pr.x, y: Pr.y - opp };        // top-right
+
+  // Ghost triangle (faint) — last theta with double scale, to show ratio invariance visually
+  // (only render briefly when scale moves)
+  // (Not currently rendering ghost; keeping simpler for clarity.)
+
+  // Triangle fill
+  gFig.appendChild(svgEl("path", {
+    d: "M " + Pl.x + " " + Pl.y + " L " + Pr.x + " " + Pr.y + " L " + Pt.x + " " + Pt.y + " Z",
+    fill: "rgba(255,240,103,0.06)", stroke: "none"
+  }));
+
+  // Sides
+  // adj (blue, bottom)
+  gFig.appendChild(svgEl("line", {
+    x1: Pl.x, y1: Pl.y, x2: Pr.x, y2: Pr.y,
+    stroke: COL.blue, "stroke-width": 4, "stroke-linecap": "round"
+  }));
+  // opp (orange, vertical right)
+  gFig.appendChild(svgEl("line", {
+    x1: Pr.x, y1: Pr.y, x2: Pt.x, y2: Pt.y,
+    stroke: COL.orange, "stroke-width": 4, "stroke-linecap": "round"
+  }));
+  // hyp (pink, diagonal)
+  gFig.appendChild(svgEl("line", {
+    x1: Pl.x, y1: Pl.y, x2: Pt.x, y2: Pt.y,
+    stroke: COL.pink, "stroke-width": 4, "stroke-linecap": "round"
+  }));
+
+  // Right-angle marker at P_R
+  var raSize = 12;
+  gFig.appendChild(svgEl("path", {
+    d: "M " + (Pr.x - raSize) + " " + Pr.y +
+       " L " + (Pr.x - raSize) + " " + (Pr.y - raSize) +
+       " L " + Pr.x + " " + (Pr.y - raSize),
+    fill: "none", stroke: COL.yellow, "stroke-width": 1.4, opacity: 0.7
+  }));
+
+  // Angle arc at P_L
+  var arcR = Math.min(28, adj * 0.32);
+  if (arcR > 8) {
+    // arc from along-adj direction (right) sweeping CCW to along-hyp direction
+    // In SVG y-down: starting at Pl + (arcR, 0) and ending at Pl + (arcR*cos(theta), -arcR*sin(theta))
+    var arcEndX = Pl.x + arcR * Math.cos(thetaRad);
+    var arcEndY = Pl.y - arcR * Math.sin(thetaRad);
+    gFig.appendChild(svgEl("path", {
+      d: "M " + (Pl.x + arcR) + " " + Pl.y +
+         " A " + arcR + " " + arcR + " 0 0 0 " + arcEndX + " " + arcEndY,
+      fill: "none", stroke: COL.yellow, "stroke-width": 2
+    }));
+    // θ label inside the arc
+    var labMidX = Pl.x + (arcR + 14) * Math.cos(thetaRad / 2);
+    var labMidY = Pl.y - (arcR + 14) * Math.sin(thetaRad / 2);
+    svgKaTeXLabel(gLbl, labMidX, labMidY,
+      "{\\color{" + COL.yellow + "}\\theta = " + theta + "°}", null, "center", 13);
+  }
+
+  // Side labels
+  // adj label below midpoint of bottom edge
+  svgKaTeXLabel(gLbl, (Pl.x + Pr.x) / 2, Pl.y + 18,
+    "{\\color{" + COL.blue + "}\\text{adj} = " + fmtNum(adj/20, 2) + "}", null, "center", 12);
+  // opp label right of right edge
+  svgKaTeXLabel(gLbl, Pr.x + 38, (Pr.y + Pt.y) / 2,
+    "{\\color{" + COL.orange + "}\\text{opp} = " + fmtNum(opp/20, 2) + "}", null, "center", 12);
+  // hyp label outside hypotenuse, perpendicular outward (above-left)
+  var midH = { x: (Pl.x + Pt.x) / 2, y: (Pl.y + Pt.y) / 2 };
+  // outward normal direction (perpendicular to hyp, away from interior point P_R)
+  var hypVec = { x: Pt.x - Pl.x, y: Pt.y - Pl.y };
+  var hypLen = Math.sqrt(hypVec.x*hypVec.x + hypVec.y*hypVec.y) || 1;
+  // perpendicular outward (rotate -90° in y-down: (x,y) → (y,-x))
+  var outX = hypVec.y / hypLen;
+  var outY = -hypVec.x / hypLen;
+  // Make sure it points away from Pr
+  var toPrX = Pr.x - midH.x, toPrY = Pr.y - midH.y;
+  if (outX * toPrX + outY * toPrY > 0) { outX = -outX; outY = -outY; }
+  svgKaTeXLabel(gLbl, midH.x + outX * 24, midH.y + outY * 24,
+    "{\\color{" + COL.pink + "}\\text{hyp} = " + fmtNum(L/20, 2) + "}", null, "center", 12);
+
+  // Update ratios + values
+  var sinV = Math.sin(thetaRad);
+  var cosV = Math.cos(thetaRad);
+  var tanV = Math.tan(thetaRad);
+
+  tryRender(document.getElementById("f-sin"),
+    "= \\dfrac{{\\color{" + COL.orange + "}" + fmtNum(opp/20, 2) + "}}" +
+    "{{\\color{" + COL.pink + "}" + fmtNum(L/20, 2) + "}}");
+  tryRender(document.getElementById("f-cos"),
+    "= \\dfrac{{\\color{" + COL.blue + "}" + fmtNum(adj/20, 2) + "}}" +
+    "{{\\color{" + COL.pink + "}" + fmtNum(L/20, 2) + "}}");
+  tryRender(document.getElementById("f-tan"),
+    "= \\dfrac{{\\color{" + COL.orange + "}" + fmtNum(opp/20, 2) + "}}" +
+    "{{\\color{" + COL.blue + "}" + fmtNum(adj/20, 2) + "}}");
+
+  document.getElementById("v-sin").textContent = "= " + fmtNum(sinV, 3);
+  document.getElementById("v-cos").textContent = "= " + fmtNum(cosV, 3);
+  document.getElementById("v-tan").textContent = "= " + fmtNum(tanV, 3);
+}
+
+// Equation bar helpers + ratio-flash
+function flashRatiosLocked() {
+  ["row-sin", "row-cos", "row-tan"].forEach(function(id) {
+    var el = document.getElementById(id);
+    el.classList.add("lock-flash");
+    setTimeout(function() { el.classList.remove("lock-flash"); }, 400);
+  });
+}
+
+// ===== Sliders =====
+var angleSlider = document.getElementById("angleSlider");
+var angleVal = document.getElementById("angleVal");
+var sizeSlider = document.getElementById("sizeSlider");
+var sizeVal = document.getElementById("sizeVal");
+
+function syncLabels() {
+  angleVal.textContent = fmtNum(display.theta, 0) + "°";
+  sizeVal.textContent  = fmtNum(display.scale, 2) + "×";
+}
+
+angleSlider.addEventListener("input", function() {
+  params.theta = parseFloat(angleSlider.value);
+  kickSpring();
+});
+sizeSlider.addEventListener("input", function() {
+  params.scale = parseFloat(sizeSlider.value);
+  kickSpring();
+  if (Math.abs(params.theta - lastTheta) < 0.5) flashRatiosLocked();
+});
+
+// ===== Spring loop =====
+var rafId = null;
+function kickSpring() { if (rafId) return; rafId = requestAnimationFrame(tick); }
+function tick() {
+  display.theta += (params.theta - display.theta) * SPRING_FACTOR;
+  display.scale += (params.scale - display.scale) * SPRING_FACTOR;
+  if (Math.abs(params.theta - display.theta) < SPRING_EPS) display.theta = params.theta;
+  if (Math.abs(params.scale - display.scale) < SPRING_EPS) display.scale = params.scale;
+  render();
+  syncLabels();
+  if (display.theta !== params.theta || display.scale !== params.scale) {
+    rafId = requestAnimationFrame(tick);
+  } else {
+    rafId = null;
+    lastTheta = params.theta;
+  }
+}
+
+render();
+syncLabels();
+
+// ===== Height reporter =====
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>
