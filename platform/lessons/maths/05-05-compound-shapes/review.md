@@ -161,7 +161,9 @@ $$\text{SA} = 80\pi + 24\pi + 50\pi + 16\pi + \pi = \boxed{171\pi}\;\text{cm}^2$
 
 **[M3 for the four exposed-face terms; M1 for the hole-bottom disc; A1 for $171\pi$]**
 
-Full marks $= 9$ for both parts.
+Full marks $= 9$.
+
+(Three for volume, six for surface area.)
 
 The lesson: when a feature crosses an internal join, walk through every face slowly. Drawing a cross-section helps.
 

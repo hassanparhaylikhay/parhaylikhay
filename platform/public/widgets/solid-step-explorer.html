@@ -46,9 +46,23 @@
   button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 
-  .shape-part { transition: opacity 0.5s ease, fill 0.5s ease, stroke 0.5s ease; }
+  .shape-part { transition: opacity 0.5s ease, fill 0.5s ease, stroke 0.5s ease, stroke-width 0.4s ease, filter 0.4s ease; }
   .shape-part.faded { opacity: 0.18; }
   .shape-part.hidden { opacity: 0; }
+  /* Highlight: bright outline + drop-shadow glow keyed to the element's stroke colour */
+  .shape-part.highlight {
+    stroke-width: 3.5;
+    filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 6px currentColor);
+  }
+  /* Pulse animation while highlighted to draw the eye */
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 3px currentColor) drop-shadow(0 0 5px currentColor); }
+    50%      { filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 10px currentColor); }
+  }
+  .shape-part.highlight { animation: pulse-glow 1.6s ease-in-out infinite; }
+  /* Annotation overlays (measurement brackets, arrows): fade in/out with the step */
+  .annotation { opacity: 0; transition: opacity 0.45s ease; }
+  .annotation.shown { opacity: 1; }
 </style>
 </head>
 <body>
@@ -83,6 +97,7 @@
           </linearGradient>
         </defs>
         <g id="g-shape"></g>
+        <g id="g-annotations"></g>
       </svg>
     </div>
     <div class="equations" id="equations"></div>
@@ -544,6 +559,14 @@ function buildSectorToCone(p) {
 // =====================================================================
 // PRESETS
 // =====================================================================
+// Each step has:
+//   - show:      array of part names that should be visible
+//   - fade:      array of part names that fade to 0.18 opacity
+//   - highlight: array of part names that get a bright pulsing glow
+//   - eqs:       text/TeX lines on the right
+//
+// First step ALWAYS introduces the shape (no highlight, just full visibility).
+// Subsequent steps highlight whatever is being calculated.
 var PRESETS = {
   "frustum-vol": {
     title: "Frustum: volume by subtraction",
@@ -552,26 +575,39 @@ var PRESETS = {
     footer: "Cambridge Winter 2023 Paper 22, Q10(a)(i)",
     steps: [
       {
-        show: ["fullCone"],
+        show: ["frustum", "topCircle", "botEllipse"],
         eqs: [
-          { kind: "tag", text: "STEP 1: SET UP THE LARGE CONE" },
+          { kind: "tag", text: "STEP 1: THE SOLID" },
+          { kind: "hint", text: "a frustum: large cone with the tip removed" },
+          { kind: "note", text: "the trick is to find the volume by subtracting the small (removed) cone from the original large cone" }
+        ]
+      },
+      {
+        show: ["fullCone", "frustum", "topCircle", "botEllipse", "smallCone"],
+        fade: ["frustum", "topCircle", "botEllipse"],
+        highlight: ["fullCone"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: THE LARGE CONE (BLUE OUTLINE)" },
           { kind: "main", tex: "V_\\text{large} = \\tfrac{1}{3}\\pi R^{2} H = \\tfrac{1}{3}\\pi(9)^{2}(21)" },
           { kind: "ans", tex: "V_\\text{large} = 567\\pi\\;\\text{cm}^{3}" }
         ]
       },
       {
-        show: ["fullCone", "smallCone"],
+        show: ["fullCone", "smallCone", "frustum", "topCircle", "botEllipse"],
+        fade: ["fullCone", "frustum", "topCircle", "botEllipse"],
+        highlight: ["smallCone"],
         eqs: [
-          { kind: "tag", text: "STEP 2: SIMILAR TRIANGLES → SMALL RADIUS" },
-          { kind: "main", tex: "r = \\tfrac{h}{H} \\times R = \\tfrac{14}{21} \\times 9 = 6" },
+          { kind: "tag", text: "STEP 3: THE REMOVED SMALL CONE (PINK)" },
+          { kind: "hint", text: "similar triangles: r = (h/H) × R = (14/21) × 9 = 6" },
           { kind: "main", tex: "V_\\text{small} = \\tfrac{1}{3}\\pi(6)^{2}(14)" },
           { kind: "ans", tex: "V_\\text{small} = 168\\pi\\;\\text{cm}^{3}" }
         ]
       },
       {
         show: ["frustum", "topCircle", "botEllipse"],
+        highlight: ["frustum"],
         eqs: [
-          { kind: "tag", text: "STEP 3: SUBTRACT" },
+          { kind: "tag", text: "STEP 4: SUBTRACT" },
           { kind: "main", tex: "V_\\text{frustum} = V_\\text{large} - V_\\text{small}" },
           { kind: "main", tex: "= 567\\pi - 168\\pi" },
           { kind: "ans", tex: "= 399\\pi\\;\\text{cm}^{3}" }
@@ -588,30 +624,44 @@ var PRESETS = {
       {
         show: ["frustum", "topCircle", "botEllipse"],
         eqs: [
-          { kind: "tag", text: "STEP 1: SLANT HEIGHTS (PYTHAGORAS)" },
-          { kind: "main", tex: "l_\\text{large} = \\sqrt{H^{2} + R^{2}} = \\sqrt{441 + 81} = \\sqrt{522}" },
-          { kind: "main", tex: "l_\\text{small} = \\sqrt{14^{2} + 6^{2}} = \\sqrt{232}" }
+          { kind: "tag", text: "STEP 1: THE FRUSTUM" },
+          { kind: "hint", text: "three exposed surfaces: outer curved, inner curved, annular ring" }
         ]
       },
       {
-        show: ["frustum", "topCircle", "botEllipse"],
+        show: ["fullCone", "frustum", "topCircle", "botEllipse"],
+        fade: ["frustum", "topCircle", "botEllipse"],
+        highlight: ["fullCone"],
         eqs: [
-          { kind: "tag", text: "STEP 2: OUTER + INNER CURVED SURFACES" },
-          { kind: "main", tex: "\\text{outer} = \\pi R\\, l_\\text{large} = 9\\pi\\sqrt{522}" },
-          { kind: "main", tex: "\\text{inner} = \\pi r\\, l_\\text{small} = 6\\pi\\sqrt{232}" }
+          { kind: "tag", text: "STEP 2: SLANT OF THE LARGE CONE" },
+          { kind: "main", tex: "l_\\text{large} = \\sqrt{H^{2} + R^{2}} = \\sqrt{441 + 81} = \\sqrt{522}" },
+          { kind: "main", tex: "\\text{outer curved} = \\pi R\\, l_\\text{large} = 9\\pi\\sqrt{522}" }
+        ]
+      },
+      {
+        show: ["smallCone", "frustum", "topCircle", "botEllipse"],
+        fade: ["frustum", "topCircle", "botEllipse"],
+        highlight: ["smallCone"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: SLANT OF THE SMALL CONE" },
+          { kind: "main", tex: "l_\\text{small} = \\sqrt{14^{2} + 6^{2}} = \\sqrt{232}" },
+          { kind: "main", tex: "\\text{inner curved} = \\pi r\\, l_\\text{small} = 6\\pi\\sqrt{232}" }
         ]
       },
       {
         show: ["frustum", "topCircle", "botEllipse", "annulus"],
+        fade: ["frustum"],
+        highlight: ["annulus"],
         eqs: [
-          { kind: "tag", text: "STEP 3: ANNULAR RING AT THE TOP" },
+          { kind: "tag", text: "STEP 4: ANNULAR RING (PINK)" },
           { kind: "main", tex: "\\text{ring} = \\pi(R^{2} - r^{2}) = \\pi(81 - 36) = 45\\pi" }
         ]
       },
       {
-        show: ["frustum", "topCircle", "botEllipse", "annulus"],
+        show: ["frustum", "topCircle", "botEllipse"],
+        highlight: ["frustum"],
         eqs: [
-          { kind: "tag", text: "STEP 4: ADD ALL EXPOSED SURFACES" },
+          { kind: "tag", text: "STEP 5: ADD EVERYTHING" },
           { kind: "main", tex: "\\text{SA} = 9\\pi\\sqrt{522} + 6\\pi\\sqrt{232} + 45\\pi" },
           { kind: "ans", tex: "\\approx 1074\\;\\text{cm}^{2}" }
         ]
@@ -627,28 +677,43 @@ var PRESETS = {
       {
         show: ["hemi", "cone", "join", "slant"],
         eqs: [
-          { kind: "tag", text: "STEP 1: VOLUMES (NO CANCELLATION)" },
-          { kind: "main", tex: "V_\\text{hemi} = \\tfrac{2}{3}\\pi r^{3} = \\tfrac{2}{3}\\pi(216) = 144\\pi" },
+          { kind: "tag", text: "STEP 1: THE COMPOSITE SOLID" },
+          { kind: "hint", text: "hemisphere on the bottom, cone on top, both radius r" }
+        ]
+      },
+      {
+        show: ["hemi", "cone", "join", "slant"],
+        highlight: ["hemi"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: HEMISPHERE VOLUME (HIGHLIGHT)" },
+          { kind: "main", tex: "V_\\text{hemi} = \\tfrac{2}{3}\\pi r^{3} = \\tfrac{2}{3}\\pi(216) = 144\\pi" }
+        ]
+      },
+      {
+        show: ["hemi", "cone", "join", "slant"],
+        highlight: ["cone"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: CONE VOLUME (HIGHLIGHT)" },
           { kind: "main", tex: "V_\\text{cone} = \\tfrac{1}{3}\\pi r^{2} h = \\tfrac{1}{3}\\pi(36)(8) = 96\\pi" },
           { kind: "ans", tex: "V_\\text{total} = 240\\pi\\;\\text{cm}^{3}" }
         ]
       },
       {
-        show: ["hemi", "cone", "slant"],
-        fade: ["join"],
+        show: ["hemi", "cone", "join", "slant"],
+        highlight: ["join"],
         eqs: [
-          { kind: "tag", text: "STEP 2: AT THE JOIN, FACES CANCEL" },
-          { kind: "hint", text: "the dashed ellipse is the joined face" },
-          { kind: "main", tex: "\\text{cancelled}: \\pi r^{2} \\text{ (hemisphere flat)} = \\pi r^{2} \\text{ (cone base)}" },
-          { kind: "note", text: "Only the curved surfaces remain on the boundary" }
+          { kind: "tag", text: "STEP 4: AT THE JOIN, FACES CANCEL" },
+          { kind: "hint", text: "the dashed circle is the hidden join (πr² each side, both removed from SA)" },
+          { kind: "note", text: "only the two curved surfaces survive on the outside" }
         ]
       },
       {
         show: ["hemi", "cone", "slant"],
+        fade: ["join"],
+        highlight: ["hemi", "cone"],
         eqs: [
-          { kind: "tag", text: "STEP 3: SURFACE AREA" },
-          { kind: "main", tex: "\\text{SA} = \\underbrace{2\\pi r^{2}}_{\\text{hemi curved}} + \\underbrace{\\pi r l}_{\\text{cone curved}}" },
-          { kind: "main", tex: "= 2\\pi(36) + \\pi(6)(10) = 72\\pi + 60\\pi" },
+          { kind: "tag", text: "STEP 5: SURFACE AREA = TWO CURVED PIECES" },
+          { kind: "main", tex: "\\text{SA} = 2\\pi r^{2} + \\pi r l = 72\\pi + 60\\pi" },
           { kind: "ans", tex: "= 132\\pi\\;\\text{cm}^{2}" }
         ]
       }
@@ -663,33 +728,44 @@ var PRESETS = {
       {
         show: ["cyl", "cone", "botEllipse", "join", "slant"],
         eqs: [
-          { kind: "tag", text: "STEP 1: CONE HEIGHT FROM SLANT" },
-          { kind: "main", tex: "h_\\text{cone} = \\sqrt{l^{2} - r^{2}} = \\sqrt{8.7^{2} - 6.3^{2}}" },
-          { kind: "main", tex: "= \\sqrt{75.69 - 39.69} = \\sqrt{36} = 6" }
+          { kind: "tag", text: "STEP 1: THE COMPOSITE" },
+          { kind: "hint", text: "cylinder on the bottom, cone on top, joined at a shared circle" }
         ]
       },
       {
         show: ["cyl", "cone", "botEllipse", "join", "slant"],
+        highlight: ["slant", "cone"],
         eqs: [
-          { kind: "tag", text: "STEP 2: CYLINDER HEIGHT FROM RATIO" },
-          { kind: "hint", text: "cone : cylinder = 2 : 3" },
-          { kind: "main", tex: "h_\\text{cyl} = \\tfrac{3}{2} \\times h_\\text{cone} = \\tfrac{3}{2} \\times 6 = 9" }
+          { kind: "tag", text: "STEP 2: CONE HEIGHT FROM SLANT (PYTHAGORAS)" },
+          { kind: "main", tex: "h_\\text{cone} = \\sqrt{l^{2} - r^{2}} = \\sqrt{8.7^{2} - 6.3^{2}}" },
+          { kind: "ans", tex: "= \\sqrt{36} = 6" }
+        ]
+      },
+      {
+        show: ["cyl", "cone", "botEllipse", "join", "slant"],
+        highlight: ["cyl"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: CYLINDER HEIGHT FROM RATIO" },
+          { kind: "hint", text: "cone : cylinder = 2 : 3, cone height = 6" },
+          { kind: "main", tex: "h_\\text{cyl} = \\tfrac{3}{2} \\times 6 = 9" }
         ]
       },
       {
         show: ["cyl", "cone", "botEllipse", "slant"],
         fade: ["join"],
+        highlight: ["join"],
         eqs: [
-          { kind: "tag", text: "STEP 3: COUNT EXPOSED FACES" },
-          { kind: "hint", text: "join cancels — cone base + cylinder top" },
-          { kind: "main", tex: "\\text{SA} = \\pi r l + 2\\pi r h_\\text{cyl} + \\pi r^{2}" }
+          { kind: "tag", text: "STEP 4: JOIN CANCELS" },
+          { kind: "hint", text: "cone base + cylinder top = both hidden inside" },
+          { kind: "note", text: "exposed: cone curved + cylinder curved + cylinder bottom" }
         ]
       },
       {
         show: ["cyl", "cone", "botEllipse", "slant"],
+        highlight: ["cone", "cyl", "botEllipse"],
         eqs: [
-          { kind: "tag", text: "STEP 4: SUBSTITUTE AND ADD" },
-          { kind: "main", tex: "= \\pi(6.3)(8.7) + 2\\pi(6.3)(9) + \\pi(6.3)^{2}" },
+          { kind: "tag", text: "STEP 5: SUM OF EXPOSED FACES" },
+          { kind: "main", tex: "\\text{SA} = \\pi r l + 2\\pi r h_\\text{cyl} + \\pi r^{2}" },
           { kind: "main", tex: "= 54.81\\pi + 113.4\\pi + 39.69\\pi = 207.9\\pi" },
           { kind: "ans", tex: "\\approx 653\\;\\text{cm}^{2}" }
         ]
@@ -706,24 +782,33 @@ var PRESETS = {
         show: ["cuboid"],
         eqs: [
           { kind: "tag", text: "STEP 1: PLAIN CUBOID" },
-          { kind: "main", tex: "V = L \\times W \\times h = 10 \\times 8 \\times 6 = 480" },
-          { kind: "main", tex: "\\text{SA} = 2(LW + Lh + Wh) = 2(80 + 60 + 48) = 376" }
+          { kind: "hint", text: "10 × 8 × 6 cm" }
+        ]
+      },
+      {
+        show: ["cuboid"],
+        highlight: ["cuboid"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: VOLUME AND SA OF THE CUBOID" },
+          { kind: "main", tex: "V = 10 \\times 8 \\times 6 = 480" },
+          { kind: "main", tex: "\\text{SA} = 2(80 + 60 + 48) = 376" }
         ]
       },
       {
         show: ["cuboid", "hole"],
+        highlight: ["hole"],
         eqs: [
-          { kind: "tag", text: "STEP 2: DRILL OUT THE CYLINDRICAL HOLE" },
+          { kind: "tag", text: "STEP 3: DRILL OUT THE CYLINDRICAL HOLE" },
           { kind: "main", tex: "V_\\text{hole} = \\pi r^{2} h = \\pi(4)(6) = 24\\pi" },
           { kind: "ans", tex: "V_\\text{solid} = 480 - 24\\pi\\;\\text{cm}^{3}" }
         ]
       },
       {
         show: ["cuboid", "hole"],
+        highlight: ["hole"],
         eqs: [
-          { kind: "tag", text: "STEP 3: ADJUST THE SURFACE AREA" },
-          { kind: "hint", text: "remove 2 end-circles, ADD inner wall" },
-          { kind: "main", tex: "-2\\pi r^{2} + 2\\pi r h = -8\\pi + 24\\pi = 16\\pi" },
+          { kind: "tag", text: "STEP 4: ADJUST SA: −2 END CIRCLES + INNER WALL" },
+          { kind: "main", tex: "-2\\pi r^{2} + 2\\pi r h = -8\\pi + 24\\pi = +16\\pi" },
           { kind: "ans", tex: "\\text{SA} = 376 + 16\\pi\\;\\text{cm}^{2}" }
         ]
       }
@@ -738,31 +823,41 @@ var PRESETS = {
       {
         show: ["sector"],
         eqs: [
-          { kind: "tag", text: "STEP 1: ARC LENGTH OF THE SECTOR" },
+          { kind: "tag", text: "STEP 1: A SECTOR (RADIUS 8, ANGLE 75°)" },
+          { kind: "hint", text: "we'll roll it into a cone — the sector's two straight edges meet" }
+        ]
+      },
+      {
+        show: ["sector"],
+        highlight: ["sector"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: ARC LENGTH (BECOMES CONE'S BASE CIRCUMFERENCE)" },
           { kind: "main", tex: "\\text{arc} = \\tfrac{75}{360} \\times 2\\pi(8) = \\tfrac{10\\pi}{3}\\;\\text{cm}" }
         ]
       },
       {
         show: ["sector", "coneBody", "coneBase"],
+        fade: ["sector"],
+        highlight: ["coneBase"],
         eqs: [
-          { kind: "tag", text: "STEP 2: ARC BECOMES CONE'S BASE CIRCUMFERENCE" },
+          { kind: "tag", text: "STEP 3: CONE BASE RADIUS" },
           { kind: "main", tex: "2\\pi r = \\tfrac{10\\pi}{3} \\Rightarrow r = \\tfrac{5}{3}\\;\\text{cm}" },
-          { kind: "hint", text: "sector radius R = cone slant l = 8 cm" }
+          { kind: "hint", text: "the original sector radius R = 8 becomes the cone slant l = 8" }
         ]
       },
       {
         show: ["coneBody", "coneBase"],
-        fade: ["sector"],
+        highlight: ["coneBody"],
         eqs: [
-          { kind: "tag", text: "STEP 3: CONE HEIGHT (PYTHAGORAS)" },
+          { kind: "tag", text: "STEP 4: CONE HEIGHT (PYTHAGORAS)" },
           { kind: "main", tex: "h = \\sqrt{l^{2} - r^{2}} = \\sqrt{64 - \\tfrac{25}{9}} = \\tfrac{\\sqrt{551}}{3}" }
         ]
       },
       {
         show: ["coneBody", "coneBase"],
-        fade: ["sector"],
+        highlight: ["coneBody"],
         eqs: [
-          { kind: "tag", text: "STEP 4: VOLUME" },
+          { kind: "tag", text: "STEP 5: VOLUME" },
           { kind: "main", tex: "V = \\tfrac{1}{3}\\pi r^{2} h = \\tfrac{1}{3}\\pi \\cdot \\tfrac{25}{9} \\cdot \\tfrac{\\sqrt{551}}{3}" },
           { kind: "ans", tex: "\\approx 22.7\\;\\text{cm}^{3}" }
         ]
@@ -799,37 +894,42 @@ function flattenParts(p) {
 }
 var flatParts = flattenParts(parts);
 
-function setVisibility(showList, fadeList) {
+// Walk a part name, calling cb on every leaf SVG element it covers
+// (handles both individual parts and groups returned by builders).
+function eachLeaf(name, cb) {
+  var el = flatParts[name];
+  if (el && el.classList) { cb(el); return; }
+  // Group: visit every member with that prefix
+  Object.keys(flatParts).forEach(function(kk) {
+    if (kk.indexOf(name + ".") === 0 && flatParts[kk].classList) cb(flatParts[kk]);
+  });
+}
+
+function setVisibility(showList, fadeList, highlightList) {
   showList = showList || [];
   fadeList = fadeList || [];
-  // Default: hide every part
+  highlightList = highlightList || [];
+  // Reset every leaf to hidden, no highlight
   for (var k in flatParts) {
     var el = flatParts[k];
     if (!el || !el.classList) continue;
-    el.classList.remove("hidden", "faded");
+    el.classList.remove("faded", "highlight");
     el.classList.add("hidden");
   }
-  // Show the listed parts (and any descendants)
   showList.forEach(function(name) {
-    var el = flatParts[name];
-    if (!el) return;
-    if (el.classList) {
-      el.classList.remove("hidden", "faded");
-    } else {
-      // It's a group; show all descendants
-      Object.keys(flatParts).forEach(function(kk) {
-        if (kk.indexOf(name + ".") === 0 && flatParts[kk].classList) {
-          flatParts[kk].classList.remove("hidden", "faded");
-        }
-      });
-    }
+    eachLeaf(name, function(el) { el.classList.remove("hidden", "faded"); });
   });
   fadeList.forEach(function(name) {
-    var el = flatParts[name];
-    if (el && el.classList) {
-      el.classList.remove("hidden");
-      el.classList.add("faded");
-    }
+    eachLeaf(name, function(el) { el.classList.remove("hidden"); el.classList.add("faded"); });
+  });
+  highlightList.forEach(function(name) {
+    eachLeaf(name, function(el) {
+      el.classList.remove("hidden", "faded");
+      el.classList.add("highlight");
+      // Make the drop-shadow `currentColor` match the element's stroke
+      var stroke = el.getAttribute("stroke");
+      if (stroke && stroke !== "none") el.style.color = stroke;
+    });
   });
 }
 
@@ -842,7 +942,7 @@ var nextBtn = document.getElementById("next");
 function renderStep() {
   var step = preset.steps[stepIdx];
   if (!step) return;
-  setVisibility(step.show, step.fade);
+  setVisibility(step.show, step.fade, step.highlight);
   equationsEl.innerHTML = "";
   step.eqs.forEach(function(eq) {
     var line = document.createElement("div");
