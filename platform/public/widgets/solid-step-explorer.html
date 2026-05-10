@@ -16,23 +16,23 @@
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
   .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
 
-  .layout { display:grid; grid-template-columns: 1fr; gap:18px; align-items:start; }
-  @media (min-width: 560px) { .layout { grid-template-columns: 300px 1fr; gap:18px; } }
+  .layout { display:grid; grid-template-columns: 1fr; gap:20px; align-items:start; }
+  @media (min-width: 560px) { .layout { grid-template-columns: 360px 1fr; gap:22px; } }
 
-  .stage-outer { width:100%; max-width:300px; margin:0 auto; aspect-ratio: 300 / 280; position:relative; }
+  .stage-outer { width:100%; max-width:360px; margin:0 auto; aspect-ratio: 300 / 280; position:relative; }
   .stage-outer svg { display:block; width:100%; height:100%; overflow:visible; }
-  .lbl-host { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; line-height:1; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:13px; font-weight:600; line-height:1; }
   .lbl-host .katex { font-size:1em; }
 
-  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; min-height:200px; }
-  .eq-group { display:flex; flex-direction:column; gap:4px; opacity:0; transition: opacity 0.4s ease; }
+  .equations { display:flex; flex-direction:column; gap:16px; padding:4px 2px; min-height:220px; }
+  .eq-group { display:flex; flex-direction:column; gap:5px; opacity:0; transition: opacity 0.4s ease; }
   .eq-group.drawn { opacity:1; }
   .eq-line { font-family:'Geist Mono', monospace; line-height:1.5; }
-  .eq-line[data-kind="tag"]    { font-size:11px; color:#7a7875; letter-spacing:0.4px; }
-  .eq-line[data-kind="hint"]   { font-size:13px; color:#fff067; }
-  .eq-line[data-kind="main"]   { font-size:14.5px; color:#f0eeea; }
-  .eq-line[data-kind="ans"]    { font-size:17px; color:#f0eeea; font-weight:700; }
-  .eq-line[data-kind="note"]   { font-size:11px; color:#7a7875; margin-top:4px; }
+  .eq-line[data-kind="tag"]    { font-size:12px; color:#7a7875; letter-spacing:0.5px; }
+  .eq-line[data-kind="hint"]   { font-size:15px; color:#fff067; }
+  .eq-line[data-kind="main"]   { font-size:16.5px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]    { font-size:19px; color:#f0eeea; font-weight:700; }
+  .eq-line[data-kind="note"]   { font-size:12.5px; color:#7a7875; margin-top:4px; }
   .eq-line .katex { font-size:1em; }
 
   .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
