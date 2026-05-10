@@ -532,14 +532,18 @@ function buildSectorToCone(p) {
   var g = document.getElementById("g-shape");
   g.innerHTML = "";
 
-  // Sector (yellow fan, apex up, arc opens down)
-  // sweep-flag = 1 (CW in SVG y-down) so the short arc bulges DOWNWARD,
-  // away from the apex.
+  // Sector (yellow fan, apex up, arc opens down).
+  // Both endpoints sit below the apex at the same y. The arc has to bulge
+  // FURTHER down (away from the apex) — i.e. through the bottom of the
+  // circle centred at the apex. Going from pLeft (lower-left) through the
+  // bottom to pRight (lower-right) is visually counter-clockwise around
+  // the apex, so sweep-flag = 0. With sweep-flag = 1 SVG would draw the
+  // arc on the OTHER possible circle, producing a bow-tie / arrow shape.
   var sector = svgEl("path", {
     "class": "shape-part",
     d: "M " + cx + " " + apexY +
        " L " + pLeft.x.toFixed(2) + " " + pLeft.y.toFixed(2) +
-       " A " + sectorRpx + " " + sectorRpx + " 0 " + large + " 1 " +
+       " A " + sectorRpx + " " + sectorRpx + " 0 " + large + " 0 " +
        pRight.x.toFixed(2) + " " + pRight.y.toFixed(2) + " Z",
     fill: "rgba(255,240,103,0.20)", stroke: COL.yellow, "stroke-width": 2, "stroke-linejoin": "round"
   });

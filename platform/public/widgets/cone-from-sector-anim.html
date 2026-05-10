@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sector → Cone Animation</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 14px; }
+  .head {
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom:10px; gap:12px; min-height:22px;
+  }
+  .title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:1.2px; text-transform:uppercase; }
+  .stage {
+    width:100%; max-width:420px; aspect-ratio: 5 / 4; margin:0 auto;
+    position:relative;
+  }
+  svg { display:block; width:100%; height:100%; overflow:visible; }
+  .legend {
+    display:flex; gap:14px; justify-content:center;
+    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
+    margin-top:6px; flex-wrap:wrap;
+  }
+  .legend .item { display:flex; align-items:center; gap:5px; }
+  .legend .swatch {
+    display:inline-block; width:10px; height:10px; border-radius:2px;
+  }
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:10px; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:7px 14px; border-radius:6px; cursor:pointer; min-width:90px;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  button.ctl:hover { color:#fff067; border-color:#fff067; }
+  .progress {
+    width:100%; height:3px; background:#141e2a; border-radius:2px;
+    margin:8px auto 0; overflow:hidden;
+  }
+  .progress-fill {
+    height:100%; background: linear-gradient(90deg, #fff067, #ff822c);
+    width:0%;
+  }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="title" id="title-text">SECTOR → CONE · LIVE FOLD</span>
+    <span class="title" id="phase-text" style="color:#7a7875">phase: flat sector</span>
+  </div>
+
+  <div class="stage" id="stage">
+    <svg viewBox="0 0 480 400" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="morphFill" x1="0" y1="0" x2="0" y2="1">
+          <stop id="morphStop1" offset="0%" stop-color="rgba(255,240,103,0.30)"/>
+          <stop id="morphStop2" offset="100%" stop-color="rgba(255,240,103,0.20)"/>
+        </linearGradient>
+      </defs>
+      <!-- The morphing shape: same path topology (M ... L ... A ... Z) for both endpoints -->
+      <path id="morph-path" d="" fill="url(#morphFill)" stroke="#fff067" stroke-width="2" stroke-linejoin="round"/>
+      <!-- Cone base ellipse (only visible at the end) -->
+      <ellipse id="cone-base" cx="240" cy="0" rx="0" ry="0" fill="none" stroke="#fff067" stroke-width="1.5" opacity="0"/>
+      <!-- "fold seam" guide that appears mid-animation: the two straight edges of the sector meeting -->
+      <line id="seam" x1="0" y1="0" x2="0" y2="0" stroke="#ff4670" stroke-width="1.5" stroke-dasharray="4 3" opacity="0"/>
+      <g id="g-labels"></g>
+    </svg>
+  </div>
+
+  <div class="progress"><div class="progress-fill" id="progress-fill"></div></div>
+
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:#fff067"></span><span>sector apex stays put</span></div>
+    <div class="item"><span class="swatch" style="background:#ff4670"></span><span>straight edges fold together</span></div>
+    <div class="item"><span class="swatch" style="background:#ff822c"></span><span>arc becomes the base circle</span></div>
+  </div>
+
+  <div class="controls">
+    <button class="ctl" id="replay">▶ replay</button>
+    <button class="ctl" id="pause">⏸ pause</button>
+  </div>
+  <p class="footer">apex stays · straight edges meet · arc curls into a circle of circumference 2πr</p>
+</div>
+
+<script>
+"use strict";
+
+// Sector parameters (Cambridge example: R = 8, θ = 75°)
+var SECTOR_R_CM = 8;
+var THETA = 75;
+var SCALE = 22;
+
+var COL = { yellow: "#fff067", orange: "#ff822c", pink: "#ff4670", grey: "#7a7875" };
+var SVG_W = 480, SVG_H = 400;
+var cx = SVG_W / 2;
+var apexY = 50;
+
+// Geometry constants
+var sectorRpx = SECTOR_R_CM * SCALE;             // sector radius in px (also cone slant)
+var coneR_cm  = SECTOR_R_CM * THETA / 360;        // cone base radius (cm)
+var coneR_px  = coneR_cm * SCALE;                 // cone base radius (px)
+var coneRyPx  = coneR_px * 0.32;                  // foreshortened ellipse for the cone base
+var coneH_cm  = Math.sqrt(SECTOR_R_CM * SECTOR_R_CM - coneR_cm * coneR_cm);
+var coneH_px  = coneH_cm * SCALE;                 // cone height (px)
+
+// Auto-fit: ensure both extents fit
+var TOP_PAD = 50, BOT_PAD = 30;
+var avail = SVG_H - TOP_PAD - BOT_PAD;
+var maxExtent = Math.max(sectorRpx, coneH_px);
+if (maxExtent > avail) {
+  var fit = avail / maxExtent;
+  sectorRpx *= fit;
+  coneR_px  *= fit;
+  coneRyPx  *= fit;
+  coneH_px  *= fit;
+}
+
+var morphPath = document.getElementById("morph-path");
+var coneBase  = document.getElementById("cone-base");
+var seam      = document.getElementById("seam");
+var phaseText = document.getElementById("phase-text");
+var progressFill = document.getElementById("progress-fill");
+
+// Sector vertices (apex at top, arc opens down). Math angle 90° = straight
+// down in SVG y-down (since cos=0, sin=1).
+function ptOnSector(theta_deg, r) {
+  var rad = theta_deg * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: apexY + r * Math.sin(rad) };
+}
+var sectorLeft  = ptOnSector(90 + THETA/2, sectorRpx);
+var sectorRight = ptOnSector(90 - THETA/2, sectorRpx);
+
+// Cone front vertices (apex up, base ellipse at the bottom)
+var coneBaseY = apexY + coneH_px;
+var coneLeft  = { x: cx - coneR_px, y: coneBaseY };
+var coneRight = { x: cx + coneR_px, y: coneBaseY };
+
+// Linear interpolation between two points
+function lerpPt(a, b, t) {
+  return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+}
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+// Compute the morph path at parameter t in [0, 1]
+//   t = 0 → flat sector
+//   t = 1 → cone (front silhouette)
+// We morph both arc endpoints AND the arc rx/ry. The arc structure is the
+// same in both cases (large=0, sweep=0).
+function morphD(t) {
+  var pL = lerpPt(sectorLeft,  coneLeft,  t);
+  var pR = lerpPt(sectorRight, coneRight, t);
+  var rx = lerp(sectorRpx, coneR_px, t);
+  var ry = lerp(sectorRpx, coneRyPx, t); // sector → cone-base ellipse minor radius
+  return "M " + cx.toFixed(2) + " " + apexY.toFixed(2) +
+         " L " + pL.x.toFixed(2) + " " + pL.y.toFixed(2) +
+         " A " + rx.toFixed(2) + " " + ry.toFixed(2) + " 0 0 0 " +
+         pR.x.toFixed(2) + " " + pR.y.toFixed(2) + " Z";
+}
+
+function setT(t) {
+  // Phase labels
+  var phase;
+  if (t < 0.05)      phase = "flat sector (R = " + SECTOR_R_CM + ", θ = " + THETA + "°)";
+  else if (t < 0.45) phase = "rolling: straight edges sweeping in";
+  else if (t < 0.85) phase = "almost a cone — arc curls into a circle";
+  else               phase = "cone (l = " + SECTOR_R_CM + ", r = 5/3, h = √551 / 3)";
+  phaseText.textContent = "phase: " + phase;
+
+  morphPath.setAttribute("d", morphD(t));
+  // Cone base ellipse fades in over the second half
+  var baseOp = Math.max(0, (t - 0.55) / 0.45);
+  coneBase.setAttribute("cx", cx);
+  coneBase.setAttribute("cy", coneBaseY);
+  coneBase.setAttribute("rx", coneR_px);
+  coneBase.setAttribute("ry", coneRyPx);
+  coneBase.setAttribute("opacity", baseOp.toFixed(3));
+  // Seam line (the join where the two sector edges meet) is most visible mid-roll
+  // It runs along the cone's right slant (the seam after rolling).
+  var seamVis = Math.max(0, 1 - Math.abs(t - 0.5) * 4); // peak at t=0.5
+  seam.setAttribute("x1", cx);
+  seam.setAttribute("y1", apexY);
+  seam.setAttribute("x2", lerp(sectorRight.x, coneRight.x, t));
+  seam.setAttribute("y2", lerp(sectorRight.y, coneRight.y, t));
+  seam.setAttribute("opacity", seamVis.toFixed(3));
+
+  // Update the gradient: sector is yellow, cone is more orange
+  document.getElementById("morphStop1").setAttribute("stop-color",
+    "rgba(255," + Math.round(240 - t*110) + "," + Math.round(103 - t*60) + "," + (0.30 - t*0.05) + ")");
+  document.getElementById("morphStop2").setAttribute("stop-color",
+    "rgba(255," + Math.round(240 - t*110) + "," + Math.round(103 - t*60) + "," + (0.20 - t*0.04) + ")");
+  morphPath.setAttribute("stroke", t < 0.5 ? "#fff067" : "#ff822c");
+
+  progressFill.style.width = (t * 100).toFixed(2) + "%";
+}
+
+// Animation runtime
+var DURATION_MS = 3500;
+var HOLD_MS     = 1200;  // hold at the end before looping
+var startTime = 0;
+var animState = "playing"; // "playing" | "holding" | "paused"
+var rafId = null;
+
+function tick(now) {
+  if (animState === "paused") return;
+  if (!startTime) startTime = now;
+  var elapsed = now - startTime;
+  if (elapsed < DURATION_MS) {
+    var t = elapsed / DURATION_MS;
+    // Ease-in-out for a smoother roll
+    var eased = t < 0.5 ? 2*t*t : -1 + (4 - 2*t) * t;
+    setT(eased);
+    rafId = requestAnimationFrame(tick);
+  } else if (elapsed < DURATION_MS + HOLD_MS) {
+    setT(1);
+    animState = "holding";
+    rafId = requestAnimationFrame(tick);
+  } else {
+    // Restart
+    startTime = now;
+    animState = "playing";
+    setT(0);
+    rafId = requestAnimationFrame(tick);
+  }
+}
+
+function start() {
+  startTime = 0;
+  animState = "playing";
+  if (rafId) cancelAnimationFrame(rafId);
+  rafId = requestAnimationFrame(tick);
+}
+
+document.getElementById("replay").addEventListener("click", start);
+document.getElementById("pause").addEventListener("click", function() {
+  if (animState === "paused") {
+    // Resume — adjust startTime so elapsed continues from where we paused
+    startTime = performance.now() - (pausedElapsed || 0);
+    animState = "playing";
+    rafId = requestAnimationFrame(tick);
+    this.textContent = "⏸ pause";
+  } else {
+    pausedElapsed = performance.now() - startTime;
+    animState = "paused";
+    this.textContent = "▶ resume";
+  }
+});
+var pausedElapsed = 0;
+
+setT(0);
+start();
+
+// Height reporter
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>
