@@ -164,21 +164,36 @@ function compositeFig(label) {
   return svg;
 }
 function frustumFig(R, r, H, h) {
-  var s = Math.min(40/Math.max(R,r), 12);
+  // Auto-fit so the whole frustum (including the bottom ellipse) sits inside
+  // the SVG with margin. Bottom ellipse extends ry below botY, so we account
+  // for that in the available height.
+  var Wp = 220, He = 200;
+  var TOP_PAD = 14, BOT_PAD = 18;
+  var avail = He - TOP_PAD - BOT_PAD;
+  var ryFrac = 0.32;
+  // Required height = Hpx + (R * s * ryFrac)/2 above + (R * s * ryFrac)/2 below
+  // Approx: Hpx + R*s*ryFrac. Solve for s: H*s + R*s*ryFrac = avail
+  var s = Math.min(avail / (H + R * ryFrac), 50 / Math.max(R, r));
   var Rpx = R*s, rpx = r*s, Hpx = H*s;
-  var Wp = 200, He = 180, cx = Wp/2;
-  var apexY = (He - Hpx)/2, botY = apexY + Hpx, cutY = apexY + h*s;
+  var ryBig = Rpx * ryFrac, rySmall = rpx * ryFrac;
+  var cx = Wp/2;
+  var apexY = TOP_PAD + ryBig * 0.3;  // small offset so the top circle isn't flush against the edge
+  var cutY = apexY + h*s;
+  var botY = apexY + Hpx;
   var svg = '<svg viewBox="0 0 ' + Wp + ' ' + He + '" width="' + Wp + '" height="' + He + '">';
-  // Frustum body
+  // Frustum body (front-half visible; back of bottom ellipse drawn separately)
   svg += '<path d="M ' + (cx-Rpx) + ' ' + botY + ' L ' + (cx-rpx) + ' ' + cutY +
-         ' A ' + rpx + ' ' + (rpx*0.32) + ' 0 0 0 ' + (cx+rpx) + ' ' + cutY +
+         ' A ' + rpx + ' ' + rySmall + ' 0 0 0 ' + (cx+rpx) + ' ' + cutY +
          ' L ' + (cx+Rpx) + ' ' + botY +
-         ' A ' + Rpx + ' ' + (Rpx*0.32) + ' 0 0 0 ' + (cx-Rpx) + ' ' + botY + ' Z" fill="rgba(0,171,250,0.22)" stroke="#00abfa" stroke-width="2"/>';
-  // Top circle
-  svg += '<ellipse cx="' + cx + '" cy="' + cutY + '" rx="' + rpx + '" ry="' + (rpx*0.32) + '" fill="rgba(255,240,103,0.22)" stroke="#fff067" stroke-width="1.5"/>';
-  svg += '<text x="' + (cx+Rpx+8) + '" y="' + (botY-3) + '" text-anchor="start" font-family="Geist Mono,monospace" font-size="10" font-weight="700" fill="#00abfa">R=' + R + '</text>';
-  svg += '<text x="' + (cx+rpx+8) + '" y="' + (cutY+3) + '" text-anchor="start" font-family="Geist Mono,monospace" font-size="10" font-weight="700" fill="#fff067">r=' + r + '</text>';
-  svg += '<text x="' + (cx-Rpx-8) + '" y="' + ((cutY+botY)/2) + '" text-anchor="end" font-family="Geist Mono,monospace" font-size="10" font-weight="700" fill="#00abfa">H-h=' + (H-h) + '</text>';
+         ' A ' + Rpx + ' ' + ryBig + ' 0 0 0 ' + (cx-Rpx) + ' ' + botY + ' Z" fill="rgba(0,171,250,0.22)" stroke="#00abfa" stroke-width="2" stroke-linejoin="round"/>';
+  // Top circle (yellow — the cut face)
+  svg += '<ellipse cx="' + cx + '" cy="' + cutY + '" rx="' + rpx + '" ry="' + rySmall + '" fill="rgba(255,240,103,0.22)" stroke="#fff067" stroke-width="1.5"/>';
+  // Bottom ellipse (back half dashed so the base reads as a full 3D ellipse)
+  svg += '<ellipse cx="' + cx + '" cy="' + botY + '" rx="' + Rpx + '" ry="' + ryBig + '" fill="none" stroke="#00abfa" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>';
+  // Labels
+  svg += '<text x="' + (cx+Rpx+8) + '" y="' + (botY+4) + '" text-anchor="start" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="#00abfa">R=' + R + '</text>';
+  svg += '<text x="' + (cx+rpx+8) + '" y="' + (cutY+4) + '" text-anchor="start" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="#fff067">r=' + r + '</text>';
+  svg += '<text x="' + (cx-Rpx-8) + '" y="' + ((cutY+botY)/2 + 4) + '" text-anchor="end" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="#00abfa">' + (H-h) + '</text>';
   svg += '</svg>';
   return svg;
 }

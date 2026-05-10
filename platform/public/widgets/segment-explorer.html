@@ -89,7 +89,9 @@
 "use strict";
 
 var SVG_W = 480, SVG_H = 280;
-var SCALE = 24;
+// Auto-scale: pick px-per-cm so the largest possible circle (r_max = 8 cm)
+// still fits inside the SVG with margin. r_max * SCALE + margin <= SVG_H/2.
+var SCALE = Math.min(15, (SVG_H - 60) / 16);
 
 function svgEl(tag, attrs) {
   var el = document.createElementNS("http://www.w3.org/2000/svg", tag);

@@ -57,7 +57,7 @@ If you've worked through P1 to P4 you can:
 <div style="font-size:14px;line-height:1.85;padding:14px 18px">
 
 <div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#00abfa;font-weight:700">2D COMPOUND</span> &nbsp;
-\({\color{#00abfa}A_\text{total} = \sum A_\text{parts}}\) &nbsp;or&nbsp; \({\color{#00abfa}A_\text{big} - A_\text{cut}}\)
+\({\color{#00abfa}A_\text{total} = \text{(sum of parts)}}\) &nbsp;or&nbsp; \({\color{#00abfa}A_\text{big} - A_\text{cut}}\)
 <div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">split or subtract · perimeter = outside outline only</div>
 </div>
 
@@ -79,7 +79,7 @@ If you've worked through P1 to P4 you can:
 </div>
 
 <div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#0fee89;font-weight:700">3D COMPOUND</span> &nbsp;
-\({\color{#0fee89}V = \sum V_\text{parts}}\) · SA = sum of EXPOSED faces
+\({\color{#0fee89}V = \text{(sum of parts)}}\) · SA = sum of EXPOSED faces
 <div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">faces at the join cancel · count carefully</div>
 </div>
 

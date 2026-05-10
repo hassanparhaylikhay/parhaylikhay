@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>3D Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; min-height:22px; gap:10px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; }
+  .step-num { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+
+  .layout { display:grid; grid-template-columns: 1fr; gap:18px; align-items:start; }
+  @media (min-width: 560px) { .layout { grid-template-columns: 300px 1fr; gap:18px; } }
+
+  .stage-outer { width:100%; max-width:300px; margin:0 auto; aspect-ratio: 300 / 280; position:relative; }
+  .stage-outer svg { display:block; width:100%; height:100%; overflow:visible; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; min-height:200px; }
+  .eq-group { display:flex; flex-direction:column; gap:4px; opacity:0; transition: opacity 0.4s ease; }
+  .eq-group.drawn { opacity:1; }
+  .eq-line { font-family:'Geist Mono', monospace; line-height:1.5; }
+  .eq-line[data-kind="tag"]    { font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .eq-line[data-kind="hint"]   { font-size:13px; color:#fff067; }
+  .eq-line[data-kind="main"]   { font-size:14.5px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]    { font-size:17px; color:#f0eeea; font-weight:700; }
+  .eq-line[data-kind="note"]   { font-size:11px; color:#7a7875; margin-top:4px; }
+  .eq-line .katex { font-size:1em; }
+
+  .controls { display:flex; gap:8px; justify-content:center; margin-top:14px; align-items:center; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:80px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.3; cursor:not-allowed; }
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+
+  .shape-part { transition: opacity 0.5s ease, fill 0.5s ease, stroke 0.5s ease; }
+  .shape-part.faded { opacity: 0.18; }
+  .shape-part.hidden { opacity: 0; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title"></span>
+    <span class="step-num" id="counter"></span>
+  </div>
+  <div class="layout">
+    <div class="stage-outer">
+      <svg id="stage" viewBox="0 0 300 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="hemiGrad" cx="38%" cy="32%" r="65%">
+            <stop offset="0%" stop-color="rgba(0,171,250,0.50)"/>
+            <stop offset="60%" stop-color="rgba(0,171,250,0.18)"/>
+            <stop offset="100%" stop-color="rgba(0,171,250,0.05)"/>
+          </radialGradient>
+          <linearGradient id="cylGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(0,171,250,0.10)"/>
+            <stop offset="50%" stop-color="rgba(0,171,250,0.30)"/>
+            <stop offset="100%" stop-color="rgba(0,171,250,0.10)"/>
+          </linearGradient>
+          <linearGradient id="coneGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(255,130,44,0.10)"/>
+            <stop offset="50%" stop-color="rgba(255,130,44,0.30)"/>
+            <stop offset="100%" stop-color="rgba(255,130,44,0.10)"/>
+          </linearGradient>
+          <linearGradient id="pinkGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="rgba(255,70,112,0.10)"/>
+            <stop offset="50%" stop-color="rgba(255,70,112,0.30)"/>
+            <stop offset="100%" stop-color="rgba(255,70,112,0.10)"/>
+          </linearGradient>
+        </defs>
+        <g id="g-shape"></g>
+      </svg>
+    </div>
+    <div class="equations" id="equations"></div>
+  </div>
+  <div class="controls">
+    <button class="ctl" id="prev">← prev</button>
+    <button class="ctl" id="next">next →</button>
+  </div>
+  <p class="footer" id="footer"></p>
+</div>
+
+<script>
+"use strict";
+
+var qs = new URLSearchParams(location.search);
+var PRESET = qs.get("preset") || "frustum-vol";
+
+var COL = {
+  blue: "#00abfa", yellow: "#fff067", orange: "#ff822c",
+  green: "#0fee89", pink: "#ff4670", grey: "#7a7875", faint: "#3a4a5a"
+};
+
+var SVG_W = 300, SVG_H = 280;
+var ELLIPSE_RATIO = 0.32;
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n) {
+  if (!isFinite(n)) return "—";
+  var v = Math.round(n * 100) / 100;
+  if (v === 0) return "0";
+  return parseFloat(v.toFixed(2)).toString();
+}
+function texCoefPi(coef) {
+  var v = Math.round(coef * 1000) / 1000;
+  if (v === 0) return "0";
+  if (v === 1) return "\\pi";
+  return parseFloat(v.toFixed(3)).toString() + "\\pi";
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment) {
+  var fo = svgEl("foreignObject", {
+    x: (x - 50), y: (y - 11), width: 100, height: 22,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  div.style.color = color || "#f0eeea";
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+// =====================================================================
+// SHAPE BUILDERS — each returns a map of "part-name" → SVG element
+// The current step decides which parts are shown / faded / hidden.
+// =====================================================================
+function buildFrustum(p) {
+  // p: { R, H, h, r } where r = R * h/H (similar triangles)
+  var TOP_PAD = 22, BOT_PAD = 28;
+  var avail = SVG_H - TOP_PAD - BOT_PAD;
+  var ryFrac = ELLIPSE_RATIO;
+  var s = Math.min(avail / (p.H + p.R * ryFrac), 50 / Math.max(p.R, p.r));
+  var Rpx = p.R * s, rpx = p.r * s, Hpx = p.H * s;
+  var ryBig = Rpx * ryFrac, rySmall = rpx * ryFrac;
+  var cx = SVG_W / 2;
+  var apexY = TOP_PAD + ryBig * 0.3;
+  var cutY = apexY + p.h * s;
+  var botY = apexY + Hpx;
+  var leftXBot = cx - Rpx, rightXBot = cx + Rpx;
+  var leftXTop = cx - rpx, rightXTop = cx + rpx;
+
+  var g = document.getElementById("g-shape");
+  g.innerHTML = "";
+
+  // Full cone outline (faint dashed)
+  var fullCone = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + cx + " " + apexY + " L " + leftXBot + " " + botY +
+       " A " + Rpx + " " + ryBig + " 0 0 0 " + rightXBot + " " + botY + " Z",
+    fill: "none", stroke: COL.faint, "stroke-width": 1.2, "stroke-dasharray": "3 3"
+  });
+  g.appendChild(fullCone);
+
+  // Small cone (pink) — the tip being removed
+  var smallCone = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + cx + " " + apexY + " L " + leftXTop + " " + cutY +
+       " A " + rpx + " " + rySmall + " 0 0 0 " + rightXTop + " " + cutY + " Z",
+    fill: "url(#pinkGrad)", stroke: COL.pink, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(smallCone);
+
+  // Frustum body (blue)
+  var frustum = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + leftXBot + " " + botY + " L " + leftXTop + " " + cutY +
+       " A " + rpx + " " + rySmall + " 0 0 0 " + rightXTop + " " + cutY +
+       " L " + rightXBot + " " + botY +
+       " A " + Rpx + " " + ryBig + " 0 0 0 " + leftXBot + " " + botY + " Z",
+    fill: "url(#cylGrad)", stroke: COL.blue, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(frustum);
+
+  // Top circle (yellow)
+  var topCircle = svgEl("ellipse", {
+    "class": "shape-part",
+    cx: cx, cy: cutY, rx: rpx, ry: rySmall,
+    fill: "rgba(255,240,103,0.22)", stroke: COL.yellow, "stroke-width": 1.5
+  });
+  g.appendChild(topCircle);
+
+  // Bottom ellipse (back half dashed)
+  var botEllipse = svgEl("ellipse", {
+    "class": "shape-part",
+    cx: cx, cy: botY, rx: Rpx, ry: ryBig,
+    fill: "none", stroke: COL.blue, "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0.7
+  });
+  g.appendChild(botEllipse);
+
+  // Annular ring highlight (pink dashed when needed for SA step)
+  var annulus = svgEl("path", {
+    "class": "shape-part hidden",
+    d: "M " + leftXTop + " " + cutY +
+       " A " + rpx + " " + rySmall + " 0 0 1 " + rightXTop + " " + cutY +
+       " A " + rpx + " " + rySmall + " 0 0 1 " + leftXTop + " " + cutY + " Z" +
+       " M " + leftXBot + " " + botY +
+       " A " + Rpx + " " + ryBig + " 0 0 1 " + rightXBot + " " + botY +
+       " A " + Rpx + " " + ryBig + " 0 0 1 " + leftXBot + " " + botY + " Z",
+    fill: "rgba(255,70,112,0.30)", "fill-rule": "evenodd",
+    stroke: COL.pink, "stroke-width": 1.5
+  });
+  g.appendChild(annulus);
+
+  // Labels
+  svgKaTeXLabel(g, cx + Rpx + 14, botY + 6, "R = " + p.R, COL.blue, "left");
+  svgKaTeXLabel(g, cx + rpx + 14, cutY, "r = " + p.r, COL.yellow, "left");
+  svgKaTeXLabel(g, cx - 14, (cutY + botY)/2, "H - h", COL.blue, "right");
+  svgKaTeXLabel(g, cx - 14, (apexY + cutY)/2, "h = " + p.h, COL.pink, "right");
+
+  return { fullCone: fullCone, smallCone: smallCone, frustum: frustum, topCircle: topCircle, botEllipse: botEllipse, annulus: annulus };
+}
+
+function buildHemiCone(p) {
+  // p: { r, h, l }  (cone height h; l can be derived)
+  var TOP_PAD = 18, BOT_PAD = 18;
+  var totalH = p.r + p.h;
+  var availH = SVG_H - TOP_PAD - BOT_PAD;
+  var s = availH / totalH;
+  var rPx = p.r * s, hPx = p.h * s;
+  var ryPx = rPx * ELLIPSE_RATIO;
+  var cx = SVG_W / 2;
+  var hemiCenterY = SVG_H - BOT_PAD - rPx;
+  var coneApexY = hemiCenterY - hPx;
+  var leftX = cx - rPx, rightX = cx + rPx;
+
+  var g = document.getElementById("g-shape");
+  g.innerHTML = "";
+
+  // Hemisphere (blue dome facing down)
+  var hemi = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + leftX + " " + hemiCenterY +
+       " A " + rPx + " " + rPx + " 0 0 0 " + rightX + " " + hemiCenterY + " Z",
+    fill: "url(#hemiGrad)", stroke: COL.blue, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(hemi);
+
+  // Cone (orange)
+  var cone = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + cx + " " + coneApexY +
+       " L " + leftX + " " + hemiCenterY +
+       " A " + rPx + " " + ryPx + " 0 0 0 " + rightX + " " + hemiCenterY + " Z",
+    fill: "url(#coneGrad)", stroke: COL.orange, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(cone);
+
+  // Hidden join (dashed grey)
+  var join = svgEl("ellipse", {
+    "class": "shape-part",
+    cx: cx, cy: hemiCenterY, rx: rPx, ry: ryPx,
+    fill: "none", stroke: COL.grey, "stroke-width": 1, "stroke-dasharray": "3 3"
+  });
+  g.appendChild(join);
+
+  // Slant line
+  var slant = svgEl("line", {
+    "class": "shape-part",
+    x1: cx, y1: coneApexY, x2: rightX, y2: hemiCenterY,
+    stroke: COL.pink, "stroke-width": 1.5
+  });
+  g.appendChild(slant);
+
+  // Labels
+  svgKaTeXLabel(g, cx + rPx*0.5, hemiCenterY + ryPx + 16, "r = " + p.r, COL.yellow, "left");
+  svgKaTeXLabel(g, cx - 14, (hemiCenterY + coneApexY)/2, "h = " + p.h, COL.orange, "right");
+  if (p.l) svgKaTeXLabel(g, cx + rPx*0.6 + 12, (coneApexY + hemiCenterY)/2 - 6, "l = " + p.l, COL.pink, "left");
+
+  return { hemi: hemi, cone: cone, join: join, slant: slant };
+}
+
+function buildConeOnCylinder(p) {
+  // p: { r, hCyl, hCone, l }
+  var TOP_PAD = 18, BOT_PAD = 22;
+  var totalH = p.hCyl + p.hCone;
+  var avail = SVG_H - TOP_PAD - BOT_PAD;
+  var s = avail / totalH;
+  var rPx = p.r * s, hCylPx = p.hCyl * s, hConePx = p.hCone * s;
+  var ryPx = rPx * ELLIPSE_RATIO;
+  var cx = SVG_W / 2;
+  var cylBottomY = SVG_H - BOT_PAD;
+  var cylTopY = cylBottomY - hCylPx;
+  var coneApexY = cylTopY - hConePx;
+  var leftX = cx - rPx, rightX = cx + rPx;
+
+  var g = document.getElementById("g-shape");
+  g.innerHTML = "";
+
+  // Cylinder (blue)
+  var cyl = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + leftX + " " + cylTopY +
+       " L " + leftX + " " + cylBottomY +
+       " A " + rPx + " " + ryPx + " 0 0 0 " + rightX + " " + cylBottomY +
+       " L " + rightX + " " + cylTopY +
+       " A " + rPx + " " + ryPx + " 0 0 1 " + leftX + " " + cylTopY + " Z",
+    fill: "url(#cylGrad)", stroke: COL.blue, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(cyl);
+
+  // Cone (orange)
+  var cone = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + cx + " " + coneApexY +
+       " L " + leftX + " " + cylTopY +
+       " A " + rPx + " " + ryPx + " 0 0 0 " + rightX + " " + cylTopY + " Z",
+    fill: "url(#coneGrad)", stroke: COL.orange, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(cone);
+
+  // Bottom ellipse (visible cylinder base, yellow)
+  var botEllipse = svgEl("ellipse", {
+    "class": "shape-part",
+    cx: cx, cy: cylBottomY, rx: rPx, ry: ryPx,
+    fill: "rgba(255,240,103,0.18)", stroke: COL.yellow, "stroke-width": 1.5
+  });
+  g.appendChild(botEllipse);
+
+  // Hidden join (dashed)
+  var join = svgEl("ellipse", {
+    "class": "shape-part",
+    cx: cx, cy: cylTopY, rx: rPx, ry: ryPx,
+    fill: "none", stroke: COL.grey, "stroke-width": 1, "stroke-dasharray": "3 3"
+  });
+  g.appendChild(join);
+
+  // Slant line on cone
+  var slant = svgEl("line", {
+    "class": "shape-part",
+    x1: cx, y1: coneApexY, x2: rightX, y2: cylTopY,
+    stroke: COL.pink, "stroke-width": 1.5
+  });
+  g.appendChild(slant);
+
+  // Labels
+  svgKaTeXLabel(g, cx + rPx + 14, cylBottomY, "r = " + p.r, COL.yellow, "left");
+  svgKaTeXLabel(g, cx - 14, (cylTopY + cylBottomY)/2, "h_{\\text{cyl}} = " + p.hCyl, COL.blue, "right");
+  svgKaTeXLabel(g, cx - 14, (cylTopY + coneApexY)/2, "h_{\\text{cone}} = " + p.hCone, COL.orange, "right");
+  if (p.l) svgKaTeXLabel(g, cx + rPx*0.6 + 14, (coneApexY + cylTopY)/2 - 4, "l = " + p.l, COL.pink, "left");
+
+  return { cyl: cyl, cone: cone, botEllipse: botEllipse, join: join, slant: slant };
+}
+
+function buildCuboidDrilled(p) {
+  // p: { L, W, H, rh }  (rh = hole radius)
+  var TOP_PAD = 18, BOT_PAD = 22;
+  var avail = SVG_H - TOP_PAD - BOT_PAD;
+  var maxDim = Math.max(p.L, p.W * 0.9 + p.H, p.W);
+  var sc = Math.min(avail / (p.H + p.W * 0.5), (SVG_W - 60) / (p.L + p.W * 0.6));
+  var dx = p.W * 0.6 * sc;
+  var dy = -p.W * 0.45 * sc;
+  var Lp = p.L * sc, Hp = p.H * sc;
+  var ax = (SVG_W - Lp - dx) / 2;
+  var ay = (SVG_H + Hp + Math.abs(dy)) / 2;
+  var rPx = p.rh * sc;
+
+  var g = document.getElementById("g-shape");
+  g.innerHTML = "";
+
+  // Back face (faint)
+  var back = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + (ax+dx) + " " + (ay+dy) + " L " + (ax+dx+Lp) + " " + (ay+dy) +
+       " L " + (ax+dx+Lp) + " " + (ay+dy-Hp) + " L " + (ax+dx) + " " + (ay+dy-Hp) + " Z",
+    fill: "rgba(0,171,250,0.06)", stroke: COL.faint, "stroke-width": 1, "stroke-dasharray": "3 3"
+  });
+  g.appendChild(back);
+
+  // Top face (yellow)
+  var top = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + ax + " " + (ay-Hp) + " L " + (ax+Lp) + " " + (ay-Hp) +
+       " L " + (ax+Lp+dx) + " " + (ay-Hp+dy) + " L " + (ax+dx) + " " + (ay-Hp+dy) + " Z",
+    fill: "rgba(255,240,103,0.20)", stroke: COL.yellow, "stroke-width": 1.5
+  });
+  g.appendChild(top);
+
+  // Right face
+  var right = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + (ax+Lp) + " " + ay + " L " + (ax+Lp) + " " + (ay-Hp) +
+       " L " + (ax+Lp+dx) + " " + (ay-Hp+dy) + " L " + (ax+Lp+dx) + " " + (ay+dy) + " Z",
+    fill: "rgba(255,130,44,0.16)", stroke: COL.orange, "stroke-width": 1.5
+  });
+  g.appendChild(right);
+
+  // Front face (blue)
+  var front = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + ax + " " + ay + " L " + (ax+Lp) + " " + ay +
+       " L " + (ax+Lp) + " " + (ay-Hp) + " L " + ax + " " + (ay-Hp) + " Z",
+    fill: "rgba(0,171,250,0.18)", stroke: COL.blue, "stroke-width": 1.6
+  });
+  g.appendChild(front);
+
+  // Cylindrical hole on top (pink)
+  var holeXTop = ax + Lp/2 + dx/2;
+  var holeYTop = ay - Hp + dy/2;
+  var holeRyEll = rPx * 0.32;
+  var holeCircle = svgEl("ellipse", {
+    "class": "shape-part",
+    cx: holeXTop, cy: holeYTop, rx: rPx, ry: holeRyEll,
+    fill: "rgba(255,70,112,0.30)", stroke: COL.pink, "stroke-width": 1.5
+  });
+  g.appendChild(holeCircle);
+
+  // Hole's inner walls (dashed pink lines)
+  var holeWallL = svgEl("line", {
+    "class": "shape-part",
+    x1: holeXTop - rPx, y1: holeYTop, x2: holeXTop - rPx, y2: holeYTop + Hp,
+    stroke: COL.pink, "stroke-width": 1.2, "stroke-dasharray": "3 3"
+  });
+  g.appendChild(holeWallL);
+  var holeWallR = svgEl("line", {
+    "class": "shape-part",
+    x1: holeXTop + rPx, y1: holeYTop, x2: holeXTop + rPx, y2: holeYTop + Hp,
+    stroke: COL.pink, "stroke-width": 1.2, "stroke-dasharray": "3 3"
+  });
+  g.appendChild(holeWallR);
+  // Bottom dashed circle (hole exits the bottom)
+  var holeBottom = svgEl("ellipse", {
+    "class": "shape-part",
+    cx: holeXTop, cy: holeYTop + Hp, rx: rPx, ry: holeRyEll,
+    fill: "none", stroke: COL.pink, "stroke-width": 1, "stroke-dasharray": "3 3"
+  });
+  g.appendChild(holeBottom);
+
+  // Labels
+  svgKaTeXLabel(g, ax + Lp/2, ay + 12, "L = " + p.L, COL.blue, "center");
+  svgKaTeXLabel(g, ax - 12, ay - Hp/2, "h = " + p.H, COL.blue, "right");
+  svgKaTeXLabel(g, ax + Lp + dx/2 + 10, ay - Hp + dy/2 - 8, "W = " + p.W, COL.orange, "left");
+  svgKaTeXLabel(g, holeXTop + rPx + 10, holeYTop, "r = " + p.rh, COL.pink, "left");
+
+  return {
+    cuboid: { back: back, top: top, right: right, front: front },
+    hole: { circle: holeCircle, wallL: holeWallL, wallR: holeWallR, bottom: holeBottom }
+  };
+}
+
+function buildSectorToCone(p) {
+  // p: { sectorR, theta }  (sector being rolled into a cone)
+  var sectorR = p.sectorR, theta = p.theta;
+  var s = 12;
+  var sectorRpx = sectorR * s;
+  var cx = SVG_W / 2, cy = SVG_H/2 + 10;
+  // Sector apex at (cx, 30), arc opens downward
+  var apexY = 30;
+  var startA = 90 + theta/2;
+  var endA = 90 - theta/2;
+  function pt(deg) {
+    var rad = deg * Math.PI / 180;
+    return { x: cx + sectorRpx * Math.cos(rad), y: apexY + 50 - sectorRpx * Math.sin(rad) - 50 + 50 };
+  }
+  // Simpler: place apex at (cx, 30); arc points at angles startA, endA from there
+  function ptFromApex(deg, r) {
+    var rad = deg * Math.PI / 180;
+    return { x: cx + r * Math.cos(rad), y: apexY + r * Math.sin(rad) };
+  }
+  // We want the sector apex at TOP, sector arc at BOTTOM. Use angles where 90° is straight down.
+  var leftAngle = 270 - theta/2;
+  var rightAngle = 270 + theta/2;
+  var pLeft = ptFromApex(leftAngle, sectorRpx);
+  var pRight = ptFromApex(rightAngle, sectorRpx);
+  var large = (theta > 180) ? 1 : 0;
+
+  var g = document.getElementById("g-shape");
+  g.innerHTML = "";
+
+  // Sector (yellow fan)
+  var sector = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + cx + " " + apexY +
+       " L " + pLeft.x + " " + pLeft.y +
+       " A " + sectorRpx + " " + sectorRpx + " 0 " + large + " 1 " + pRight.x + " " + pRight.y + " Z",
+    fill: "rgba(255,240,103,0.20)", stroke: COL.yellow, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(sector);
+
+  // Sector radius label
+  svgKaTeXLabel(g, cx - 14, (apexY + pLeft.y) / 2, "R = " + p.sectorR, COL.yellow, "right");
+  // Theta label inside the apex
+  svgKaTeXLabel(g, cx + 16, apexY + 18, p.theta + "°", COL.green, "left");
+
+  // After: a cone forms with slant = sectorR and base radius = R*theta/360
+  // We'll show this when stepping through
+  var coneR = sectorR * theta / 360;
+  var coneRpx = (p.sectorR * theta / 360) * s;
+  var coneSlantPx = sectorRpx;
+  var coneH_cm = Math.sqrt(p.sectorR * p.sectorR - (p.sectorR * theta / 360) * (p.sectorR * theta / 360));
+  var coneHPx = coneH_cm * s;
+  // Position cone below/right of sector
+  var coneCx = cx + 70;
+  var coneApexY = apexY + 30;
+  var coneBaseY = coneApexY + coneHPx;
+  var coneBody = svgEl("path", {
+    "class": "shape-part hidden",
+    d: "M " + coneCx + " " + coneApexY +
+       " L " + (coneCx - coneRpx) + " " + coneBaseY +
+       " A " + coneRpx + " " + (coneRpx*ELLIPSE_RATIO) + " 0 0 0 " + (coneCx + coneRpx) + " " + coneBaseY + " Z",
+    fill: "url(#coneGrad)", stroke: COL.orange, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(coneBody);
+  var coneBase = svgEl("ellipse", {
+    "class": "shape-part hidden",
+    cx: coneCx, cy: coneBaseY, rx: coneRpx, ry: coneRpx*ELLIPSE_RATIO,
+    fill: "none", stroke: COL.yellow, "stroke-width": 1, "stroke-dasharray": "3 3"
+  });
+  g.appendChild(coneBase);
+
+  return { sector: sector, coneBody: coneBody, coneBase: coneBase };
+}
+
+// =====================================================================
+// PRESETS
+// =====================================================================
+var PRESETS = {
+  "frustum-vol": {
+    title: "Frustum: volume by subtraction",
+    builder: buildFrustum,
+    params: { R: 9, H: 21, h: 14, r: 6 },
+    footer: "Cambridge Winter 2023 Paper 22, Q10(a)(i)",
+    steps: [
+      {
+        show: ["fullCone"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: SET UP THE LARGE CONE" },
+          { kind: "main", tex: "V_\\text{large} = \\tfrac{1}{3}\\pi R^{2} H = \\tfrac{1}{3}\\pi(9)^{2}(21)" },
+          { kind: "ans", tex: "V_\\text{large} = 567\\pi\\;\\text{cm}^{3}" }
+        ]
+      },
+      {
+        show: ["fullCone", "smallCone"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: SIMILAR TRIANGLES → SMALL RADIUS" },
+          { kind: "main", tex: "r = \\tfrac{h}{H} \\times R = \\tfrac{14}{21} \\times 9 = 6" },
+          { kind: "main", tex: "V_\\text{small} = \\tfrac{1}{3}\\pi(6)^{2}(14)" },
+          { kind: "ans", tex: "V_\\text{small} = 168\\pi\\;\\text{cm}^{3}" }
+        ]
+      },
+      {
+        show: ["frustum", "topCircle", "botEllipse"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: SUBTRACT" },
+          { kind: "main", tex: "V_\\text{frustum} = V_\\text{large} - V_\\text{small}" },
+          { kind: "main", tex: "= 567\\pi - 168\\pi" },
+          { kind: "ans", tex: "= 399\\pi\\;\\text{cm}^{3}" }
+        ]
+      }
+    ]
+  },
+  "frustum-sa": {
+    title: "Frustum: surface area",
+    builder: buildFrustum,
+    params: { R: 9, H: 21, h: 14, r: 6 },
+    footer: "Cambridge Winter 2023 Paper 22, Q10(a)(ii)",
+    steps: [
+      {
+        show: ["frustum", "topCircle", "botEllipse"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: SLANT HEIGHTS (PYTHAGORAS)" },
+          { kind: "main", tex: "l_\\text{large} = \\sqrt{H^{2} + R^{2}} = \\sqrt{441 + 81} = \\sqrt{522}" },
+          { kind: "main", tex: "l_\\text{small} = \\sqrt{14^{2} + 6^{2}} = \\sqrt{232}" }
+        ]
+      },
+      {
+        show: ["frustum", "topCircle", "botEllipse"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: OUTER + INNER CURVED SURFACES" },
+          { kind: "main", tex: "\\text{outer} = \\pi R\\, l_\\text{large} = 9\\pi\\sqrt{522}" },
+          { kind: "main", tex: "\\text{inner} = \\pi r\\, l_\\text{small} = 6\\pi\\sqrt{232}" }
+        ]
+      },
+      {
+        show: ["frustum", "topCircle", "botEllipse", "annulus"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: ANNULAR RING AT THE TOP" },
+          { kind: "main", tex: "\\text{ring} = \\pi(R^{2} - r^{2}) = \\pi(81 - 36) = 45\\pi" }
+        ]
+      },
+      {
+        show: ["frustum", "topCircle", "botEllipse", "annulus"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: ADD ALL EXPOSED SURFACES" },
+          { kind: "main", tex: "\\text{SA} = 9\\pi\\sqrt{522} + 6\\pi\\sqrt{232} + 45\\pi" },
+          { kind: "ans", tex: "\\approx 1074\\;\\text{cm}^{2}" }
+        ]
+      }
+    ]
+  },
+  "hemi-cone": {
+    title: "Hemisphere + cone composite",
+    builder: buildHemiCone,
+    params: { r: 6, h: 8, l: 10 },
+    footer: "Faces at the join cancel — only curved surfaces count",
+    steps: [
+      {
+        show: ["hemi", "cone", "join", "slant"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: VOLUMES (NO CANCELLATION)" },
+          { kind: "main", tex: "V_\\text{hemi} = \\tfrac{2}{3}\\pi r^{3} = \\tfrac{2}{3}\\pi(216) = 144\\pi" },
+          { kind: "main", tex: "V_\\text{cone} = \\tfrac{1}{3}\\pi r^{2} h = \\tfrac{1}{3}\\pi(36)(8) = 96\\pi" },
+          { kind: "ans", tex: "V_\\text{total} = 240\\pi\\;\\text{cm}^{3}" }
+        ]
+      },
+      {
+        show: ["hemi", "cone", "slant"],
+        fade: ["join"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: AT THE JOIN, FACES CANCEL" },
+          { kind: "hint", text: "the dashed ellipse is the joined face" },
+          { kind: "main", tex: "\\text{cancelled}: \\pi r^{2} \\text{ (hemisphere flat)} = \\pi r^{2} \\text{ (cone base)}" },
+          { kind: "note", text: "Only the curved surfaces remain on the boundary" }
+        ]
+      },
+      {
+        show: ["hemi", "cone", "slant"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: SURFACE AREA" },
+          { kind: "main", tex: "\\text{SA} = \\underbrace{2\\pi r^{2}}_{\\text{hemi curved}} + \\underbrace{\\pi r l}_{\\text{cone curved}}" },
+          { kind: "main", tex: "= 2\\pi(36) + \\pi(6)(10) = 72\\pi + 60\\pi" },
+          { kind: "ans", tex: "= 132\\pi\\;\\text{cm}^{2}" }
+        ]
+      }
+    ]
+  },
+  "cone-on-cylinder": {
+    title: "Cone on cylinder (same radius)",
+    builder: buildConeOnCylinder,
+    params: { r: 6.3, hCyl: 9, hCone: 6, l: 8.7 },
+    footer: "Cambridge Winter 2024 Paper 21, Q6(c)",
+    steps: [
+      {
+        show: ["cyl", "cone", "botEllipse", "join", "slant"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: CONE HEIGHT FROM SLANT" },
+          { kind: "main", tex: "h_\\text{cone} = \\sqrt{l^{2} - r^{2}} = \\sqrt{8.7^{2} - 6.3^{2}}" },
+          { kind: "main", tex: "= \\sqrt{75.69 - 39.69} = \\sqrt{36} = 6" }
+        ]
+      },
+      {
+        show: ["cyl", "cone", "botEllipse", "join", "slant"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: CYLINDER HEIGHT FROM RATIO" },
+          { kind: "hint", text: "cone : cylinder = 2 : 3" },
+          { kind: "main", tex: "h_\\text{cyl} = \\tfrac{3}{2} \\times h_\\text{cone} = \\tfrac{3}{2} \\times 6 = 9" }
+        ]
+      },
+      {
+        show: ["cyl", "cone", "botEllipse", "slant"],
+        fade: ["join"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: COUNT EXPOSED FACES" },
+          { kind: "hint", text: "join cancels — cone base + cylinder top" },
+          { kind: "main", tex: "\\text{SA} = \\pi r l + 2\\pi r h_\\text{cyl} + \\pi r^{2}" }
+        ]
+      },
+      {
+        show: ["cyl", "cone", "botEllipse", "slant"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: SUBSTITUTE AND ADD" },
+          { kind: "main", tex: "= \\pi(6.3)(8.7) + 2\\pi(6.3)(9) + \\pi(6.3)^{2}" },
+          { kind: "main", tex: "= 54.81\\pi + 113.4\\pi + 39.69\\pi = 207.9\\pi" },
+          { kind: "ans", tex: "\\approx 653\\;\\text{cm}^{2}" }
+        ]
+      }
+    ]
+  },
+  "cuboid-drilled": {
+    title: "Cuboid with cylindrical hole",
+    builder: buildCuboidDrilled,
+    params: { L: 10, W: 8, H: 6, rh: 2 },
+    footer: "Drilling a hole INCREASES total SA",
+    steps: [
+      {
+        show: ["cuboid"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: PLAIN CUBOID" },
+          { kind: "main", tex: "V = L \\times W \\times h = 10 \\times 8 \\times 6 = 480" },
+          { kind: "main", tex: "\\text{SA} = 2(LW + Lh + Wh) = 2(80 + 60 + 48) = 376" }
+        ]
+      },
+      {
+        show: ["cuboid", "hole"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: DRILL OUT THE CYLINDRICAL HOLE" },
+          { kind: "main", tex: "V_\\text{hole} = \\pi r^{2} h = \\pi(4)(6) = 24\\pi" },
+          { kind: "ans", tex: "V_\\text{solid} = 480 - 24\\pi\\;\\text{cm}^{3}" }
+        ]
+      },
+      {
+        show: ["cuboid", "hole"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: ADJUST THE SURFACE AREA" },
+          { kind: "hint", text: "remove 2 end-circles, ADD inner wall" },
+          { kind: "main", tex: "-2\\pi r^{2} + 2\\pi r h = -8\\pi + 24\\pi = 16\\pi" },
+          { kind: "ans", tex: "\\text{SA} = 376 + 16\\pi\\;\\text{cm}^{2}" }
+        ]
+      }
+    ]
+  },
+  "sector-to-cone": {
+    title: "Sector folded into a cone",
+    builder: buildSectorToCone,
+    params: { sectorR: 8, theta: 75 },
+    footer: "Cambridge Summer 2023 Paper 22, Q8(b)",
+    steps: [
+      {
+        show: ["sector"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: ARC LENGTH OF THE SECTOR" },
+          { kind: "main", tex: "\\text{arc} = \\tfrac{75}{360} \\times 2\\pi(8) = \\tfrac{10\\pi}{3}\\;\\text{cm}" }
+        ]
+      },
+      {
+        show: ["sector", "coneBody", "coneBase"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: ARC BECOMES CONE'S BASE CIRCUMFERENCE" },
+          { kind: "main", tex: "2\\pi r = \\tfrac{10\\pi}{3} \\Rightarrow r = \\tfrac{5}{3}\\;\\text{cm}" },
+          { kind: "hint", text: "sector radius R = cone slant l = 8 cm" }
+        ]
+      },
+      {
+        show: ["coneBody", "coneBase"],
+        fade: ["sector"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: CONE HEIGHT (PYTHAGORAS)" },
+          { kind: "main", tex: "h = \\sqrt{l^{2} - r^{2}} = \\sqrt{64 - \\tfrac{25}{9}} = \\tfrac{\\sqrt{551}}{3}" }
+        ]
+      },
+      {
+        show: ["coneBody", "coneBase"],
+        fade: ["sector"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: VOLUME" },
+          { kind: "main", tex: "V = \\tfrac{1}{3}\\pi r^{2} h = \\tfrac{1}{3}\\pi \\cdot \\tfrac{25}{9} \\cdot \\tfrac{\\sqrt{551}}{3}" },
+          { kind: "ans", tex: "\\approx 22.7\\;\\text{cm}^{3}" }
+        ]
+      }
+    ]
+  }
+};
+
+// =====================================================================
+// RUNTIME
+// =====================================================================
+var preset = PRESETS[PRESET] || PRESETS["frustum-vol"];
+document.getElementById("title").textContent = preset.title;
+document.getElementById("footer").textContent = preset.footer || "";
+
+// Build the shape
+var parts = preset.builder(preset.params);
+
+// Flatten parts (some builders return nested groups, e.g. cuboid/hole groups)
+function flattenParts(p) {
+  var out = {};
+  for (var k in p) {
+    if (p[k] && p[k].setAttribute) {
+      out[k] = p[k];
+    } else if (p[k] && typeof p[k] === "object") {
+      // Sub-group — promote children with the parent name as prefix
+      for (var kk in p[k]) {
+        out[k + "." + kk] = p[k][kk];
+        out[k] = p[k]; // also keep the group reference for show/hide all
+      }
+    }
+  }
+  return out;
+}
+var flatParts = flattenParts(parts);
+
+function setVisibility(showList, fadeList) {
+  showList = showList || [];
+  fadeList = fadeList || [];
+  // Default: hide every part
+  for (var k in flatParts) {
+    var el = flatParts[k];
+    if (!el || !el.classList) continue;
+    el.classList.remove("hidden", "faded");
+    el.classList.add("hidden");
+  }
+  // Show the listed parts (and any descendants)
+  showList.forEach(function(name) {
+    var el = flatParts[name];
+    if (!el) return;
+    if (el.classList) {
+      el.classList.remove("hidden", "faded");
+    } else {
+      // It's a group; show all descendants
+      Object.keys(flatParts).forEach(function(kk) {
+        if (kk.indexOf(name + ".") === 0 && flatParts[kk].classList) {
+          flatParts[kk].classList.remove("hidden", "faded");
+        }
+      });
+    }
+  });
+  fadeList.forEach(function(name) {
+    var el = flatParts[name];
+    if (el && el.classList) {
+      el.classList.remove("hidden");
+      el.classList.add("faded");
+    }
+  });
+}
+
+var stepIdx = 0;
+var equationsEl = document.getElementById("equations");
+var counterEl = document.getElementById("counter");
+var prevBtn = document.getElementById("prev");
+var nextBtn = document.getElementById("next");
+
+function renderStep() {
+  var step = preset.steps[stepIdx];
+  if (!step) return;
+  setVisibility(step.show, step.fade);
+  equationsEl.innerHTML = "";
+  step.eqs.forEach(function(eq) {
+    var line = document.createElement("div");
+    line.className = "eq-line";
+    line.dataset.kind = eq.kind;
+    if (eq.tex) {
+      tryRender(line, eq.tex);
+    } else {
+      line.textContent = eq.text;
+    }
+    equationsEl.appendChild(line);
+  });
+  // fade-in cascade
+  Array.prototype.forEach.call(equationsEl.children, function(el, i) {
+    setTimeout(function() { el.classList.add("drawn"); }, 60 * i);
+  });
+  Array.prototype.forEach.call(equationsEl.children, function(el) {
+    var g = document.createElement("div");
+    g.className = "eq-group drawn";
+  });
+  counterEl.textContent = (stepIdx + 1) + " / " + preset.steps.length;
+  prevBtn.disabled = stepIdx === 0;
+  nextBtn.disabled = stepIdx === preset.steps.length - 1;
+  reportHeight();
+}
+
+prevBtn.onclick = function() { if (stepIdx > 0) { stepIdx--; renderStep(); } };
+nextBtn.onclick = function() { if (stepIdx < preset.steps.length - 1) { stepIdx++; renderStep(); } };
+
+renderStep();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>
