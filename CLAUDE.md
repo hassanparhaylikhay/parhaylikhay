@@ -20,6 +20,8 @@ When a user reports a buggy widget by screenshot, check first:
 
 When the user says "make it visual" / "more like a video" / "needs to be smoother": don't just add text — every state change needs a visible animation, every step needs a visual highlight, every shape transformation should morph continuously rather than swap.
 
+**ALL math renders via KaTeX, including numbers and units.** This is non-negotiable across lessons, widgets, diagrams, quizzes, and graphs. Plain Unicode `π θ ² ³ ½` in monospace text reads as ugly fallback. So does plain SVG `<text>` showing `r = 5` or `cm²` next to a KaTeX formula. Use `\pi`, `\theta`, `^{2}`, `^{3}`, `\tfrac{1}{2}` inside `\(...\)` or `$...$`. Use `\text{cm}^{2}` not `cm²`. In widgets, route every numeric label through the `svgKaTeXLabel` foreignObject helper — even live values like `r = 5.4` must render as `r = " + fmtNum(r)` inside KaTeX, not as plain `<text>`. The full rule and rationale: see `feedback-katex-everywhere.md`.
+
 ---
 
 ## Platform Overview
