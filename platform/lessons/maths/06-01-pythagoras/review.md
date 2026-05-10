@@ -69,9 +69,7 @@ A vertical pole stands at point $P$ on horizontal ground. A wire runs from the t
 
 <iframe src="/widgets/pythagoras-step-explorer.html?preset=pole-with-wires" style="width:100%;max-width:696px;height:580px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
----
-
-**Part (a)**: We have a right triangle $TPA$ with the right angle at $P$ (the pole is vertical, the ground is horizontal). The wire $TA = 15$ is the hypotenuse, $PA = 9$ is one leg, and the height $TP$ is the other leg.
+**Part (a): height of the pole.** Right triangle $TPA$ has the right angle at $P$ (pole vertical, ground horizontal). The wire $TA = 15$ is the hypotenuse, $PA = 9$ is one leg, and the height $TP$ is the other leg.
 
 $$TP^{2} + 9^{2} = 15^{2}$$
 
@@ -79,27 +77,21 @@ $$TP^{2} = 225 - 81 = 144$$
 
 $$TP = 12\;\text{m}$$
 
-(M1 for $TP^{2} + 9^{2} = 15^{2}$; A1 for $TP = 12$ m.)
+**[M1 for $TP^{2} + 9^{2} = 15^{2}$; A1 for $TP = 12$]**
 
----
+**Part (b): length of wire $TB$.** Right triangle $TPB$ shares the same vertical at $P$. Use $TP = 12$ from part (a) and $PB = 12$.
 
-**Part (b)**: Now use the right triangle $TPB$, with the right angle at $P$. We know $TP = 12$ from part (a), and $PB = 12$.
-
-$$TB^{2} = TP^{2} + PB^{2} = 12^{2} + 12^{2} = 144 + 144 = 288$$
+$$TB^{2} = TP^{2} + PB^{2} = 12^{2} + 12^{2} = 288$$
 
 $$TB = \sqrt{288} = 12\sqrt{2} \approx 16.97\;\text{m}$$
 
 In surd form, $TB = 12\sqrt{2}$ m. As a decimal, $TB \approx 16.97$ m.
 
-(M1 for $TB^{2} = 12^{2} + 12^{2}$ (ECF on $TP$ from part (a)); A1 for $TB = 12\sqrt{2}$ m or $16.97$ m.)
+**[M1 for $TB^{2} = 12^{2} + 12^{2}$ (ECF on $TP$); A1 for $12\sqrt{2}$ or $16.97$]**
 
----
+**Part (c): length $AB$.** $A$, $P$, $B$ are collinear, $P$ between $A$ and $B$, so $AB = AP + PB = 9 + 12 = 21$ m.
 
-**Part (c)**: $A$, $P$, $B$ are collinear, with $P$ between $A$ and $B$, so $AB = AP + PB = 9 + 12 = 21$ m.
-
-(B1 for $AB = 21$ m.)
-
----
+**[B1 for $AB = 21$]**
 
 Full marks $= 5$.
 
