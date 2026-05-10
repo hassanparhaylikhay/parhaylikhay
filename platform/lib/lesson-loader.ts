@@ -76,6 +76,7 @@ const LESSON_FOLDERS: Record<string, string> = {
   "05-03": "05-03-circles-arcs-sectors",
   "05-04": "05-04-surface-area-and-volume",
   "05-05": "05-05-compound-shapes",
+  "06-01": "06-01-pythagoras",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
