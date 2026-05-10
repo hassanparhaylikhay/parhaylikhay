@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Cone Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+
+  .formulas { display:flex; flex-direction:column; gap:4px; align-items:center; margin-bottom:10px; }
+  .formula { font-size:14px; color:#f0eeea; line-height:1.3; }
+  .formula .katex { font-size:1em; }
+
+  .controls {
+    display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:0 4px;
+    font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap;
+  }
+  .row { display:flex; align-items:center; gap:8px; min-width:170px; flex:1; }
+  .row .name { color:#fff067; font-weight:600; min-width:14px; }
+  .row input[type=range] {
+    flex:1; min-width:60px; appearance:none; -webkit-appearance:none;
+    height:3px; background:#141e2a; border-radius:2px; outline:none;
+  }
+  .row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:#fff067; cursor:pointer; border:0;
+  }
+  .row input[type=range]::-moz-range-thumb {
+    width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0;
+  }
+  .row .val { min-width:28px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  .toggle-row { display:flex; align-items:center; gap:8px; }
+  .toggle-row .name { color:#fff067; font-weight:600; }
+  .toggle-row select {
+    background:#141e2a; color:#f0eeea; border:1px solid #3a4a5a; border-radius:4px;
+    padding:3px 6px; font-family:'Geist Mono',monospace; font-size:11px; outline:none; cursor:pointer;
+  }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+  .body-fill   { fill: rgba(0,171,250,0.18); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
+  .base-front  { fill: rgba(15,238,137,0.18); stroke:#0fee89; stroke-width:2; }
+  .base-back   { fill: none; stroke:#0fee89; stroke-width:1.4; stroke-dasharray:3 3; }
+  .axis-line   { stroke:#fff067; stroke-width:1.5; stroke-dasharray:4 3; fill:none; }
+  .slant-line  { stroke:#ff4670; stroke-width:2; fill:none; }
+  .lbl { font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600; }
+  .lbl-r { fill:#0fee89; }
+  .lbl-h { fill:#fff067; }
+  .lbl-l { fill:#ff4670; }
+
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="formulas">
+    <span class="formula" id="fSlant"></span>
+    <span class="formula" id="fV"></span>
+    <span class="formula" id="fSA"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">r</span>
+      <input type="range" id="rSlider" min="1" max="6" value="3" step="0.1"/>
+      <span class="val" id="rVal">3</span>
+    </div>
+    <div class="row">
+      <span class="name">h</span>
+      <input type="range" id="hSlider" min="2" max="14" value="4" step="0.1"/>
+      <span class="val" id="hVal">4</span>
+    </div>
+    <div class="toggle-row">
+      <span class="name">show</span>
+      <select id="modeSel">
+        <option value="pi" selected>in terms of π</option>
+        <option value="dec">decimal</option>
+      </select>
+    </div>
+  </div>
+
+  <svg id="svg" viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-cone"></g>
+  </svg>
+
+  <p class="footer">drag r and h · slant l comes from Pythagoras · V uses h, curved SA uses l</p>
+</div>
+
+<script>
+"use strict";
+
+var SVG_W = 480, SVG_H = 280;
+var SCALE_R = 16;
+var SCALE_H = 14;
+var ELLIPSE_RATIO = 0.32;
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n) {
+  if (!isFinite(n)) return "—";
+  var v = Math.round(n * 100) / 100;
+  if (v === 0) return "0";
+  return parseFloat(v.toFixed(2)).toString();
+}
+function texCoefPi(coef) {
+  var v = Math.round(coef * 1000) / 1000;
+  if (v === 0) return "0";
+  if (v === 1) return "\\pi";
+  return parseFloat(v.toFixed(3)).toString() + "\\pi";
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var state = {
+  params:  { r: 3, h: 4 },
+  display: { r: 3, h: 4 },
+  mode:    "pi"
+};
+var SPRING_FACTOR = 0.22, SPRING_EPS = 0.005, rafScheduled = false;
+function startSpring() { if (!rafScheduled) { rafScheduled = true; requestAnimationFrame(springTick); } }
+function springTick() {
+  var moving = false;
+  ["r","h"].forEach(function(k) {
+    var d = state.params[k] - state.display[k];
+    if (Math.abs(d) > SPRING_EPS) { state.display[k] += d * SPRING_FACTOR; moving = true; }
+    else state.display[k] = state.params[k];
+  });
+  render();
+  if (moving) requestAnimationFrame(springTick);
+  else rafScheduled = false;
+}
+
+var fSlant = document.getElementById("fSlant");
+var fV     = document.getElementById("fV");
+var fSA    = document.getElementById("fSA");
+var gCone  = document.getElementById("g-cone");
+
+function render() {
+  var r = state.display.r, h = state.display.h;
+  var rPx = r * SCALE_R;
+  var hPx = h * SCALE_H;
+  var ryPx = rPx * ELLIPSE_RATIO;
+  var l = Math.sqrt(r*r + h*h);
+
+  var cx = SVG_W / 2;
+  var apexY = 30;
+  var baseY = apexY + hPx;
+
+  gCone.innerHTML = "";
+
+  // Cone body: triangle from apex to base ellipse, with curved sides matching ellipse foreshortening.
+  // Build a path: apex → left-base → bottom-half-ellipse → right-base → back to apex.
+  var leftX  = cx - rPx;
+  var rightX = cx + rPx;
+  var bodyD =
+    "M" + cx + " " + apexY +
+    " L" + leftX + " " + baseY +
+    " A" + rPx + " " + ryPx + " 0 0 0 " + rightX + " " + baseY +
+    " Z";
+  gCone.appendChild(svgEl("path", { "class": "body-fill", d: bodyD }));
+
+  // Base ellipse — back half dashed, full ellipse outlined for clarity
+  gCone.appendChild(svgEl("ellipse", {
+    "class": "base-back",
+    cx: cx, cy: baseY, rx: rPx, ry: ryPx
+  }));
+  // The "front" half of the base is implicitly drawn as part of the body path's lower arc
+  // so we add an explicit ellipse on top for visual clarity (front-facing in green)
+  // Just draw an ellipse half — the bottom half — using path
+  var frontHalfD =
+    "M" + leftX + " " + baseY +
+    " A" + rPx + " " + ryPx + " 0 0 0 " + rightX + " " + baseY;
+  gCone.appendChild(svgEl("path", {
+    d: frontHalfD,
+    fill: "none", stroke: "#0fee89", "stroke-width": 2
+  }));
+
+  // Vertical perpendicular height (yellow dashed line from apex to base centre)
+  gCone.appendChild(svgEl("line", {
+    "class": "axis-line",
+    x1: cx, y1: apexY, x2: cx, y2: baseY
+  }));
+  // Horizontal radius line on the base ellipse (green solid)
+  gCone.appendChild(svgEl("line", {
+    x1: cx, y1: baseY, x2: cx + rPx, y2: baseY,
+    stroke: "#0fee89", "stroke-width": 2
+  }));
+  // Slant line (red, from apex to right-base)
+  gCone.appendChild(svgEl("line", {
+    "class": "slant-line",
+    x1: cx, y1: apexY, x2: cx + rPx, y2: baseY
+  }));
+
+  // Labels
+  var rLbl = svgEl("text", {
+    "class": "lbl lbl-r",
+    x: cx + rPx/2, y: baseY + 16, "text-anchor": "middle"
+  });
+  rLbl.textContent = "r = " + fmtNum(r);
+  gCone.appendChild(rLbl);
+
+  var hLbl = svgEl("text", {
+    "class": "lbl lbl-h",
+    x: cx - 6, y: (apexY + baseY)/2 + 4, "text-anchor": "end"
+  });
+  hLbl.textContent = "h = " + fmtNum(h);
+  gCone.appendChild(hLbl);
+
+  var lLbl = svgEl("text", {
+    "class": "lbl lbl-l",
+    x: (cx + cx + rPx) / 2 + 8,
+    y: (apexY + baseY) / 2 - 4,
+    "text-anchor": "start"
+  });
+  lLbl.textContent = "l = " + fmtNum(l);
+  gCone.appendChild(lLbl);
+
+  // KaTeX formulas
+  tryRender(fSlant,
+    "{\\color{#ff4670}l} = \\sqrt{r^{2} + h^{2}} = \\sqrt{" +
+    fmtNum(r) + "^{2} + " + fmtNum(h) + "^{2}} = " +
+    "{\\color{#ff4670}" + fmtNum(l) + "}\\;\\text{cm}");
+
+  var Vcoef  = (1/3) * r * r * h;
+  var SAcoef = r * l;
+  if (state.mode === "pi") {
+    tryRender(fV,
+      "{\\color{#00abfa}V} = \\tfrac{1}{3}\\pi r^{2} h = " +
+      "{\\color{#00abfa}" + texCoefPi(Vcoef) + "}\\;\\text{cm}^{3}");
+    tryRender(fSA,
+      "{\\color{#0fee89}\\text{curved SA}} = \\pi r l = " +
+      "{\\color{#0fee89}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}");
+  } else {
+    tryRender(fV,
+      "{\\color{#00abfa}V} = \\tfrac{1}{3}\\pi r^{2} h = " +
+      "{\\color{#00abfa}" + fmtNum(Vcoef * Math.PI) + "}\\;\\text{cm}^{3}");
+    tryRender(fSA,
+      "{\\color{#0fee89}\\text{curved SA}} = \\pi r l = " +
+      "{\\color{#0fee89}" + fmtNum(SAcoef * Math.PI) + "}\\;\\text{cm}^{2}");
+  }
+}
+
+function bind(id, key, valEl) {
+  var slider = document.getElementById(id);
+  var val = document.getElementById(valEl);
+  slider.addEventListener("input", function() {
+    state.params[key] = parseFloat(slider.value);
+    val.textContent = fmtNum(state.params[key]);
+    startSpring();
+  });
+}
+bind("rSlider", "r", "rVal");
+bind("hSlider", "h", "hVal");
+document.getElementById("modeSel").addEventListener("change", function(e) {
+  state.mode = e.target.value; render();
+});
+
+render();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>

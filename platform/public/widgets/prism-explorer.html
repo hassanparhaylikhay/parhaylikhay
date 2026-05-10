@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Triangular Prism Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+
+  .formulas { display:flex; flex-direction:column; gap:4px; align-items:center; margin-bottom:10px; }
+  .formula { font-size:14.5px; color:#f0eeea; line-height:1.3; }
+  .formula .katex { font-size:1em; }
+
+  .controls {
+    display:flex; align-items:center; gap:14px; margin-bottom:10px; padding:0 4px;
+    font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; flex-wrap:wrap;
+  }
+  .row { display:flex; align-items:center; gap:8px; min-width:170px; flex:1; }
+  .row .name { color:#fff067; font-weight:600; min-width:14px; }
+  .row input[type=range] {
+    flex:1; min-width:60px; appearance:none; -webkit-appearance:none;
+    height:3px; background:#141e2a; border-radius:2px; outline:none;
+  }
+  .row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background:#fff067; cursor:pointer; border:0;
+  }
+  .row input[type=range]::-moz-range-thumb {
+    width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0;
+  }
+  .row .val { min-width:28px; text-align:right; color:#f0eeea; font-weight:600; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
+  .end-face   { fill: rgba(0,171,250,0.18); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
+  .end-face.back { fill: rgba(0,171,250,0.06); stroke-width:1.5; }
+  .side-face  { fill: rgba(255,240,103,0.10); stroke:#fff067; stroke-width:1.5; stroke-linejoin:round; }
+  .top-face   { fill: rgba(15,238,137,0.10); stroke:#0fee89; stroke-width:1.5; stroke-linejoin:round; }
+  .edge-line  { stroke:#3a4a5a; stroke-width:1; stroke-dasharray:3 3; fill:none; }
+  .perp-line  { stroke:#ff4670; stroke-width:1.5; stroke-dasharray:4 3; fill:none; }
+  .lbl { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; }
+  .lbl-b { fill:#00abfa; }
+  .lbl-h { fill:#ff4670; }
+  .lbl-L { fill:#fff067; }
+
+  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="formulas">
+    <span class="formula" id="fA"></span>
+    <span class="formula" id="fV"></span>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">b</span>
+      <input type="range" id="bSlider" min="3" max="14" value="8" step="0.5"/>
+      <span class="val" id="bVal">8</span>
+    </div>
+    <div class="row">
+      <span class="name">h</span>
+      <input type="range" id="hSlider" min="2" max="10" value="6" step="0.5"/>
+      <span class="val" id="hVal">6</span>
+    </div>
+    <div class="row">
+      <span class="name">L</span>
+      <input type="range" id="LSlider" min="3" max="16" value="10" step="0.5"/>
+      <span class="val" id="LVal">10</span>
+    </div>
+  </div>
+
+  <svg id="svg" viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-prism"></g>
+  </svg>
+
+  <p class="footer">drag b, h, L · cross-section is yellow inside the blue triangle · V updates live</p>
+</div>
+
+<script>
+"use strict";
+
+var SVG_W = 480, SVG_H = 280;
+var SCALE = 14;
+var DX = 70, DY = -28; // offset from front-face to back-face (oblique projection)
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n) {
+  if (!isFinite(n)) return "—";
+  var v = Math.round(n * 100) / 100;
+  if (v === 0) return "0";
+  return parseFloat(v.toFixed(2)).toString();
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+
+var state = {
+  params:  { b: 8, h: 6, L: 10 },
+  display: { b: 8, h: 6, L: 10 }
+};
+var SPRING_FACTOR = 0.22, SPRING_EPS = 0.005, rafScheduled = false;
+function startSpring() { if (!rafScheduled) { rafScheduled = true; requestAnimationFrame(springTick); } }
+function springTick() {
+  var moving = false;
+  ["b","h","L"].forEach(function(k) {
+    var d = state.params[k] - state.display[k];
+    if (Math.abs(d) > SPRING_EPS) { state.display[k] += d * SPRING_FACTOR; moving = true; }
+    else state.display[k] = state.params[k];
+  });
+  render();
+  if (moving) requestAnimationFrame(springTick);
+  else rafScheduled = false;
+}
+
+var fA = document.getElementById("fA");
+var fV = document.getElementById("fV");
+var gPrism = document.getElementById("g-prism");
+
+function render() {
+  var b = state.display.b, h = state.display.h, L = state.display.L;
+  var bp = b * SCALE, hp = h * SCALE, Lp = L * SCALE;
+
+  // We project depth along oblique direction (DX, DY) per cm of L.
+  var dx = (Lp / Math.max(L, 1)) * (DX / 16); // scale offset with L
+  var dy = (Lp / Math.max(L, 1)) * (DY / 16);
+  // Simpler: depth offset is (Lp * dxFactor, Lp * dyFactor)
+  var depthFactor = 0.62;
+  var ox = Lp * 0.55, oy = -Lp * 0.30;
+
+  // Front triangle: place its base centred horizontally, sitting low
+  var cx = SVG_W / 2 - ox / 2;     // shift left so the projected back fits
+  var baseY = SVG_H - 50;          // sit base above bottom
+  // Triangle vertices (front face)
+  var Af = { x: cx - bp/2, y: baseY };
+  var Bf = { x: cx + bp/2, y: baseY };
+  var Cf = { x: cx,        y: baseY - hp };
+  // Back face vertices (offset by depth)
+  var Ab = { x: Af.x + ox, y: Af.y + oy };
+  var Bb = { x: Bf.x + ox, y: Bf.y + oy };
+  var Cb = { x: Cf.x + ox, y: Cf.y + oy };
+
+  gPrism.innerHTML = "";
+
+  // 1. Back triangle (faded)
+  gPrism.appendChild(svgEl("path", {
+    "class": "end-face back",
+    d: "M" + Ab.x + " " + Ab.y + " L" + Bb.x + " " + Bb.y + " L" + Cb.x + " " + Cb.y + " Z"
+  }));
+  // 2. Top slanting face (Cf, Cb, Bb, Bf)
+  gPrism.appendChild(svgEl("path", {
+    "class": "side-face",
+    d: "M" + Cf.x + " " + Cf.y + " L" + Cb.x + " " + Cb.y +
+       " L" + Bb.x + " " + Bb.y + " L" + Bf.x + " " + Bf.y + " Z"
+  }));
+  // 3. Left slanting face (Af, Ab, Cb, Cf)
+  gPrism.appendChild(svgEl("path", {
+    "class": "side-face",
+    d: "M" + Af.x + " " + Af.y + " L" + Ab.x + " " + Ab.y +
+       " L" + Cb.x + " " + Cb.y + " L" + Cf.x + " " + Cf.y + " Z"
+  }));
+  // 4. Bottom face (the base rectangle, hidden — show as faint dashed edge)
+  gPrism.appendChild(svgEl("line", {
+    "class": "edge-line",
+    x1: Af.x, y1: Af.y, x2: Ab.x, y2: Ab.y
+  }));
+  gPrism.appendChild(svgEl("line", {
+    "class": "edge-line",
+    x1: Bf.x, y1: Bf.y, x2: Bb.x, y2: Bb.y
+  }));
+  // 5. Front triangle (cross-section, prominent)
+  gPrism.appendChild(svgEl("path", {
+    "class": "end-face",
+    d: "M" + Af.x + " " + Af.y + " L" + Bf.x + " " + Bf.y + " L" + Cf.x + " " + Cf.y + " Z"
+  }));
+  // 6. Perpendicular height marker on front face
+  var midF = { x: (Af.x + Bf.x) / 2, y: Af.y };
+  gPrism.appendChild(svgEl("line", {
+    "class": "perp-line",
+    x1: midF.x, y1: midF.y, x2: Cf.x, y2: Cf.y
+  }));
+
+  // Labels
+  // b label below the base of front triangle
+  var bLbl = svgEl("text", {
+    "class": "lbl lbl-b",
+    x: midF.x, y: Af.y + 16, "text-anchor": "middle"
+  });
+  bLbl.textContent = "b = " + fmtNum(b);
+  gPrism.appendChild(bLbl);
+  // h label to the left of the perpendicular
+  var hLbl = svgEl("text", {
+    "class": "lbl lbl-h",
+    x: midF.x - 6, y: midF.y - hp/2 + 4, "text-anchor": "end"
+  });
+  hLbl.textContent = "h = " + fmtNum(h);
+  gPrism.appendChild(hLbl);
+  // L label along the depth of the top-back edge (between Cf and Cb)
+  var LLbl = svgEl("text", {
+    "class": "lbl lbl-L",
+    x: (Cf.x + Cb.x) / 2 + 6, y: (Cf.y + Cb.y) / 2 - 4, "text-anchor": "start"
+  });
+  LLbl.textContent = "L = " + fmtNum(L);
+  gPrism.appendChild(LLbl);
+
+  // KaTeX formulas
+  var A = 0.5 * b * h;
+  var V = A * L;
+  tryRender(fA,
+    "{\\color{#00abfa}A_{\\text{cross}}} = \\tfrac{1}{2} \\times b \\times h = " +
+    "{\\color{#00abfa}" + fmtNum(A) + "}\\;\\text{cm}^{2}");
+  tryRender(fV,
+    "{\\color{#0fee89}V} = A_{\\text{cross}} \\times L = " +
+    fmtNum(A) + " \\times " + fmtNum(L) +
+    " = {\\color{#0fee89}" + fmtNum(V) + "}\\;\\text{cm}^{3}");
+}
+
+function bind(id, key, valEl) {
+  var slider = document.getElementById(id);
+  var val = document.getElementById(valEl);
+  slider.addEventListener("input", function() {
+    state.params[key] = parseFloat(slider.value);
+    val.textContent = fmtNum(state.params[key]);
+    startSpring();
+  });
+}
+bind("bSlider", "b", "bVal");
+bind("hSlider", "h", "hVal");
+bind("LSlider", "L", "LVal");
+
+render();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>
