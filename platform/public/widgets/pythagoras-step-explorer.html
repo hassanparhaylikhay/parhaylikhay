@@ -429,6 +429,230 @@ function buildLadder(p) {
   return { wall: wall, ground: ground, legH: legH, legD: legD, ladder: ladder };
 }
 
+// ------ Builder 5: distance between two coordinate points
+// p: { x1, y1, x2, y2, name1, name2 }
+function buildCoordinates(p) {
+  clearShape();
+  var g = document.getElementById("g-shape");
+  var gl = document.getElementById("g-labels");
+
+  var TOP_PAD = 24, BOT_PAD = 36, L_PAD = 38, R_PAD = 24;
+  var availW = SVG_W - L_PAD - R_PAD, availH = SVG_H - TOP_PAD - BOT_PAD;
+  // Coord range — pad min/max by 1 each side
+  var xMin = Math.min(p.x1, p.x2, 0) - 1;
+  var xMax = Math.max(p.x1, p.x2, 0) + 1;
+  var yMin = Math.min(p.y1, p.y2, 0) - 1;
+  var yMax = Math.max(p.y1, p.y2, 0) + 1;
+  var sX = availW / (xMax - xMin), sY = availH / (yMax - yMin);
+  var s = Math.min(sX, sY);
+
+  function toS(x, y) {
+    return { x: L_PAD + (x - xMin) * s, y: SVG_H - BOT_PAD - (y - yMin) * s };
+  }
+
+  // Grid lines
+  for (var gx = Math.ceil(xMin); gx <= Math.floor(xMax); gx++) {
+    var p1 = toS(gx, yMin), p2 = toS(gx, yMax);
+    g.appendChild(svgEl("line", {
+      "class": "shape-part",
+      x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y,
+      stroke: COL.faint, "stroke-width": 0.5, opacity: 0.5
+    }));
+  }
+  for (var gy = Math.ceil(yMin); gy <= Math.floor(yMax); gy++) {
+    var p1 = toS(xMin, gy), p2 = toS(xMax, gy);
+    g.appendChild(svgEl("line", {
+      "class": "shape-part",
+      x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y,
+      stroke: COL.faint, "stroke-width": 0.5, opacity: 0.5
+    }));
+  }
+  // Axes
+  var orig = toS(0, 0);
+  var xAxisL = toS(xMin, 0), xAxisR = toS(xMax, 0);
+  var yAxisB = toS(0, yMin), yAxisT = toS(0, yMax);
+  g.appendChild(svgEl("line", {
+    "class": "shape-part",
+    x1: xAxisL.x, y1: xAxisL.y, x2: xAxisR.x, y2: xAxisR.y,
+    stroke: COL.grey, "stroke-width": 1
+  }));
+  g.appendChild(svgEl("line", {
+    "class": "shape-part",
+    x1: yAxisB.x, y1: yAxisB.y, x2: yAxisT.x, y2: yAxisT.y,
+    stroke: COL.grey, "stroke-width": 1
+  }));
+
+  var P1 = toS(p.x1, p.y1);
+  var P2 = toS(p.x2, p.y2);
+  var Pcorner = toS(p.x2, p.y1); // corner of right triangle (same y as P1, same x as P2)
+
+  // Horizontal leg (Δx, blue)
+  var legX = svgEl("line", {
+    "class": "shape-part",
+    x1: P1.x, y1: P1.y, x2: Pcorner.x, y2: Pcorner.y,
+    stroke: COL.blue, "stroke-width": 4
+  });
+  legX.style.color = COL.blue;
+  g.appendChild(legX);
+
+  // Vertical leg (Δy, orange)
+  var legY = svgEl("line", {
+    "class": "shape-part",
+    x1: Pcorner.x, y1: Pcorner.y, x2: P2.x, y2: P2.y,
+    stroke: COL.orange, "stroke-width": 4
+  });
+  legY.style.color = COL.orange;
+  g.appendChild(legY);
+
+  // Distance segment (pink)
+  var dist = svgEl("line", {
+    "class": "shape-part",
+    x1: P1.x, y1: P1.y, x2: P2.x, y2: P2.y,
+    stroke: COL.pink, "stroke-width": 3.5
+  });
+  dist.style.color = COL.pink;
+  g.appendChild(dist);
+
+  // Right-angle marker at Pcorner
+  var ra = 8;
+  var dirX = (Pcorner.x > P1.x) ? -1 : 1;
+  var dirY = (P2.y < Pcorner.y) ? -1 : 1;
+  g.appendChild(svgEl("path", {
+    "class": "shape-part",
+    d: "M " + (Pcorner.x + dirX*ra) + " " + Pcorner.y +
+       " L " + (Pcorner.x + dirX*ra) + " " + (Pcorner.y + dirY*ra) +
+       " L " + Pcorner.x + " " + (Pcorner.y + dirY*ra),
+    fill: "none", stroke: COL.yellow, "stroke-width": 1.3, opacity: 0.7
+  }));
+
+  // Point dots
+  function dot(P, color, name) {
+    g.appendChild(svgEl("circle", {
+      "class": "shape-part",
+      cx: P.x, cy: P.y, r: 4, fill: color, stroke: "#0b1118", "stroke-width": 1.5
+    }));
+    if (name) {
+      svgKaTeXLabel(gl, P.x + 12, P.y - 12,
+        "{\\color{" + color + "}" + name + "}", null, "center", 12);
+    }
+  }
+  dot(P1, COL.green, p.name1 || ("(" + p.x1 + "," + p.y1 + ")"));
+  dot(P2, COL.green, p.name2 || ("(" + p.x2 + "," + p.y2 + ")"));
+
+  // Δx, Δy labels
+  var dx = Math.abs(p.x2 - p.x1), dy = Math.abs(p.y2 - p.y1);
+  svgKaTeXLabel(gl, (P1.x + Pcorner.x)/2, (P1.y + Pcorner.y)/2 + 14,
+    "{\\color{" + COL.blue + "}\\Delta x = " + dx + "}", null, "center", 12);
+  svgKaTeXLabel(gl, (Pcorner.x + P2.x)/2 + 22, (Pcorner.y + P2.y)/2,
+    "{\\color{" + COL.orange + "}\\Delta y = " + dy + "}", null, "center", 12);
+
+  return { legX: legX, legY: legY, dist: dist };
+}
+
+// ------ Builder 6: vertical pole with two ground wires
+// p: { ap, pb, ta }  — AP=9, PB=12, TA=15 (length of one wire)
+function buildPoleWires(p) {
+  clearShape();
+  var g = document.getElementById("g-shape");
+  var gl = document.getElementById("g-labels");
+
+  // Pole height TP from Pythagoras on TA & AP: TP = sqrt(15^2 - 9^2) = 12
+  var tp = Math.sqrt(p.ta*p.ta - p.ap*p.ap);
+  var tb = Math.sqrt(tp*tp + p.pb*p.pb);
+
+  var TOP_PAD = 24, BOT_PAD = 38, L_PAD = 26, R_PAD = 26;
+  var availW = SVG_W - L_PAD - R_PAD, availH = SVG_H - TOP_PAD - BOT_PAD;
+  // Total ground width in problem coords = ap + pb
+  var groundW = p.ap + p.pb;
+  var s = Math.min(availW / groundW, availH / tp);
+
+  // P at the centre of the ground line
+  var P = { x: L_PAD + p.ap * s, y: SVG_H - BOT_PAD };
+  var A = { x: L_PAD, y: P.y };
+  var B = { x: P.x + p.pb * s, y: P.y };
+  var T = { x: P.x, y: P.y - tp * s };
+
+  // Ground (faint)
+  g.appendChild(svgEl("line", {
+    "class": "shape-part",
+    x1: A.x - 8, y1: P.y, x2: B.x + 8, y2: P.y,
+    stroke: COL.faint, "stroke-width": 3
+  }));
+
+  // Pole (yellow)
+  var pole = svgEl("line", {
+    "class": "shape-part",
+    x1: P.x, y1: P.y, x2: T.x, y2: T.y,
+    stroke: COL.yellow, "stroke-width": 4
+  });
+  pole.style.color = COL.yellow;
+  g.appendChild(pole);
+
+  // PA segment (blue)
+  var pa = svgEl("line", {
+    "class": "shape-part",
+    x1: A.x, y1: A.y, x2: P.x, y2: P.y,
+    stroke: COL.blue, "stroke-width": 4
+  });
+  pa.style.color = COL.blue;
+  g.appendChild(pa);
+
+  // PB segment (orange)
+  var pb = svgEl("line", {
+    "class": "shape-part",
+    x1: P.x, y1: P.y, x2: B.x, y2: B.y,
+    stroke: COL.orange, "stroke-width": 4
+  });
+  pb.style.color = COL.orange;
+  g.appendChild(pb);
+
+  // Wire TA (pink)
+  var ta = svgEl("line", {
+    "class": "shape-part",
+    x1: T.x, y1: T.y, x2: A.x, y2: A.y,
+    stroke: COL.pink, "stroke-width": 3.5
+  });
+  ta.style.color = COL.pink;
+  g.appendChild(ta);
+
+  // Wire TB (green)
+  var tb_line = svgEl("line", {
+    "class": "shape-part",
+    x1: T.x, y1: T.y, x2: B.x, y2: B.y,
+    stroke: COL.green, "stroke-width": 3.5
+  });
+  tb_line.style.color = COL.green;
+  g.appendChild(tb_line);
+
+  // Right-angle marker at P
+  var ra = 10;
+  g.appendChild(svgEl("path", {
+    "class": "shape-part",
+    d: "M " + (P.x + ra) + " " + P.y +
+       " L " + (P.x + ra) + " " + (P.y - ra) +
+       " L " + P.x + " " + (P.y - ra),
+    fill: "none", stroke: COL.faint, "stroke-width": 1.3, opacity: 0.8
+  }));
+
+  // Labels
+  svgKaTeXLabel(gl, A.x, A.y + 18, "{\\color{" + COL.green + "}A}", null, "center", 12);
+  svgKaTeXLabel(gl, P.x, P.y + 18, "P", COL.grey, "center", 12);
+  svgKaTeXLabel(gl, B.x, B.y + 18, "{\\color{" + COL.green + "}B}", null, "center", 12);
+  svgKaTeXLabel(gl, T.x + 14, T.y - 4, "T", COL.yellow, "center", 12);
+  svgKaTeXLabel(gl, (A.x + P.x)/2, P.y - 12,
+    "{\\color{" + COL.blue + "}" + p.ap + "}", null, "center", 12);
+  svgKaTeXLabel(gl, (P.x + B.x)/2, P.y - 12,
+    "{\\color{" + COL.orange + "}" + p.pb + "}", null, "center", 12);
+  svgKaTeXLabel(gl, P.x - 18, (P.y + T.y)/2,
+    "{\\color{" + COL.yellow + "}h}", null, "center", 12);
+  svgKaTeXLabel(gl, (T.x + A.x)/2 - 14, (T.y + A.y)/2 - 8,
+    "{\\color{" + COL.pink + "}" + p.ta + "}", null, "center", 12);
+  svgKaTeXLabel(gl, (T.x + B.x)/2 + 14, (T.y + B.y)/2 - 8,
+    "{\\color{" + COL.green + "}TB}", null, "center", 12);
+
+  return { pole: pole, pa: pa, pb: pb, ta: ta, tb: tb_line };
+}
+
 // =====================================================================
 // PRESETS
 // =====================================================================
@@ -641,6 +865,146 @@ var PRESETS = {
           { kind: "ans", tex: "{\\color{#ff822c}h = 4.8\\;\\text{m}}" }
         ]
       }
+    ]
+  },
+  "find-hyp-9-12": {
+    title: "Find the hypotenuse",
+    builder: buildRightTriangle,
+    params: { a: 12, b: 9, aLabel: "12", bLabel: "9", cLabel: "c = ?" },
+    footer: "(9, 12, 15) — the (3, 4, 5) triple scaled by 3",
+    steps: [
+      { show: ["triangle","legA","legB","hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE TRIANGLE" },
+          { kind: "hint", text: "right-angled triangle with legs 9 m and 12 m. Find the hypotenuse." }
+        ] },
+      { show: ["triangle","legA","legB","hyp"], highlight: ["legA","legB"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: WRITE PYTHAGORAS" },
+          { kind: "main", tex: "{\\color{#00abfa}a^{2}} + {\\color{#ff822c}b^{2}} = {\\color{#ff4670}c^{2}}" },
+          { kind: "main", tex: "12^{2} + 9^{2} = c^{2}" }
+        ] },
+      { show: ["triangle","legA","legB","hyp"], highlight: ["legA","legB"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: SQUARE AND ADD" },
+          { kind: "main", tex: "144 + 81 = 225" },
+          { kind: "main", tex: "c^{2} = 225" }
+        ] },
+      { show: ["triangle","legA","legB","hyp"], highlight: ["hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: SQUARE ROOT" },
+          { kind: "main", tex: "c = \\sqrt{225}" },
+          { kind: "ans", tex: "{\\color{#ff4670}c = 15\\;\\text{m}}" }
+        ] }
+    ]
+  },
+  "find-hyp-5-7": {
+    title: "Hypotenuse with non-integer answer",
+    builder: buildRightTriangle,
+    params: { a: 7, b: 5, aLabel: "7", bLabel: "5", cLabel: "c = ?" },
+    footer: "Not every Pythagoras answer is a whole number",
+    steps: [
+      { show: ["triangle","legA","legB","hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE TRIANGLE" },
+          { kind: "hint", text: "legs 5 cm and 7 cm. Find the hypotenuse to 2 decimal places." }
+        ] },
+      { show: ["triangle","legA","legB","hyp"], highlight: ["legA","legB"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: PYTHAGORAS" },
+          { kind: "main", tex: "5^{2} + 7^{2} = c^{2}" },
+          { kind: "main", tex: "25 + 49 = 74" }
+        ] },
+      { show: ["triangle","legA","legB","hyp"], highlight: ["hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: SQUARE ROOT" },
+          { kind: "main", tex: "c = \\sqrt{74} = 8.602\\dots" },
+          { kind: "ans", tex: "{\\color{#ff4670}c = 8.60\\;\\text{cm}}" },
+          { kind: "note", text: "keep the full value on your calculator; only round the final answer" }
+        ] }
+    ]
+  },
+  "find-leg-9-4": {
+    title: "Leg with non-integer answer",
+    builder: buildRightTriangle,
+    params: { a: Math.sqrt(65), b: 4, aLabel: "a = ?", bLabel: "4", cLabel: "9" },
+    footer: "Subtract, then square root",
+    steps: [
+      { show: ["triangle","legA","legB","hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: WHAT'S GIVEN" },
+          { kind: "hint", text: "hypotenuse 9 cm, one leg 4 cm. Find the other leg to 3 sig figs." }
+        ] },
+      { show: ["triangle","legA","legB","hyp"], highlight: ["hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: REARRANGE" },
+          { kind: "main", tex: "a^{2} = 9^{2} - 4^{2}" },
+          { kind: "main", tex: "a^{2} = 81 - 16 = 65" }
+        ] },
+      { show: ["triangle","legA","legB","hyp"], highlight: ["legA"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: SQUARE ROOT" },
+          { kind: "main", tex: "a = \\sqrt{65} = 8.062\\dots" },
+          { kind: "ans", tex: "{\\color{#00abfa}a = 8.06\\;\\text{cm}}" }
+        ] }
+    ]
+  },
+  "coordinates-2-1-8-9": {
+    title: "Distance between two points",
+    builder: buildCoordinates,
+    params: { x1: 2, y1: 1, x2: 8, y2: 9, name1: "A(2,1)", name2: "B(8,9)" },
+    footer: "Distance formula = Pythagoras on Δx and Δy",
+    steps: [
+      { show: ["legX","legY","dist"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: TWO POINTS ON A GRID" },
+          { kind: "hint", text: "A(2, 1) and B(8, 9). Find the length of segment AB." }
+        ] },
+      { show: ["legX","legY","dist"], highlight: ["legX","legY"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: SPOT THE RIGHT TRIANGLE" },
+          { kind: "hint", text: "horizontal leg = 8 - 2 = 6, vertical leg = 9 - 1 = 8" }
+        ] },
+      { show: ["legX","legY","dist"], highlight: ["dist"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: PYTHAGORAS" },
+          { kind: "main", tex: "AB^{2} = 6^{2} + 8^{2} = 36 + 64 = 100" },
+          { kind: "ans", tex: "{\\color{#ff4670}AB = \\sqrt{100} = 10}" }
+        ] }
+    ]
+  },
+  "pole-with-wires": {
+    title: "Vertical pole with two wires",
+    builder: buildPoleWires,
+    params: { ap: 9, pb: 12, ta: 15 },
+    footer: "Multi-part: each part reuses an answer from the previous",
+    steps: [
+      { show: ["pole","pa","pb","ta","tb"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE SCENE" },
+          { kind: "hint", text: "pole at P; wires from top T to A and B on the ground. AP = 9, PB = 12, TA = 15." }
+        ] },
+      { show: ["pole","pa","pb","ta","tb"], fade: ["pb","tb"], highlight: ["pole","pa","ta"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: PART (A) — POLE HEIGHT" },
+          { kind: "hint", text: "right triangle TPA: TA is the hypotenuse, AP = 9 is one leg, TP is the height." },
+          { kind: "main", tex: "TP^{2} + 9^{2} = 15^{2}" },
+          { kind: "main", tex: "TP^{2} = 225 - 81 = 144" },
+          { kind: "ans", tex: "{\\color{#fff067}TP = 12\\;\\text{m}}" }
+        ] },
+      { show: ["pole","pa","pb","ta","tb"], fade: ["pa","ta"], highlight: ["pole","pb","tb"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: PART (B) — WIRE TB" },
+          { kind: "hint", text: "right triangle TPB: legs TP = 12 and PB = 12; TB is the hypotenuse." },
+          { kind: "main", tex: "TB^{2} = 12^{2} + 12^{2} = 288" },
+          { kind: "ans", tex: "{\\color{#0fee89}TB = 12\\sqrt{2} \\approx 16.97\\;\\text{m}}" }
+        ] },
+      { show: ["pole","pa","pb","ta","tb"], highlight: ["pa","pb"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: PART (C) — DISTANCE AB" },
+          { kind: "hint", text: "A, P, B are collinear with P between them, so AB = AP + PB." },
+          { kind: "ans", tex: "AB = 9 + 12 = {\\color{#0fee89}21\\;\\text{m}}" }
+        ] }
     ]
   }
 };

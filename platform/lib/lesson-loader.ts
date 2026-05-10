@@ -229,6 +229,11 @@ const WIDGETS: Record<string, WidgetSpec> = {
   "05-05-p3":     { url: "/widgets/compound-shapes-trainer.html?topic=compound3d", height: 600 },
   "05-05-p4":     { url: "/widgets/compound-shapes-trainer.html?topic=frustum",    height: 600 },
   "05-05-review": { url: "/widgets/compound-shapes-trainer.html?topic=mixed",      height: 600 },
+  "06-01-p1":     { url: "/widgets/pythagoras-trainer.html?topic=identify", height: 620 },
+  "06-01-p2":     { url: "/widgets/pythagoras-trainer.html?topic=hyp",      height: 620 },
+  "06-01-p3":     { url: "/widgets/pythagoras-trainer.html?topic=leg",      height: 620 },
+  "06-01-p4":     { url: "/widgets/pythagoras-trainer.html?topic=context",  height: 620 },
+  "06-01-review": { url: "/widgets/pythagoras-trainer.html?topic=mixed",    height: 620 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {

@@ -67,6 +67,8 @@ A vertical pole stands at point $P$ on horizontal ground. A wire runs from the t
 
 (c) Find the length $AB$.
 
+<iframe src="/widgets/pythagoras-step-explorer.html?preset=pole-with-wires" style="width:100%;max-width:696px;height:580px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
 ---
 
 **Part (a)**: We have a right triangle $TPA$ with the right angle at $P$ (the pole is vertical, the ground is horizontal). The wire $TA = 15$ is the hypotenuse, $PA = 9$ is one leg, and the height $TP$ is the other leg.
