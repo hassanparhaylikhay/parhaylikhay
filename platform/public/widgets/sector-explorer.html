@@ -36,8 +36,6 @@
   }
   .row .val { min-width:36px; text-align:right; color:#f0eeea; font-weight:600; }
 
-  .toggles { display:flex; align-items:center; gap:14px; padding:0 4px; margin-bottom:8px; flex-wrap:wrap;
-             font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
   .toggle-row { display:flex; align-items:center; gap:8px; }
   .toggle-row .name { color:#fff067; font-weight:600; }
   .toggle-row select {
@@ -49,16 +47,12 @@
   svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
   .circle-outline { fill:none; stroke:#3a4a5a; stroke-width:1.2; stroke-dasharray:3 3; }
   .sector-fill   { fill:rgba(0,171,250,0.16); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
-  .sector-fill.major { fill:rgba(255,130,44,0.16); stroke:#ff822c; }
   .arc-stroke    { fill:none; stroke:#00abfa; stroke-width:3.5; stroke-linecap:round; }
-  .arc-stroke.major { stroke:#ff822c; }
   .radius-line   { stroke:#fff067; stroke-width:2; }
   .angle-marker  { fill:none; stroke:#0fee89; stroke-width:1.5; }
-  .angle-marker.major { stroke:#ff822c; }
   .lbl { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; }
   .lbl-r  { fill:#fff067; }
   .lbl-th { fill:#0fee89; }
-  .lbl-th.major { fill:#ff822c; }
   .centre-dot   { fill:#7a7875; }
   .centre-label { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; fill:#7a7875; }
 
@@ -80,18 +74,8 @@
     </div>
     <div class="row">
       <span class="name">θ</span>
-      <input type="range" id="tSlider" min="10" max="350" value="90" step="1"/>
+      <input type="range" id="tSlider" min="10" max="359" value="90" step="1"/>
       <span class="val" id="tVal">90°</span>
-    </div>
-  </div>
-
-  <div class="toggles">
-    <div class="toggle-row">
-      <span class="name">sector</span>
-      <select id="seg">
-        <option value="minor" selected>minor</option>
-        <option value="major">major</option>
-      </select>
     </div>
     <div class="toggle-row">
       <span class="name">show</span>
@@ -108,7 +92,7 @@
     <g id="layer-overlay"></g>
   </svg>
 
-  <p class="footer">drag radius and angle · toggle minor / major · arc and area update live</p>
+  <p class="footer">drag the radius and the angle · the highlighted sector is the one being measured</p>
 </div>
 
 <script>
@@ -149,7 +133,6 @@ function tryRender(target, tex) {
 var state = {
   params:  { r: 5, theta: 90 },
   display: { r: 5, theta: 90 },
-  segment: "minor",
   mode:    "pi"
 };
 var SPRING_FACTOR = 0.22, SPRING_EPS = 0.02, rafScheduled = false;
@@ -202,7 +185,6 @@ function render() {
   var r = state.display.r;
   var theta = state.display.theta;
   var rPx = r * SCALE;
-  var isMajor = state.segment === "major";
 
   lcEl.innerHTML = ""; lsEl.innerHTML = ""; loEl.innerHTML = "";
 
@@ -211,39 +193,37 @@ function render() {
     "class": "circle-outline", cx: SVG_CX, cy: SVG_CY, r: rPx
   }));
 
-  // Sector spans from top (90°) clockwise by theta (minor) or major spans the other way.
+  // The highlighted sector starts at the top (90°) and sweeps clockwise
+  // through θ degrees. Whatever θ the user picks is the sector being measured.
   var startDeg = 90;
-  var minorEnd = 90 - theta;
-  var majorEnd = 90 + (360 - theta);
-
-  var sStart = isMajor ? startDeg : minorEnd;
-  var sEnd   = isMajor ? majorEnd : startDeg;
+  var endDeg   = 90 - theta;
 
   lsEl.appendChild(svgEl("path", {
-    "class": "sector-fill" + (isMajor ? " major" : ""),
-    d: sectorPath(SVG_CX, SVG_CY, rPx, sStart, sEnd)
+    "class": "sector-fill",
+    d: sectorPath(SVG_CX, SVG_CY, rPx, endDeg, startDeg)
   }));
   lsEl.appendChild(svgEl("path", {
-    "class": "arc-stroke" + (isMajor ? " major" : ""),
-    d: arcOnlyPath(SVG_CX, SVG_CY, rPx, sStart, sEnd)
+    "class": "arc-stroke",
+    d: arcOnlyPath(SVG_CX, SVG_CY, rPx, endDeg, startDeg)
   }));
 
   // Two radii to the sector boundary
-  var pStart    = ptOnCircle(SVG_CX, SVG_CY, rPx, startDeg);
-  var pMinorEnd = ptOnCircle(SVG_CX, SVG_CY, rPx, minorEnd);
+  var pStart = ptOnCircle(SVG_CX, SVG_CY, rPx, startDeg);
+  var pEnd   = ptOnCircle(SVG_CX, SVG_CY, rPx, endDeg);
   loEl.appendChild(svgEl("line", { "class": "radius-line",
     x1: SVG_CX, y1: SVG_CY, x2: pStart.x, y2: pStart.y }));
   loEl.appendChild(svgEl("line", { "class": "radius-line",
-    x1: SVG_CX, y1: SVG_CY, x2: pMinorEnd.x, y2: pMinorEnd.y }));
+    x1: SVG_CX, y1: SVG_CY, x2: pEnd.x, y2: pEnd.y }));
 
-  // Angle marker at centre
-  var markerR = Math.min(28, rPx * 0.4);
-  var mArcStart = isMajor ? startDeg : minorEnd;
-  var mArcEnd   = isMajor ? majorEnd : startDeg;
-  loEl.appendChild(svgEl("path", {
-    "class": "angle-marker" + (isMajor ? " major" : ""),
-    d: arcOnlyPath(SVG_CX, SVG_CY, markerR, mArcStart, mArcEnd)
-  }));
+  // Angle marker arc at centre — only show when θ ≤ 180° (otherwise it
+  // wraps around and visually duplicates the sector itself)
+  if (theta <= 180) {
+    var markerR = Math.min(28, rPx * 0.4);
+    loEl.appendChild(svgEl("path", {
+      "class": "angle-marker",
+      d: arcOnlyPath(SVG_CX, SVG_CY, markerR, endDeg, startDeg)
+    }));
+  }
 
   // r label on the top radius
   var rLbl = svgEl("text", {
@@ -253,18 +233,17 @@ function render() {
   rLbl.textContent = "r = " + fmtNum(r);
   loEl.appendChild(rLbl);
 
-  // θ label inside the highlighted angle
-  var midDeg = isMajor ? (startDeg + (360 - theta) / 2)
-                       : (startDeg - theta / 2);
+  // θ label placed in the middle of the highlighted angle
+  var midDeg = startDeg - theta / 2;
   var midRad = midDeg * Math.PI / 180;
-  var tLblR  = markerR + 14;
+  var tLblR  = (theta <= 180) ? Math.min(28, rPx * 0.4) + 14 : Math.min(rPx * 0.55, 70);
   var tLblX  = SVG_CX + tLblR * Math.cos(midRad);
   var tLblY  = SVG_CY - tLblR * Math.sin(midRad);
   var tLbl = svgEl("text", {
-    "class": "lbl lbl-th" + (isMajor ? " major" : ""),
+    "class": "lbl lbl-th",
     x: tLblX, y: tLblY + 4, "text-anchor": "middle"
   });
-  tLbl.textContent = (isMajor ? fmtNum(360 - theta) : fmtNum(theta)) + "°";
+  tLbl.textContent = fmtNum(theta) + "°";
   loEl.appendChild(tLbl);
 
   // Centre dot + O label
@@ -276,28 +255,24 @@ function render() {
   loEl.appendChild(oLbl);
 
   // ===== KaTeX formulas with live values ==============================
-  var thetaUsed = isMajor ? (360 - theta) : theta;
-  var arcCoef   = (thetaUsed / 360) * 2 * r;
-  var areaCoef  = (thetaUsed / 360) * r * r;
-
-  var arcColor  = isMajor ? "#ff822c" : "#00abfa";
-  var areaColor = isMajor ? "#ff822c" : "#0fee89";
-  var theNum = fmtNum(thetaUsed);
+  var arcCoef  = (theta / 360) * 2 * r;
+  var areaCoef = (theta / 360) * r * r;
+  var theNum = fmtNum(theta);
 
   if (state.mode === "pi") {
     tryRender(fArc,
-      "{\\color{" + arcColor + "}\\text{arc}} = \\dfrac{" + theNum + "}{360} \\times 2\\pi r = " +
-      "{\\color{" + arcColor + "}" + texCoefPi(arcCoef) + "}\\;\\text{cm}");
+      "{\\color{#00abfa}\\text{arc}} = \\dfrac{" + theNum + "}{360} \\times 2\\pi r = " +
+      "{\\color{#00abfa}" + texCoefPi(arcCoef) + "}\\;\\text{cm}");
     tryRender(fArea,
-      "{\\color{" + areaColor + "}A} = \\dfrac{" + theNum + "}{360} \\times \\pi r^{2} = " +
-      "{\\color{" + areaColor + "}" + texCoefPi(areaCoef) + "}\\;\\text{cm}^{2}");
+      "{\\color{#0fee89}A} = \\dfrac{" + theNum + "}{360} \\times \\pi r^{2} = " +
+      "{\\color{#0fee89}" + texCoefPi(areaCoef) + "}\\;\\text{cm}^{2}");
   } else {
     tryRender(fArc,
-      "{\\color{" + arcColor + "}\\text{arc}} = \\dfrac{" + theNum + "}{360} \\times 2\\pi r = " +
-      "{\\color{" + arcColor + "}" + fmtNum(arcCoef * Math.PI) + "}\\;\\text{cm}");
+      "{\\color{#00abfa}\\text{arc}} = \\dfrac{" + theNum + "}{360} \\times 2\\pi r = " +
+      "{\\color{#00abfa}" + fmtNum(arcCoef * Math.PI) + "}\\;\\text{cm}");
     tryRender(fArea,
-      "{\\color{" + areaColor + "}A} = \\dfrac{" + theNum + "}{360} \\times \\pi r^{2} = " +
-      "{\\color{" + areaColor + "}" + fmtNum(areaCoef * Math.PI) + "}\\;\\text{cm}^{2}");
+      "{\\color{#0fee89}A} = \\dfrac{" + theNum + "}{360} \\times \\pi r^{2} = " +
+      "{\\color{#0fee89}" + fmtNum(areaCoef * Math.PI) + "}\\;\\text{cm}^{2}");
   }
 }
 
@@ -318,10 +293,6 @@ tSlider.addEventListener("input", function() {
   startSpring();
 });
 
-document.getElementById("seg").addEventListener("change", function(e) {
-  state.segment = e.target.value;
-  render();
-});
 document.getElementById("mode").addEventListener("change", function(e) {
   state.mode = e.target.value;
   render();
