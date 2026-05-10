@@ -125,6 +125,8 @@ The single most expensive slip across this unit: **forgetting that internal join
 
 ## Comprehensive worked example
 
+<iframe src="/widgets/solid-step-explorer.html?preset=hemicyl-drilled" style="width:100%;max-width:696px;height:520px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
 A solid is formed by joining a hemisphere to the bottom of a cylinder, then drilling a small cylindrical hole all the way through the centre of the cylinder (the hole stops at the hemisphere's flat side; it doesn't go into the dome).
 
 Outer cylinder: radius $5$ cm, height $8$ cm.

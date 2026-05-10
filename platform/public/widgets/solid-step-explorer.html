@@ -556,6 +556,120 @@ function buildSectorToCone(p) {
   return { sector: sector, coneBody: coneBody, coneBase: coneBase };
 }
 
+// 5.5 review's comprehensive composite: cylinder on top of a hemisphere,
+// with a small cylindrical hole drilled all the way down through the
+// cylinder (the hole stops at the hemisphere's flat side, doesn't enter
+// the dome).
+function buildHemiCylDrilled(p) {
+  // p: { R, hCyl, r }  (R = cylinder/hemi radius, r = drill radius)
+  var R = p.R, hCyl = p.hCyl, r = p.r;
+  var TOP_PAD = 18, BOT_PAD = 28;
+  var totalH = hCyl + R; // cylinder + dome
+  var avail = SVG_H - TOP_PAD - BOT_PAD;
+  var s = Math.min(avail / totalH, 14);
+  var Rpx = R * s, rPx = r * s, hCylPx = hCyl * s;
+  var ryOuter = Rpx * ELLIPSE_RATIO;
+  var ryInner = rPx * ELLIPSE_RATIO;
+  var cx = SVG_W / 2;
+  var cylTopY = TOP_PAD + ryOuter * 0.3;
+  var cylBottomY = cylTopY + hCylPx;
+  var hemiCenterY = cylBottomY;        // centre of dome equator (= cylinder bottom)
+  var leftXOuter = cx - Rpx, rightXOuter = cx + Rpx;
+
+  var g = document.getElementById("g-shape");
+  g.innerHTML = "";
+
+  // Hemisphere dome (faces DOWN, below the cylinder)
+  var hemi = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + leftXOuter + " " + hemiCenterY +
+       " A " + Rpx + " " + Rpx + " 0 0 0 " + rightXOuter + " " + hemiCenterY + " Z",
+    fill: "url(#hemiGrad)", stroke: COL.blue, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(hemi);
+
+  // Cylinder body (blue gradient)
+  var cyl = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + leftXOuter + " " + cylTopY +
+       " L " + leftXOuter + " " + cylBottomY +
+       " A " + Rpx + " " + ryOuter + " 0 0 0 " + rightXOuter + " " + cylBottomY +
+       " L " + rightXOuter + " " + cylTopY +
+       " A " + Rpx + " " + ryOuter + " 0 0 1 " + leftXOuter + " " + cylTopY + " Z",
+    fill: "url(#cylGrad)", stroke: COL.blue, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(cyl);
+
+  // Cylinder top — annulus (outer ellipse minus the hole circle)
+  // Use a path with even-odd fill so the inner ellipse cuts a hole.
+  var cylTop = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + (cx - Rpx) + " " + cylTopY +
+       " A " + Rpx + " " + ryOuter + " 0 0 0 " + (cx + Rpx) + " " + cylTopY +
+       " A " + Rpx + " " + ryOuter + " 0 0 0 " + (cx - Rpx) + " " + cylTopY + " Z " +
+       " M " + (cx - rPx) + " " + cylTopY +
+       " A " + rPx + " " + ryInner + " 0 0 0 " + (cx + rPx) + " " + cylTopY +
+       " A " + rPx + " " + ryInner + " 0 0 0 " + (cx - rPx) + " " + cylTopY + " Z",
+    "fill-rule": "evenodd",
+    fill: "rgba(255,240,103,0.18)", stroke: COL.yellow, "stroke-width": 1.5
+  });
+  g.appendChild(cylTop);
+
+  // The hole's top opening (pink solid ellipse) — sits inside the annulus
+  var holeTop = svgEl("ellipse", {
+    "class": "shape-part",
+    cx: cx, cy: cylTopY, rx: rPx, ry: ryInner,
+    fill: "rgba(255,70,112,0.30)", stroke: COL.pink, "stroke-width": 1.5
+  });
+  g.appendChild(holeTop);
+
+  // Hole's inner wall — two vertical dashed pink lines from top to cylinder bottom
+  var holeWallL = svgEl("line", {
+    "class": "shape-part",
+    x1: cx - rPx, y1: cylTopY, x2: cx - rPx, y2: cylBottomY,
+    stroke: COL.pink, "stroke-width": 1.4, "stroke-dasharray": "3 3"
+  });
+  g.appendChild(holeWallL);
+  var holeWallR = svgEl("line", {
+    "class": "shape-part",
+    x1: cx + rPx, y1: cylTopY, x2: cx + rPx, y2: cylBottomY,
+    stroke: COL.pink, "stroke-width": 1.4, "stroke-dasharray": "3 3"
+  });
+  g.appendChild(holeWallR);
+  // A grouping wrapper so highlight ["holeWall"] hits both lines.
+  // (Done via the flatParts walker — both keys are leaf elements; we'll
+  // expose them under the names "holeWallL" / "holeWallR" and reference
+  // each in the preset's highlight list.)
+
+  // Hole's bottom disc — sits at the bottom of the cylinder (= top of
+  // hemisphere flat side). Inside the well, this small disc is exposed.
+  var holeBottom = svgEl("ellipse", {
+    "class": "shape-part",
+    cx: cx, cy: cylBottomY, rx: rPx, ry: ryInner,
+    fill: "rgba(255,70,112,0.20)", stroke: COL.pink, "stroke-width": 1.4, "stroke-dasharray": "3 2"
+  });
+  g.appendChild(holeBottom);
+
+  // Hidden join (dashed grey ellipse where cylinder meets hemisphere)
+  var join = svgEl("ellipse", {
+    "class": "shape-part",
+    cx: cx, cy: cylBottomY, rx: Rpx, ry: ryOuter,
+    fill: "none", stroke: COL.grey, "stroke-width": 1, "stroke-dasharray": "4 3"
+  });
+  g.appendChild(join);
+
+  // Labels
+  svgKaTeXLabel(g, cx + Rpx + 14, (cylTopY + cylBottomY)/2, "h_{\\text{cyl}} = " + p.hCyl, COL.blue, "left");
+  svgKaTeXLabel(g, cx + rPx + 12, cylTopY - 4, "r = " + p.r, COL.pink, "left");
+  svgKaTeXLabel(g, cx - Rpx*0.5, hemiCenterY + Rpx + 16, "R = " + p.R, COL.yellow, "center");
+
+  return {
+    hemi: hemi, cyl: cyl, cylTop: cylTop,
+    holeTop: holeTop, holeWallL: holeWallL, holeWallR: holeWallR,
+    holeBottom: holeBottom, join: join
+  };
+}
+
 // =====================================================================
 // PRESETS
 // =====================================================================
@@ -860,6 +974,104 @@ var PRESETS = {
           { kind: "tag", text: "STEP 5: VOLUME" },
           { kind: "main", tex: "V = \\tfrac{1}{3}\\pi r^{2} h = \\tfrac{1}{3}\\pi \\cdot \\tfrac{25}{9} \\cdot \\tfrac{\\sqrt{551}}{3}" },
           { kind: "ans", tex: "\\approx 22.7\\;\\text{cm}^{3}" }
+        ]
+      }
+    ]
+  },
+  "hemicyl-drilled": {
+    title: "Cylinder + hemisphere with a drilled hole",
+    builder: buildHemiCylDrilled,
+    params: { R: 5, hCyl: 8, r: 1 },
+    footer: "comprehensive composite · volume by sum/subtract · SA face-by-face",
+    steps: [
+      {
+        show: ["cyl", "hemi", "cylTop", "holeTop", "holeWallL", "holeWallR", "holeBottom", "join"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE COMPOSITE SOLID" },
+          { kind: "hint", text: "cylinder (top, R=5, h=8) + hemisphere dome (bottom, r=5)" },
+          { kind: "note", text: "a small cylindrical hole (r=1) is drilled through the cylinder; it stops at the hemisphere's flat side" }
+        ]
+      },
+      {
+        show: ["cyl", "hemi", "cylTop", "holeTop", "holeWallL", "holeWallR", "holeBottom", "join"],
+        highlight: ["cyl"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: CYLINDER VOLUME" },
+          { kind: "main", tex: "V_\\text{cyl} = \\pi R^{2} h = \\pi(25)(8) = 200\\pi" }
+        ]
+      },
+      {
+        show: ["cyl", "hemi", "cylTop", "holeTop", "holeWallL", "holeWallR", "holeBottom", "join"],
+        highlight: ["hemi"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: HEMISPHERE VOLUME" },
+          { kind: "main", tex: "V_\\text{hemi} = \\tfrac{2}{3}\\pi R^{3} = \\tfrac{2}{3}\\pi(125) = \\tfrac{250\\pi}{3}" }
+        ]
+      },
+      {
+        show: ["cyl", "hemi", "cylTop", "holeTop", "holeWallL", "holeWallR", "holeBottom", "join"],
+        highlight: ["holeTop", "holeWallL", "holeWallR", "holeBottom"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: SUBTRACT THE DRILLED HOLE" },
+          { kind: "main", tex: "V_\\text{hole} = \\pi r^{2} h_\\text{cyl} = \\pi(1)(8) = 8\\pi" },
+          { kind: "main", tex: "V = 200\\pi + \\tfrac{250\\pi}{3} - 8\\pi = \\tfrac{826\\pi}{3}" },
+          { kind: "ans", tex: "\\approx 275.3\\pi\\;\\text{cm}^{3}" }
+        ]
+      },
+      {
+        show: ["cyl", "hemi", "cylTop", "holeTop", "holeWallL", "holeWallR", "holeBottom", "join"],
+        fade: ["join"],
+        highlight: ["cyl"],
+        eqs: [
+          { kind: "tag", text: "STEP 5: SA — CYLINDER CURVED" },
+          { kind: "hint", text: "cylinder bottom + hemisphere flat are GLUED → cancel" },
+          { kind: "main", tex: "2\\pi R h = 2\\pi(5)(8) = 80\\pi" }
+        ]
+      },
+      {
+        show: ["cyl", "hemi", "cylTop", "holeTop", "holeWallL", "holeWallR", "holeBottom", "join"],
+        fade: ["join"],
+        highlight: ["hemi"],
+        eqs: [
+          { kind: "tag", text: "STEP 6: SA — HEMISPHERE CURVED" },
+          { kind: "main", tex: "2\\pi R^{2} = 2\\pi(25) = 50\\pi" }
+        ]
+      },
+      {
+        show: ["cyl", "hemi", "cylTop", "holeTop", "holeWallL", "holeWallR", "holeBottom", "join"],
+        fade: ["join"],
+        highlight: ["cylTop"],
+        eqs: [
+          { kind: "tag", text: "STEP 7: SA — CYLINDER TOP (ANNULUS)" },
+          { kind: "hint", text: "outer top minus the hole's circle" },
+          { kind: "main", tex: "\\pi R^{2} - \\pi r^{2} = 25\\pi - \\pi = 24\\pi" }
+        ]
+      },
+      {
+        show: ["cyl", "hemi", "cylTop", "holeTop", "holeWallL", "holeWallR", "holeBottom", "join"],
+        fade: ["join"],
+        highlight: ["holeWallL", "holeWallR"],
+        eqs: [
+          { kind: "tag", text: "STEP 8: SA — INNER WALL OF THE HOLE" },
+          { kind: "main", tex: "2\\pi r h_\\text{cyl} = 2\\pi(1)(8) = 16\\pi" }
+        ]
+      },
+      {
+        show: ["cyl", "hemi", "cylTop", "holeTop", "holeWallL", "holeWallR", "holeBottom", "join"],
+        fade: ["join"],
+        highlight: ["holeBottom"],
+        eqs: [
+          { kind: "tag", text: "STEP 9: SA — HOLE BOTTOM (TINY EXPOSED DISC)" },
+          { kind: "hint", text: "the hole hits the hemisphere's flat side — that little disc is exposed inside the well" },
+          { kind: "main", tex: "\\pi r^{2} = \\pi(1)^{2} = \\pi" }
+        ]
+      },
+      {
+        show: ["cyl", "hemi", "cylTop", "holeTop", "holeWallL", "holeWallR", "holeBottom"],
+        eqs: [
+          { kind: "tag", text: "STEP 10: SUM EVERY EXPOSED SURFACE" },
+          { kind: "main", tex: "\\text{SA} = 80\\pi + 50\\pi + 24\\pi + 16\\pi + \\pi" },
+          { kind: "ans", tex: "= 171\\pi\\;\\text{cm}^{2}" }
         ]
       }
     ]
