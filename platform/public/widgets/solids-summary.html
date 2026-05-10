@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Surface Area & Volume Summary</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  body { padding:14px 18px 16px; overflow-x:hidden; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 16px 18px; }
+  .head {
+    font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875;
+    letter-spacing:1.6px; text-transform:uppercase;
+    margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #141e2a; text-align:center;
+  }
+
+  .card {
+    border:1px solid #141e2a; border-radius:8px; padding:12px 14px;
+    margin-bottom:12px; background:#07090d;
+  }
+  .card .name {
+    font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:700;
+    letter-spacing:1.4px; text-transform:uppercase; margin-bottom:8px;
+  }
+  .card .row {
+    display:grid;
+    grid-template-columns: 1fr 1px 1fr;
+    gap:14px; align-items:center;
+    margin-bottom:10px;
+  }
+  .card .pane {
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  .card .pane svg { display:block; max-width:100%; height:auto; overflow:visible; }
+  .card .pane .pane-label {
+    font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a;
+    letter-spacing:1.2px; text-transform:uppercase;
+  }
+  .card .divider {
+    width:1px; height:80%; background:#141e2a; align-self:center; justify-self:center;
+  }
+  .card .formulas {
+    display:flex; flex-direction:column; gap:3px; padding-top:8px; border-top:1px solid #141e2a;
+    align-items:center;
+  }
+  .card .formulas .f {
+    font-size:13.5px; line-height:1.35;
+  }
+  .card .formulas .f .katex { font-size:1em; }
+  .card .note {
+    font-family:'Geist Mono',monospace; font-size:10.5px; color:#7a7875;
+    margin-top:4px; text-align:center;
+  }
+
+  /* shape strokes / fills */
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:10px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">Surface area & volume · solids and their nets</div>
+  <div id="cards"></div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:   "#00abfa",
+  yellow: "#fff067",
+  orange: "#ff822c",
+  green:  "#0fee89",
+  pink:   "#ff4670",
+  grey:   "#7a7875",
+  faint:  "#3a4a5a"
+};
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeX(parent, x, y, tex, color, alignment) {
+  var fo = svgEl("foreignObject", {
+    x: (x - 50), y: (y - 10), width: 100, height: 20,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  div.style.color = color || "#f0eeea";
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+// =====================================================================
+// SHAPE BUILDERS — each returns { svg3d, svgNet, formulas: [...], note }
+// SVGs are 200x140 (3d) and 200x140 (net), so they fit inside 1fr cells.
+// =====================================================================
+
+function buildCuboid() {
+  var L = 60, W = 36, H = 38;
+  var dx = 22, dy = -16; // oblique projection offset
+  var cx = 100, cy = 88;
+  var ax = cx - L/2, ay = cy + H/2;
+  // 3D
+  var s = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  // back face
+  s += '<path d="M' + (ax+dx) + ' ' + (ay+dy) + ' L' + (ax+dx+L) + ' ' + (ay+dy) + ' L' + (ax+dx+L) + ' ' + (ay+dy-H) + ' L' + (ax+dx) + ' ' + (ay+dy-H) + ' Z" fill="rgba(0,171,250,0.06)" stroke="' + COL.faint + '" stroke-width="1" stroke-dasharray="3 3"/>';
+  // top
+  s += '<path d="M' + ax + ' ' + (ay-H) + ' L' + (ax+L) + ' ' + (ay-H) + ' L' + (ax+L+dx) + ' ' + (ay-H+dy) + ' L' + (ax+dx) + ' ' + (ay-H+dy) + ' Z" fill="rgba(255,70,112,0.16)" stroke="' + COL.pink + '" stroke-width="1.4"/>';
+  // right
+  s += '<path d="M' + (ax+L) + ' ' + ay + ' L' + (ax+L) + ' ' + (ay-H) + ' L' + (ax+L+dx) + ' ' + (ay-H+dy) + ' L' + (ax+L+dx) + ' ' + (ay+dy) + ' Z" fill="rgba(255,130,44,0.16)" stroke="' + COL.orange + '" stroke-width="1.4"/>';
+  // front
+  s += '<path d="M' + ax + ' ' + ay + ' L' + (ax+L) + ' ' + ay + ' L' + (ax+L) + ' ' + (ay-H) + ' L' + ax + ' ' + (ay-H) + ' Z" fill="rgba(0,171,250,0.18)" stroke="' + COL.blue + '" stroke-width="1.6"/>';
+  s += '</svg>';
+  // 3D labels (HTML overlays via foreignObject would be inside the svg; use post-render)
+  var svg3dWith = function() {
+    var svgEle = mountSVG(s);
+    // l along front-bottom
+    svgKaTeX(svgEle, ax + L/2, ay + 11, "l", COL.blue, "center");
+    // h along front-left
+    svgKaTeX(svgEle, ax - 8, ay - H/2, "h", COL.pink, "right");
+    // w along back-top
+    svgKaTeX(svgEle, ax + L + dx + 6, ay - H + dy/2 + 2, "w", COL.orange, "left");
+    return svgEle;
+  };
+
+  // Net: cross-shape
+  var u = 22; // unit pixel for net face — keeps net compact
+  var nL = 60, nW = 36, nH = 38;
+  // Compose a cross-shaped layout fitting 200x140
+  // Centre column: top (lw), middle (lh = front), bottom (lw)
+  // Left of middle: wh (left); right of middle: wh (right); right of right: lh (back)
+  // Use scale factor so the net fits
+  var netScale = Math.min(180 / (nL + 2*nW + nL), 130 / (nH + 2*nW));
+  var fL = nL * netScale, fW = nW * netScale, fH = nH * netScale;
+  var nCx = 100, nCy = 70;
+  // Front (centre): width fL, height fH centred
+  var frontX = nCx - fL/2, frontY = nCy - fH/2;
+  var n = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  // Top (above front): lw
+  n += '<rect x="' + frontX + '" y="' + (frontY - fW) + '" width="' + fL + '" height="' + fW + '" fill="rgba(255,70,112,0.18)" stroke="' + COL.pink + '" stroke-width="1.2"/>';
+  // Bottom: lw
+  n += '<rect x="' + frontX + '" y="' + (frontY + fH) + '" width="' + fL + '" height="' + fW + '" fill="rgba(255,70,112,0.18)" stroke="' + COL.pink + '" stroke-width="1.2"/>';
+  // Left: wh
+  n += '<rect x="' + (frontX - fW) + '" y="' + frontY + '" width="' + fW + '" height="' + fH + '" fill="rgba(255,130,44,0.18)" stroke="' + COL.orange + '" stroke-width="1.2"/>';
+  // Right: wh
+  n += '<rect x="' + (frontX + fL) + '" y="' + frontY + '" width="' + fW + '" height="' + fH + '" fill="rgba(255,130,44,0.18)" stroke="' + COL.orange + '" stroke-width="1.2"/>';
+  // Back (next to right): lh
+  n += '<rect x="' + (frontX + fL + fW) + '" y="' + frontY + '" width="' + fL + '" height="' + fH + '" fill="rgba(0,171,250,0.10)" stroke="' + COL.blue + '" stroke-width="1.2" stroke-dasharray="3 3"/>';
+  // Front (centre): lh
+  n += '<rect x="' + frontX + '" y="' + frontY + '" width="' + fL + '" height="' + fH + '" fill="rgba(0,171,250,0.22)" stroke="' + COL.blue + '" stroke-width="1.5"/>';
+  n += '</svg>';
+
+  var svgNetWith = function() {
+    var svgEle = mountSVG(n);
+    svgKaTeX(svgEle, frontX + fL/2, frontY + fH/2, "lh", COL.blue, "center");
+    svgKaTeX(svgEle, frontX + fL/2, frontY - fW/2, "lw", COL.pink, "center");
+    svgKaTeX(svgEle, frontX - fW/2, frontY + fH/2, "wh", COL.orange, "center");
+    return svgEle;
+  };
+
+  return {
+    name: "CUBOID", color: COL.blue,
+    paint: function(card3d, cardNet, formulas) {
+      card3d.appendChild(svg3dWith());
+      cardNet.appendChild(svgNetWith());
+      formulas.push("V = l \\times w \\times h");
+      formulas.push("\\text{SA} = 2(lw + lh + wh)");
+    },
+    note: "volume given on formula sheet · SA built from 3 pairs"
+  };
+}
+
+function buildPrism() {
+  // Triangular prism: front triangle, oblique back
+  var b = 60, h = 30, L = 50;
+  var dx = 22, dy = -14;
+  var cx = 100, cy = 95;
+  var ax = cx - b/2, ay = cy;
+  var s = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  // back triangle (faint)
+  s += '<path d="M' + (ax+dx) + ' ' + (ay+dy) + ' L' + (ax+b+dx) + ' ' + (ay+dy) + ' L' + (ax+b/2+dx) + ' ' + (ay-h+dy) + ' Z" fill="rgba(0,171,250,0.06)" stroke="' + COL.faint + '" stroke-width="1" stroke-dasharray="3 3"/>';
+  // top slant face
+  s += '<path d="M' + (ax+b/2) + ' ' + (ay-h) + ' L' + (ax+b/2+dx) + ' ' + (ay-h+dy) + ' L' + (ax+b+dx) + ' ' + (ay+dy) + ' L' + (ax+b) + ' ' + ay + ' Z" fill="rgba(255,130,44,0.10)" stroke="' + COL.orange + '" stroke-width="1.2"/>';
+  // left slant face
+  s += '<path d="M' + ax + ' ' + ay + ' L' + (ax+dx) + ' ' + (ay+dy) + ' L' + (ax+b/2+dx) + ' ' + (ay-h+dy) + ' L' + (ax+b/2) + ' ' + (ay-h) + ' Z" fill="rgba(255,130,44,0.10)" stroke="' + COL.orange + '" stroke-width="1.2"/>';
+  // front triangle (cap)
+  s += '<path d="M' + ax + ' ' + ay + ' L' + (ax+b) + ' ' + ay + ' L' + (ax+b/2) + ' ' + (ay-h) + ' Z" fill="rgba(0,171,250,0.22)" stroke="' + COL.blue + '" stroke-width="1.6"/>';
+  // perpendicular height (pink dashed)
+  s += '<line x1="' + (ax+b/2) + '" y1="' + ay + '" x2="' + (ax+b/2) + '" y2="' + (ay-h) + '" stroke="' + COL.pink + '" stroke-width="1.2" stroke-dasharray="3 3"/>';
+  s += '</svg>';
+
+  var svg3dWith = function() {
+    var svgEle = mountSVG(s);
+    svgKaTeX(svgEle, ax + b/2, ay + 11, "b", COL.blue, "center");
+    svgKaTeX(svgEle, ax + b/2 - 8, ay - h/2, "h", COL.pink, "right");
+    svgKaTeX(svgEle, (ax + b + ax + b + dx) / 2 + 8, ay + dy/2 + 2, "L", COL.orange, "left");
+    return svgEle;
+  };
+
+  // Net: 2 triangles + 3 rectangles
+  var sc = 0.6;
+  var nb = b*sc, nh = h*sc, nL = L*sc;
+  var nCx = 100, nCy = 78;
+  // central column: bottom rect (b × L), then triangle on top, triangle on bottom; sides on left/right
+  // Layout: triangles at left (cap) and right (cap); centre is the unrolled strip:
+  // [cap_L][rect_b][rect_a (slant1)][rect_c (slant2)][cap_R]
+  // Simpler: stack 3 rects vertically with caps left/right
+  var stripX = nCx - nL/2;
+  var stripY = nCy - 1.5*nL/2;  // not quite, just centre vertically
+  // Use 3-rect tower (heights b, slant, slant) + 2 triangle caps left/right
+  var n = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  // bottom rect (b × L)
+  var bottomRectY = nCy + nb/2 - nL/2 + 10;
+  n += '<rect x="' + (nCx - nL/2) + '" y="' + (nCy + nb/2 + 5) + '" width="' + nL + '" height="' + nb + '" fill="rgba(255,130,44,0.18)" stroke="' + COL.orange + '" stroke-width="1.2"/>';
+  // a-leg rect
+  n += '<rect x="' + (nCx - nL/2) + '" y="' + (nCy - nb/2 - 5) + '" width="' + nL + '" height="' + nb + '" fill="rgba(255,130,44,0.18)" stroke="' + COL.orange + '" stroke-width="1.2"/>';
+  // hyp rect
+  n += '<rect x="' + (nCx - nL/2) + '" y="' + (nCy - nb/2 - 5 - nb*1.2) + '" width="' + nL + '" height="' + nb*1.2 + '" fill="rgba(255,130,44,0.18)" stroke="' + COL.orange + '" stroke-width="1.2"/>';
+  // left cap (triangle)
+  var capX = nCx - nL/2 - nb;
+  var capY = nCy + nb/2 + 5;
+  n += '<path d="M' + (capX + nb) + ' ' + capY + ' L' + (capX + nb) + ' ' + (capY + nb) + ' L' + capX + ' ' + (capY + nb) + ' Z" fill="rgba(0,171,250,0.22)" stroke="' + COL.blue + '" stroke-width="1.5"/>';
+  // right cap
+  var capRX = nCx + nL/2;
+  n += '<path d="M' + capRX + ' ' + capY + ' L' + capRX + ' ' + (capY + nb) + ' L' + (capRX + nb) + ' ' + (capY + nb) + ' Z" fill="rgba(0,171,250,0.22)" stroke="' + COL.blue + '" stroke-width="1.5"/>';
+  n += '</svg>';
+
+  var svgNetWith = function() {
+    var svgEle = mountSVG(n);
+    // labels for the rectangle areas
+    svgKaTeX(svgEle, nCx, nCy + nb/2 + 5 + nb/2, "bL", COL.orange, "center");
+    svgKaTeX(svgEle, nCx, nCy - 5, "aL", COL.orange, "center");
+    svgKaTeX(svgEle, nCx, nCy - nb/2 - 5 - nb*0.6, "cL", COL.orange, "center");
+    svgKaTeX(svgEle, capX + nb*0.55, capY + nb*0.7, "\\tfrac{1}{2}bh", COL.blue, "center");
+    svgKaTeX(svgEle, capRX + nb*0.45, capY + nb*0.7, "\\tfrac{1}{2}bh", COL.blue, "center");
+    return svgEle;
+  };
+
+  return {
+    name: "PRISM (TRIANGULAR)", color: COL.yellow,
+    paint: function(card3d, cardNet, formulas) {
+      card3d.appendChild(svg3dWith());
+      cardNet.appendChild(svgNetWith());
+      formulas.push("V = A_{\\text{cross}} \\times L");
+      formulas.push("\\text{SA} = 2 A_{\\text{cross}} + (\\text{perimeter} \\times L)");
+    },
+    note: "any prism: cross-section × length · prism formula given"
+  };
+}
+
+function buildCylinder() {
+  var r = 28, H = 70;
+  var ry = r * 0.32;
+  var cx = 100, topY = 30, botY = topY + H;
+  var leftX = cx - r, rightX = cx + r;
+  var s = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  // body
+  s += '<defs><linearGradient id="cylG" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgba(0,171,250,0.10)"/><stop offset="50%" stop-color="rgba(0,171,250,0.32)"/><stop offset="100%" stop-color="rgba(0,171,250,0.10)"/></linearGradient></defs>';
+  s += '<path d="M' + leftX + ' ' + topY + ' L' + leftX + ' ' + botY + ' A' + r + ' ' + ry + ' 0 0 0 ' + rightX + ' ' + botY + ' L' + rightX + ' ' + topY + ' A' + r + ' ' + ry + ' 0 0 1 ' + leftX + ' ' + topY + ' Z" fill="url(#cylG)" stroke="' + COL.blue + '" stroke-width="1.5"/>';
+  // bottom dashed
+  s += '<ellipse cx="' + cx + '" cy="' + botY + '" rx="' + r + '" ry="' + ry + '" fill="none" stroke="' + COL.pink + '" stroke-width="1.2" stroke-dasharray="3 3"/>';
+  // top
+  s += '<ellipse cx="' + cx + '" cy="' + topY + '" rx="' + r + '" ry="' + ry + '" fill="rgba(255,70,112,0.20)" stroke="' + COL.pink + '" stroke-width="1.5"/>';
+  // radius and height
+  s += '<line x1="' + cx + '" y1="' + topY + '" x2="' + (cx+r) + '" y2="' + topY + '" stroke="' + COL.pink + '" stroke-width="1.5"/>';
+  s += '</svg>';
+
+  var svg3dWith = function() {
+    var svgEle = mountSVG(s);
+    svgKaTeX(svgEle, cx + r/2, topY - 8, "r", COL.pink, "center");
+    svgKaTeX(svgEle, cx + r + 12, (topY + botY)/2, "h", COL.blue, "left");
+    return svgEle;
+  };
+
+  // Net: 1 rectangle of 2πr × h, two circles
+  var nh = H * 0.55;
+  var nWide = nh * 3;  // 2πr ≈ 3h for visual; just illustrative
+  if (nWide > 110) nWide = 110;
+  var nx = 100 - nWide/2, ny = 70 - nh/2;
+  var nr = nh * 0.35;
+  var n = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  // Rectangle
+  n += '<rect x="' + nx + '" y="' + ny + '" width="' + nWide + '" height="' + nh + '" fill="rgba(0,171,250,0.22)" stroke="' + COL.blue + '" stroke-width="1.5"/>';
+  // Top circle (above the rectangle)
+  n += '<circle cx="' + (nx + nWide/2) + '" cy="' + (ny - nr - 4) + '" r="' + nr + '" fill="rgba(255,70,112,0.20)" stroke="' + COL.pink + '" stroke-width="1.5"/>';
+  // Bottom circle (below)
+  n += '<circle cx="' + (nx + nWide/2) + '" cy="' + (ny + nh + nr + 4) + '" r="' + nr + '" fill="rgba(255,70,112,0.20)" stroke="' + COL.pink + '" stroke-width="1.5"/>';
+  n += '</svg>';
+
+  var svgNetWith = function() {
+    var svgEle = mountSVG(n);
+    svgKaTeX(svgEle, nx + nWide/2, ny + nh/2, "2\\pi r h", COL.blue, "center");
+    svgKaTeX(svgEle, nx + nWide/2, ny - nr - 4, "\\pi r^{2}", COL.pink, "center");
+    svgKaTeX(svgEle, nx + nWide/2, ny + nh + nr + 4, "\\pi r^{2}", COL.pink, "center");
+    return svgEle;
+  };
+
+  return {
+    name: "CYLINDER", color: COL.orange,
+    paint: function(card3d, cardNet, formulas) {
+      card3d.appendChild(svg3dWith());
+      cardNet.appendChild(svgNetWith());
+      formulas.push("V = \\pi r^{2} h");
+      formulas.push("\\text{SA} = 2\\pi r h + 2\\pi r^{2}");
+    },
+    note: "curved 2πrh given · two end-circles you add"
+  };
+}
+
+function buildSphere() {
+  var r = 36, cx = 100, cy = 70;
+  var s = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  s += '<defs><radialGradient id="sphG" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="rgba(255,70,112,0.55)"/><stop offset="60%" stop-color="rgba(255,70,112,0.20)"/><stop offset="100%" stop-color="rgba(255,70,112,0.06)"/></radialGradient></defs>';
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="url(#sphG)" stroke="' + COL.pink + '" stroke-width="1.5"/>';
+  s += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + r + '" ry="' + (r*0.32) + '" fill="none" stroke="' + COL.faint + '" stroke-width="1" stroke-dasharray="3 3"/>';
+  s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + r*0.7) + '" y2="' + (cy - r*0.7) + '" stroke="' + COL.yellow + '" stroke-width="1.5"/>';
+  s += '<circle cx="' + cx + '" cy="' + cy + '" r="2" fill="' + COL.grey + '"/>';
+  s += '</svg>';
+
+  var svg3dWith = function() {
+    var svgEle = mountSVG(s);
+    svgKaTeX(svgEle, cx + r*0.4, cy - r*0.42 - 6, "r", COL.yellow, "center");
+    return svgEle;
+  };
+  // No net for sphere
+  var n = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  n += '<text x="100" y="76" text-anchor="middle" font-family="Geist Mono,monospace" font-size="11" fill="' + COL.faint + '" letter-spacing="1">NO FLAT NET</text>';
+  n += '</svg>';
+  var svgNetWith = function() { return mountSVG(n); };
+
+  return {
+    name: "SPHERE", color: COL.pink,
+    paint: function(card3d, cardNet, formulas) {
+      card3d.appendChild(svg3dWith());
+      cardNet.appendChild(svgNetWith());
+      formulas.push("V = \\tfrac{4}{3}\\pi r^{3}");
+      formulas.push("\\text{SA} = 4\\pi r^{2}");
+    },
+    note: "both formulas given · cannot be unrolled flat"
+  };
+}
+
+function buildHemisphere() {
+  var r = 36, cx = 100, cy = 80;
+  var s = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  s += '<defs><radialGradient id="hemG" cx="38%" cy="32%" r="65%"><stop offset="0%" stop-color="rgba(15,238,137,0.55)"/><stop offset="60%" stop-color="rgba(15,238,137,0.20)"/><stop offset="100%" stop-color="rgba(15,238,137,0.06)"/></radialGradient></defs>';
+  // dome
+  s += '<path d="M' + (cx-r) + ' ' + cy + ' A' + r + ' ' + r + ' 0 0 1 ' + (cx+r) + ' ' + cy + ' Z" fill="url(#hemG)" stroke="' + COL.green + '" stroke-width="1.5"/>';
+  // flat base
+  s += '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + r + '" ry="' + (r*0.32) + '" fill="rgba(255,240,103,0.20)" stroke="' + COL.yellow + '" stroke-width="1.5"/>';
+  s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + r*0.7) + '" y2="' + (cy - r*0.7) + '" stroke="' + COL.pink + '" stroke-width="1.5"/>';
+  s += '</svg>';
+
+  var svg3dWith = function() {
+    var svgEle = mountSVG(s);
+    svgKaTeX(svgEle, cx + r*0.4, cy - r*0.42 - 6, "r", COL.pink, "center");
+    return svgEle;
+  };
+  // Net: dome (curved 2πr²) + base circle πr² — show as a half-sphere visualization + circle
+  var nx = 60, ny = 40;
+  var nr = 24;
+  var n = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  // The "dome" surface unrolls into a complex shape; show as half-disk + flat circle annotation
+  n += '<rect x="' + (60) + '" y="' + (30) + '" width="40" height="40" rx="20" fill="rgba(15,238,137,0.18)" stroke="' + COL.green + '" stroke-width="1.5" stroke-dasharray="3 2"/>';
+  n += '<text x="80" y="55" text-anchor="middle" font-family="Geist Mono,monospace" font-size="9" fill="' + COL.green + '">curved</text>';
+  n += '<circle cx="130" cy="50" r="22" fill="rgba(255,240,103,0.20)" stroke="' + COL.yellow + '" stroke-width="1.5"/>';
+  n += '</svg>';
+  var svgNetWith = function() {
+    var svgEle = mountSVG(n);
+    svgKaTeX(svgEle, 80, 78, "2\\pi r^{2}", COL.green, "center");
+    svgKaTeX(svgEle, 130, 50, "\\pi r^{2}", COL.yellow, "center");
+    svgKaTeX(svgEle, 100, 110, "\\text{total} = 3\\pi r^{2}", "#f0eeea", "center");
+    return svgEle;
+  };
+
+  return {
+    name: "HEMISPHERE", color: COL.green,
+    paint: function(card3d, cardNet, formulas) {
+      card3d.appendChild(svg3dWith());
+      cardNet.appendChild(svgNetWith());
+      formulas.push("V = \\tfrac{2}{3}\\pi r^{3}");
+      formulas.push("\\text{SA (solid)} = 3\\pi r^{2}");
+    },
+    note: "= half a sphere + flat πr² base"
+  };
+}
+
+function buildPyramid() {
+  var sBase = 50, H = 60;
+  var dx = 16, dy = -8;
+  var cx = 100, cy = 95;
+  var ax = cx - sBase/2;
+  var apex = { x: cx + dx*0.6, y: cy - H + dy*0.6 };
+  var s = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  // Back base edges (faint)
+  s += '<line x1="' + (ax + dx) + '" y1="' + (cy + dy) + '" x2="' + (ax + sBase + dx) + '" y2="' + (cy + dy) + '" stroke="' + COL.faint + '" stroke-width="1" stroke-dasharray="3 3"/>';
+  s += '<line x1="' + (ax + sBase + dx) + '" y1="' + (cy + dy) + '" x2="' + (ax + sBase) + '" y2="' + cy + '" stroke="' + COL.faint + '" stroke-width="1" stroke-dasharray="3 3"/>';
+  // Right face
+  s += '<path d="M' + (ax + sBase) + ' ' + cy + ' L' + (ax + sBase + dx) + ' ' + (cy + dy) + ' L' + apex.x + ' ' + apex.y + ' Z" fill="rgba(0,171,250,0.10)" stroke="' + COL.blue + '" stroke-width="1.4"/>';
+  // Front-left face
+  s += '<path d="M' + ax + ' ' + cy + ' L' + (ax + sBase) + ' ' + cy + ' L' + apex.x + ' ' + apex.y + ' Z" fill="rgba(0,171,250,0.22)" stroke="' + COL.blue + '" stroke-width="1.5"/>';
+  // base front edge
+  s += '<line x1="' + ax + '" y1="' + cy + '" x2="' + (ax + dx) + '" y2="' + (cy + dy) + '" stroke="' + COL.yellow + '" stroke-width="1.3"/>';
+  s += '</svg>';
+
+  var svg3dWith = function() {
+    var svgEle = mountSVG(s);
+    svgKaTeX(svgEle, ax + sBase/2, cy + 11, "s", COL.yellow, "center");
+    svgKaTeX(svgEle, apex.x + 8, (apex.y + cy)/2, "h", COL.blue, "left");
+    return svgEle;
+  };
+
+  // Net: square base + 4 triangles
+  var nx = 100, ny = 70;
+  var sq = 30;
+  var sl = 36;
+  var n = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  // base
+  n += '<rect x="' + (nx - sq/2) + '" y="' + (ny - sq/2) + '" width="' + sq + '" height="' + sq + '" fill="rgba(255,240,103,0.20)" stroke="' + COL.yellow + '" stroke-width="1.4"/>';
+  // top tri
+  n += '<path d="M' + (nx - sq/2) + ' ' + (ny - sq/2) + ' L' + (nx + sq/2) + ' ' + (ny - sq/2) + ' L' + nx + ' ' + (ny - sq/2 - sl) + ' Z" fill="rgba(0,171,250,0.18)" stroke="' + COL.blue + '" stroke-width="1.3"/>';
+  // bottom tri
+  n += '<path d="M' + (nx - sq/2) + ' ' + (ny + sq/2) + ' L' + (nx + sq/2) + ' ' + (ny + sq/2) + ' L' + nx + ' ' + (ny + sq/2 + sl) + ' Z" fill="rgba(0,171,250,0.18)" stroke="' + COL.blue + '" stroke-width="1.3"/>';
+  // left tri
+  n += '<path d="M' + (nx - sq/2) + ' ' + (ny - sq/2) + ' L' + (nx - sq/2) + ' ' + (ny + sq/2) + ' L' + (nx - sq/2 - sl) + ' ' + ny + ' Z" fill="rgba(0,171,250,0.18)" stroke="' + COL.blue + '" stroke-width="1.3"/>';
+  // right tri
+  n += '<path d="M' + (nx + sq/2) + ' ' + (ny - sq/2) + ' L' + (nx + sq/2) + ' ' + (ny + sq/2) + ' L' + (nx + sq/2 + sl) + ' ' + ny + ' Z" fill="rgba(0,171,250,0.18)" stroke="' + COL.blue + '" stroke-width="1.3"/>';
+  n += '</svg>';
+
+  var svgNetWith = function() {
+    var svgEle = mountSVG(n);
+    svgKaTeX(svgEle, nx, ny, "s^{2}", COL.yellow, "center");
+    svgKaTeX(svgEle, nx, ny - sq/2 - sl/2, "\\tfrac{1}{2}sl", COL.blue, "center");
+    return svgEle;
+  };
+
+  return {
+    name: "PYRAMID (SQUARE BASE)", color: COL.yellow,
+    paint: function(card3d, cardNet, formulas) {
+      card3d.appendChild(svg3dWith());
+      cardNet.appendChild(svgNetWith());
+      formulas.push("V = \\tfrac{1}{3} \\times A_{\\text{base}} \\times h");
+      formulas.push("\\text{SA} = s^{2} + 4 \\times \\tfrac{1}{2}sl");
+    },
+    note: "h is perpendicular height · l is the face slant"
+  };
+}
+
+function buildCone() {
+  var r = 28, H = 60;
+  var ry = r * 0.32;
+  var cx = 100, apexY = 30, baseY = apexY + H;
+  var leftX = cx - r, rightX = cx + r;
+  var s = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  s += '<defs><linearGradient id="cnG" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="rgba(0,171,250,0.10)"/><stop offset="50%" stop-color="rgba(0,171,250,0.32)"/><stop offset="100%" stop-color="rgba(0,171,250,0.10)"/></linearGradient></defs>';
+  s += '<path d="M' + cx + ' ' + apexY + ' L' + leftX + ' ' + baseY + ' A' + r + ' ' + ry + ' 0 0 0 ' + rightX + ' ' + baseY + ' Z" fill="url(#cnG)" stroke="' + COL.blue + '" stroke-width="1.5"/>';
+  s += '<ellipse cx="' + cx + '" cy="' + baseY + '" rx="' + r + '" ry="' + ry + '" fill="none" stroke="' + COL.yellow + '" stroke-width="1" stroke-dasharray="3 3"/>';
+  s += '<path d="M' + leftX + ' ' + baseY + ' A' + r + ' ' + ry + ' 0 0 0 ' + rightX + ' ' + baseY + '" fill="none" stroke="' + COL.yellow + '" stroke-width="1.5"/>';
+  s += '<line x1="' + cx + '" y1="' + apexY + '" x2="' + cx + '" y2="' + baseY + '" stroke="' + COL.orange + '" stroke-width="1.2" stroke-dasharray="3 3"/>';
+  s += '<line x1="' + cx + '" y1="' + baseY + '" x2="' + (cx + r) + '" y2="' + baseY + '" stroke="' + COL.yellow + '" stroke-width="1.5"/>';
+  s += '<line x1="' + cx + '" y1="' + apexY + '" x2="' + (cx + r) + '" y2="' + baseY + '" stroke="' + COL.pink + '" stroke-width="1.5"/>';
+  s += '</svg>';
+
+  var svg3dWith = function() {
+    var svgEle = mountSVG(s);
+    svgKaTeX(svgEle, cx + r/2, baseY + 11, "r", COL.yellow, "center");
+    svgKaTeX(svgEle, cx - 6, (apexY + baseY)/2, "h", COL.orange, "right");
+    svgKaTeX(svgEle, cx + r*0.65, (apexY + baseY)/2 - 6, "l", COL.pink, "left");
+    return svgEle;
+  };
+
+  // Net: sector + base circle
+  var slant = 50;
+  var sectorAngle = 130; // degrees, illustrative
+  var ncx = 100, ncy = 60;
+  var startA = 90 + sectorAngle/2;
+  var endA   = 90 - sectorAngle/2;
+  var p1 = { x: ncx + slant * Math.cos(startA * Math.PI/180), y: ncy - slant * Math.sin(startA * Math.PI/180) };
+  var p2 = { x: ncx + slant * Math.cos(endA   * Math.PI/180), y: ncy - slant * Math.sin(endA   * Math.PI/180) };
+  var n = '<svg viewBox="0 0 200 140" width="200" height="140">';
+  n += '<path d="M' + ncx + ' ' + ncy + ' L' + p1.x.toFixed(1) + ' ' + p1.y.toFixed(1) + ' A' + slant + ' ' + slant + ' 0 0 1 ' + p2.x.toFixed(1) + ' ' + p2.y.toFixed(1) + ' Z" fill="rgba(0,171,250,0.20)" stroke="' + COL.blue + '" stroke-width="1.5"/>';
+  // base circle below
+  n += '<circle cx="' + ncx + '" cy="' + (ncy + slant + 16) + '" r="14" fill="rgba(255,240,103,0.20)" stroke="' + COL.yellow + '" stroke-width="1.4"/>';
+  n += '</svg>';
+
+  var svgNetWith = function() {
+    var svgEle = mountSVG(n);
+    svgKaTeX(svgEle, ncx, ncy + slant*0.55, "\\pi r l", COL.blue, "center");
+    svgKaTeX(svgEle, ncx, ncy + slant + 16, "\\pi r^{2}", COL.yellow, "center");
+    return svgEle;
+  };
+
+  return {
+    name: "CONE", color: COL.orange,
+    paint: function(card3d, cardNet, formulas) {
+      card3d.appendChild(svg3dWith());
+      cardNet.appendChild(svgNetWith());
+      formulas.push("V = \\tfrac{1}{3}\\pi r^{2} h");
+      formulas.push("\\text{SA} = \\pi r l + \\pi r^{2} \\quad\\text{where}\\ l = \\sqrt{r^{2}+h^{2}}");
+    },
+    note: "slant l from Pythagoras · curved πrl given"
+  };
+}
+
+function mountSVG(html) {
+  var div = document.createElement("div");
+  div.innerHTML = html;
+  return div.firstChild;
+}
+
+// =====================================================================
+// Render all cards
+// =====================================================================
+var cardsEl = document.getElementById("cards");
+var SHAPES = [buildCuboid(), buildPrism(), buildCylinder(), buildSphere(), buildHemisphere(), buildPyramid(), buildCone()];
+
+SHAPES.forEach(function(shape) {
+  var card = document.createElement("div");
+  card.className = "card";
+
+  var name = document.createElement("div");
+  name.className = "name";
+  name.style.color = shape.color;
+  name.textContent = shape.name;
+  card.appendChild(name);
+
+  var row = document.createElement("div");
+  row.className = "row";
+  var pane3d = document.createElement("div");
+  pane3d.className = "pane";
+  var lbl3d = document.createElement("span");
+  lbl3d.className = "pane-label";
+  lbl3d.textContent = "3D";
+  var divider = document.createElement("div");
+  divider.className = "divider";
+  var paneNet = document.createElement("div");
+  paneNet.className = "pane";
+  var lblNet = document.createElement("span");
+  lblNet.className = "pane-label";
+  lblNet.textContent = "NET";
+
+  pane3d.appendChild(lbl3d);
+  paneNet.appendChild(lblNet);
+  row.appendChild(pane3d);
+  row.appendChild(divider);
+  row.appendChild(paneNet);
+  card.appendChild(row);
+
+  var formulasEl = document.createElement("div");
+  formulasEl.className = "formulas";
+  var formulasArr = [];
+  shape.paint(pane3d, paneNet, formulasArr);
+  formulasArr.forEach(function(tex) {
+    var f = document.createElement("span");
+    f.className = "f";
+    f.style.color = "#f0eeea";
+    tryRender(f, "{\\color{" + shape.color + "}" + tex + "}");
+    formulasEl.appendChild(f);
+  });
+  if (shape.note) {
+    var note = document.createElement("div");
+    note.className = "note";
+    note.textContent = shape.note;
+    formulasEl.appendChild(note);
+  }
+  card.appendChild(formulasEl);
+
+  cardsEl.appendChild(card);
+});
+
+// =====================================================================
+// Height reporter
+// =====================================================================
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>

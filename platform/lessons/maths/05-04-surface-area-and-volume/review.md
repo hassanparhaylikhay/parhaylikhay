@@ -99,6 +99,12 @@ If you've worked through P1 to P6 you can:
 </div>
 </div>
 
+## Shapes, nets, and formulas at a glance
+
+<iframe src="/widgets/solids-summary.html" style="width:100%;max-width:696px;height:1500px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
+For each solid: the 3D shape on the left with sides labelled, its flat net on the right with each face's area in KaTeX, and the volume + SA formulas underneath. Sphere has no flat net — its surface cannot be unrolled.
+
 ## Marking patterns at a glance
 
 For a typical Cambridge mensuration question:
