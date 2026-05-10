@@ -135,12 +135,13 @@ function buildCuboid() {
   // 3D labels (HTML overlays via foreignObject would be inside the svg; use post-render)
   var svg3dWith = function() {
     var svgEle = mountSVG(s);
-    // l along front-bottom
+    // l along front-bottom (centred below the front edge)
     svgKaTeX(svgEle, ax + L/2, ay + 11, "l", COL.blue, "center");
-    // h along front-left
-    svgKaTeX(svgEle, ax - 8, ay - H/2, "h", COL.pink, "right");
-    // w along back-top
-    svgKaTeX(svgEle, ax + L + dx + 6, ay - H + dy/2 + 2, "w", COL.orange, "left");
+    // h to the LEFT of the front-left edge, midpoint height
+    svgKaTeX(svgEle, ax - 12, ay - H/2, "h", COL.pink, "center");
+    // w along the top-back edge: midpoint of (ax+L, ay-H) → (ax+L+dx, ay-H+dy),
+    // shifted slightly above so it doesn't overlap the edge.
+    svgKaTeX(svgEle, ax + L + dx/2, ay - H + dy/2 - 9, "w", COL.orange, "center");
     return svgEle;
   };
 
@@ -212,9 +213,13 @@ function buildPrism() {
 
   var svg3dWith = function() {
     var svgEle = mountSVG(s);
+    // b along the front base
     svgKaTeX(svgEle, ax + b/2, ay + 11, "b", COL.blue, "center");
-    svgKaTeX(svgEle, ax + b/2 - 8, ay - h/2, "h", COL.pink, "right");
-    svgKaTeX(svgEle, (ax + b + ax + b + dx) / 2 + 8, ay + dy/2 + 2, "L", COL.orange, "left");
+    // h on the perpendicular dashed line, centred just left of it
+    svgKaTeX(svgEle, ax + b/2 - 12, ay - h/2, "h", COL.pink, "center");
+    // L along the depth edge: midpoint of (ax+b, ay) → (ax+b+dx, ay+dy),
+    // pushed slightly RIGHT and DOWN to clear the slant face stroke.
+    svgKaTeX(svgEle, ax + b + dx/2 + 14, ay + dy/2 + 2, "L", COL.orange, "center");
     return svgEle;
   };
 
