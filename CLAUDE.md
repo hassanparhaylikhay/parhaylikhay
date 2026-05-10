@@ -4,6 +4,23 @@
 
 ---
 
+## Session-tested conventions (read these BEFORE editing lessons or widgets)
+
+The user's auto-memory at `~/.claude/projects/-Users-hassanahmad-Desktop-ParhayLikhay/memory/` has three durable convention files captured from real bugs the user has caught one or more times. Read whichever applies before making changes:
+
+- **`preflight-checklist.md`** — single entry point with the three most common bug categories and audit greps. Read this first every session.
+- **`lesson-conventions.md`** — worked-example regex rules (WE heading must start `## Worked example`; body must end with `Full marks $= N$.` with period right after `$`); YAML JSON-array vs single-quoted escape rules; em dashes banned; `\sum` not allowed; `\(...\)` for math inside HTML diagram blocks; Cambridge paper references in plain English.
+- **`widget-conventions.md`** — SVG arc sweep flag (`sweep = 0` for an apex-up fan); math angles use `90 ± θ/2` not `270` for screen-down sectors in y-down SVG; svgKaTeXLabel alignment anchors text edges at `x ± 50`, NOT at x; auto-fit pattern for figures that overflow; KaTeX everywhere via foreignObject; step explorer pattern (step 1 = build the shape, each subsequent step highlights what's being computed); cuboid depth `(dx, dy)` MUST scale with W.
+
+When a user reports a buggy widget by screenshot, check first:
+1. SVG arc sweep flag (arc bulging the wrong direction → bow-tie / arrow shape)
+2. Hardcoded dimension that doesn't respond to a slider
+3. Label alignment misanchored (text inside the shape vs outside)
+
+When the user says "make it visual" / "more like a video": don't just add text — each step needs a visible change to the shape.
+
+---
+
 ## Platform Overview
 
 **Name:** Parhaylikhay
