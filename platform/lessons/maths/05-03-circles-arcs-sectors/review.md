@@ -49,22 +49,21 @@ If you've worked through P1 to P3 you can:
 
 <div class="diagram">
 <div class="diagram-caption">CIRCLES, ARCS, SECTORS · REFERENCE</div>
-<div style="font-family:var(--font-geist-mono),monospace;font-size:13px;color:#f0eeea;line-height:1.85;padding:14px 18px">
+<div style="font-size:14px;line-height:1.85;padding:14px 18px">
 
-<div style="margin-bottom:10px"><span style="color:#fff067;font-weight:700">CIRCLE</span> &nbsp;
-C = <span style="color:#0fee89">2π r</span> &nbsp;·&nbsp;
-A = <span style="color:#0fee89">π r²</span>
-<div style="font-size:11px;color:#7a7875;margin-top:2px">both formulas given on the formula sheet</div>
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">CIRCLE</span> &nbsp;
+\({\color{#0fee89}C = 2\pi r}\) &nbsp;·&nbsp; \({\color{#0fee89}A = \pi r^{2}}\)
+<div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">both formulas given on the formula sheet</div>
 </div>
 
-<div style="margin-bottom:10px"><span style="color:#fff067;font-weight:700">ARC LENGTH</span> &nbsp;
-arc = <span style="color:#0fee89">(θ / 360) × 2πr</span>
-<div style="font-size:11px;color:#7a7875;margin-top:2px">a fraction of the circumference · NOT given on the paper</div>
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">ARC LENGTH</span> &nbsp;
+\({\color{#0fee89}\text{arc} = \dfrac{\theta}{360} \times 2\pi r}\)
+<div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">a fraction of the circumference · NOT given on the paper</div>
 </div>
 
-<div><span style="color:#fff067;font-weight:700">SECTOR AREA</span> &nbsp;
-A = <span style="color:#0fee89">(θ / 360) × πr²</span>
-<div style="font-size:11px;color:#7a7875;margin-top:2px">a fraction of the area · NOT given on the paper</div>
+<div><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">SECTOR AREA</span> &nbsp;
+\({\color{#0fee89}A = \dfrac{\theta}{360} \times \pi r^{2}}\)
+<div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">a fraction of the area · NOT given on the paper</div>
 </div>
 
 </div>

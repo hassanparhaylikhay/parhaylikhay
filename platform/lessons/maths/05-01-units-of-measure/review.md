@@ -51,35 +51,35 @@ A reference table to keep next to you while you practise.
 
 <div class="diagram">
 <div class="diagram-caption">METRIC UNIT CONVERSIONS · REFERENCE</div>
-<div style="font-family:var(--font-geist-mono),monospace;font-size:13px;color:#f0eeea;line-height:1.85;padding:14px 18px">
+<div style="font-size:14px;line-height:1.85;padding:14px 18px">
 
-<div style="margin-bottom:10px"><span style="color:#fff067;font-weight:700">LENGTH</span> &nbsp;
-1 km = <span style="color:#0fee89">1000</span> m &nbsp;·&nbsp;
-1 m = <span style="color:#0fee89">100</span> cm &nbsp;·&nbsp;
-1 cm = <span style="color:#0fee89">10</span> mm
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">LENGTH</span> &nbsp;
+\(1\,\text{km} = {\color{#0fee89}1000}\,\text{m}\) &nbsp;·&nbsp;
+\(1\,\text{m} = {\color{#0fee89}100}\,\text{cm}\) &nbsp;·&nbsp;
+\(1\,\text{cm} = {\color{#0fee89}10}\,\text{mm}\)
 </div>
 
-<div style="margin-bottom:10px"><span style="color:#fff067;font-weight:700">MASS</span> &nbsp;
-1 kg = <span style="color:#0fee89">1000</span> g
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">MASS</span> &nbsp;
+\(1\,\text{kg} = {\color{#0fee89}1000}\,\text{g}\)
 </div>
 
-<div style="margin-bottom:10px"><span style="color:#fff067;font-weight:700">AREA</span> &nbsp;
-1 km² = <span style="color:#0fee89">1 000 000</span> m² &nbsp;·&nbsp;
-1 m² = <span style="color:#0fee89">10 000</span> cm² &nbsp;·&nbsp;
-1 cm² = <span style="color:#0fee89">100</span> mm²
-<div style="font-size:11px;color:#7a7875;margin-top:2px">linear factor SQUARED</div>
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">AREA</span> &nbsp;
+\(1\,\text{km}^{2} = {\color{#0fee89}1{,}000{,}000}\,\text{m}^{2}\) &nbsp;·&nbsp;
+\(1\,\text{m}^{2} = {\color{#0fee89}10{,}000}\,\text{cm}^{2}\) &nbsp;·&nbsp;
+\(1\,\text{cm}^{2} = {\color{#0fee89}100}\,\text{mm}^{2}\)
+<div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">linear factor SQUARED</div>
 </div>
 
-<div style="margin-bottom:10px"><span style="color:#fff067;font-weight:700">VOLUME</span> &nbsp;
-1 m³ = <span style="color:#0fee89">1 000 000</span> cm³ &nbsp;·&nbsp;
-1 cm³ = <span style="color:#0fee89">1000</span> mm³
-<div style="font-size:11px;color:#7a7875;margin-top:2px">linear factor CUBED</div>
+<div style="margin-bottom:10px"><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">VOLUME</span> &nbsp;
+\(1\,\text{m}^{3} = {\color{#0fee89}1{,}000{,}000}\,\text{cm}^{3}\) &nbsp;·&nbsp;
+\(1\,\text{cm}^{3} = {\color{#0fee89}1000}\,\text{mm}^{3}\)
+<div style="font-family:var(--font-geist-mono),monospace;font-size:11px;color:#7a7875;margin-top:2px">linear factor CUBED</div>
 </div>
 
-<div><span style="color:#fff067;font-weight:700">CAPACITY</span> &nbsp;
-1 litre = <span style="color:#0fee89">1000</span> ml = <span style="color:#0fee89">1000</span> cm³ &nbsp;·&nbsp;
-1 m³ = <span style="color:#0fee89">1000</span> litres &nbsp;·&nbsp;
-1 cm³ = <span style="color:#0fee89">1</span> ml
+<div><span style="font-family:var(--font-geist-mono),monospace;color:#fff067;font-weight:700">CAPACITY</span> &nbsp;
+\(1\,\text{litre} = {\color{#0fee89}1000}\,\text{ml} = {\color{#0fee89}1000}\,\text{cm}^{3}\) &nbsp;·&nbsp;
+\(1\,\text{m}^{3} = {\color{#0fee89}1000}\,\text{litres}\) &nbsp;·&nbsp;
+\(1\,\text{cm}^{3} = {\color{#0fee89}1}\,\text{ml}\)
 </div>
 
 </div>
