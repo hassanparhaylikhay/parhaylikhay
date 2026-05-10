@@ -175,7 +175,8 @@ function buildFrustum(p) {
   var TOP_PAD = 22, BOT_PAD = 28;
   var avail = SVG_H - TOP_PAD - BOT_PAD;
   var ryFrac = ELLIPSE_RATIO;
-  var s = Math.min(avail / (p.H + p.R * ryFrac), 50 / Math.max(p.R, p.r));
+  // Height denom accounts for: ryBig * 0.3 above apex + Hpx + ryBig below bot
+  var s = Math.min(avail / (p.H + p.R * ryFrac * 1.3), (SVG_W / 2 - 50) / Math.max(p.R, p.r));
   var Rpx = p.R * s, rpx = p.r * s, Hpx = p.H * s;
   var ryBig = Rpx * ryFrac, rySmall = rpx * ryFrac;
   var cx = SVG_W / 2;
