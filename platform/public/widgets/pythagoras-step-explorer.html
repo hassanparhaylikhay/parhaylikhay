@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Pythagoras — Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:14px; flex-wrap:wrap; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
+
+  .layout { display:grid; grid-template-columns: 1fr; gap:18px; align-items:start; }
+  @media (min-width: 560px) { .layout { grid-template-columns: 320px 1fr; gap:22px; } }
+
+  .stage-outer { width:100%; max-width:340px; margin:0 auto; aspect-ratio: 320 / 300; position:relative; }
+  svg { display:block; width:100%; height:100%; user-select:none; overflow:visible; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:13px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; min-height:240px; }
+  .eq-group { display:flex; flex-direction:column; gap:5px; }
+  .eq-line { line-height:1.35; }
+  .eq-line[data-kind="tag"]    { font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; letter-spacing:0.5px; }
+  .eq-line[data-kind="hint"]   { font-style:italic; font-size:14.5px; color:#fff067; }
+  .eq-line[data-kind="main"]   { font-size:16.5px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]    { font-size:19px; color:#f0eeea; font-weight:700; }
+  .eq-line[data-kind="note"]   { font-size:12.5px; color:#7a7875; margin-top:4px; }
+  .eq-line .katex { font-size:1em; }
+
+  .controls { display:flex; gap:8px; align-items:center; margin-top:14px; padding-top:10px; border-top:1px solid #141e2a; }
+  .controls .left { display:flex; gap:8px; }
+  .controls .right { margin-left:auto; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:7px 16px; border-radius:6px; cursor:pointer;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.35; cursor:not-allowed; }
+
+  .footer { margin-top:10px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+
+  /* Highlight pulse — element sets style.color to its stroke colour, drop-shadow uses currentColor */
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 10px currentColor); }
+    50%      { filter: drop-shadow(0 0 7px currentColor) drop-shadow(0 0 14px currentColor); }
+  }
+  .shape-part { transition: opacity 0.5s ease, fill 0.5s ease, stroke 0.5s ease, transform 0.4s ease; }
+  .shape-part.faded { opacity: 0.18; }
+  .shape-part.highlight { animation: pulse-glow 1.6s ease-in-out infinite; }
+  .shape-part.hidden { opacity: 0; pointer-events:none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">PYTHAGORAS · STEP EXPLORER</span>
+    <span class="meta" id="meta"></span>
+  </div>
+
+  <div class="layout">
+    <div class="stage-outer">
+      <svg id="stage" viewBox="0 0 320 300" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="legA" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#00abfa" stop-opacity="0.10"/>
+            <stop offset="100%" stop-color="#00abfa" stop-opacity="0.30"/>
+          </linearGradient>
+          <linearGradient id="legB" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ff822c" stop-opacity="0.30"/>
+            <stop offset="100%" stop-color="#ff822c" stop-opacity="0.10"/>
+          </linearGradient>
+        </defs>
+        <g id="g-shape"></g>
+        <g id="g-labels"></g>
+      </svg>
+    </div>
+    <div class="equations" id="equations"></div>
+  </div>
+
+  <div class="controls">
+    <div class="left">
+      <button class="ctl" id="prev">← back</button>
+      <button class="ctl" id="next">next →</button>
+    </div>
+    <div class="right" id="counter">1 / 1</div>
+  </div>
+
+  <p class="footer" id="footer"></p>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:   "#00abfa",
+  yellow: "#fff067",
+  orange: "#ff822c",
+  green:  "#0fee89",
+  pink:   "#ff4670",
+  faint:  "#3a4a5a",
+  grey:   "#7a7875",
+  off:    "#f0eeea"
+};
+
+// ===== Helpers =====
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n, dp) {
+  if (!isFinite(n)) return "—";
+  if (dp == null) dp = 2;
+  var v = +n.toFixed(dp);
+  return parseFloat(v.toFixed(dp)).toString();
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment, fontSizePx) {
+  var W = 120, H = 26;
+  var fo = svgEl("foreignObject", {
+    x: (x - W/2), y: (y - H/2), width: W, height: H,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  if (fontSizePx) div.style.fontSize = fontSizePx + "px";
+  div.style.color = color || COL.off;
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+var SVG_W = 320, SVG_H = 300;
+
+// =====================================================================
+// SHAPE BUILDERS — each returns a "parts" object the steps can show / fade / highlight.
+// =====================================================================
+
+function clearShape() {
+  document.getElementById("g-shape").innerHTML = "";
+  document.getElementById("g-labels").innerHTML = "";
+}
+
+function rightAngleMarker(parent, originPt, alongA, alongB, size) {
+  // alongA, alongB: unit-length vectors along the two legs from origin
+  var p1 = { x: originPt.x + alongA.x*size, y: originPt.y + alongA.y*size };
+  var p2 = { x: originPt.x + alongA.x*size + alongB.x*size, y: originPt.y + alongA.y*size + alongB.y*size };
+  var p3 = { x: originPt.x + alongB.x*size, y: originPt.y + alongB.y*size };
+  return svgEl("path", {
+    d: "M " + p1.x + " " + p1.y + " L " + p2.x + " " + p2.y + " L " + p3.x + " " + p3.y,
+    fill: "none", stroke: COL.yellow, "stroke-width": 1.5, opacity: 0.7
+  });
+}
+
+// ------ Builder 1: simple right triangle with labelled legs and hypotenuse
+// p: { a, b, aLabel, bLabel, cLabel, hypUnknown: bool, legUnknown: "a"|"b"|null }
+function buildRightTriangle(p) {
+  clearShape();
+  var g = document.getElementById("g-shape");
+  var gl = document.getElementById("g-labels");
+
+  var TOP_PAD = 30, BOT_PAD = 36, L_PAD = 38, R_PAD = 38;
+  var availW = SVG_W - L_PAD - R_PAD;
+  var availH = SVG_H - TOP_PAD - BOT_PAD;
+  var s = Math.min(availW / p.a, availH / p.b);
+
+  var aPx = p.a * s, bPx = p.b * s;
+  // Anchor right-angle at lower-left; horizontal leg goes right; vertical leg goes up.
+  var Pa = { x: SVG_W/2 - aPx/2, y: SVG_H/2 + bPx/2 };
+  var Pc = { x: Pa.x + aPx,      y: Pa.y };
+  var Pb = { x: Pa.x,            y: Pa.y - bPx };
+
+  var hypAns = Math.sqrt(p.a*p.a + p.b*p.b);
+
+  var triangle = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + Pa.x + " " + Pa.y + " L " + Pc.x + " " + Pc.y + " L " + Pb.x + " " + Pb.y + " Z",
+    fill: "rgba(255,240,103,0.08)", stroke: COL.yellow, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(triangle);
+
+  // Sides as separate path elements so they can be highlighted individually
+  var legA = svgEl("line", {
+    "class": "shape-part",
+    x1: Pa.x, y1: Pa.y, x2: Pc.x, y2: Pc.y,
+    stroke: COL.blue, "stroke-width": 4
+  });
+  legA.style.color = COL.blue;
+  g.appendChild(legA);
+
+  var legB = svgEl("line", {
+    "class": "shape-part",
+    x1: Pa.x, y1: Pa.y, x2: Pb.x, y2: Pb.y,
+    stroke: COL.orange, "stroke-width": 4
+  });
+  legB.style.color = COL.orange;
+  g.appendChild(legB);
+
+  var hyp = svgEl("line", {
+    "class": "shape-part",
+    x1: Pb.x, y1: Pb.y, x2: Pc.x, y2: Pc.y,
+    stroke: COL.pink, "stroke-width": 4
+  });
+  hyp.style.color = COL.pink;
+  g.appendChild(hyp);
+
+  // Right-angle marker
+  g.appendChild(rightAngleMarker(g, Pa, { x: 1, y: 0 }, { x: 0, y: -1 }, Math.min(0.6 * s, 14)));
+
+  // Labels
+  var aTxt = p.aLabel != null ? p.aLabel : "a = " + fmtNum(p.a, 2);
+  var bTxt = p.bLabel != null ? p.bLabel : "b = " + fmtNum(p.b, 2);
+  var cTxt = p.cLabel != null ? p.cLabel : "c = " + fmtNum(hypAns, 2);
+
+  svgKaTeXLabel(gl, (Pa.x + Pc.x)/2, Pa.y + 18,
+    "{\\color{" + COL.blue + "}" + aTxt + "}", null, "center", 13);
+  svgKaTeXLabel(gl, Pa.x - 22, (Pa.y + Pb.y)/2,
+    "{\\color{" + COL.orange + "}" + bTxt + "}", null, "center", 13);
+  // Hypotenuse label OUTSIDE the triangle, above the hypotenuse line
+  var midH = { x: (Pb.x + Pc.x)/2, y: (Pb.y + Pc.y)/2 };
+  // outward dir from interior (toward Pa) is from interior to outside, so flip vector toward Pa
+  var inward = { x: Pa.x - midH.x, y: Pa.y - midH.y };
+  var inLen = Math.sqrt(inward.x*inward.x + inward.y*inward.y) || 1;
+  var outX = midH.x - inward.x/inLen * 18;
+  var outY = midH.y - inward.y/inLen * 18;
+  svgKaTeXLabel(gl, outX, outY,
+    "{\\color{" + COL.pink + "}" + cTxt + "}", null, "center", 13);
+
+  return { triangle: triangle, legA: legA, legB: legB, hyp: hyp };
+}
+
+// ------ Builder 2: rectangle with a diagonal
+// p: { l, w, lLabel, wLabel, dLabel }
+function buildRectangleDiagonal(p) {
+  clearShape();
+  var g = document.getElementById("g-shape");
+  var gl = document.getElementById("g-labels");
+
+  var TOP_PAD = 32, BOT_PAD = 38, L_PAD = 40, R_PAD = 40;
+  var availW = SVG_W - L_PAD - R_PAD, availH = SVG_H - TOP_PAD - BOT_PAD;
+  var s = Math.min(availW / p.l, availH / p.w);
+  var lPx = p.l * s, wPx = p.w * s;
+
+  var P1 = { x: SVG_W/2 - lPx/2, y: SVG_H/2 + wPx/2 };  // bottom-left
+  var P2 = { x: P1.x + lPx, y: P1.y };                  // bottom-right
+  var P3 = { x: P1.x + lPx, y: P1.y - wPx };            // top-right
+  var P4 = { x: P1.x, y: P1.y - wPx };                  // top-left
+
+  var rect = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + P1.x + " " + P1.y + " L " + P2.x + " " + P2.y +
+       " L " + P3.x + " " + P3.y + " L " + P4.x + " " + P4.y + " Z",
+    fill: "rgba(0,171,250,0.08)", stroke: COL.blue, "stroke-width": 2.2, "stroke-linejoin": "round"
+  });
+  g.appendChild(rect);
+
+  // Bottom edge (l, blue)
+  var bot = svgEl("line", { "class": "shape-part",
+    x1: P1.x, y1: P1.y, x2: P2.x, y2: P2.y, stroke: COL.blue, "stroke-width": 4 });
+  bot.style.color = COL.blue; g.appendChild(bot);
+
+  // Right edge (w, orange)
+  var right = svgEl("line", { "class": "shape-part",
+    x1: P2.x, y1: P2.y, x2: P3.x, y2: P3.y, stroke: COL.orange, "stroke-width": 4 });
+  right.style.color = COL.orange; g.appendChild(right);
+
+  // Diagonal (d, pink)
+  var diag = svgEl("line", { "class": "shape-part",
+    x1: P1.x, y1: P1.y, x2: P3.x, y2: P3.y, stroke: COL.pink, "stroke-width": 3.5 });
+  diag.style.color = COL.pink; g.appendChild(diag);
+
+  // Right-angle marker at P2
+  g.appendChild(rightAngleMarker(g, P2, { x: -1, y: 0 }, { x: 0, y: -1 }, Math.min(0.5 * s, 14)));
+
+  var dAns = Math.sqrt(p.l*p.l + p.w*p.w);
+
+  svgKaTeXLabel(gl, (P1.x + P2.x)/2, P1.y + 18,
+    "{\\color{" + COL.blue + "}" + (p.lLabel || "l = " + fmtNum(p.l, 2)) + "}", null, "center", 13);
+  svgKaTeXLabel(gl, P3.x + 26, (P2.y + P3.y)/2,
+    "{\\color{" + COL.orange + "}" + (p.wLabel || "w = " + fmtNum(p.w, 2)) + "}", null, "center", 13);
+  // Diagonal label, slightly above midpoint
+  var midD = { x: (P1.x + P3.x)/2, y: (P1.y + P3.y)/2 };
+  svgKaTeXLabel(gl, midD.x - 18, midD.y - 14,
+    "{\\color{" + COL.pink + "}" + (p.dLabel || "d = " + fmtNum(dAns, 2)) + "}", null, "center", 13);
+
+  return { rect: rect, bot: bot, right: right, diag: diag };
+}
+
+// ------ Builder 3: isosceles triangle with altitude dropped
+// p: { base, slant, baseLabel, slantLabel, halfLabel, hLabel }
+function buildIsoscelesAltitude(p) {
+  clearShape();
+  var g = document.getElementById("g-shape");
+  var gl = document.getElementById("g-labels");
+
+  var hAns = Math.sqrt(p.slant*p.slant - (p.base/2)*(p.base/2));
+
+  var TOP_PAD = 30, BOT_PAD = 38, L_PAD = 38, R_PAD = 38;
+  var availW = SVG_W - L_PAD - R_PAD, availH = SVG_H - TOP_PAD - BOT_PAD;
+  var s = Math.min(availW / p.base, availH / hAns);
+
+  var basePx = p.base * s, hPx = hAns * s;
+
+  var Apex   = { x: SVG_W/2,            y: SVG_H/2 - hPx/2 };
+  var Bleft  = { x: SVG_W/2 - basePx/2, y: SVG_H/2 + hPx/2 };
+  var Bright = { x: SVG_W/2 + basePx/2, y: SVG_H/2 + hPx/2 };
+  var Foot   = { x: SVG_W/2,            y: Bleft.y };
+
+  // Triangle outline
+  var tri = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + Apex.x + " " + Apex.y + " L " + Bleft.x + " " + Bleft.y +
+       " L " + Bright.x + " " + Bright.y + " Z",
+    fill: "rgba(255,240,103,0.08)", stroke: COL.yellow, "stroke-width": 2, "stroke-linejoin": "round"
+  });
+  g.appendChild(tri);
+
+  // Two slants (pink)
+  var slL = svgEl("line", { "class": "shape-part",
+    x1: Apex.x, y1: Apex.y, x2: Bleft.x, y2: Bleft.y, stroke: COL.pink, "stroke-width": 4 });
+  slL.style.color = COL.pink; g.appendChild(slL);
+  var slR = svgEl("line", { "class": "shape-part",
+    x1: Apex.x, y1: Apex.y, x2: Bright.x, y2: Bright.y, stroke: COL.pink, "stroke-width": 4 });
+  slR.style.color = COL.pink; g.appendChild(slR);
+
+  // Base (blue)
+  var base = svgEl("line", { "class": "shape-part",
+    x1: Bleft.x, y1: Bleft.y, x2: Bright.x, y2: Bright.y, stroke: COL.blue, "stroke-width": 4 });
+  base.style.color = COL.blue; g.appendChild(base);
+
+  // Altitude (orange dashed)
+  var alt = svgEl("line", { "class": "shape-part",
+    x1: Apex.x, y1: Apex.y, x2: Foot.x, y2: Foot.y,
+    stroke: COL.orange, "stroke-width": 3, "stroke-dasharray": "5 4" });
+  alt.style.color = COL.orange; g.appendChild(alt);
+
+  // Right-angle marker at the foot
+  g.appendChild(rightAngleMarker(g, Foot, { x: 1, y: 0 }, { x: 0, y: -1 }, 12));
+
+  // Labels
+  var halfTxt = p.halfLabel != null ? p.halfLabel : fmtNum(p.base/2, 2);
+  svgKaTeXLabel(gl, (Foot.x + Bright.x)/2, Bright.y + 16,
+    "{\\color{" + COL.blue + "}" + halfTxt + "}", null, "center", 12);
+  svgKaTeXLabel(gl, (Bleft.x + Foot.x)/2, Bright.y + 16,
+    "{\\color{" + COL.blue + "}" + halfTxt + "}", null, "center", 12);
+  svgKaTeXLabel(gl, (Apex.x + Bleft.x)/2 - 16, (Apex.y + Bleft.y)/2,
+    "{\\color{" + COL.pink + "}" + (p.slantLabel || fmtNum(p.slant, 2)) + "}", null, "center", 13);
+  svgKaTeXLabel(gl, (Apex.x + Bright.x)/2 + 16, (Apex.y + Bright.y)/2,
+    "{\\color{" + COL.pink + "}" + (p.slantLabel || fmtNum(p.slant, 2)) + "}", null, "center", 13);
+  svgKaTeXLabel(gl, Foot.x + 26, (Apex.y + Foot.y)/2,
+    "{\\color{" + COL.orange + "}" + (p.hLabel || "h = " + fmtNum(hAns, 2)) + "}", null, "center", 13);
+
+  return { tri: tri, base: base, slantL: slL, slantR: slR, alt: alt };
+}
+
+// ------ Builder 4: ladder against a wall
+// p: { d (base), h (up wall), L (length), dLabel, hLabel, LLabel }
+function buildLadder(p) {
+  clearShape();
+  var g = document.getElementById("g-shape");
+  var gl = document.getElementById("g-labels");
+
+  var TOP_PAD = 28, BOT_PAD = 40, L_PAD = 64, R_PAD = 30;
+  var availW = SVG_W - L_PAD - R_PAD, availH = SVG_H - TOP_PAD - BOT_PAD;
+  var s = Math.min(availW / p.d, availH / p.h);
+  var dPx = p.d * s, hPx = p.h * s;
+
+  var Corner = { x: L_PAD, y: TOP_PAD + availH };  // ground meets wall
+  var Top    = { x: Corner.x, y: Corner.y - hPx };  // top of ladder on wall
+  var Foot   = { x: Corner.x + dPx, y: Corner.y };  // base of ladder on ground
+
+  // Wall (vertical, faint)
+  var wall = svgEl("line", { "class": "shape-part",
+    x1: Corner.x - 4, y1: Corner.y, x2: Corner.x - 4, y2: TOP_PAD,
+    stroke: COL.faint, "stroke-width": 4 });
+  g.appendChild(wall);
+  // Ground (horizontal, faint)
+  var ground = svgEl("line", { "class": "shape-part",
+    x1: Corner.x - 4, y1: Corner.y + 4, x2: Corner.x + dPx + 12, y2: Corner.y + 4,
+    stroke: COL.faint, "stroke-width": 4 });
+  g.appendChild(ground);
+
+  // The right triangle: corner, top, foot
+  var legH = svgEl("line", { "class": "shape-part",
+    x1: Corner.x, y1: Corner.y, x2: Top.x, y2: Top.y, stroke: COL.orange, "stroke-width": 4 });
+  legH.style.color = COL.orange; g.appendChild(legH);
+
+  var legD = svgEl("line", { "class": "shape-part",
+    x1: Corner.x, y1: Corner.y, x2: Foot.x, y2: Foot.y, stroke: COL.blue, "stroke-width": 4 });
+  legD.style.color = COL.blue; g.appendChild(legD);
+
+  var ladder = svgEl("line", { "class": "shape-part",
+    x1: Top.x, y1: Top.y, x2: Foot.x, y2: Foot.y, stroke: COL.pink, "stroke-width": 4 });
+  ladder.style.color = COL.pink; g.appendChild(ladder);
+
+  // Right-angle marker
+  g.appendChild(rightAngleMarker(g, Corner, { x: 1, y: 0 }, { x: 0, y: -1 }, 12));
+
+  // Labels
+  svgKaTeXLabel(gl, (Corner.x + Foot.x)/2, Corner.y + 18,
+    "{\\color{" + COL.blue + "}" + (p.dLabel || fmtNum(p.d, 2) + "\\,\\text{m}") + "}", null, "center", 13);
+  svgKaTeXLabel(gl, Corner.x - 26, (Corner.y + Top.y)/2,
+    "{\\color{" + COL.orange + "}" + (p.hLabel || fmtNum(p.h, 2) + "\\,\\text{m}") + "}", null, "center", 13);
+  svgKaTeXLabel(gl, (Top.x + Foot.x)/2 + 22, (Top.y + Foot.y)/2 - 14,
+    "{\\color{" + COL.pink + "}" + (p.LLabel || fmtNum(p.L, 2) + "\\,\\text{m}") + "}", null, "center", 13);
+
+  return { wall: wall, ground: ground, legH: legH, legD: legD, ladder: ladder };
+}
+
+// =====================================================================
+// PRESETS
+// =====================================================================
+var PRESETS = {
+  "find-hyp-3-4": {
+    title: "Find the hypotenuse",
+    builder: buildRightTriangle,
+    params: { a: 3, b: 4, aLabel: "a = 3", bLabel: "b = 4", cLabel: "c = ?" },
+    footer: "(3, 4, 5) is the most common Pythagorean triple",
+    steps: [
+      {
+        show: ["triangle", "legA", "legB", "hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE TRIANGLE" },
+          { kind: "hint", text: "right-angled triangle with legs 3 and 4. Find the hypotenuse c." }
+        ]
+      },
+      {
+        show: ["triangle", "legA", "legB", "hyp"],
+        highlight: ["legA", "legB"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: WRITE PYTHAGORAS" },
+          { kind: "main", tex: "{\\color{#00abfa}a^{2}} + {\\color{#ff822c}b^{2}} = {\\color{#ff4670}c^{2}}" },
+          { kind: "main", tex: "{\\color{#00abfa}3^{2}} + {\\color{#ff822c}4^{2}} = c^{2}" }
+        ]
+      },
+      {
+        show: ["triangle", "legA", "legB", "hyp"],
+        highlight: ["legA", "legB"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: SQUARE AND ADD" },
+          { kind: "main", tex: "9 + 16 = c^{2}" },
+          { kind: "main", tex: "c^{2} = 25" }
+        ]
+      },
+      {
+        show: ["triangle", "legA", "legB", "hyp"],
+        highlight: ["hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: SQUARE ROOT" },
+          { kind: "main", tex: "c = \\sqrt{25}" },
+          { kind: "ans", tex: "{\\color{#ff4670}c = 5}" }
+        ]
+      }
+    ]
+  },
+  "find-leg-13-5": {
+    title: "Find a missing leg",
+    builder: buildRightTriangle,
+    params: { a: 12, b: 5, aLabel: "a = ?", bLabel: "b = 5", cLabel: "c = 13" },
+    footer: "When the hypotenuse is known, you SUBTRACT, not add",
+    steps: [
+      {
+        show: ["triangle", "legA", "legB", "hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: WHAT'S GIVEN" },
+          { kind: "hint", text: "hypotenuse 13 (opposite the right angle), one leg 5. Find the other leg a." }
+        ]
+      },
+      {
+        show: ["triangle", "legA", "legB", "hyp"],
+        highlight: ["hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: PYTHAGORAS" },
+          { kind: "main", tex: "a^{2} + {\\color{#ff822c}b^{2}} = {\\color{#ff4670}c^{2}}" },
+          { kind: "main", tex: "a^{2} + {\\color{#ff822c}5^{2}} = {\\color{#ff4670}13^{2}}" }
+        ]
+      },
+      {
+        show: ["triangle", "legA", "legB", "hyp"],
+        highlight: ["hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: REARRANGE" },
+          { kind: "hint", text: "swap to get a^{2} alone, subtracting b^{2} from both sides" },
+          { kind: "main", tex: "a^{2} = 13^{2} - 5^{2} = 169 - 25" },
+          { kind: "main", tex: "a^{2} = 144" }
+        ]
+      },
+      {
+        show: ["triangle", "legA", "legB", "hyp"],
+        highlight: ["legA"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: SQUARE ROOT" },
+          { kind: "main", tex: "a = \\sqrt{144}" },
+          { kind: "ans", tex: "{\\color{#00abfa}a = 12}" },
+          { kind: "note", text: "this is the (5, 12, 13) Pythagorean triple" }
+        ]
+      }
+    ]
+  },
+  "rectangle-diagonal": {
+    title: "Diagonal of a rectangle",
+    builder: buildRectangleDiagonal,
+    params: { l: 12, w: 5, lLabel: "l = 12", wLabel: "w = 5", dLabel: "d = ?" },
+    footer: "A rectangle hides two right triangles, separated by the diagonal",
+    steps: [
+      {
+        show: ["rect", "bot", "right", "diag"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE RECTANGLE" },
+          { kind: "hint", text: "rectangle 12 cm by 5 cm. Find the diagonal d." }
+        ]
+      },
+      {
+        show: ["rect", "bot", "right", "diag"],
+        highlight: ["diag"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: SPOT THE RIGHT TRIANGLE" },
+          { kind: "hint", text: "the diagonal splits the rectangle into two right triangles. Each has legs 12 and 5, and hypotenuse d." }
+        ]
+      },
+      {
+        show: ["rect", "bot", "right", "diag"],
+        highlight: ["bot", "right"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: PYTHAGORAS" },
+          { kind: "main", tex: "d^{2} = {\\color{#00abfa}12^{2}} + {\\color{#ff822c}5^{2}}" },
+          { kind: "main", tex: "d^{2} = 144 + 25 = 169" }
+        ]
+      },
+      {
+        show: ["rect", "bot", "right", "diag"],
+        highlight: ["diag"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: SQUARE ROOT" },
+          { kind: "main", tex: "d = \\sqrt{169}" },
+          { kind: "ans", tex: "{\\color{#ff4670}d = 13\\;\\text{cm}}" }
+        ]
+      }
+    ]
+  },
+  "isosceles-altitude": {
+    title: "Altitude of an isosceles triangle",
+    builder: buildIsoscelesAltitude,
+    params: { base: 10, slant: 13, slantLabel: "13", halfLabel: "5", hLabel: "h = ?" },
+    footer: "Drop a perpendicular to create a right triangle, the standard isosceles split",
+    steps: [
+      {
+        show: ["tri", "base", "slantL", "slantR"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: ISOSCELES TRIANGLE" },
+          { kind: "hint", text: "equal sides of 13, base of 10. Find the altitude (perpendicular height)." }
+        ]
+      },
+      {
+        show: ["tri", "base", "slantL", "slantR", "alt"],
+        highlight: ["alt"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: DROP A PERPENDICULAR" },
+          { kind: "hint", text: "the altitude bisects the base by symmetry, so each half-base is 5." }
+        ]
+      },
+      {
+        show: ["tri", "base", "slantL", "slantR", "alt"],
+        fade: ["slantR"],
+        highlight: ["alt", "slantL"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: WORK IN ONE HALF" },
+          { kind: "hint", text: "left half is a right triangle: legs h and 5, hypotenuse 13." },
+          { kind: "main", tex: "h^{2} + 5^{2} = 13^{2}" }
+        ]
+      },
+      {
+        show: ["tri", "base", "slantL", "slantR", "alt"],
+        highlight: ["alt"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: SOLVE" },
+          { kind: "main", tex: "h^{2} = 169 - 25 = 144" },
+          { kind: "ans", tex: "{\\color{#ff822c}h = 12}" }
+        ]
+      }
+    ]
+  },
+  "ladder": {
+    title: "Ladder against a wall",
+    builder: buildLadder,
+    params: { d: 1.4, h: 4.8, L: 5, dLabel: "1.4\\,\\text{m}", hLabel: "h = ?", LLabel: "5\\,\\text{m}" },
+    footer: "Real-world Pythagoras: ladder is the hypotenuse, wall and ground form the legs",
+    steps: [
+      {
+        show: ["wall", "ground", "legH", "legD", "ladder"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE SCENE" },
+          { kind: "hint", text: "5 m ladder, foot 1.4 m from the wall. How high up the wall does it reach?" }
+        ]
+      },
+      {
+        show: ["wall", "ground", "legH", "legD", "ladder"],
+        highlight: ["ladder"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: IDENTIFY THE HYPOTENUSE" },
+          { kind: "hint", text: "the ladder is opposite the right angle (between wall and ground), so the LADDER is the hypotenuse." }
+        ]
+      },
+      {
+        show: ["wall", "ground", "legH", "legD", "ladder"],
+        highlight: ["ladder", "legD"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: PYTHAGORAS" },
+          { kind: "main", tex: "h^{2} + 1.4^{2} = 5^{2}" },
+          { kind: "main", tex: "h^{2} = 25 - 1.96 = 23.04" }
+        ]
+      },
+      {
+        show: ["wall", "ground", "legH", "legD", "ladder"],
+        highlight: ["legH"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: SQUARE ROOT" },
+          { kind: "main", tex: "h = \\sqrt{23.04}" },
+          { kind: "ans", tex: "{\\color{#ff822c}h = 4.8\\;\\text{m}}" }
+        ]
+      }
+    ]
+  }
+};
+
+// =====================================================================
+// CONTROLLER
+// =====================================================================
+var qs = new URLSearchParams(location.search);
+var PRESET = qs.get("preset") || "find-hyp-3-4";
+var preset = PRESETS[PRESET] || PRESETS["find-hyp-3-4"];
+
+document.getElementById("title").textContent = preset.title.toUpperCase();
+document.getElementById("footer").textContent = preset.footer || "";
+
+var parts = preset.builder(preset.params);
+
+var stepIdx = 0;
+var stepEl = document.getElementById("equations");
+var counterEl = document.getElementById("counter");
+var prevBtn = document.getElementById("prev");
+var nextBtn = document.getElementById("next");
+
+function applyVisibility(step) {
+  // Reset all parts: faded by default if not in show list
+  Object.keys(parts).forEach(function(k) {
+    var el = parts[k];
+    el.classList.remove("faded", "highlight", "hidden");
+  });
+  // Hide everything not listed in show
+  Object.keys(parts).forEach(function(k) {
+    if (!step.show || step.show.indexOf(k) === -1) {
+      parts[k].classList.add("hidden");
+    }
+  });
+  // Apply fade
+  if (step.fade) step.fade.forEach(function(k) { if (parts[k]) parts[k].classList.add("faded"); });
+  // Apply highlight
+  if (step.highlight) step.highlight.forEach(function(k) { if (parts[k]) parts[k].classList.add("highlight"); });
+}
+
+function renderEqs(step) {
+  stepEl.innerHTML = "";
+  var grp = document.createElement("div");
+  grp.className = "eq-group";
+  step.eqs.forEach(function(line, i) {
+    var div = document.createElement("div");
+    div.className = "eq-line";
+    div.setAttribute("data-kind", line.kind);
+    div.style.opacity = "0";
+    div.style.transform = "translateY(4px)";
+    div.style.transition = "opacity 0.45s ease " + (i*60) + "ms, transform 0.45s ease " + (i*60) + "ms";
+    if (line.tex) tryRender(div, line.tex);
+    else div.textContent = line.text;
+    grp.appendChild(div);
+    requestAnimationFrame(function() {
+      div.style.opacity = "1";
+      div.style.transform = "translateY(0)";
+    });
+  });
+  stepEl.appendChild(grp);
+}
+
+function renderStep() {
+  var step = preset.steps[stepIdx];
+  applyVisibility(step);
+  renderEqs(step);
+  counterEl.textContent = (stepIdx + 1) + " / " + preset.steps.length;
+  prevBtn.disabled = stepIdx === 0;
+  nextBtn.disabled = stepIdx === preset.steps.length - 1;
+}
+
+prevBtn.onclick = function() { if (stepIdx > 0) { stepIdx--; renderStep(); } };
+nextBtn.onclick = function() { if (stepIdx < preset.steps.length - 1) { stepIdx++; renderStep(); } };
+
+renderStep();
+
+// ===== Height reporter =====
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>

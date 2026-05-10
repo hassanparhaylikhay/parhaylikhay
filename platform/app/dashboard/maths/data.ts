@@ -501,7 +501,16 @@ export const UNITS: Unit[] = [
   {
     slug: "06", title: "Trigonometry", color: "#00abfa",
     topics: [
-      { slug: "01", code: "6.1", title: "Pythagoras' theorem" },
+      {
+        slug: "01", code: "6.1", title: "Pythagoras' theorem",
+        parts: [
+          { slug: "p1",     label: "P1", title: "What Pythagoras actually says" },
+          { slug: "p2",     label: "P2", title: "Finding the hypotenuse" },
+          { slug: "p3",     label: "P3", title: "Finding a missing leg" },
+          { slug: "p4",     label: "P4", title: "Pythagoras in context" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "02", code: "6.2", title: "Right-angled triangles" },
       { slug: "03", code: "6.3", title: "Non-right-angled triangles" },
       { slug: "04", code: "6.4", title: "Pythagoras and trigonometry in 3D" },
