@@ -112,31 +112,61 @@ function fmtPi(coef) {
   return parseFloat(v.toFixed(3)).toString() + "π";
 }
 
-// Pretty figure: a small circle SVG with optional sector wedge.
+// Pretty figure: a circle (with optional highlighted sector) at fixed
+// display size — r and θ in the prompt are the source of truth, the
+// figure is just a visual aid.
 function circleFig(r, theta) {
-  var W = 200, H = 160, cx = W/2, cy = H/2 + 4;
-  var rPx = Math.min(60, Math.max(28, r * 6));
+  var W = 280, H = 220, cx = W/2, cy = H/2 + 4;
+  var rPx = 78;
   var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '" xmlns="http://www.w3.org/2000/svg">';
-  s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rPx + '" fill="rgba(0,171,250,0.10)" stroke="#00abfa" stroke-width="1.5"/>';
-  if (theta != null && theta < 360) {
-    // Wedge using conic gradient is awkward in inline SVG, use a path
-    var start = 90, endDeg = 90 - theta;
-    var pStart = { x: cx + rPx * Math.cos(start * Math.PI / 180), y: cy - rPx * Math.sin(start * Math.PI / 180) };
-    var pEnd   = { x: cx + rPx * Math.cos(endDeg * Math.PI / 180), y: cy - rPx * Math.sin(endDeg * Math.PI / 180) };
-    var large = (theta > 180) ? 1 : 0;
+
+  if (theta == null) {
+    // Plain circle (no sector). Show a filled disk and one radius.
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rPx + '" fill="rgba(0,171,250,0.12)" stroke="#00abfa" stroke-width="2"/>';
+    s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + rPx) + '" y2="' + cy + '" stroke="#fff067" stroke-width="2"/>';
+    s += '<text x="' + (cx + rPx/2) + '" y="' + (cy - 8) + '" text-anchor="middle" font-family="Geist Mono,monospace" font-size="12" font-weight="700" fill="#fff067">r = ' + r + '</text>';
+  } else {
+    // Faint full-circle outline behind the sector
+    s += '<circle cx="' + cx + '" cy="' + cy + '" r="' + rPx + '" fill="none" stroke="#3a4a5a" stroke-width="1.2" stroke-dasharray="3 3"/>';
+
+    var startDeg = 90, endDeg = 90 - theta;
+    var pStart = { x: cx + rPx * Math.cos(startDeg * Math.PI / 180), y: cy - rPx * Math.sin(startDeg * Math.PI / 180) };
+    var pEnd   = { x: cx + rPx * Math.cos(endDeg   * Math.PI / 180), y: cy - rPx * Math.sin(endDeg   * Math.PI / 180) };
+    var large  = (theta > 180) ? 1 : 0;
+
+    // Highlighted wedge — blue fill, blue stroke
     s += '<path d="M ' + cx + ' ' + cy + ' L ' + pStart.x + ' ' + pStart.y +
          ' A ' + rPx + ' ' + rPx + ' 0 ' + large + ' 0 ' + pEnd.x + ' ' + pEnd.y + ' Z"' +
-         ' fill="rgba(255,240,103,0.20)" stroke="#fff067" stroke-width="1.6"/>';
-    // Angle label
-    var midDeg = start - theta/2;
-    var midR = rPx * 0.45;
-    var lx = cx + midR * Math.cos(midDeg * Math.PI / 180);
-    var ly = cy - midR * Math.sin(midDeg * Math.PI / 180);
-    s += '<text x="' + lx + '" y="' + (ly+4) + '" text-anchor="middle" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="#fff067">' + theta + '°</text>';
+         ' fill="rgba(0,171,250,0.16)" stroke="#00abfa" stroke-width="2" stroke-linejoin="round"/>';
+    // Yellow radii on top of the wedge
+    s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + pStart.x + '" y2="' + pStart.y + '" stroke="#fff067" stroke-width="2"/>';
+    s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + pEnd.x   + '" y2="' + pEnd.y   + '" stroke="#fff067" stroke-width="2"/>';
+
+    // Small angle marker arc near the centre (only when θ ≤ 180°)
+    var markerR = 18;
+    if (theta <= 180) {
+      var mS = { x: cx + markerR * Math.cos(startDeg * Math.PI / 180), y: cy - markerR * Math.sin(startDeg * Math.PI / 180) };
+      var mE = { x: cx + markerR * Math.cos(endDeg   * Math.PI / 180), y: cy - markerR * Math.sin(endDeg   * Math.PI / 180) };
+      s += '<path d="M ' + mE.x + ' ' + mE.y + ' A ' + markerR + ' ' + markerR + ' 0 0 0 ' + mS.x + ' ' + mS.y + '" fill="none" stroke="#0fee89" stroke-width="1.5"/>';
+    }
+
+    // θ label — placed in the angle bisector direction, pushed out far
+    // enough to clear the marker even for tiny wedges.
+    var midDeg = startDeg - theta/2;
+    var lblR = (theta <= 60) ? markerR + 24 : markerR + 16;
+    var lx = cx + lblR * Math.cos(midDeg * Math.PI / 180);
+    var ly = cy - lblR * Math.sin(midDeg * Math.PI / 180);
+    s += '<text x="' + lx + '" y="' + (ly+4) + '" text-anchor="middle" font-family="Geist Mono,monospace" font-size="12" font-weight="700" fill="#0fee89">' + theta + '°</text>';
+
+    // r label on the OUTSIDE of the wedge, in the empty quadrant — no
+    // collision with θ. Anchor it on the diametrically-opposite side.
+    var oppDeg = midDeg + 180;
+    var rLblR = rPx * 0.55;
+    var rx = cx + rLblR * Math.cos(oppDeg * Math.PI / 180);
+    var ry = cy - rLblR * Math.sin(oppDeg * Math.PI / 180);
+    s += '<text x="' + rx + '" y="' + (ry+4) + '" text-anchor="middle" font-family="Geist Mono,monospace" font-size="12" font-weight="700" fill="#fff067">r = ' + r + '</text>';
   }
-  // Radius line + label
-  s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + rPx) + '" y2="' + cy + '" stroke="#7a7875" stroke-width="1.2"/>';
-  s += '<text x="' + (cx + rPx/2) + '" y="' + (cy - 6) + '" text-anchor="middle" font-family="Geist Mono,monospace" font-size="11" font-weight="600" fill="#7a7875">r = ' + r + '</text>';
+  // Centre dot
   s += '<circle cx="' + cx + '" cy="' + cy + '" r="2.5" fill="#7a7875"/>';
   s += '</svg>';
   return s;
