@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Unit Circle: where sin, cos, tan come from</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:10px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .ratios { display:flex; flex-direction:column; gap:6px; padding:12px 6px 6px; border-top:1px solid #141e2a; margin-top:6px; }
+  .ratio-row {
+    display:grid;
+    grid-template-columns: 60px 1fr 90px;
+    align-items:center;
+    gap:10px;
+    font-size:14.5px;
+    line-height:1.2;
+  }
+  .ratio-row .name { font-family:'Geist Mono',monospace; font-weight:700; text-align:right; }
+  .ratio-row.sin .name { color:#ff822c; }
+  .ratio-row.cos .name { color:#00abfa; }
+  .ratio-row.tan .name { color:#fff067; }
+  .ratio-row .formula { font-size:13.5px; color:#c8c6be; }
+  .ratio-row .formula .katex { font-size:1em; }
+  .ratio-row .value { font-family:'Geist Mono',monospace; font-weight:700; font-size:15px; text-align:right; color:#f0eeea; }
+
+  .controls { display:flex; flex-direction:column; gap:8px; padding:12px 4px 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:10px; }
+  .row .name { font-weight:600; min-width:60px; color:#f0eeea; }
+  .row input[type=range] {
+    flex:1; appearance:none; -webkit-appearance:none;
+    height:3px; background:#141e2a; border-radius:2px; outline:none;
+  }
+  .row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%; cursor:pointer; border:0; background:#fff067;
+  }
+  .row input[type=range]::-moz-range-thumb {
+    width:14px; height:14px; border-radius:50%; cursor:pointer; border:0; background:#fff067;
+  }
+  .row .val { min-width:46px; text-align:right; color:#f0eeea; font-weight:600; font-size:12.5px; }
+
+  .insight {
+    margin-top:12px; padding:9px 12px;
+    background:rgba(15,238,137,0.06); border:1px solid rgba(15,238,137,0.18); border-radius:6px;
+    font-size:12px; color:#0fee89; line-height:1.5;
+    font-family:'Geist Mono',monospace; letter-spacing:0.2px;
+  }
+
+  .footer { margin-top:10px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+
+  .vertex-handle { cursor:grab; transition: r 0.15s ease; }
+  .vertex-handle:active { cursor:grabbing; }
+  .vertex-handle:hover { r:11; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">UNIT CIRCLE · WHERE SIN, COS, TAN COME FROM</span>
+    <span class="meta">drag the point · or use the slider</span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 360" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-grid"></g>
+    <g id="g-figure"></g>
+    <g id="g-labels"></g>
+    <g id="g-handles"></g>
+  </svg>
+
+  <div class="ratios">
+    <div class="ratio-row sin">
+      <span class="name">sin θ</span>
+      <span class="formula">= vertical reach (height of the point)</span>
+      <span class="value" id="v-sin"></span>
+    </div>
+    <div class="ratio-row cos">
+      <span class="name">cos θ</span>
+      <span class="formula">= horizontal reach (foot under the point)</span>
+      <span class="value" id="v-cos"></span>
+    </div>
+    <div class="ratio-row tan">
+      <span class="name">tan θ</span>
+      <span class="formula">= sin θ ÷ cos θ (slope of the radius)</span>
+      <span class="value" id="v-tan"></span>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <span class="name">angle θ</span>
+      <input type="range" id="thetaSlider" min="0" max="90" step="0.5" value="35"/>
+      <span class="val" id="thetaVal"></span>
+    </div>
+  </div>
+
+  <div class="insight">on a circle of radius 1, sin θ and cos θ are literally the y- and x-coordinates of the point. that's all they are.</div>
+
+  <p class="footer">the right triangle inside the circle (origin, foot, point) has hyp = 1, opp = sin θ, adj = cos θ — that's why SOH-CAH-TOA works</p>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:   "#00abfa",
+  yellow: "#fff067",
+  orange: "#ff822c",
+  green:  "#0fee89",
+  pink:   "#ff4670",
+  faint:  "#3a4a5a",
+  grey:   "#7a7875",
+  off:    "#f0eeea"
+};
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n, dp) {
+  if (!isFinite(n)) return "—";
+  if (dp == null) dp = 3;
+  var v = +n.toFixed(dp);
+  return parseFloat(v.toFixed(dp)).toString();
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment, fontSizePx) {
+  var W = 120, H = 26;
+  var fo = svgEl("foreignObject", {
+    x: (x - W/2), y: (y - H/2), width: W, height: H,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  if (fontSizePx) div.style.fontSize = fontSizePx + "px";
+  div.style.color = color || COL.off;
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+// ===== Geometry =====
+var SVG_W = 480, SVG_H = 360;
+var CX = 200, CY = 200, R = 130;  // circle centre + radius (px)
+
+// State
+var params  = { theta: 35 };  // degrees
+var display = { theta: 35 };
+var SPRING_FACTOR = 0.22, SPRING_EPS = 0.005;
+
+var stage = document.getElementById("stage");
+var gGrid = document.getElementById("g-grid");
+var gFig  = document.getElementById("g-figure");
+var gLbl  = document.getElementById("g-labels");
+var gHnd  = document.getElementById("g-handles");
+
+function renderStaticGrid() {
+  gGrid.innerHTML = "";
+  // Axes
+  gGrid.appendChild(svgEl("line", {
+    x1: CX - R - 26, y1: CY, x2: CX + R + 26, y2: CY,
+    stroke: COL.faint, "stroke-width": 1
+  }));
+  gGrid.appendChild(svgEl("line", {
+    x1: CX, y1: CY - R - 26, x2: CX, y2: CY + R + 26,
+    stroke: COL.faint, "stroke-width": 1
+  }));
+  // Tick labels for axes (at +1 and -1 ish, since we restrict θ to acute we only need the +1 axis labels really)
+  svgKaTeXLabel(gGrid, CX + R, CY + 16, "1", COL.grey, "center", 11);
+  svgKaTeXLabel(gGrid, CX - 12, CY - R, "1", COL.grey, "center", 11);
+
+  // Unit circle
+  gGrid.appendChild(svgEl("circle", {
+    cx: CX, cy: CY, r: R,
+    fill: "rgba(255,240,103,0.04)", stroke: COL.faint, "stroke-width": 1.4
+  }));
+}
+renderStaticGrid();
+
+function render() {
+  gFig.innerHTML = "";
+  gLbl.innerHTML = "";
+  gHnd.innerHTML = "";
+
+  var theta = display.theta;
+  var thetaRad = theta * Math.PI / 180;
+  // Point P on the unit circle (in SVG coords: y inverted)
+  var Px = CX + R * Math.cos(thetaRad);
+  var Py = CY - R * Math.sin(thetaRad);
+  // Foot of perpendicular from P to x-axis
+  var Fx = Px;
+  var Fy = CY;
+
+  // ===== cos θ segment (blue, horizontal from origin to foot) =====
+  gFig.appendChild(svgEl("line", {
+    x1: CX, y1: CY, x2: Fx, y2: Fy,
+    stroke: COL.blue, "stroke-width": 5, "stroke-linecap": "round"
+  }));
+  // ===== sin θ segment (orange, vertical from foot to P) =====
+  gFig.appendChild(svgEl("line", {
+    x1: Fx, y1: Fy, x2: Px, y2: Py,
+    stroke: COL.orange, "stroke-width": 5, "stroke-linecap": "round"
+  }));
+  // ===== Radius (pink, from origin to P, hypotenuse of the inner triangle) =====
+  gFig.appendChild(svgEl("line", {
+    x1: CX, y1: CY, x2: Px, y2: Py,
+    stroke: COL.pink, "stroke-width": 3, "stroke-linecap": "round"
+  }));
+
+  // Right-angle marker at the foot
+  if (theta > 4 && theta < 86) {
+    var ra = 10;
+    var dx = (Px > CX) ? -1 : 1;
+    gFig.appendChild(svgEl("path", {
+      d: "M " + (Fx + dx * ra) + " " + Fy +
+         " L " + (Fx + dx * ra) + " " + (Fy - ra) +
+         " L " + Fx + " " + (Fy - ra),
+      fill: "none", stroke: COL.yellow, "stroke-width": 1.4, opacity: 0.7
+    }));
+  }
+
+  // Angle arc at origin
+  var arcR = 30;
+  var arcEndX = CX + arcR * Math.cos(thetaRad);
+  var arcEndY = CY - arcR * Math.sin(thetaRad);
+  gFig.appendChild(svgEl("path", {
+    d: "M " + (CX + arcR) + " " + CY +
+       " A " + arcR + " " + arcR + " 0 0 0 " + arcEndX + " " + arcEndY,
+    fill: "none", stroke: COL.yellow, "stroke-width": 2.2
+  }));
+  // θ label
+  var labMidX = CX + (arcR + 16) * Math.cos(thetaRad / 2);
+  var labMidY = CY - (arcR + 16) * Math.sin(thetaRad / 2);
+  svgKaTeXLabel(gLbl, labMidX, labMidY,
+    "{\\color{" + COL.yellow + "}\\theta = " + Math.round(theta) + "°}", null, "center", 13);
+
+  // Side labels
+  // cos θ label below the cos segment
+  svgKaTeXLabel(gLbl, (CX + Fx) / 2, Fy + 18,
+    "{\\color{" + COL.blue + "}\\cos\\theta = " + fmtNum(Math.cos(thetaRad), 3) + "}", null, "center", 12);
+  // sin θ label right of the sin segment
+  svgKaTeXLabel(gLbl, Fx + 50, (Fy + Py) / 2,
+    "{\\color{" + COL.orange + "}\\sin\\theta = " + fmtNum(Math.sin(thetaRad), 3) + "}", null, "center", 12);
+
+  // Hypotenuse-of-1 label outside the radius
+  var midR = { x: (CX + Px) / 2, y: (CY + Py) / 2 };
+  // outward normal (away from foot)
+  var rVec = { x: Px - CX, y: Py - CY };
+  var rLen = Math.sqrt(rVec.x*rVec.x + rVec.y*rVec.y) || 1;
+  var outX = -rVec.y / rLen, outY = rVec.x / rLen;
+  // Make sure outward is the side OPPOSITE the foot
+  var toFootX = Fx - midR.x, toFootY = Fy - midR.y;
+  if (outX * toFootX + outY * toFootY > 0) { outX = -outX; outY = -outY; }
+  svgKaTeXLabel(gLbl, midR.x + outX * 22, midR.y + outY * 22,
+    "{\\color{" + COL.pink + "}r = 1}", null, "center", 12);
+
+  // Point P (yellow, draggable)
+  var phHandle = svgEl("circle", {
+    "class": "vertex-handle", id: "handle-p",
+    cx: Px, cy: Py, r: 8,
+    fill: COL.yellow, stroke: "#0b1118", "stroke-width": 2
+  });
+  gHnd.appendChild(phHandle);
+
+  // Update bottom readouts
+  var sinV = Math.sin(thetaRad);
+  var cosV = Math.cos(thetaRad);
+  var tanV = Math.tan(thetaRad);
+  document.getElementById("v-sin").textContent = "= " + fmtNum(sinV, 3);
+  document.getElementById("v-cos").textContent = "= " + fmtNum(cosV, 3);
+  document.getElementById("v-tan").textContent = "= " + fmtNum(tanV, 3);
+}
+
+// Slider wiring
+var thetaSlider = document.getElementById("thetaSlider");
+var thetaVal = document.getElementById("thetaVal");
+
+function syncLabels() {
+  thetaVal.textContent = fmtNum(display.theta, 0) + "°";
+}
+thetaSlider.addEventListener("input", function() {
+  params.theta = parseFloat(thetaSlider.value);
+  kickSpring();
+});
+
+// Spring loop
+var rafId = null;
+function kickSpring() { if (rafId) return; rafId = requestAnimationFrame(tick); }
+function tick() {
+  display.theta += (params.theta - display.theta) * SPRING_FACTOR;
+  if (Math.abs(params.theta - display.theta) < SPRING_EPS) display.theta = params.theta;
+  render();
+  syncLabels();
+  if (display.theta !== params.theta) {
+    rafId = requestAnimationFrame(tick);
+  } else {
+    rafId = null;
+  }
+}
+
+// Drag the point P directly
+var dragging = false;
+function svgPointFromEvent(evt) {
+  var rect = stage.getBoundingClientRect();
+  var clientX = evt.clientX != null ? evt.clientX : (evt.touches && evt.touches[0].clientX);
+  var clientY = evt.clientY != null ? evt.clientY : (evt.touches && evt.touches[0].clientY);
+  var x = (clientX - rect.left) * (SVG_W / rect.width);
+  var y = (clientY - rect.top)  * (SVG_H / rect.height);
+  return { x: x, y: y };
+}
+stage.addEventListener("pointerdown", function(evt) {
+  if (evt.target.id === "handle-p") {
+    dragging = true;
+    stage.setPointerCapture(evt.pointerId);
+  }
+});
+stage.addEventListener("pointermove", function(evt) {
+  if (!dragging) return;
+  var pt = svgPointFromEvent(evt);
+  var dx = pt.x - CX, dy = -(pt.y - CY);
+  var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  ang = Math.max(0, Math.min(90, ang));
+  params.theta = ang;
+  display.theta = ang;
+  thetaSlider.value = ang;
+  render();
+  syncLabels();
+});
+stage.addEventListener("pointerup",   function() { dragging = false; });
+stage.addEventListener("pointercancel",function() { dragging = false; });
+
+render();
+syncLabels();
+
+// Height reporter
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>

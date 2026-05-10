@@ -65,27 +65,17 @@ A right-angled triangle $ABC$ has the right angle at $B$. $AB = 6.2$ cm and $\an
 
 (c) Find $\angle BCA$.
 
-**Part (a): find $BC$.** From vertex $A$ (where the $38°$ is), the side $AB = 6.2$ is **adjacent** to the angle, and $BC$ is **opposite** the angle. opp + adj pair → tan:
+<iframe src="/widgets/trig-step-explorer.html?preset=triangle-abc-comprehensive" style="width:100%;max-width:696px;height:580px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
-$$\tan 38° = \dfrac{BC}{6.2}$$
-
-$$BC = 6.2 \tan 38° \approx 6.2 \times 0.7813 \approx 4.84\;\text{cm}$$
+**Part (a): find $BC$.** From vertex $A$ (where the $38°$ is), the side $AB = 6.2$ is adjacent to the angle, and $BC$ is opposite. opp + adj → tan, so $BC = 6.2\tan 38° \approx 4.84$ cm.
 
 **[M1 for $\tan 38° = BC/6.2$; A1 for $BC = 4.84$]**
 
-**Part (b): find $AC$.** From vertex $A$, $AB$ is adjacent and $AC$ is the hypotenuse. adj + hyp pair → cos:
-
-$$\cos 38° = \dfrac{6.2}{AC}$$
-
-The unknown is in the denominator, so flip:
-
-$$AC = \dfrac{6.2}{\cos 38°} \approx \dfrac{6.2}{0.7880} \approx 7.87\;\text{cm}$$
+**Part (b): find $AC$.** $AB$ is adjacent, $AC$ is hypotenuse. adj + hyp → cos. The unknown is in the denominator, so flip: $AC = 6.2/\cos 38° \approx 7.87$ cm.
 
 **[M1 for $\cos 38° = 6.2/AC$; A1 for $AC = 7.87$]**
 
-**Part (c): find $\angle BCA$.** The two acute angles in a right triangle sum to $90°$:
-
-$$\angle BCA = 90° - 38° = 52°$$
+**Part (c): find $\angle BCA$.** The two acute angles sum to $90°$, so $\angle BCA = 90° - 38° = 52°$.
 
 **[B1 for $\angle BCA = 52°$]**
 

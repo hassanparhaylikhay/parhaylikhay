@@ -250,6 +250,22 @@ function buildRightTriangle(p) {
       "{\\color{" + COL.pink + "}" + p.hypLabel + "}", null, "center", 13);
   }
 
+  // Optional vertex labels at the three corners (e.g. A, B, C for a named triangle)
+  if (p.vertices) {
+    if (p.vertices.left) {
+      svgKaTeXLabel(gl, Pl.x - 14, Pl.y + 12,
+        "{\\color{" + COL.grey + "}" + p.vertices.left + "}", null, "center", 13);
+    }
+    if (p.vertices.right) {
+      svgKaTeXLabel(gl, Pr.x + 14, Pr.y + 12,
+        "{\\color{" + COL.grey + "}" + p.vertices.right + "}", null, "center", 13);
+    }
+    if (p.vertices.top) {
+      svgKaTeXLabel(gl, Pt.x + 14, Pt.y - 12,
+        "{\\color{" + COL.grey + "}" + p.vertices.top + "}", null, "center", 13);
+    }
+  }
+
   return { adj: adjLine, opp: oppLine, hyp: hypLine, arc: arcEl };
 }
 
@@ -437,6 +453,179 @@ var PRESETS = {
         eqs: [
           { kind: "tag", text: "STEP 4: ADJACENT" },
           { kind: "hint", text: "the side NEXT to θ that isn't the hypotenuse. The two non-hypotenuse legs are the adj and opp." }
+        ] }
+    ]
+  },
+
+  // === Worked-example presets ===
+  "compute-ratios-5-12-13": {
+    title: "Computing sin, cos, tan from sides",
+    builder: buildRightTriangle,
+    params: { theta: 22.62, oppLabel: "5", adjLabel: "12", hypLabel: "13", thetaLabel: "\\theta" },
+    footer: "(5, 12, 13) is a Pythagorean triple — sides come out clean",
+    steps: [
+      { show: ["adj","opp","hyp","arc"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE TRIANGLE" },
+          { kind: "hint", text: "right triangle with sides 5, 12, 13. The angle θ sits between the 12 and the 13." }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["opp","hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: SIN θ = OPP / HYP" },
+          { kind: "main", tex: "\\sin\\theta = \\dfrac{{\\color{#ff822c}5}}{{\\color{#ff4670}13}}" },
+          { kind: "ans", tex: "{\\color{#ff822c}\\sin\\theta = \\tfrac{5}{13}}" }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["adj","hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: COS θ = ADJ / HYP" },
+          { kind: "main", tex: "\\cos\\theta = \\dfrac{{\\color{#00abfa}12}}{{\\color{#ff4670}13}}" },
+          { kind: "ans", tex: "{\\color{#00abfa}\\cos\\theta = \\tfrac{12}{13}}" }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["opp","adj"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: TAN θ = OPP / ADJ" },
+          { kind: "main", tex: "\\tan\\theta = \\dfrac{{\\color{#ff822c}5}}{{\\color{#00abfa}12}}" },
+          { kind: "ans", tex: "{\\color{#fff067}\\tan\\theta = \\tfrac{5}{12}}" }
+        ] }
+    ]
+  },
+  "tree-shadow-58": {
+    title: "Tree shadow — find the height",
+    builder: buildRightTriangle,
+    params: { theta: 58, oppLabel: "h = ?", adjLabel: "9\\,\\text{m}", hypLabel: null },
+    footer: "Tree is the opposite, shadow is the adjacent, line of sight is the hypotenuse",
+    steps: [
+      { show: ["adj","opp","hyp","arc"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE SCENE" },
+          { kind: "hint", text: "9 m shadow, 58° angle of elevation. Find the tree height h." }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["opp","adj"], fade: ["hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: PICK THE RATIO" },
+          { kind: "hint", text: "we have adj (9) and want opp (h). adj + opp pair → tan." },
+          { kind: "main", tex: "\\tan 58° = \\dfrac{h}{9}" }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["opp"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: SOLVE" },
+          { kind: "main", tex: "h = 9 \\tan 58° \\approx 9 \\times 1.6003" },
+          { kind: "ans", tex: "{\\color{#ff822c}h \\approx 14.4\\;\\text{m}}" }
+        ] }
+    ]
+  },
+  "ramp-cos-12": {
+    title: "Ramp length — find the hypotenuse",
+    builder: buildRightTriangle,
+    params: { theta: 12, oppLabel: null, adjLabel: "4.5\\,\\text{m}", hypLabel: "x = ?" },
+    footer: "Unknown in the denominator — divide instead of multiply",
+    steps: [
+      { show: ["adj","opp","hyp","arc"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE SCENE" },
+          { kind: "hint", text: "ramp rising at 12° over 4.5 m horizontal. Find the ramp length x." }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["adj","hyp"], fade: ["opp"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: PICK THE RATIO" },
+          { kind: "hint", text: "have adj, want hyp → cos." },
+          { kind: "main", tex: "\\cos 12° = \\dfrac{4.5}{x}" }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["hyp"], fade: ["opp"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: REARRANGE AND SOLVE" },
+          { kind: "hint", text: "the unknown is in the denominator. Multiply both sides by x, then divide by cos 12°." },
+          { kind: "main", tex: "x = \\dfrac{4.5}{\\cos 12°} \\approx \\dfrac{4.5}{0.9781}" },
+          { kind: "ans", tex: "{\\color{#ff4670}x \\approx 4.60\\;\\text{m}}" }
+        ] }
+    ]
+  },
+  "ramp-angle-find": {
+    title: "Wheelchair ramp — find the angle",
+    builder: buildRightTriangle,
+    params: { theta: 6.84, oppLabel: "0.6\\,\\text{m}", adjLabel: "5\\,\\text{m}", hypLabel: null, thetaLabel: "\\theta = ?" },
+    footer: "opp + adj → tan, then inverse tan to recover the angle",
+    steps: [
+      { show: ["adj","opp","hyp","arc"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE SCENE" },
+          { kind: "hint", text: "ramp rises 0.6 m over 5 m horizontal. Find the angle of the ramp with the ground." }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["opp","adj"], fade: ["hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: PICK THE RATIO" },
+          { kind: "hint", text: "two legs given → tan." },
+          { kind: "main", tex: "\\tan\\theta = \\dfrac{0.6}{5} = 0.12" }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["arc"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: INVERSE TAN" },
+          { kind: "main", tex: "\\theta = \\tan^{-1}(0.12) \\approx 6.84°" },
+          { kind: "ans", tex: "{\\color{#fff067}\\theta \\approx 6.8°}" }
+        ] }
+    ]
+  },
+  "find-angle-5-12-13": {
+    title: "Angle in a 5-12-13 triangle",
+    builder: buildRightTriangle,
+    params: { theta: 22.62, oppLabel: "5", adjLabel: "12", hypLabel: "13", thetaLabel: "\\alpha = ?" },
+    footer: "All three sides given — pick any pair and use inverse trig",
+    steps: [
+      { show: ["adj","opp","hyp","arc"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE TRIANGLE" },
+          { kind: "hint", text: "all three sides given: 5, 12, 13. Find the angle α opposite the side 5." }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["opp","hyp"], fade: ["adj"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: PICK A RATIO" },
+          { kind: "hint", text: "use opp = 5 and hyp = 13 → sin." },
+          { kind: "main", tex: "\\sin\\alpha = \\dfrac{5}{13} \\approx 0.3846" }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["arc"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: INVERSE SIN" },
+          { kind: "main", tex: "\\alpha = \\sin^{-1}(0.3846) \\approx 22.62°" },
+          { kind: "ans", tex: "{\\color{#fff067}\\alpha \\approx 22.6°}" }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["arc"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: THE OTHER ACUTE ANGLE" },
+          { kind: "hint", text: "the two acute angles sum to 90°." },
+          { kind: "ans", tex: "{\\color{#fff067}\\beta = 90° - 22.6° \\approx 67.4°}" }
+        ] }
+    ]
+  },
+  "triangle-abc-comprehensive": {
+    title: "Triangle ABC — multi-part",
+    builder: buildRightTriangle,
+    params: { theta: 38, oppLabel: "BC", adjLabel: "AB = 6.2", hypLabel: "AC", thetaLabel: "38°", vertices: { left: "A", right: "B", top: "C" } },
+    footer: "Right angle at B; angle BAC = 38°",
+    steps: [
+      { show: ["adj","opp","hyp","arc"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE TRIANGLE" },
+          { kind: "hint", text: "right-angled at B. AB = 6.2 cm and angle BAC = 38°. Find BC, AC, and angle BCA." }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["opp","adj"], fade: ["hyp"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: PART (A) — FIND BC" },
+          { kind: "hint", text: "from A, AB is adjacent and BC is opposite. Use tan." },
+          { kind: "main", tex: "\\tan 38° = \\dfrac{BC}{6.2}" },
+          { kind: "ans", tex: "{\\color{#ff822c}BC = 6.2\\tan 38° \\approx 4.84\\;\\text{cm}}" }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["adj","hyp"], fade: ["opp"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: PART (B) — FIND AC" },
+          { kind: "hint", text: "AB is adjacent, AC is hypotenuse. Use cos." },
+          { kind: "main", tex: "\\cos 38° = \\dfrac{6.2}{AC}" },
+          { kind: "ans", tex: "{\\color{#ff4670}AC = \\dfrac{6.2}{\\cos 38°} \\approx 7.87\\;\\text{cm}}" }
+        ] },
+      { show: ["adj","opp","hyp","arc"], highlight: ["arc"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: PART (C) — ANGLE BCA" },
+          { kind: "hint", text: "the two acute angles sum to 90°." },
+          { kind: "ans", tex: "{\\color{#fff067}\\angle BCA = 90° - 38° = 52°}" }
         ] }
     ]
   }
