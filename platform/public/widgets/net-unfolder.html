@@ -450,30 +450,33 @@ function buildTrapezoidalPrism() {
   allHinges.push(hSlant2);
   hSlant2.appendChild(rectFace(L, s, c, "sL", "bottom"));
 
-  // Caps: trapezium clipped from a b×h bounding box. Vertex coords in pct of bbox:
-  //   bottom-left:  (0, 100)
-  //   bottom-right: (100, 100)
-  //   top-right:    ((b-(b-a)/2)/b * 100, 0)
-  //   top-left:     (((b-a)/2)/b * 100, 0)
-  var topRightPct = ((b - (b - a) / 2) / b * 100).toFixed(2);
-  var topLeftPct  = (((b - a) / 2) / b * 100).toFixed(2);
-  var trapClip = "0% 100%, 100% 100%, " + topRightPct + "% 0%, " + topLeftPct + "% 0%";
+  // Caps: trapezium clipped from an h×b bounding box (width = perpendicular
+  // height of the trapezium, height = the b-side). The b-side runs along ONE
+  // of the bbox's vertical edges; that edge is the hinge edge so when the cap
+  // folds up around the y-axis, the b-side stays vertical and aligns with the
+  // bottom rectangle's left/right short edge.
+  //
+  // Vertex coords in pct of the h×b bbox (origin top-left, y-down):
+  //   left cap (hinge on RIGHT edge):
+  //     (100%, 0%)            top-right (top end of b-side)
+  //     (100%, 100%)           bottom-right (bottom end of b-side)
+  //     (0%, (b+a)/(2b)*100%)  bottom-left of a-side
+  //     (0%, (b-a)/(2b)*100%)  top-left of a-side
+  //   right cap (hinge on LEFT edge): mirror of the above.
+  var aSideTopPct = ((b - a) / (2 * b) * 100).toFixed(2);
+  var aSideBotPct = ((b + a) / (2 * b) * 100).toFixed(2);
 
-  // LEFT cap: hinged at the bottom rect's LEFT short edge (x=-L/2, y=bottomCY).
-  // The cap face has size b × h. hingeAttach="right" puts the face's RIGHT edge
-  // on the hinge — but we want the cap's BOTTOM edge (the b-side) on the hinge.
-  // To rotate the cap properly when folded, the hinge is rotated 90° about Y AND
-  // we also need the cap to be oriented so its long axis aligns with the bottom
-  // rect. We accomplish this by hinging on the cap's right edge AND rotating the
-  // face's local coordinate system 90° via an extra wrapper.
-  // Simpler approach: keep the cap oriented vertically, but treat the hinge
-  // origin as where the b-side connects.
+  var leftCapClip  = "100% 0%, 100% 100%, 0% " + aSideBotPct + "%, 0% " + aSideTopPct + "%";
+  var rightCapClip = "0% 0%, 0% 100%, 100% " + aSideBotPct + "%, 100% " + aSideTopPct + "%";
+
+  // LEFT cap: hinges at bottom rect's LEFT short edge.
   var hCapL = trackHinge(hinge(scene, 90, "Y", -L/2, bottomCY, 0));
-  var capL = triFace(b, h, c, "\\tfrac{1}{2}(a+b)h", trapClip, "right");
+  var capL = triFace(h, b, c, "\\tfrac{1}{2}(a+b)h", leftCapClip, "right");
   hCapL.appendChild(capL);
 
+  // RIGHT cap: hinges at bottom rect's RIGHT short edge.
   var hCapR = trackHinge(hinge(scene, -90, "Y", L/2, bottomCY, 0));
-  var capR = triFace(b, h, c, "\\tfrac{1}{2}(a+b)h", trapClip, "left");
+  var capR = triFace(h, b, c, "\\tfrac{1}{2}(a+b)h", rightCapClip, "left");
   hCapR.appendChild(capR);
 }
 
