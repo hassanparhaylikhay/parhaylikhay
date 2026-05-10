@@ -53,21 +53,12 @@
   button.ctl {
     background:#0b1118; border:1px solid #141e2a; color:#7a7875;
     font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
-    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:110px;
+    padding:8px 18px; border-radius:6px; cursor:pointer; min-width:120px;
     transition: color 0.12s, border-color 0.12s;
   }
   button.ctl:hover { color:#fff067; border-color:#fff067; }
-  .progress {
-    width:100%; height:3px; background:#141e2a; border-radius:2px;
-    margin:10px auto 0; overflow:hidden;
-  }
-  .progress-fill {
-    height:100%; background: linear-gradient(90deg, #fff067, #00abfa);
-    width:0%;
-    transition: width 0.3s linear;
-  }
 
-  .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+  .footer { margin-top:10px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
 </head>
 <body>
@@ -81,12 +72,10 @@
       <div class="scene" id="scene"></div>
     </div>
   </div>
-  <div class="progress"><div class="progress-fill" id="progress-fill"></div></div>
   <div class="controls">
-    <button class="ctl" id="toggle">→ fold into cone</button>
-    <button class="ctl" id="autoplay">⏸ pause loop</button>
+    <button class="ctl" id="toggle">fold →</button>
   </div>
-  <p class="footer">N triangular slats sweep from the unrolled sector into the curved surface of the cone. Apex stays put; the base circle hinges into place.</p>
+  <p class="footer">click to fold the flat sector into a cone — and click again to unroll it back</p>
 </div>
 
 <script>
@@ -204,9 +193,7 @@ allParts.push(baseCircle);
 
 // ===== Toggle controller =====
 var toggleBtn = document.getElementById("toggle");
-var autoplayBtn = document.getElementById("autoplay");
 var stateEl = document.getElementById("state-text");
-var progressFill = document.getElementById("progress-fill");
 
 // Start in the flat (sector) state, since the lesson is showing how a
 // SECTOR ROLLS INTO a cone — opposite of the net-unfolder.
@@ -217,63 +204,17 @@ function setView(flat) {
   isFlat = flat;
   if (flat) {
     stage.classList.add("is-flat");
-    toggleBtn.textContent = "→ fold into cone";
+    toggleBtn.textContent = "fold →";
     stateEl.textContent = "FLAT SECTOR";
     allParts.forEach(function(el) { el.style.transform = el.dataset.flat3d; });
   } else {
     stage.classList.remove("is-flat");
-    toggleBtn.textContent = "← unroll back to sector";
+    toggleBtn.textContent = "← unfold";
     stateEl.textContent = "FOLDED CONE";
     allParts.forEach(function(el) { el.style.transform = el.dataset.folded3d; });
   }
 }
-toggleBtn.onclick = function() { setView(!isFlat); resetAutoplayTimer(); };
-
-// ===== Autoplay loop =====
-var FOLD_DURATION_MS = 1600;
-var HOLD_MS = 1400;
-var autoplayActive = true;
-var autoplayTimer = null;
-var phaseStart = 0;
-var progressRaf = null;
-
-function scheduleNext() {
-  if (autoplayTimer) clearTimeout(autoplayTimer);
-  if (!autoplayActive) return;
-  phaseStart = performance.now();
-  // Tick the progress bar during the fold animation
-  cancelAnimationFrame(progressRaf);
-  function tickProgress() {
-    var elapsed = performance.now() - phaseStart;
-    var frac = Math.min(1, elapsed / FOLD_DURATION_MS);
-    progressFill.style.width = (frac * 100) + "%";
-    if (frac < 1 && autoplayActive) progressRaf = requestAnimationFrame(tickProgress);
-  }
-  progressRaf = requestAnimationFrame(tickProgress);
-  autoplayTimer = setTimeout(function() {
-    setView(!isFlat);
-    autoplayTimer = setTimeout(scheduleNext, HOLD_MS);
-  }, FOLD_DURATION_MS + HOLD_MS);
-}
-
-function resetAutoplayTimer() {
-  if (autoplayTimer) clearTimeout(autoplayTimer);
-  cancelAnimationFrame(progressRaf);
-  if (autoplayActive) scheduleNext();
-}
-
-autoplayBtn.onclick = function() {
-  autoplayActive = !autoplayActive;
-  autoplayBtn.textContent = autoplayActive ? "⏸ pause loop" : "▶ resume loop";
-  if (autoplayActive) scheduleNext();
-  else { if (autoplayTimer) clearTimeout(autoplayTimer); cancelAnimationFrame(progressRaf); }
-};
-
-// First flip happens after the initial hold so the viewer sees the flat sector first
-setTimeout(function() {
-  setView(false);  // fold into cone
-  setTimeout(scheduleNext, FOLD_DURATION_MS + HOLD_MS);
-}, 800);
+toggleBtn.onclick = function() { setView(!isFlat); };
 
 // ===== Height reporter =====
 var lastReported = 0, reportScheduled = false;
