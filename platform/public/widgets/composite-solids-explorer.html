@@ -43,11 +43,10 @@
     padding:3px 6px; font-family:'Geist Mono',monospace; font-size:11px; outline:none; cursor:pointer;
   }
 
-  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
-  .body-fill   { fill: rgba(0,171,250,0.16); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
-  .body-fill-2 { fill: rgba(255,130,44,0.16); stroke:#ff822c; stroke-width:2; stroke-linejoin:round; }
-  .ellipse-mid-dashed { fill: none; stroke:#3a4a5a; stroke-width:1.2; stroke-dasharray:4 3; }
-  .ellipse-back-dashed { fill: none; stroke:#fff067; stroke-width:1; stroke-dasharray:3 3; }
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
+  .lbl-host { font-size:11.5px; line-height:1; font-family:'Geist Mono',monospace; font-weight:600; }
+  .lbl-host .katex { font-size:1em; }
+  .ellipse-hidden-join { fill: none; stroke:#7a7875; stroke-width:1.2; stroke-dasharray:4 3; }
 
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
@@ -65,7 +64,7 @@
       <select id="kindSel">
         <option value="hemi-cone" selected>hemisphere + cone</option>
         <option value="cyl-cone">cylinder + cone</option>
-        <option value="hemi-cyl">hemisphere + cylinder</option>
+        <option value="hemi-cyl">cylinder + dome</option>
       </select>
     </div>
     <div class="row">
@@ -74,13 +73,35 @@
       <span class="val" id="rVal">3</span>
     </div>
     <div class="row">
-      <span class="name" id="hLabel">h₂</span>
+      <span class="name" id="hLabel">h</span>
       <input type="range" id="hSlider" min="2" max="14" value="6" step="0.1"/>
       <span class="val" id="hVal">6</span>
     </div>
   </div>
 
   <svg id="svg" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <radialGradient id="domeGrad" cx="38%" cy="32%" r="65%">
+        <stop offset="0%" stop-color="rgba(255,70,112,0.55)"/>
+        <stop offset="55%" stop-color="rgba(255,70,112,0.20)"/>
+        <stop offset="100%" stop-color="rgba(255,70,112,0.05)"/>
+      </radialGradient>
+      <radialGradient id="hemiBottomGrad" cx="38%" cy="68%" r="65%">
+        <stop offset="0%" stop-color="rgba(0,171,250,0.45)"/>
+        <stop offset="60%" stop-color="rgba(0,171,250,0.18)"/>
+        <stop offset="100%" stop-color="rgba(0,171,250,0.05)"/>
+      </radialGradient>
+      <linearGradient id="cylGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="rgba(0,171,250,0.10)"/>
+        <stop offset="50%" stop-color="rgba(0,171,250,0.28)"/>
+        <stop offset="100%" stop-color="rgba(0,171,250,0.10)"/>
+      </linearGradient>
+      <linearGradient id="coneGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="rgba(255,130,44,0.10)"/>
+        <stop offset="50%" stop-color="rgba(255,130,44,0.28)"/>
+        <stop offset="100%" stop-color="rgba(255,130,44,0.10)"/>
+      </linearGradient>
+    </defs>
     <g id="g-shape"></g>
   </svg>
 
@@ -121,6 +142,27 @@ function tryRender(target, tex) {
   }
 }
 
+// KaTeX label inside SVG via foreignObject
+function svgKaTeXLabel(parent, x, y, tex, color, alignment) {
+  var fo = svgEl("foreignObject", {
+    x: (x - 60), y: (y - 12), width: 120, height: 24,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  div.style.color = color || "#f0eeea";
+  div.style.width = "100%";
+  div.style.height = "100%";
+  div.style.display = "flex";
+  div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
 var state = {
   params:  { r: 3, h: 6 },
   display: { r: 3, h: 6 },
@@ -144,208 +186,208 @@ var fV = document.getElementById("fV");
 var fSA = document.getElementById("fSA");
 var gShape = document.getElementById("g-shape");
 
-function ellipsePath(cx, cy, rx, ry) {
-  return "M" + (cx - rx) + " " + cy +
-         " A" + rx + " " + ry + " 0 0 0 " + (cx + rx) + " " + cy +
-         " A" + rx + " " + ry + " 0 0 0 " + (cx - rx) + " " + cy + " Z";
-}
-
 function render() {
   var r = state.display.r, hSec = state.display.h;
   var rPx = r * SCALE_R;
   var ryPx = rPx * ELLIPSE_RATIO;
   var hPx = hSec * SCALE_H;
-
   var cx = SVG_W / 2;
 
   gShape.innerHTML = "";
 
   if (state.kind === "hemi-cone") {
-    // Layout: cone on top of hemisphere. Hemisphere flat side faces up, cone sits on it.
-    var hemiCenterY = SVG_H - 60;       // centre of equatorial cut
+    // ===== Hemisphere (bottom, dome facing down) + Cone (top) =====
+    // Hemisphere dome curves DOWN; flat side faces UP, cone sits on it.
+    var hemiCenterY = SVG_H - 70;
+    var hemiBottomY = hemiCenterY + rPx;
     var coneApexY   = hemiCenterY - hPx;
     var leftX  = cx - rPx;
     var rightX = cx + rPx;
 
-    // Hemisphere body (lower half): blue
+    // Hemisphere bottom (dome) — half disk pointing down with blue gradient
     var hemiD =
       "M" + leftX + " " + hemiCenterY +
       " A" + rPx + " " + rPx + " 0 0 0 " + rightX + " " + hemiCenterY +
       " Z";
-    gShape.appendChild(svgEl("path", { "class": "body-fill", d: hemiD }));
+    gShape.appendChild(svgEl("path", {
+      d: hemiD, fill: "url(#hemiBottomGrad)",
+      stroke: "#00abfa", "stroke-width": 2, "stroke-linejoin": "round"
+    }));
 
-    // Cone body (above hemi-centre): orange
+    // Cone (orange gradient, foreshortened ellipse base)
     var coneD =
       "M" + cx + " " + coneApexY +
       " L" + leftX + " " + hemiCenterY +
       " A" + rPx + " " + ryPx + " 0 0 0 " + rightX + " " + hemiCenterY +
       " Z";
-    gShape.appendChild(svgEl("path", { "class": "body-fill-2", d: coneD }));
+    gShape.appendChild(svgEl("path", {
+      d: coneD, fill: "url(#coneGrad)",
+      stroke: "#ff822c", "stroke-width": 2, "stroke-linejoin": "round"
+    }));
 
-    // Join ellipse (dashed, hidden)
+    // Hidden join: dashed grey ellipse at the equator
     gShape.appendChild(svgEl("ellipse", {
-      "class": "ellipse-mid-dashed",
+      "class": "ellipse-hidden-join",
       cx: cx, cy: hemiCenterY, rx: rPx, ry: ryPx
     }));
 
-    // Labels
-    var rLbl = svgEl("text", {
-      x: cx + rPx/2, y: hemiCenterY + 18, "text-anchor": "middle",
-      "font-family": "Geist Mono,monospace", "font-size": 11.5, "font-weight": 700, fill: "#0fee89"
-    });
-    rLbl.textContent = "r = " + fmtNum(r);
-    gShape.appendChild(rLbl);
-    var hLbl = svgEl("text", {
-      x: cx + 8, y: (hemiCenterY + coneApexY)/2 + 4, "text-anchor": "start",
-      "font-family": "Geist Mono,monospace", "font-size": 11.5, "font-weight": 700, fill: "#fff067"
-    });
-    hLbl.textContent = "h = " + fmtNum(hSec);
-    gShape.appendChild(hLbl);
+    // Slant line (pink) from cone apex to right edge of base
+    gShape.appendChild(svgEl("line", {
+      x1: cx, y1: coneApexY, x2: rightX, y2: hemiCenterY,
+      stroke: "#ff4670", "stroke-width": 1.5
+    }));
+
+    // Labels (KaTeX)
+    svgKaTeXLabel(gShape, cx + rPx/2 + 4, hemiCenterY + ryPx + 16,
+      "r = " + fmtNum(r), "#fff067", "left");
+    svgKaTeXLabel(gShape, cx - 18, (hemiCenterY + coneApexY)/2,
+      "h = " + fmtNum(hSec), "#ff822c", "right");
 
     // Volume + SA
     var l = Math.sqrt(r*r + hSec*hSec);
-    var Vcoef = (2/3) * r*r*r + (1/3) * r*r * hSec;
-    var SAcoef = 2 * r*r + r * l; // 2πr² + πrl
+    var Vcoef  = (2/3) * r*r*r + (1/3) * r*r * hSec;
+    var SAcoef = 2 * r*r + r * l;
     tryRender(fV,
-      "{\\color{#00abfa}V} = \\tfrac{2}{3}\\pi r^{3} + \\tfrac{1}{3}\\pi r^{2} h = " +
-      "{\\color{#00abfa}" + texCoefPi(Vcoef) + "}\\;\\text{cm}^{3}");
+      "{\\color{#00abfa}V_{\\text{hemi}}} + {\\color{#ff822c}V_{\\text{cone}}} = \\tfrac{2}{3}\\pi r^{3} + \\tfrac{1}{3}\\pi r^{2} h = " +
+      "{\\color{#fff067}" + texCoefPi(Vcoef) + "}\\;\\text{cm}^{3}");
     tryRender(fSA,
-      "{\\color{#0fee89}\\text{SA}} = 2\\pi r^{2} + \\pi r l = " +
-      "{\\color{#0fee89}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}\\;\\;(l=" + fmtNum(l) + ")");
+      "\\text{SA} = {\\color{#00abfa}2\\pi r^{2}} + {\\color{#ff822c}\\pi r l} = " +
+      "{\\color{#fff067}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}\\;\\;(l=" + fmtNum(l) + ")");
   } else if (state.kind === "cyl-cone") {
-    // Layout: cylinder on the bottom, cone on top, same r. h slider controls cylinder height; cone height fixed at 1.5r for visual clarity.
+    // ===== Cylinder (bottom) + Cone (top) =====
     var hCone = 1.5 * r;
     var hConePx = hCone * SCALE_H;
     var hCylPx  = hPx;
     var cylBottomY = SVG_H - 50;
     var cylTopY    = cylBottomY - hCylPx;
     var coneApexY  = cylTopY - hConePx;
+    var leftX = cx - rPx, rightX = cx + rPx;
 
-    var leftX = cx - rPx;
-    var rightX = cx + rPx;
-
-    // Cylinder body
+    // Cylinder body (blue gradient)
     var cylD =
       "M" + leftX + " " + cylTopY +
       " L" + leftX + " " + cylBottomY +
       " A" + rPx + " " + ryPx + " 0 0 0 " + rightX + " " + cylBottomY +
       " L" + rightX + " " + cylTopY +
       " A" + rPx + " " + ryPx + " 0 0 1 " + leftX + " " + cylTopY + " Z";
-    gShape.appendChild(svgEl("path", { "class": "body-fill", d: cylD }));
+    gShape.appendChild(svgEl("path", {
+      d: cylD, fill: "url(#cylGrad)",
+      stroke: "#00abfa", "stroke-width": 2, "stroke-linejoin": "round"
+    }));
 
-    // Cone on top
+    // Cone on top (orange gradient)
     var coneD =
       "M" + cx + " " + coneApexY +
       " L" + leftX + " " + cylTopY +
       " A" + rPx + " " + ryPx + " 0 0 0 " + rightX + " " + cylTopY +
       " Z";
-    gShape.appendChild(svgEl("path", { "class": "body-fill-2", d: coneD }));
+    gShape.appendChild(svgEl("path", {
+      d: coneD, fill: "url(#coneGrad)",
+      stroke: "#ff822c", "stroke-width": 2, "stroke-linejoin": "round"
+    }));
 
-    // Bottom ellipse (visible base of cylinder)
+    // Bottom ellipse (visible cylinder base) — yellow accent
     gShape.appendChild(svgEl("ellipse", {
       cx: cx, cy: cylBottomY, rx: rPx, ry: ryPx,
-      fill: "rgba(15,238,137,0.18)", stroke: "#0fee89", "stroke-width": 1.5
+      fill: "rgba(255,240,103,0.18)", stroke: "#fff067", "stroke-width": 1.6
     }));
-    // Join ellipse cyl-cone (dashed, hidden)
+    // Hidden join (dashed)
     gShape.appendChild(svgEl("ellipse", {
-      "class": "ellipse-mid-dashed",
+      "class": "ellipse-hidden-join",
       cx: cx, cy: cylTopY, rx: rPx, ry: ryPx
     }));
 
-    // Labels
-    var rLbl = svgEl("text", {
-      x: cx + rPx + 6, y: cylBottomY + 4, "text-anchor": "start",
-      "font-family": "Geist Mono,monospace", "font-size": 11.5, "font-weight": 700, fill: "#0fee89"
-    });
-    rLbl.textContent = "r = " + fmtNum(r);
-    gShape.appendChild(rLbl);
-    var hCylLbl = svgEl("text", {
-      x: cx + 8, y: (cylTopY + cylBottomY)/2 + 4, "text-anchor": "start",
-      "font-family": "Geist Mono,monospace", "font-size": 11.5, "font-weight": 700, fill: "#fff067"
-    });
-    hCylLbl.textContent = "h_cyl = " + fmtNum(hSec);
-    gShape.appendChild(hCylLbl);
-    var hConeLbl = svgEl("text", {
-      x: cx + 8, y: (cylTopY + coneApexY)/2 + 4, "text-anchor": "start",
-      "font-family": "Geist Mono,monospace", "font-size": 11.5, "font-weight": 700, fill: "#ff822c"
-    });
-    hConeLbl.textContent = "h_cone = " + fmtNum(hCone);
-    gShape.appendChild(hConeLbl);
+    // Slant line on cone (pink)
+    gShape.appendChild(svgEl("line", {
+      x1: cx, y1: coneApexY, x2: rightX, y2: cylTopY,
+      stroke: "#ff4670", "stroke-width": 1.5
+    }));
+
+    // Labels (KaTeX)
+    svgKaTeXLabel(gShape, cx + rPx + 18, cylBottomY,
+      "r = " + fmtNum(r), "#fff067", "left");
+    svgKaTeXLabel(gShape, cx - 18, (cylTopY + cylBottomY)/2,
+      "h_{\\text{cyl}} = " + fmtNum(hSec), "#00abfa", "right");
+    svgKaTeXLabel(gShape, cx - 18, (cylTopY + coneApexY)/2,
+      "h_{\\text{cone}} = " + fmtNum(hCone), "#ff822c", "right");
 
     // Computations
     var l = Math.sqrt(r*r + hCone*hCone);
     var Vcoef = r*r*hSec + (1/3)*r*r*hCone;
-    var SAcoef = 2*r*hSec + r*l + r*r;  // 2πrh (cyl curved) + πrl (cone curved) + πr² (cyl bottom)
+    var SAcoef = 2*r*hSec + r*l + r*r;  // cyl curved + cone curved + cyl bottom
     tryRender(fV,
-      "{\\color{#00abfa}V} = \\pi r^{2} h_{\\text{cyl}} + \\tfrac{1}{3}\\pi r^{2} h_{\\text{cone}} = " +
-      "{\\color{#00abfa}" + texCoefPi(Vcoef) + "}\\;\\text{cm}^{3}");
+      "{\\color{#00abfa}V_{\\text{cyl}}} + {\\color{#ff822c}V_{\\text{cone}}} = \\pi r^{2} h_{\\text{cyl}} + \\tfrac{1}{3}\\pi r^{2} h_{\\text{cone}} = " +
+      "{\\color{#fff067}" + texCoefPi(Vcoef) + "}\\;\\text{cm}^{3}");
     tryRender(fSA,
-      "{\\color{#0fee89}\\text{SA}} = 2\\pi r h_{\\text{cyl}} + \\pi r l + \\pi r^{2} = " +
-      "{\\color{#0fee89}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}");
-  } else { // hemi-cyl
-    // Layout: cylinder on bottom, hemisphere dome on top, same r. h controls cylinder height.
+      "\\text{SA} = {\\color{#00abfa}2\\pi r h_{\\text{cyl}}} + {\\color{#ff822c}\\pi r l} + {\\color{#fff067}\\pi r^{2}} = " +
+      "{\\color{#ff4670}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}");
+  } else {
+    // ===== Cylinder (bottom) + Hemisphere DOME (top) =====
+    // Dome is a true 3D-looking dome via radial gradient + foreshortened equator hint.
     var cylBottomY = SVG_H - 50;
     var cylTopY    = cylBottomY - hPx;
-    var domeRadius = rPx;            // dome reaches up by r
-    var domeTopY   = cylTopY - domeRadius;
+    var domeTopY   = cylTopY - rPx;
     var leftX = cx - rPx, rightX = cx + rPx;
 
-    // Cylinder body
+    // Cylinder body (blue gradient)
     var cylD =
       "M" + leftX + " " + cylTopY +
       " L" + leftX + " " + cylBottomY +
       " A" + rPx + " " + ryPx + " 0 0 0 " + rightX + " " + cylBottomY +
       " L" + rightX + " " + cylTopY +
       " A" + rPx + " " + ryPx + " 0 0 1 " + leftX + " " + cylTopY + " Z";
-    gShape.appendChild(svgEl("path", { "class": "body-fill", d: cylD }));
+    gShape.appendChild(svgEl("path", {
+      d: cylD, fill: "url(#cylGrad)",
+      stroke: "#00abfa", "stroke-width": 2, "stroke-linejoin": "round"
+    }));
 
-    // Hemisphere dome (upper half-circle of radius rPx around (cx, cylTopY))
+    // Dome: half-circle path with pink radial gradient — front half above the equator
+    // The dome is a hemisphere oriented with curved side UP; the cut face is the bottom (glued to cylinder top).
     var domeD =
       "M" + leftX + " " + cylTopY +
       " A" + rPx + " " + rPx + " 0 0 1 " + rightX + " " + cylTopY;
     gShape.appendChild(svgEl("path", {
       d: domeD + " Z",
-      fill: "rgba(255,130,44,0.16)", stroke: "#ff822c", "stroke-width": 2, "stroke-linejoin": "round"
+      fill: "url(#domeGrad)",
+      stroke: "#ff4670", "stroke-width": 2, "stroke-linejoin": "round"
+    }));
+    // Equator suggestion: a thin dashed ellipse at the dome's "back" so it reads as 3D
+    gShape.appendChild(svgEl("ellipse", {
+      cx: cx, cy: cylTopY, rx: rPx, ry: ryPx * 0.5,
+      fill: "none", stroke: "#ff4670", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0.5
     }));
 
-    // Bottom ellipse (visible base)
+    // Bottom ellipse (visible cylinder base) — yellow
     gShape.appendChild(svgEl("ellipse", {
       cx: cx, cy: cylBottomY, rx: rPx, ry: ryPx,
-      fill: "rgba(15,238,137,0.18)", stroke: "#0fee89", "stroke-width": 1.5
+      fill: "rgba(255,240,103,0.18)", stroke: "#fff067", "stroke-width": 1.6
     }));
-    // Join ellipse (dashed, hidden)
+    // Hidden join (dashed)
     gShape.appendChild(svgEl("ellipse", {
-      "class": "ellipse-mid-dashed",
+      "class": "ellipse-hidden-join",
       cx: cx, cy: cylTopY, rx: rPx, ry: ryPx
     }));
 
     // Labels
-    var rLbl = svgEl("text", {
-      x: cx + rPx + 6, y: cylBottomY + 4, "text-anchor": "start",
-      "font-family": "Geist Mono,monospace", "font-size": 11.5, "font-weight": 700, fill: "#0fee89"
-    });
-    rLbl.textContent = "r = " + fmtNum(r);
-    gShape.appendChild(rLbl);
-    var hCylLbl = svgEl("text", {
-      x: cx + 8, y: (cylTopY + cylBottomY)/2 + 4, "text-anchor": "start",
-      "font-family": "Geist Mono,monospace", "font-size": 11.5, "font-weight": 700, fill: "#fff067"
-    });
-    hCylLbl.textContent = "h_cyl = " + fmtNum(hSec);
-    gShape.appendChild(hCylLbl);
+    svgKaTeXLabel(gShape, cx + rPx + 18, cylBottomY,
+      "r = " + fmtNum(r), "#fff067", "left");
+    svgKaTeXLabel(gShape, cx - 18, (cylTopY + cylBottomY)/2,
+      "h_{\\text{cyl}} = " + fmtNum(hSec), "#00abfa", "right");
+    svgKaTeXLabel(gShape, cx + rPx + 14, (cylTopY + domeTopY)/2 + 4,
+      "r", "#ff4670", "left");
 
     // Computations
     var Vcoef = r*r*hSec + (2/3)*r*r*r;
-    var SAcoef = 2*r*hSec + 2*r*r + r*r;  // 2πrh (cyl curved) + 2πr² (dome) + πr² (bottom)
+    var SAcoef = 2*r*hSec + 2*r*r + r*r;  // cyl curved + dome curved + cyl bottom
     tryRender(fV,
-      "{\\color{#00abfa}V} = \\pi r^{2} h_{\\text{cyl}} + \\tfrac{2}{3}\\pi r^{3} = " +
-      "{\\color{#00abfa}" + texCoefPi(Vcoef) + "}\\;\\text{cm}^{3}");
+      "{\\color{#00abfa}V_{\\text{cyl}}} + {\\color{#ff4670}V_{\\text{dome}}} = \\pi r^{2} h_{\\text{cyl}} + \\tfrac{2}{3}\\pi r^{3} = " +
+      "{\\color{#fff067}" + texCoefPi(Vcoef) + "}\\;\\text{cm}^{3}");
     tryRender(fSA,
-      "{\\color{#0fee89}\\text{SA}} = 2\\pi r h_{\\text{cyl}} + 2\\pi r^{2} + \\pi r^{2} = " +
-      "{\\color{#0fee89}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}");
+      "\\text{SA} = {\\color{#00abfa}2\\pi r h_{\\text{cyl}}} + {\\color{#ff4670}2\\pi r^{2}} + {\\color{#fff067}\\pi r^{2}} = " +
+      "{\\color{#ff822c}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}");
   }
 }
 
-// Slider labels: change h-label and bounds based on solid kind
 function updateLabelsForKind() {
   var hLab = document.getElementById("hLabel");
   if (state.kind === "hemi-cone") hLab.textContent = "h_cone";

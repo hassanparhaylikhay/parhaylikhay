@@ -56,12 +56,12 @@
   /* Each face translates to ±half its perpendicular dimension. The
      perpendicular distance is set inline from JS because sliders change
      the cuboid extents. */
-  .face.front  { background: rgba(0,171,250,0.12); }
-  .face.back   { background: rgba(0,171,250,0.04); }
-  .face.right  { background: rgba(255,240,103,0.08); border-color:#fff067; }
-  .face.left   { background: rgba(255,240,103,0.04); border-color:#fff067; }
-  .face.top    { background: rgba(15,238,137,0.10); border-color:#0fee89; }
-  .face.bottom { background: rgba(15,238,137,0.04); border-color:#0fee89; }
+  .face.front  { background: rgba(0,171,250,0.18); }
+  .face.back   { background: rgba(0,171,250,0.05); }
+  .face.right  { background: rgba(255,130,44,0.16); border-color:#ff822c; }
+  .face.left   { background: rgba(255,130,44,0.05); border-color:#ff822c; }
+  .face.top    { background: rgba(255,70,112,0.16); border-color:#ff4670; }
+  .face.bottom { background: rgba(255,70,112,0.05); border-color:#ff4670; }
 
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
@@ -172,11 +172,13 @@ function render() {
   var V  = l * w * h;
   var SA = 2 * (l*w + l*h + w*h);
   tryRender(fV,
-    "{\\color{#0fee89}V} = l \\times w \\times h = " +
-    fmtNum(l) + " \\times " + fmtNum(w) + " \\times " + fmtNum(h) +
-    " = {\\color{#0fee89}" + fmtNum(V) + "}\\;\\text{cm}^{3}");
+    "{\\color{#00abfa}V} = {\\color{#00abfa}l} \\times {\\color{#ff822c}w} \\times {\\color{#ff4670}h} = " +
+    "{\\color{#00abfa}" + fmtNum(l) + "} \\times " +
+    "{\\color{#ff822c}" + fmtNum(w) + "} \\times " +
+    "{\\color{#ff4670}" + fmtNum(h) + "} = " +
+    "{\\color{#fff067}" + fmtNum(V) + "}\\;\\text{cm}^{3}");
   tryRender(fSA,
-    "{\\color{#fff067}\\text{SA}} = 2(lw + lh + wh) = " +
+    "\\text{SA} = 2({\\color{#00abfa}l}{\\color{#ff822c}w} + {\\color{#00abfa}l}{\\color{#ff4670}h} + {\\color{#ff822c}w}{\\color{#ff4670}h}) = " +
     "{\\color{#fff067}" + fmtNum(SA) + "}\\;\\text{cm}^{2}");
 }
 

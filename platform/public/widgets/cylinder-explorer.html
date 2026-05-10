@@ -43,14 +43,14 @@
     padding:3px 6px; font-family:'Geist Mono',monospace; font-size:11px; outline:none; cursor:pointer;
   }
 
-  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
-  .body-curved  { fill: rgba(0,171,250,0.18); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
-  .top-ellipse  { fill: rgba(15,238,137,0.22); stroke:#0fee89; stroke-width:2; }
-  .bottom-ellipse { fill: rgba(15,238,137,0.10); stroke:#0fee89; stroke-width:1.5; stroke-dasharray:4 3; }
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
+  .body-curved  { fill: url(#cylBodyGrad); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
+  .top-ellipse  { fill: rgba(255,70,112,0.22); stroke:#ff4670; stroke-width:2; }
+  .bottom-ellipse { fill: rgba(255,70,112,0.10); stroke:#ff4670; stroke-width:1.5; stroke-dasharray:4 3; }
   .axis-line    { stroke:#fff067; stroke-width:1.5; stroke-dasharray:3 3; }
-  .lbl { font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600; }
-  .lbl-r { fill:#0fee89; }
-  .lbl-h { fill:#fff067; }
+  .radius-line  { stroke:#ff4670; stroke-width:2; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
 
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
@@ -84,6 +84,13 @@
   </div>
 
   <svg id="svg" viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="cylBodyGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="rgba(0,171,250,0.10)"/>
+        <stop offset="50%" stop-color="rgba(0,171,250,0.32)"/>
+        <stop offset="100%" stop-color="rgba(0,171,250,0.10)"/>
+      </linearGradient>
+    </defs>
     <g id="g-cyl"></g>
   </svg>
 
@@ -123,6 +130,23 @@ function tryRender(target, tex) {
   } else {
     setTimeout(function() { tryRender(target, tex); }, 50);
   }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment) {
+  var fo = svgEl("foreignObject", {
+    x: (x - 60), y: (y - 12), width: 120, height: 24,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  div.style.color = color || "#f0eeea";
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
 }
 
 var state = {
@@ -183,32 +207,20 @@ function render() {
     "class": "top-ellipse", cx: cx, cy: topY, rx: rPx, ry: ryPx
   }));
 
-  // Vertical axis (height) — from top centre down to bottom centre
+  // Vertical axis (height) — yellow dashed
   gCyl.appendChild(svgEl("line", {
     "class": "axis-line",
     x1: cx, y1: topY, x2: cx, y2: botY
   }));
-  // Radius line on top ellipse (from centre to right edge of top ellipse, mid-line)
+  // Radius line on top ellipse (pink solid)
   gCyl.appendChild(svgEl("line", {
-    "class": "axis-line",
-    x1: cx, y1: topY, x2: cx + rPx, y2: topY,
-    "stroke-dasharray": "0"
+    "class": "radius-line",
+    x1: cx, y1: topY, x2: cx + rPx, y2: topY
   }));
 
-  // Labels
-  var rLbl = svgEl("text", {
-    "class": "lbl lbl-r",
-    x: cx + rPx/2, y: topY - 6, "text-anchor": "middle"
-  });
-  rLbl.textContent = "r = " + fmtNum(r);
-  gCyl.appendChild(rLbl);
-
-  var hLbl = svgEl("text", {
-    "class": "lbl lbl-h",
-    x: cx + 8, y: (topY + botY) / 2 + 4, "text-anchor": "start"
-  });
-  hLbl.textContent = "h = " + fmtNum(h);
-  gCyl.appendChild(hLbl);
+  // KaTeX labels (foreignObject)
+  svgKaTeXLabel(gCyl, cx + rPx/2, topY - 14, "r = " + fmtNum(r), "#ff4670", "center");
+  svgKaTeXLabel(gCyl, cx + rPx + 26, (topY + botY)/2, "h = " + fmtNum(h), "#fff067", "left");
 
   // Formulas
   var V_coef = r * r * h;          // πr²h coefficient of π
@@ -219,21 +231,21 @@ function render() {
       "{\\color{#00abfa}V} = \\pi r^{2} h = " +
       "{\\color{#00abfa}" + texCoefPi(V_coef) + "}\\;\\text{cm}^{3}");
     tryRender(fCSA,
-      "{\\color{#fff067}\\text{curved SA}} = 2\\pi r h = " +
-      "{\\color{#fff067}" + texCoefPi(CSA_coef) + "}\\;\\text{cm}^{2}");
+      "{\\color{#ff822c}\\text{curved SA}} = 2\\pi r h = " +
+      "{\\color{#ff822c}" + texCoefPi(CSA_coef) + "}\\;\\text{cm}^{2}");
     tryRender(fTSA,
-      "{\\color{#0fee89}\\text{total SA}} = 2\\pi r h + 2\\pi r^{2} = " +
-      "{\\color{#0fee89}" + texCoefPi(TSA_coef) + "}\\;\\text{cm}^{2}");
+      "{\\color{#fff067}\\text{total SA}} = 2\\pi r h + 2\\pi r^{2} = " +
+      "{\\color{#fff067}" + texCoefPi(TSA_coef) + "}\\;\\text{cm}^{2}");
   } else {
     tryRender(fV,
       "{\\color{#00abfa}V} = \\pi r^{2} h = " +
       "{\\color{#00abfa}" + fmtNum(V_coef * Math.PI) + "}\\;\\text{cm}^{3}");
     tryRender(fCSA,
-      "{\\color{#fff067}\\text{curved SA}} = 2\\pi r h = " +
-      "{\\color{#fff067}" + fmtNum(CSA_coef * Math.PI) + "}\\;\\text{cm}^{2}");
+      "{\\color{#ff822c}\\text{curved SA}} = 2\\pi r h = " +
+      "{\\color{#ff822c}" + fmtNum(CSA_coef * Math.PI) + "}\\;\\text{cm}^{2}");
     tryRender(fTSA,
-      "{\\color{#0fee89}\\text{total SA}} = 2\\pi r h + 2\\pi r^{2} = " +
-      "{\\color{#0fee89}" + fmtNum(TSA_coef * Math.PI) + "}\\;\\text{cm}^{2}");
+      "{\\color{#fff067}\\text{total SA}} = 2\\pi r h + 2\\pi r^{2} = " +
+      "{\\color{#fff067}" + fmtNum(TSA_coef * Math.PI) + "}\\;\\text{cm}^{2}");
   }
 }
 

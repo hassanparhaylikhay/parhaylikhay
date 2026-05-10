@@ -43,16 +43,15 @@
     padding:3px 6px; font-family:'Geist Mono',monospace; font-size:11px; outline:none; cursor:pointer;
   }
 
-  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
-  .body-fill   { fill: rgba(0,171,250,0.18); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
-  .base-front  { fill: rgba(15,238,137,0.18); stroke:#0fee89; stroke-width:2; }
-  .base-back   { fill: none; stroke:#0fee89; stroke-width:1.4; stroke-dasharray:3 3; }
-  .axis-line   { stroke:#fff067; stroke-width:1.5; stroke-dasharray:4 3; fill:none; }
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
+  .body-fill   { fill: url(#coneBodyGrad); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
+  .base-front  { fill: rgba(255,240,103,0.20); stroke:#fff067; stroke-width:2; }
+  .base-back   { fill: none; stroke:#fff067; stroke-width:1.4; stroke-dasharray:3 3; opacity:0.6; }
+  .axis-line   { stroke:#ff822c; stroke-width:1.5; stroke-dasharray:4 3; fill:none; }
+  .radius-base-line { stroke:#fff067; stroke-width:2; }
   .slant-line  { stroke:#ff4670; stroke-width:2; fill:none; }
-  .lbl { font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600; }
-  .lbl-r { fill:#0fee89; }
-  .lbl-h { fill:#fff067; }
-  .lbl-l { fill:#ff4670; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:11.5px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
 
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
@@ -86,6 +85,13 @@
   </div>
 
   <svg id="svg" viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="coneBodyGrad" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="rgba(0,171,250,0.10)"/>
+        <stop offset="50%" stop-color="rgba(0,171,250,0.32)"/>
+        <stop offset="100%" stop-color="rgba(0,171,250,0.10)"/>
+      </linearGradient>
+    </defs>
     <g id="g-cone"></g>
   </svg>
 
@@ -124,6 +130,23 @@ function tryRender(target, tex) {
   } else {
     setTimeout(function() { tryRender(target, tex); }, 50);
   }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment) {
+  var fo = svgEl("foreignObject", {
+    x: (x - 60), y: (y - 12), width: 120, height: 24,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  div.style.color = color || "#f0eeea";
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
 }
 
 var state = {
@@ -174,61 +197,40 @@ function render() {
     " Z";
   gCone.appendChild(svgEl("path", { "class": "body-fill", d: bodyD }));
 
-  // Base ellipse — back half dashed, full ellipse outlined for clarity
+  // Base ellipse — back half (yellow dashed)
   gCone.appendChild(svgEl("ellipse", {
     "class": "base-back",
     cx: cx, cy: baseY, rx: rPx, ry: ryPx
   }));
-  // The "front" half of the base is implicitly drawn as part of the body path's lower arc
-  // so we add an explicit ellipse on top for visual clarity (front-facing in green)
-  // Just draw an ellipse half — the bottom half — using path
+  // Front half of base (yellow solid)
   var frontHalfD =
     "M" + leftX + " " + baseY +
     " A" + rPx + " " + ryPx + " 0 0 0 " + rightX + " " + baseY;
   gCone.appendChild(svgEl("path", {
     d: frontHalfD,
-    fill: "none", stroke: "#0fee89", "stroke-width": 2
+    fill: "none", stroke: "#fff067", "stroke-width": 2
   }));
 
-  // Vertical perpendicular height (yellow dashed line from apex to base centre)
+  // Vertical perpendicular height (orange dashed)
   gCone.appendChild(svgEl("line", {
     "class": "axis-line",
     x1: cx, y1: apexY, x2: cx, y2: baseY
   }));
-  // Horizontal radius line on the base ellipse (green solid)
+  // Horizontal radius line on the base (yellow solid)
   gCone.appendChild(svgEl("line", {
-    x1: cx, y1: baseY, x2: cx + rPx, y2: baseY,
-    stroke: "#0fee89", "stroke-width": 2
+    "class": "radius-base-line",
+    x1: cx, y1: baseY, x2: cx + rPx, y2: baseY
   }));
-  // Slant line (red, from apex to right-base)
+  // Slant line (pink solid)
   gCone.appendChild(svgEl("line", {
     "class": "slant-line",
     x1: cx, y1: apexY, x2: cx + rPx, y2: baseY
   }));
 
-  // Labels
-  var rLbl = svgEl("text", {
-    "class": "lbl lbl-r",
-    x: cx + rPx/2, y: baseY + 16, "text-anchor": "middle"
-  });
-  rLbl.textContent = "r = " + fmtNum(r);
-  gCone.appendChild(rLbl);
-
-  var hLbl = svgEl("text", {
-    "class": "lbl lbl-h",
-    x: cx - 6, y: (apexY + baseY)/2 + 4, "text-anchor": "end"
-  });
-  hLbl.textContent = "h = " + fmtNum(h);
-  gCone.appendChild(hLbl);
-
-  var lLbl = svgEl("text", {
-    "class": "lbl lbl-l",
-    x: (cx + cx + rPx) / 2 + 8,
-    y: (apexY + baseY) / 2 - 4,
-    "text-anchor": "start"
-  });
-  lLbl.textContent = "l = " + fmtNum(l);
-  gCone.appendChild(lLbl);
+  // KaTeX labels (foreignObject)
+  svgKaTeXLabel(gCone, cx + rPx/2, baseY + 22, "r = " + fmtNum(r), "#fff067", "center");
+  svgKaTeXLabel(gCone, cx - 22, (apexY + baseY)/2, "h = " + fmtNum(h), "#ff822c", "right");
+  svgKaTeXLabel(gCone, (cx + cx + rPx)/2 + 24, (apexY + baseY)/2 - 8, "l = " + fmtNum(l), "#ff4670", "left");
 
   // KaTeX formulas
   tryRender(fSlant,
@@ -243,15 +245,15 @@ function render() {
       "{\\color{#00abfa}V} = \\tfrac{1}{3}\\pi r^{2} h = " +
       "{\\color{#00abfa}" + texCoefPi(Vcoef) + "}\\;\\text{cm}^{3}");
     tryRender(fSA,
-      "{\\color{#0fee89}\\text{curved SA}} = \\pi r l = " +
-      "{\\color{#0fee89}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}");
+      "{\\color{#fff067}\\text{curved SA}} = \\pi r l = " +
+      "{\\color{#fff067}" + texCoefPi(SAcoef) + "}\\;\\text{cm}^{2}");
   } else {
     tryRender(fV,
       "{\\color{#00abfa}V} = \\tfrac{1}{3}\\pi r^{2} h = " +
       "{\\color{#00abfa}" + fmtNum(Vcoef * Math.PI) + "}\\;\\text{cm}^{3}");
     tryRender(fSA,
-      "{\\color{#0fee89}\\text{curved SA}} = \\pi r l = " +
-      "{\\color{#0fee89}" + fmtNum(SAcoef * Math.PI) + "}\\;\\text{cm}^{2}");
+      "{\\color{#fff067}\\text{curved SA}} = \\pi r l = " +
+      "{\\color{#fff067}" + fmtNum(SAcoef * Math.PI) + "}\\;\\text{cm}^{2}");
   }
 }
 

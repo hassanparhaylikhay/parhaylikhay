@@ -111,12 +111,6 @@ For a typical Cambridge mensuration question:
 
 The single most expensive slip across all of 5.4: **dropping the $\tfrac{1}{3}$ on a cone or pyramid volume**. That's the M mark vanishing for one missing fraction.
 
-## Practice
-
-<iframe src="/widgets/volume-trainer.html" style="width:100%;max-width:696px;height:600px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
-
-The trainer cycles through all the shapes from this unit. Pick a single shape ("cone", "cylinder", etc) for focused drill, or "mixed" to practice recognising which formula to pull out.
-
 ## Comprehensive worked example
 
 A solid is formed by joining a cone to a hemisphere. Both have radius $r = 6$ cm. The cone's slant height is $10$ cm.

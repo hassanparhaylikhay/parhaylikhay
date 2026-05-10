@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Triangular Prism Explorer</title>
+<title>Prism Explorer</title>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -34,19 +34,24 @@
   .row input[type=range]::-moz-range-thumb {
     width:14px; height:14px; border-radius:50%; background:#fff067; cursor:pointer; border:0;
   }
-  .row .val { min-width:28px; text-align:right; color:#f0eeea; font-weight:600; }
+  .row .val { min-width:32px; text-align:right; color:#f0eeea; font-weight:600; }
 
-  svg { display:block; width:100%; height:auto; user-select:none; overflow:hidden; }
-  .end-face   { fill: rgba(0,171,250,0.18); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
-  .end-face.back { fill: rgba(0,171,250,0.06); stroke-width:1.5; }
-  .side-face  { fill: rgba(255,240,103,0.10); stroke:#fff067; stroke-width:1.5; stroke-linejoin:round; }
-  .top-face   { fill: rgba(15,238,137,0.10); stroke:#0fee89; stroke-width:1.5; stroke-linejoin:round; }
-  .edge-line  { stroke:#3a4a5a; stroke-width:1; stroke-dasharray:3 3; fill:none; }
-  .perp-line  { stroke:#ff4670; stroke-width:1.5; stroke-dasharray:4 3; fill:none; }
-  .lbl { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; }
-  .lbl-b { fill:#00abfa; }
-  .lbl-h { fill:#ff4670; }
-  .lbl-L { fill:#fff067; }
+  .toggle-row { display:flex; align-items:center; gap:8px; }
+  .toggle-row .name { color:#fff067; font-weight:600; }
+  .toggle-row select {
+    background:#141e2a; color:#f0eeea; border:1px solid #3a4a5a; border-radius:4px;
+    padding:3px 6px; font-family:'Geist Mono',monospace; font-size:11px; outline:none; cursor:pointer;
+  }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
+  .cross-front { fill: rgba(0,171,250,0.22); stroke:#00abfa; stroke-width:2; stroke-linejoin:round; }
+  .cross-back  { fill: rgba(0,171,250,0.05); stroke:#3a4a5a; stroke-width:1; stroke-dasharray:3 3; }
+  .side-face   { fill: rgba(255,130,44,0.10); stroke:#ff822c; stroke-width:1.4; stroke-linejoin:round; }
+  .perp-line   { stroke:#ff4670; stroke-width:1.6; stroke-dasharray:4 3; fill:none; }
+  .perp-tick   { stroke:#ff4670; stroke-width:1.5; fill:none; }
+
+  .lbl-host { font-size:11.5px; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
 
   .footer { margin-top:8px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
 </style>
@@ -59,15 +64,15 @@
   </div>
 
   <div class="controls">
-    <div class="row">
-      <span class="name">b</span>
-      <input type="range" id="bSlider" min="3" max="14" value="8" step="0.5"/>
-      <span class="val" id="bVal">8</span>
-    </div>
-    <div class="row">
-      <span class="name">h</span>
-      <input type="range" id="hSlider" min="2" max="10" value="6" step="0.5"/>
-      <span class="val" id="hVal">6</span>
+    <div class="toggle-row">
+      <span class="name">cross-section</span>
+      <select id="kindSel">
+        <option value="triangle" selected>triangle</option>
+        <option value="trapezium">trapezium</option>
+        <option value="rectangle">rectangle</option>
+        <option value="lshape">L-shape</option>
+        <option value="parallelogram">parallelogram</option>
+      </select>
     </div>
     <div class="row">
       <span class="name">L</span>
@@ -76,19 +81,20 @@
     </div>
   </div>
 
+  <div class="controls" id="paramRow"></div>
+
   <svg id="svg" viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
     <g id="g-prism"></g>
   </svg>
 
-  <p class="footer">drag b, h, L · cross-section is yellow inside the blue triangle · V updates live</p>
+  <p class="footer">drag the parameters · the cross-section sweeps along L · V updates live</p>
 </div>
 
 <script>
 "use strict";
 
 var SVG_W = 480, SVG_H = 280;
-var SCALE = 14;
-var DX = 70, DY = -28; // offset from front-face to back-face (oblique projection)
+var SCALE = 12;
 
 function svgEl(tag, attrs) {
   var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
@@ -110,7 +116,159 @@ function tryRender(target, tex) {
   }
 }
 
+// Place a KaTeX label inside the SVG via <foreignObject>.
+// pos = {x, y} centre point in SVG coords; tex = LaTeX string; color = hex.
+function svgKaTeXLabel(parent, x, y, tex, color, alignment) {
+  var fo = svgEl("foreignObject", {
+    x: (x - 60), y: (y - 12), width: 120, height: 24,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  div.style.color = color || "#f0eeea";
+  div.style.textAlign = alignment || "center";
+  div.style.fontWeight = "600";
+  div.style.lineHeight = "1";
+  div.style.width = "100%";
+  div.style.height = "100%";
+  div.style.display = "flex";
+  div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+// === Cross-section definitions =========================================
+// Each returns:
+//   points: array of [x_cm, y_cm] for the polygon (y up), centred so origin
+//           is roughly the centroid; the renderer translates to fit.
+//   area: in cm²
+//   labels: array of {x, y, tex, color} for cross-section measurement labels (cm coords)
+//   perpHeights: array of {from: [x,y], to: [x,y]} for dashed perpendicular markers (cm)
+var SECTIONS = {
+  triangle: {
+    params: [
+      { key: "b", label: "b", min: 3, max: 14, step: 0.5, default: 8 },
+      { key: "h", label: "h", min: 2, max: 10, step: 0.5, default: 6 }
+    ],
+    build: function(p) {
+      var b = p.b, h = p.h;
+      // Isosceles triangle, base at y=0, apex at y=h
+      var pts = [[-b/2, 0], [b/2, 0], [0, h]];
+      return {
+        points: pts,
+        area: 0.5 * b * h,
+        labels: [
+          { x: 0,         y: -0.7,    tex: "b = " + fmtNum(b), color: "#00abfa", align: "center" },
+          { x: -b/4 - 0.4, y: h/2,    tex: "h = " + fmtNum(h), color: "#ff4670", align: "right" }
+        ],
+        perpLines: [{ from: [0, 0], to: [0, h] }],
+        formulaTex: "\\tfrac{1}{2} \\times b \\times h",
+        formulaSubTex: "\\tfrac{1}{2} \\times " + fmtNum(b) + " \\times " + fmtNum(h)
+      };
+    }
+  },
+  trapezium: {
+    params: [
+      { key: "a", label: "a", min: 4, max: 14, step: 0.5, default: 6 },
+      { key: "b", label: "b", min: 6, max: 18, step: 0.5, default: 10 },
+      { key: "h", label: "h", min: 2, max: 9, step: 0.5, default: 5 }
+    ],
+    build: function(p) {
+      var a = p.a, b = p.b, h = p.h;
+      // Symmetrical trapezium, parallel sides a (top) and b (bottom)
+      var pts = [[-b/2, 0], [b/2, 0], [a/2, h], [-a/2, h]];
+      return {
+        points: pts,
+        area: 0.5 * (a + b) * h,
+        labels: [
+          { x: 0,        y: -0.7, tex: "b = " + fmtNum(b), color: "#00abfa", align: "center" },
+          { x: 0,        y: h + 0.55, tex: "a = " + fmtNum(a), color: "#fff067", align: "center" },
+          { x: -b/4 - 0.5, y: h/2, tex: "h = " + fmtNum(h), color: "#ff4670", align: "right" }
+        ],
+        perpLines: [{ from: [-a/2, h], to: [-a/2, 0] }],
+        formulaTex: "\\tfrac{1}{2}(a + b) \\times h",
+        formulaSubTex: "\\tfrac{1}{2}(" + fmtNum(a) + " + " + fmtNum(b) + ") \\times " + fmtNum(h)
+      };
+    }
+  },
+  rectangle: {
+    params: [
+      { key: "w", label: "w", min: 2, max: 14, step: 0.5, default: 8 },
+      { key: "h", label: "h", min: 2, max: 10, step: 0.5, default: 5 }
+    ],
+    build: function(p) {
+      var w = p.w, h = p.h;
+      var pts = [[-w/2, 0], [w/2, 0], [w/2, h], [-w/2, h]];
+      return {
+        points: pts,
+        area: w * h,
+        labels: [
+          { x: 0,         y: -0.7, tex: "w = " + fmtNum(w), color: "#00abfa", align: "center" },
+          { x: -w/2 - 0.5, y: h/2,  tex: "h = " + fmtNum(h), color: "#ff4670", align: "right" }
+        ],
+        perpLines: [],
+        formulaTex: "w \\times h",
+        formulaSubTex: fmtNum(w) + " \\times " + fmtNum(h)
+      };
+    }
+  },
+  lshape: {
+    params: [
+      { key: "a", label: "a", min: 4, max: 12, step: 0.5, default: 8 },
+      { key: "b", label: "b", min: 2, max: 8,  step: 0.5, default: 4 }
+    ],
+    build: function(p) {
+      var a = p.a, b = p.b;
+      // L-shape: outer dimension a × a, with a (a-b) × (a-b) corner removed from top-right.
+      // Origin at centroid roughly; let's just build points then re-centre.
+      var raw = [[0,0],[a,0],[a,b],[b,b],[b,a],[0,a]];
+      var pts = raw.map(function(pt) { return [pt[0] - a/2, pt[1] - a/2]; });
+      var area = a*a - (a-b)*(a-b);
+      return {
+        points: pts,
+        area: area,
+        labels: [
+          { x: a/2 - a/2,         y: -a/2 - 0.7, tex: "a = " + fmtNum(a), color: "#00abfa", align: "center" },
+          { x: -a/2 - 0.55,        y: 0,           tex: "a = " + fmtNum(a), color: "#00abfa", align: "right" },
+          { x: (b + a)/2 - a/2,    y: b - a/2 + 0.5, tex: "b = " + fmtNum(b), color: "#fff067", align: "center" }
+        ],
+        perpLines: [],
+        formulaTex: "a^{2} - (a-b)^{2}",
+        formulaSubTex: fmtNum(a) + "^{2} - " + fmtNum(a-b) + "^{2}"
+      };
+    }
+  },
+  parallelogram: {
+    params: [
+      { key: "b", label: "b", min: 4, max: 14, step: 0.5, default: 8 },
+      { key: "h", label: "h", min: 2, max: 9,  step: 0.5, default: 5 },
+      { key: "shear", label: "skew", min: -3, max: 3, step: 0.2, default: 1.5 }
+    ],
+    build: function(p) {
+      var b = p.b, h = p.h, sh = p.shear;
+      // Bottom-left at (-b/2, 0), bottom-right (b/2, 0), top-right (b/2 + sh, h), top-left (-b/2 + sh, h)
+      var pts = [[-b/2, 0], [b/2, 0], [b/2 + sh, h], [-b/2 + sh, h]];
+      return {
+        points: pts,
+        area: b * h,
+        labels: [
+          { x: 0,           y: -0.7, tex: "b = " + fmtNum(b), color: "#00abfa", align: "center" },
+          { x: -b/2 + sh - 0.5,  y: h/2,  tex: "h = " + fmtNum(h), color: "#ff4670", align: "right" }
+        ],
+        perpLines: [{ from: [-b/2 + sh, h], to: [-b/2 + sh, 0] }],
+        formulaTex: "b \\times h",
+        formulaSubTex: fmtNum(b) + " \\times " + fmtNum(h)
+      };
+    }
+  }
+};
+
 var state = {
+  kind:    "triangle",
   params:  { b: 8, h: 6, L: 10 },
   display: { b: 8, h: 6, L: 10 }
 };
@@ -118,11 +276,12 @@ var SPRING_FACTOR = 0.22, SPRING_EPS = 0.005, rafScheduled = false;
 function startSpring() { if (!rafScheduled) { rafScheduled = true; requestAnimationFrame(springTick); } }
 function springTick() {
   var moving = false;
-  ["b","h","L"].forEach(function(k) {
-    var d = state.params[k] - state.display[k];
-    if (Math.abs(d) > SPRING_EPS) { state.display[k] += d * SPRING_FACTOR; moving = true; }
+  for (var k in state.params) {
+    if (!Object.prototype.hasOwnProperty.call(state.params, k)) continue;
+    var d = state.params[k] - (state.display[k] || 0);
+    if (Math.abs(d) > SPRING_EPS) { state.display[k] = (state.display[k] || 0) + d * SPRING_FACTOR; moving = true; }
     else state.display[k] = state.params[k];
-  });
+  }
   render();
   if (moving) requestAnimationFrame(springTick);
   else rafScheduled = false;
@@ -131,118 +290,164 @@ function springTick() {
 var fA = document.getElementById("fA");
 var fV = document.getElementById("fV");
 var gPrism = document.getElementById("g-prism");
+var paramRow = document.getElementById("paramRow");
+
+function buildParamRow() {
+  paramRow.innerHTML = "";
+  var section = SECTIONS[state.kind];
+  // Reset state.params for cross-section keys
+  section.params.forEach(function(p) {
+    if (state.params[p.key] === undefined || state.params[p.key] < p.min || state.params[p.key] > p.max) {
+      state.params[p.key] = p.default;
+      state.display[p.key] = p.default;
+    }
+    var row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML =
+      '<span class="name">' + p.label + '</span>' +
+      '<input type="range" min="' + p.min + '" max="' + p.max + '" value="' + state.params[p.key] + '" step="' + p.step + '"/>' +
+      '<span class="val">' + fmtNum(state.params[p.key]) + '</span>';
+    var slider = row.querySelector("input");
+    var val    = row.querySelector(".val");
+    slider.addEventListener("input", (function(key, valEl) {
+      return function() {
+        state.params[key] = parseFloat(slider.value);
+        valEl.textContent = fmtNum(state.params[key]);
+        startSpring();
+      };
+    })(p.key, val));
+    paramRow.appendChild(row);
+  });
+}
 
 function render() {
-  var b = state.display.b, h = state.display.h, L = state.display.L;
-  var bp = b * SCALE, hp = h * SCALE, Lp = L * SCALE;
+  var section = SECTIONS[state.kind];
+  // Build display-version of params for spring smoothing
+  var paramsDisplay = {};
+  section.params.forEach(function(p) {
+    paramsDisplay[p.key] = state.display[p.key] !== undefined ? state.display[p.key] : state.params[p.key];
+  });
+  var data = section.build(paramsDisplay);
+  var L = state.display.L;
 
-  // We project depth along oblique direction (DX, DY) per cm of L.
-  var dx = (Lp / Math.max(L, 1)) * (DX / 16); // scale offset with L
-  var dy = (Lp / Math.max(L, 1)) * (DY / 16);
-  // Simpler: depth offset is (Lp * dxFactor, Lp * dyFactor)
-  var depthFactor = 0.62;
-  var ox = Lp * 0.55, oy = -Lp * 0.30;
+  // Compute polygon's bounding box to centre on canvas
+  var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  data.points.forEach(function(pt) {
+    minX = Math.min(minX, pt[0]); maxX = Math.max(maxX, pt[0]);
+    minY = Math.min(minY, pt[1]); maxY = Math.max(maxY, pt[1]);
+  });
+  var widthCm = maxX - minX, heightCm = maxY - minY;
 
-  // Front triangle: place its base centred horizontally, sitting low
-  var cx = SVG_W / 2 - ox / 2;     // shift left so the projected back fits
-  var baseY = SVG_H - 50;          // sit base above bottom
-  // Triangle vertices (front face)
-  var Af = { x: cx - bp/2, y: baseY };
-  var Bf = { x: cx + bp/2, y: baseY };
-  var Cf = { x: cx,        y: baseY - hp };
-  // Back face vertices (offset by depth)
-  var Ab = { x: Af.x + ox, y: Af.y + oy };
-  var Bb = { x: Bf.x + ox, y: Bf.y + oy };
-  var Cb = { x: Cf.x + ox, y: Cf.y + oy };
+  // Oblique projection: depth offset (ox, oy) per cm of L
+  var depthCmFactor = 0.62;
+  var ox = L * depthCmFactor * 0.85 * SCALE;
+  var oy = -L * depthCmFactor * 0.55 * SCALE;
+
+  // Centre the assembly: the prism spans width (widthCm + ox/SCALE) and height (heightCm + |oy|/SCALE)
+  var pixelW = widthCm * SCALE + ox;
+  var pixelH = heightCm * SCALE + Math.abs(oy);
+  var cx0 = (SVG_W - pixelW) / 2 - minX * SCALE;
+  var cy0 = (SVG_H + pixelH) / 2 + minY * SCALE - Math.abs(oy);
+  // (cy0, cx0) maps cm origin to SVG. y-axis flipped.
+
+  function P(pt) { return [cx0 + pt[0] * SCALE, cy0 - pt[1] * SCALE]; }
+  function Pback(pt) { return [cx0 + pt[0] * SCALE + ox, cy0 - pt[1] * SCALE + oy]; }
 
   gPrism.innerHTML = "";
 
-  // 1. Back triangle (faded)
-  gPrism.appendChild(svgEl("path", {
-    "class": "end-face back",
-    d: "M" + Ab.x + " " + Ab.y + " L" + Bb.x + " " + Bb.y + " L" + Cb.x + " " + Cb.y + " Z"
-  }));
-  // 2. Top slanting face (Cf, Cb, Bb, Bf)
-  gPrism.appendChild(svgEl("path", {
-    "class": "side-face",
-    d: "M" + Cf.x + " " + Cf.y + " L" + Cb.x + " " + Cb.y +
-       " L" + Bb.x + " " + Bb.y + " L" + Bf.x + " " + Bf.y + " Z"
-  }));
-  // 3. Left slanting face (Af, Ab, Cb, Cf)
-  gPrism.appendChild(svgEl("path", {
-    "class": "side-face",
-    d: "M" + Af.x + " " + Af.y + " L" + Ab.x + " " + Ab.y +
-       " L" + Cb.x + " " + Cb.y + " L" + Cf.x + " " + Cf.y + " Z"
-  }));
-  // 4. Bottom face (the base rectangle, hidden — show as faint dashed edge)
-  gPrism.appendChild(svgEl("line", {
-    "class": "edge-line",
-    x1: Af.x, y1: Af.y, x2: Ab.x, y2: Ab.y
-  }));
-  gPrism.appendChild(svgEl("line", {
-    "class": "edge-line",
-    x1: Bf.x, y1: Bf.y, x2: Bb.x, y2: Bb.y
-  }));
-  // 5. Front triangle (cross-section, prominent)
-  gPrism.appendChild(svgEl("path", {
-    "class": "end-face",
-    d: "M" + Af.x + " " + Af.y + " L" + Bf.x + " " + Bf.y + " L" + Cf.x + " " + Cf.y + " Z"
-  }));
-  // 6. Perpendicular height marker on front face
-  var midF = { x: (Af.x + Bf.x) / 2, y: Af.y };
-  gPrism.appendChild(svgEl("line", {
-    "class": "perp-line",
-    x1: midF.x, y1: midF.y, x2: Cf.x, y2: Cf.y
-  }));
+  var pts = data.points;
+  var n = pts.length;
+  var frontPts = pts.map(P);
+  var backPts  = pts.map(Pback);
 
-  // Labels
-  // b label below the base of front triangle
-  var bLbl = svgEl("text", {
-    "class": "lbl lbl-b",
-    x: midF.x, y: Af.y + 16, "text-anchor": "middle"
-  });
-  bLbl.textContent = "b = " + fmtNum(b);
-  gPrism.appendChild(bLbl);
-  // h label to the left of the perpendicular
-  var hLbl = svgEl("text", {
-    "class": "lbl lbl-h",
-    x: midF.x - 6, y: midF.y - hp/2 + 4, "text-anchor": "end"
-  });
-  hLbl.textContent = "h = " + fmtNum(h);
-  gPrism.appendChild(hLbl);
-  // L label along the depth of the top-back edge (between Cf and Cb)
-  var LLbl = svgEl("text", {
-    "class": "lbl lbl-L",
-    x: (Cf.x + Cb.x) / 2 + 6, y: (Cf.y + Cb.y) / 2 - 4, "text-anchor": "start"
-  });
-  LLbl.textContent = "L = " + fmtNum(L);
-  gPrism.appendChild(LLbl);
+  // 1. Back polygon (faded)
+  var backD = "M";
+  backPts.forEach(function(pt, i) { backD += (i ? " L" : "") + pt[0].toFixed(2) + " " + pt[1].toFixed(2); });
+  backD += " Z";
+  gPrism.appendChild(svgEl("path", { "class": "cross-back", d: backD }));
 
-  // KaTeX formulas
-  var A = 0.5 * b * h;
-  var V = A * L;
+  // 2. Side faces (one rectangle per edge, only for the edges that face away from viewer + visible top/right edges)
+  // Render every side face with the same style; rendering order (back to front) is handled by relative depth.
+  // The simplest correct order: render "back-facing" sides first, then "front-facing".
+  // For oblique projection where back goes up-right (ox>0, oy<0), the sides with edges on the upper-right are MORE visible.
+  // We'll just render all sides in polygon order, then re-render the front polygon on top so the cross-section is prominent.
+  for (var i = 0; i < n; i++) {
+    var iNext = (i + 1) % n;
+    var f0 = frontPts[i], f1 = frontPts[iNext];
+    var b0 = backPts[i],  b1 = backPts[iNext];
+    var sideD = "M" + f0[0].toFixed(2) + " " + f0[1].toFixed(2) +
+                " L" + f1[0].toFixed(2) + " " + f1[1].toFixed(2) +
+                " L" + b1[0].toFixed(2) + " " + b1[1].toFixed(2) +
+                " L" + b0[0].toFixed(2) + " " + b0[1].toFixed(2) + " Z";
+    gPrism.appendChild(svgEl("path", { "class": "side-face", d: sideD }));
+  }
+
+  // 3. Front polygon (the cross-section, prominent)
+  var frontD = "M";
+  frontPts.forEach(function(pt, i) { frontD += (i ? " L" : "") + pt[0].toFixed(2) + " " + pt[1].toFixed(2); });
+  frontD += " Z";
+  gPrism.appendChild(svgEl("path", { "class": "cross-front", d: frontD }));
+
+  // 4. Perpendicular height markers
+  data.perpLines.forEach(function(pl) {
+    var p1 = P(pl.from), p2 = P(pl.to);
+    gPrism.appendChild(svgEl("line", {
+      "class": "perp-line",
+      x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1]
+    }));
+    // small perpendicular tick at the foot
+    var dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+    var len = Math.sqrt(dx*dx + dy*dy);
+    if (len > 0) {
+      var nx = -dy/len * 6, ny = dx/len * 6;
+      gPrism.appendChild(svgEl("line", {
+        "class": "perp-tick",
+        x1: p2[0] - nx, y1: p2[1] - ny, x2: p2[0] + nx, y2: p2[1] + ny
+      }));
+    }
+  });
+
+  // 5. KaTeX labels for cross-section measurements
+  data.labels.forEach(function(lbl) {
+    var pos = P([lbl.x, lbl.y]);
+    svgKaTeXLabel(gPrism, pos[0], pos[1], lbl.tex, lbl.color, lbl.align);
+  });
+
+  // 6. L label along the depth at the topmost-back edge
+  // Pick the polygon vertex with the smallest y-cm (topmost) for the L label anchor.
+  var topIdx = 0;
+  for (var j = 1; j < n; j++) {
+    if (pts[j][1] > pts[topIdx][1]) topIdx = j;
+  }
+  var fTop = frontPts[topIdx], bTop = backPts[topIdx];
+  var midX = (fTop[0] + bTop[0]) / 2;
+  var midY = (fTop[1] + bTop[1]) / 2 - 6;
+  svgKaTeXLabel(gPrism, midX + 14, midY, "L = " + fmtNum(L), "#fff067", "left");
+
+  // === KaTeX formula bar ===
+  var V = data.area * L;
   tryRender(fA,
-    "{\\color{#00abfa}A_{\\text{cross}}} = \\tfrac{1}{2} \\times b \\times h = " +
-    "{\\color{#00abfa}" + fmtNum(A) + "}\\;\\text{cm}^{2}");
+    "{\\color{#00abfa}A_{\\text{cross}}} = " + data.formulaTex + " = " +
+    data.formulaSubTex + " = {\\color{#00abfa}" + fmtNum(data.area) + "}\\;\\text{cm}^{2}");
   tryRender(fV,
-    "{\\color{#0fee89}V} = A_{\\text{cross}} \\times L = " +
-    fmtNum(A) + " \\times " + fmtNum(L) +
-    " = {\\color{#0fee89}" + fmtNum(V) + "}\\;\\text{cm}^{3}");
+    "{\\color{#ff822c}V} = A_{\\text{cross}} \\times L = " +
+    fmtNum(data.area) + " \\times " + fmtNum(L) +
+    " = {\\color{#ff822c}" + fmtNum(V) + "}\\;\\text{cm}^{3}");
 }
 
-function bind(id, key, valEl) {
-  var slider = document.getElementById(id);
-  var val = document.getElementById(valEl);
-  slider.addEventListener("input", function() {
-    state.params[key] = parseFloat(slider.value);
-    val.textContent = fmtNum(state.params[key]);
-    startSpring();
-  });
-}
-bind("bSlider", "b", "bVal");
-bind("hSlider", "h", "hVal");
-bind("LSlider", "L", "LVal");
+document.getElementById("kindSel").addEventListener("change", function() {
+  state.kind = this.value;
+  buildParamRow();
+  startSpring();
+  render();
+});
+document.getElementById("LSlider").addEventListener("input", function() {
+  state.params.L = parseFloat(this.value);
+  document.getElementById("LVal").textContent = fmtNum(state.params.L);
+  startSpring();
+});
 
+buildParamRow();
 render();
 
 var lastReported = 0, reportScheduled = false;
