@@ -12,11 +12,9 @@
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
   body { padding:14px 16px 16px; }
   .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
-  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:14px; }
-  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
-  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
-  .hint { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; margin:0 0 8px; letter-spacing:0.3px; }
-  .hint .h-key { color:#fff067; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
 
   .mode-tabs { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
   .mode-tab {
@@ -75,11 +73,9 @@
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
-    <span class="step-title">FOUR TRANSFORMATIONS · ONE TRIANGLE</span>
-    <span class="meta" id="meta">drag the pink shape</span>
+    <span class="step-title">FOUR TRANSFORMATIONS</span>
+    <span class="meta" id="meta">drag on the canvas</span>
   </div>
-
-  <p class="hint" id="hint"></p>
 
   <div class="mode-tabs">
     <button class="mode-tab active" data-mode="translate">Translate</button>
@@ -106,7 +102,6 @@
     <div class="body" id="ms-body"></div>
   </div>
 
-  <p class="footer">drag on the canvas · presets snap to common values · everything springs smoothly</p>
 </div>
 
 <script>
@@ -772,13 +767,11 @@ function updateActivePresetButtons(){
 }
 
 function renderHint(){
-  var h = document.getElementById("hint");
-  var t;
-  if (mode === "translate") t = "<span class='h-key'>Drag the pink triangle</span> anywhere it lands. Snaps to half units.";
-  else if (mode === "reflect") t = "<span class='h-key'>Drag the two yellow dots</span> to set the mirror, or pick a preset.";
-  else if (mode === "rotate") t = "<span class='h-key'>Drag the yellow centre</span>, then <span class='h-key'>drag A' around it</span> to set the angle.";
-  else if (mode === "enlarge") t = "<span class='h-key'>Drag the yellow centre</span>, then <span class='h-key'>drag A' along the ray</span> to set the scale factor.";
-  h.innerHTML = t;
+  var m = document.getElementById("meta");
+  if (mode === "translate") m.textContent = "drag the pink triangle";
+  else if (mode === "reflect") m.textContent = "drag the yellow dots on the mirror";
+  else if (mode === "rotate") m.textContent = "drag the centre or A' around it";
+  else if (mode === "enlarge") m.textContent = "drag the centre or A' along the ray";
 }
 
 // ----- tab wiring -----

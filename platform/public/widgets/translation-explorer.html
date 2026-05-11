@@ -12,11 +12,9 @@
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
   body { padding:14px 16px 16px; }
   .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
-  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:14px; }
-  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
-  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
-  .hint { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; margin:0 0 8px; letter-spacing:0.3px; }
-  .hint .h-key { color:#fff067; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
 
   #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:default; }
   #stage.grabbing { cursor:grabbing; }
@@ -63,15 +61,9 @@
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
-    <span class="step-title">TRANSLATION · DRAG THE YELLOW TIP OR THE TRIANGLE</span>
-    <span class="meta" id="meta">every point shifts by the same column vector</span>
+    <span class="step-title">TRANSLATION</span>
+    <span class="meta">drag the pink triangle or the yellow tip</span>
   </div>
-
-  <p class="hint">
-    <span class="h-key">Drag the yellow arrow tip</span> from the origin to set the column vector.
-    Or <span class="h-key">drag the pink triangle</span> directly. The faint yellow guide arrows show
-    that every vertex shifts by the same amount.
-  </p>
 
   <svg id="stage" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
     <g id="g-grid"></g>
@@ -87,15 +79,9 @@
   <div class="vector-strip">
     <span class="tag">column vector</span>
     <span class="col" id="col-display"></span>
-    <span style="margin-left:auto; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px;">
-      <span style="color:#00abfa;">a</span> = right shift &nbsp;·&nbsp;
-      <span style="color:#ff822c;">b</span> = up shift
-    </span>
   </div>
 
   <div id="controls" class="controls"></div>
-
-  <p class="footer">drag anywhere · snaps to half units · animation springs smoothly</p>
 </div>
 
 <script>
