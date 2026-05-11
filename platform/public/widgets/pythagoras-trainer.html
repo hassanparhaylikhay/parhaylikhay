@@ -447,6 +447,7 @@ var TOPIC_ROUTES = {
 };
 
 var topic = "mixed";
+var hasUserInteracted = false;
 var queue = [];
 var stepIdx = 0;
 var rightCount = 0, wrongCount = 0;
@@ -556,7 +557,9 @@ function paintNumeric(card, q) {
   var btn = document.createElement("button"); btn.className = "btn-check"; btn.textContent = "check";
   row.appendChild(input); if (q.unit) row.appendChild(unit); row.appendChild(btn);
   card.appendChild(row);
-  setTimeout(function() { input.focus(); }, 0);
+  // Only auto-focus after the user has clicked into the trainer; otherwise
+  // the iframe's initial paint scrolls the parent page down to the trainer.
+  if (hasUserInteracted) setTimeout(function() { input.focus(); }, 0);
 
   function submit() {
     if (locked) return;
@@ -601,6 +604,7 @@ function makeNextBtn() {
   var b = document.createElement("button"); b.className = "btn primary";
   b.textContent = (stepIdx + 1 >= TOTAL) ? "see results" : "next →";
   b.addEventListener("click", function() {
+    hasUserInteracted = true;
     locked = false;
     stepIdx++;
     paint();
@@ -637,6 +641,7 @@ if (qsTopic && TOPIC_ROUTES[qsTopic]) topic = qsTopic;
 var topicEl = document.getElementById("topic");
 topicEl.value = topic;
 topicEl.addEventListener("change", function() {
+  hasUserInteracted = true;
   topic = topicEl.value;
   buildSession();
   paint();
