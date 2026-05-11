@@ -78,6 +78,7 @@ const LESSON_FOLDERS: Record<string, string> = {
   "05-05": "05-05-compound-shapes",
   "06-01": "06-01-pythagoras",
   "06-02": "06-02-right-angled-triangles",
+  "06-03": "06-03-non-right-triangles",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
@@ -240,6 +241,12 @@ const WIDGETS: Record<string, WidgetSpec> = {
   "06-02-p3":     { url: "/widgets/trig-trainer.html?topic=side",     height: 620 },
   "06-02-p4":     { url: "/widgets/trig-trainer.html?topic=angle",    height: 620 },
   "06-02-review": { url: "/widgets/trig-trainer.html?topic=mixed",    height: 620 },
+  "06-03-p1":     { url: "/widgets/trig-non-right-trainer.html?topic=rule",   height: 640 },
+  "06-03-p2":     { url: "/widgets/trig-non-right-trainer.html?topic=sine",   height: 640 },
+  "06-03-p3":     { url: "/widgets/trig-non-right-trainer.html?topic=sine",   height: 640 },
+  "06-03-p4":     { url: "/widgets/trig-non-right-trainer.html?topic=cosine", height: 640 },
+  "06-03-p5":     { url: "/widgets/trig-non-right-trainer.html?topic=area",   height: 640 },
+  "06-03-review": { url: "/widgets/trig-non-right-trainer.html?topic=mixed",  height: 640 },
 }
 
 async function readMarkdown(folder: string, file: string): Promise<Lesson | null> {

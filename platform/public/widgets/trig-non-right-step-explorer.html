@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Non-right Triangle Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:14px; flex-wrap:wrap; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
+  .layout { display:grid; grid-template-columns: 1fr; gap:18px; align-items:start; }
+  @media (min-width: 560px) { .layout { grid-template-columns: 340px 1fr; gap:22px; } }
+  .stage-outer { width:100%; max-width:360px; margin:0 auto; aspect-ratio: 340 / 300; position:relative; }
+  svg { display:block; width:100%; height:100%; user-select:none; overflow:visible; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:13px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; min-height:240px; }
+  .eq-group { display:flex; flex-direction:column; gap:5px; }
+  .eq-line { line-height:1.35; }
+  .eq-line[data-kind="tag"]    { font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; letter-spacing:0.5px; }
+  .eq-line[data-kind="hint"]   { font-style:italic; font-size:14.5px; color:#fff067; }
+  .eq-line[data-kind="main"]   { font-size:16px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]    { font-size:19px; color:#f0eeea; font-weight:700; }
+  .eq-line[data-kind="note"]   { font-size:12.5px; color:#7a7875; margin-top:4px; }
+  .eq-line .katex { font-size:1em; }
+  .controls { display:flex; gap:8px; align-items:center; margin-top:14px; padding-top:10px; border-top:1px solid #141e2a; }
+  .controls .left { display:flex; gap:8px; }
+  .controls .right { margin-left:auto; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:7px 16px; border-radius:6px; cursor:pointer;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.35; cursor:not-allowed; }
+  .footer { margin-top:10px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 10px currentColor); }
+    50%      { filter: drop-shadow(0 0 7px currentColor) drop-shadow(0 0 14px currentColor); }
+  }
+  .shape-part { transition: opacity 0.5s ease, fill 0.5s ease, stroke 0.5s ease, transform 0.4s ease; }
+  .shape-part.faded { opacity: 0.18; }
+  .shape-part.highlight { animation: pulse-glow 1.6s ease-in-out infinite; }
+  .shape-part.hidden { opacity: 0; pointer-events:none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">NON-RIGHT TRIANGLE · STEP EXPLORER</span>
+    <span class="meta" id="meta"></span>
+  </div>
+  <div class="layout">
+    <div class="stage-outer">
+      <svg id="stage" viewBox="0 0 340 300" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <g id="g-shape"></g>
+        <g id="g-labels"></g>
+      </svg>
+    </div>
+    <div class="equations" id="equations"></div>
+  </div>
+  <div class="controls">
+    <div class="left">
+      <button class="ctl" id="prev">← back</button>
+      <button class="ctl" id="next">next →</button>
+    </div>
+    <div class="right" id="counter">1 / 1</div>
+  </div>
+  <p class="footer" id="footer"></p>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", yellow:"#fff067", orange:"#ff822c",
+  green:"#0fee89", pink:"#ff4670", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n, dp) {
+  if (!isFinite(n)) return "—";
+  if (dp == null) dp = 2;
+  return parseFloat((+n.toFixed(dp)).toFixed(dp)).toString();
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment, fontSizePx) {
+  var W = 120, H = 26;
+  var fo = svgEl("foreignObject", {
+    x: (x - W/2), y: (y - H/2), width: W, height: H,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  if (fontSizePx) div.style.fontSize = fontSizePx + "px";
+  div.style.color = color || COL.off;
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+var SVG_W = 340, SVG_H = 300;
+function clearShape() {
+  document.getElementById("g-shape").innerHTML = "";
+  document.getElementById("g-labels").innerHTML = "";
+}
+
+// =====================================================================
+// BUILDER: a general triangle defined by 3 side lengths a, b, c.
+// Convention: side a opposite vertex A, etc. We place:
+//   B at bottom-left, C at bottom-right (so side a = BC is along the bottom)
+//   A at the apex (computed from the law of cosines)
+//
+// p: {
+//   a, b, c: side lengths (positive; must satisfy triangle inequality)
+//   sideLabels: { a, b, c }   (string for KaTeX, or null to hide)
+//   angleLabels: { A, B, C }  (string or null)
+//   showAngles: { A, B, C } booleans   (whether to draw the arc)
+//   vertexLabels: { A, B, C } strings  (vertex letters at corners)
+// }
+// =====================================================================
+function buildTriangle(p) {
+  clearShape();
+  var g = document.getElementById("g-shape");
+  var gl = document.getElementById("g-labels");
+
+  var a = p.a, b = p.b, c = p.c;
+  if (!a || !b || !c) { console.warn("buildTriangle: missing sides"); return {}; }
+
+  // Compute angles via law of cosines (radians)
+  var A = Math.acos((b*b + c*c - a*a) / (2*b*c));
+  var B = Math.acos((a*a + c*c - b*b) / (2*a*c));
+  var C = Math.acos((a*a + b*b - c*c) / (2*a*b));
+
+  // Compute positions in math coords with B at (0,0), C at (a,0)
+  var xA_math = (a*a + c*c - b*b) / (2*a);
+  var yA_math = Math.sqrt(Math.max(0, c*c - xA_math*xA_math));
+
+  // Find bounding box in math coords
+  var minX = Math.min(0, a, xA_math), maxX = Math.max(0, a, xA_math);
+  var minY = 0, maxY = yA_math;
+  var natW = maxX - minX, natH = maxY - minY;
+
+  // Pad and scale to SVG
+  var TOP_PAD = 36, BOT_PAD = 38, L_PAD = 50, R_PAD = 50;
+  var availW = SVG_W - L_PAD - R_PAD, availH = SVG_H - TOP_PAD - BOT_PAD;
+  var s = Math.min(availW / natW, availH / natH);
+
+  // SVG positions: math (x, y) -> SVG (left + (x - minX)*s, top + (maxY - y)*s) (y flip)
+  function toSvg(mx, my) {
+    return {
+      x: L_PAD + (mx - minX) * s + (availW - natW * s) / 2,
+      y: TOP_PAD + (maxY - my) * s
+    };
+  }
+  var Bp = toSvg(0, 0);
+  var Cp = toSvg(a, 0);
+  var Ap = toSvg(xA_math, yA_math);
+
+  // ===== Triangle interior =====
+  g.appendChild(svgEl("path", {
+    "class": "shape-part",
+    d: "M " + Ap.x + " " + Ap.y +
+       " L " + Bp.x + " " + Bp.y +
+       " L " + Cp.x + " " + Cp.y + " Z",
+    fill: "rgba(255,240,103,0.06)", stroke: "none"
+  }));
+
+  // ===== Sides (as separate lines for individual highlighting) =====
+  // sideA = BC (bottom, blue)
+  var sideA = svgEl("line", {
+    "class": "shape-part",
+    x1: Bp.x, y1: Bp.y, x2: Cp.x, y2: Cp.y,
+    stroke: COL.blue, "stroke-width": 4, "stroke-linecap": "round"
+  });
+  sideA.style.color = COL.blue;
+  g.appendChild(sideA);
+
+  // sideB = CA (right side, orange)
+  var sideB = svgEl("line", {
+    "class": "shape-part",
+    x1: Cp.x, y1: Cp.y, x2: Ap.x, y2: Ap.y,
+    stroke: COL.orange, "stroke-width": 4, "stroke-linecap": "round"
+  });
+  sideB.style.color = COL.orange;
+  g.appendChild(sideB);
+
+  // sideC = AB (left side, pink)
+  var sideC = svgEl("line", {
+    "class": "shape-part",
+    x1: Ap.x, y1: Ap.y, x2: Bp.x, y2: Bp.y,
+    stroke: COL.pink, "stroke-width": 4, "stroke-linecap": "round"
+  });
+  sideC.style.color = COL.pink;
+  g.appendChild(sideC);
+
+  // ===== Angle arcs (drawn as separate paths so they can be highlighted) =====
+  function drawAngleArc(vertex, fromVec, toVec, color, arcR) {
+    arcR = arcR || 20;
+    var len1 = Math.hypot(fromVec.x, fromVec.y) || 1;
+    var len2 = Math.hypot(toVec.x, toVec.y) || 1;
+    var u1 = { x: fromVec.x/len1, y: fromVec.y/len1 };
+    var u2 = { x: toVec.x/len2, y: toVec.y/len2 };
+    var start = { x: vertex.x + u1.x*arcR, y: vertex.y + u1.y*arcR };
+    var end   = { x: vertex.x + u2.x*arcR, y: vertex.y + u2.y*arcR };
+    // Determine sweep flag — we want the smaller arc (the inside angle)
+    // Cross product u1 x u2; in SVG y-down, positive cross = clockwise = sweep flag 1
+    var cross = u1.x * u2.y - u1.y * u2.x;
+    var sweep = (cross > 0) ? 1 : 0;
+    var path = svgEl("path", {
+      "class": "shape-part",
+      d: "M " + start.x + " " + start.y + " A " + arcR + " " + arcR + " 0 0 " + sweep + " " + end.x + " " + end.y,
+      fill: "none", stroke: color, "stroke-width": 2.2
+    });
+    path.style.color = color;
+    return { el: path, midX: vertex.x + ((u1.x+u2.x)/2) * (arcR + 14), midY: vertex.y + ((u1.y+u2.y)/2) * (arcR + 14) };
+  }
+
+  var arcs = {};
+  // At A: vectors from A to B and from A to C
+  if (p.showAngles && p.showAngles.A !== false) {
+    var arcA = drawAngleArc(Ap, { x: Bp.x - Ap.x, y: Bp.y - Ap.y }, { x: Cp.x - Ap.x, y: Cp.y - Ap.y }, COL.yellow, 22);
+    g.appendChild(arcA.el);
+    arcs.A = arcA.el;
+    if (p.angleLabels && p.angleLabels.A) {
+      svgKaTeXLabel(gl, arcA.midX, arcA.midY,
+        "{\\color{" + COL.yellow + "}" + p.angleLabels.A + "}", null, "center", 12);
+    }
+  }
+  if (p.showAngles && p.showAngles.B !== false) {
+    var arcB = drawAngleArc(Bp, { x: Cp.x - Bp.x, y: Cp.y - Bp.y }, { x: Ap.x - Bp.x, y: Ap.y - Bp.y }, COL.green, 22);
+    g.appendChild(arcB.el);
+    arcs.B = arcB.el;
+    if (p.angleLabels && p.angleLabels.B) {
+      svgKaTeXLabel(gl, arcB.midX, arcB.midY,
+        "{\\color{" + COL.green + "}" + p.angleLabels.B + "}", null, "center", 12);
+    }
+  }
+  if (p.showAngles && p.showAngles.C !== false) {
+    var arcC = drawAngleArc(Cp, { x: Ap.x - Cp.x, y: Ap.y - Cp.y }, { x: Bp.x - Cp.x, y: Bp.y - Cp.y }, COL.pink, 22);
+    g.appendChild(arcC.el);
+    arcs.C = arcC.el;
+    if (p.angleLabels && p.angleLabels.C) {
+      svgKaTeXLabel(gl, arcC.midX, arcC.midY,
+        "{\\color{" + COL.pink + "}" + p.angleLabels.C + "}", null, "center", 12);
+    }
+  }
+
+  // ===== Side labels (OUTSIDE the triangle, perpendicular to each side, away from centroid) =====
+  var centroid = { x: (Ap.x + Bp.x + Cp.x) / 3, y: (Ap.y + Bp.y + Cp.y) / 3 };
+  function labelSide(start, end, text, color) {
+    if (!text) return;
+    var mid = { x: (start.x + end.x) / 2, y: (start.y + end.y) / 2 };
+    var dir = { x: end.x - start.x, y: end.y - start.y };
+    var len = Math.hypot(dir.x, dir.y) || 1;
+    // Perpendicular (rotate 90°): outward = away from centroid
+    var normX = -dir.y / len, normY = dir.x / len;
+    var toCentroidX = centroid.x - mid.x, toCentroidY = centroid.y - mid.y;
+    if (normX * toCentroidX + normY * toCentroidY > 0) { normX = -normX; normY = -normY; }
+    svgKaTeXLabel(gl, mid.x + normX * 20, mid.y + normY * 20,
+      "{\\color{" + color + "}" + text + "}", null, "center", 13);
+  }
+  if (p.sideLabels) {
+    labelSide(Bp, Cp, p.sideLabels.a, COL.blue);
+    labelSide(Cp, Ap, p.sideLabels.b, COL.orange);
+    labelSide(Ap, Bp, p.sideLabels.c, COL.pink);
+  }
+
+  // ===== Vertex labels (faint, just outside the triangle) =====
+  if (p.vertexLabels) {
+    function labelVertex(pt, text) {
+      if (!text) return;
+      var toCentroidX = centroid.x - pt.x, toCentroidY = centroid.y - pt.y;
+      var len = Math.hypot(toCentroidX, toCentroidY) || 1;
+      var outX = -toCentroidX / len, outY = -toCentroidY / len;
+      svgKaTeXLabel(gl, pt.x + outX * 14, pt.y + outY * 14,
+        "{\\color{" + COL.grey + "}" + text + "}", null, "center", 12);
+    }
+    labelVertex(Ap, p.vertexLabels.A);
+    labelVertex(Bp, p.vertexLabels.B);
+    labelVertex(Cp, p.vertexLabels.C);
+  }
+
+  return {
+    sideA: sideA, sideB: sideB, sideC: sideC,
+    angleA: arcs.A, angleB: arcs.B, angleC: arcs.C
+  };
+}
+
+// =====================================================================
+// SECOND BUILDER: Two overlaid triangles (for the ambiguous case)
+// =====================================================================
+function buildTwoTriangles(p) {
+  // p: { a, b, A_deg } where a, b are sides, A_deg is the known angle
+  //   Two triangles fit: one with angle B acute, one with angle B obtuse
+  clearShape();
+  var g = document.getElementById("g-shape");
+  var gl = document.getElementById("g-labels");
+
+  // Angle B from sine rule: sin B = b * sin A / a
+  var A_rad = p.A_deg * Math.PI / 180;
+  var sinB = p.b * Math.sin(A_rad) / p.a;
+  if (sinB > 1) { console.warn("Ambiguous-case preset has no valid triangle"); return {}; }
+  var B1_rad = Math.asin(sinB);                 // acute
+  var B2_rad = Math.PI - B1_rad;                // obtuse
+  var C1_rad = Math.PI - A_rad - B1_rad;
+  var C2_rad = Math.PI - A_rad - B2_rad;
+  // Third side c by sine rule: c = a * sin C / sin A
+  var c1 = p.a * Math.sin(C1_rad) / Math.sin(A_rad);
+  var c2 = p.a * Math.sin(C2_rad) / Math.sin(A_rad);
+
+  // Place A at origin, B along positive x. So:
+  //   For Triangle 1: A=(0,0), B=(c1, 0), C above (since A_deg is the angle at A)
+  //   For Triangle 2: A=(0,0), B=(c2, 0), C above
+  // But we need to overlay them on the SAME side a and angle A. Actually the ambiguous case
+  // shares: angle A, side a (opposite A), side b (adjacent to A).
+  // Let me redo: fix A's position and direction of side b (going to C). Then side a is "swung"
+  // from C to B (the unknown vertex). Two positions for B fit, giving two triangles.
+  //
+  // Simpler placement: A at origin. side AC (length b) along the upper-right at angle A above x-axis.
+  // Then B is on the x-axis at distance c1 (or c2) from A.
+
+  // We'll place A at the left, with side b going up-right (toward C). Side a sits at C.
+  // Both triangles share A and C; B differs.
+
+  // Place A at (0, 0), C at (b * cos(A_rad), b * sin(A_rad)) (in math coords y-up)
+  var Cx_m = p.b * Math.cos(A_rad), Cy_m = p.b * Math.sin(A_rad);
+  // B is on the positive x-axis: B = (c, 0). Two solutions: c1 and c2.
+  var B1x_m = c1, B1y_m = 0;
+  var B2x_m = c2, B2y_m = 0;
+
+  var minX = Math.min(0, Cx_m, B1x_m, B2x_m);
+  var maxX = Math.max(0, Cx_m, B1x_m, B2x_m);
+  var minY = Math.min(0, Cy_m, B1y_m, B2y_m);
+  var maxY = Math.max(0, Cy_m, B1y_m, B2y_m);
+  var natW = maxX - minX, natH = maxY - minY;
+
+  var TOP_PAD = 36, BOT_PAD = 38, L_PAD = 40, R_PAD = 40;
+  var availW = SVG_W - L_PAD - R_PAD, availH = SVG_H - TOP_PAD - BOT_PAD;
+  var s = Math.min(availW / natW, availH / natH);
+
+  function toSvg(mx, my) {
+    return {
+      x: L_PAD + (mx - minX) * s + (availW - natW * s) / 2,
+      y: TOP_PAD + (maxY - my) * s
+    };
+  }
+  var Ap = toSvg(0, 0);
+  var Cp = toSvg(Cx_m, Cy_m);
+  var B1p = toSvg(B1x_m, B1y_m);
+  var B2p = toSvg(B2x_m, B2y_m);
+
+  // Triangle 1 (solid, green): A-B1-C
+  var tri1 = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + Ap.x + " " + Ap.y + " L " + B1p.x + " " + B1p.y + " L " + Cp.x + " " + Cp.y + " Z",
+    fill: "rgba(15,238,137,0.10)", stroke: COL.green, "stroke-width": 3, "stroke-linejoin": "round"
+  });
+  tri1.style.color = COL.green;
+  g.appendChild(tri1);
+  // Triangle 2 (dashed, pink): A-B2-C
+  var tri2 = svgEl("path", {
+    "class": "shape-part",
+    d: "M " + Ap.x + " " + Ap.y + " L " + B2p.x + " " + B2p.y + " L " + Cp.x + " " + Cp.y + " Z",
+    fill: "rgba(255,70,112,0.07)", stroke: COL.pink, "stroke-width": 2.5, "stroke-linejoin": "round",
+    "stroke-dasharray": "5 4"
+  });
+  tri2.style.color = COL.pink;
+  g.appendChild(tri2);
+
+  // Vertex dots
+  function dot(pt, color) {
+    g.appendChild(svgEl("circle", {
+      "class": "shape-part",
+      cx: pt.x, cy: pt.y, r: 4,
+      fill: color, stroke: "#0b1118", "stroke-width": 1.5
+    }));
+  }
+  dot(Ap, COL.yellow);
+  dot(Cp, COL.yellow);
+  dot(B1p, COL.green);
+  dot(B2p, COL.pink);
+
+  // Labels
+  svgKaTeXLabel(gl, Ap.x - 14, Ap.y, "A", COL.grey, "center", 13);
+  svgKaTeXLabel(gl, Cp.x + 4, Cp.y - 14, "C", COL.grey, "center", 13);
+  svgKaTeXLabel(gl, B1p.x, B1p.y + 18, "{\\color{" + COL.green + "}B_{1}}", null, "center", 12);
+  svgKaTeXLabel(gl, B2p.x, B2p.y + 18, "{\\color{" + COL.pink + "}B_{2}}", null, "center", 12);
+
+  // Side b label (A to C, common to both)
+  var bMid = { x: (Ap.x + Cp.x)/2, y: (Ap.y + Cp.y)/2 };
+  svgKaTeXLabel(gl, bMid.x - 16, bMid.y - 12,
+    "{\\color{" + COL.orange + "}b = " + p.b + "}", null, "center", 12);
+  // Side a labels (from C to B1 and C to B2)
+  svgKaTeXLabel(gl, (Cp.x + B1p.x)/2 + 14, (Cp.y + B1p.y)/2,
+    "{\\color{" + COL.green + "}a = " + p.a + "}", null, "center", 11);
+  svgKaTeXLabel(gl, (Cp.x + B2p.x)/2 - 14, (Cp.y + B2p.y)/2 - 14,
+    "{\\color{" + COL.pink + "}a = " + p.a + "}", null, "center", 11);
+
+  return { tri1: tri1, tri2: tri2 };
+}
+
+// =====================================================================
+// PRESETS
+// =====================================================================
+var PRESETS = {
+  "no-right-angle-stuck": {
+    title: "When SOH-CAH-TOA isn't enough",
+    builder: buildTriangle,
+    params: {
+      a: 10, b: 9, c: 7,
+      sideLabels: { a: "a = 10", b: "b = 9", c: "c = 7" },
+      angleLabels: { A: "A", B: "B", C: "C" },
+      showAngles: { A: true, B: true, C: true },
+      vertexLabels: { A: "A", B: "B", C: "C" }
+    },
+    footer: "All angles acute, no 90°. SOH-CAH-TOA can't act directly.",
+    steps: [
+      { show: ["sideA","sideB","sideC","angleA","angleB","angleC"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: A TRIANGLE WITH NO RIGHT ANGLE" },
+          { kind: "hint", text: "three sides given (a, b, c). No angle is 90°. You can't pick an opposite/adjacent/hypotenuse from any vertex." }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA","angleB","angleC"], highlight: ["angleA","angleB","angleC"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: WHY SOH-CAH-TOA STALLS" },
+          { kind: "hint", text: "the ratios opp/hyp, adj/hyp, opp/adj are defined only when a right angle sits at the chosen vertex. Here every angle is acute (< 90°)." }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA","angleB","angleC"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: WHAT TO REACH FOR INSTEAD" },
+          { kind: "hint", text: "two new rules generalise sin, cos, tan to ANY triangle." },
+          { kind: "main", tex: "\\textbf{sine rule:} \\quad \\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B} = \\dfrac{c}{\\sin C}" },
+          { kind: "main", tex: "\\textbf{cosine rule:} \\quad a^{2} = b^{2} + c^{2} - 2bc\\cos A" },
+          { kind: "note", text: "both are given on the Cambridge formula sheet." }
+        ] }
+    ]
+  },
+
+  "sine-rule-find-side": {
+    title: "Sine rule — find a side",
+    builder: buildTriangle,
+    params: {
+      a: 8, b: 9.46, c: 8.50,   // chosen so A=55°, B=80°, C=45° (sin-rule consistent)
+      sideLabels: { a: "a = 8", b: "b = ?", c: null },
+      angleLabels: { A: "55°", B: "80°", C: null },
+      showAngles: { A: true, B: true, C: false },
+      vertexLabels: { A: "A", B: "B", C: "C" }
+    },
+    footer: "Two angles and a side (ASA / AAS) — sine rule.",
+    steps: [
+      { show: ["sideA","sideB","sideC","angleA","angleB"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: WHAT'S GIVEN" },
+          { kind: "hint", text: "angle A = 55°, angle B = 80°, side a = 8. Find side b." }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA","angleB"], highlight: ["sideA","angleA","sideB","angleB"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: PAIR EACH ANGLE WITH ITS OPPOSITE SIDE" },
+          { kind: "hint", text: "angle A is opposite side a; angle B is opposite side b. Sine rule pairs these up." },
+          { kind: "main", tex: "\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B}" }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA","angleB"], highlight: ["sideB"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: SUBSTITUTE AND SOLVE" },
+          { kind: "main", tex: "\\dfrac{8}{\\sin 55°} = \\dfrac{b}{\\sin 80°}" },
+          { kind: "main", tex: "b = \\dfrac{8 \\sin 80°}{\\sin 55°}" },
+          { kind: "ans", tex: "{\\color{#ff822c}b \\approx 9.62\\;\\text{cm}}" }
+        ] }
+    ]
+  },
+
+  "sine-rule-find-angle": {
+    title: "Sine rule — find an angle",
+    builder: buildTriangle,
+    params: {
+      a: 7, b: 10, c: 14.16,   // A=24°, B=35°, C=... actually let's recompute: A=35°, b=10, find B from sin B = 10*sin35/7
+      sineSpecial: true,
+      sideLabels: { a: "a = 7", b: "b = 10", c: null },
+      angleLabels: { A: "35°", B: "B = ?", C: null },
+      showAngles: { A: true, B: true, C: false },
+      vertexLabels: { A: "A", B: "B", C: "C" }
+    },
+    footer: "Two sides and an angle opposite one of them — sine rule (with the ambiguity check).",
+    steps: [
+      { show: ["sideA","sideB","sideC","angleA","angleB"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: WHAT'S GIVEN" },
+          { kind: "hint", text: "side a = 7, side b = 10, angle A = 35°. Find angle B." }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA","angleB"], highlight: ["sideA","angleA","sideB","angleB"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: SINE RULE" },
+          { kind: "main", tex: "\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B}" },
+          { kind: "main", tex: "\\dfrac{7}{\\sin 35°} = \\dfrac{10}{\\sin B}" }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA","angleB"], highlight: ["angleB"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: REARRANGE FOR SIN B" },
+          { kind: "main", tex: "\\sin B = \\dfrac{10 \\sin 35°}{7} \\approx 0.819" },
+          { kind: "main", tex: "B = \\sin^{-1}(0.819) \\approx 55.0°" },
+          { kind: "ans", tex: "{\\color{#0fee89}B \\approx 55.0°}" },
+          { kind: "note", text: "(B could also be 180° - 55° = 125° if the diagram allowed an obtuse triangle — see the ambiguous case.)" }
+        ] }
+    ]
+  },
+
+  "cosine-rule-find-side": {
+    title: "Cosine rule — find a side (SAS)",
+    builder: buildTriangle,
+    params: {
+      a: 6.24, b: 7, c: 8,   // gives A = 50° (chosen)
+      sideLabels: { a: "a = ?", b: "b = 7", c: "c = 8" },
+      angleLabels: { A: "50°", B: null, C: null },
+      showAngles: { A: true, B: false, C: false },
+      vertexLabels: { A: "A", B: "B", C: "C" }
+    },
+    footer: "Two sides and the INCLUDED angle (SAS) — cosine rule.",
+    steps: [
+      { show: ["sideA","sideB","sideC","angleA"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: WHAT'S GIVEN" },
+          { kind: "hint", text: "sides b = 7 and c = 8, with the angle BETWEEN them A = 50°. Find side a (opposite A)." }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA"], highlight: ["sideB","sideC","angleA"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: COSINE RULE" },
+          { kind: "main", tex: "a^{2} = b^{2} + c^{2} - 2bc\\cos A" },
+          { kind: "main", tex: "a^{2} = 7^{2} + 8^{2} - 2(7)(8)\\cos 50°" }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA"], highlight: ["sideA"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: COMPUTE AND SQUARE ROOT" },
+          { kind: "main", tex: "a^{2} = 49 + 64 - 112\\cos 50° \\approx 113 - 71.99 = 41.01" },
+          { kind: "ans", tex: "{\\color{#00abfa}a \\approx 6.40\\;\\text{cm}}" }
+        ] }
+    ]
+  },
+
+  "cosine-rule-find-angle": {
+    title: "Cosine rule — find an angle (SSS)",
+    builder: buildTriangle,
+    params: {
+      a: 8, b: 5, c: 7,
+      sideLabels: { a: "a = 8", b: "b = 5", c: "c = 7" },
+      angleLabels: { A: "A = ?", B: null, C: null },
+      showAngles: { A: true, B: false, C: false },
+      vertexLabels: { A: "A", B: "B", C: "C" }
+    },
+    footer: "All three sides (SSS) — cosine rule rearranged.",
+    steps: [
+      { show: ["sideA","sideB","sideC","angleA"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: WHAT'S GIVEN" },
+          { kind: "hint", text: "a = 8, b = 5, c = 7. Find angle A (opposite the longest side)." }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA"], highlight: ["sideA","sideB","sideC"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: REARRANGE COSINE RULE FOR COS A" },
+          { kind: "main", tex: "\\cos A = \\dfrac{b^{2} + c^{2} - a^{2}}{2bc}" },
+          { kind: "main", tex: "\\cos A = \\dfrac{25 + 49 - 64}{2(5)(7)} = \\dfrac{10}{70}" }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA"], highlight: ["angleA"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: INVERSE COS" },
+          { kind: "main", tex: "\\cos A = \\tfrac{1}{7} \\approx 0.1429" },
+          { kind: "ans", tex: "{\\color{#fff067}A \\approx 81.8°}" }
+        ] }
+    ]
+  },
+
+  "ambiguous-case": {
+    title: "The ambiguous case (SSA)",
+    builder: buildTwoTriangles,
+    params: { a: 6, b: 8, A_deg: 40 },
+    footer: "When you know two sides and a non-included angle, two triangles can fit.",
+    steps: [
+      { show: ["tri1","tri2"], fade: ["tri2"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE FIRST SOLUTION" },
+          { kind: "hint", text: "side a = 6 (opposite the known angle A = 40°), side b = 8. Sine rule gives sin B = 8 sin 40° / 6 ≈ 0.857." },
+          { kind: "main", tex: "B \\approx \\sin^{-1}(0.857) \\approx 59.0°" }
+        ] },
+      { show: ["tri1","tri2"], fade: ["tri1"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: THE SECOND SOLUTION" },
+          { kind: "hint", text: "sine is positive in both Q1 and Q2 — the obtuse alternative also fits." },
+          { kind: "main", tex: "B' = 180° - 59° \\approx 121°" }
+        ] },
+      { show: ["tri1","tri2"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: BOTH ARE VALID" },
+          { kind: "hint", text: "two different triangles share the same a, b, and A. Cambridge usually disambiguates with a diagram or a clue (e.g. 'B is acute' or 'B is obtuse')." },
+          { kind: "note", text: "If the question gives the diagram, read it carefully — the diagram tells you which case you're in." }
+        ] }
+    ]
+  },
+
+  "area-find": {
+    title: "Area = ½ ab sin C",
+    builder: buildTriangle,
+    params: {
+      a: 9, b: 6, c: 5.69,   // approx C=40°
+      sideLabels: { a: "a = 9", b: "b = 6", c: null },
+      angleLabels: { A: null, B: null, C: "40°" },
+      showAngles: { A: false, B: false, C: true },
+      vertexLabels: { A: "A", B: "B", C: "C" }
+    },
+    footer: "Two sides and the included angle — area formula.",
+    steps: [
+      { show: ["sideA","sideB","sideC","angleC"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: WHAT'S GIVEN" },
+          { kind: "hint", text: "sides a = 9 and b = 6, with the angle between them C = 40°. Find the area." }
+        ] },
+      { show: ["sideA","sideB","sideC","angleC"], highlight: ["sideA","sideB","angleC"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: THE AREA FORMULA" },
+          { kind: "main", tex: "\\text{Area} = \\tfrac{1}{2} ab \\sin C" },
+          { kind: "main", tex: "= \\tfrac{1}{2} (9)(6) \\sin 40°" }
+        ] },
+      { show: ["sideA","sideB","sideC","angleC"], highlight: ["sideA","sideB","angleC"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: COMPUTE" },
+          { kind: "main", tex: "= 27 \\sin 40° \\approx 27 \\times 0.6428" },
+          { kind: "ans", tex: "{\\color{#0fee89}\\text{Area} \\approx 17.4\\;\\text{cm}^{2}}" }
+        ] }
+    ]
+  },
+
+  "comprehensive-field": {
+    title: "Triangular field — multi-part",
+    builder: buildTriangle,
+    // AB = 120, BC = 90, angle B = 65°. In our convention: B-vertex is "left", C-vertex is "right",
+    // A-vertex is the apex. We need side a = BC, side b = AC (unknown), side c = AB = 120, angle B = 65°.
+    // We'll precompute b from the cosine rule so the figure renders correctly.
+    params: (function() {
+      var c = 120, a = 90, Bdeg = 65;
+      var b = Math.sqrt(a*a + c*c - 2*a*c*Math.cos(Bdeg*Math.PI/180));
+      return {
+        a: a, b: b, c: c,
+        sideLabels: { a: "BC = 90", b: "AC = ?", c: "AB = 120" },
+        angleLabels: { A: "A", B: "65°", C: "C" },
+        showAngles: { A: false, B: true, C: false },
+        vertexLabels: { A: "A", B: "B", C: "C" }
+      };
+    })(),
+    footer: "Triangular field — AB = 120 m, BC = 90 m, angle B = 65°.",
+    steps: [
+      { show: ["sideA","sideB","sideC","angleB"],
+        eqs: [
+          { kind: "tag", text: "STEP 1: WHAT'S GIVEN" },
+          { kind: "hint", text: "AB = 120, BC = 90, angle B = 65°. Three sub-questions: find AC, find angle A, find the area." }
+        ] },
+      { show: ["sideA","sideB","sideC","angleB"], highlight: ["sideA","sideC","angleB","sideB"],
+        eqs: [
+          { kind: "tag", text: "STEP 2: PART (A) — FIND AC USING COSINE RULE" },
+          { kind: "hint", text: "Two sides + the included angle B → cosine rule." },
+          { kind: "main", tex: "b^{2} = 120^{2} + 90^{2} - 2(120)(90)\\cos 65°" },
+          { kind: "main", tex: "b^{2} \\approx 13371.7" },
+          { kind: "ans", tex: "{\\color{#ff822c}AC \\approx 115.6\\;\\text{m}}" }
+        ] },
+      { show: ["sideA","sideB","sideC","angleA","angleB"], highlight: ["sideA","sideB","angleA"],
+        eqs: [
+          { kind: "tag", text: "STEP 3: PART (B) — FIND ANGLE A USING SINE RULE" },
+          { kind: "hint", text: "Now we know all three sides — use the sine rule pairing (BC, A) with (AC, B)." },
+          { kind: "main", tex: "\\dfrac{90}{\\sin A} = \\dfrac{115.6}{\\sin 65°}" },
+          { kind: "main", tex: "\\sin A = \\dfrac{90\\sin 65°}{115.6} \\approx 0.706" },
+          { kind: "ans", tex: "{\\color{#fff067}A \\approx 44.9°}" }
+        ] },
+      { show: ["sideA","sideB","sideC","angleB"], highlight: ["sideA","sideC","angleB"],
+        eqs: [
+          { kind: "tag", text: "STEP 4: PART (C) — FIND THE AREA" },
+          { kind: "hint", text: "Two sides + included angle → ½ ab sin C, with the angle B as the included one." },
+          { kind: "main", tex: "\\text{Area} = \\tfrac{1}{2}(120)(90)\\sin 65°" },
+          { kind: "ans", tex: "{\\color{#0fee89}\\text{Area} \\approx 4894\\;\\text{m}^{2}}" }
+        ] }
+    ]
+  }
+};
+
+// =====================================================================
+// CONTROLLER
+// =====================================================================
+var qs = new URLSearchParams(location.search);
+var PRESET = qs.get("preset") || "no-right-angle-stuck";
+var preset = PRESETS[PRESET] || PRESETS["no-right-angle-stuck"];
+
+document.getElementById("title").textContent = preset.title.toUpperCase();
+document.getElementById("footer").textContent = preset.footer || "";
+
+var parts = preset.builder(preset.params);
+
+var stepIdx = 0;
+var stepEl = document.getElementById("equations");
+var counterEl = document.getElementById("counter");
+var prevBtn = document.getElementById("prev");
+var nextBtn = document.getElementById("next");
+
+function applyVisibility(step) {
+  Object.keys(parts).forEach(function(k) {
+    var el = parts[k];
+    if (!el) return;
+    el.classList.remove("faded", "highlight", "hidden");
+  });
+  Object.keys(parts).forEach(function(k) {
+    var el = parts[k]; if (!el) return;
+    if (!step.show || step.show.indexOf(k) === -1) {
+      el.classList.add("hidden");
+    }
+  });
+  if (step.fade) step.fade.forEach(function(k) { if (parts[k]) parts[k].classList.add("faded"); });
+  if (step.highlight) step.highlight.forEach(function(k) { if (parts[k]) parts[k].classList.add("highlight"); });
+}
+
+function renderEqs(step) {
+  stepEl.innerHTML = "";
+  var grp = document.createElement("div"); grp.className = "eq-group";
+  step.eqs.forEach(function(line, i) {
+    var div = document.createElement("div");
+    div.className = "eq-line";
+    div.setAttribute("data-kind", line.kind);
+    div.style.opacity = "0";
+    div.style.transform = "translateY(4px)";
+    div.style.transition = "opacity 0.45s ease " + (i*60) + "ms, transform 0.45s ease " + (i*60) + "ms";
+    if (line.tex) tryRender(div, line.tex);
+    else div.textContent = line.text;
+    grp.appendChild(div);
+    requestAnimationFrame(function() {
+      div.style.opacity = "1";
+      div.style.transform = "translateY(0)";
+    });
+  });
+  stepEl.appendChild(grp);
+}
+
+function renderStep() {
+  var step = preset.steps[stepIdx];
+  applyVisibility(step);
+  renderEqs(step);
+  counterEl.textContent = (stepIdx + 1) + " / " + preset.steps.length;
+  prevBtn.disabled = stepIdx === 0;
+  nextBtn.disabled = stepIdx === preset.steps.length - 1;
+}
+
+prevBtn.onclick = function() { if (stepIdx > 0) { stepIdx--; renderStep(); } };
+nextBtn.onclick = function() { if (stepIdx < preset.steps.length - 1) { stepIdx++; renderStep(); } };
+
+renderStep();
+
+// Height reporter
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>

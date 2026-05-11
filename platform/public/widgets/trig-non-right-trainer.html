@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Non-right Triangle Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#07090d; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:22px 18px 26px; }
+  .wrap { max-width:600px; margin:0 auto; }
+  .head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+  .label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#fff067; }
+  .target-picker { display:flex; gap:6px; align-items:center; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .target-picker select {
+    appearance:none; background:#0b1118; border:1px solid #141e2a; color:#f0eeea;
+    font-family:inherit; font-size:12px; padding:5px 22px 5px 10px; border-radius:5px; cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7875' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 8px center;
+  }
+  .card { background:#0b1118; border:1px solid #141e2a; border-radius:12px; padding:24px 24px 22px; min-height:340px; }
+  .q-label { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#3a4a5a; margin-bottom:12px; text-align:center; }
+  .q-prompt { font-size:15px; line-height:1.55; color:#c8c6be; text-align:center; margin:6px 0 12px; }
+  .q-prompt b { color:#f0eeea; font-weight:600; }
+  .q-prompt .katex { font-size:1em; }
+  .q-figure { display:flex; justify-content:center; padding:6px 0 12px; }
+  .q-figure svg { display:block; max-width:100%; height:auto; }
+
+  .answer-row { display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+  .answer-row input {
+    appearance:none; width:170px; height:42px; text-align:center;
+    font-family:'Geist Mono',monospace; font-size:18px; font-weight:600;
+    background:#07090d; border:1px solid rgba(0,171,250,0.5); border-radius:8px;
+    color:#00abfa; outline:none;
+  }
+  .answer-row input:focus { border-color:#00abfa; box-shadow:0 0 0 3px rgba(0,171,250,0.12); }
+  .answer-row input.wrong { border-color:#ff4670; color:#ff4670; box-shadow:0 0 0 3px rgba(255,70,112,0.1); }
+  .answer-row input.correct { border-color:#0fee89; color:#0fee89; box-shadow:0 0 0 3px rgba(15,238,137,0.1); }
+  .answer-row .target-unit { font-family:'Geist Mono',monospace; font-size:14px; color:#fff067; font-weight:700; }
+  .btn-check { appearance:none; cursor:pointer; font-family:inherit; font-size:13px; font-weight:600; padding:10px 16px; border-radius:6px; border:0; background:#00abfa; color:#07090d; }
+
+  .choices { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+  .choice { display:flex; align-items:center; gap:10px; padding:11px 14px; border:1px solid #1a2433; border-radius:7px; background:#0b1118; cursor:pointer; font-size:14px; line-height:1.4; transition: border-color 0.15s ease, background 0.15s ease; }
+  .choice:hover:not(.locked):not(.picked) { border-color:#3a4a5a; background:#0e1620; }
+  .choice .marker { width:20px; height:20px; border-radius:50%; border:1.5px solid #3a4a5a; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; }
+  .choice.locked { cursor:default; opacity:0.6; }
+  .choice.correct { border-color:#0fee89; background:rgba(15,238,137,0.07); }
+  .choice.correct .marker { border-color:#0fee89; color:#0fee89; }
+  .choice.wrong   { border-color:#ff4670; background:rgba(255,70,112,0.07); }
+  .choice.wrong .marker { border-color:#ff4670; color:#ff4670; }
+  .choice .body .katex { font-size:1em; }
+
+  .hint-line { text-align:center; font-family:'Geist Mono',monospace; font-size:10.5px; color:#3a4a5a; margin-top:12px; }
+  .reveal { margin-top:18px; padding-top:14px; border-top:1px solid #141e2a; }
+  .reveal-line { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; letter-spacing:.5px; margin-bottom:8px; text-align:center; }
+  .reveal.ok .reveal-line { color:#0fee89; }
+  .reveal.bad .reveal-line { color:#ff4670; }
+  .reveal-explain { font-size:13px; color:#c8c6be; line-height:1.55; text-align:center; margin-bottom:12px; }
+  .reveal-explain .katex { font-size:1em; }
+  .controls { display:flex; gap:8px; margin-top:6px; justify-content:center; }
+  .btn { appearance:none; cursor:pointer; font-family:inherit; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:5px; border:1px solid transparent; }
+  .btn.primary { background:#00abfa; color:#07090d; }
+
+  .progress-row { display:flex; justify-content:space-between; align-items:center; margin-top:14px; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  .progress-row .right { color:#0fee89; }
+  .progress-row .wrong { color:#ff4670; }
+  .done-card { text-align:center; padding:22px 18px; }
+  .done-card .big { font-size:32px; font-weight:700; color:#f0eeea; letter-spacing:-0.5px; }
+  .done-card .big .total { font-size:20px; color:#3a4a5a; font-weight:500; }
+  .done-card .sub { font-size:13px; color:#7a7875; margin-top:6px; }
+  .done-card .msg { font-size:13px; color:#0fee89; margin-top:10px; font-weight:500; }
+  .done-card .kicker { display:inline-block; font-family:'Geist Mono',monospace; font-size:10.5px; letter-spacing:2px; text-transform:uppercase; color:#0fee89; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <span class="label">NON-RIGHT TRAINER · 8 QUESTIONS</span>
+    <div class="target-picker">
+      <span>topic:</span>
+      <select id="topic">
+        <option value="rule">which rule?</option>
+        <option value="sine">sine rule</option>
+        <option value="cosine">cosine rule</option>
+        <option value="area">area</option>
+        <option value="mixed" selected>mixed</option>
+      </select>
+    </div>
+  </div>
+  <div class="card" id="card"></div>
+  <div class="progress-row">
+    <span><b id="step-num">1</b>/<span id="step-total">8</span></span>
+    <span><span class="right">✓ <b id="right-count">0</b></span> &nbsp; <span class="wrong">✗ <b id="wrong-count">0</b></span></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+var COL = { blue:"#00abfa", yellow:"#fff067", orange:"#ff822c", green:"#0fee89", pink:"#ff4670", faint:"#3a4a5a", grey:"#7a7875" };
+
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function fmtNum(n, dp) {
+  if (!isFinite(n)) return "—";
+  if (dp == null) dp = 2;
+  return parseFloat((+n.toFixed(dp)).toFixed(dp)).toString();
+}
+function tryRenderInto(el, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, el, { throwOnError: false, output: "html" }); }
+    catch (e) { el.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRenderInto(el, tex); }, 50);
+  }
+}
+function renderMixed(el, html) {
+  el.innerHTML = "";
+  var parts = html.split(/(\$[^$]+\$)/g);
+  parts.forEach(function(p) {
+    if (p.startsWith("$") && p.endsWith("$") && p.length > 2) {
+      var span = document.createElement("span");
+      tryRenderInto(span, p.slice(1, -1));
+      el.appendChild(span);
+    } else {
+      var sp = document.createElement("span");
+      sp.innerHTML = p;
+      el.appendChild(sp);
+    }
+  });
+}
+
+// Small general-triangle SVG for the question figure.
+// p: { A_deg, b, c, labels: { sides, angles } } — A is the angle at the LEFT vertex; sides b and c emanate from A.
+function generalTriSvg(p) {
+  var W = 260, H = 200;
+  var A_rad = p.A_deg * Math.PI / 180;
+  // Place A at left, B at right along x-axis. So side c = AB along bottom, b = AC up-right.
+  // Compute C's position from A using side b and angle A.
+  var Cx_m = p.b * Math.cos(A_rad), Cy_m = p.b * Math.sin(A_rad);
+  var Bx_m = p.c, By_m = 0;
+  var minX = Math.min(0, Cx_m, Bx_m), maxX = Math.max(0, Cx_m, Bx_m);
+  var minY = 0, maxY = Math.max(Cy_m, 0);
+  var natW = maxX - minX, natH = (maxY - minY);
+  if (natH < 0.0001) natH = 0.0001;
+  var PAD = 28;
+  var s = Math.min((W - 2*PAD) / natW, (H - 2*PAD) / natH);
+  function toS(x, y) { return { x: PAD + (x - minX) * s, y: H - PAD - (y - minY) * s }; }
+  var Ap = toS(0, 0), Bp = toS(Bx_m, By_m), Cp = toS(Cx_m, Cy_m);
+
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="' + W + '" height="' + H + '">';
+  svg += '<path d="M ' + Ap.x + ' ' + Ap.y + ' L ' + Bp.x + ' ' + Bp.y + ' L ' + Cp.x + ' ' + Cp.y + ' Z" fill="rgba(255,240,103,0.06)" stroke="none"/>';
+  // Bottom: side c (AB)
+  svg += '<line x1="' + Ap.x + '" y1="' + Ap.y + '" x2="' + Bp.x + '" y2="' + Bp.y + '" stroke="' + COL.pink + '" stroke-width="3" stroke-linecap="round"/>';
+  // Right side: side a (BC)
+  svg += '<line x1="' + Bp.x + '" y1="' + Bp.y + '" x2="' + Cp.x + '" y2="' + Cp.y + '" stroke="' + COL.blue + '" stroke-width="3" stroke-linecap="round"/>';
+  // Left side: side b (CA)
+  svg += '<line x1="' + Cp.x + '" y1="' + Cp.y + '" x2="' + Ap.x + '" y2="' + Ap.y + '" stroke="' + COL.orange + '" stroke-width="3" stroke-linecap="round"/>';
+  // Vertex letters
+  svg += '<text x="' + (Ap.x - 12) + '" y="' + (Ap.y + 4) + '" font-family="Geist Mono,monospace" font-size="12" font-weight="700" fill="' + COL.grey + '">A</text>';
+  svg += '<text x="' + (Bp.x + 6) + '" y="' + (Bp.y + 4) + '" font-family="Geist Mono,monospace" font-size="12" font-weight="700" fill="' + COL.grey + '">B</text>';
+  svg += '<text x="' + (Cp.x + 6) + '" y="' + (Cp.y - 6) + '" font-family="Geist Mono,monospace" font-size="12" font-weight="700" fill="' + COL.grey + '">C</text>';
+  // Side labels
+  if (p.labels) {
+    if (p.labels.a) svg += '<text x="' + ((Bp.x+Cp.x)/2 + 14) + '" y="' + ((Bp.y+Cp.y)/2) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.blue + '">' + p.labels.a + '</text>';
+    if (p.labels.b) svg += '<text x="' + ((Ap.x+Cp.x)/2 - 14) + '" y="' + ((Ap.y+Cp.y)/2) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.orange + '">' + p.labels.b + '</text>';
+    if (p.labels.c) svg += '<text x="' + ((Ap.x+Bp.x)/2) + '" y="' + (Ap.y + 16) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.pink + '">' + p.labels.c + '</text>';
+    if (p.labels.A) svg += '<text x="' + (Ap.x + 22) + '" y="' + (Ap.y - 10) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.yellow + '">' + p.labels.A + '</text>';
+    if (p.labels.B) svg += '<text x="' + (Bp.x - 28) + '" y="' + (Bp.y - 10) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.green + '">' + p.labels.B + '</text>';
+  }
+  svg += '</svg>';
+  return svg;
+}
+
+function makeChecker(ans, tol) {
+  tol = tol || 0.05;
+  return function(s) {
+    var clean = s.replace(/,/g, "").replace(/\s+/g, "").replace(/[a-zA-Zπ²³√°]+$/, "");
+    var n = parseFloat(clean);
+    if (!isFinite(n)) return false;
+    return Math.abs(n - ans) <= Math.max(tol, Math.abs(ans) * 0.01);
+  };
+}
+
+// ===== QUESTION GENERATORS =====
+function genRule() {
+  var cases = [
+    { setup: "two angles ($A = 50°$, $B = 60°$) and side $a = 7$", answer: "sine rule", why: "Two angles + a side (ASA / AAS) → sine rule pairs them up." },
+    { setup: "two sides ($b = 6$, $c = 8$) and the angle $A = 40°$ between them", answer: "cosine rule", why: "SAS (the angle is INCLUDED between the two known sides) → cosine rule for the third side." },
+    { setup: "all three sides $a = 5$, $b = 7$, $c = 8$", answer: "cosine rule rearranged", why: "SSS → cosine rule rearranged: $\\cos A = (b^{2}+c^{2}-a^{2})/(2bc)$." },
+    { setup: "side $a = 10$, side $b = 7$, and the angle $A = 35°$ (opposite $a$)", answer: "sine rule", why: "SSA: a known angle is opposite one of the known sides → sine rule (watch the ambiguous case)." },
+    { setup: "two sides ($a = 9$, $b = 5$) and the angle $C = 70°$ between them, and you want the AREA", answer: "area formula", why: "Two sides + included angle, asking for area → $\\tfrac{1}{2}ab\\sin C$." }
+  ];
+  var chosen = pick(cases);
+  var choices = ["sine rule", "cosine rule", "cosine rule rearranged", "area formula"];
+  // Shuffle but keep the correct in the list
+  var all = choices.slice();
+  for (var i = all.length-1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i+1));
+    var tmp = all[i]; all[i] = all[j]; all[j] = tmp;
+  }
+  return {
+    type: "choice",
+    prompt: "You know " + chosen.setup + ". Which rule do you reach for?",
+    choices: all,
+    correctIdx: all.indexOf(chosen.answer),
+    why: chosen.why,
+    hint: "match the given configuration to the right tool"
+  };
+}
+
+function genSine() {
+  var kind = pick(["find-side", "find-angle"]);
+  if (kind === "find-side") {
+    var A = pick([40, 45, 50, 55, 60, 65, 70]);
+    var B = pick([35, 40, 50, 55, 60, 70, 75]);
+    if (A + B >= 175) B = 180 - A - 30;
+    var a = pick([5, 6, 7, 8, 9, 10]);
+    var Arad = A * Math.PI / 180, Brad = B * Math.PI / 180;
+    var b = a * Math.sin(Brad) / Math.sin(Arad);
+    return {
+      type: "numeric",
+      prompt: "In a triangle: $A = " + A + "°$, $B = " + B + "°$, side $a = " + a + "$. Find side $b$.",
+      figure: generalTriSvg({ A_deg: A, b: b, c: a * Math.sin((180-A-B)*Math.PI/180) / Math.sin(Arad), labels: { a: a + "", b: "?", A: A + "°", B: B + "°" } }),
+      answer: b, unit: "",
+      why: "$\\dfrac{" + a + "}{\\sin " + A + "°} = \\dfrac{b}{\\sin " + B + "°}$, so $b = \\dfrac{" + a + "\\sin " + B + "°}{\\sin " + A + "°} \\approx " + fmtNum(b, 2) + "$.",
+      hint: "round to 2 d.p.",
+      check: makeChecker(b, 0.1)
+    };
+  } else {
+    var data = pick([
+      { a: 7, b: 10, A: 35 },
+      { a: 8, b: 9, A: 40 },
+      { a: 9, b: 12, A: 30 },
+      { a: 6, b: 8, A: 30 }
+    ]);
+    var sinBval = data.b * Math.sin(data.A * Math.PI / 180) / data.a;
+    var B = Math.asin(Math.min(1, sinBval)) * 180 / Math.PI;
+    return {
+      type: "numeric",
+      prompt: "In a triangle: side $a = " + data.a + "$, side $b = " + data.b + "$, $A = " + data.A + "°$ (and $B$ is acute). Find $B$ to 1 d.p.",
+      figure: generalTriSvg({ A_deg: data.A, b: data.b, c: data.a * Math.sin((180-data.A-B)*Math.PI/180) / Math.sin(data.A*Math.PI/180), labels: { a: data.a + "", b: data.b + "", A: data.A + "°", B: "?" } }),
+      answer: B, unit: "°",
+      why: "$\\sin B = \\dfrac{" + data.b + "\\sin " + data.A + "°}{" + data.a + "} \\approx " + fmtNum(sinBval, 3) + "$, so $B = \\sin^{-1}(\\dots) \\approx " + fmtNum(B, 1) + "°$.",
+      hint: "use the acute solution",
+      check: makeChecker(B, 0.5)
+    };
+  }
+}
+
+function genCosine() {
+  var kind = pick(["find-side", "find-angle"]);
+  if (kind === "find-side") {
+    var data = pick([
+      { b: 7, c: 8, A: 60 },
+      { b: 5, c: 8, A: 45 },
+      { b: 9, c: 6, A: 50 },
+      { b: 10, c: 12, A: 70 }
+    ]);
+    var aSq = data.b*data.b + data.c*data.c - 2*data.b*data.c*Math.cos(data.A*Math.PI/180);
+    var a = Math.sqrt(aSq);
+    return {
+      type: "numeric",
+      prompt: "Triangle has $b = " + data.b + "$, $c = " + data.c + "$, included $A = " + data.A + "°$. Find $a$ to 2 d.p.",
+      figure: generalTriSvg({ A_deg: data.A, b: data.b, c: data.c, labels: { a: "?", b: data.b + "", c: data.c + "", A: data.A + "°" } }),
+      answer: a, unit: "",
+      why: "$a^{2} = " + data.b + "^{2} + " + data.c + "^{2} - 2(" + data.b + ")(" + data.c + ")\\cos " + data.A + "° \\approx " + fmtNum(aSq, 2) + "$, so $a \\approx " + fmtNum(a, 2) + "$.",
+      hint: "cosine rule, then square root",
+      check: makeChecker(a, 0.05)
+    };
+  } else {
+    var data = pick([
+      { a: 8, b: 5, c: 7 },
+      { a: 9, b: 6, c: 7 },
+      { a: 12, b: 8, c: 10 },
+      { a: 7, b: 5, c: 6 }
+    ]);
+    var cosA = (data.b*data.b + data.c*data.c - data.a*data.a) / (2*data.b*data.c);
+    var A = Math.acos(cosA) * 180 / Math.PI;
+    // For the figure we need positions; choose a representative angle
+    return {
+      type: "numeric",
+      prompt: "Triangle has sides $a = " + data.a + "$, $b = " + data.b + "$, $c = " + data.c + "$. Find angle $A$ to 1 d.p.",
+      figure: generalTriSvg({ A_deg: A, b: data.b, c: data.c, labels: { a: data.a + "", b: data.b + "", c: data.c + "", A: "?" } }),
+      answer: A, unit: "°",
+      why: "$\\cos A = \\dfrac{" + data.b + "^{2} + " + data.c + "^{2} - " + data.a + "^{2}}{2(" + data.b + ")(" + data.c + ")} \\approx " + fmtNum(cosA, 3) + "$, so $A \\approx " + fmtNum(A, 1) + "°$.",
+      hint: "rearrange the cosine rule",
+      check: makeChecker(A, 0.5)
+    };
+  }
+}
+
+function genArea() {
+  var data = pick([
+    { a: 9, b: 6, C: 40 },
+    { a: 8, b: 5, C: 55 },
+    { a: 12, b: 7, C: 35 },
+    { a: 10, b: 10, C: 60 },
+    { a: 7, b: 9, C: 75 }
+  ]);
+  var area = 0.5 * data.a * data.b * Math.sin(data.C * Math.PI / 180);
+  return {
+    type: "numeric",
+    prompt: "Two sides ($a = " + data.a + "$, $b = " + data.b + "$) and the included angle ($C = " + data.C + "°$). Find the area to 1 d.p.",
+    figure: generalTriSvg({ A_deg: 180 - data.C - 50, b: data.b, c: data.a, labels: { a: data.a + "", b: data.b + "", c: "", A: "", B: data.C + "°" } }),
+    answer: area, unit: "",
+    why: "$\\text{Area} = \\tfrac{1}{2}(" + data.a + ")(" + data.b + ")\\sin " + data.C + "° \\approx " + fmtNum(area, 1) + "$.",
+    hint: "$\\tfrac{1}{2}ab\\sin C$",
+    check: makeChecker(area, 0.2)
+  };
+}
+
+var TOPIC_ROUTES = {
+  rule:   function() { return genRule(); },
+  sine:   function() { return genSine(); },
+  cosine: function() { return genCosine(); },
+  area:   function() { return genArea(); },
+  mixed:  function() { return pick([genRule, genSine, genCosine, genArea])(); }
+};
+
+var topic = "mixed";
+var queue = [];
+var stepIdx = 0;
+var rightCount = 0, wrongCount = 0;
+var locked = false;
+var TOTAL = 8;
+
+function buildSession() {
+  queue = [];
+  for (var i = 0; i < TOTAL; i++) queue.push(TOPIC_ROUTES[topic]());
+  stepIdx = 0; rightCount = 0; wrongCount = 0; locked = false;
+}
+
+function paint() {
+  var card = document.getElementById("card");
+  card.innerHTML = "";
+  document.getElementById("step-num").textContent = (stepIdx + 1);
+  document.getElementById("step-total").textContent = TOTAL;
+  document.getElementById("right-count").textContent = rightCount;
+  document.getElementById("wrong-count").textContent = wrongCount;
+  if (stepIdx >= TOTAL) { paintDone(); return; }
+  var q = queue[stepIdx];
+  var label = document.createElement("div"); label.className = "q-label"; label.textContent = "QUESTION " + (stepIdx + 1) + " / " + TOTAL;
+  card.appendChild(label);
+  var prompt = document.createElement("div"); prompt.className = "q-prompt"; renderMixed(prompt, q.prompt);
+  card.appendChild(prompt);
+  if (q.figure) {
+    var fig = document.createElement("div"); fig.className = "q-figure";
+    fig.innerHTML = q.figure;
+    card.appendChild(fig);
+  }
+  if (q.type === "choice") paintChoice(card, q);
+  else paintNumeric(card, q);
+  if (q.hint) {
+    var h = document.createElement("div"); h.className = "hint-line"; h.textContent = q.hint;
+    card.appendChild(h);
+  }
+}
+
+function paintChoice(card, q) {
+  var box = document.createElement("div"); box.className = "choices";
+  q.choices.forEach(function(ch, i) {
+    var div = document.createElement("div"); div.className = "choice"; div.setAttribute("data-i", i);
+    var marker = document.createElement("div"); marker.className = "marker"; marker.textContent = String.fromCharCode(65+i);
+    var body = document.createElement("div"); body.className = "body";
+    renderMixed(body, ch);
+    div.appendChild(marker); div.appendChild(body);
+    div.addEventListener("click", function() {
+      if (locked) return;
+      locked = true;
+      box.querySelectorAll(".choice").forEach(function(c) { c.classList.add("locked"); });
+      if (i === q.correctIdx) {
+        div.classList.add("correct"); rightCount++;
+        revealOk(card, "correct.", q.why);
+      } else {
+        div.classList.add("wrong");
+        var correct = box.querySelector('[data-i="' + q.correctIdx + '"]');
+        if (correct) correct.classList.add("correct");
+        wrongCount++;
+        revealBad(card, "not quite.", q.why);
+      }
+    });
+    box.appendChild(div);
+  });
+  card.appendChild(box);
+}
+
+function paintNumeric(card, q) {
+  var row = document.createElement("div"); row.className = "answer-row";
+  var input = document.createElement("input"); input.type = "text"; input.placeholder = "your answer";
+  var unit = document.createElement("span"); unit.className = "target-unit";
+  if (q.unit) unit.textContent = q.unit;
+  var btn = document.createElement("button"); btn.className = "btn-check"; btn.textContent = "check";
+  row.appendChild(input); if (q.unit) row.appendChild(unit); row.appendChild(btn);
+  card.appendChild(row);
+  setTimeout(function() { input.focus(); }, 0);
+  function submit() {
+    if (locked) return;
+    var v = input.value.trim();
+    if (!v) return;
+    locked = true;
+    btn.disabled = true;
+    if (q.check(v)) {
+      input.classList.add("correct"); rightCount++;
+      revealOk(card, "correct.", q.why);
+    } else {
+      input.classList.add("wrong"); wrongCount++;
+      revealBad(card, "not quite.", q.why);
+    }
+  }
+  btn.addEventListener("click", submit);
+  input.addEventListener("keydown", function(e) { if (e.key === "Enter") submit(); });
+}
+
+function revealOk(card, line, explain) { revealCommon(card, line, explain, "ok"); }
+function revealBad(card, line, explain) { revealCommon(card, line, explain, "bad"); }
+function revealCommon(card, line, explain, kind) {
+  var r = document.createElement("div"); r.className = "reveal " + kind;
+  var l = document.createElement("div"); l.className = "reveal-line"; l.textContent = line.toUpperCase();
+  var e = document.createElement("div"); e.className = "reveal-explain";
+  renderMixed(e, explain);
+  r.appendChild(l); r.appendChild(e);
+  r.appendChild(makeNextBtn());
+  card.appendChild(r);
+}
+function makeNextBtn() {
+  var c = document.createElement("div"); c.className = "controls";
+  var b = document.createElement("button"); b.className = "btn primary";
+  b.textContent = (stepIdx + 1 >= TOTAL) ? "see results" : "next →";
+  b.addEventListener("click", function() { locked = false; stepIdx++; paint(); });
+  c.appendChild(b);
+  return c;
+}
+function paintDone() {
+  var card = document.getElementById("card");
+  card.innerHTML = "";
+  var d = document.createElement("div"); d.className = "done-card";
+  var k = document.createElement("div"); k.className = "kicker"; k.textContent = "SESSION COMPLETE";
+  var big = document.createElement("div"); big.className = "big";
+  big.innerHTML = '<b>' + rightCount + '</b><span class="total"> / ' + TOTAL + '</span>';
+  var sub = document.createElement("div"); sub.className = "sub";
+  sub.textContent = rightCount === TOTAL ? "perfect run." : "try a different topic, or run it again.";
+  var msg = document.createElement("div"); msg.className = "msg";
+  if (rightCount >= 7) msg.textContent = "strong recall.";
+  else if (rightCount >= 5) msg.textContent = "solid grasp, keep drilling.";
+  else msg.textContent = "review the lessons before retrying.";
+  d.appendChild(k); d.appendChild(big); d.appendChild(sub); d.appendChild(msg);
+  var c = document.createElement("div"); c.className = "controls";
+  var btn = document.createElement("button"); btn.className = "btn primary"; btn.textContent = "retry";
+  btn.addEventListener("click", function() { buildSession(); paint(); });
+  c.appendChild(btn);
+  d.appendChild(c);
+  card.appendChild(d);
+}
+
+var qsTopic = (new URLSearchParams(location.search)).get("topic");
+if (qsTopic && TOPIC_ROUTES[qsTopic]) topic = qsTopic;
+var topicEl = document.getElementById("topic");
+topicEl.value = topic;
+topicEl.addEventListener("change", function() {
+  topic = topicEl.value;
+  buildSession();
+  paint();
+});
+
+buildSession();
+paint();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var bodyRect = document.querySelector(".wrap").getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(bodyRect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.querySelector(".wrap"));
+var origPaint = paint;
+paint = function() { origPaint(); setTimeout(reportHeight, 50); };
+</script>
+</body>
+</html>

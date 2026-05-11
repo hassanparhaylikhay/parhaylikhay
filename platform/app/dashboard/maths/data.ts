@@ -521,7 +521,17 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "03", code: "6.3", title: "Non-right-angled triangles" },
+      {
+        slug: "03", code: "6.3", title: "Non-right-angled triangles",
+        parts: [
+          { slug: "p1",     label: "P1", title: "When SOH-CAH-TOA isn't enough" },
+          { slug: "p2",     label: "P2", title: "The sine rule" },
+          { slug: "p3",     label: "P3", title: "The ambiguous case (SSA)" },
+          { slug: "p4",     label: "P4", title: "The cosine rule" },
+          { slug: "p5",     label: "P5", title: "Area = ½ ab sin C" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "04", code: "6.4", title: "Pythagoras and trigonometry in 3D" },
     ],
   },
