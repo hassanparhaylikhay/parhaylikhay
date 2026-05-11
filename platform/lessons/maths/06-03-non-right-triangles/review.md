@@ -4,23 +4,23 @@ checks:
   - q: 'You know two angles ($A = 40°$, $B = 70°$) and a side ($a = 6$). To find side $b$, use...'
     options: ["sine rule", "cosine rule", "Pythagoras", "area formula"]
     correct: 0
-    explain: 'Two angles + a side (AAS / ASA) → sine rule. Pair side $a$ with angle $A$ and side $b$ with angle $B$.'
+    explain: 'Two angles and any side → sine rule. Pair side $a$ with angle $A$ and side $b$ with angle $B$.'
   - q: 'You know two sides ($b = 7$, $c = 8$) and the angle between them ($A = 60°$). To find side $a$, use...'
     options: ["sine rule", "cosine rule", "area formula", "any of these"]
     correct: 1
-    explain: 'SAS → cosine rule. $a^{2} = b^{2}+c^{2}-2bc\cos A$.'
+    explain: 'Two sides with the angle between them → cosine rule. $a^{2} = b^{2}+c^{2}-2bc\cos A$.'
   - q: 'You know all three sides $5, 7, 8$ and want to find the largest angle. Use...'
     options: ["sine rule", "cosine rule rearranged", "area formula", "Pythagoras"]
     correct: 1
-    explain: 'SSS → rearranged cosine rule: $\cos A = (b^{2}+c^{2}-a^{2})/(2bc)$, with $a$ as the longest side.'
+    explain: 'All three sides → rearranged cosine rule: $\cos A = (b^{2}+c^{2}-a^{2})/(2bc)$, with $a$ as the longest side.'
   - q: 'Area of a triangle with sides $a=6$, $b=5$ and included angle $C=70°$ is...'
     options: ["$15$", "$15\\sin 70°$", "$30\\sin 70°$", "$\\tfrac{1}{2}(6+5)\\sin 70°$"]
     correct: 1
     explain: '$\tfrac{1}{2}(6)(5)\sin 70° = 15\sin 70° \approx 14.1$ cm².'
-  - q: 'The sine rule''s ambiguous case can occur when you know...'
-    options: ["two angles + a side", "two sides + the included angle", "two sides + a NON-included angle", "all three sides"]
+  - q: 'The ambiguous case can occur when you know...'
+    options: ["two angles + a side", "two sides + the included angle", "two sides + the angle opposite one of them", "all three sides"]
     correct: 2
-    explain: 'SSA: sin is positive in both Q1 and Q2, so two triangles may fit. Diagram or context disambiguates.'
+    explain: 'Sine gives the same value at any pair of angles adding to $180°$, so two triangles may fit. Diagram or context disambiguates.'
 ---
 
 ## What you learned in 6.3
@@ -29,8 +29,8 @@ A short walkthrough of the unit:
 
 - The hook: SOH-CAH-TOA only works on right triangles. The sine rule and cosine rule extend trigonometry to any triangle.
 - The sine rule: $\dfrac{a}{\sin A} = \dfrac{b}{\sin B} = \dfrac{c}{\sin C}$. Use when you have a (side, opposite-angle) pair plus one more piece.
-- The ambiguous case: SSA can fit two triangles. Check the second solution $180° - \sin^{-1}(\text{value})$ and verify the angle sum.
-- The cosine rule: $a^{2} = b^{2} + c^{2} - 2bc\cos A$. Use for SAS (find a side) or SSS (find an angle, rearranged).
+- The ambiguous case: two sides and the angle opposite one of them can fit two different triangles. Check the second solution $180° - \sin^{-1}(\text{value})$ and verify the angle sum.
+- The cosine rule: $a^{2} = b^{2} + c^{2} - 2bc\cos A$. Use it when the known angle is between the two known sides (find the third side), or when all three sides are known (find an angle, rearranged).
 - The area formula: $\tfrac{1}{2}ab\sin C$. Use when you have two sides and the included angle.
 
 ## Which rule for which situation, at a glance
@@ -73,7 +73,7 @@ A triangular field $ABC$ has $AB = 120$ m, $BC = 90$ m, and $\angle B = 65°$.
 
 <iframe src="/widgets/trig-non-right-step-explorer.html?preset=comprehensive-field" style="width:100%;max-width:696px;height:560px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 
-**Part (a): find $AC$.** Two sides ($AB = 120$ and $BC = 90$) with the included angle at $B$, which is SAS. Use the cosine rule with $b$ as the side opposite $B$ (i.e. $AC = b$):
+**Part (a): find $AC$.** Two sides ($AB = 120$ and $BC = 90$) with the angle between them at $B$. Use the cosine rule with $b$ as the side opposite $B$ (i.e. $AC = b$):
 
 $$b^{2} = AB^{2} + BC^{2} - 2(AB)(BC)\cos B$$
 
