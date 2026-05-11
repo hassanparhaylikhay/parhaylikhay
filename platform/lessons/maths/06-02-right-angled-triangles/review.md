@@ -13,7 +13,7 @@ checks:
     options: ["$20\\sin 25°$", "$20\\cos 25°$", "$20\\tan 25°$", "$20/\\cos 25°$"]
     correct: 1
     explain: '$\cos 25° = \dfrac{\text{adj}}{20}$, so adj $= 20\cos 25° \approx 18.13$.'
-  - q: 'In a right triangle, $\\sin\\theta$ for an acute angle is always...'
+  - q: 'In a right triangle, $\sin\theta$ for an acute angle is always...'
     options: ["between 0 and 1", "greater than 1", "exactly equal to $\\cos\\theta$", "negative"]
     correct: 0
     explain: 'For $0° < \theta < 90°$, the opposite side is shorter than the hypotenuse, so $\sin\theta = \text{opp}/\text{hyp}$ is between 0 and 1.'
