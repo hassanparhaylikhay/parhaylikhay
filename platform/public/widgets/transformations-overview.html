@@ -15,6 +15,8 @@
   .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:14px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
   .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
+  .hint { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; margin:0 0 8px; letter-spacing:0.3px; }
+  .hint .h-key { color:#fff067; }
 
   .mode-tabs { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
   .mode-tab {
@@ -26,19 +28,13 @@
   .mode-tab:hover { color:#f0eeea; border-color:#3a4a5a; }
   .mode-tab.active { background:rgba(255,240,103,0.06); color:#fff067; border-color:#fff067; }
 
-  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; }
+  #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:default; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
   .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
   .lbl-host .katex { font-size:1em; }
 
-  .controls { display:flex; flex-direction:column; gap:8px; padding:10px 4px 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
-  .row { display:flex; align-items:center; gap:10px; }
-  .row .name { font-weight:600; min-width:60px; }
-  .row input[type=range] { flex:1; appearance:none; -webkit-appearance:none; height:3px; background:#141e2a; border-radius:2px; outline:none; }
-  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; cursor:pointer; border:0; background:#fff067; }
-  .row input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; cursor:pointer; border:0; background:#fff067; }
-  .row .val { min-width:46px; text-align:right; color:#f0eeea; font-weight:600; font-size:12.5px; }
-
-  .preset-row { display:flex; gap:6px; flex-wrap:wrap; padding:6px 0 4px; }
+  .controls { display:flex; gap:6px; flex-wrap:wrap; padding:10px 0 4px; }
   .preset-btn {
     background:#0b1118; border:1px solid #141e2a; color:#7a7875;
     font-family:'Geist Mono',monospace; font-size:11px; font-weight:600;
@@ -46,7 +42,14 @@
     transition: all 0.12s ease;
   }
   .preset-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
-  .preset-btn.active { background:rgba(0,171,250,0.06); color:#00abfa; border-color:#00abfa; }
+  .preset-btn.active { background:rgba(255,240,103,0.06); color:#fff067; border-color:#fff067; }
+  .reset-btn {
+    margin-left:auto; background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:11px; font-weight:600;
+    padding:5px 10px; border-radius:4px; cursor:pointer;
+    transition: all 0.12s ease;
+  }
+  .reset-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
 
   .mark-scheme {
     margin-top:10px; padding:10px 12px; border-radius:6px;
@@ -61,14 +64,22 @@
   .mark-scheme .body .katex { font-size:1em; }
 
   .footer { margin-top:10px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
+  }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
 </style>
 </head>
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
-    <span class="step-title" id="title">FOUR TRANSFORMATIONS · ONE TRIANGLE</span>
-    <span class="meta" id="meta">drag a control to move the image</span>
+    <span class="step-title">FOUR TRANSFORMATIONS · ONE TRIANGLE</span>
+    <span class="meta" id="meta">drag the pink shape</span>
   </div>
+
+  <p class="hint" id="hint"></p>
 
   <div class="mode-tabs">
     <button class="mode-tab active" data-mode="translate">Translate</button>
@@ -84,7 +95,7 @@
     <g id="g-overlays"></g>
     <g id="g-object"></g>
     <g id="g-image"></g>
-    <g id="g-controls"></g>
+    <g id="g-handles"></g>
     <g id="g-labels"></g>
   </svg>
 
@@ -95,7 +106,7 @@
     <div class="body" id="ms-body"></div>
   </div>
 
-  <p class="footer">positive angles = anticlockwise · negative scale factor flips through the centre</p>
+  <p class="footer">drag on the canvas · presets snap to common values · everything springs smoothly</p>
 </div>
 
 <script>
@@ -117,43 +128,54 @@ var SVG_W = 480, SVG_H = 320;
 var X_MIN = -7, X_MAX = 9, Y_MIN = -5, Y_MAX = 5;
 var pxPerX = SVG_W / (X_MAX - X_MIN);
 var pxPerY = SVG_H / (Y_MAX - Y_MIN);
-// Equal px/unit: take the smaller
 var UNIT = Math.min(pxPerX, pxPerY);
-var ORIGIN_PX = { x: -X_MIN * UNIT, y: SVG_H + Y_MIN * UNIT };
-// recenter the plot horizontally if there is extra room
-ORIGIN_PX.x = (SVG_W - (X_MAX - X_MIN) * UNIT) / 2 - X_MIN * UNIT;
-ORIGIN_PX.y = SVG_H - (-Y_MIN) * UNIT - (SVG_H - (Y_MAX - Y_MIN) * UNIT) / 2;
-
+var ORIGIN_PX = {
+  x: (SVG_W - (X_MAX - X_MIN) * UNIT) / 2 - X_MIN * UNIT,
+  y: SVG_H - (-Y_MIN) * UNIT - (SVG_H - (Y_MAX - Y_MIN) * UNIT) / 2
+};
 function toSx(x){ return ORIGIN_PX.x + x * UNIT; }
 function toSy(y){ return ORIGIN_PX.y - y * UNIT; }
+function fromSx(sx){ return (sx - ORIGIN_PX.x) / UNIT; }
+function fromSy(sy){ return (ORIGIN_PX.y - sy) / UNIT; }
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+function clampMath(p){ return { x: clamp(p.x, X_MIN + 0.5, X_MAX - 0.5), y: clamp(p.y, Y_MIN + 0.5, Y_MAX - 0.5) }; }
+function snapHalf(v){ return Math.round(v * 2) / 2; }
+function snapInt(v){ return Math.round(v); }
+function snapQuarter(v){ return Math.round(v * 4) / 4; }
+function snap5(v){ return Math.round(v / 5) * 5; }
 
-// ----- object triangle (constant across modes) -----
+// ----- object triangle (constant) -----
 var OBJ = [ {x:1,y:1}, {x:4,y:1}, {x:2,y:3} ];
 var LABELS = ['A','B','C'];
 
-// ----- state per mode -----
+// ----- params (drag targets) and display (spring) -----
 var mode = "translate";
-// translate: tx, ty (column vector)
-var T = { tx: 3, ty: -2 };
-// reflect: which preset line
-var R = { preset: "yx" }; // y=x by default
-// rotate: angle (90 steps), centre
-var ROT = { angle: 90, cx: 0, cy: 0 };
-// enlarge: SF, centre
-var ENL = { k: 2, cx: 0, cy: 0 };
+var P = {
+  T:   { tx: 3, ty: -2 },
+  R:   { p1: {x:-4,y:-4}, p2: {x:4,y:4}, preset: "yx" },
+  ROT: { cx: 0, cy: 0, angle: 90 },
+  ENL: { cx: 0, cy: 0, k: 2 }
+};
+var D = {
+  T:   { tx: 3, ty: -2 },
+  R:   { p1: {x:-4,y:-4}, p2: {x:4,y:4} },
+  ROT: { cx: 0, cy: 0, angle: 90 },
+  ENL: { cx: 0, cy: 0, k: 2 }
+};
+var DEFAULTS = JSON.parse(JSON.stringify(P));
+
+var SPRING = 0.22;
+var EPS = 0.005;
+var raf = null;
 
 // ----- math helpers -----
-function reflectPt(p, mirror){
-  // mirror = { type: "y0"|"x0"|"yx"|"ynx"|"y1"|"x2" }
-  switch(mirror.preset){
-    case "y0":  return { x: p.x,  y: -p.y };
-    case "x0":  return { x: -p.x, y: p.y };
-    case "yx":  return { x: p.y,  y: p.x };
-    case "ynx": return { x: -p.y, y: -p.x };
-    case "y1":  return { x: p.x,  y: 2 - p.y };
-    case "x2":  return { x: 4 - p.x, y: p.y };
-  }
-  return p;
+function reflectPtLine(p, a, b){
+  var dx = b.x - a.x, dy = b.y - a.y;
+  var len2 = dx*dx + dy*dy;
+  if (len2 < 1e-6) return p;
+  var t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2;
+  var fx = a.x + t * dx, fy = a.y + t * dy;
+  return { x: 2*fx - p.x, y: 2*fy - p.y };
 }
 function rotatePt(p, cx, cy, deg){
   var th = deg * Math.PI / 180;
@@ -166,13 +188,25 @@ function enlargePt(p, cx, cy, k){
 }
 function translatePt(p, tx, ty){ return { x: p.x + tx, y: p.y + ty }; }
 
-function imagePoints(){
-  if (mode === "translate") return OBJ.map(function(p){ return translatePt(p, T.tx, T.ty); });
-  if (mode === "reflect")   return OBJ.map(function(p){ return reflectPt(p, R); });
-  if (mode === "rotate")    return OBJ.map(function(p){ return rotatePt(p, ROT.cx, ROT.cy, ROT.angle); });
-  if (mode === "enlarge")   return OBJ.map(function(p){ return enlargePt(p, ENL.cx, ENL.cy, ENL.k); });
+function imagePointsDisplay(){
+  if (mode === "translate") return OBJ.map(function(p){ return translatePt(p, D.T.tx, D.T.ty); });
+  if (mode === "reflect")   return OBJ.map(function(p){ return reflectPtLine(p, D.R.p1, D.R.p2); });
+  if (mode === "rotate")    return OBJ.map(function(p){ return rotatePt(p, D.ROT.cx, D.ROT.cy, D.ROT.angle); });
+  if (mode === "enlarge")   return OBJ.map(function(p){ return enlargePt(p, D.ENL.cx, D.ENL.cy, D.ENL.k); });
   return OBJ.slice();
 }
+// ----- point-in-polygon (math coords) -----
+function pointInPoly(p, poly){
+  var inside = false;
+  for (var i = 0, j = poly.length - 1; i < poly.length; j = i++){
+    var xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
+    var intersect = ((yi > p.y) !== (yj > p.y)) &&
+      (p.x < (xj - xi) * (p.y - yi) / ((yj - yi) || 1e-9) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+function dist2(a, b){ var dx = a.x - b.x, dy = a.y - b.y; return dx*dx + dy*dy; }
 
 // ----- KaTeX helpers -----
 function tryRender(target, tex){
@@ -212,22 +246,20 @@ function drawGridAxes(){
   var gAxes = document.getElementById("g-axes");
   var gTicks = document.getElementById("g-ticks");
   clear(gGrid); clear(gAxes); clear(gTicks);
-
   for (var x = Math.ceil(X_MIN); x <= X_MAX; x++){
-    var line = document.createElementNS("http://www.w3.org/2000/svg","line");
-    line.setAttribute("x1", toSx(x)); line.setAttribute("x2", toSx(x));
-    line.setAttribute("y1", toSy(Y_MIN)); line.setAttribute("y2", toSy(Y_MAX));
-    line.setAttribute("stroke", "#141e2a"); line.setAttribute("stroke-width", 0.7);
-    gGrid.appendChild(line);
+    var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", toSx(x)); l.setAttribute("x2", toSx(x));
+    l.setAttribute("y1", toSy(Y_MIN)); l.setAttribute("y2", toSy(Y_MAX));
+    l.setAttribute("stroke", "#141e2a"); l.setAttribute("stroke-width", 0.7);
+    gGrid.appendChild(l);
   }
   for (var y = Math.ceil(Y_MIN); y <= Y_MAX; y++){
-    var line2 = document.createElementNS("http://www.w3.org/2000/svg","line");
-    line2.setAttribute("y1", toSy(y)); line2.setAttribute("y2", toSy(y));
-    line2.setAttribute("x1", toSx(X_MIN)); line2.setAttribute("x2", toSx(X_MAX));
-    line2.setAttribute("stroke", "#141e2a"); line2.setAttribute("stroke-width", 0.7);
-    gGrid.appendChild(line2);
+    var l2 = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l2.setAttribute("y1", toSy(y)); l2.setAttribute("y2", toSy(y));
+    l2.setAttribute("x1", toSx(X_MIN)); l2.setAttribute("x2", toSx(X_MAX));
+    l2.setAttribute("stroke", "#141e2a"); l2.setAttribute("stroke-width", 0.7);
+    gGrid.appendChild(l2);
   }
-  // axes
   var ax = document.createElementNS("http://www.w3.org/2000/svg","line");
   ax.setAttribute("x1", toSx(X_MIN)); ax.setAttribute("x2", toSx(X_MAX));
   ax.setAttribute("y1", toSy(0)); ax.setAttribute("y2", toSy(0));
@@ -238,7 +270,6 @@ function drawGridAxes(){
   ay.setAttribute("x1", toSx(0)); ay.setAttribute("x2", toSx(0));
   ay.setAttribute("stroke", COL.faint); ay.setAttribute("stroke-width", 1.2);
   gAxes.appendChild(ay);
-  // ticks
   for (var xt = Math.ceil(X_MIN); xt <= X_MAX; xt++){
     if (xt === 0) continue;
     svgKaTeXLabel(gTicks, toSx(xt), toSy(0) + 11, String(xt), COL.grey);
@@ -260,8 +291,8 @@ function drawPoly(g, pts, fillCol, strokeCol, strokeW){
   path.setAttribute("stroke-width", strokeW || 2);
   path.setAttribute("stroke-linejoin","round");
   g.appendChild(path);
+  return path;
 }
-
 function drawVertexDot(g, pt, color, label, primeFlag){
   var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
   c.setAttribute("cx", toSx(pt.x)); c.setAttribute("cy", toSy(pt.y));
@@ -277,113 +308,87 @@ function drawObjectAndImage(){
   var gImg = document.getElementById("g-image");
   clear(gObj); clear(gImg);
   drawPoly(gObj, OBJ, "rgba(0,171,250,0.10)", COL.blue, 2);
-  var IMG = imagePoints();
+  var IMG = imagePointsDisplay();
   drawPoly(gImg, IMG, "rgba(255,70,112,0.10)", COL.pink, 2);
   OBJ.forEach(function(p,i){ drawVertexDot(gObj, p, COL.blue, LABELS[i], false); });
   IMG.forEach(function(p,i){ drawVertexDot(gImg, p, COL.pink, LABELS[i] + "'", true); });
 }
 
 // ----- overlays per mode -----
-function drawTranslateOverlay(){
+function drawOverlay(){
   var g = document.getElementById("g-overlays");
   clear(g);
-  // Yellow arrow from each object vertex to its image vertex
-  OBJ.forEach(function(p,i){
-    var q = translatePt(p, T.tx, T.ty);
-    drawArrow(g, p, q, COL.yellow, 1.6, true, false);
-  });
-}
-
-function drawReflectOverlay(){
-  var g = document.getElementById("g-overlays");
-  clear(g);
-  // Draw mirror line as dashed blue across the plot
-  var line = mirrorLineForPreset(R.preset);
-  var lineEl = document.createElementNS("http://www.w3.org/2000/svg","line");
-  lineEl.setAttribute("x1", toSx(line.a.x));
-  lineEl.setAttribute("y1", toSy(line.a.y));
-  lineEl.setAttribute("x2", toSx(line.b.x));
-  lineEl.setAttribute("y2", toSy(line.b.y));
-  lineEl.setAttribute("stroke", COL.yellow);
-  lineEl.setAttribute("stroke-width", 1.8);
-  lineEl.setAttribute("stroke-dasharray", "6 5");
-  g.appendChild(lineEl);
-  // Perpendicular bisectors (faint) for each vertex
-  OBJ.forEach(function(p){
-    var q = reflectPt(p, R);
-    var bis = document.createElementNS("http://www.w3.org/2000/svg","line");
-    bis.setAttribute("x1", toSx(p.x)); bis.setAttribute("y1", toSy(p.y));
-    bis.setAttribute("x2", toSx(q.x)); bis.setAttribute("y2", toSy(q.y));
-    bis.setAttribute("stroke", "rgba(240,238,234,0.18)");
-    bis.setAttribute("stroke-width", 1);
-    bis.setAttribute("stroke-dasharray", "3 4");
-    g.appendChild(bis);
-  });
-}
-
-function drawRotateOverlay(){
-  var g = document.getElementById("g-overlays");
-  clear(g);
-  // Centre marker (yellow)
-  var cMark = document.createElementNS("http://www.w3.org/2000/svg","circle");
-  cMark.setAttribute("cx", toSx(ROT.cx)); cMark.setAttribute("cy", toSy(ROT.cy));
-  cMark.setAttribute("r", 6); cMark.setAttribute("fill", COL.yellow);
-  cMark.setAttribute("stroke", "#0b1118"); cMark.setAttribute("stroke-width", 1.5);
-  g.appendChild(cMark);
-  // Arc trail for each vertex
-  OBJ.forEach(function(p){
-    var r = Math.sqrt((p.x - ROT.cx)*(p.x - ROT.cx) + (p.y - ROT.cy)*(p.y - ROT.cy));
-    if (r < 0.05) return;
-    var startMath = Math.atan2(p.y - ROT.cy, p.x - ROT.cx);
-    var endMath = startMath + ROT.angle * Math.PI / 180;
-    var startScreen = -startMath;
-    var endScreen = -endMath;
-    var sweep = ROT.angle > 0 ? 0 : 1; // anticlockwise = sweep 0 in svg y-down
-    var largeArc = Math.abs(ROT.angle) > 180 ? 1 : 0;
-    var rPx = r * UNIT;
-    var sx = toSx(ROT.cx) + rPx * Math.cos(startScreen);
-    var sy = toSy(ROT.cy) + rPx * Math.sin(startScreen);
-    var ex = toSx(ROT.cx) + rPx * Math.cos(endScreen);
-    var ey = toSy(ROT.cy) + rPx * Math.sin(endScreen);
-    var arc = document.createElementNS("http://www.w3.org/2000/svg","path");
-    arc.setAttribute("d", "M " + sx + " " + sy + " A " + rPx + " " + rPx + " 0 " + largeArc + " " + sweep + " " + ex + " " + ey);
-    arc.setAttribute("fill", "none");
-    arc.setAttribute("stroke", COL.yellow);
-    arc.setAttribute("stroke-width", 1.4);
-    arc.setAttribute("opacity", 0.55);
-    g.appendChild(arc);
-  });
-}
-
-function drawEnlargeOverlay(){
-  var g = document.getElementById("g-overlays");
-  clear(g);
-  // Centre marker
-  var cMark = document.createElementNS("http://www.w3.org/2000/svg","circle");
-  cMark.setAttribute("cx", toSx(ENL.cx)); cMark.setAttribute("cy", toSy(ENL.cy));
-  cMark.setAttribute("r", 6); cMark.setAttribute("fill", COL.yellow);
-  cMark.setAttribute("stroke", "#0b1118"); cMark.setAttribute("stroke-width", 1.5);
-  g.appendChild(cMark);
-  // Rays through centre, object vertex, image vertex
-  OBJ.forEach(function(p){
-    var q = enlargePt(p, ENL.cx, ENL.cy, ENL.k);
-    var dx = p.x - ENL.cx, dy = p.y - ENL.cy;
+  if (mode === "translate"){
+    OBJ.forEach(function(p){
+      var q = translatePt(p, D.T.tx, D.T.ty);
+      drawArrow(g, p, q, "rgba(255,240,103,0.4)", 1.3, true, true);
+    });
+  } else if (mode === "reflect"){
+    var dx = D.R.p2.x - D.R.p1.x, dy = D.R.p2.y - D.R.p1.y;
     var len = Math.sqrt(dx*dx + dy*dy);
-    if (len < 0.01) return;
-    var ext = 16;
-    var ux = dx / len, uy = dy / len;
-    var ray = document.createElementNS("http://www.w3.org/2000/svg","line");
-    ray.setAttribute("x1", toSx(ENL.cx - ext * ux));
-    ray.setAttribute("y1", toSy(ENL.cy - ext * uy));
-    ray.setAttribute("x2", toSx(ENL.cx + ext * ux));
-    ray.setAttribute("y2", toSy(ENL.cy + ext * uy));
-    ray.setAttribute("stroke", COL.yellow);
-    ray.setAttribute("stroke-width", 1);
-    ray.setAttribute("stroke-dasharray", "4 4");
-    ray.setAttribute("opacity", 0.45);
-    g.appendChild(ray);
-    void q;
-  });
+    if (len > 0.001){
+      var ux = dx / len, uy = dy / len;
+      var ext = 14;
+      var a = { x: D.R.p1.x - ext * ux, y: D.R.p1.y - ext * uy };
+      var b = { x: D.R.p1.x + ext * ux, y: D.R.p1.y + ext * uy };
+      var line = document.createElementNS("http://www.w3.org/2000/svg","line");
+      line.setAttribute("x1", toSx(a.x)); line.setAttribute("y1", toSy(a.y));
+      line.setAttribute("x2", toSx(b.x)); line.setAttribute("y2", toSy(b.y));
+      line.setAttribute("stroke", COL.yellow); line.setAttribute("stroke-width", 1.8);
+      line.setAttribute("stroke-dasharray", "6 5");
+      g.appendChild(line);
+    }
+    OBJ.forEach(function(p){
+      var q = reflectPtLine(p, D.R.p1, D.R.p2);
+      var bis = document.createElementNS("http://www.w3.org/2000/svg","line");
+      bis.setAttribute("x1", toSx(p.x)); bis.setAttribute("y1", toSy(p.y));
+      bis.setAttribute("x2", toSx(q.x)); bis.setAttribute("y2", toSy(q.y));
+      bis.setAttribute("stroke", "rgba(240,238,234,0.18)");
+      bis.setAttribute("stroke-width", 1);
+      bis.setAttribute("stroke-dasharray", "3 4");
+      g.appendChild(bis);
+    });
+  } else if (mode === "rotate"){
+    OBJ.forEach(function(p){
+      var r = Math.sqrt((p.x - D.ROT.cx)*(p.x - D.ROT.cx) + (p.y - D.ROT.cy)*(p.y - D.ROT.cy));
+      if (r < 0.05) return;
+      var startMath = Math.atan2(p.y - D.ROT.cy, p.x - D.ROT.cx);
+      var endMath = startMath + D.ROT.angle * Math.PI / 180;
+      var startScreen = -startMath, endScreen = -endMath;
+      var sweep = D.ROT.angle > 0 ? 0 : 1;
+      var largeArc = Math.abs(D.ROT.angle) > 180 ? 1 : 0;
+      var rPx = r * UNIT;
+      var sx = toSx(D.ROT.cx) + rPx * Math.cos(startScreen);
+      var sy = toSy(D.ROT.cy) + rPx * Math.sin(startScreen);
+      var ex = toSx(D.ROT.cx) + rPx * Math.cos(endScreen);
+      var ey = toSy(D.ROT.cy) + rPx * Math.sin(endScreen);
+      var arc = document.createElementNS("http://www.w3.org/2000/svg","path");
+      arc.setAttribute("d", "M " + sx + " " + sy + " A " + rPx + " " + rPx + " 0 " + largeArc + " " + sweep + " " + ex + " " + ey);
+      arc.setAttribute("fill", "none");
+      arc.setAttribute("stroke", COL.yellow);
+      arc.setAttribute("stroke-width", 1.4);
+      arc.setAttribute("opacity", 0.55);
+      g.appendChild(arc);
+    });
+  } else if (mode === "enlarge"){
+    OBJ.forEach(function(p){
+      var dx = p.x - D.ENL.cx, dy = p.y - D.ENL.cy;
+      var len = Math.sqrt(dx*dx + dy*dy);
+      if (len < 0.01) return;
+      var ext = 16;
+      var ux = dx / len, uy = dy / len;
+      var ray = document.createElementNS("http://www.w3.org/2000/svg","line");
+      ray.setAttribute("x1", toSx(D.ENL.cx - ext * ux));
+      ray.setAttribute("y1", toSy(D.ENL.cy - ext * uy));
+      ray.setAttribute("x2", toSx(D.ENL.cx + ext * ux));
+      ray.setAttribute("y2", toSy(D.ENL.cy + ext * uy));
+      ray.setAttribute("stroke", COL.yellow);
+      ray.setAttribute("stroke-width", 1);
+      ray.setAttribute("stroke-dasharray", "4 4");
+      ray.setAttribute("opacity", 0.45);
+      g.appendChild(ray);
+    });
+  }
 }
 
 function drawArrow(g, fromPt, toPt, color, width, withHead, dashed){
@@ -394,8 +399,7 @@ function drawArrow(g, fromPt, toPt, color, width, withHead, dashed){
   if (L < 4) return;
   var ux = dx / L, uy = dy / L;
   var head = withHead ? 9 : 0;
-  var bx = x2 - ux * head;
-  var by = y2 - uy * head;
+  var bx = x2 - ux * head, by = y2 - uy * head;
   var ln = document.createElementNS("http://www.w3.org/2000/svg","line");
   ln.setAttribute("x1", x1); ln.setAttribute("y1", y1);
   ln.setAttribute("x2", bx); ln.setAttribute("y2", by);
@@ -414,20 +418,253 @@ function drawArrow(g, fromPt, toPt, color, width, withHead, dashed){
   }
 }
 
-// ----- mirror line geometry for each preset -----
-function mirrorLineForPreset(p){
-  switch (p){
-    case "y0":  return { a: {x: X_MIN, y: 0}, b: {x: X_MAX, y: 0}, label: "y = 0 (x\\text{-axis})" };
-    case "x0":  return { a: {x: 0, y: Y_MIN}, b: {x: 0, y: Y_MAX}, label: "x = 0 (y\\text{-axis})" };
-    case "yx":  return { a: {x: -6, y: -6}, b: {x: 6, y: 6}, label: "y = x" };
-    case "ynx": return { a: {x: -6, y: 6}, b: {x: 6, y: -6}, label: "y = -x" };
-    case "y1":  return { a: {x: X_MIN, y: 1}, b: {x: X_MAX, y: 1}, label: "y = 1" };
-    case "x2":  return { a: {x: 2, y: Y_MIN}, b: {x: 2, y: Y_MAX}, label: "x = 2" };
+// ----- yellow handle dots -----
+function drawHandleDot(g, mathPt, ringColor){
+  var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("cx", toSx(mathPt.x));
+  c.setAttribute("cy", toSy(mathPt.y));
+  c.setAttribute("r", 7);
+  c.setAttribute("fill", COL.yellow);
+  c.setAttribute("stroke", ringColor || "#0b1118");
+  c.setAttribute("stroke-width", ringColor ? 2 : 1.5);
+  c.setAttribute("class", "handle");
+  c.style.color = COL.yellow;
+  g.appendChild(c);
+  return c;
+}
+
+function drawHandles(){
+  var g = document.getElementById("g-handles");
+  clear(g);
+  if (mode === "reflect"){
+    drawHandleDot(g, D.R.p1);
+    drawHandleDot(g, D.R.p2);
+  } else if (mode === "rotate"){
+    drawHandleDot(g, { x: D.ROT.cx, y: D.ROT.cy });
+    var aPrime = rotatePt(OBJ[0], D.ROT.cx, D.ROT.cy, D.ROT.angle);
+    drawHandleDot(g, aPrime, COL.pink);
+  } else if (mode === "enlarge"){
+    drawHandleDot(g, { x: D.ENL.cx, y: D.ENL.cy });
+    var aImg = enlargePt(OBJ[0], D.ENL.cx, D.ENL.cy, D.ENL.k);
+    drawHandleDot(g, aImg, COL.pink);
+  }
+  // translate has no separate handles — the pink shape itself is the grab target
+}
+
+// ----- handle list for hit-test (display positions, since that is what the user sees) -----
+function currentHandleList(){
+  var list = [];
+  var HIT2 = 0.6 * 0.6; // ~0.6 math unit (~18 px) hit radius
+  if (mode === "reflect"){
+    list.push({ kind: "reflect-p1", pos: D.R.p1, tol: HIT2 });
+    list.push({ kind: "reflect-p2", pos: D.R.p2, tol: HIT2 });
+  } else if (mode === "rotate"){
+    var aP = rotatePt(OBJ[0], D.ROT.cx, D.ROT.cy, D.ROT.angle);
+    list.push({ kind: "rotate-aprime", pos: aP, tol: HIT2 });
+    list.push({ kind: "rotate-centre", pos: { x: D.ROT.cx, y: D.ROT.cy }, tol: HIT2 });
+  } else if (mode === "enlarge"){
+    var aE = enlargePt(OBJ[0], D.ENL.cx, D.ENL.cy, D.ENL.k);
+    list.push({ kind: "enlarge-aprime", pos: aE, tol: HIT2 });
+    list.push({ kind: "enlarge-centre", pos: { x: D.ENL.cx, y: D.ENL.cy }, tol: HIT2 });
+  }
+  return list;
+}
+function hitTest(mathPt){
+  var handles = currentHandleList();
+  for (var i = 0; i < handles.length; i++){
+    if (dist2(mathPt, handles[i].pos) < handles[i].tol){
+      return { kind: handles[i].kind, grab: null };
+    }
+  }
+  // Translate: pink polygon — grab anywhere inside the displayed pink triangle
+  if (mode === "translate"){
+    var img = imagePointsDisplay();
+    if (pointInPoly(mathPt, img)){
+      var cx = (img[0].x + img[1].x + img[2].x) / 3;
+      var cy = (img[0].y + img[1].y + img[2].y) / 3;
+      return { kind: "translate-shape", grab: { x: mathPt.x - cx, y: mathPt.y - cy } };
+    }
   }
   return null;
 }
 
-// ----- mark scheme text -----
+function applyDrag(info, m){
+  if (info.kind === "translate-shape"){
+    // Compute new translation so that the grabbed point on the image follows the cursor.
+    // image_centroid = OBJ_centroid + (tx, ty); grabbed point = image_centroid + grab
+    // Set: cursor = image_centroid_new + grab → image_centroid_new = cursor - grab
+    // tx = image_centroid_new.x - OBJ_centroid.x
+    var ocx = (OBJ[0].x + OBJ[1].x + OBJ[2].x) / 3;
+    var ocy = (OBJ[0].y + OBJ[1].y + OBJ[2].y) / 3;
+    var ntx = m.x - info.grab.x - ocx;
+    var nty = m.y - info.grab.y - ocy;
+    P.T.tx = clamp(snapHalf(ntx), -8, 8);
+    P.T.ty = clamp(snapHalf(nty), -6, 6);
+  } else if (info.kind === "reflect-p1"){
+    var s = { x: snapHalf(m.x), y: snapHalf(m.y) };
+    P.R.p1 = clampMath(s); P.R.preset = null;
+    updateActivePresetButtons();
+  } else if (info.kind === "reflect-p2"){
+    var s2 = { x: snapHalf(m.x), y: snapHalf(m.y) };
+    P.R.p2 = clampMath(s2); P.R.preset = null;
+    updateActivePresetButtons();
+  } else if (info.kind === "rotate-centre"){
+    var c = clampMath({ x: snapInt(m.x), y: snapInt(m.y) });
+    P.ROT.cx = c.x; P.ROT.cy = c.y;
+  } else if (info.kind === "rotate-aprime"){
+    var startMath = Math.atan2(OBJ[0].y - P.ROT.cy, OBJ[0].x - P.ROT.cx);
+    var cursMath = Math.atan2(m.y - P.ROT.cy, m.x - P.ROT.cx);
+    var deg = (cursMath - startMath) * 180 / Math.PI;
+    while (deg > 180) deg -= 360;
+    while (deg < -180) deg += 360;
+    P.ROT.angle = snap5(deg);
+    updateActivePresetButtons();
+  } else if (info.kind === "enlarge-centre"){
+    var c2 = clampMath({ x: snapInt(m.x), y: snapInt(m.y) });
+    P.ENL.cx = c2.x; P.ENL.cy = c2.y;
+  } else if (info.kind === "enlarge-aprime"){
+    var dx = OBJ[0].x - P.ENL.cx, dy = OBJ[0].y - P.ENL.cy;
+    var len2 = dx*dx + dy*dy;
+    if (len2 < 1e-6) return;
+    var t = ((m.x - P.ENL.cx) * dx + (m.y - P.ENL.cy) * dy) / len2;
+    P.ENL.k = clamp(snapQuarter(t), -3, 3);
+    updateActivePresetButtons();
+  }
+  kick();
+}
+
+// ----- stage-level pointer dispatch -----
+var stage = document.getElementById("stage");
+var dragInfo = null;
+function svgPtFromEvent(e){
+  var pt = stage.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  var inv = stage.getScreenCTM().inverse();
+  return pt.matrixTransform(inv);
+}
+function evMath(e){
+  var sp = svgPtFromEvent(e);
+  return { x: fromSx(sp.x), y: fromSy(sp.y) };
+}
+stage.addEventListener("pointerdown", function(e){
+  var m = evMath(e);
+  var info = hitTest(m);
+  if (!info) return;
+  e.preventDefault();
+  dragInfo = info;
+  stage.setPointerCapture(e.pointerId);
+  stage.classList.add("grabbing");
+});
+stage.addEventListener("pointermove", function(e){
+  if (!dragInfo){
+    // hover cursor hint
+    var m = evMath(e);
+    var hit = hitTest(m);
+    if (hit) stage.classList.add("hover-grab");
+    else stage.classList.remove("hover-grab");
+    return;
+  }
+  e.preventDefault();
+  var m2 = evMath(e);
+  applyDrag(dragInfo, m2);
+});
+function endDrag(e){
+  if (!dragInfo) return;
+  dragInfo = null;
+  try { stage.releasePointerCapture(e.pointerId); } catch(_){}
+  stage.classList.remove("grabbing");
+}
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover-grab"); });
+
+// ----- spring loop -----
+function lerpAngle(target, display){
+  var diff = target - display;
+  while (diff > 180) diff -= 360;
+  while (diff < -180) diff += 360;
+  return display + diff * SPRING;
+}
+function nearlySettled(){
+  if (mode === "translate") return Math.abs(P.T.tx - D.T.tx) < EPS && Math.abs(P.T.ty - D.T.ty) < EPS;
+  if (mode === "reflect")   return Math.abs(P.R.p1.x - D.R.p1.x) < EPS && Math.abs(P.R.p1.y - D.R.p1.y) < EPS && Math.abs(P.R.p2.x - D.R.p2.x) < EPS && Math.abs(P.R.p2.y - D.R.p2.y) < EPS;
+  if (mode === "rotate"){
+    var d = P.ROT.angle - D.ROT.angle; while (d > 180) d -= 360; while (d < -180) d += 360;
+    return Math.abs(P.ROT.cx - D.ROT.cx) < EPS && Math.abs(P.ROT.cy - D.ROT.cy) < EPS && Math.abs(d) < EPS;
+  }
+  if (mode === "enlarge")   return Math.abs(P.ENL.cx - D.ENL.cx) < EPS && Math.abs(P.ENL.cy - D.ENL.cy) < EPS && Math.abs(P.ENL.k - D.ENL.k) < EPS;
+  return true;
+}
+function step(){
+  if (mode === "translate"){
+    D.T.tx += (P.T.tx - D.T.tx) * SPRING;
+    D.T.ty += (P.T.ty - D.T.ty) * SPRING;
+  } else if (mode === "reflect"){
+    D.R.p1.x += (P.R.p1.x - D.R.p1.x) * SPRING;
+    D.R.p1.y += (P.R.p1.y - D.R.p1.y) * SPRING;
+    D.R.p2.x += (P.R.p2.x - D.R.p2.x) * SPRING;
+    D.R.p2.y += (P.R.p2.y - D.R.p2.y) * SPRING;
+  } else if (mode === "rotate"){
+    D.ROT.cx += (P.ROT.cx - D.ROT.cx) * SPRING;
+    D.ROT.cy += (P.ROT.cy - D.ROT.cy) * SPRING;
+    D.ROT.angle = lerpAngle(P.ROT.angle, D.ROT.angle);
+  } else if (mode === "enlarge"){
+    D.ENL.cx += (P.ENL.cx - D.ENL.cx) * SPRING;
+    D.ENL.cy += (P.ENL.cy - D.ENL.cy) * SPRING;
+    D.ENL.k += (P.ENL.k - D.ENL.k) * SPRING;
+  }
+  drawObjectAndImage();
+  drawOverlay();
+  drawHandles();
+  renderMarkScheme();
+  if (!nearlySettled()){
+    raf = requestAnimationFrame(step);
+  } else {
+    raf = null;
+    if (mode === "translate"){ D.T.tx = P.T.tx; D.T.ty = P.T.ty; }
+    else if (mode === "reflect"){ D.R.p1.x = P.R.p1.x; D.R.p1.y = P.R.p1.y; D.R.p2.x = P.R.p2.x; D.R.p2.y = P.R.p2.y; }
+    else if (mode === "rotate"){ D.ROT.cx = P.ROT.cx; D.ROT.cy = P.ROT.cy; D.ROT.angle = P.ROT.angle; }
+    else if (mode === "enlarge"){ D.ENL.cx = P.ENL.cx; D.ENL.cy = P.ENL.cy; D.ENL.k = P.ENL.k; }
+    drawObjectAndImage(); drawOverlay(); drawHandles(); renderMarkScheme();
+  }
+}
+function kick(){
+  if (raf == null) raf = requestAnimationFrame(step);
+  notifyHeight();
+}
+
+// ----- mirror equation -----
+function mirrorPresetEndpoints(p){
+  switch (p){
+    case "y0":  return { p1: {x:-5, y:0}, p2: {x:5, y:0}, label: "y = 0" };
+    case "x0":  return { p1: {x:0, y:-4}, p2: {x:0, y:4}, label: "x = 0" };
+    case "yx":  return { p1: {x:-4, y:-4}, p2: {x:4, y:4}, label: "y = x" };
+    case "ynx": return { p1: {x:-4, y:4}, p2: {x:4, y:-4}, label: "y = -x" };
+    case "y1":  return { p1: {x:-5, y:1}, p2: {x:5, y:1}, label: "y = 1" };
+    case "x2":  return { p1: {x:2, y:-4}, p2: {x:2, y:4}, label: "x = 2" };
+  }
+  return null;
+}
+function mirrorEquationFromLine(a, b){
+  var dx = b.x - a.x, dy = b.y - a.y;
+  var tol = 0.05;
+  if (Math.abs(dx) < tol) return "x = " + fmtNum(a.x);
+  if (Math.abs(dy) < tol) return "y = " + fmtNum(a.y);
+  var m = dy / dx;
+  var c = a.y - m * a.x;
+  if (Math.abs(m - 1) < 0.05){
+    if (Math.abs(c) < 0.05) return "y = x";
+    return "y = x " + (c >= 0 ? "+ " + fmtNum(c) : "- " + fmtNum(Math.abs(c)));
+  }
+  if (Math.abs(m + 1) < 0.05){
+    if (Math.abs(c) < 0.05) return "y = -x";
+    return "y = -x " + (c >= 0 ? "+ " + fmtNum(c) : "- " + fmtNum(Math.abs(c)));
+  }
+  var mStr = fmtNum(m);
+  return "y = " + mStr + "x " + (c >= 0 ? "+ " + fmtNum(c) : "- " + fmtNum(Math.abs(c)));
+}
+
+// ----- mark scheme text (uses display state) -----
 function fmtNum(v){
   var r = Math.round(v * 10) / 10;
   if (Math.abs(r - Math.round(r)) < 0.05) return String(Math.round(r));
@@ -436,84 +673,112 @@ function fmtNum(v){
 function renderMarkScheme(){
   var body = document.getElementById("ms-body");
   body.innerHTML = "";
+  var tex = "";
   if (mode === "translate"){
-    var tex = "\\text{Translation by } \\begin{pmatrix} " + fmtNum(T.tx) + " \\\\ " + fmtNum(T.ty) + " \\end{pmatrix}";
-    tryRender(body, tex);
+    tex = "\\text{Translation by } \\begin{pmatrix} " + fmtNum(D.T.tx) + " \\\\ " + fmtNum(D.T.ty) + " \\end{pmatrix}";
   } else if (mode === "reflect"){
-    var L = mirrorLineForPreset(R.preset);
-    tryRender(body, "\\text{Reflection in } " + L.label);
+    var eq = mirrorEquationFromLine(D.R.p1, D.R.p2);
+    tex = "\\text{Reflection in } " + eq;
   } else if (mode === "rotate"){
-    var dir = ROT.angle >= 0 ? "anticlockwise" : "clockwise";
-    var degT = Math.abs(ROT.angle);
-    tryRender(body, "\\text{Rotation, } " + degT + "° \\text{ " + dir + ", centre } (" + fmtNum(ROT.cx) + ", " + fmtNum(ROT.cy) + ")");
+    var deg = Math.round(D.ROT.angle);
+    var dir = deg >= 0 ? "anticlockwise" : "clockwise";
+    if (deg === 0) dir = "(no rotation)";
+    var degT = Math.abs(deg);
+    var msg = degT === 0
+      ? "\\text{Rotation, } 0° \\text{, centre } (" + fmtNum(D.ROT.cx) + ", " + fmtNum(D.ROT.cy) + ")"
+      : "\\text{Rotation, } " + degT + "° \\text{ " + dir + ", centre } (" + fmtNum(D.ROT.cx) + ", " + fmtNum(D.ROT.cy) + ")";
+    tex = msg;
   } else if (mode === "enlarge"){
-    tryRender(body, "\\text{Enlargement, scale factor } " + fmtNum(ENL.k) + ", \\text{ centre } (" + fmtNum(ENL.cx) + ", " + fmtNum(ENL.cy) + ")");
+    tex = "\\text{Enlargement, scale factor } " + fmtNum(D.ENL.k) + ", \\text{ centre } (" + fmtNum(D.ENL.cx) + ", " + fmtNum(D.ENL.cy) + ")";
   }
+  tryRender(body, tex);
 }
 
-// ----- controls per mode -----
+// ----- preset buttons + reset -----
 function renderControls(){
   var c = document.getElementById("controls");
   c.innerHTML = "";
-  if (mode === "translate"){
-    c.appendChild(makeSlider("tx", "x-shift", -6, 6, 1, T.tx, function(v){ T.tx = v; refresh(); }));
-    c.appendChild(makeSlider("ty", "y-shift", -4, 4, 1, T.ty, function(v){ T.ty = v; refresh(); }));
-  } else if (mode === "reflect"){
-    var row = document.createElement("div"); row.className = "preset-row";
-    [
-      ["y0","y = 0"],["x0","x = 0"],["yx","y = x"],
-      ["ynx","y = −x"],["y1","y = 1"],["x2","x = 2"]
-    ].forEach(function(pair){
+  if (mode === "reflect"){
+    [["y0","y = 0"],["x0","x = 0"],["yx","y = x"],["ynx","y = −x"],["y1","y = 1"],["x2","x = 2"]].forEach(function(pair){
       var b = document.createElement("button");
-      b.className = "preset-btn" + (R.preset === pair[0] ? " active" : "");
+      b.className = "preset-btn" + (P.R.preset === pair[0] ? " active" : "");
       b.textContent = pair[1];
-      b.onclick = function(){ R.preset = pair[0]; refresh(); };
-      row.appendChild(b);
+      b.dataset.preset = pair[0];
+      b.onclick = function(){
+        P.R.preset = pair[0];
+        var ep = mirrorPresetEndpoints(pair[0]);
+        P.R.p1 = { x: ep.p1.x, y: ep.p1.y };
+        P.R.p2 = { x: ep.p2.x, y: ep.p2.y };
+        updateActivePresetButtons();
+        kick();
+      };
+      c.appendChild(b);
     });
-    c.appendChild(row);
   } else if (mode === "rotate"){
-    var pr = document.createElement("div"); pr.className = "preset-row";
     [["90","90° ACW"],["180","180°"],["-90","90° CW"],["-180","−180°"]].forEach(function(pair){
       var b = document.createElement("button");
-      b.className = "preset-btn" + (String(ROT.angle) === pair[0] ? " active" : "");
+      b.className = "preset-btn" + (parseInt(pair[0],10) === Math.round(P.ROT.angle) ? " active" : "");
       b.textContent = pair[1];
-      b.onclick = function(){ ROT.angle = parseInt(pair[0],10); refresh(); };
-      pr.appendChild(b);
+      b.dataset.preset = pair[0];
+      b.onclick = function(){ P.ROT.angle = parseInt(pair[0],10); updateActivePresetButtons(); kick(); };
+      c.appendChild(b);
     });
-    c.appendChild(pr);
-    c.appendChild(makeSlider("cx", "centre x", -4, 4, 1, ROT.cx, function(v){ ROT.cx = v; refresh(); }));
-    c.appendChild(makeSlider("cy", "centre y", -3, 3, 1, ROT.cy, function(v){ ROT.cy = v; refresh(); }));
   } else if (mode === "enlarge"){
-    c.appendChild(makeSlider("k", "scale", -2, 3, 0.5, ENL.k, function(v){ ENL.k = v; refresh(); }));
-    c.appendChild(makeSlider("cx", "centre x", -4, 4, 1, ENL.cx, function(v){ ENL.cx = v; refresh(); }));
-    c.appendChild(makeSlider("cy", "centre y", -3, 3, 1, ENL.cy, function(v){ ENL.cy = v; refresh(); }));
+    [["-2","SF = -2"],["-1","SF = -1"],["0.5","SF = ½"],["2","SF = 2"],["3","SF = 3"]].forEach(function(pair){
+      var b = document.createElement("button");
+      b.className = "preset-btn" + (Math.abs(parseFloat(pair[0]) - P.ENL.k) < 0.01 ? " active" : "");
+      b.textContent = pair[1];
+      b.dataset.preset = pair[0];
+      b.onclick = function(){ P.ENL.k = parseFloat(pair[0]); updateActivePresetButtons(); kick(); };
+      c.appendChild(b);
+    });
+  } else if (mode === "translate"){
+    [["3,-2","[3, -2]"],["-4,3","[-4, 3]"],["5,0","[5, 0]"],["0,-3","[0, -3]"]].forEach(function(pair){
+      var b = document.createElement("button");
+      var v = pair[0].split(",").map(parseFloat);
+      b.className = "preset-btn" + (v[0] === P.T.tx && v[1] === P.T.ty ? " active" : "");
+      b.textContent = pair[1];
+      b.dataset.preset = pair[0];
+      b.onclick = function(){ P.T.tx = v[0]; P.T.ty = v[1]; updateActivePresetButtons(); kick(); };
+      c.appendChild(b);
+    });
   }
-}
-function makeSlider(id, label, min, max, step, val, onInput){
-  var row = document.createElement("div"); row.className = "row";
-  var name = document.createElement("span"); name.className = "name"; name.style.color = COL.yellow; name.textContent = label;
-  var input = document.createElement("input"); input.type = "range";
-  input.min = min; input.max = max; input.step = step; input.value = val;
-  var v = document.createElement("span"); v.className = "val"; v.textContent = fmtNum(val);
-  input.oninput = function(){
-    var nv = parseFloat(input.value);
-    v.textContent = fmtNum(nv);
-    onInput(nv);
+  var reset = document.createElement("button");
+  reset.className = "reset-btn";
+  reset.textContent = "↻ reset";
+  reset.onclick = function(){
+    if (mode === "translate"){ P.T = JSON.parse(JSON.stringify(DEFAULTS.T)); }
+    else if (mode === "reflect"){ P.R = JSON.parse(JSON.stringify(DEFAULTS.R)); }
+    else if (mode === "rotate"){ P.ROT = JSON.parse(JSON.stringify(DEFAULTS.ROT)); }
+    else if (mode === "enlarge"){ P.ENL = JSON.parse(JSON.stringify(DEFAULTS.ENL)); }
+    updateActivePresetButtons();
+    kick();
   };
-  row.appendChild(name); row.appendChild(input); row.appendChild(v);
-  return row;
+  c.appendChild(reset);
+}
+function updateActivePresetButtons(){
+  var c = document.getElementById("controls");
+  c.querySelectorAll(".preset-btn").forEach(function(b){
+    b.classList.remove("active");
+    var ds = b.dataset.preset;
+    if (mode === "reflect" && P.R.preset === ds) b.classList.add("active");
+    else if (mode === "rotate" && parseInt(ds,10) === Math.round(P.ROT.angle)) b.classList.add("active");
+    else if (mode === "enlarge" && Math.abs(parseFloat(ds) - P.ENL.k) < 0.01) b.classList.add("active");
+    else if (mode === "translate"){
+      var v = ds.split(",").map(parseFloat);
+      if (v[0] === P.T.tx && v[1] === P.T.ty) b.classList.add("active");
+    }
+  });
 }
 
-// ----- refresh full picture -----
-function refresh(){
-  drawObjectAndImage();
-  if (mode === "translate") drawTranslateOverlay();
-  if (mode === "reflect")   drawReflectOverlay();
-  if (mode === "rotate")    drawRotateOverlay();
-  if (mode === "enlarge")   drawEnlargeOverlay();
-  renderMarkScheme();
-  renderControls();
-  notifyHeight();
+function renderHint(){
+  var h = document.getElementById("hint");
+  var t;
+  if (mode === "translate") t = "<span class='h-key'>Drag the pink triangle</span> anywhere it lands. Snaps to half units.";
+  else if (mode === "reflect") t = "<span class='h-key'>Drag the two yellow dots</span> to set the mirror, or pick a preset.";
+  else if (mode === "rotate") t = "<span class='h-key'>Drag the yellow centre</span>, then <span class='h-key'>drag A' around it</span> to set the angle.";
+  else if (mode === "enlarge") t = "<span class='h-key'>Drag the yellow centre</span>, then <span class='h-key'>drag A' along the ray</span> to set the scale factor.";
+  h.innerHTML = t;
 }
 
 // ----- tab wiring -----
@@ -522,7 +787,9 @@ document.querySelectorAll(".mode-tab").forEach(function(t){
     document.querySelectorAll(".mode-tab").forEach(function(x){ x.classList.remove("active"); });
     t.classList.add("active");
     mode = t.getAttribute("data-mode");
-    refresh();
+    renderHint();
+    renderControls();
+    kick();
   });
 });
 
@@ -537,7 +804,12 @@ window.addEventListener("resize", notifyHeight);
 
 // ----- init -----
 drawGridAxes();
-refresh();
+renderHint();
+renderControls();
+drawObjectAndImage();
+drawOverlay();
+drawHandles();
+renderMarkScheme();
 setTimeout(notifyHeight, 200);
 </script>
 </body>
