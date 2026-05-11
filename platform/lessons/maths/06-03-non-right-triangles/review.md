@@ -35,51 +35,24 @@ A short walkthrough of the unit:
 
 ## Which rule for which situation, at a glance
 
-<div class="diagram" style="border:1px solid #141e2a;border-radius:10px;padding:20px 16px 22px;margin:14px 0;background:#0b1118">
-  <div style="font-family:'Geist Mono',monospace;font-size:11px;color:#7a7875;letter-spacing:0.4px;margin-bottom:18px;text-transform:uppercase;text-align:center">DECISION TREE</div>
-  <div style="display:flex;justify-content:center;margin-bottom:6px">
-    <div style="padding:8px 18px;border:1.5px solid #fff067;border-radius:6px;background:rgba(255,240,103,0.08);font-family:'Geist Mono',monospace;font-size:12px;font-weight:700;color:#fff067;letter-spacing:0.4px;text-align:center">IS THE KNOWN ANGLE OPPOSITE A KNOWN SIDE, OR BETWEEN THEM?</div>
-  </div>
-  <div style="text-align:center;color:#3a4a5a;font-size:14px;margin-bottom:4px">↓</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-family:'Geist Mono',monospace;font-size:12px">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-      <div style="padding:7px 12px;border:1px solid #00abfa;border-radius:6px;background:rgba(0,171,250,0.07);color:#00abfa;font-weight:600;text-align:center;width:100%">OPPOSITE pair available</div>
-      <div style="color:#3a4a5a;font-size:14px">↓</div>
-      <div style="display:flex;gap:6px;width:100%">
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div style="font-size:11px;color:#7a7875;text-align:center;line-height:1.3">2 angles<br/>+ 1 side<br/><span style="color:#3a4a5a">(AAS / ASA)</span></div>
-          <div style="color:#3a4a5a;font-size:12px">↓</div>
-          <div style="padding:6px 6px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:11px;text-align:center;width:100%;line-height:1.25">sine rule<br/><span style="color:#3a4a5a;font-weight:500;font-size:10px">find a side</span></div>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div style="font-size:11px;color:#7a7875;text-align:center;line-height:1.3">2 sides<br/>+ non-incl angle<br/><span style="color:#3a4a5a">(SSA)</span></div>
-          <div style="color:#3a4a5a;font-size:12px">↓</div>
-          <div style="padding:6px 6px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:11px;text-align:center;width:100%;line-height:1.25">sine rule<br/><span style="color:#ff4670;font-weight:500;font-size:10px">check ambiguous case</span></div>
-        </div>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-      <div style="padding:7px 12px;border:1px solid #ff822c;border-radius:6px;background:rgba(255,130,44,0.07);color:#ff822c;font-weight:600;text-align:center;width:100%">angle BETWEEN two known sides</div>
-      <div style="color:#3a4a5a;font-size:14px">↓</div>
-      <div style="display:flex;gap:6px;width:100%">
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div style="font-size:11px;color:#7a7875;text-align:center;line-height:1.3">find third side<br/><span style="color:#3a4a5a">(SAS)</span></div>
-          <div style="color:#3a4a5a;font-size:12px">↓</div>
-          <div style="padding:6px 6px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:11px;text-align:center;width:100%;line-height:1.25">cosine rule</div>
-        </div>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div style="font-size:11px;color:#7a7875;text-align:center;line-height:1.3">want area</div>
-          <div style="color:#3a4a5a;font-size:12px">↓</div>
-          <div style="padding:6px 6px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:11px;text-align:center;width:100%;line-height:1.25">½ ab sin C</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #141e2a;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:11.5px;color:#7a7875">
-    <span>or</span>
-    <div style="padding:6px 10px;border:1px solid #ff4670;border-radius:5px;background:rgba(255,70,112,0.07);color:#ff4670;font-weight:600">3 sides (SSS)</div>
-    <span style="color:#3a4a5a">→</span>
-    <div style="padding:6px 10px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;text-align:center">cosine rule<br/><span style="color:#3a4a5a;font-weight:500;font-size:10px">rearranged for cos A</span></div>
+<div class="diagram" style="border:1px solid #141e2a;border-radius:10px;padding:22px 16px 24px;margin:14px 0;background:#0b1118">
+  <div style="font-family:'Geist Mono',monospace;font-size:11px;color:#7a7875;letter-spacing:0.4px;margin-bottom:16px;text-transform:uppercase;text-align:center">DECISION TREE</div>
+  <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:14px 16px;align-items:center;font-family:'Geist Mono',monospace">
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><div style="padding:9px 14px;border:1.5px solid #0fee89;border-radius:6px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:13px;white-space:nowrap">Use SOH-CAH-TOA</div><span style="color:#0fee89;font-weight:700;font-size:11px">←Yes</span></div>
+    <div style="padding:11px 16px;border:1.5px solid #fff067;border-radius:7px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;font-size:13px;text-align:center;max-width:240px;line-height:1.35">Is the triangle right-angled?</div>
+    <div></div>
+    <div></div>
+    <div style="text-align:center;color:#7a7875;font-size:12px;line-height:1"><span style="color:#3a4a5a;font-size:16px">↓</span><div style="color:#ff4670;font-weight:700;font-size:11px;margin-top:2px">No</div></div>
+    <div></div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><div style="padding:9px 14px;border:1.5px solid #0fee89;border-radius:6px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:13px;white-space:nowrap">Use sine rule</div><span style="color:#0fee89;font-weight:700;font-size:11px">←Yes</span></div>
+    <div style="padding:11px 16px;border:1.5px solid #fff067;border-radius:7px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;font-size:13px;text-align:center;max-width:240px;line-height:1.35">Are there opposite pairs of sides and angles?</div>
+    <div></div>
+    <div></div>
+    <div style="text-align:center;color:#7a7875;font-size:12px;line-height:1"><span style="color:#3a4a5a;font-size:16px">↓</span><div style="color:#ff4670;font-weight:700;font-size:11px;margin-top:2px">No</div></div>
+    <div></div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><div style="padding:9px 14px;border:1.5px solid #0fee89;border-radius:6px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:13px;white-space:nowrap">Use area formula</div><span style="color:#0fee89;font-weight:700;font-size:11px">←Yes</span></div>
+    <div style="padding:11px 16px;border:1.5px solid #fff067;border-radius:7px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;font-size:13px;text-align:center;max-width:240px;line-height:1.35">Does the question involve area?</div>
+    <div style="display:flex;align-items:center;justify-content:flex-start;gap:10px"><span style="color:#ff4670;font-weight:700;font-size:11px">No→</span><div style="padding:9px 14px;border:1.5px solid #0fee89;border-radius:6px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:13px;white-space:nowrap">Use cosine rule</div></div>
   </div>
 </div>
 
