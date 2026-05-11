@@ -547,10 +547,44 @@ export const UNITS: Unit[] = [
   {
     slug: "07", title: "Transformations and vectors", color: "#fff067",
     topics: [
-      { slug: "01", code: "7.1", title: "Transformations" },
-      { slug: "02", code: "7.2", title: "Vectors in two dimensions" },
-      { slug: "03", code: "7.3", title: "Magnitude of a vector" },
-      { slug: "04", code: "7.4", title: "Vector geometry" },
+      {
+        slug: "01", code: "7.1", title: "Transformations",
+        parts: [
+          { slug: "p1",     label: "P1", title: "The four transformations at a glance" },
+          { slug: "p2",     label: "P2", title: "Translation by a column vector" },
+          { slug: "p3",     label: "P3", title: "Reflection in a mirror line" },
+          { slug: "p4",     label: "P4", title: "Rotation about a centre" },
+          { slug: "p5",     label: "P5", title: "Enlargement: centre and scale factor" },
+          { slug: "p6",     label: "P6", title: "Combining transformations" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "02", code: "7.2", title: "Vectors in two dimensions",
+        parts: [
+          { slug: "p1",     label: "P1", title: "What a vector is" },
+          { slug: "p2",     label: "P2", title: "Adding and subtracting vectors" },
+          { slug: "p3",     label: "P3", title: "Multiplying a vector by a scalar" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "03", code: "7.3", title: "Magnitude of a vector",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Magnitude from the column" },
+          { slug: "p2",     label: "P2", title: "Distance between two points" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "04", code: "7.4", title: "Vector geometry",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Position vectors and AB = b − a" },
+          { slug: "p2",     label: "P2", title: "Expressing a vector in terms of a and b" },
+          { slug: "p3",     label: "P3", title: "Parallel, collinear, and ratio splits" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
     ],
   },
   {
