@@ -191,25 +191,26 @@ function buildTriangle(p) {
   }));
 
   // ===== Sides (as separate lines for individual highlighting) =====
-  // sideA = BC (bottom, blue)
+  // Side colours match the OPPOSITE vertex: a/A yellow, b/B green, c/C pink.
+  // sideA = BC (bottom, opposite vertex A) — yellow
   var sideA = svgEl("line", {
     "class": "shape-part",
     x1: Bp.x, y1: Bp.y, x2: Cp.x, y2: Cp.y,
-    stroke: COL.blue, "stroke-width": 4, "stroke-linecap": "round"
+    stroke: COL.yellow, "stroke-width": 4, "stroke-linecap": "round"
   });
-  sideA.style.color = COL.blue;
+  sideA.style.color = COL.yellow;
   g.appendChild(sideA);
 
-  // sideB = CA (right side, orange)
+  // sideB = CA (right side, opposite vertex B) — green
   var sideB = svgEl("line", {
     "class": "shape-part",
     x1: Cp.x, y1: Cp.y, x2: Ap.x, y2: Ap.y,
-    stroke: COL.orange, "stroke-width": 4, "stroke-linecap": "round"
+    stroke: COL.green, "stroke-width": 4, "stroke-linecap": "round"
   });
-  sideB.style.color = COL.orange;
+  sideB.style.color = COL.green;
   g.appendChild(sideB);
 
-  // sideC = AB (left side, pink)
+  // sideC = AB (left side, opposite vertex C) — pink
   var sideC = svgEl("line", {
     "class": "shape-part",
     x1: Ap.x, y1: Ap.y, x2: Bp.x, y2: Bp.y,
@@ -285,24 +286,24 @@ function buildTriangle(p) {
       "{\\color{" + color + "}" + text + "}", null, "center", 13);
   }
   if (p.sideLabels) {
-    labelSide(Bp, Cp, p.sideLabels.a, COL.blue);
-    labelSide(Cp, Ap, p.sideLabels.b, COL.orange);
+    labelSide(Bp, Cp, p.sideLabels.a, COL.yellow);
+    labelSide(Cp, Ap, p.sideLabels.b, COL.green);
     labelSide(Ap, Bp, p.sideLabels.c, COL.pink);
   }
 
-  // ===== Vertex labels (faint, just outside the triangle) =====
+  // ===== Vertex labels — coloured to match each vertex's pairing =====
   if (p.vertexLabels) {
-    function labelVertex(pt, text) {
+    function labelVertex(pt, text, color) {
       if (!text) return;
       var toCentroidX = centroid.x - pt.x, toCentroidY = centroid.y - pt.y;
       var len = Math.hypot(toCentroidX, toCentroidY) || 1;
       var outX = -toCentroidX / len, outY = -toCentroidY / len;
       svgKaTeXLabel(gl, pt.x + outX * 14, pt.y + outY * 14,
-        "{\\color{" + COL.grey + "}" + text + "}", null, "center", 12);
+        "{\\color{" + color + "}" + text + "}", null, "center", 12);
     }
-    labelVertex(Ap, p.vertexLabels.A);
-    labelVertex(Bp, p.vertexLabels.B);
-    labelVertex(Cp, p.vertexLabels.C);
+    labelVertex(Ap, p.vertexLabels.A, COL.yellow);
+    labelVertex(Bp, p.vertexLabels.B, COL.green);
+    labelVertex(Cp, p.vertexLabels.C, COL.pink);
   }
 
   return {
