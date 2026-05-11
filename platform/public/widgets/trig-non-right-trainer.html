@@ -156,19 +156,19 @@ function generalTriSvg(p) {
   svg += '<line x1="' + Ap.x + '" y1="' + Ap.y + '" x2="' + Bp.x + '" y2="' + Bp.y + '" stroke="' + COL.pink + '" stroke-width="3" stroke-linecap="round"/>';
   // Right side: side a (BC, opposite vertex A) — yellow
   svg += '<line x1="' + Bp.x + '" y1="' + Bp.y + '" x2="' + Cp.x + '" y2="' + Cp.y + '" stroke="' + COL.yellow + '" stroke-width="3" stroke-linecap="round"/>';
-  // Left side: side b (CA, opposite vertex B) — green
-  svg += '<line x1="' + Cp.x + '" y1="' + Cp.y + '" x2="' + Ap.x + '" y2="' + Ap.y + '" stroke="' + COL.green + '" stroke-width="3" stroke-linecap="round"/>';
-  // Vertex letters — coloured to match their pairing (A yellow, B green, C pink)
+  // Left side: side b (CA, opposite vertex B) — blue
+  svg += '<line x1="' + Cp.x + '" y1="' + Cp.y + '" x2="' + Ap.x + '" y2="' + Ap.y + '" stroke="' + COL.blue + '" stroke-width="3" stroke-linecap="round"/>';
+  // Vertex letters — coloured to match their pairing (A yellow, B blue, C pink)
   svg += '<text x="' + (Ap.x - 12) + '" y="' + (Ap.y + 4) + '" font-family="Geist Mono,monospace" font-size="12" font-weight="700" fill="' + COL.yellow + '">A</text>';
-  svg += '<text x="' + (Bp.x + 6) + '" y="' + (Bp.y + 4) + '" font-family="Geist Mono,monospace" font-size="12" font-weight="700" fill="' + COL.green + '">B</text>';
+  svg += '<text x="' + (Bp.x + 6) + '" y="' + (Bp.y + 4) + '" font-family="Geist Mono,monospace" font-size="12" font-weight="700" fill="' + COL.blue + '">B</text>';
   svg += '<text x="' + (Cp.x + 6) + '" y="' + (Cp.y - 6) + '" font-family="Geist Mono,monospace" font-size="12" font-weight="700" fill="' + COL.pink + '">C</text>';
   // Side labels
   if (p.labels) {
     if (p.labels.a) svg += '<text x="' + ((Bp.x+Cp.x)/2 + 14) + '" y="' + ((Bp.y+Cp.y)/2) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.yellow + '">' + p.labels.a + '</text>';
-    if (p.labels.b) svg += '<text x="' + ((Ap.x+Cp.x)/2 - 14) + '" y="' + ((Ap.y+Cp.y)/2) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.green + '">' + p.labels.b + '</text>';
+    if (p.labels.b) svg += '<text x="' + ((Ap.x+Cp.x)/2 - 14) + '" y="' + ((Ap.y+Cp.y)/2) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.blue + '">' + p.labels.b + '</text>';
     if (p.labels.c) svg += '<text x="' + ((Ap.x+Bp.x)/2) + '" y="' + (Ap.y + 16) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.pink + '">' + p.labels.c + '</text>';
     if (p.labels.A) svg += '<text x="' + (Ap.x + 22) + '" y="' + (Ap.y - 10) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.yellow + '">' + p.labels.A + '</text>';
-    if (p.labels.B) svg += '<text x="' + (Bp.x - 28) + '" y="' + (Bp.y - 10) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.green + '">' + p.labels.B + '</text>';
+    if (p.labels.B) svg += '<text x="' + (Bp.x - 28) + '" y="' + (Bp.y - 10) + '" font-family="Geist Mono,monospace" font-size="11" font-weight="700" fill="' + COL.blue + '">' + p.labels.B + '</text>';
   }
   svg += '</svg>';
   return svg;

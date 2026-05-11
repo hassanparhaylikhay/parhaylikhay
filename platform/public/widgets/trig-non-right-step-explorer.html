@@ -205,9 +205,9 @@ function buildTriangle(p) {
   var sideB = svgEl("line", {
     "class": "shape-part",
     x1: Cp.x, y1: Cp.y, x2: Ap.x, y2: Ap.y,
-    stroke: COL.green, "stroke-width": 4, "stroke-linecap": "round"
+    stroke: COL.blue, "stroke-width": 4, "stroke-linecap": "round"
   });
-  sideB.style.color = COL.green;
+  sideB.style.color = COL.blue;
   g.appendChild(sideB);
 
   // sideC = AB (left side, opposite vertex C) — pink
@@ -253,12 +253,12 @@ function buildTriangle(p) {
     }
   }
   if (p.showAngles && p.showAngles.B !== false) {
-    var arcB = drawAngleArc(Bp, { x: Cp.x - Bp.x, y: Cp.y - Bp.y }, { x: Ap.x - Bp.x, y: Ap.y - Bp.y }, COL.green, 22);
+    var arcB = drawAngleArc(Bp, { x: Cp.x - Bp.x, y: Cp.y - Bp.y }, { x: Ap.x - Bp.x, y: Ap.y - Bp.y }, COL.blue, 22);
     g.appendChild(arcB.el);
     arcs.B = arcB.el;
     if (p.angleLabels && p.angleLabels.B) {
       svgKaTeXLabel(gl, arcB.midX, arcB.midY,
-        "{\\color{" + COL.green + "}" + p.angleLabels.B + "}", null, "center", 12);
+        "{\\color{" + COL.blue + "}" + p.angleLabels.B + "}", null, "center", 12);
     }
   }
   if (p.showAngles && p.showAngles.C !== false) {
@@ -287,7 +287,7 @@ function buildTriangle(p) {
   }
   if (p.sideLabels) {
     labelSide(Bp, Cp, p.sideLabels.a, COL.yellow);
-    labelSide(Cp, Ap, p.sideLabels.b, COL.green);
+    labelSide(Cp, Ap, p.sideLabels.b, COL.blue);
     labelSide(Ap, Bp, p.sideLabels.c, COL.pink);
   }
 
@@ -302,7 +302,7 @@ function buildTriangle(p) {
         "{\\color{" + color + "}" + text + "}", null, "center", 12);
     }
     labelVertex(Ap, p.vertexLabels.A, COL.yellow);
-    labelVertex(Bp, p.vertexLabels.B, COL.green);
+    labelVertex(Bp, p.vertexLabels.B, COL.blue);
     labelVertex(Cp, p.vertexLabels.C, COL.pink);
   }
 
@@ -379,9 +379,9 @@ function buildTwoTriangles(p) {
   var tri1 = svgEl("path", {
     "class": "shape-part",
     d: "M " + Ap.x + " " + Ap.y + " L " + B1p.x + " " + B1p.y + " L " + Cp.x + " " + Cp.y + " Z",
-    fill: "rgba(15,238,137,0.10)", stroke: COL.green, "stroke-width": 3, "stroke-linejoin": "round"
+    fill: "rgba(0,171,250,0.10)", stroke: COL.blue, "stroke-width": 3, "stroke-linejoin": "round"
   });
-  tri1.style.color = COL.green;
+  tri1.style.color = COL.blue;
   g.appendChild(tri1);
   // Triangle 2 (dashed, pink): A-B2-C
   var tri2 = svgEl("path", {
@@ -403,13 +403,13 @@ function buildTwoTriangles(p) {
   }
   dot(Ap, COL.yellow);
   dot(Cp, COL.yellow);
-  dot(B1p, COL.green);
+  dot(B1p, COL.blue);
   dot(B2p, COL.pink);
 
   // Labels
   svgKaTeXLabel(gl, Ap.x - 14, Ap.y, "A", COL.grey, "center", 13);
   svgKaTeXLabel(gl, Cp.x + 4, Cp.y - 14, "C", COL.grey, "center", 13);
-  svgKaTeXLabel(gl, B1p.x, B1p.y + 18, "{\\color{" + COL.green + "}B_{1}}", null, "center", 12);
+  svgKaTeXLabel(gl, B1p.x, B1p.y + 18, "{\\color{" + COL.blue + "}B_{1}}", null, "center", 12);
   svgKaTeXLabel(gl, B2p.x, B2p.y + 18, "{\\color{" + COL.pink + "}B_{2}}", null, "center", 12);
 
   // Side b label (A to C, common to both)
@@ -418,7 +418,7 @@ function buildTwoTriangles(p) {
     "{\\color{" + COL.orange + "}b = " + p.b + "}", null, "center", 12);
   // Side a labels (from C to B1 and C to B2)
   svgKaTeXLabel(gl, (Cp.x + B1p.x)/2 + 14, (Cp.y + B1p.y)/2,
-    "{\\color{" + COL.green + "}a = " + p.a + "}", null, "center", 11);
+    "{\\color{" + COL.blue + "}a = " + p.a + "}", null, "center", 11);
   svgKaTeXLabel(gl, (Cp.x + B2p.x)/2 - 14, (Cp.y + B2p.y)/2 - 14,
     "{\\color{" + COL.pink + "}a = " + p.a + "}", null, "center", 11);
 
@@ -524,7 +524,7 @@ var PRESETS = {
           { kind: "tag", text: "STEP 3: REARRANGE FOR SIN B" },
           { kind: "main", tex: "\\sin B = \\dfrac{10 \\sin 35°}{7} \\approx 0.819" },
           { kind: "main", tex: "B = \\sin^{-1}(0.819) \\approx 55.0°" },
-          { kind: "ans", tex: "{\\color{#0fee89}B \\approx 55.0°}" },
+          { kind: "ans", tex: "{\\color{#00abfa}B \\approx 55.0°}" },
           { kind: "note", text: "(B could also be 180° - 55° = 125° if the diagram allowed an obtuse triangle — see the ambiguous case.)" }
         ] }
     ]
@@ -648,7 +648,7 @@ var PRESETS = {
         eqs: [
           { kind: "tag", text: "STEP 3: COMPUTE" },
           { kind: "main", tex: "= 27 \\sin 40° \\approx 27 \\times 0.6428" },
-          { kind: "ans", tex: "{\\color{#0fee89}\\text{Area} \\approx 17.4\\;\\text{cm}^{2}}" }
+          { kind: "ans", tex: "{\\color{#00abfa}\\text{Area} \\approx 17.4\\;\\text{cm}^{2}}" }
         ] }
     ]
   },
@@ -698,7 +698,7 @@ var PRESETS = {
           { kind: "tag", text: "STEP 4: PART (C) — FIND THE AREA" },
           { kind: "hint", text: "Two sides + included angle → ½ ab sin C, with the angle B as the included one." },
           { kind: "main", tex: "\\text{Area} = \\tfrac{1}{2}(120)(90)\\sin 65°" },
-          { kind: "ans", tex: "{\\color{#0fee89}\\text{Area} \\approx 4894\\;\\text{m}^{2}}" }
+          { kind: "ans", tex: "{\\color{#00abfa}\\text{Area} \\approx 4894\\;\\text{m}^{2}}" }
         ] }
     ]
   }

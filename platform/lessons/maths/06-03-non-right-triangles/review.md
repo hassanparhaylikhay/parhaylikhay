@@ -38,21 +38,21 @@ A short walkthrough of the unit:
 <div class="diagram" style="border:1px solid #141e2a;border-radius:10px;padding:22px 16px 24px;margin:14px 0;background:#0b1118">
   <div style="font-family:'Geist Mono',monospace;font-size:11px;color:#7a7875;letter-spacing:0.4px;margin-bottom:16px;text-transform:uppercase;text-align:center">DECISION TREE</div>
   <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:14px 16px;align-items:center;font-family:'Geist Mono',monospace">
-    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><div style="padding:9px 14px;border:1.5px solid #0fee89;border-radius:6px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:13px;white-space:nowrap">Use SOH-CAH-TOA</div><span style="color:#0fee89;font-weight:700;font-size:11px">←Yes</span></div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><div style="padding:9px 14px;border:1.5px solid #00abfa;border-radius:6px;background:rgba(0,171,250,0.08);color:#00abfa;font-weight:700;font-size:13px;white-space:nowrap">Use SOH-CAH-TOA</div><span style="color:#00abfa;font-weight:700;font-size:11px">←Yes</span></div>
     <div style="padding:11px 16px;border:1.5px solid #fff067;border-radius:7px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;font-size:13px;text-align:center;max-width:240px;line-height:1.35">Is the triangle right-angled?</div>
     <div></div>
     <div></div>
     <div style="text-align:center;color:#7a7875;font-size:12px;line-height:1"><span style="color:#3a4a5a;font-size:16px">↓</span><div style="color:#ff4670;font-weight:700;font-size:11px;margin-top:2px">No</div></div>
     <div></div>
-    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><div style="padding:9px 14px;border:1.5px solid #0fee89;border-radius:6px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:13px;white-space:nowrap">Use sine rule</div><span style="color:#0fee89;font-weight:700;font-size:11px">←Yes</span></div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><div style="padding:9px 14px;border:1.5px solid #00abfa;border-radius:6px;background:rgba(0,171,250,0.08);color:#00abfa;font-weight:700;font-size:13px;white-space:nowrap">Use sine rule</div><span style="color:#00abfa;font-weight:700;font-size:11px">←Yes</span></div>
     <div style="padding:11px 16px;border:1.5px solid #fff067;border-radius:7px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;font-size:13px;text-align:center;max-width:240px;line-height:1.35">Are there opposite pairs of sides and angles?</div>
     <div></div>
     <div></div>
     <div style="text-align:center;color:#7a7875;font-size:12px;line-height:1"><span style="color:#3a4a5a;font-size:16px">↓</span><div style="color:#ff4670;font-weight:700;font-size:11px;margin-top:2px">No</div></div>
     <div></div>
-    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><div style="padding:9px 14px;border:1.5px solid #0fee89;border-radius:6px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:13px;white-space:nowrap">Use area formula</div><span style="color:#0fee89;font-weight:700;font-size:11px">←Yes</span></div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px"><div style="padding:9px 14px;border:1.5px solid #00abfa;border-radius:6px;background:rgba(0,171,250,0.08);color:#00abfa;font-weight:700;font-size:13px;white-space:nowrap">Use area formula</div><span style="color:#00abfa;font-weight:700;font-size:11px">←Yes</span></div>
     <div style="padding:11px 16px;border:1.5px solid #fff067;border-radius:7px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;font-size:13px;text-align:center;max-width:240px;line-height:1.35">Does the question involve area?</div>
-    <div style="display:flex;align-items:center;justify-content:flex-start;gap:10px"><span style="color:#ff4670;font-weight:700;font-size:11px">No→</span><div style="padding:9px 14px;border:1.5px solid #0fee89;border-radius:6px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:13px;white-space:nowrap">Use cosine rule</div></div>
+    <div style="display:flex;align-items:center;justify-content:flex-start;gap:10px"><span style="color:#ff4670;font-weight:700;font-size:11px">No→</span><div style="padding:9px 14px;border:1.5px solid #00abfa;border-radius:6px;background:rgba(0,171,250,0.08);color:#00abfa;font-weight:700;font-size:13px;white-space:nowrap">Use cosine rule</div></div>
   </div>
 </div>
 
