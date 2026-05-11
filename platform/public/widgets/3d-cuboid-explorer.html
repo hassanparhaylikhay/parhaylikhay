@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>3D Cuboid Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
+
+  .mode-tabs { display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap; }
+  .mode-tab {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:11px; font-weight:600;
+    padding:6px 12px; border-radius:5px; cursor:pointer;
+    transition: all 0.15s ease;
+  }
+  .mode-tab:hover { color:#fff067; border-color:#3a4a5a; }
+  .mode-tab.active { color:#fff067; border-color:#fff067; background:rgba(255,240,103,0.06); }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:grab; }
+  svg:active { cursor:grabbing; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .panel { display:flex; flex-direction:column; gap:6px; padding:12px 6px 6px; border-top:1px solid #141e2a; margin-top:6px; }
+  .eq-row { font-size:15px; line-height:1.35; color:#f0eeea; }
+  .eq-row.tag { font-family:'Geist Mono',monospace; font-size:10.5px; color:#7a7875; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:2px; }
+  .eq-row.ans { font-weight:700; font-size:16.5px; }
+  .eq-row .katex { font-size:1em; }
+
+  .controls { display:flex; flex-direction:column; gap:8px; padding:12px 4px 4px; font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; }
+  .row { display:flex; align-items:center; gap:10px; }
+  .row .name { font-weight:600; min-width:50px; }
+  .row.l-row .name { color:#00abfa; }
+  .row.w-row .name { color:#ff822c; }
+  .row.h-row .name { color:#ff4670; }
+  .row input[type=range] {
+    flex:1; appearance:none; -webkit-appearance:none;
+    height:3px; background:#141e2a; border-radius:2px; outline:none;
+  }
+  .row input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; cursor:pointer; border:0; }
+  .row input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; cursor:pointer; border:0; }
+  .row.l-row input[type=range]::-webkit-slider-thumb { background:#00abfa; }
+  .row.l-row input[type=range]::-moz-range-thumb { background:#00abfa; }
+  .row.w-row input[type=range]::-webkit-slider-thumb { background:#ff822c; }
+  .row.w-row input[type=range]::-moz-range-thumb { background:#ff822c; }
+  .row.h-row input[type=range]::-webkit-slider-thumb { background:#ff4670; }
+  .row.h-row input[type=range]::-moz-range-thumb { background:#ff4670; }
+  .row .val { min-width:36px; text-align:right; color:#f0eeea; font-weight:600; font-size:12.5px; }
+
+  .footer { margin-top:10px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">3D CUBOID · BASE DIAGONAL</span>
+    <span class="meta">drag to rotate</span>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="base">base diagonal</button>
+    <button class="mode-tab" data-mode="space">space diagonal</button>
+    <button class="mode-tab" data-mode="angle">line-plane angle</button>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-back-edges"></g>
+    <g id="g-faces"></g>
+    <g id="g-front-edges"></g>
+    <g id="g-overlays"></g>
+    <g id="g-labels"></g>
+  </svg>
+
+  <div class="panel" id="panel"></div>
+
+  <div class="controls">
+    <div class="row l-row">
+      <span class="name">length</span>
+      <input type="range" id="lSlider" min="2" max="10" step="0.1" value="5"/>
+      <span class="val" id="lVal"></span>
+    </div>
+    <div class="row w-row">
+      <span class="name">width</span>
+      <input type="range" id="wSlider" min="2" max="10" step="0.1" value="3"/>
+      <span class="val" id="wVal"></span>
+    </div>
+    <div class="row h-row">
+      <span class="name">height</span>
+      <input type="range" id="hSlider" min="2" max="10" step="0.1" value="4"/>
+      <span class="val" id="hVal"></span>
+    </div>
+  </div>
+
+  <p class="footer" id="footer">drag horizontally to spin · drag vertically to tilt</p>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:   "#00abfa",
+  yellow: "#fff067",
+  orange: "#ff822c",
+  green:  "#0fee89",
+  pink:   "#ff4670",
+  faint:  "#3a4a5a",
+  grey:   "#7a7875",
+  off:    "#f0eeea"
+};
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n, dp) {
+  if (!isFinite(n)) return "—";
+  if (dp == null) dp = 2;
+  return parseFloat((+n.toFixed(dp)).toFixed(dp)).toString();
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment, fontSizePx) {
+  var W = 120, H = 26;
+  var fo = svgEl("foreignObject", {
+    x: (x - W/2), y: (y - H/2), width: W, height: H,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  if (fontSizePx) div.style.fontSize = fontSizePx + "px";
+  div.style.color = color || COL.off;
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+// ===== State =====
+var SVG_W = 480, SVG_H = 320;
+var params  = { l: 5, w: 3, h: 4 };
+var display = { l: 5, w: 3, h: 4 };
+var SPRING_FACTOR = 0.22, SPRING_EPS = 0.005;
+var mode = "base";  // "base" | "space" | "angle"
+var yaw = -28 * Math.PI / 180;     // around vertical (Y) axis
+var pitch = 18 * Math.PI / 180;    // tilt
+var stage = document.getElementById("stage");
+var gBackEdges = document.getElementById("g-back-edges");
+var gFaces = document.getElementById("g-faces");
+var gFrontEdges = document.getElementById("g-front-edges");
+var gOverlays = document.getElementById("g-overlays");
+var gLabels = document.getElementById("g-labels");
+
+// ===== 3D projection =====
+// World coords: x right, y up, z forward (toward viewer)
+// Cuboid centered at origin, half-extents (l/2, h/2, w/2)
+// Rotate around Y by yaw, then around X by pitch. Orthographic project (drop new z).
+function project(p) {
+  // p: { x, y, z } in world
+  // Yaw (around Y axis)
+  var cy = Math.cos(yaw), sy = Math.sin(yaw);
+  var x1 =  p.x * cy + p.z * sy;
+  var z1 = -p.x * sy + p.z * cy;
+  // Pitch (around X axis)
+  var cp = Math.cos(pitch), sp = Math.sin(pitch);
+  var y2 = p.y * cp - z1 * sp;
+  var z2 = p.y * sp + z1 * cp;
+  // Orthographic project to SVG
+  // SVG: x right, y DOWN. Negate y.
+  var SCALE = 22;  // px per world-unit (auto-fit will adjust)
+  return { sx: SVG_W / 2 + x1 * SCALE, sy: SVG_H / 2 - y2 * SCALE, depth: z2 };
+}
+
+function projectScaled(p, scale) {
+  var cy = Math.cos(yaw), sy = Math.sin(yaw);
+  var x1 =  p.x * cy + p.z * sy;
+  var z1 = -p.x * sy + p.z * cy;
+  var cp = Math.cos(pitch), sp = Math.sin(pitch);
+  var y2 = p.y * cp - z1 * sp;
+  var z2 = p.y * sp + z1 * cp;
+  return { sx: SVG_W / 2 + x1 * scale, sy: SVG_H / 2 - y2 * scale, depth: z2 };
+}
+
+function computeScale() {
+  // Find scale so the cuboid fits within ~85% of SVG
+  var l = display.l, w = display.w, h = display.h;
+  var maxExtent = Math.max(l, w, h);
+  return Math.min(180 / maxExtent, 22);
+}
+
+// ===== Render =====
+function render() {
+  gBackEdges.innerHTML = "";
+  gFaces.innerHTML = "";
+  gFrontEdges.innerHTML = "";
+  gOverlays.innerHTML = "";
+  gLabels.innerHTML = "";
+
+  var l = display.l, w = display.w, h = display.h;
+  var scale = computeScale();
+
+  // 8 cuboid vertices (centered at origin)
+  // v[0..3]: bottom face (y = -h/2), order: front-left, front-right, back-right, back-left
+  // v[4..7]: top face (y = +h/2), same order
+  var hx = l/2, hy = h/2, hz = w/2;
+  var verts3d = [
+    { x: -hx, y: -hy, z:  hz },  // 0 bottom front-left
+    { x:  hx, y: -hy, z:  hz },  // 1 bottom front-right
+    { x:  hx, y: -hy, z: -hz },  // 2 bottom back-right
+    { x: -hx, y: -hy, z: -hz },  // 3 bottom back-left
+    { x: -hx, y:  hy, z:  hz },  // 4 top front-left
+    { x:  hx, y:  hy, z:  hz },  // 5 top front-right
+    { x:  hx, y:  hy, z: -hz },  // 6 top back-right
+    { x: -hx, y:  hy, z: -hz }   // 7 top back-left
+  ];
+  var verts = verts3d.map(function(p) { return projectScaled(p, scale); });
+
+  // ---- 6 faces (with depth-based shading) ----
+  var faces = [
+    { idx: [0,1,2,3], col: "rgba(0,171,250,0.04)" },  // bottom
+    { idx: [4,5,6,7], col: "rgba(255,240,103,0.04)" },// top
+    { idx: [0,1,5,4], col: "rgba(255,130,44,0.04)" }, // front
+    { idx: [3,2,6,7], col: "rgba(255,130,44,0.04)" }, // back
+    { idx: [0,3,7,4], col: "rgba(255,70,112,0.04)" }, // left
+    { idx: [1,2,6,5], col: "rgba(255,70,112,0.04)" }  // right
+  ];
+  // Compute face center depth (avg of 4 vertices)
+  faces.forEach(function(f) {
+    f.avgDepth = (verts[f.idx[0]].depth + verts[f.idx[1]].depth + verts[f.idx[2]].depth + verts[f.idx[3]].depth) / 4;
+    // Compute face normal in world coords (using indices order)
+    var p0 = verts3d[f.idx[0]], p1 = verts3d[f.idx[1]], p2 = verts3d[f.idx[2]];
+    var v1 = { x: p1.x - p0.x, y: p1.y - p0.y, z: p1.z - p0.z };
+    var v2 = { x: p2.x - p1.x, y: p2.y - p1.y, z: p2.z - p1.z };
+    f.normal = {
+      x: v1.y * v2.z - v1.z * v2.y,
+      y: v1.z * v2.x - v1.x * v2.z,
+      z: v1.x * v2.y - v1.y * v2.x
+    };
+    // Transform normal by camera rotation to check if face is back-facing
+    var cy = Math.cos(yaw), sy = Math.sin(yaw);
+    var nx1 =  f.normal.x * cy + f.normal.z * sy;
+    var nz1 = -f.normal.x * sy + f.normal.z * cy;
+    var cp = Math.cos(pitch), sp = Math.sin(pitch);
+    var nz2 = f.normal.y * sp + nz1 * cp;
+    f.facingViewer = nz2 > 0;  // positive z (after rotation) means facing viewer
+  });
+  // Sort by avgDepth (back to front, so far faces drawn first)
+  faces.sort(function(a, b) { return a.avgDepth - b.avgDepth; });
+  faces.forEach(function(f) {
+    var pts = f.idx.map(function(i) { return verts[i].sx + "," + verts[i].sy; }).join(" ");
+    gFaces.appendChild(svgEl("polygon", {
+      points: pts, fill: f.col, stroke: "none"
+    }));
+  });
+
+  // ---- 12 edges ----
+  // Each edge: [from, to, color, isBackEdge]
+  // Color edges by direction: x-edges blue (length), z-edges orange (width), y-edges pink (height)
+  var edges = [
+    // Bottom face
+    [0, 1, COL.blue],   [1, 2, COL.orange], [2, 3, COL.blue], [3, 0, COL.orange],
+    // Top face
+    [4, 5, COL.blue],   [5, 6, COL.orange], [6, 7, COL.blue], [7, 4, COL.orange],
+    // Vertical
+    [0, 4, COL.pink], [1, 5, COL.pink], [2, 6, COL.pink], [3, 7, COL.pink]
+  ];
+  // For each edge, decide if it's a "back" edge (both endpoints behind their adjacent face center)
+  // Simple heuristic: an edge is back if BOTH adjacent faces are back-facing.
+  // Each edge belongs to exactly 2 faces. We map edges to face indices.
+  // Easier: compute avg depth of the edge's two endpoints; if greater than the cuboid's center depth, it's a back edge.
+  edges.forEach(function(e) {
+    var fromIdx = e[0], toIdx = e[1], color = e[2];
+    var p1 = verts[fromIdx], p2 = verts[toIdx];
+    var avgDepth = (p1.depth + p2.depth) / 2;
+    var isBack = avgDepth < 0;  // simplistic: behind centre
+    var lineEl = svgEl("line", {
+      x1: p1.sx, y1: p1.sy, x2: p2.sx, y2: p2.sy,
+      stroke: color, "stroke-width": isBack ? 1.5 : 2.5,
+      "stroke-linecap": "round",
+      "stroke-dasharray": isBack ? "4 3" : null,
+      opacity: isBack ? 0.5 : 1
+    });
+    (isBack ? gBackEdges : gFrontEdges).appendChild(lineEl);
+  });
+
+  // ---- Overlays based on mode ----
+  // We always work with the cuboid's bottom face: vertex 0 (front-left-bottom) and the opposite bottom corner vertex 2 (back-right-bottom).
+  // Base diagonal goes from v[0] → v[2] across the bottom.
+  // Space diagonal goes from v[0] → v[6] (top-back-right).
+
+  if (mode === "base") {
+    // Highlight base diagonal (v[0] → v[2])
+    gOverlays.appendChild(svgEl("line", {
+      x1: verts[0].sx, y1: verts[0].sy, x2: verts[2].sx, y2: verts[2].sy,
+      stroke: COL.green, "stroke-width": 3.5, "stroke-linecap": "round",
+      style: "filter: drop-shadow(0 0 6px rgba(15,238,137,0.6))"
+    }));
+    // Label the diagonal
+    var midD = { x: (verts[0].sx + verts[2].sx) / 2, y: (verts[0].sy + verts[2].sy) / 2 };
+    var baseDiag = Math.sqrt(l*l + w*w);
+    svgKaTeXLabel(gLabels, midD.x + 26, midD.y - 6,
+      "{\\color{" + COL.green + "}d_{\\text{base}} = " + fmtNum(baseDiag, 2) + "}", null, "center", 12);
+    // Light up the two base edges that form the right triangle
+    // l-edge: v[0]→v[1], w-edge: v[1]→v[2]
+    [{a:0, b:1, c: COL.blue, lbl: "l = " + fmtNum(l)}, {a:1, b:2, c: COL.orange, lbl: "w = " + fmtNum(w)}].forEach(function(e) {
+      var p1 = verts[e.a], p2 = verts[e.b];
+      var mid = { x: (p1.sx + p2.sx) / 2, y: (p1.sy + p2.sy) / 2 };
+      svgKaTeXLabel(gLabels, mid.x, mid.y + 18,
+        "{\\color{" + e.c + "}" + e.lbl + "}", null, "center", 11);
+    });
+  } else if (mode === "space") {
+    // Step 1: faint base diagonal
+    gOverlays.appendChild(svgEl("line", {
+      x1: verts[0].sx, y1: verts[0].sy, x2: verts[2].sx, y2: verts[2].sy,
+      stroke: COL.green, "stroke-width": 2, "stroke-linecap": "round",
+      "stroke-dasharray": "5 4", opacity: 0.6
+    }));
+    // Step 2: SPACE diagonal v[0] → v[6]
+    gOverlays.appendChild(svgEl("line", {
+      x1: verts[0].sx, y1: verts[0].sy, x2: verts[6].sx, y2: verts[6].sy,
+      stroke: COL.yellow, "stroke-width": 3.5, "stroke-linecap": "round",
+      style: "filter: drop-shadow(0 0 8px rgba(255,240,103,0.5))"
+    }));
+    // Highlight the vertical edge that closes the triangle: v[2]→v[6]
+    gOverlays.appendChild(svgEl("line", {
+      x1: verts[2].sx, y1: verts[2].sy, x2: verts[6].sx, y2: verts[6].sy,
+      stroke: COL.pink, "stroke-width": 3.5, "stroke-linecap": "round"
+    }));
+    // Label space diagonal
+    var midS = { x: (verts[0].sx + verts[6].sx) / 2, y: (verts[0].sy + verts[6].sy) / 2 };
+    var spaceDiag = Math.sqrt(l*l + w*w + h*h);
+    svgKaTeXLabel(gLabels, midS.x - 26, midS.y - 14,
+      "{\\color{" + COL.yellow + "}d = " + fmtNum(spaceDiag, 2) + "}", null, "center", 12);
+    // Label base diagonal
+    var midD2 = { x: (verts[0].sx + verts[2].sx) / 2, y: (verts[0].sy + verts[2].sy) / 2 };
+    var baseDiag2 = Math.sqrt(l*l + w*w);
+    svgKaTeXLabel(gLabels, midD2.x + 30, midD2.y + 4,
+      "{\\color{" + COL.green + "}\\sqrt{l^2+w^2}}", null, "center", 11);
+    // Label height edge
+    var midH = { x: (verts[2].sx + verts[6].sx) / 2, y: (verts[2].sy + verts[6].sy) / 2 };
+    svgKaTeXLabel(gLabels, midH.x + 22, midH.y,
+      "{\\color{" + COL.pink + "}h = " + fmtNum(h) + "}", null, "center", 11);
+  } else if (mode === "angle") {
+    // Space diagonal v[0] → v[6]
+    gOverlays.appendChild(svgEl("line", {
+      x1: verts[0].sx, y1: verts[0].sy, x2: verts[6].sx, y2: verts[6].sy,
+      stroke: COL.yellow, "stroke-width": 3.5, "stroke-linecap": "round",
+      style: "filter: drop-shadow(0 0 8px rgba(255,240,103,0.5))"
+    }));
+    // Projection onto the base plane: v[0] → v[2] (this is the base diagonal)
+    gOverlays.appendChild(svgEl("line", {
+      x1: verts[0].sx, y1: verts[0].sy, x2: verts[2].sx, y2: verts[2].sy,
+      stroke: COL.green, "stroke-width": 3, "stroke-linecap": "round",
+      "stroke-dasharray": "5 4"
+    }));
+    // Vertical line from v[2] up to v[6] showing the "drop" perpendicular
+    gOverlays.appendChild(svgEl("line", {
+      x1: verts[6].sx, y1: verts[6].sy, x2: verts[2].sx, y2: verts[2].sy,
+      stroke: COL.pink, "stroke-width": 2, "stroke-linecap": "round",
+      "stroke-dasharray": "3 4", opacity: 0.7
+    }));
+    // Compute angle theta = arctan(h / sqrt(l^2 + w^2))
+    var theta = Math.atan2(h, Math.sqrt(l*l + w*w)) * 180 / Math.PI;
+    // Label
+    var midA = { x: verts[0].sx + 28, y: verts[0].sy - 4 };
+    svgKaTeXLabel(gLabels, midA.x, midA.y,
+      "{\\color{" + COL.yellow + "}\\theta = " + fmtNum(theta, 1) + "°}", null, "center", 12);
+    // Mark "diagonal" and "projection" labels
+    var midSd = { x: (verts[0].sx + verts[6].sx) / 2, y: (verts[0].sy + verts[6].sy) / 2 };
+    svgKaTeXLabel(gLabels, midSd.x - 16, midSd.y - 18,
+      "{\\color{" + COL.yellow + "}\\text{diagonal}}", null, "center", 10);
+    var midPj = { x: (verts[0].sx + verts[2].sx) / 2, y: (verts[0].sy + verts[2].sy) / 2 };
+    svgKaTeXLabel(gLabels, midPj.x + 30, midPj.y + 16,
+      "{\\color{" + COL.green + "}\\text{projection}}", null, "center", 10);
+  }
+
+  renderPanel();
+}
+
+// ===== Panel =====
+var panelEl = document.getElementById("panel");
+function renderPanel() {
+  panelEl.innerHTML = "";
+  var l = display.l, w = display.w, h = display.h;
+  var baseDiag = Math.sqrt(l*l + w*w);
+  var spaceDiag = Math.sqrt(l*l + w*w + h*h);
+  var theta = Math.atan2(h, baseDiag) * 180 / Math.PI;
+
+  function row(kind, tex) {
+    var r = document.createElement("div");
+    r.className = "eq-row " + (kind || "");
+    if (tex) tryRender(r, tex); else r.textContent = "";
+    panelEl.appendChild(r);
+    return r;
+  }
+
+  if (mode === "base") {
+    document.getElementById("title").textContent = "3D CUBOID · BASE DIAGONAL";
+    row("tag").textContent = "STEP 1: PYTHAGORAS ON THE BASE";
+    row("", "d_{\\text{base}}^{2} = {\\color{" + COL.blue + "}l^{2}} + {\\color{" + COL.orange + "}w^{2}}");
+    row("", "d_{\\text{base}}^{2} = " + fmtNum(l, 1) + "^{2} + " + fmtNum(w, 1) + "^{2} = " + fmtNum(l*l + w*w, 2));
+    row("ans", "{\\color{" + COL.green + "}d_{\\text{base}} = " + fmtNum(baseDiag, 2) + "}");
+  } else if (mode === "space") {
+    document.getElementById("title").textContent = "3D CUBOID · SPACE DIAGONAL";
+    row("tag").textContent = "STEP 1: BASE DIAGONAL FIRST";
+    row("", "d_{\\text{base}}^{2} = {\\color{" + COL.blue + "}l^{2}} + {\\color{" + COL.orange + "}w^{2}} = " + fmtNum(l*l + w*w, 2));
+    row("tag").textContent = "STEP 2: NEW RIGHT TRIANGLE WITH HEIGHT";
+    row("", "d^{2} = d_{\\text{base}}^{2} + {\\color{" + COL.pink + "}h^{2}}");
+    row("", "d^{2} = {\\color{" + COL.blue + "}l^{2}} + {\\color{" + COL.orange + "}w^{2}} + {\\color{" + COL.pink + "}h^{2}}");
+    row("", "d^{2} = " + fmtNum(l*l + w*w + h*h, 2));
+    row("ans", "{\\color{" + COL.yellow + "}d = " + fmtNum(spaceDiag, 2) + "}");
+  } else if (mode === "angle") {
+    document.getElementById("title").textContent = "3D CUBOID · ANGLE WITH BASE";
+    row("tag").textContent = "PROJECT THE DIAGONAL ONTO THE BASE";
+    row("", "\\text{adjacent (in base)} = \\sqrt{l^{2}+w^{2}} = " + fmtNum(baseDiag, 2));
+    row("", "\\text{opposite (vertical)} = h = " + fmtNum(h, 2));
+    row("", "\\tan\\theta = \\dfrac{h}{\\sqrt{l^{2}+w^{2}}} = \\dfrac{" + fmtNum(h, 2) + "}{" + fmtNum(baseDiag, 2) + "}");
+    row("ans", "{\\color{" + COL.yellow + "}\\theta = " + fmtNum(theta, 1) + "°}");
+  }
+}
+
+// ===== Sliders =====
+var lSlider = document.getElementById("lSlider");
+var wSlider = document.getElementById("wSlider");
+var hSlider = document.getElementById("hSlider");
+var lVal = document.getElementById("lVal");
+var wVal = document.getElementById("wVal");
+var hVal = document.getElementById("hVal");
+function syncSliderLabels() {
+  lVal.textContent = fmtNum(display.l, 1);
+  wVal.textContent = fmtNum(display.w, 1);
+  hVal.textContent = fmtNum(display.h, 1);
+}
+lSlider.addEventListener("input", function() { params.l = parseFloat(lSlider.value); kickSpring(); });
+wSlider.addEventListener("input", function() { params.w = parseFloat(wSlider.value); kickSpring(); });
+hSlider.addEventListener("input", function() { params.h = parseFloat(hSlider.value); kickSpring(); });
+
+// ===== Spring loop =====
+var rafId = null;
+function kickSpring() { if (rafId) return; rafId = requestAnimationFrame(tick); }
+function tick() {
+  display.l += (params.l - display.l) * SPRING_FACTOR;
+  display.w += (params.w - display.w) * SPRING_FACTOR;
+  display.h += (params.h - display.h) * SPRING_FACTOR;
+  if (Math.abs(params.l - display.l) < SPRING_EPS) display.l = params.l;
+  if (Math.abs(params.w - display.w) < SPRING_EPS) display.w = params.w;
+  if (Math.abs(params.h - display.h) < SPRING_EPS) display.h = params.h;
+  render();
+  syncSliderLabels();
+  if (display.l !== params.l || display.w !== params.w || display.h !== params.h) {
+    rafId = requestAnimationFrame(tick);
+  } else { rafId = null; }
+}
+
+// ===== Drag-to-rotate =====
+var dragging = false;
+var dragStartX = 0, dragStartY = 0;
+var dragStartYaw = 0, dragStartPitch = 0;
+
+stage.addEventListener("pointerdown", function(evt) {
+  dragging = true;
+  dragStartX = evt.clientX;
+  dragStartY = evt.clientY;
+  dragStartYaw = yaw;
+  dragStartPitch = pitch;
+  stage.setPointerCapture(evt.pointerId);
+});
+stage.addEventListener("pointermove", function(evt) {
+  if (!dragging) return;
+  var dx = evt.clientX - dragStartX;
+  var dy = evt.clientY - dragStartY;
+  // Sensitivity: 0.5 deg per px
+  yaw = dragStartYaw + dx * 0.01;
+  pitch = dragStartPitch + dy * 0.01;
+  // Clamp pitch so we don't flip upside down
+  if (pitch > Math.PI / 2 - 0.05) pitch = Math.PI / 2 - 0.05;
+  if (pitch < -0.05) pitch = -0.05;
+  render();
+});
+stage.addEventListener("pointerup", function() { dragging = false; });
+stage.addEventListener("pointercancel", function() { dragging = false; });
+
+// ===== Mode tabs =====
+var modeTabs = document.querySelectorAll(".mode-tab");
+modeTabs.forEach(function(tab) {
+  tab.addEventListener("click", function() {
+    mode = tab.getAttribute("data-mode");
+    modeTabs.forEach(function(t) { t.classList.remove("active"); });
+    tab.classList.add("active");
+    render();
+  });
+});
+
+// Honour ?mode= query param
+var qs = new URLSearchParams(location.search);
+var initialMode = qs.get("mode");
+if (initialMode === "base" || initialMode === "space" || initialMode === "angle") {
+  mode = initialMode;
+  modeTabs.forEach(function(t) {
+    t.classList.toggle("active", t.getAttribute("data-mode") === mode);
+  });
+}
+
+render();
+syncSliderLabels();
+
+// ===== Height reporter =====
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>

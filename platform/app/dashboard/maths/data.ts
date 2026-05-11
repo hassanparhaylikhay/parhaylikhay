@@ -532,7 +532,16 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "04", code: "6.4", title: "Pythagoras and trigonometry in 3D" },
+      {
+        slug: "04", code: "6.4", title: "Pythagoras and trigonometry in 3D",
+        parts: [
+          { slug: "p1",     label: "P1", title: "From 2D to 3D: find the hidden right triangle" },
+          { slug: "p2",     label: "P2", title: "Cuboid diagonals" },
+          { slug: "p3",     label: "P3", title: "Angle between a line and a plane" },
+          { slug: "p4",     label: "P4", title: "Pyramids: slant edges and angles" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
     ],
   },
   {

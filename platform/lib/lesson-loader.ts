@@ -79,6 +79,7 @@ const LESSON_FOLDERS: Record<string, string> = {
   "06-01": "06-01-pythagoras",
   "06-02": "06-02-right-angled-triangles",
   "06-03": "06-03-non-right-triangles",
+  "06-04": "06-04-3d-trigonometry",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public

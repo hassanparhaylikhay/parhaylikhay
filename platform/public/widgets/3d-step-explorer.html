@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>3D Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 14px; }
+
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:14px; flex-wrap:wrap; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
+
+  .layout { display:grid; grid-template-columns: 1fr; gap:18px; align-items:start; }
+  @media (min-width: 560px) { .layout { grid-template-columns: 340px 1fr; gap:22px; } }
+
+  .stage-outer { width:100%; max-width:340px; margin:0 auto; aspect-ratio: 340 / 300; position:relative; }
+  svg { display:block; width:100%; height:100%; user-select:none; overflow:visible; touch-action:none; cursor:grab; }
+  svg:active { cursor:grabbing; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .equations { display:flex; flex-direction:column; gap:14px; padding:4px 2px; min-height:240px; }
+  .eq-group { display:flex; flex-direction:column; gap:5px; }
+  .eq-line { line-height:1.35; }
+  .eq-line[data-kind="tag"]    { font-family:'Geist Mono',monospace; font-size:11.5px; color:#7a7875; letter-spacing:0.5px; }
+  .eq-line[data-kind="hint"]   { font-style:italic; font-size:14.5px; color:#fff067; }
+  .eq-line[data-kind="main"]   { font-size:16px; color:#f0eeea; }
+  .eq-line[data-kind="ans"]    { font-size:19px; color:#f0eeea; font-weight:700; }
+  .eq-line[data-kind="note"]   { font-size:12.5px; color:#7a7875; margin-top:4px; }
+  .eq-line .katex { font-size:1em; }
+
+  .controls { display:flex; gap:8px; align-items:center; margin-top:14px; padding-top:10px; border-top:1px solid #141e2a; }
+  .controls .left { display:flex; gap:8px; }
+  .controls .right { margin-left:auto; font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; }
+  button.ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:12px; font-weight:600;
+    padding:7px 16px; border-radius:6px; cursor:pointer;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  button.ctl:hover:not(:disabled) { color:#fff067; border-color:#fff067; }
+  button.ctl:disabled { opacity:0.35; cursor:not-allowed; }
+
+  .footer { margin-top:10px; font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; text-align:center; letter-spacing:0.4px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">3D · STEP EXPLORER</span>
+    <span class="meta">drag the figure to rotate</span>
+  </div>
+  <div class="layout">
+    <div class="stage-outer">
+      <svg id="stage" viewBox="0 0 340 300" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+        <g id="g-back"></g>
+        <g id="g-faces"></g>
+        <g id="g-front"></g>
+        <g id="g-overlays"></g>
+        <g id="g-labels"></g>
+      </svg>
+    </div>
+    <div class="equations" id="equations"></div>
+  </div>
+  <div class="controls">
+    <div class="left">
+      <button class="ctl" id="prev">← back</button>
+      <button class="ctl" id="next">next →</button>
+    </div>
+    <div class="right" id="counter">1 / 1</div>
+  </div>
+  <p class="footer" id="footer"></p>
+</div>
+
+<script>
+"use strict";
+var COL = {
+  blue:"#00abfa", yellow:"#fff067", orange:"#ff822c",
+  green:"#0fee89", pink:"#ff4670", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+function svgEl(tag, attrs) {
+  var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  if (attrs) for (var k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+}
+function fmtNum(n, dp) {
+  if (!isFinite(n)) return "—";
+  if (dp == null) dp = 2;
+  return parseFloat((+n.toFixed(dp)).toFixed(dp)).toString();
+}
+function tryRender(target, tex) {
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, target, { throwOnError: false, output: "html" }); }
+    catch (e) { target.textContent = tex; }
+  } else {
+    setTimeout(function() { tryRender(target, tex); }, 50);
+  }
+}
+function svgKaTeXLabel(parent, x, y, tex, color, alignment, fontSizePx) {
+  var W = 120, H = 26;
+  var fo = svgEl("foreignObject", {
+    x: (x - W/2), y: (y - H/2), width: W, height: H,
+    style: "overflow:visible; pointer-events:none"
+  });
+  var div = document.createElement("div");
+  div.setAttribute("xmlns", "http://www.w3.org/1999/xhtml");
+  div.className = "lbl-host";
+  if (fontSizePx) div.style.fontSize = fontSizePx + "px";
+  div.style.color = color || COL.off;
+  div.style.width = "100%"; div.style.height = "100%";
+  div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = (alignment === "left" ? "flex-start" : alignment === "right" ? "flex-end" : "center");
+  fo.appendChild(div);
+  parent.appendChild(fo);
+  tryRender(div, tex);
+  return fo;
+}
+
+// ===== 3D projection =====
+var SVG_W = 340, SVG_H = 300;
+var yaw = -28 * Math.PI / 180;
+var pitch = 18 * Math.PI / 180;
+
+function projectScaled(p, scale) {
+  var cy = Math.cos(yaw), sy = Math.sin(yaw);
+  var x1 =  p.x * cy + p.z * sy;
+  var z1 = -p.x * sy + p.z * cy;
+  var cp = Math.cos(pitch), sp = Math.sin(pitch);
+  var y2 = p.y * cp - z1 * sp;
+  var z2 = p.y * sp + z1 * cp;
+  return { sx: SVG_W / 2 + x1 * scale, sy: SVG_H / 2 - y2 * scale, depth: z2 };
+}
+
+var stage = document.getElementById("stage");
+var gBack = document.getElementById("g-back");
+var gFaces = document.getElementById("g-faces");
+var gFront = document.getElementById("g-front");
+var gOverlays = document.getElementById("g-overlays");
+var gLabels = document.getElementById("g-labels");
+
+function clearAll() {
+  gBack.innerHTML = "";
+  gFaces.innerHTML = "";
+  gFront.innerHTML = "";
+  gOverlays.innerHTML = "";
+  gLabels.innerHTML = "";
+}
+
+// =====================================================================
+// CUBOID BUILDER
+// p: { l, w, h, scale (optional) }
+// Returns { verts: [...projected vertex objects...], scale }
+// =====================================================================
+function drawCuboid(p) {
+  var l = p.l, w = p.w, h = p.h;
+  var scale = p.scale || Math.min(110 / Math.max(l, w, h), 22);
+  var hx = l/2, hy = h/2, hz = w/2;
+  var verts3d = [
+    { x: -hx, y: -hy, z:  hz },  // 0 bottom front-left
+    { x:  hx, y: -hy, z:  hz },  // 1 bottom front-right
+    { x:  hx, y: -hy, z: -hz },  // 2 bottom back-right
+    { x: -hx, y: -hy, z: -hz },  // 3 bottom back-left
+    { x: -hx, y:  hy, z:  hz },  // 4 top front-left
+    { x:  hx, y:  hy, z:  hz },  // 5 top front-right
+    { x:  hx, y:  hy, z: -hz },  // 6 top back-right
+    { x: -hx, y:  hy, z: -hz }   // 7 top back-left
+  ];
+  var verts = verts3d.map(function(p) { return projectScaled(p, scale); });
+
+  // Faces (translucent shading)
+  var faces = [
+    { idx: [0,1,2,3], col: "rgba(0,171,250,0.04)" },
+    { idx: [4,5,6,7], col: "rgba(255,240,103,0.04)" },
+    { idx: [0,1,5,4], col: "rgba(255,130,44,0.04)" },
+    { idx: [3,2,6,7], col: "rgba(255,130,44,0.04)" },
+    { idx: [0,3,7,4], col: "rgba(255,70,112,0.04)" },
+    { idx: [1,2,6,5], col: "rgba(255,70,112,0.04)" }
+  ];
+  faces.forEach(function(f) {
+    f.avgDepth = (verts[f.idx[0]].depth + verts[f.idx[1]].depth + verts[f.idx[2]].depth + verts[f.idx[3]].depth) / 4;
+  });
+  faces.sort(function(a, b) { return a.avgDepth - b.avgDepth; });
+  faces.forEach(function(f) {
+    var pts = f.idx.map(function(i) { return verts[i].sx + "," + verts[i].sy; }).join(" ");
+    gFaces.appendChild(svgEl("polygon", { points: pts, fill: f.col, stroke: "none" }));
+  });
+
+  // Edges
+  var edges = [
+    [0,1, COL.blue], [1,2, COL.orange], [2,3, COL.blue], [3,0, COL.orange],
+    [4,5, COL.blue], [5,6, COL.orange], [6,7, COL.blue], [7,4, COL.orange],
+    [0,4, COL.pink], [1,5, COL.pink], [2,6, COL.pink], [3,7, COL.pink]
+  ];
+  edges.forEach(function(e) {
+    var p1 = verts[e[0]], p2 = verts[e[1]], color = e[2];
+    var avgDepth = (p1.depth + p2.depth) / 2;
+    var isBack = avgDepth < 0;
+    var line = svgEl("line", {
+      x1: p1.sx, y1: p1.sy, x2: p2.sx, y2: p2.sy,
+      stroke: color, "stroke-width": isBack ? 1.4 : 2.4,
+      "stroke-linecap": "round",
+      "stroke-dasharray": isBack ? "4 3" : null,
+      opacity: isBack ? 0.45 : 0.9
+    });
+    (isBack ? gBack : gFront).appendChild(line);
+  });
+
+  return { verts: verts, verts3d: verts3d, scale: scale, kind: "cuboid" };
+}
+
+// =====================================================================
+// PYRAMID BUILDER (square-based)
+// p: { base (side of square base), h (apex height), scale (optional) }
+// Vertices (in order):
+//  v[0..3]: base corners (front-left, front-right, back-right, back-left)
+//  v[4]: apex (centered above)
+//  v[5..8]: midpoints of base edges (front, right, back, left)
+//  v[9]: centre of base
+// =====================================================================
+function drawPyramid(p) {
+  var base = p.base, h = p.h;
+  var scale = p.scale || Math.min(110 / Math.max(base, h), 22);
+  var hb = base / 2;
+  var verts3d = [
+    { x: -hb, y: -h/2, z:  hb },  // 0 front-left base
+    { x:  hb, y: -h/2, z:  hb },  // 1 front-right base
+    { x:  hb, y: -h/2, z: -hb },  // 2 back-right base
+    { x: -hb, y: -h/2, z: -hb },  // 3 back-left base
+    { x:   0, y:  h/2, z:   0 },  // 4 apex
+    { x:   0, y: -h/2, z:  hb },  // 5 midpoint front base
+    { x:  hb, y: -h/2, z:   0 },  // 6 midpoint right base
+    { x:   0, y: -h/2, z: -hb },  // 7 midpoint back base
+    { x: -hb, y: -h/2, z:   0 },  // 8 midpoint left base
+    { x:   0, y: -h/2, z:   0 }   // 9 centre of base
+  ];
+  var verts = verts3d.map(function(p) { return projectScaled(p, scale); });
+
+  // Faces: 1 base + 4 triangular slant faces
+  var faces = [
+    { idx: [0,1,2,3], col: "rgba(0,171,250,0.04)" },           // base
+    { idx: [0,1,4],   col: "rgba(255,130,44,0.05)" },          // front slant
+    { idx: [1,2,4],   col: "rgba(255,130,44,0.05)" },          // right slant
+    { idx: [2,3,4],   col: "rgba(255,130,44,0.05)" },          // back slant
+    { idx: [3,0,4],   col: "rgba(255,130,44,0.05)" }           // left slant
+  ];
+  faces.forEach(function(f) {
+    var depths = f.idx.map(function(i) { return verts[i].depth; });
+    f.avgDepth = depths.reduce(function(a,b) { return a+b; }, 0) / depths.length;
+  });
+  faces.sort(function(a, b) { return a.avgDepth - b.avgDepth; });
+  faces.forEach(function(f) {
+    var pts = f.idx.map(function(i) { return verts[i].sx + "," + verts[i].sy; }).join(" ");
+    gFaces.appendChild(svgEl("polygon", { points: pts, fill: f.col, stroke: "none" }));
+  });
+
+  // Edges
+  var edges = [
+    [0,1, COL.blue],  [1,2, COL.orange], [2,3, COL.blue],  [3,0, COL.orange],  // base
+    [0,4, COL.pink],  [1,4, COL.pink],   [2,4, COL.pink],  [3,4, COL.pink]     // slant edges
+  ];
+  edges.forEach(function(e) {
+    var p1 = verts[e[0]], p2 = verts[e[1]], color = e[2];
+    var avgDepth = (p1.depth + p2.depth) / 2;
+    var isBack = avgDepth < 0;
+    var line = svgEl("line", {
+      x1: p1.sx, y1: p1.sy, x2: p2.sx, y2: p2.sy,
+      stroke: color, "stroke-width": isBack ? 1.4 : 2.4,
+      "stroke-linecap": "round",
+      "stroke-dasharray": isBack ? "4 3" : null,
+      opacity: isBack ? 0.45 : 0.9
+    });
+    (isBack ? gBack : gFront).appendChild(line);
+  });
+
+  return { verts: verts, verts3d: verts3d, scale: scale, kind: "pyramid", base: base, h: h };
+}
+
+// =====================================================================
+// OVERLAY HELPERS
+// =====================================================================
+function overlayLine(p1, p2, color, opts) {
+  opts = opts || {};
+  var attrs = {
+    x1: p1.sx, y1: p1.sy, x2: p2.sx, y2: p2.sy,
+    stroke: color,
+    "stroke-width": opts.width || 3,
+    "stroke-linecap": "round"
+  };
+  if (opts.dashed) attrs["stroke-dasharray"] = "4 4";
+  if (opts.glow) attrs.style = "filter: drop-shadow(0 0 6px " + color + ")";
+  if (opts.opacity != null) attrs.opacity = opts.opacity;
+  return gOverlays.appendChild(svgEl("line", attrs));
+}
+function overlayLabel(p1, p2, tex, color, offset) {
+  offset = offset || { x: 0, y: -10 };
+  var mid = { x: (p1.sx + p2.sx)/2 + (offset.x || 0), y: (p1.sy + p2.sy)/2 + (offset.y || 0) };
+  return svgKaTeXLabel(gLabels, mid.x, mid.y, tex, color, "center", 12);
+}
+
+// =====================================================================
+// PRESETS
+// =====================================================================
+var PRESETS = {
+  "cuboid-space-diagonal": {
+    title: "Cuboid: space diagonal",
+    builder: drawCuboid,
+    params: { l: 6, w: 4, h: 3 },
+    footer: "Two Pythagoras steps: base diagonal first, then up to the opposite corner.",
+    steps: [
+      {
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE CUBOID" },
+          { kind: "hint", text: "cuboid 6 × 4 × 3. Find the space diagonal (corner to opposite corner)." }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[2], COL.green, { width: 3.5, glow: true });
+          overlayLabel(b.verts[0], b.verts[2], "{\\color{" + COL.green + "}\\sqrt{l^{2}+w^{2}}}", null, { x: 24, y: -2 });
+        },
+        eqs: [
+          { kind: "tag", text: "STEP 2: BASE DIAGONAL FIRST" },
+          { kind: "hint", text: "the bottom face is a rectangle. Its diagonal splits it into two right triangles." },
+          { kind: "main", tex: "d_{\\text{base}}^{2} = 6^{2} + 4^{2} = 52" },
+          { kind: "main", tex: "d_{\\text{base}} = \\sqrt{52} \\approx 7.21" }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[2], COL.green, { width: 2.5, dashed: true, opacity: 0.6 });
+          overlayLine(b.verts[2], b.verts[6], COL.pink, { width: 3, glow: true });
+          overlayLine(b.verts[0], b.verts[6], COL.yellow, { width: 3.5, glow: true });
+          overlayLabel(b.verts[0], b.verts[6], "{\\color{" + COL.yellow + "}d}", null, { x: -20, y: -10 });
+        },
+        eqs: [
+          { kind: "tag", text: "STEP 3: NEW RIGHT TRIANGLE WITH HEIGHT" },
+          { kind: "hint", text: "the base diagonal, the vertical height, and the space diagonal form a right triangle." },
+          { kind: "main", tex: "d^{2} = d_{\\text{base}}^{2} + h^{2} = 52 + 9 = 61" },
+          { kind: "ans", tex: "{\\color{" + COL.yellow + "}d = \\sqrt{61} \\approx 7.81}" }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[6], COL.yellow, { width: 3.5, glow: true });
+        },
+        eqs: [
+          { kind: "tag", text: "STEP 4: THE SHORTCUT" },
+          { kind: "hint", text: "for any cuboid, the space diagonal is just" },
+          { kind: "main", tex: "d = \\sqrt{l^{2} + w^{2} + h^{2}}" },
+          { kind: "note", text: "this generalises Pythagoras to 3D in one formula." }
+        ]
+      }
+    ]
+  },
+
+  "cuboid-line-plane-angle": {
+    title: "Cuboid: angle with the base",
+    builder: drawCuboid,
+    params: { l: 6, w: 4, h: 5 },
+    footer: "Drop the perpendicular onto the base, then use tan.",
+    steps: [
+      {
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE QUESTION" },
+          { kind: "hint", text: "cuboid 6 × 4 × 5. Find the angle the space diagonal makes with the base." }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[6], COL.yellow, { width: 3.5, glow: true });
+          overlayLine(b.verts[0], b.verts[2], COL.green, { width: 3, dashed: true });
+        },
+        eqs: [
+          { kind: "tag", text: "STEP 2: PROJECT ONTO THE BASE" },
+          { kind: "hint", text: "the space diagonal's shadow on the base IS the base diagonal." },
+          { kind: "main", tex: "\\text{projection} = \\sqrt{6^{2}+4^{2}} = \\sqrt{52} \\approx 7.21" }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[6], COL.yellow, { width: 3.5, glow: true });
+          overlayLine(b.verts[0], b.verts[2], COL.green, { width: 3, dashed: true });
+          overlayLine(b.verts[2], b.verts[6], COL.pink, { width: 3, dashed: true });
+        },
+        eqs: [
+          { kind: "tag", text: "STEP 3: RIGHT TRIANGLE IN THE VERTICAL PLANE" },
+          { kind: "hint", text: "diagonal + projection + vertical edge = right triangle. Use tan." },
+          { kind: "main", tex: "\\tan\\theta = \\dfrac{h}{\\sqrt{l^{2}+w^{2}}} = \\dfrac{5}{\\sqrt{52}}" }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[6], COL.yellow, { width: 3.5, glow: true });
+          overlayLine(b.verts[0], b.verts[2], COL.green, { width: 3, dashed: true });
+        },
+        eqs: [
+          { kind: "tag", text: "STEP 4: INVERSE TAN" },
+          { kind: "main", tex: "\\theta = \\tan^{-1}(5/\\sqrt{52}) \\approx \\tan^{-1}(0.6934)" },
+          { kind: "ans", tex: "{\\color{" + COL.yellow + "}\\theta \\approx 34.7°}" }
+        ]
+      }
+    ]
+  },
+
+  "pyramid-slant-edge": {
+    title: "Pyramid: slant edge",
+    builder: drawPyramid,
+    params: { base: 6, h: 8 },
+    footer: "Find the diagonal across the base first, halve it, then Pythagoras up to the apex.",
+    steps: [
+      {
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE PYRAMID" },
+          { kind: "hint", text: "square-based pyramid: base side 6, height 8. Find the length of one slant edge (apex to a base corner)." }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[2], COL.green, { width: 3, dashed: true });
+          overlayLabel(b.verts[0], b.verts[2], "{\\color{" + COL.green + "}\\text{base diag}}", null, { x: 24, y: 4 });
+        },
+        eqs: [
+          { kind: "tag", text: "STEP 2: BASE DIAGONAL" },
+          { kind: "hint", text: "the apex sits above the centre of the base. The horizontal distance from a base corner to the centre is half the diagonal." },
+          { kind: "main", tex: "\\text{base diagonal} = \\sqrt{6^{2}+6^{2}} = 6\\sqrt{2}" },
+          { kind: "main", tex: "\\text{half} = 3\\sqrt{2} \\approx 4.24" }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[9], COL.green, { width: 3, dashed: true });
+          overlayLine(b.verts[9], b.verts[4], COL.pink, { width: 3, dashed: true });
+          overlayLine(b.verts[0], b.verts[4], COL.yellow, { width: 3.5, glow: true });
+          overlayLabel(b.verts[0], b.verts[4], "{\\color{" + COL.yellow + "}\\text{slant edge}}", null, { x: -28, y: -4 });
+        },
+        eqs: [
+          { kind: "tag", text: "STEP 3: PYTHAGORAS IN THE VERTICAL TRIANGLE" },
+          { kind: "hint", text: "base-corner, centre-of-base, apex make a right triangle. Slant edge is the hypotenuse." },
+          { kind: "main", tex: "\\text{slant}^{2} = (3\\sqrt{2})^{2} + 8^{2} = 18 + 64 = 82" },
+          { kind: "ans", tex: "{\\color{" + COL.yellow + "}\\text{slant edge} = \\sqrt{82} \\approx 9.06}" }
+        ]
+      }
+    ]
+  },
+
+  "pyramid-edge-angle": {
+    title: "Pyramid: angle between slant edge and base",
+    builder: drawPyramid,
+    params: { base: 6, h: 8 },
+    footer: "Slant edge, its base-plane shadow, and the vertical height form the right triangle.",
+    steps: [
+      {
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE QUESTION" },
+          { kind: "hint", text: "square-based pyramid, base 6, height 8. Find the angle that a slant edge makes with the base." }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[9], COL.green, { width: 3, dashed: true });
+          overlayLine(b.verts[9], b.verts[4], COL.pink, { width: 3, dashed: true });
+          overlayLine(b.verts[0], b.verts[4], COL.yellow, { width: 3.5, glow: true });
+          overlayLabel(b.verts[0], b.verts[9], "{\\color{" + COL.green + "}3\\sqrt{2}}", null, { x: 14, y: 12 });
+          overlayLabel(b.verts[9], b.verts[4], "{\\color{" + COL.pink + "}h = 8}", null, { x: 18, y: 0 });
+        },
+        eqs: [
+          { kind: "tag", text: "STEP 2: THE RIGHT TRIANGLE" },
+          { kind: "hint", text: "the slant edge's projection onto the base goes from the corner to the centre — half the base diagonal." },
+          { kind: "main", tex: "\\text{horizontal} = \\tfrac{1}{2}\\sqrt{6^{2}+6^{2}} = 3\\sqrt{2}" },
+          { kind: "main", tex: "\\text{vertical} = h = 8" }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[4], COL.yellow, { width: 3.5, glow: true });
+          overlayLine(b.verts[0], b.verts[9], COL.green, { width: 3, dashed: true });
+        },
+        eqs: [
+          { kind: "tag", text: "STEP 3: TAN, THEN INVERSE TAN" },
+          { kind: "main", tex: "\\tan\\theta = \\dfrac{8}{3\\sqrt{2}} \\approx 1.886" },
+          { kind: "ans", tex: "{\\color{" + COL.yellow + "}\\theta = \\tan^{-1}(1.886) \\approx 62.0°}" }
+        ]
+      }
+    ]
+  },
+
+  "comprehensive-cuboid": {
+    title: "Cuboid: multi-step",
+    builder: drawCuboid,
+    params: { l: 8, w: 6, h: 4 },
+    footer: "Cuboid 8 × 6 × 4: face diagonal, space diagonal, and angle with the base.",
+    steps: [
+      {
+        eqs: [
+          { kind: "tag", text: "STEP 1: THE CUBOID" },
+          { kind: "hint", text: "8 × 6 × 4. Three sub-questions to solve: (a) face diagonal, (b) space diagonal, (c) angle of space diagonal with the base." }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[2], COL.green, { width: 3.5, glow: true });
+        },
+        eqs: [
+          { kind: "tag", text: "PART (A): BASE DIAGONAL" },
+          { kind: "main", tex: "d_{\\text{base}} = \\sqrt{8^{2}+6^{2}} = \\sqrt{100} = 10" },
+          { kind: "ans", tex: "{\\color{" + COL.green + "}d_{\\text{base}} = 10}" }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[2], COL.green, { width: 2.5, dashed: true, opacity: 0.6 });
+          overlayLine(b.verts[2], b.verts[6], COL.pink, { width: 3 });
+          overlayLine(b.verts[0], b.verts[6], COL.yellow, { width: 3.5, glow: true });
+        },
+        eqs: [
+          { kind: "tag", text: "PART (B): SPACE DIAGONAL" },
+          { kind: "main", tex: "d^{2} = 10^{2} + 4^{2} = 116" },
+          { kind: "ans", tex: "{\\color{" + COL.yellow + "}d = \\sqrt{116} \\approx 10.77}" }
+        ]
+      },
+      {
+        overlays: function(b) {
+          overlayLine(b.verts[0], b.verts[6], COL.yellow, { width: 3.5, glow: true });
+          overlayLine(b.verts[0], b.verts[2], COL.green, { width: 3, dashed: true });
+        },
+        eqs: [
+          { kind: "tag", text: "PART (C): ANGLE WITH THE BASE" },
+          { kind: "main", tex: "\\tan\\theta = \\dfrac{4}{10} = 0.4" },
+          { kind: "ans", tex: "{\\color{" + COL.yellow + "}\\theta = \\tan^{-1}(0.4) \\approx 21.8°}" }
+        ]
+      }
+    ]
+  }
+};
+
+// =====================================================================
+// CONTROLLER
+// =====================================================================
+var qs = new URLSearchParams(location.search);
+var PRESET = qs.get("preset") || "cuboid-space-diagonal";
+var preset = PRESETS[PRESET] || PRESETS["cuboid-space-diagonal"];
+
+document.getElementById("title").textContent = preset.title.toUpperCase();
+document.getElementById("footer").textContent = preset.footer || "";
+
+var stepIdx = 0;
+var stepEl = document.getElementById("equations");
+var counterEl = document.getElementById("counter");
+var prevBtn = document.getElementById("prev");
+var nextBtn = document.getElementById("next");
+
+function renderStep() {
+  clearAll();
+  var built = preset.builder(preset.params);
+  var step = preset.steps[stepIdx];
+  if (step.overlays) step.overlays(built);
+
+  stepEl.innerHTML = "";
+  var grp = document.createElement("div"); grp.className = "eq-group";
+  step.eqs.forEach(function(line, i) {
+    var div = document.createElement("div");
+    div.className = "eq-line";
+    div.setAttribute("data-kind", line.kind);
+    div.style.opacity = "0";
+    div.style.transform = "translateY(4px)";
+    div.style.transition = "opacity 0.45s ease " + (i*60) + "ms, transform 0.45s ease " + (i*60) + "ms";
+    if (line.tex) tryRender(div, line.tex);
+    else div.textContent = line.text;
+    grp.appendChild(div);
+    requestAnimationFrame(function() {
+      div.style.opacity = "1";
+      div.style.transform = "translateY(0)";
+    });
+  });
+  stepEl.appendChild(grp);
+
+  counterEl.textContent = (stepIdx + 1) + " / " + preset.steps.length;
+  prevBtn.disabled = stepIdx === 0;
+  nextBtn.disabled = stepIdx === preset.steps.length - 1;
+}
+
+prevBtn.onclick = function() { if (stepIdx > 0) { stepIdx--; renderStep(); } };
+nextBtn.onclick = function() { if (stepIdx < preset.steps.length - 1) { stepIdx++; renderStep(); } };
+
+// Drag to rotate
+var dragging = false;
+var dragStartX = 0, dragStartY = 0;
+var dragStartYaw = 0, dragStartPitch = 0;
+stage.addEventListener("pointerdown", function(evt) {
+  dragging = true;
+  dragStartX = evt.clientX;
+  dragStartY = evt.clientY;
+  dragStartYaw = yaw;
+  dragStartPitch = pitch;
+  stage.setPointerCapture(evt.pointerId);
+});
+stage.addEventListener("pointermove", function(evt) {
+  if (!dragging) return;
+  var dx = evt.clientX - dragStartX;
+  var dy = evt.clientY - dragStartY;
+  yaw = dragStartYaw + dx * 0.012;
+  pitch = dragStartPitch + dy * 0.012;
+  if (pitch > Math.PI / 2 - 0.05) pitch = Math.PI / 2 - 0.05;
+  if (pitch < -0.05) pitch = -0.05;
+  renderStep();
+});
+stage.addEventListener("pointerup", function() { dragging = false; });
+stage.addEventListener("pointercancel", function() { dragging = false; });
+
+renderStep();
+
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bodyPadTop = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bodyPadBottom = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var hh = Math.ceil(rect.height + bodyPadTop + bodyPadBottom);
+    if (Math.abs(hh - lastReported) < 3) return;
+    lastReported = hh;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: hh }, "*");
+  });
+}
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+</script>
+</body>
+</html>
