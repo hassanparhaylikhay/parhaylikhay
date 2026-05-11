@@ -120,15 +120,19 @@ function svgKaTeXLabel(parent, x, y, tex, color, alignment, fontSizePx) {
 }
 
 // ===== Geometry =====
-// CRITICAL: WSCALE === R so the wave panel and the unit circle use the
-// SAME px-per-unit. That makes the dashed connecting line meaningful —
-// the height on the circle equals the height on the wave panel.
+// CRITICAL: WSCALE === R and WX === CX + R, so:
+//  - the wave panel's left edge IS the tangent line to the circle at x = 1
+//  - the panel's y=0 baseline aligns with the circle's x-axis (WCY = CY)
+//  - 1 unit on the wave's y-axis equals 1 unit on the circle (= R px)
+// This makes the geometry literally continuous: the y=1 dashed reference
+// line in the panel exits the top of the circle; tan(θ) is the y-coord
+// where the extended radius hits the panel's left edge.
 var SVG_W = 660, SVG_H = 380;
-var CX = 110, CY = 190, R = 90;        // circle centre + radius (px)
-// Wave panel — right of the circle, y=0 baseline at WCY, full ±WMAX_Y range
-var WX = 230, WW = 410;                // panel x extent
+var CX = 130, CY = 190, R = 100;       // circle centre + radius (px)
+var WX = CX + R;                       // panel left edge = tangent line at x=1
+var WW = SVG_W - WX - 24;              // panel x extent
 var WCY = CY;                          // y=0 baseline ALIGNED with circle centre
-var WSCALE = R;                        // px per unit on y-axis = circle radius (matched scales)
+var WSCALE = R;                        // px per unit on y-axis (matched scales)
 var WMAX_Y = 2;                        // clip tan beyond this (panel y range = ±2 units)
 var WY = WCY - WMAX_Y * WSCALE;        // top of panel
 var WH = 2 * WMAX_Y * WSCALE;          // panel height
@@ -222,9 +226,9 @@ function renderStaticWavePanel() {
     }));
   });
 
-  // y-axis labels (±1)
-  svgKaTeXLabel(gWaveStatic, WX - 12, yWave(1),  "1",  COL.grey, "center", 10);
-  svgKaTeXLabel(gWaveStatic, WX - 14, yWave(-1), "-1", COL.grey, "center", 10);
+  // y-axis labels are not needed here — the circle's own ±1 ticks already
+  // mark those values, and the dashed y=±1 reference lines run from the
+  // top/bottom of the circle straight into the panel.
 
   // ===== Static (faint) full-range curves over 0-360° =====
   function buildCurvePath(fn) {
@@ -404,12 +408,40 @@ function render() {
     stroke: COL.faint, "stroke-width": 0.8, "stroke-dasharray": "3 3", opacity: 0.6
   }));
 
-  // Dashed connecting lines from the circle's point to the wave panel
-  // (matched scales mean these go horizontally across at the same y)
+  // ===== Geometric link: extended hypotenuse → tangent line → tan curve =====
+  // The line from origin through P, extended to x = WX (the panel's left edge,
+  // which is the tangent line at x=1), hits y = CY - R*tan(θ). That y-value
+  // IS yWave(tan(θ)) because WX = CX+R, WCY = CY, WSCALE = R. So the extended
+  // radius lands exactly at the y-level of tan(θ) on the panel.
+  // We draw this in yellow when cos(θ) > 0 (Q1 and Q4 — where the radius
+  // actually extends rightward through P) and |tan(θ)| stays within the panel.
   var sinDotY = yWave(sinV);
+  var tanDotY = yWave(tanV);
+  var canShowTanExt = (cosV > 0.05) && (Math.abs(tanV) <= WMAX_Y);
+  if (canShowTanExt) {
+    var tanEdgeX = WX, tanEdgeY = CY - R * tanV;
+    // Yellow dashed line: from P (on the circle) through the tangent point at x=WX
+    gWaveTrace.appendChild(svgEl("line", {
+      x1: Px, y1: Py, x2: tanEdgeX, y2: tanEdgeY,
+      stroke: COL.yellow, "stroke-width": 1, "stroke-dasharray": "3 4", opacity: 0.55
+    }));
+    // Yellow horizontal dashed line: from tangent point across to the tan dot
+    gWaveTrace.appendChild(svgEl("line", {
+      x1: tanEdgeX, y1: tanEdgeY, x2: cursorX, y2: tanDotY,
+      stroke: COL.yellow, "stroke-width": 0.8, "stroke-dasharray": "2 4", opacity: 0.45
+    }));
+    // Small dot at the tangent point — marks "tan θ lives here on the tangent line"
+    gWaveTrace.appendChild(svgEl("circle", {
+      cx: tanEdgeX, cy: tanEdgeY, r: 3,
+      fill: COL.yellow, opacity: 0.7
+    }));
+  }
+
+  // Orange dashed line for sin: from P horizontally to the sin dot
+  // (with matched scales and the touching panel, this is a straight horizontal line)
   gWaveTrace.appendChild(svgEl("line", {
     x1: Px, y1: Py, x2: cursorX, y2: sinDotY,
-    stroke: COL.orange, "stroke-width": 0.8, "stroke-dasharray": "2 4", opacity: 0.4
+    stroke: COL.orange, "stroke-width": 0.8, "stroke-dasharray": "2 4", opacity: 0.45
   }));
 
   // Dots at the current value of each curve
@@ -422,7 +454,7 @@ function render() {
   dot(cursorX, sinDotY, COL.orange);
   dot(cursorX, yWave(cosV), COL.blue);
   if (Math.abs(tanV) <= WMAX_Y) {
-    dot(cursorX, yWave(tanV), COL.yellow);
+    dot(cursorX, tanDotY, COL.yellow);
   }
 }
 
