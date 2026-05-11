@@ -219,6 +219,28 @@ function tryRender(target, tex){
     setTimeout(function(){ tryRender(target, tex); }, 50);
   }
 }
+// Renders a string that mixes prose and inline math like "Shift $=$ image".
+// Splits on $...$ boundaries; renders math segments via KaTeX, prose as text.
+function renderMixed(target, str){
+  target.innerHTML = "";
+  if (typeof katex === "undefined"){
+    setTimeout(function(){ renderMixed(target, str); }, 50);
+    return;
+  }
+  var parts = str.split(/(\$[^$]+\$)/g);
+  parts.forEach(function(part){
+    if (!part) return;
+    if (part.length >= 2 && part.charAt(0) === "$" && part.charAt(part.length - 1) === "$"){
+      var span = document.createElement("span");
+      var tex = part.slice(1, -1);
+      try { katex.render(tex, span, { throwOnError:false, output:"html" }); }
+      catch(e){ span.textContent = part; }
+      target.appendChild(span);
+    } else {
+      target.appendChild(document.createTextNode(part));
+    }
+  });
+}
 function svgKaTeXLabel(parent, x, y, tex, color, align){
   align = align || "center";
   var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
@@ -410,7 +432,7 @@ function renderPanel(){
       row.className = "eq-row fade-in";
       row.style.animationDelay = (delay + i * 60) + "ms";
       panel.appendChild(row);
-      tryRender(row, line);
+      renderMixed(row, line);
     });
   }
   if (s.ans){
