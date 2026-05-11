@@ -179,6 +179,61 @@ var PRESETS = {
         highlight: "all"
       }
     ]
+  },
+  "p3-reflection-identify": {
+    title: "WORKED EXAMPLE · IDENTIFY THE REFLECTION",
+    obj: [{x:2,y:1}, {x:5,y:1}, {x:2,y:3}],
+    img: [{x:1,y:2}, {x:1,y:5}, {x:3,y:2}],
+    labels: ['A','B','C'],
+    range: { xmin:-1, xmax:7, ymin:-1, ymax:7 },
+    mirror: { p1: {x:-1, y:-1}, p2: {x:7, y:7} },
+    steps: [
+      {
+        tag: "STEP 1 · WHAT WE'RE GIVEN",
+        lines: [
+          "Object $A(2,1),\\, B(5,1),\\, C(2,3)$",
+          "Image $A'(1,2),\\, B'(1,5),\\, C'(3,2)$",
+          "The shape stays the same size, so this is NOT an enlargement."
+        ],
+        highlight: null
+      },
+      {
+        tag: "STEP 2 · RULE OUT TRANSLATION",
+        lines: [
+          "Shift $A \\to A' = (1-2,\\; 2-1) = (-1,\\, 1)$",
+          "Shift $B \\to B' = (1-5,\\; 5-1) = (-4,\\, 4)$",
+          "Different shifts. Not a translation."
+        ],
+        highlight: null,
+        showShifts: [0, 1]
+      },
+      {
+        tag: "STEP 3 · TEST THE MIDPOINTS",
+        lines: [
+          "Reflection $\\Rightarrow$ midpoint of every $(A, A')$ pair lies on the mirror.",
+          "Midpoint of $AA'$ $= (1.5,\\, 1.5)$",
+          "Midpoint of $BB'$ $= (3,\\, 3)$",
+          "Midpoint of $CC'$ $= (2.5,\\, 2.5)$",
+          "All three midpoints fit the pattern $x = y$."
+        ],
+        highlight: "showMirror"
+      },
+      {
+        tag: "STEP 4 · CHECK PERPENDICULAR DISTANCE",
+        lines: [
+          "Mirror line $y = x$. For each pair, the segment from object to image is perpendicular to the mirror, with equal distances on either side.",
+          "That confirms a reflection in $y = x$."
+        ],
+        highlight: "showMirror",
+        showShifts: [0, 1, 2]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\boxed{\\text{Reflection in the line } y = x}",
+        marks: "[B1 for \"reflection\"; B1 for the equation of the mirror line]",
+        highlight: "all"
+      }
+    ]
   }
 };
 
@@ -384,6 +439,34 @@ function drawScene(){
   var hi = s.highlight;
   var fadeOther = (typeof hi === "number");
 
+  // Optional mirror line for reflection presets
+  if ((hi === "showMirror" || hi === "all") && PRESET.mirror){
+    var dx = PRESET.mirror.p2.x - PRESET.mirror.p1.x;
+    var dy = PRESET.mirror.p2.y - PRESET.mirror.p1.y;
+    var len = Math.sqrt(dx*dx + dy*dy);
+    if (len > 0.001){
+      var ux = dx / len, uy = dy / len, ext = 16;
+      var ma = { x: PRESET.mirror.p1.x - ext * ux, y: PRESET.mirror.p1.y - ext * uy };
+      var mb = { x: PRESET.mirror.p1.x + ext * ux, y: PRESET.mirror.p1.y + ext * uy };
+      var line = document.createElementNS("http://www.w3.org/2000/svg","line");
+      line.setAttribute("x1", toSx(ma.x)); line.setAttribute("y1", toSy(ma.y));
+      line.setAttribute("x2", toSx(mb.x)); line.setAttribute("y2", toSy(mb.y));
+      line.setAttribute("stroke", COL.yellow); line.setAttribute("stroke-width", 1.8);
+      line.setAttribute("stroke-dasharray", "6 5");
+      gHi.appendChild(line);
+      // midpoint dots on the mirror
+      PRESET.obj.forEach(function(p, i){
+        var q = PRESET.img[i];
+        var mid = { x: (p.x + q.x)/2, y: (p.y + q.y)/2 };
+        var mp = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        mp.setAttribute("cx", toSx(mid.x)); mp.setAttribute("cy", toSy(mid.y));
+        mp.setAttribute("r", 3); mp.setAttribute("fill", COL.yellow);
+        mp.setAttribute("class", "glow"); mp.style.color = COL.yellow;
+        gHi.appendChild(mp);
+      });
+    }
+  }
+
   // Draw shapes — fade non-highlighted vertices when one is focused
   drawPoly(gObj, PRESET.obj, "rgba(0,171,250,0.10)", COL.blue, 2, fadeOther ? 0.5 : 1);
   drawPoly(gImg, PRESET.img, "rgba(255,70,112,0.10)", COL.pink, 2, fadeOther ? 0.5 : 1);
@@ -403,12 +486,18 @@ function drawScene(){
     drawHighlightRing(gHi, PRESET.img[hi], COL.yellow);
     drawArrow(gSh, PRESET.obj[hi], PRESET.img[hi], COL.yellow, 2, true, false);
   } else if (hi === "all"){
-    // glow on every image vertex (the answer is reached)
     PRESET.img.forEach(function(p){
       drawHighlightRing(gHi, p, COL.green);
     });
     PRESET.obj.forEach(function(p, i){
       drawArrow(gSh, p, PRESET.img[i], COL.green, 1.6, true, true);
+    });
+  }
+
+  // Optional explicit shift arrows for "showShifts" array
+  if (Array.isArray(s.showShifts)){
+    s.showShifts.forEach(function(i){
+      drawArrow(gSh, PRESET.obj[i], PRESET.img[i], COL.yellow, 1.6, true, true);
     });
   }
 }

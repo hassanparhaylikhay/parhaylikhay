@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Reflection Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:default; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .mirror-strip {
+    display:flex; align-items:center; gap:14px; padding:10px 14px; margin-top:10px;
+    background:rgba(255,240,103,0.04); border:1px solid rgba(255,240,103,0.18); border-radius:8px;
+  }
+  .mirror-strip .tag { font-family:'Geist Mono',monospace; font-size:10px; color:#fff067; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; }
+  .mirror-strip .eq { font-size:18px; color:#f0eeea; }
+  .mirror-strip .eq .katex { font-size:1em; }
+
+  .controls { display:flex; gap:6px; flex-wrap:wrap; padding:10px 0 4px; }
+  .preset-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:5px 10px; border-radius:4px; cursor:pointer; transition: all 0.12s ease; }
+  .preset-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
+  .preset-btn.active { background:rgba(255,240,103,0.06); color:#fff067; border-color:#fff067; }
+  .reset-btn { margin-left:auto; background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:5px 10px; border-radius:4px; cursor:pointer; }
+  .reset-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
+  }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">REFLECTION</span>
+    <span class="meta">drag the two yellow dots, or pick a preset</span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-grid"></g>
+    <g id="g-axes"></g>
+    <g id="g-ticks"></g>
+    <g id="g-bisectors"></g>
+    <g id="g-mirror"></g>
+    <g id="g-object"></g>
+    <g id="g-image"></g>
+    <g id="g-handles"></g>
+  </svg>
+
+  <div class="mirror-strip">
+    <span class="tag">mirror</span>
+    <span class="eq" id="eq-display"></span>
+  </div>
+
+  <div id="controls" class="controls"></div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:   "#00abfa",
+  yellow: "#fff067",
+  orange: "#ff822c",
+  green:  "#0fee89",
+  pink:   "#ff4670",
+  faint:  "#3a4a5a",
+  grey:   "#7a7875",
+  off:    "#f0eeea"
+};
+
+// ----- world -----
+var SVG_W = 480, SVG_H = 320;
+var X_MIN = -7, X_MAX = 9, Y_MIN = -5, Y_MAX = 5;
+var pxPerX = SVG_W / (X_MAX - X_MIN);
+var pxPerY = SVG_H / (Y_MAX - Y_MIN);
+var UNIT = Math.min(pxPerX, pxPerY);
+var ORIGIN_PX = {
+  x: (SVG_W - (X_MAX - X_MIN) * UNIT) / 2 - X_MIN * UNIT,
+  y: SVG_H - (-Y_MIN) * UNIT - (SVG_H - (Y_MAX - Y_MIN) * UNIT) / 2
+};
+function toSx(x){ return ORIGIN_PX.x + x * UNIT; }
+function toSy(y){ return ORIGIN_PX.y - y * UNIT; }
+function fromSx(sx){ return (sx - ORIGIN_PX.x) / UNIT; }
+function fromSy(sy){ return (ORIGIN_PX.y - sy) / UNIT; }
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+function clampMath(p){ return { x: clamp(p.x, X_MIN + 0.5, X_MAX - 0.5), y: clamp(p.y, Y_MIN + 0.5, Y_MAX - 0.5) }; }
+function snapHalf(v){ return Math.round(v * 2) / 2; }
+
+// ----- object -----
+var OBJ = [ {x:1,y:1}, {x:4,y:1}, {x:2,y:3} ];
+var LABELS = ['A','B','C'];
+
+// ----- state -----
+var P = { p1: {x:-4,y:-4}, p2: {x:4,y:4}, preset: "yx" };
+var D = { p1: {x:-4,y:-4}, p2: {x:4,y:4} };
+var DEFAULTS = JSON.parse(JSON.stringify(P));
+var SPRING = 0.22, EPS = 0.005;
+var raf = null;
+
+// ----- math helpers -----
+function reflectPtLine(p, a, b){
+  var dx = b.x - a.x, dy = b.y - a.y;
+  var len2 = dx*dx + dy*dy;
+  if (len2 < 1e-6) return p;
+  var t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2;
+  var fx = a.x + t * dx, fy = a.y + t * dy;
+  return { x: 2*fx - p.x, y: 2*fy - p.y };
+}
+function dist2(a, b){ var dx = a.x - b.x, dy = a.y - b.y; return dx*dx + dy*dy; }
+
+// ----- KaTeX -----
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function svgKaTeXLabel(parent, x, y, tex, color, align){
+  align = align || "center";
+  var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
+  fo.setAttribute("x", x - 50); fo.setAttribute("y", y - 11);
+  fo.setAttribute("width", 100); fo.setAttribute("height", 22);
+  fo.style.overflow = "visible"; fo.style.pointerEvents = "none";
+  var div = document.createElement("div");
+  div.style.height = "22px"; div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
+  div.className = "lbl-host"; div.style.color = color || COL.off;
+  fo.appendChild(div); parent.appendChild(fo);
+  tryRender(div, tex);
+}
+
+// ----- drawing -----
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+function drawGridAxes(){
+  var gG = document.getElementById("g-grid");
+  var gA = document.getElementById("g-axes");
+  var gT = document.getElementById("g-ticks");
+  clear(gG); clear(gA); clear(gT);
+  for (var x = Math.ceil(X_MIN); x <= X_MAX; x++){
+    var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", toSx(x)); l.setAttribute("x2", toSx(x));
+    l.setAttribute("y1", toSy(Y_MIN)); l.setAttribute("y2", toSy(Y_MAX));
+    l.setAttribute("stroke", "#141e2a"); l.setAttribute("stroke-width", 0.7);
+    gG.appendChild(l);
+  }
+  for (var y = Math.ceil(Y_MIN); y <= Y_MAX; y++){
+    var l2 = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l2.setAttribute("y1", toSy(y)); l2.setAttribute("y2", toSy(y));
+    l2.setAttribute("x1", toSx(X_MIN)); l2.setAttribute("x2", toSx(X_MAX));
+    l2.setAttribute("stroke", "#141e2a"); l2.setAttribute("stroke-width", 0.7);
+    gG.appendChild(l2);
+  }
+  var ax = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ax.setAttribute("x1", toSx(X_MIN)); ax.setAttribute("x2", toSx(X_MAX));
+  ax.setAttribute("y1", toSy(0)); ax.setAttribute("y2", toSy(0));
+  ax.setAttribute("stroke", COL.faint); ax.setAttribute("stroke-width", 1.2);
+  gA.appendChild(ax);
+  var ay = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ay.setAttribute("y1", toSy(Y_MIN)); ay.setAttribute("y2", toSy(Y_MAX));
+  ay.setAttribute("x1", toSx(0)); ay.setAttribute("x2", toSx(0));
+  ay.setAttribute("stroke", COL.faint); ay.setAttribute("stroke-width", 1.2);
+  gA.appendChild(ay);
+  for (var xt = Math.ceil(X_MIN); xt <= X_MAX; xt++){
+    if (xt === 0) continue;
+    svgKaTeXLabel(gT, toSx(xt), toSy(0) + 11, String(xt), COL.grey);
+  }
+  for (var yt = Math.ceil(Y_MIN); yt <= Y_MAX; yt++){
+    if (yt === 0) continue;
+    svgKaTeXLabel(gT, toSx(0) - 12, toSy(yt), String(yt), COL.grey);
+  }
+}
+function drawPoly(g, pts, fillCol, strokeCol, w){
+  var d = "M " + toSx(pts[0].x) + " " + toSy(pts[0].y);
+  for (var i = 1; i < pts.length; i++) d += " L " + toSx(pts[i].x) + " " + toSy(pts[i].y);
+  d += " Z";
+  var path = document.createElementNS("http://www.w3.org/2000/svg","path");
+  path.setAttribute("d", d); path.setAttribute("fill", fillCol);
+  path.setAttribute("stroke", strokeCol); path.setAttribute("stroke-width", w || 2);
+  path.setAttribute("stroke-linejoin","round");
+  g.appendChild(path);
+}
+function drawVertexDot(g, pt, color, label, primeFlag){
+  var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("cx", toSx(pt.x)); c.setAttribute("cy", toSy(pt.y));
+  c.setAttribute("r", 3.5); c.setAttribute("fill", color);
+  g.appendChild(c);
+  svgKaTeXLabel(g, toSx(pt.x) + (primeFlag ? 12 : -12), toSy(pt.y) - 10, label, color, primeFlag ? "left" : "right");
+}
+
+function drawScene(){
+  var gM = document.getElementById("g-mirror");
+  var gB = document.getElementById("g-bisectors");
+  var gO = document.getElementById("g-object");
+  var gI = document.getElementById("g-image");
+  var gH = document.getElementById("g-handles");
+  clear(gM); clear(gB); clear(gO); clear(gI); clear(gH);
+
+  // mirror line extended
+  var dx = D.p2.x - D.p1.x, dy = D.p2.y - D.p1.y;
+  var len = Math.sqrt(dx*dx + dy*dy);
+  if (len > 0.001){
+    var ux = dx / len, uy = dy / len;
+    var ext = 16;
+    var a = { x: D.p1.x - ext * ux, y: D.p1.y - ext * uy };
+    var b = { x: D.p1.x + ext * ux, y: D.p1.y + ext * uy };
+    var line = document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("x1", toSx(a.x)); line.setAttribute("y1", toSy(a.y));
+    line.setAttribute("x2", toSx(b.x)); line.setAttribute("y2", toSy(b.y));
+    line.setAttribute("stroke", COL.yellow); line.setAttribute("stroke-width", 1.8);
+    line.setAttribute("stroke-dasharray", "6 5");
+    gM.appendChild(line);
+  }
+
+  // perpendicular bisectors per vertex (faint), plus midpoint dot
+  OBJ.forEach(function(p){
+    var q = reflectPtLine(p, D.p1, D.p2);
+    var bis = document.createElementNS("http://www.w3.org/2000/svg","line");
+    bis.setAttribute("x1", toSx(p.x)); bis.setAttribute("y1", toSy(p.y));
+    bis.setAttribute("x2", toSx(q.x)); bis.setAttribute("y2", toSy(q.y));
+    bis.setAttribute("stroke", "rgba(240,238,234,0.18)");
+    bis.setAttribute("stroke-width", 1);
+    bis.setAttribute("stroke-dasharray", "3 4");
+    gB.appendChild(bis);
+    // midpoint dot on the mirror
+    var mid = { x: (p.x + q.x)/2, y: (p.y + q.y)/2 };
+    var mp = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    mp.setAttribute("cx", toSx(mid.x)); mp.setAttribute("cy", toSy(mid.y));
+    mp.setAttribute("r", 2.5); mp.setAttribute("fill", "rgba(240,238,234,0.35)");
+    gB.appendChild(mp);
+  });
+
+  // shapes
+  drawPoly(gO, OBJ, "rgba(0,171,250,0.10)", COL.blue, 2);
+  var IMG = OBJ.map(function(p){ return reflectPtLine(p, D.p1, D.p2); });
+  drawPoly(gI, IMG, "rgba(255,70,112,0.10)", COL.pink, 2);
+  OBJ.forEach(function(p,i){ drawVertexDot(gO, p, COL.blue, LABELS[i], false); });
+  IMG.forEach(function(p,i){ drawVertexDot(gI, p, COL.pink, LABELS[i] + "'", true); });
+
+  // yellow handles
+  [D.p1, D.p2].forEach(function(pt){
+    var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx", toSx(pt.x)); c.setAttribute("cy", toSy(pt.y));
+    c.setAttribute("r", 7); c.setAttribute("fill", COL.yellow);
+    c.setAttribute("stroke", "#0b1118"); c.setAttribute("stroke-width", 1.5);
+    c.setAttribute("class", "handle"); c.style.color = COL.yellow;
+    gH.appendChild(c);
+  });
+}
+
+// ----- mirror equation -----
+function fmtNum(v){
+  var r = Math.round(v * 10) / 10;
+  if (Math.abs(r - Math.round(r)) < 0.05) return String(Math.round(r));
+  return r.toFixed(1);
+}
+function mirrorEquationTex(a, b){
+  var dx = b.x - a.x, dy = b.y - a.y;
+  var tol = 0.05;
+  if (Math.abs(dx) < tol) return "x = " + fmtNum(a.x);
+  if (Math.abs(dy) < tol) return "y = " + fmtNum(a.y);
+  var m = dy / dx, c = a.y - m * a.x;
+  if (Math.abs(m - 1) < 0.05){
+    if (Math.abs(c) < 0.05) return "y = x";
+    return c >= 0 ? "y = x + " + fmtNum(c) : "y = x - " + fmtNum(Math.abs(c));
+  }
+  if (Math.abs(m + 1) < 0.05){
+    if (Math.abs(c) < 0.05) return "y = -x";
+    return c >= 0 ? "y = -x + " + fmtNum(c) : "y = -x - " + fmtNum(Math.abs(c));
+  }
+  return "y = " + fmtNum(m) + "x " + (c >= 0 ? "+ " + fmtNum(c) : "- " + fmtNum(Math.abs(c)));
+}
+function renderMirrorEq(){
+  var el = document.getElementById("eq-display");
+  el.innerHTML = "";
+  tryRender(el, mirrorEquationTex(D.p1, D.p2));
+}
+
+// ----- hit-test -----
+function hitTest(m){
+  if (dist2(m, D.p1) < 0.6 * 0.6) return { kind: "p1" };
+  if (dist2(m, D.p2) < 0.6 * 0.6) return { kind: "p2" };
+  return null;
+}
+function applyDrag(info, m){
+  var s = { x: snapHalf(m.x), y: snapHalf(m.y) };
+  s = clampMath(s);
+  if (info.kind === "p1") P.p1 = s;
+  if (info.kind === "p2") P.p2 = s;
+  P.preset = null;
+  updateActivePreset();
+  kick();
+}
+
+// ----- pointer dispatch -----
+var stage = document.getElementById("stage");
+var dragInfo = null;
+function svgPt(e){
+  var pt = stage.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(stage.getScreenCTM().inverse());
+}
+function evMath(e){ var sp = svgPt(e); return { x: fromSx(sp.x), y: fromSy(sp.y) }; }
+stage.addEventListener("pointerdown", function(e){
+  var info = hitTest(evMath(e));
+  if (!info) return;
+  e.preventDefault();
+  dragInfo = info;
+  stage.setPointerCapture(e.pointerId);
+  stage.classList.add("grabbing");
+});
+stage.addEventListener("pointermove", function(e){
+  if (!dragInfo){
+    var hit = hitTest(evMath(e));
+    if (hit) stage.classList.add("hover-grab");
+    else stage.classList.remove("hover-grab");
+    return;
+  }
+  e.preventDefault();
+  applyDrag(dragInfo, evMath(e));
+});
+function endDrag(e){
+  if (!dragInfo) return;
+  dragInfo = null;
+  try { stage.releasePointerCapture(e.pointerId); } catch(_){}
+  stage.classList.remove("grabbing");
+}
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover-grab"); });
+
+// ----- spring -----
+function settled(){
+  return Math.abs(P.p1.x - D.p1.x) < EPS && Math.abs(P.p1.y - D.p1.y) < EPS
+      && Math.abs(P.p2.x - D.p2.x) < EPS && Math.abs(P.p2.y - D.p2.y) < EPS;
+}
+function step(){
+  D.p1.x += (P.p1.x - D.p1.x) * SPRING;
+  D.p1.y += (P.p1.y - D.p1.y) * SPRING;
+  D.p2.x += (P.p2.x - D.p2.x) * SPRING;
+  D.p2.y += (P.p2.y - D.p2.y) * SPRING;
+  drawScene(); renderMirrorEq();
+  if (!settled()) raf = requestAnimationFrame(step);
+  else { raf = null; D.p1 = { x: P.p1.x, y: P.p1.y }; D.p2 = { x: P.p2.x, y: P.p2.y }; drawScene(); renderMirrorEq(); }
+}
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+
+// ----- presets -----
+var PRESETS = [
+  ["y0",  "y = 0",  {x:-5, y:0}, {x:5, y:0}],
+  ["x0",  "x = 0",  {x:0, y:-4}, {x:0, y:4}],
+  ["yx",  "y = x",  {x:-4, y:-4}, {x:4, y:4}],
+  ["ynx", "y = −x", {x:-4, y:4}, {x:4, y:-4}],
+  ["y1",  "y = 1",  {x:-5, y:1}, {x:5, y:1}],
+  ["x2",  "x = 2",  {x:2, y:-4}, {x:2, y:4}]
+];
+function renderControls(){
+  var c = document.getElementById("controls");
+  c.innerHTML = "";
+  PRESETS.forEach(function(pair){
+    var b = document.createElement("button");
+    b.className = "preset-btn" + (P.preset === pair[0] ? " active" : "");
+    b.textContent = pair[1];
+    b.dataset.preset = pair[0];
+    b.onclick = function(){
+      P.preset = pair[0];
+      P.p1 = { x: pair[2].x, y: pair[2].y };
+      P.p2 = { x: pair[3].x, y: pair[3].y };
+      updateActivePreset(); kick();
+    };
+    c.appendChild(b);
+  });
+  var r = document.createElement("button");
+  r.className = "reset-btn"; r.textContent = "↻ reset";
+  r.onclick = function(){
+    P.preset = DEFAULTS.preset;
+    P.p1 = { x: DEFAULTS.p1.x, y: DEFAULTS.p1.y };
+    P.p2 = { x: DEFAULTS.p2.x, y: DEFAULTS.p2.y };
+    updateActivePreset(); kick();
+  };
+  c.appendChild(r);
+}
+function updateActivePreset(){
+  document.querySelectorAll(".preset-btn").forEach(function(b){
+    if (b.dataset.preset === P.preset) b.classList.add("active");
+    else b.classList.remove("active");
+  });
+}
+
+// ----- post-message -----
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+// ----- init -----
+drawGridAxes();
+renderControls();
+drawScene();
+renderMirrorEq();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>
