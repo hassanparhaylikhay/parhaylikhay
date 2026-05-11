@@ -48,16 +48,13 @@ A short walkthrough of the unit so far:
 <div class="diagram" style="border:1px solid #141e2a;border-radius:10px;padding:20px 16px 22px;margin:14px 0;background:#0b1118">
   <div style="font-family:'Geist Mono',monospace;font-size:11px;color:#7a7875;letter-spacing:0.4px;margin-bottom:18px;text-transform:uppercase;text-align:center">FROM "WHAT'S GIVEN" TO "WHAT TO USE"</div>
 
-  <!-- Root -->
   <div style="display:flex;justify-content:center;margin-bottom:6px">
     <div style="padding:8px 18px;border:1.5px solid #fff067;border-radius:6px;background:rgba(255,240,103,0.08);font-family:'Geist Mono',monospace;font-size:12px;font-weight:700;color:#fff067;letter-spacing:0.4px">WHAT DO YOU KNOW?</div>
   </div>
   <div style="text-align:center;color:#3a4a5a;font-size:14px;margin-bottom:4px">↓</div>
 
-  <!-- Three situation branches -->
   <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;font-family:'Geist Mono',monospace;font-size:12px">
 
-    <!-- Branch 1: two sides -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
       <div style="padding:7px 12px;border:1px solid #00abfa;border-radius:6px;background:rgba(0,171,250,0.07);color:#00abfa;font-weight:600;text-align:center;width:100%">2 sides</div>
       <div style="color:#3a4a5a;font-size:14px">↓</div>
@@ -75,7 +72,6 @@ A short walkthrough of the unit so far:
       </div>
     </div>
 
-    <!-- Branch 2: side + angle -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
       <div style="padding:7px 12px;border:1px solid #ff822c;border-radius:6px;background:rgba(255,130,44,0.07);color:#ff822c;font-weight:600;text-align:center;width:100%">1 side + 1 angle</div>
       <div style="color:#3a4a5a;font-size:14px">↓</div>
@@ -84,7 +80,6 @@ A short walkthrough of the unit so far:
       <div style="padding:6px 6px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:11px;text-align:center;width:100%;line-height:1.25">pick the trig ratio<br/><span style="color:#3a4a5a;font-weight:500;font-size:10px">by the pair (SOH-CAH-TOA)</span></div>
     </div>
 
-    <!-- Branch 3: only an angle -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
       <div style="padding:7px 12px;border:1px solid #ff4670;border-radius:6px;background:rgba(255,70,112,0.07);color:#ff4670;font-weight:600;text-align:center;width:100%">1 acute angle</div>
       <div style="color:#3a4a5a;font-size:14px">↓</div>
