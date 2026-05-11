@@ -409,31 +409,29 @@ function render() {
   }));
 
   // ===== Geometric link: extended hypotenuse → tangent line → tan curve =====
-  // The line from origin through P, extended to x = WX (the panel's left edge,
-  // which is the tangent line at x=1), hits y = CY - R*tan(θ). That y-value
-  // IS yWave(tan(θ)) because WX = CX+R, WCY = CY, WSCALE = R. So the extended
-  // radius lands exactly at the y-level of tan(θ) on the panel.
-  // We draw this in yellow when cos(θ) > 0 (Q1 and Q4 — where the radius
-  // actually extends rightward through P) and |tan(θ)| stays within the panel.
+  // The line from origin through P extended to x = WX (the tangent line at
+  // x = 1) hits y = CY - R*tan(θ), which is exactly yWave(tan(θ)).
+  //   - In Q1/Q4 (cos > 0): tangent point is on the "P side" of origin, so
+  //     draw the dashed extension from P to the tangent point.
+  //   - In Q2/Q3 (cos < 0): tangent point is on the OPPOSITE side of origin
+  //     from P, so draw the dashed extension from origin to the tangent point
+  //     (the radius itself already shows the origin→P direction in pink).
   var sinDotY = yWave(sinV);
   var tanDotY = yWave(tanV);
-  var canShowTanExt = (cosV > 0.05) && (Math.abs(tanV) <= WMAX_Y);
-  if (canShowTanExt) {
+  if (Math.abs(cosV) > 0.02 && Math.abs(tanV) <= WMAX_Y) {
     var tanEdgeX = WX, tanEdgeY = CY - R * tanV;
-    // Yellow dashed line: from P (on the circle) through the tangent point at x=WX
+    var sx, sy;
+    if (cosV > 0) { sx = Px; sy = Py; }      // Q1/Q4: extend beyond P
+    else          { sx = CX; sy = CY; }      // Q2/Q3: extend beyond origin in the opposite direction
+    // Yellow dashed line — extension of the radius to the tangent line
     gWaveTrace.appendChild(svgEl("line", {
-      x1: Px, y1: Py, x2: tanEdgeX, y2: tanEdgeY,
-      stroke: COL.yellow, "stroke-width": 1, "stroke-dasharray": "3 4", opacity: 0.55
+      x1: sx, y1: sy, x2: tanEdgeX, y2: tanEdgeY,
+      stroke: COL.yellow, "stroke-width": 0.8, "stroke-dasharray": "2 4", opacity: 0.45
     }));
-    // Yellow horizontal dashed line: from tangent point across to the tan dot
+    // Yellow horizontal dashed line — from tangent point across to the tan dot
     gWaveTrace.appendChild(svgEl("line", {
       x1: tanEdgeX, y1: tanEdgeY, x2: cursorX, y2: tanDotY,
       stroke: COL.yellow, "stroke-width": 0.8, "stroke-dasharray": "2 4", opacity: 0.45
-    }));
-    // Small dot at the tangent point — marks "tan θ lives here on the tangent line"
-    gWaveTrace.appendChild(svgEl("circle", {
-      cx: tanEdgeX, cy: tanEdgeY, r: 3,
-      fill: COL.yellow, opacity: 0.7
     }));
   }
 
