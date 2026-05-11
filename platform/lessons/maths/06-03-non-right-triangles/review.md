@@ -35,14 +35,62 @@ A short walkthrough of the unit:
 
 ## Which rule for which situation, at a glance
 
-<div class="diagram" style="border:1px solid #141e2a;border-radius:10px;padding:14px 16px;margin:14px 0;background:#0b1118">
-  <div style="font-family:'Geist Mono',monospace;font-size:11px;color:#7a7875;letter-spacing:0.4px;margin-bottom:10px;text-transform:uppercase;text-align:center">DECISION TREE</div>
-  <div style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;line-height:1.6;font-family:'Geist Mono',monospace">
-    <div>· given <b>2 angles + 1 side</b> → <span style="color:#0fee89">sine rule</span></div>
-    <div>· given <b>2 sides + a non-included angle (SSA)</b> → <span style="color:#0fee89">sine rule</span> (check ambiguous case)</div>
-    <div>· given <b>2 sides + the included angle (SAS)</b>, find third side → <span style="color:#0fee89">cosine rule</span></div>
-    <div>· given <b>3 sides (SSS)</b>, find an angle → <span style="color:#0fee89">cosine rule</span> rearranged</div>
-    <div>· given <b>2 sides + included angle</b>, want <b>area</b> → <span style="color:#0fee89">½ ab sin C</span></div>
+<div class="diagram" style="border:1px solid #141e2a;border-radius:10px;padding:20px 16px 22px;margin:14px 0;background:#0b1118">
+  <div style="font-family:'Geist Mono',monospace;font-size:11px;color:#7a7875;letter-spacing:0.4px;margin-bottom:18px;text-transform:uppercase;text-align:center">DECISION TREE</div>
+
+  <!-- Root -->
+  <div style="display:flex;justify-content:center;margin-bottom:6px">
+    <div style="padding:8px 18px;border:1.5px solid #fff067;border-radius:6px;background:rgba(255,240,103,0.08);font-family:'Geist Mono',monospace;font-size:12px;font-weight:700;color:#fff067;letter-spacing:0.4px;text-align:center">IS THE KNOWN ANGLE OPPOSITE A KNOWN SIDE, OR BETWEEN THEM?</div>
+  </div>
+  <div style="text-align:center;color:#3a4a5a;font-size:14px;margin-bottom:4px">↓</div>
+
+  <!-- Two big branches: OPPOSITE → sine rule | BETWEEN → cosine rule / area -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;font-family:'Geist Mono',monospace;font-size:12px">
+
+    <!-- Branch 1: OPPOSITE → sine rule -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="padding:7px 12px;border:1px solid #00abfa;border-radius:6px;background:rgba(0,171,250,0.07);color:#00abfa;font-weight:600;text-align:center;width:100%">OPPOSITE pair available</div>
+      <div style="color:#3a4a5a;font-size:14px">↓</div>
+      <div style="display:flex;gap:6px;width:100%">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="font-size:11px;color:#7a7875;text-align:center;line-height:1.3">2 angles<br/>+ 1 side<br/><span style="color:#3a4a5a">(AAS / ASA)</span></div>
+          <div style="color:#3a4a5a;font-size:12px">↓</div>
+          <div style="padding:6px 6px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:11px;text-align:center;width:100%;line-height:1.25">sine rule<br/><span style="color:#3a4a5a;font-weight:500;font-size:10px">find a side</span></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="font-size:11px;color:#7a7875;text-align:center;line-height:1.3">2 sides<br/>+ non-incl angle<br/><span style="color:#3a4a5a">(SSA)</span></div>
+          <div style="color:#3a4a5a;font-size:12px">↓</div>
+          <div style="padding:6px 6px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:11px;text-align:center;width:100%;line-height:1.25">sine rule<br/><span style="color:#ff4670;font-weight:500;font-size:10px">check ambiguous case</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Branch 2: BETWEEN → cosine rule / area -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="padding:7px 12px;border:1px solid #ff822c;border-radius:6px;background:rgba(255,130,44,0.07);color:#ff822c;font-weight:600;text-align:center;width:100%">angle BETWEEN two known sides</div>
+      <div style="color:#3a4a5a;font-size:14px">↓</div>
+      <div style="display:flex;gap:6px;width:100%">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="font-size:11px;color:#7a7875;text-align:center;line-height:1.3">find third side<br/><span style="color:#3a4a5a">(SAS)</span></div>
+          <div style="color:#3a4a5a;font-size:12px">↓</div>
+          <div style="padding:6px 6px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:11px;text-align:center;width:100%;line-height:1.25">cosine rule</div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="font-size:11px;color:#7a7875;text-align:center;line-height:1.3">want area</div>
+          <div style="color:#3a4a5a;font-size:12px">↓</div>
+          <div style="padding:6px 6px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;font-size:11px;text-align:center;width:100%;line-height:1.25">½ ab sin C</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom: standalone SSS branch (no angle given) -->
+  <div style="margin-top:14px;padding-top:12px;border-top:1px dashed #141e2a;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:11.5px;color:#7a7875">
+    <span>or</span>
+    <div style="padding:6px 10px;border:1px solid #ff4670;border-radius:5px;background:rgba(255,70,112,0.07);color:#ff4670;font-weight:600">3 sides (SSS)</div>
+    <span style="color:#3a4a5a">→</span>
+    <div style="padding:6px 10px;border:1.5px solid #0fee89;border-radius:5px;background:rgba(15,238,137,0.08);color:#0fee89;font-weight:700;text-align:center">cosine rule<br/><span style="color:#3a4a5a;font-weight:500;font-size:10px">rearranged for cos A</span></div>
   </div>
 </div>
 
