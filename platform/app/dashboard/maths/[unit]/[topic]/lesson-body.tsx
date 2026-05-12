@@ -320,13 +320,22 @@ export default function LessonBody({ markdown }: { markdown: string }) {
   React.useEffect(() => {
     function handler(e: MessageEvent) {
       if (!rootRef.current) return
-      const data = e.data as { type?: string; height?: number } | null
-      if (!data || data.type !== "pl-widget-resize" || typeof data.height !== "number") return
-      rootRef.current.querySelectorAll<HTMLIFrameElement>("iframe").forEach(frame => {
-        if (frame.contentWindow === e.source) {
-          frame.style.height = data.height + "px"
-        }
-      })
+      const data = e.data as { type?: string; height?: number; deltaY?: number } | null
+      if (!data) return
+      if (data.type === "pl-widget-resize" && typeof data.height === "number") {
+        rootRef.current.querySelectorAll<HTMLIFrameElement>("iframe").forEach(frame => {
+          if (frame.contentWindow === e.source) {
+            frame.style.height = data.height + "px"
+          }
+        })
+        return
+      }
+      if (data.type === "pl-widget-wheel" && typeof data.deltaY === "number") {
+        // Iframes consume wheel events even when their content has no scrollable
+        // area, so widgets post a wheel-forward message and we scroll the parent.
+        window.scrollBy(0, data.deltaY)
+        return
+      }
     }
     window.addEventListener("message", handler)
     return () => window.removeEventListener("message", handler)
