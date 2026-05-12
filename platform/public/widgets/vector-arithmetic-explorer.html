@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Vector Arithmetic Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  .mode-tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .mode-tab {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:11px; font-weight:600;
+    padding:6px 14px; border-radius:5px; cursor:pointer;
+    transition: all 0.15s ease; letter-spacing:0.4px;
+  }
+  .mode-tab:hover { color:#f0eeea; border-color:#3a4a5a; }
+  .mode-tab.active { background:rgba(255,240,103,0.06); color:#fff067; border-color:#fff067; }
+
+  #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:default; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .strip { display:flex; align-items:center; gap:18px; padding:10px 14px; margin-top:10px; background:rgba(255,240,103,0.04); border:1px solid rgba(255,240,103,0.18); border-radius:8px; flex-wrap:wrap; }
+  .strip .col { font-size:15px; color:#f0eeea; }
+  .strip .col .katex { font-size:1em; }
+
+  .reset-row { display:flex; padding:10px 0 0; }
+  .reset-btn { margin-left:auto; background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:5px 10px; border-radius:4px; cursor:pointer; transition: all 0.12s ease; }
+  .reset-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
+  }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">VECTOR ARITHMETIC</span>
+    <span class="meta" id="meta">drag the tip of a or b</span>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="add">a + b</button>
+    <button class="mode-tab" data-mode="sub">a − b</button>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-grid"></g>
+    <g id="g-axes"></g>
+    <g id="g-ticks"></g>
+    <g id="g-ghost"></g>
+    <g id="g-arrows"></g>
+    <g id="g-handles"></g>
+  </svg>
+
+  <div class="strip">
+    <span class="col" id="col-a"></span>
+    <span class="col" id="col-b"></span>
+    <span class="col" id="col-result"></span>
+  </div>
+
+  <div class="reset-row">
+    <button class="reset-btn" id="reset">↻ reset</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", yellow:"#fff067", orange:"#ff822c", green:"#0fee89",
+  pink:"#ff4670", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+// world
+var SVG_W = 480, SVG_H = 320;
+var X_MIN = -7, X_MAX = 9, Y_MIN = -5, Y_MAX = 5;
+var pxPerX = SVG_W / (X_MAX - X_MIN);
+var pxPerY = SVG_H / (Y_MAX - Y_MIN);
+var UNIT = Math.min(pxPerX, pxPerY);
+var ORIGIN_PX = {
+  x: (SVG_W - (X_MAX - X_MIN) * UNIT) / 2 - X_MIN * UNIT,
+  y: SVG_H - (-Y_MIN) * UNIT - (SVG_H - (Y_MAX - Y_MIN) * UNIT) / 2
+};
+function toSx(x){ return ORIGIN_PX.x + x * UNIT; }
+function toSy(y){ return ORIGIN_PX.y - y * UNIT; }
+function fromSx(sx){ return (sx - ORIGIN_PX.x) / UNIT; }
+function fromSy(sy){ return (ORIGIN_PX.y - sy) / UNIT; }
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+function snapInt(v){ return Math.round(v); }
+
+// state: a and b are vectors (components), tail of a is always origin (0,0)
+var mode = "add";
+var DEFAULTS = { a: {x:3, y:1}, b: {x:1, y:3} };
+var P = { a: {x:3, y:1}, b: {x:1, y:3} };
+var D = { a: {x:3, y:1}, b: {x:1, y:3} };
+var SPRING = 0.22, EPS = 0.005;
+var raf = null;
+
+function clone(p){ return { x: p.x, y: p.y }; }
+function dist2(a, b){ var dx = a.x - b.x, dy = a.y - b.y; return dx*dx + dy*dy; }
+
+// KaTeX
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function svgKaTeXLabel(parent, x, y, tex, color, align){
+  align = align || "center";
+  var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
+  fo.setAttribute("x", x - 50); fo.setAttribute("y", y - 11);
+  fo.setAttribute("width", 100); fo.setAttribute("height", 22);
+  fo.style.overflow = "visible"; fo.style.pointerEvents = "none";
+  var div = document.createElement("div");
+  div.style.height = "22px"; div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
+  div.className = "lbl-host"; div.style.color = color || COL.off;
+  fo.appendChild(div); parent.appendChild(fo);
+  tryRender(div, tex);
+}
+
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+
+function drawGridAxes(){
+  var gG = document.getElementById("g-grid");
+  var gA = document.getElementById("g-axes");
+  var gT = document.getElementById("g-ticks");
+  clear(gG); clear(gA); clear(gT);
+  for (var x = Math.ceil(X_MIN); x <= X_MAX; x++){
+    var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", toSx(x)); l.setAttribute("x2", toSx(x));
+    l.setAttribute("y1", toSy(Y_MIN)); l.setAttribute("y2", toSy(Y_MAX));
+    l.setAttribute("stroke", "#141e2a"); l.setAttribute("stroke-width", 0.7);
+    gG.appendChild(l);
+  }
+  for (var y = Math.ceil(Y_MIN); y <= Y_MAX; y++){
+    var l2 = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l2.setAttribute("y1", toSy(y)); l2.setAttribute("y2", toSy(y));
+    l2.setAttribute("x1", toSx(X_MIN)); l2.setAttribute("x2", toSx(X_MAX));
+    l2.setAttribute("stroke", "#141e2a"); l2.setAttribute("stroke-width", 0.7);
+    gG.appendChild(l2);
+  }
+  var ax = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ax.setAttribute("x1", toSx(X_MIN)); ax.setAttribute("x2", toSx(X_MAX));
+  ax.setAttribute("y1", toSy(0)); ax.setAttribute("y2", toSy(0));
+  ax.setAttribute("stroke", COL.faint); ax.setAttribute("stroke-width", 1.2);
+  gA.appendChild(ax);
+  var ay = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ay.setAttribute("y1", toSy(Y_MIN)); ay.setAttribute("y2", toSy(Y_MAX));
+  ay.setAttribute("x1", toSx(0)); ay.setAttribute("x2", toSx(0));
+  ay.setAttribute("stroke", COL.faint); ay.setAttribute("stroke-width", 1.2);
+  gA.appendChild(ay);
+  for (var xt = Math.ceil(X_MIN); xt <= X_MAX; xt++){
+    if (xt === 0) continue;
+    svgKaTeXLabel(gT, toSx(xt), toSy(0) + 11, String(xt), COL.grey);
+  }
+  for (var yt = Math.ceil(Y_MIN); yt <= Y_MAX; yt++){
+    if (yt === 0) continue;
+    svgKaTeXLabel(gT, toSx(0) - 12, toSy(yt), String(yt), COL.grey);
+  }
+}
+
+function drawArrow(g, fromPt, toPt, color, width, dashed, opacity){
+  var x1 = toSx(fromPt.x), y1 = toSy(fromPt.y);
+  var x2 = toSx(toPt.x),   y2 = toSy(toPt.y);
+  var dx = x2 - x1, dy = y2 - y1;
+  var L = Math.sqrt(dx*dx + dy*dy);
+  if (L < 4) return;
+  var ux = dx / L, uy = dy / L;
+  var head = 11;
+  var bx = x2 - ux * head, by = y2 - uy * head;
+  var ln = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ln.setAttribute("x1", x1); ln.setAttribute("y1", y1);
+  ln.setAttribute("x2", bx); ln.setAttribute("y2", by);
+  ln.setAttribute("stroke", color); ln.setAttribute("stroke-width", width);
+  ln.setAttribute("stroke-linecap", "round");
+  if (dashed) ln.setAttribute("stroke-dasharray", "5 4");
+  if (opacity != null) ln.setAttribute("opacity", opacity);
+  g.appendChild(ln);
+  var w = 6;
+  var tri = document.createElementNS("http://www.w3.org/2000/svg","path");
+  tri.setAttribute("d", "M " + x2 + " " + y2 +
+    " L " + (x2 - ux*head + uy*w) + " " + (y2 - uy*head - ux*w) +
+    " L " + (x2 - ux*head - uy*w) + " " + (y2 - uy*head + ux*w) + " Z");
+  tri.setAttribute("fill", color);
+  if (opacity != null) tri.setAttribute("opacity", opacity);
+  g.appendChild(tri);
+}
+
+function drawLabelOnArrow(g, fromPt, toPt, label, color){
+  var mx = (fromPt.x + toPt.x) / 2;
+  var my = (fromPt.y + toPt.y) / 2;
+  var sdx = toSx(toPt.x) - toSx(fromPt.x);
+  var sdy = toSy(toPt.y) - toSy(fromPt.y);
+  var sL = Math.sqrt(sdx*sdx + sdy*sdy);
+  if (sL < 6) return;
+  var lx = sdy / sL;
+  var ly = -sdx / sL;
+  svgKaTeXLabel(g, toSx(mx) + lx * 16, toSy(my) + ly * 16, label, color, "center");
+}
+
+function drawScene(){
+  var gGhost = document.getElementById("g-ghost");
+  var gArrows = document.getElementById("g-arrows");
+  var gH = document.getElementById("g-handles");
+  clear(gGhost); clear(gArrows); clear(gH);
+
+  var origin = { x: 0, y: 0 };
+  var aTip = { x: D.a.x, y: D.a.y };
+  var bTipFromOrigin = { x: D.b.x, y: D.b.y };
+  var sign = (mode === "add") ? 1 : -1;
+  var bTipFromA = { x: aTip.x + sign * D.b.x, y: aTip.y + sign * D.b.y };
+
+  // Faint "b from origin" reference in subtract mode (so the reversal is visible)
+  if (mode === "sub" && Math.abs(D.b.x) + Math.abs(D.b.y) > 0.05){
+    drawArrow(gGhost, origin, bTipFromOrigin, COL.orange, 1.5, true, 0.35);
+    drawLabelOnArrow(gGhost, origin, bTipFromOrigin, "\\mathbf{b}", COL.orange);
+  }
+
+  // Vector a (blue, from origin)
+  drawArrow(gArrows, origin, aTip, COL.blue, 2.8);
+  drawLabelOnArrow(gArrows, origin, aTip, "\\mathbf{a}", COL.blue);
+
+  // Translated b (or -b) starting at a's tip
+  var bColor = (mode === "add") ? COL.orange : COL.pink;
+  var bLabel = (mode === "add") ? "\\mathbf{b}" : "-\\mathbf{b}";
+  drawArrow(gArrows, aTip, bTipFromA, bColor, 2.6);
+  drawLabelOnArrow(gArrows, aTip, bTipFromA, bLabel, bColor);
+
+  // Resultant: yellow from origin to bTipFromA
+  drawArrow(gArrows, origin, bTipFromA, COL.yellow, 2.6, true, 0.95);
+  var rLabel = (mode === "add") ? "\\mathbf{a} + \\mathbf{b}" : "\\mathbf{a} - \\mathbf{b}";
+  drawLabelOnArrow(gArrows, origin, bTipFromA, rLabel, COL.yellow);
+
+  // Drag handles: tip of a (blue-rimmed yellow) and tip of translated b (b-coloured-rim yellow)
+  function handle(pt, ringCol){
+    var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx", toSx(pt.x)); c.setAttribute("cy", toSy(pt.y));
+    c.setAttribute("r", 7); c.setAttribute("fill", COL.yellow);
+    c.setAttribute("stroke", ringCol); c.setAttribute("stroke-width", 2);
+    c.setAttribute("class", "handle"); c.style.color = COL.yellow;
+    gH.appendChild(c);
+  }
+  handle(aTip, COL.blue);
+  handle(bTipFromA, bColor);
+}
+
+function fmtInt(v){ return String(Math.round(v)); }
+function renderStrip(){
+  var ea = document.getElementById("col-a");
+  var eb = document.getElementById("col-b");
+  var er = document.getElementById("col-result");
+  ea.innerHTML = ""; eb.innerHTML = ""; er.innerHTML = "";
+  tryRender(ea, "\\mathbf{a} = \\begin{pmatrix} " + fmtInt(P.a.x) + " \\\\ " + fmtInt(P.a.y) + " \\end{pmatrix}");
+  tryRender(eb, "\\mathbf{b} = \\begin{pmatrix} " + fmtInt(P.b.x) + " \\\\ " + fmtInt(P.b.y) + " \\end{pmatrix}");
+  var sign = (mode === "add") ? 1 : -1;
+  var rx = P.a.x + sign * P.b.x;
+  var ry = P.a.y + sign * P.b.y;
+  var op = (mode === "add") ? "+" : "-";
+  tryRender(er, "\\mathbf{a} " + op + " \\mathbf{b} = \\begin{pmatrix} " + fmtInt(rx) + " \\\\ " + fmtInt(ry) + " \\end{pmatrix}");
+}
+
+// hit-test against display positions
+function hitTest(m){
+  var aTip = { x: D.a.x, y: D.a.y };
+  var sign = (mode === "add") ? 1 : -1;
+  var bTipFromA = { x: aTip.x + sign * D.b.x, y: aTip.y + sign * D.b.y };
+  if (dist2(m, aTip) < 0.6 * 0.6) return { kind: "aTip" };
+  if (dist2(m, bTipFromA) < 0.6 * 0.6) return { kind: "bTip" };
+  return null;
+}
+function applyDrag(info, m){
+  var sx = clamp(snapInt(m.x), X_MIN + 0.5, X_MAX - 0.5);
+  var sy = clamp(snapInt(m.y), Y_MIN + 0.5, Y_MAX - 0.5);
+  if (info.kind === "aTip"){
+    P.a = { x: sx, y: sy };
+  } else if (info.kind === "bTip"){
+    // bTipFromA = aTip + sign*b. So b = sign*(bTip - aTip).
+    var sign = (mode === "add") ? 1 : -1;
+    P.b = { x: sign * (sx - P.a.x), y: sign * (sy - P.a.y) };
+  }
+  kick();
+}
+
+// pointer dispatch
+var stage = document.getElementById("stage");
+var dragInfo = null;
+function svgPt(e){
+  var pt = stage.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(stage.getScreenCTM().inverse());
+}
+function evMath(e){ var sp = svgPt(e); return { x: fromSx(sp.x), y: fromSy(sp.y) }; }
+stage.addEventListener("pointerdown", function(e){
+  var info = hitTest(evMath(e));
+  if (!info) return;
+  e.preventDefault();
+  dragInfo = info;
+  stage.setPointerCapture(e.pointerId);
+  stage.classList.add("grabbing");
+});
+stage.addEventListener("pointermove", function(e){
+  if (!dragInfo){
+    var hit = hitTest(evMath(e));
+    if (hit) stage.classList.add("hover-grab"); else stage.classList.remove("hover-grab");
+    return;
+  }
+  e.preventDefault();
+  applyDrag(dragInfo, evMath(e));
+});
+function endDrag(e){
+  if (!dragInfo) return;
+  dragInfo = null;
+  try { stage.releasePointerCapture(e.pointerId); } catch(_){}
+  stage.classList.remove("grabbing");
+}
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover-grab"); });
+
+// spring
+function settled(){
+  return Math.abs(P.a.x - D.a.x) < EPS && Math.abs(P.a.y - D.a.y) < EPS
+      && Math.abs(P.b.x - D.b.x) < EPS && Math.abs(P.b.y - D.b.y) < EPS;
+}
+function step(){
+  D.a.x += (P.a.x - D.a.x) * SPRING;
+  D.a.y += (P.a.y - D.a.y) * SPRING;
+  D.b.x += (P.b.x - D.b.x) * SPRING;
+  D.b.y += (P.b.y - D.b.y) * SPRING;
+  drawScene(); renderStrip();
+  if (!settled()) raf = requestAnimationFrame(step);
+  else {
+    raf = null;
+    D.a = clone(P.a); D.b = clone(P.b);
+    drawScene(); renderStrip();
+  }
+}
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+
+// mode toggle
+document.querySelectorAll(".mode-tab").forEach(function(t){
+  t.addEventListener("click", function(){
+    document.querySelectorAll(".mode-tab").forEach(function(x){ x.classList.remove("active"); });
+    t.classList.add("active");
+    mode = t.getAttribute("data-mode");
+    kick();
+  });
+});
+
+document.getElementById("reset").onclick = function(){
+  P.a = clone(DEFAULTS.a); P.b = clone(DEFAULTS.b);
+  kick();
+};
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+drawGridAxes();
+drawScene();
+renderStrip();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

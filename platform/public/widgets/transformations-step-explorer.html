@@ -180,6 +180,79 @@ var PRESETS = {
       }
     ]
   },
+  "7p2-p2-add-subtract": {
+    title: "WORKED EXAMPLE · ADD AND SUBTRACT VECTORS",
+    obj: [], img: [], labels: [],
+    range: { xmin:-5, xmax:6, ymin:-3, ymax:6 },
+    steps: [
+      {
+        tag: "STEP 1 · WHAT WE'RE GIVEN",
+        lines: [
+          "$\\mathbf{a} = \\begin{pmatrix} 3 \\\\ 1 \\end{pmatrix}$",
+          "$\\mathbf{b} = \\begin{pmatrix} -1 \\\\ 4 \\end{pmatrix}$",
+          "Find $\\mathbf{a} + \\mathbf{b}$ and $\\mathbf{a} - \\mathbf{b}$."
+        ],
+        overlays: [
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:3, y:1}, color: "blue", label: "\\mathbf{a}" },
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:-1, y:4}, color: "orange", label: "\\mathbf{b}" }
+        ]
+      },
+      {
+        tag: "STEP 2 · ADD HEAD-TO-TAIL",
+        lines: [
+          "Put $\\mathbf{b}$'s tail at $\\mathbf{a}$'s tip. Draw the resultant from start to finish.",
+          "End of $\\mathbf{a}$ is at $(3, 1)$. Adding $\\mathbf{b}$ takes us to $(3 + (-1),\\, 1 + 4) = (2, 5)$."
+        ],
+        overlays: [
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:3, y:1}, color: "blue", label: "\\mathbf{a}" },
+          { type: "vectorArrow", from: {x:3, y:1}, to: {x:2, y:5}, color: "orange", label: "\\mathbf{b}" },
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:2, y:5}, color: "yellow", label: "\\mathbf{a}+\\mathbf{b}" }
+        ]
+      },
+      {
+        tag: "STEP 3 · ADD COMPONENT BY COMPONENT",
+        lines: [
+          "$\\mathbf{a} + \\mathbf{b} = \\begin{pmatrix} 3 \\\\ 1 \\end{pmatrix} + \\begin{pmatrix} -1 \\\\ 4 \\end{pmatrix} = \\begin{pmatrix} 3 + (-1) \\\\ 1 + 4 \\end{pmatrix} = \\begin{pmatrix} 2 \\\\ 5 \\end{pmatrix}$",
+          "Tops add together. Bottoms add together. Same answer the picture gave."
+        ],
+        overlays: [
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:3, y:1}, color: "blue", label: "\\mathbf{a}" },
+          { type: "vectorArrow", from: {x:3, y:1}, to: {x:2, y:5}, color: "orange", label: "\\mathbf{b}" },
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:2, y:5}, color: "yellow", label: "\\mathbf{a}+\\mathbf{b}" }
+        ]
+      },
+      {
+        tag: "STEP 4 · SUBTRACT BY REVERSING b",
+        lines: [
+          "$\\mathbf{a} - \\mathbf{b}$ means add the REVERSE of $\\mathbf{b}$.",
+          "Flip $\\mathbf{b}$'s signs: $-\\mathbf{b} = \\begin{pmatrix} 1 \\\\ -4 \\end{pmatrix}$.",
+          "Now do head-to-tail: $\\mathbf{a}$ first, then $-\\mathbf{b}$. End point $= (3 + 1,\\, 1 + (-4)) = (4, -3)$."
+        ],
+        overlays: [
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:3, y:1}, color: "blue", label: "\\mathbf{a}" },
+          { type: "vectorArrow", from: {x:3, y:1}, to: {x:4, y:-3}, color: "pink", label: "-\\mathbf{b}" },
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:4, y:-3}, color: "yellow", label: "\\mathbf{a}-\\mathbf{b}" }
+        ]
+      },
+      {
+        tag: "STEP 5 · SUBTRACT COMPONENT BY COMPONENT",
+        lines: [
+          "$\\mathbf{a} - \\mathbf{b} = \\begin{pmatrix} 3 \\\\ 1 \\end{pmatrix} - \\begin{pmatrix} -1 \\\\ 4 \\end{pmatrix} = \\begin{pmatrix} 3 - (-1) \\\\ 1 - 4 \\end{pmatrix} = \\begin{pmatrix} 4 \\\\ -3 \\end{pmatrix}$",
+          "Tops subtract; bottoms subtract. Watch the signs."
+        ],
+        overlays: [
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:3, y:1}, color: "blue", label: "\\mathbf{a}" },
+          { type: "vectorArrow", from: {x:3, y:1}, to: {x:4, y:-3}, color: "pink", label: "-\\mathbf{b}" },
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:4, y:-3}, color: "yellow", label: "\\mathbf{a}-\\mathbf{b}" }
+        ]
+      },
+      {
+        tag: "ANSWERS",
+        ans: "\\boxed{\\mathbf{a} + \\mathbf{b} = \\begin{pmatrix} 2 \\\\ 5 \\end{pmatrix}, \\quad \\mathbf{a} - \\mathbf{b} = \\begin{pmatrix} 4 \\\\ -3 \\end{pmatrix}}",
+        marks: "[B1 for $\\mathbf{a}+\\mathbf{b}$ correct; B1 for $\\mathbf{a}-\\mathbf{b}$ correct]"
+      }
+    ]
+  },
   "7p2-p1-find-vector": {
     title: "WORKED EXAMPLE · FIND THE COLUMN VECTOR AB",
     obj: [], img: [], labels: [],
