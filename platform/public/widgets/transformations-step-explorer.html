@@ -180,6 +180,60 @@ var PRESETS = {
       }
     ]
   },
+  "p4-rotation-identify": {
+    title: "WORKED EXAMPLE · IDENTIFY THE ROTATION",
+    obj: [{x:1,y:1}, {x:3,y:1}, {x:1,y:2}],
+    img: [{x:-1,y:1}, {x:-1,y:3}, {x:-2,y:1}],
+    labels: ['A','B','C'],
+    range: { xmin:-4, xmax:5, ymin:-1, ymax:5 },
+    centre: { x: 0, y: 0 },
+    angle: 90,
+    steps: [
+      {
+        tag: "STEP 1 · WHAT WE'RE GIVEN",
+        lines: [
+          "Object $A(1,1),\\, B(3,1),\\, C(1,2)$",
+          "Image $A'(-1,1),\\, B'(-1,3),\\, C'(-2,1)$",
+          "Same size, orientation preserved (no flip). Looks like a rotation."
+        ],
+        highlight: null
+      },
+      {
+        tag: "STEP 2 · GUESS THE CENTRE",
+        lines: [
+          "Try the origin as the centre.",
+          "Distance from $(0,0)$ to $A(1,1)$ $= \\sqrt{1^2 + 1^2} = \\sqrt{2}$.",
+          "Distance from $(0,0)$ to $A'(-1,1)$ $= \\sqrt{1^2 + 1^2} = \\sqrt{2}$.",
+          "Same distance, so the origin lies on the circle through $A$ and $A'$."
+        ],
+        highlight: "showCentre"
+      },
+      {
+        tag: "STEP 3 · CHECK A SECOND VERTEX",
+        lines: [
+          "Distance from $(0,0)$ to $B(3,1)$ $= \\sqrt{9 + 1} = \\sqrt{10}$.",
+          "Distance from $(0,0)$ to $B'(-1,3)$ $= \\sqrt{1 + 9} = \\sqrt{10}$.",
+          "Same again. The origin is the centre of rotation."
+        ],
+        highlight: "showCentre"
+      },
+      {
+        tag: "STEP 4 · FIND THE ANGLE AND DIRECTION",
+        lines: [
+          "$A(1,1)$ sits at angle $45°$ above the positive $x$-axis.",
+          "$A'(-1,1)$ sits at angle $135°$ above the positive $x$-axis.",
+          "Difference $= 135° - 45° = 90°$. Going from $A$ to $A'$ moves the point ANTICLOCKWISE."
+        ],
+        highlight: "showArcs"
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\boxed{\\text{Rotation, } 90° \\text{ anticlockwise, centre } (0, 0)}",
+        marks: "[B1 for \"rotation\"; B1 for the angle and direction; B1 for the centre]",
+        highlight: "all"
+      }
+    ]
+  },
   "p3-reflection-identify": {
     title: "WORKED EXAMPLE · IDENTIFY THE REFLECTION",
     obj: [{x:2,y:1}, {x:5,y:1}, {x:2,y:3}],
@@ -438,6 +492,62 @@ function drawScene(){
   var s = PRESET.steps[STEP];
   var hi = s.highlight;
   var fadeOther = (typeof hi === "number");
+
+  // Optional centre marker for rotation presets
+  if ((hi === "showCentre" || hi === "showArcs" || hi === "all") && PRESET.centre){
+    var cc = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    cc.setAttribute("cx", toSx(PRESET.centre.x)); cc.setAttribute("cy", toSy(PRESET.centre.y));
+    cc.setAttribute("r", 6); cc.setAttribute("fill", COL.yellow);
+    cc.setAttribute("stroke", "#0b1118"); cc.setAttribute("stroke-width", 1.5);
+    cc.setAttribute("class", "glow"); cc.style.color = COL.yellow;
+    gHi.appendChild(cc);
+    // dashed radii to each object vertex (when showCentre)
+    if (hi === "showCentre" || hi === "showArcs"){
+      PRESET.obj.forEach(function(p){
+        var r1 = document.createElementNS("http://www.w3.org/2000/svg","line");
+        r1.setAttribute("x1", toSx(PRESET.centre.x)); r1.setAttribute("y1", toSy(PRESET.centre.y));
+        r1.setAttribute("x2", toSx(p.x)); r1.setAttribute("y2", toSy(p.y));
+        r1.setAttribute("stroke", "rgba(0,171,250,0.45)");
+        r1.setAttribute("stroke-width", 1);
+        r1.setAttribute("stroke-dasharray", "3 4");
+        gHi.appendChild(r1);
+      });
+      PRESET.img.forEach(function(p){
+        var r2 = document.createElementNS("http://www.w3.org/2000/svg","line");
+        r2.setAttribute("x1", toSx(PRESET.centre.x)); r2.setAttribute("y1", toSy(PRESET.centre.y));
+        r2.setAttribute("x2", toSx(p.x)); r2.setAttribute("y2", toSy(p.y));
+        r2.setAttribute("stroke", "rgba(255,70,112,0.45)");
+        r2.setAttribute("stroke-width", 1);
+        r2.setAttribute("stroke-dasharray", "3 4");
+        gHi.appendChild(r2);
+      });
+    }
+  }
+
+  // Optional arc trails for rotation presets (showArcs)
+  if ((hi === "showArcs" || hi === "all") && PRESET.centre != null && PRESET.angle != null){
+    PRESET.obj.forEach(function(p){
+      var r = Math.sqrt((p.x - PRESET.centre.x)*(p.x - PRESET.centre.x) + (p.y - PRESET.centre.y)*(p.y - PRESET.centre.y));
+      if (r < 0.05) return;
+      var startMath = Math.atan2(p.y - PRESET.centre.y, p.x - PRESET.centre.x);
+      var endMath = startMath + PRESET.angle * Math.PI / 180;
+      var startScreen = -startMath, endScreen = -endMath;
+      var sweep = PRESET.angle > 0 ? 0 : 1;
+      var largeArc = Math.abs(PRESET.angle) > 180 ? 1 : 0;
+      var rPx = r * UNIT;
+      var sx = toSx(PRESET.centre.x) + rPx * Math.cos(startScreen);
+      var sy = toSy(PRESET.centre.y) + rPx * Math.sin(startScreen);
+      var ex = toSx(PRESET.centre.x) + rPx * Math.cos(endScreen);
+      var ey = toSy(PRESET.centre.y) + rPx * Math.sin(endScreen);
+      var arc = document.createElementNS("http://www.w3.org/2000/svg","path");
+      arc.setAttribute("d", "M " + sx + " " + sy + " A " + rPx + " " + rPx + " 0 " + largeArc + " " + sweep + " " + ex + " " + ey);
+      arc.setAttribute("fill", "none");
+      arc.setAttribute("stroke", COL.yellow);
+      arc.setAttribute("stroke-width", 1.6);
+      arc.setAttribute("opacity", 0.7);
+      gSh.appendChild(arc);
+    });
+  }
 
   // Optional mirror line for reflection presets
   if ((hi === "showMirror" || hi === "all") && PRESET.mirror){
