@@ -180,6 +180,60 @@ var PRESETS = {
       }
     ]
   },
+  "7p2-p1-find-vector": {
+    title: "WORKED EXAMPLE · FIND THE COLUMN VECTOR AB",
+    obj: [], img: [], labels: [],
+    range: { xmin:-1, xmax:7, ymin:-1, ymax:7 },
+    steps: [
+      {
+        tag: "STEP 1 · WHAT WE'RE GIVEN",
+        lines: [
+          "Point $A$ is at $(2, 1)$.",
+          "Point $B$ is at $(5, 5)$.",
+          "Find the vector $\\vec{AB}$ as a column."
+        ],
+        overlays: [
+          { type: "point", pos: {x:2, y:1}, label: "A", color: "blue" },
+          { type: "point", pos: {x:5, y:5}, label: "B", color: "pink" }
+        ]
+      },
+      {
+        tag: "STEP 2 · DRAW THE ARROW FROM A TO B",
+        lines: [
+          "The vector $\\vec{AB}$ is the arrow that starts at $A$ and ends at $B$.",
+          "Two things to read off: how far right, and how far up."
+        ],
+        overlays: [
+          { type: "point", pos: {x:2, y:1}, label: "A", color: "blue" },
+          { type: "point", pos: {x:5, y:5}, label: "B", color: "pink" },
+          { type: "vectorArrow", from: {x:2, y:1}, to: {x:5, y:5}, color: "yellow", label: "\\vec{AB}" }
+        ]
+      },
+      {
+        tag: "STEP 3 · WORK OUT THE COMPONENTS",
+        lines: [
+          "Right-shift $= x_B - x_A = 5 - 2 = 3$.",
+          "Up-shift $= y_B - y_A = 5 - 1 = 4$.",
+          "Always image minus object, the same trick you used for translation."
+        ],
+        overlays: [
+          { type: "point", pos: {x:2, y:1}, label: "A", color: "blue" },
+          { type: "point", pos: {x:5, y:5}, label: "B", color: "pink" },
+          { type: "vectorArrow", from: {x:2, y:1}, to: {x:5, y:5}, color: "yellow", label: "\\vec{AB}" }
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\boxed{\\vec{AB} = \\begin{pmatrix} 3 \\\\ 4 \\end{pmatrix}}",
+        marks: "[M1 for $B - A$ set up; A1 for the correct column]",
+        overlays: [
+          { type: "point", pos: {x:2, y:1}, label: "A", color: "blue" },
+          { type: "point", pos: {x:5, y:5}, label: "B", color: "pink" },
+          { type: "vectorArrow", from: {x:2, y:1}, to: {x:5, y:5}, color: "yellow", label: "\\vec{AB}" }
+        ]
+      }
+    ]
+  },
   "review-comprehensive": {
     title: "REVIEW · COMPREHENSIVE EXAMPLE",
     obj: [{x:1,y:1}, {x:4,y:1}, {x:1,y:3}],
@@ -939,18 +993,22 @@ function drawScene(){
     }
   }
 
-  // Draw shapes — fade non-highlighted vertices when one is focused
-  drawPoly(gObj, PRESET.obj, "rgba(0,171,250,0.10)", COL.blue, 2, fadeOther ? 0.5 : 1);
-  drawPoly(gImg, PRESET.img, "rgba(255,70,112,0.10)", COL.pink, 2, fadeOther ? 0.5 : 1);
-
-  PRESET.obj.forEach(function(p, i){
-    var op = (fadeOther && i !== hi) ? 0.22 : 1;
-    drawVertexDot(gObj, p, COL.blue, PRESET.labels[i], false, op);
-  });
-  PRESET.img.forEach(function(p, i){
-    var op = (fadeOther && i !== hi) ? 0.22 : 1;
-    drawVertexDot(gImg, p, COL.pink, PRESET.labels[i] + "'", true, op);
-  });
+  // Draw shapes — fade non-highlighted vertices when one is focused.
+  // Skip when obj/img is empty (used by point-only presets like vectors).
+  if (PRESET.obj && PRESET.obj.length >= 3){
+    drawPoly(gObj, PRESET.obj, "rgba(0,171,250,0.10)", COL.blue, 2, fadeOther ? 0.5 : 1);
+    PRESET.obj.forEach(function(p, i){
+      var op = (fadeOther && i !== hi) ? 0.22 : 1;
+      drawVertexDot(gObj, p, COL.blue, PRESET.labels[i], false, op);
+    });
+  }
+  if (PRESET.img && PRESET.img.length >= 3){
+    drawPoly(gImg, PRESET.img, "rgba(255,70,112,0.10)", COL.pink, 2, fadeOther ? 0.5 : 1);
+    PRESET.img.forEach(function(p, i){
+      var op = (fadeOther && i !== hi) ? 0.22 : 1;
+      drawVertexDot(gImg, p, COL.pink, PRESET.labels[i] + "'", true, op);
+    });
+  }
 
   // Highlight rings + shift arrow for active pair
   if (typeof hi === "number"){
@@ -1065,6 +1123,51 @@ function drawScene(){
             svgKaTeXLabel(gSh, toSx(p.x) + 14, toSy(p.y) - 10, ov.labels[i], COL.orange, "center");
           }
         });
+      } else if (ov.type === "point"){
+        var colMap = { blue: COL.blue, pink: COL.pink, orange: COL.orange, green: COL.green, yellow: COL.yellow, grey: COL.grey };
+        var pc = colMap[ov.color] || COL.off;
+        var dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        dot.setAttribute("cx", toSx(ov.pos.x)); dot.setAttribute("cy", toSy(ov.pos.y));
+        dot.setAttribute("r", 5); dot.setAttribute("fill", pc);
+        dot.setAttribute("stroke", "#0b1118"); dot.setAttribute("stroke-width", 1.2);
+        gSh.appendChild(dot);
+        if (ov.label){
+          svgKaTeXLabel(gSh, toSx(ov.pos.x) + 14, toSy(ov.pos.y) - 14,
+            ov.label + "(" + ov.pos.x + ", " + ov.pos.y + ")", pc, "center");
+        }
+      } else if (ov.type === "vectorArrow"){
+        var colMap2 = { blue: COL.blue, pink: COL.pink, orange: COL.orange, green: COL.green, yellow: COL.yellow };
+        var ac = colMap2[ov.color] || COL.yellow;
+        var x1 = toSx(ov.from.x), y1 = toSy(ov.from.y);
+        var x2 = toSx(ov.to.x),   y2 = toSy(ov.to.y);
+        var vdx = x2 - x1, vdy = y2 - y1;
+        var vL = Math.sqrt(vdx*vdx + vdy*vdy);
+        if (vL < 4) return;
+        var vux = vdx / vL, vuy = vdy / vL;
+        var headL = 11;
+        var bx = x2 - vux * headL, by = y2 - vuy * headL;
+        var aln = document.createElementNS("http://www.w3.org/2000/svg","line");
+        aln.setAttribute("x1", x1); aln.setAttribute("y1", y1);
+        aln.setAttribute("x2", bx); aln.setAttribute("y2", by);
+        aln.setAttribute("stroke", ac); aln.setAttribute("stroke-width", 2.5);
+        aln.setAttribute("stroke-linecap", "round");
+        gSh.appendChild(aln);
+        var hw = 6;
+        var atri = document.createElementNS("http://www.w3.org/2000/svg","path");
+        atri.setAttribute("d", "M " + x2 + " " + y2 +
+          " L " + (x2 - vux*headL + vuy*hw) + " " + (y2 - vuy*headL - vux*hw) +
+          " L " + (x2 - vux*headL - vuy*hw) + " " + (y2 - vuy*headL + vux*hw) + " Z");
+        atri.setAttribute("fill", ac);
+        gSh.appendChild(atri);
+        if (ov.label){
+          var mx = (ov.from.x + ov.to.x) / 2;
+          var my = (ov.from.y + ov.to.y) / 2;
+          // perpendicular offset in SCREEN pixels (vdx, vdy already in screen);
+          // (vdy, -vdx) points to the LEFT of the arrow direction in SVG y-down.
+          var lx = vdy / vL;
+          var ly = -vdx / vL;
+          svgKaTeXLabel(gSh, toSx(mx) + lx * 18, toSy(my) + ly * 18, ov.label, ac, "center");
+        }
       } else if (ov.type === "ray"){
         // Line through object[obj] and image[obj], extended in both directions.
         var Ar = PRESET.obj[ov.obj], Br = PRESET.img[ov.obj];
