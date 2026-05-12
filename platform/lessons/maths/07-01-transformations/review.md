@@ -37,19 +37,28 @@ A short walkthrough of the unit:
 
 When a Cambridge question gives you an object and an image and asks for the single transformation, work through these questions in order:
 
-<div class="diagram" style="border:1px solid #141e2a;border-radius:10px;padding:22px 16px 24px;margin:14px 0;background:#0b1118">
-  <div style="font-family:'Geist Mono',monospace;font-size:11px;color:#7a7875;letter-spacing:0.4px;margin-bottom:16px;text-transform:uppercase;text-align:center">DESCRIBE FULLY · DECISION TREE</div>
-  <div style="display:flex;flex-direction:column;gap:10px;font-family:'Geist Mono',monospace;font-size:13px">
-    <div style="display:flex;align-items:center;justify-content:center;gap:14px"><div style="padding:8px 14px;border:1.5px solid #fff067;border-radius:6px;background:rgba(255,240,103,0.08);color:#fff067;font-weight:700">1 · Is the image the same SIZE as the object?</div></div>
-    <div style="text-align:center;color:#3a4a5a;font-size:14px">No → ENLARGEMENT (find scale factor and centre)</div>
-    <div style="text-align:center;color:#3a4a5a;font-size:14px">↓ Yes</div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:14px"><div style="padding:8px 14px;border:1.5px solid #fff067;border-radius:6px;background:rgba(255,240,103,0.08);color:#fff067;font-weight:700">2 · Has the orientation FLIPPED?</div></div>
-    <div style="text-align:center;color:#3a4a5a;font-size:14px">Yes (clockwise → anticlockwise) → REFLECTION (find the mirror)</div>
-    <div style="text-align:center;color:#3a4a5a;font-size:14px">↓ No</div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:14px"><div style="padding:8px 14px;border:1.5px solid #fff067;border-radius:6px;background:rgba(255,240,103,0.08);color:#fff067;font-weight:700">3 · Does every vertex shift by the SAME column vector?</div></div>
-    <div style="text-align:center;color:#3a4a5a;font-size:14px">Yes → TRANSLATION (write the column vector)</div>
-    <div style="text-align:center;color:#3a4a5a;font-size:14px">↓ No</div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:14px"><div style="padding:8px 14px;border:1.5px solid #fff067;border-radius:6px;background:rgba(255,240,103,0.08);color:#fff067;font-weight:700">4 · Must be ROTATION (find centre, angle, direction)</div></div>
+<div class="diagram" style="border:1px solid #141e2a;border-radius:10px;padding:22px 18px 22px;margin:14px 0;background:#0b1118">
+  <div style="font-family:'Geist Mono',monospace;font-size:11px;color:#7a7875;letter-spacing:0.4px;margin-bottom:18px;text-transform:uppercase;text-align:center">DESCRIBE FULLY · DECISION TREE</div>
+  <div style="display:flex;align-items:stretch;gap:10px;margin-bottom:0;font-family:'Geist Mono',monospace">
+    <div style="flex:1.5;padding:12px 14px;border:1.5px solid #fff067;border-radius:8px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;font-size:13px;text-align:center;display:flex;align-items:center;justify-content:center">Is the image the same SIZE as the object?</div>
+    <div style="display:flex;align-items:center;color:#7a7875;font-size:10.5px;letter-spacing:0.5px;font-weight:700;white-space:nowrap">NO →</div>
+    <div style="flex:1;padding:12px 14px;border:1.5px solid #ff4670;border-radius:8px;background:rgba(255,70,112,0.06);text-align:center"><div style="color:#ff4670;font-weight:700;font-size:14px;letter-spacing:0.5px">ENLARGEMENT</div><div style="color:#7a7875;font-size:11px;margin-top:4px">scale factor + centre</div></div>
+  </div>
+  <div style="text-align:center;color:#3a4a5a;font-size:10.5px;font-family:'Geist Mono',monospace;letter-spacing:0.5px;padding:8px 0;font-weight:700">↓ YES</div>
+  <div style="display:flex;align-items:stretch;gap:10px;font-family:'Geist Mono',monospace">
+    <div style="flex:1.5;padding:12px 14px;border:1.5px solid #fff067;border-radius:8px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;font-size:13px;text-align:center;display:flex;align-items:center;justify-content:center">Has the orientation FLIPPED?</div>
+    <div style="display:flex;align-items:center;color:#7a7875;font-size:10.5px;letter-spacing:0.5px;font-weight:700;white-space:nowrap">YES →</div>
+    <div style="flex:1;padding:12px 14px;border:1.5px solid #ff822c;border-radius:8px;background:rgba(255,130,44,0.06);text-align:center"><div style="color:#ff822c;font-weight:700;font-size:14px;letter-spacing:0.5px">REFLECTION</div><div style="color:#7a7875;font-size:11px;margin-top:4px">mirror as an equation</div></div>
+  </div>
+  <div style="text-align:center;color:#3a4a5a;font-size:10.5px;font-family:'Geist Mono',monospace;letter-spacing:0.5px;padding:8px 0;font-weight:700">↓ NO</div>
+  <div style="display:flex;align-items:stretch;gap:10px;font-family:'Geist Mono',monospace">
+    <div style="flex:1.5;padding:12px 14px;border:1.5px solid #fff067;border-radius:8px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;font-size:13px;text-align:center;display:flex;align-items:center;justify-content:center">Does every vertex shift by the SAME amount?</div>
+    <div style="display:flex;align-items:center;color:#7a7875;font-size:10.5px;letter-spacing:0.5px;font-weight:700;white-space:nowrap">YES →</div>
+    <div style="flex:1;padding:12px 14px;border:1.5px solid #00abfa;border-radius:8px;background:rgba(0,171,250,0.06);text-align:center"><div style="color:#00abfa;font-weight:700;font-size:14px;letter-spacing:0.5px">TRANSLATION</div><div style="color:#7a7875;font-size:11px;margin-top:4px">the column vector</div></div>
+  </div>
+  <div style="text-align:center;color:#3a4a5a;font-size:10.5px;font-family:'Geist Mono',monospace;letter-spacing:0.5px;padding:8px 0;font-weight:700">↓ NO</div>
+  <div style="display:flex;justify-content:center;font-family:'Geist Mono',monospace">
+    <div style="padding:12px 18px;border:1.5px solid #0fee89;border-radius:8px;background:rgba(15,238,137,0.06);text-align:center;min-width:260px"><div style="color:#0fee89;font-weight:700;font-size:14px;letter-spacing:0.5px">ROTATION</div><div style="color:#7a7875;font-size:11px;margin-top:4px">centre + angle + direction</div></div>
   </div>
 </div>
 
