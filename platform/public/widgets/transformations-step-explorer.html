@@ -180,6 +180,69 @@ var PRESETS = {
       }
     ]
   },
+  "review-comprehensive": {
+    title: "REVIEW · COMPREHENSIVE EXAMPLE",
+    obj: [{x:1,y:1}, {x:4,y:1}, {x:1,y:3}],
+    img: [{x:1,y:-1}, {x:4,y:-1}, {x:1,y:-3}],
+    labels: ['A','B','C'],
+    range: { xmin:-2, xmax:5, ymin:-4, ymax:5 },
+    steps: [
+      {
+        tag: "STEP 1 · THE STARTING SHAPE",
+        lines: [
+          "Triangle $T$ with $A(1,1),\\, B(4,1),\\, C(1,3)$.",
+          "We'll do two transformations in a row, then describe the single transformation that does the same job."
+        ]
+      },
+      {
+        tag: "STEP 2 · PART (a): REFLECT IN y = x",
+        lines: [
+          "Swap each pair of coordinates.",
+          "$A(1,1) \\to A_1(1,1)$",
+          "$B(4,1) \\to B_1(1,4)$",
+          "$C(1,3) \\to C_1(3,1)$"
+        ],
+        overlays: [
+          { type: "doubleMirror", first: {p1:{x:-4,y:-4}, p2:{x:4,y:4}} },
+          { type: "intermediate", pts: [{x:1,y:1}, {x:1,y:4}, {x:3,y:1}], labels: ["A_1","B_1","C_1"], highlight: true }
+        ]
+      },
+      {
+        tag: "STEP 3 · PART (b): ROTATE 90° CLOCKWISE ABOUT (0,0)",
+        lines: [
+          "Use $(x, y) \\to (y, -x)$.",
+          "$A_1(1,1) \\to A_2(1,-1)$",
+          "$B_1(1,4) \\to B_2(4,-1)$",
+          "$C_1(3,1) \\to C_2(1,-3)$",
+          "Triangle $T_2$ is the pink one."
+        ],
+        overlays: [
+          { type: "intermediate", pts: [{x:1,y:1}, {x:1,y:4}, {x:3,y:1}], labels: ["A_1","B_1","C_1"], fade: true }
+        ]
+      },
+      {
+        tag: "STEP 4 · PART (c): COMPARE T AND T_2",
+        lines: [
+          "Compare each vertex of $T$ to the matching vertex of $T_2$:",
+          "$A(1,1) \\to A_2(1,-1)$: $x$ stays, $y$ flips sign.",
+          "$B(4,1) \\to B_2(4,-1)$: same pattern.",
+          "$C(1,3) \\to C_2(1,-3)$: same pattern.",
+          "Every $y$ flips sign while $x$ stays. That's a reflection in $y = 0$."
+        ],
+        overlays: [
+          { type: "doubleMirror", first: {p1:{x:-5,y:0}, p2:{x:5,y:0}} }
+        ]
+      },
+      {
+        tag: "ANSWER · PART (c)",
+        ans: "\\boxed{\\text{Reflection in the line } y = 0}",
+        marks: "[B1 for \"reflection\"; B1 for $y = 0$]",
+        overlays: [
+          { type: "doubleMirror", first: {p1:{x:-5,y:0}, p2:{x:5,y:0}} }
+        ]
+      }
+    ]
+  },
   "p6-two-reflections": {
     title: "WORKED EXAMPLE · TWO REFLECTIONS → ONE ROTATION",
     obj: [{x:2,y:1}, {x:4,y:1}, {x:2,y:2}],
@@ -974,8 +1037,8 @@ function drawScene(){
           ln.setAttribute("opacity", opacity != null ? opacity : 0.9);
           gHi.appendChild(ln);
         }
-        drawOneMirror(ov.first, COL.yellow, ov.fadeFirst ? 0.3 : 0.9);
-        drawOneMirror(ov.second, COL.green, ov.fadeSecond ? 0.3 : 0.9);
+        if (ov.first)  drawOneMirror(ov.first,  COL.yellow, ov.fadeFirst  ? 0.3 : 0.9);
+        if (ov.second) drawOneMirror(ov.second, COL.green,  ov.fadeSecond ? 0.3 : 0.9);
       } else if (ov.type === "intermediate"){
         // The intermediate (after first reflection) triangle in orange.
         var pts = ov.pts;
