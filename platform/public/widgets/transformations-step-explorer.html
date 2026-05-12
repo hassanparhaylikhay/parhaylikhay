@@ -180,6 +180,79 @@ var PRESETS = {
       }
     ]
   },
+  "p5-enlargement-identify": {
+    title: "WORKED EXAMPLE · IDENTIFY THE ENLARGEMENT",
+    obj: [{x:2,y:1}, {x:3,y:1}, {x:2,y:3}],
+    img: [{x:3,y:2}, {x:5,y:2}, {x:3,y:6}],
+    labels: ['A','B','C'],
+    range: { xmin:-1, xmax:6, ymin:-1, ymax:7 },
+    centre: { x: 1, y: 0 },
+    steps: [
+      {
+        tag: "STEP 1 · WHAT WE'RE GIVEN",
+        lines: [
+          "Object $A(2,1),\\, B(3,1),\\, C(2,3)$",
+          "Image $A'(3,2),\\, B'(5,2),\\, C'(3,6)$",
+          "The image is bigger than the object, same shape. That's an enlargement."
+        ]
+      },
+      {
+        tag: "STEP 2 · FIND THE SCALE FACTOR",
+        lines: [
+          "Compare matching side lengths.",
+          "$|AB| = 1$ (object). $|A'B'| = 2$ (image).",
+          "Scale factor $= \\dfrac{|A'B'|}{|AB|} = \\dfrac{2}{1} = 2$."
+        ]
+      },
+      {
+        tag: "STEP 3 · DRAW RAY THROUGH AA'",
+        lines: [
+          "The centre, $A$, and $A'$ all sit on the same straight line (a 'ray' from the centre).",
+          "Draw the line through $A(2,1)$ and $A'(3,2)$, and extend it past both ends."
+        ],
+        overlays: [
+          { type: "ray", obj: 0 }
+        ]
+      },
+      {
+        tag: "STEP 4 · DRAW RAY THROUGH BB'",
+        lines: [
+          "Draw a second ray through $B(3,1)$ and $B'(5,2)$, extended.",
+          "The two rays cross at one point. That point is the centre."
+        ],
+        overlays: [
+          { type: "ray", obj: 0 },
+          { type: "ray", obj: 1 }
+        ]
+      },
+      {
+        tag: "STEP 5 · READ OFF THE CENTRE",
+        lines: [
+          "The rays cross at $(1, 0)$.",
+          "Quick check: distance from centre to $A$ is $\\sqrt{1^2 + 1^2} = \\sqrt{2}$.",
+          "Distance from centre to $A'$ is $\\sqrt{2^2 + 2^2} = 2\\sqrt{2}$.",
+          "Ratio $= 2$. Matches the scale factor."
+        ],
+        overlays: [
+          { type: "ray", obj: 0 },
+          { type: "ray", obj: 1 },
+          { type: "ray", obj: 2 },
+          { type: "centre", pos: {x:1, y:0} }
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\boxed{\\text{Enlargement, scale factor } 2, \\text{ centre } (1, 0)}",
+        marks: "[B1 for \"enlargement\"; B1 for scale factor $2$; B1 for centre $(1, 0)$]",
+        overlays: [
+          { type: "ray", obj: 0 },
+          { type: "ray", obj: 1 },
+          { type: "ray", obj: 2 },
+          { type: "centre", pos: {x:1, y:0} }
+        ]
+      }
+    ]
+  },
   "p4-find-centre-180": {
     title: "FIND THE CENTRE · 180° ROTATION",
     obj: [{x:0,y:1}, {x:3,y:1}, {x:0,y:4}],
@@ -806,6 +879,24 @@ function drawScene(){
         gHi.appendChild(cm);
         svgKaTeXLabel(gHi, toSx(ov.pos.x) + 18, toSy(ov.pos.y) + 8,
           "(" + ov.pos.x + ", " + ov.pos.y + ")", COL.green, "left");
+      } else if (ov.type === "ray"){
+        // Line through object[obj] and image[obj], extended in both directions.
+        var Ar = PRESET.obj[ov.obj], Br = PRESET.img[ov.obj];
+        var dxr = Br.x - Ar.x, dyr = Br.y - Ar.y;
+        var lenR = Math.sqrt(dxr*dxr + dyr*dyr);
+        if (lenR < 1e-6) return;
+        var uxr = dxr / lenR, uyr = dyr / lenR;
+        var extR = 20;
+        var rline = document.createElementNS("http://www.w3.org/2000/svg","line");
+        rline.setAttribute("x1", toSx(Ar.x - extR * uxr));
+        rline.setAttribute("y1", toSy(Ar.y - extR * uyr));
+        rline.setAttribute("x2", toSx(Br.x + extR * uxr));
+        rline.setAttribute("y2", toSy(Br.y + extR * uyr));
+        rline.setAttribute("stroke", COL.yellow);
+        rline.setAttribute("stroke-width", 1.4);
+        rline.setAttribute("stroke-dasharray", "5 4");
+        rline.setAttribute("opacity", 0.7);
+        gSh.appendChild(rline);
       } else if (ov.type === "arc"){
         var p = PRESET.obj[ov.pair];
         var ctr = ov.centre;
