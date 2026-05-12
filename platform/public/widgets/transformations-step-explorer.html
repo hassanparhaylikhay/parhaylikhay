@@ -180,6 +180,84 @@ var PRESETS = {
       }
     ]
   },
+  "p6-two-reflections": {
+    title: "WORKED EXAMPLE · TWO REFLECTIONS → ONE ROTATION",
+    obj: [{x:2,y:1}, {x:4,y:1}, {x:2,y:2}],
+    img: [{x:-1,y:2}, {x:-1,y:4}, {x:-2,y:2}],
+    labels: ['P','Q','R'],
+    range: { xmin:-4, xmax:5, ymin:-3, ymax:5 },
+    centre: { x: 0, y: 0 },
+    angle: 90,
+    mirror: { p1: {x:-5,y:0}, p2: {x:5,y:0} },
+    mirror2: { p1: {x:-4,y:-4}, p2: {x:4,y:4} },
+    intermediate: [{x:2,y:-1}, {x:4,y:-1}, {x:2,y:-2}],
+    steps: [
+      {
+        tag: "STEP 1 · WHAT THE QUESTION ASKS",
+        lines: [
+          "Triangle $P(2,1),\\, Q(4,1),\\, R(2,2)$ is reflected in $y = 0$ to give the orange triangle, then that triangle is reflected in $y = x$ to give the pink triangle.",
+          "Describe the single transformation that maps the blue triangle straight onto the pink one."
+        ],
+        overlays: [
+          { type: "doubleMirror", first: {p1:{x:-5,y:0}, p2:{x:5,y:0}}, second: {p1:{x:-4,y:-4}, p2:{x:4,y:4}} },
+          { type: "intermediate", pts: [{x:2,y:-1}, {x:4,y:-1}, {x:2,y:-2}], labels: ["P'","Q'","R'"] }
+        ]
+      },
+      {
+        tag: "STEP 2 · FIRST REFLECTION (in y = 0)",
+        lines: [
+          "Reflect each vertex in the $x$-axis: flip the sign of $y$.",
+          "$P(2,1) \\to P'(2,-1)$",
+          "$Q(4,1) \\to Q'(4,-1)$",
+          "$R(2,2) \\to R'(2,-2)$"
+        ],
+        overlays: [
+          { type: "doubleMirror", first: {p1:{x:-5,y:0}, p2:{x:5,y:0}}, second: {p1:{x:-4,y:-4}, p2:{x:4,y:4}}, fadeSecond: true },
+          { type: "intermediate", pts: [{x:2,y:-1}, {x:4,y:-1}, {x:2,y:-2}], labels: ["P'","Q'","R'"], highlight: true }
+        ]
+      },
+      {
+        tag: "STEP 3 · SECOND REFLECTION (in y = x)",
+        lines: [
+          "Now reflect the orange triangle in $y = x$: swap the two coordinates.",
+          "$P'(2,-1) \\to P''(-1,2)$",
+          "$Q'(4,-1) \\to Q''(-1,4)$",
+          "$R'(2,-2) \\to R''(-2,2)$"
+        ],
+        overlays: [
+          { type: "doubleMirror", first: {p1:{x:-5,y:0}, p2:{x:5,y:0}}, second: {p1:{x:-4,y:-4}, p2:{x:4,y:4}} },
+          { type: "intermediate", pts: [{x:2,y:-1}, {x:4,y:-1}, {x:2,y:-2}], labels: ["P'","Q'","R'"], fade: true }
+        ]
+      },
+      {
+        tag: "STEP 4 · TWO REFLECTIONS = ONE ROTATION",
+        lines: [
+          "Two mirrors that cross each other always combine to give a rotation.",
+          "Centre $=$ where the mirrors cross $= (0, 0)$.",
+          "Angle $= 2 \\times$ (angle between the mirrors) $= 2 \\times 45° = 90°$.",
+          "Direction $=$ from the first mirror toward the second, which is anticlockwise here."
+        ],
+        overlays: [
+          { type: "doubleMirror", first: {p1:{x:-5,y:0}, p2:{x:5,y:0}}, second: {p1:{x:-4,y:-4}, p2:{x:4,y:4}} },
+          { type: "centre", pos: {x:0, y:0} },
+          { type: "arc", pair: 0, centre: {x:0,y:0}, angle: 90 },
+          { type: "arc", pair: 1, centre: {x:0,y:0}, angle: 90 },
+          { type: "arc", pair: 2, centre: {x:0,y:0}, angle: 90 }
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\boxed{\\text{Rotation, } 90° \\text{ anticlockwise, centre } (0, 0)}",
+        marks: "[B1 for \"rotation\"; B1 for $90°$ anticlockwise; B1 for centre $(0, 0)$]",
+        overlays: [
+          { type: "centre", pos: {x:0, y:0} },
+          { type: "arc", pair: 0, centre: {x:0,y:0}, angle: 90 },
+          { type: "arc", pair: 1, centre: {x:0,y:0}, angle: 90 },
+          { type: "arc", pair: 2, centre: {x:0,y:0}, angle: 90 }
+        ]
+      }
+    ]
+  },
   "p5-enlargement-identify": {
     title: "WORKED EXAMPLE · IDENTIFY THE ENLARGEMENT",
     obj: [{x:2,y:1}, {x:3,y:1}, {x:2,y:3}],
@@ -879,6 +957,51 @@ function drawScene(){
         gHi.appendChild(cm);
         svgKaTeXLabel(gHi, toSx(ov.pos.x) + 18, toSy(ov.pos.y) + 8,
           "(" + ov.pos.x + ", " + ov.pos.y + ")", COL.green, "left");
+      } else if (ov.type === "doubleMirror"){
+        // Two mirror lines (used for p6 two-reflections preset)
+        function drawOneMirror(M, color, opacity){
+          var dx = M.p2.x - M.p1.x, dy = M.p2.y - M.p1.y;
+          var lenM = Math.sqrt(dx*dx + dy*dy);
+          if (lenM < 0.001) return;
+          var uxm = dx/lenM, uym = dy/lenM, extM = 16;
+          var a = { x: M.p1.x - extM * uxm, y: M.p1.y - extM * uym };
+          var b = { x: M.p1.x + extM * uxm, y: M.p1.y + extM * uym };
+          var ln = document.createElementNS("http://www.w3.org/2000/svg","line");
+          ln.setAttribute("x1", toSx(a.x)); ln.setAttribute("y1", toSy(a.y));
+          ln.setAttribute("x2", toSx(b.x)); ln.setAttribute("y2", toSy(b.y));
+          ln.setAttribute("stroke", color); ln.setAttribute("stroke-width", 1.8);
+          ln.setAttribute("stroke-dasharray", "6 5");
+          ln.setAttribute("opacity", opacity != null ? opacity : 0.9);
+          gHi.appendChild(ln);
+        }
+        drawOneMirror(ov.first, COL.yellow, ov.fadeFirst ? 0.3 : 0.9);
+        drawOneMirror(ov.second, COL.green, ov.fadeSecond ? 0.3 : 0.9);
+      } else if (ov.type === "intermediate"){
+        // The intermediate (after first reflection) triangle in orange.
+        var pts = ov.pts;
+        var op = ov.fade ? 0.35 : (ov.highlight ? 1 : 0.9);
+        var d = "M " + toSx(pts[0].x) + " " + toSy(pts[0].y);
+        for (var i = 1; i < pts.length; i++) d += " L " + toSx(pts[i].x) + " " + toSy(pts[i].y);
+        d += " Z";
+        var path = document.createElementNS("http://www.w3.org/2000/svg","path");
+        path.setAttribute("d", d);
+        path.setAttribute("fill", "rgba(255,130,44,0.10)");
+        path.setAttribute("stroke", COL.orange);
+        path.setAttribute("stroke-width", 1.8);
+        path.setAttribute("stroke-dasharray", "5 4");
+        path.setAttribute("stroke-linejoin","round");
+        path.setAttribute("opacity", op);
+        gSh.appendChild(path);
+        pts.forEach(function(p, i){
+          var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+          c.setAttribute("cx", toSx(p.x)); c.setAttribute("cy", toSy(p.y));
+          c.setAttribute("r", 3.2); c.setAttribute("fill", COL.orange);
+          c.setAttribute("opacity", op);
+          gSh.appendChild(c);
+          if (ov.labels && ov.labels[i]){
+            svgKaTeXLabel(gSh, toSx(p.x) + 12, toSy(p.y) - 10, ov.labels[i], COL.orange, "left");
+          }
+        });
       } else if (ov.type === "ray"){
         // Line through object[obj] and image[obj], extended in both directions.
         var Ar = PRESET.obj[ov.obj], Br = PRESET.img[ov.obj];
