@@ -738,9 +738,9 @@ function drawVertexDot(g, pt, color, label, primeFlag, opacity){
   c.setAttribute("r", 3.5); c.setAttribute("fill", color);
   if (opacity != null) c.setAttribute("opacity", opacity);
   g.appendChild(c);
-  var lblX = toSx(pt.x) + (primeFlag ? 12 : -12);
+  var lblX = toSx(pt.x) + (primeFlag ? 14 : -14);
   var lblY = toSy(pt.y) - 10;
-  svgKaTeXLabel(g, lblX, lblY, label, color, primeFlag ? "left" : "right");
+  svgKaTeXLabel(g, lblX, lblY, label, color, "center");
 }
 
 function drawHighlightRing(g, pt, color){
@@ -955,8 +955,8 @@ function drawScene(){
         cm.setAttribute("stroke", "#0b1118"); cm.setAttribute("stroke-width", 1.5);
         cm.setAttribute("class", "glow"); cm.style.color = COL.green;
         gHi.appendChild(cm);
-        svgKaTeXLabel(gHi, toSx(ov.pos.x) + 18, toSy(ov.pos.y) + 8,
-          "(" + ov.pos.x + ", " + ov.pos.y + ")", COL.green, "left");
+        svgKaTeXLabel(gHi, toSx(ov.pos.x) + 32, toSy(ov.pos.y) + 8,
+          "(" + ov.pos.x + ", " + ov.pos.y + ")", COL.green, "center");
       } else if (ov.type === "doubleMirror"){
         // Two mirror lines (used for p6 two-reflections preset)
         function drawOneMirror(M, color, opacity){
@@ -999,7 +999,7 @@ function drawScene(){
           c.setAttribute("opacity", op);
           gSh.appendChild(c);
           if (ov.labels && ov.labels[i]){
-            svgKaTeXLabel(gSh, toSx(p.x) + 12, toSy(p.y) - 10, ov.labels[i], COL.orange, "left");
+            svgKaTeXLabel(gSh, toSx(p.x) + 14, toSy(p.y) - 10, ov.labels[i], COL.orange, "center");
           }
         });
       } else if (ov.type === "ray"){

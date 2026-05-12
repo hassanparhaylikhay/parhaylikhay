@@ -242,8 +242,8 @@ function drawVertexDot(g, pt, color, label, side){
   c.setAttribute("cx", toSx(pt.x)); c.setAttribute("cy", toSy(pt.y));
   c.setAttribute("r", 3.5); c.setAttribute("fill", color);
   g.appendChild(c);
-  var ox = (side === "right") ? 12 : -12;
-  svgKaTeXLabel(g, toSx(pt.x) + ox, toSy(pt.y) - 10, label, color, side === "right" ? "left" : "right");
+  var ox = (side === "right") ? 14 : -14;
+  svgKaTeXLabel(g, toSx(pt.x) + ox, toSy(pt.y) - 10, label, color, "center");
 }
 
 function drawHandle(g, pt, fillCol, ringCol){
@@ -282,7 +282,7 @@ function drawScene(){
     c.setAttribute("r", 3); c.setAttribute("fill", COL.orange);
     c.setAttribute("opacity", 0.85);
     gIn.appendChild(c);
-    svgKaTeXLabel(gIn, toSx(p.x) + 12, toSy(p.y) - 10, LABELS[i] + "'", COL.orange, "left");
+    svgKaTeXLabel(gIn, toSx(p.x) + 14, toSy(p.y) - 10, LABELS[i] + "'", COL.orange, "center");
   });
   FIN.forEach(function(p,i){ drawVertexDot(gF, p, COL.pink, LABELS[i] + "''", "right"); });
 

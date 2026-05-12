@@ -184,7 +184,7 @@ function drawVertexDot(g, pt, color, label, primeFlag){
   c.setAttribute("cx", toSx(pt.x)); c.setAttribute("cy", toSy(pt.y));
   c.setAttribute("r", 3.5); c.setAttribute("fill", color);
   g.appendChild(c);
-  svgKaTeXLabel(g, toSx(pt.x) + (primeFlag ? 12 : -12), toSy(pt.y) - 10, label, color, primeFlag ? "left" : "right");
+  svgKaTeXLabel(g, toSx(pt.x) + (primeFlag ? 14 : -14), toSy(pt.y) - 10, label, color, "center");
 }
 
 function drawScene(){
