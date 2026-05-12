@@ -212,13 +212,14 @@ var PRESETS = {
       {
         tag: "STEP 3 · WORK OUT THE COMPONENTS",
         lines: [
-          "Right-shift $= x_B - x_A = 5 - 2 = 3$.",
-          "Up-shift $= y_B - y_A = 5 - 1 = 4$.",
+          "Right-shift $= x_B - x_A = 5 - 2 = 3$ (the blue dashed line).",
+          "Up-shift $= y_B - y_A = 5 - 1 = 4$ (the orange dashed line).",
           "Always image minus object, the same trick you used for translation."
         ],
         overlays: [
           { type: "point", pos: {x:2, y:1}, label: "A", color: "blue" },
           { type: "point", pos: {x:5, y:5}, label: "B", color: "pink" },
+          { type: "componentLines", from: {x:2, y:1}, to: {x:5, y:5} },
           { type: "vectorArrow", from: {x:2, y:1}, to: {x:5, y:5}, color: "yellow", label: "\\vec{AB}" }
         ]
       },
@@ -229,6 +230,7 @@ var PRESETS = {
         overlays: [
           { type: "point", pos: {x:2, y:1}, label: "A", color: "blue" },
           { type: "point", pos: {x:5, y:5}, label: "B", color: "pink" },
+          { type: "componentLines", from: {x:2, y:1}, to: {x:5, y:5} },
           { type: "vectorArrow", from: {x:2, y:1}, to: {x:5, y:5}, color: "yellow", label: "\\vec{AB}" }
         ]
       }
@@ -1167,6 +1169,40 @@ function drawScene(){
           var lx = vdy / vL;
           var ly = -vdx / vL;
           svgKaTeXLabel(gSh, toSx(mx) + lx * 18, toSy(my) + ly * 18, ov.label, ac, "center");
+        }
+      } else if (ov.type === "componentLines"){
+        // Dotted "L" showing the x-shift (blue, horizontal) and y-shift (orange, vertical)
+        // from ov.from to ov.to. Labels show the signed magnitudes.
+        var fx = ov.from.x, fy = ov.from.y, tx = ov.to.x, ty = ov.to.y;
+        var dxVal = tx - fx, dyVal = ty - fy;
+        // horizontal segment at y = fy, from x = fx to x = tx (blue)
+        var hLine = document.createElementNS("http://www.w3.org/2000/svg","line");
+        hLine.setAttribute("x1", toSx(fx)); hLine.setAttribute("y1", toSy(fy));
+        hLine.setAttribute("x2", toSx(tx)); hLine.setAttribute("y2", toSy(fy));
+        hLine.setAttribute("stroke", COL.blue);
+        hLine.setAttribute("stroke-width", 1.6);
+        hLine.setAttribute("stroke-dasharray", "5 4");
+        gSh.appendChild(hLine);
+        // vertical segment at x = tx, from y = fy to y = ty (orange)
+        var vLine = document.createElementNS("http://www.w3.org/2000/svg","line");
+        vLine.setAttribute("x1", toSx(tx)); vLine.setAttribute("y1", toSy(fy));
+        vLine.setAttribute("x2", toSx(tx)); vLine.setAttribute("y2", toSy(ty));
+        vLine.setAttribute("stroke", COL.orange);
+        vLine.setAttribute("stroke-width", 1.6);
+        vLine.setAttribute("stroke-dasharray", "5 4");
+        gSh.appendChild(vLine);
+        // labels
+        if (Math.abs(dxVal) > 0.01){
+          var hMid = (fx + tx) / 2;
+          // place x-label below the horizontal line (screen y is below)
+          var labelYOffset = (ty >= fy) ? 14 : -14;
+          svgKaTeXLabel(gSh, toSx(hMid), toSy(fy) + labelYOffset, String(dxVal), COL.blue, "center");
+        }
+        if (Math.abs(dyVal) > 0.01){
+          var vMid = (fy + ty) / 2;
+          // place y-label to the right of the vertical line
+          var labelXOffset = (tx >= fx) ? 14 : -14;
+          svgKaTeXLabel(gSh, toSx(tx) + labelXOffset, toSy(vMid), String(dyVal), COL.orange, "center");
         }
       } else if (ov.type === "ray"){
         // Line through object[obj] and image[obj], extended in both directions.
