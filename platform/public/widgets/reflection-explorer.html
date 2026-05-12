@@ -288,7 +288,8 @@ function mirrorEquationTex(a, b){
 function renderMirrorEq(){
   var el = document.getElementById("eq-display");
   el.innerHTML = "";
-  tryRender(el, mirrorEquationTex(D.p1, D.p2));
+  // Use TARGET (P) values so the equation snaps with the user, not the spring.
+  tryRender(el, mirrorEquationTex(P.p1, P.p2));
 }
 
 // ----- hit-test -----

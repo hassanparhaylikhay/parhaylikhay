@@ -304,7 +304,8 @@ function fmtNum(v){
 function renderColumn(){
   var el = document.getElementById("col-display");
   el.innerHTML = "";
-  var tex = "\\begin{pmatrix} {\\color{#00abfa}" + fmtNum(D.tx) + "} \\\\ {\\color{#ff822c}" + fmtNum(D.ty) + "} \\end{pmatrix}";
+  // Use TARGET (P) values so the readout snaps with the user, not the spring.
+  var tex = "\\begin{pmatrix} {\\color{#00abfa}" + fmtNum(P.tx) + "} \\\\ {\\color{#ff822c}" + fmtNum(P.ty) + "} \\end{pmatrix}";
   tryRender(el, tex);
 }
 

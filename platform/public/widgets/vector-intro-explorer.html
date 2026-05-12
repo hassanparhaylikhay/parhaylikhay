@@ -207,28 +207,28 @@ function drawScene(){
     svgKaTeXLabel(gArr, toSx(midx + offX), toSy(midy + offY), "\\vec{AB}", COL.yellow, "center");
   }
 
-  // draggable points
-  function drawPt(host, pt, color, label){
+  // draggable points: position uses display (smooth lerp), label uses target (snapped int)
+  function drawPt(host, dispPt, tgtPt, color, label){
     var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    c.setAttribute("cx", toSx(pt.x)); c.setAttribute("cy", toSy(pt.y));
+    c.setAttribute("cx", toSx(dispPt.x)); c.setAttribute("cy", toSy(dispPt.y));
     c.setAttribute("r", 7); c.setAttribute("fill", color);
     c.setAttribute("stroke", "#0b1118"); c.setAttribute("stroke-width", 1.5);
     c.setAttribute("class", "handle"); c.style.color = color;
     host.appendChild(c);
-    // coord label, slightly offset
-    svgKaTeXLabel(host, toSx(pt.x) + 14, toSy(pt.y) - 14,
-      label + "(" + pt.x + ", " + pt.y + ")", color, "center");
+    svgKaTeXLabel(host, toSx(dispPt.x) + 14, toSy(dispPt.y) - 14,
+      label + "(" + tgtPt.x + ", " + tgtPt.y + ")", color, "center");
   }
-  drawPt(gPts, D.A, COL.blue, "A");
-  drawPt(gPts, D.B, COL.pink, "B");
+  drawPt(gPts, D.A, P.A, COL.blue, "A");
+  drawPt(gPts, D.B, P.B, COL.pink, "B");
 }
 
 function fmtInt(v){ return String(Math.round(v)); }
 function renderColumn(){
   var el = document.getElementById("col-display");
   el.innerHTML = "";
-  var dx = D.B.x - D.A.x, dy = D.B.y - D.A.y;
-  var tex = "\\vec{AB} = \\begin{pmatrix} {\\color{#00abfa}" + fmtInt(dx) + "} \\\\ {\\color{#ff822c}" + fmtInt(dy) + "} \\end{pmatrix}";
+  // Use TARGET (P) values for the readout so the column never lags through fractions.
+  var dx = P.B.x - P.A.x, dy = P.B.y - P.A.y;
+  var tex = "\\vec{AB} = \\begin{pmatrix} {\\color{#00abfa}" + dx + "} \\\\ {\\color{#ff822c}" + dy + "} \\end{pmatrix}";
   tryRender(el, tex);
 }
 

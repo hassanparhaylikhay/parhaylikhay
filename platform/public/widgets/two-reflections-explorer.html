@@ -292,12 +292,14 @@ function drawScene(){
   drawHandle(gH, D.M2.p1, COL.green);
   drawHandle(gH, D.M2.p2, COL.green);
 
-  // equivalent and centre dot
-  var eq = composeReflections(D.M1, D.M2);
-  renderEquivalent(eq);
-  if (eq.kind === "rotation" && eq.centre){
+  // Centre dot follows the lerping mirrors (visual), but the readout text
+  // uses the snapped target so it doesn't show diabolical decimals mid-flight.
+  var eqDisp = composeReflections(D.M1, D.M2);
+  var eqText = composeReflections(P.M1, P.M2);
+  renderEquivalent(eqText);
+  if (eqDisp.kind === "rotation" && eqDisp.centre){
     var dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    dot.setAttribute("cx", toSx(eq.centre.x)); dot.setAttribute("cy", toSy(eq.centre.y));
+    dot.setAttribute("cx", toSx(eqDisp.centre.x)); dot.setAttribute("cy", toSy(eqDisp.centre.y));
     dot.setAttribute("r", 5); dot.setAttribute("fill", COL.blue);
     dot.setAttribute("stroke", "#0b1118"); dot.setAttribute("stroke-width", 1.5);
     gC.appendChild(dot);

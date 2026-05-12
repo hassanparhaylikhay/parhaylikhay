@@ -263,12 +263,13 @@ function fmtNum(v){
 function renderMS(){
   var el = document.getElementById("eq-display");
   el.innerHTML = "";
-  var deg = Math.round(D.angle);
+  // Use TARGET (P) values so the readout snaps with the user, not the spring.
+  var deg = Math.round(P.angle);
   var dir = deg >= 0 ? "anticlockwise" : "clockwise";
   if (deg === 0){
-    tryRender(el, "\\text{Rotation, } 0° \\text{, centre } (" + fmtNum(D.cx) + ", " + fmtNum(D.cy) + ")");
+    tryRender(el, "\\text{Rotation, } 0° \\text{, centre } (" + fmtNum(P.cx) + ", " + fmtNum(P.cy) + ")");
   } else {
-    tryRender(el, "\\text{Rotation, } " + Math.abs(deg) + "° \\text{ " + dir + ", centre } (" + fmtNum(D.cx) + ", " + fmtNum(D.cy) + ")");
+    tryRender(el, "\\text{Rotation, } " + Math.abs(deg) + "° \\text{ " + dir + ", centre } (" + fmtNum(P.cx) + ", " + fmtNum(P.cy) + ")");
   }
 }
 

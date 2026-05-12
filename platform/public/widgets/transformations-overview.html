@@ -668,23 +668,24 @@ function fmtNum(v){
 function renderMarkScheme(){
   var body = document.getElementById("ms-body");
   body.innerHTML = "";
+  // Use TARGET (P) values so the readout snaps with the user, not the spring.
   var tex = "";
   if (mode === "translate"){
-    tex = "\\text{Translation by } \\begin{pmatrix} " + fmtNum(D.T.tx) + " \\\\ " + fmtNum(D.T.ty) + " \\end{pmatrix}";
+    tex = "\\text{Translation by } \\begin{pmatrix} " + fmtNum(P.T.tx) + " \\\\ " + fmtNum(P.T.ty) + " \\end{pmatrix}";
   } else if (mode === "reflect"){
-    var eq = mirrorEquationFromLine(D.R.p1, D.R.p2);
+    var eq = mirrorEquationFromLine(P.R.p1, P.R.p2);
     tex = "\\text{Reflection in } " + eq;
   } else if (mode === "rotate"){
-    var deg = Math.round(D.ROT.angle);
+    var deg = Math.round(P.ROT.angle);
     var dir = deg >= 0 ? "anticlockwise" : "clockwise";
     if (deg === 0) dir = "(no rotation)";
     var degT = Math.abs(deg);
     var msg = degT === 0
-      ? "\\text{Rotation, } 0° \\text{, centre } (" + fmtNum(D.ROT.cx) + ", " + fmtNum(D.ROT.cy) + ")"
-      : "\\text{Rotation, } " + degT + "° \\text{ " + dir + ", centre } (" + fmtNum(D.ROT.cx) + ", " + fmtNum(D.ROT.cy) + ")";
+      ? "\\text{Rotation, } 0° \\text{, centre } (" + fmtNum(P.ROT.cx) + ", " + fmtNum(P.ROT.cy) + ")"
+      : "\\text{Rotation, } " + degT + "° \\text{ " + dir + ", centre } (" + fmtNum(P.ROT.cx) + ", " + fmtNum(P.ROT.cy) + ")";
     tex = msg;
   } else if (mode === "enlarge"){
-    tex = "\\text{Enlargement, scale factor } " + fmtNum(D.ENL.k) + ", \\text{ centre } (" + fmtNum(D.ENL.cx) + ", " + fmtNum(D.ENL.cy) + ")";
+    tex = "\\text{Enlargement, scale factor } " + fmtNum(P.ENL.k) + ", \\text{ centre } (" + fmtNum(P.ENL.cx) + ", " + fmtNum(P.ENL.cy) + ")";
   }
   tryRender(body, tex);
 }

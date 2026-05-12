@@ -255,7 +255,8 @@ function fmtInt(v){ return String(Math.round(v)); }
 function renderMS(){
   var el = document.getElementById("eq-display");
   el.innerHTML = "";
-  tryRender(el, "\\text{Enlargement, scale factor } " + fmtK(D.k) + ",\\ \\text{centre } (" + fmtInt(D.cx) + ", " + fmtInt(D.cy) + ")");
+  // Use TARGET (P) values so the readout snaps with the user, not the spring.
+  tryRender(el, "\\text{Enlargement, scale factor } " + fmtK(P.k) + ",\\ \\text{centre } (" + fmtInt(P.cx) + ", " + fmtInt(P.cy) + ")");
 }
 
 // hit-test
