@@ -180,6 +180,69 @@ var PRESETS = {
       }
     ]
   },
+  "7p2-p3-parallel": {
+    title: "WORKED EXAMPLE · SHOW TWO VECTORS ARE PARALLEL",
+    obj: [], img: [], labels: [],
+    range: { xmin:-1, xmax:8, ymin:-1, ymax:10 },
+    steps: [
+      {
+        tag: "STEP 1 · WHAT WE'RE GIVEN",
+        lines: [
+          "$\\mathbf{a} = \\begin{pmatrix} 2 \\\\ 3 \\end{pmatrix}$",
+          "$\\mathbf{c} = \\begin{pmatrix} 6 \\\\ 9 \\end{pmatrix}$",
+          "Write $\\mathbf{c}$ as $k\\mathbf{a}$ for some number $k$, and state how $\\mathbf{a}$ and $\\mathbf{c}$ are related."
+        ],
+        overlays: [
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:2, y:3}, color: "blue", label: "\\mathbf{a}" },
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:6, y:9}, color: "yellow", label: "\\mathbf{c}" }
+        ]
+      },
+      {
+        tag: "STEP 2 · COMPARE THE TOP NUMBERS",
+        lines: [
+          "Top of $\\mathbf{c}$ $= 6$. Top of $\\mathbf{a}$ $= 2$.",
+          "$6 \\div 2 = 3$.",
+          "If $\\mathbf{c} = k\\mathbf{a}$, then $k = 3$."
+        ],
+        overlays: [
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:2, y:3}, color: "blue", label: "\\mathbf{a}" },
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:6, y:9}, color: "yellow", label: "\\mathbf{c}" }
+        ]
+      },
+      {
+        tag: "STEP 3 · CHECK THE BOTTOM NUMBERS MATCH",
+        lines: [
+          "Bottom of $\\mathbf{c}$ $= 9$. Bottom of $\\mathbf{a}$ $= 3$.",
+          "$9 \\div 3 = 3$. Same ratio.",
+          "Both components agree on $k = 3$, so we can write $\\mathbf{c} = 3\\mathbf{a}$."
+        ],
+        overlays: [
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:2, y:3}, color: "blue", label: "\\mathbf{a}" },
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:6, y:9}, color: "yellow", label: "\\mathbf{c}" }
+        ]
+      },
+      {
+        tag: "STEP 4 · STATE THE RELATIONSHIP",
+        lines: [
+          "Because $\\mathbf{c} = 3\\mathbf{a}$, the two vectors point in the same direction.",
+          "$\\mathbf{c}$ is parallel to $\\mathbf{a}$, and three times as long."
+        ],
+        overlays: [
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:2, y:3}, color: "blue", label: "\\mathbf{a}" },
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:6, y:9}, color: "yellow", label: "\\mathbf{c}" }
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\boxed{\\mathbf{c} = 3\\mathbf{a}; \\ \\mathbf{c} \\text{ is parallel to } \\mathbf{a}}",
+        marks: "[M1 for $k = 3$ from one component check; A1 for $\\mathbf{c} = 3\\mathbf{a}$; B1 for stating parallel]",
+        overlays: [
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:2, y:3}, color: "blue", label: "\\mathbf{a}" },
+          { type: "vectorArrow", from: {x:0, y:0}, to: {x:6, y:9}, color: "yellow", label: "\\mathbf{c}" }
+        ]
+      }
+    ]
+  },
   "7p2-p2-add-subtract": {
     title: "WORKED EXAMPLE · ADD AND SUBTRACT VECTORS",
     obj: [], img: [], labels: [],
