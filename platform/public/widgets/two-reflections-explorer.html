@@ -25,7 +25,9 @@
   .preset-btn.m1.active { background:rgba(255,240,103,0.06); color:#fff067; border-color:#fff067; }
   .preset-btn.m2.active { background:rgba(15,238,137,0.06); color:#0fee89; border-color:#0fee89; }
 
-  #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; }
+  #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:default; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
   .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
   .lbl-host .katex { font-size:1em; }
 
@@ -33,13 +35,19 @@
   .ms-strip .tag { font-family:'Geist Mono',monospace; font-size:10px; color:#00abfa; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; }
   .ms-strip .eq { font-size:15px; color:#f0eeea; }
   .ms-strip .eq .katex { font-size:1em; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
+  }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
 </style>
 </head>
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
     <span class="step-title">TWO REFLECTIONS</span>
-    <span class="meta">pick a first mirror, then a second</span>
+    <span class="meta">drag the handles or pick a preset</span>
   </div>
 
   <div class="picker">
@@ -60,6 +68,7 @@
     <g id="g-inter"></g>
     <g id="g-final"></g>
     <g id="g-centre"></g>
+    <g id="g-handles"></g>
   </svg>
 
   <div class="ms-strip">
@@ -88,20 +97,39 @@ var ORIGIN_PX = {
 };
 function toSx(x){ return ORIGIN_PX.x + x * UNIT; }
 function toSy(y){ return ORIGIN_PX.y - y * UNIT; }
+function fromSx(sx){ return (sx - ORIGIN_PX.x) / UNIT; }
+function fromSy(sy){ return (ORIGIN_PX.y - sy) / UNIT; }
+function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+function clampMath(p){ return { x: clamp(p.x, X_MIN + 0.5, X_MAX - 0.5), y: clamp(p.y, Y_MIN + 0.5, Y_MAX - 0.5) }; }
+function snapHalf(v){ return Math.round(v * 2) / 2; }
 
 var OBJ = [ {x:2,y:1}, {x:4,y:1}, {x:2,y:2} ];
 var LABELS = ['A','B','C'];
 
-// Mirrors (six presets)
-var MIRRORS = {
-  "y0":  { label: "y = 0", p1:{x:-6,y:0}, p2:{x:6,y:0} },
+// preset definitions
+var PRESETS = {
+  "y0":  { label: "y = 0", p1:{x:-5,y:0}, p2:{x:5,y:0} },
   "x0":  { label: "x = 0", p1:{x:0,y:-4}, p2:{x:0,y:4} },
   "yx":  { label: "y = x", p1:{x:-4,y:-4}, p2:{x:4,y:4} },
   "ynx": { label: "y = -x", p1:{x:-4,y:4}, p2:{x:4,y:-4} },
-  "y1":  { label: "y = 1", p1:{x:-6,y:1}, p2:{x:6,y:1} },
+  "y1":  { label: "y = 1", p1:{x:-5,y:1}, p2:{x:5,y:1} },
   "x2":  { label: "x = 2", p1:{x:2,y:-4}, p2:{x:2,y:4} }
 };
-var M1KEY = "y0", M2KEY = "yx";
+
+// State: target (P) and display (D), each with two mirrors.
+// presetKey is null whenever user drags a handle; set whenever a preset chip is clicked.
+var P = {
+  M1: { p1: clone(PRESETS.y0.p1), p2: clone(PRESETS.y0.p2), preset: "y0" },
+  M2: { p1: clone(PRESETS.yx.p1), p2: clone(PRESETS.yx.p2), preset: "yx" }
+};
+var D = {
+  M1: { p1: clone(PRESETS.y0.p1), p2: clone(PRESETS.y0.p2) },
+  M2: { p1: clone(PRESETS.yx.p1), p2: clone(PRESETS.yx.p2) }
+};
+function clone(p){ return { x: p.x, y: p.y }; }
+
+var SPRING = 0.22, EPS = 0.005;
+var raf = null;
 
 // math
 function reflectPtLine(p, a, b){
@@ -119,6 +147,7 @@ function lineIntersection(a1, a2, b1, b2){
   var t = ((x1-x3)*(y3-y4) - (y1-y3)*(x3-x4)) / denom;
   return { x: x1 + t*(x2-x1), y: y1 + t*(y2-y1) };
 }
+function dist2(a, b){ var dx = a.x - b.x, dy = a.y - b.y; return dx*dx + dy*dy; }
 
 // KaTeX
 function tryRender(target, tex){
@@ -182,16 +211,16 @@ function drawGridAxes(){
   }
 }
 
-function drawMirror(g, M, color){
-  var dx = M.p2.x - M.p1.x, dy = M.p2.y - M.p1.y;
+function drawMirrorLine(g, a, b, color){
+  var dx = b.x - a.x, dy = b.y - a.y;
   var len = Math.sqrt(dx*dx + dy*dy);
   if (len < 0.001) return;
   var ux = dx/len, uy = dy/len, ext = 16;
-  var a = { x: M.p1.x - ext*ux, y: M.p1.y - ext*uy };
-  var b = { x: M.p1.x + ext*ux, y: M.p1.y + ext*uy };
+  var p = { x: a.x - ext * ux, y: a.y - ext * uy };
+  var q = { x: a.x + ext * ux, y: a.y + ext * uy };
   var line = document.createElementNS("http://www.w3.org/2000/svg","line");
-  line.setAttribute("x1", toSx(a.x)); line.setAttribute("y1", toSy(a.y));
-  line.setAttribute("x2", toSx(b.x)); line.setAttribute("y2", toSy(b.y));
+  line.setAttribute("x1", toSx(p.x)); line.setAttribute("y1", toSy(p.y));
+  line.setAttribute("x2", toSx(q.x)); line.setAttribute("y2", toSy(q.y));
   line.setAttribute("stroke", color); line.setAttribute("stroke-width", 1.8);
   line.setAttribute("stroke-dasharray", "6 5");
   line.setAttribute("opacity", 0.85);
@@ -217,29 +246,35 @@ function drawVertexDot(g, pt, color, label, side){
   svgKaTeXLabel(g, toSx(pt.x) + ox, toSy(pt.y) - 10, label, color, side === "right" ? "left" : "right");
 }
 
-function drawScene(){
-  var M1 = MIRRORS[M1KEY], M2 = MIRRORS[M2KEY];
+function drawHandle(g, pt, fillCol, ringCol){
+  var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("cx", toSx(pt.x)); c.setAttribute("cy", toSy(pt.y));
+  c.setAttribute("r", 6.5); c.setAttribute("fill", fillCol);
+  c.setAttribute("stroke", ringCol || "#0b1118");
+  c.setAttribute("stroke-width", ringCol ? 1.5 : 1.5);
+  c.setAttribute("class", "handle"); c.style.color = fillCol;
+  g.appendChild(c);
+}
 
+function drawScene(){
   var gM = document.getElementById("g-mirrors");
   var gO = document.getElementById("g-object");
   var gIn = document.getElementById("g-inter");
   var gF = document.getElementById("g-final");
   var gC = document.getElementById("g-centre");
-  clear(gM); clear(gO); clear(gIn); clear(gF); clear(gC);
+  var gH = document.getElementById("g-handles");
+  clear(gM); clear(gO); clear(gIn); clear(gF); clear(gC); clear(gH);
 
-  drawMirror(gM, M1, COL.yellow);
-  drawMirror(gM, M2, COL.green);
+  drawMirrorLine(gM, D.M1.p1, D.M1.p2, COL.yellow);
+  drawMirrorLine(gM, D.M2.p1, D.M2.p2, COL.green);
 
-  // intermediate after first reflection
-  var INT = OBJ.map(function(p){ return reflectPtLine(p, M1.p1, M1.p2); });
-  // final after second reflection
-  var FIN = INT.map(function(p){ return reflectPtLine(p, M2.p1, M2.p2); });
+  var INT = OBJ.map(function(p){ return reflectPtLine(p, D.M1.p1, D.M1.p2); });
+  var FIN = INT.map(function(p){ return reflectPtLine(p, D.M2.p1, D.M2.p2); });
 
-  // intermediate is drawn faded + dashed (transitional)
   drawPoly(gIn, INT, "rgba(255,130,44,0.06)", COL.orange, 1.6, true);
-  // object and final solid
   drawPoly(gO, OBJ, "rgba(0,171,250,0.10)", COL.blue, 2);
   drawPoly(gF, FIN, "rgba(255,70,112,0.10)", COL.pink, 2);
+
   OBJ.forEach(function(p,i){ drawVertexDot(gO, p, COL.blue, LABELS[i]); });
   INT.forEach(function(p,i){
     var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
@@ -251,8 +286,14 @@ function drawScene(){
   });
   FIN.forEach(function(p,i){ drawVertexDot(gF, p, COL.pink, LABELS[i] + "''", "right"); });
 
-  // single equivalent
-  var eq = composeReflections(M1, M2);
+  // 4 mirror handles
+  drawHandle(gH, D.M1.p1, COL.yellow);
+  drawHandle(gH, D.M1.p2, COL.yellow);
+  drawHandle(gH, D.M2.p1, COL.green);
+  drawHandle(gH, D.M2.p2, COL.green);
+
+  // equivalent and centre dot
+  var eq = composeReflections(D.M1, D.M2);
   renderEquivalent(eq);
   if (eq.kind === "rotation" && eq.centre){
     var dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
@@ -268,13 +309,11 @@ function composeReflections(M1, M2){
   var d2 = { x: M2.p2.x - M2.p1.x, y: M2.p2.y - M2.p1.y };
   var cross = d1.x * d2.y - d2.x * d1.y;
   if (Math.abs(cross) < 1e-6){
-    // parallel → translation
     var p = OBJ[0];
     var q = reflectPtLine(p, M1.p1, M1.p2);
     var r = reflectPtLine(q, M2.p1, M2.p2);
     return { kind: "translation", tx: r.x - p.x, ty: r.y - p.y };
   }
-  // intersecting → rotation
   var centre = lineIntersection(M1.p1, M1.p2, M2.p1, M2.p2);
   var a1 = Math.atan2(d1.y, d1.x);
   var a2 = Math.atan2(d2.y, d2.x);
@@ -285,7 +324,12 @@ function composeReflections(M1, M2){
   return { kind: "rotation", centre: centre, angle: rotAngle };
 }
 
-function fmtInt(v){ return String(Math.round(v)); }
+function fmtInt(v){
+  // round to nearest int, but accept halves
+  var r = Math.round(v * 2) / 2;
+  if (Math.abs(r - Math.round(r)) < 0.05) return String(Math.round(r));
+  return r.toFixed(1);
+}
 function renderEquivalent(eq){
   var el = document.getElementById("eq-display");
   el.innerHTML = "";
@@ -295,33 +339,119 @@ function renderEquivalent(eq){
     var deg = Math.round(eq.angle);
     var dir = deg >= 0 ? "anticlockwise" : "clockwise";
     if (deg === 0){
-      tryRender(el, "\\text{No rotation (identity)}");
+      tryRender(el, "\\text{Identity (no overall change)}");
     } else {
       tryRender(el, "\\text{Rotation, } " + Math.abs(deg) + "° \\text{ " + dir + ", centre } (" + fmtInt(eq.centre.x) + ", " + fmtInt(eq.centre.y) + ")");
     }
   }
 }
 
+// hit-test against display positions
+function hitTest(m){
+  var H2 = 0.6 * 0.6;
+  if (dist2(m, D.M1.p1) < H2) return { kind: "M1.p1" };
+  if (dist2(m, D.M1.p2) < H2) return { kind: "M1.p2" };
+  if (dist2(m, D.M2.p1) < H2) return { kind: "M2.p1" };
+  if (dist2(m, D.M2.p2) < H2) return { kind: "M2.p2" };
+  return null;
+}
+function applyDrag(info, m){
+  var s = clampMath({ x: snapHalf(m.x), y: snapHalf(m.y) });
+  if (info.kind === "M1.p1"){ P.M1.p1 = s; P.M1.preset = null; }
+  else if (info.kind === "M1.p2"){ P.M1.p2 = s; P.M1.preset = null; }
+  else if (info.kind === "M2.p1"){ P.M2.p1 = s; P.M2.preset = null; }
+  else if (info.kind === "M2.p2"){ P.M2.p2 = s; P.M2.preset = null; }
+  updateActiveChips(); kick();
+}
+
+// pointer dispatch
+var stage = document.getElementById("stage");
+var dragInfo = null;
+function svgPt(e){
+  var pt = stage.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(stage.getScreenCTM().inverse());
+}
+function evMath(e){ var sp = svgPt(e); return { x: fromSx(sp.x), y: fromSy(sp.y) }; }
+stage.addEventListener("pointerdown", function(e){
+  var info = hitTest(evMath(e));
+  if (!info) return;
+  e.preventDefault();
+  dragInfo = info;
+  stage.setPointerCapture(e.pointerId);
+  stage.classList.add("grabbing");
+});
+stage.addEventListener("pointermove", function(e){
+  if (!dragInfo){
+    var hit = hitTest(evMath(e));
+    if (hit) stage.classList.add("hover-grab"); else stage.classList.remove("hover-grab");
+    return;
+  }
+  e.preventDefault();
+  applyDrag(dragInfo, evMath(e));
+});
+function endDrag(e){
+  if (!dragInfo) return;
+  dragInfo = null;
+  try { stage.releasePointerCapture(e.pointerId); } catch(_){}
+  stage.classList.remove("grabbing");
+}
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover-grab"); });
+
+// spring
+function settled(){
+  return Math.abs(P.M1.p1.x - D.M1.p1.x) < EPS && Math.abs(P.M1.p1.y - D.M1.p1.y) < EPS
+      && Math.abs(P.M1.p2.x - D.M1.p2.x) < EPS && Math.abs(P.M1.p2.y - D.M1.p2.y) < EPS
+      && Math.abs(P.M2.p1.x - D.M2.p1.x) < EPS && Math.abs(P.M2.p1.y - D.M2.p1.y) < EPS
+      && Math.abs(P.M2.p2.x - D.M2.p2.x) < EPS && Math.abs(P.M2.p2.y - D.M2.p2.y) < EPS;
+}
+function lerpPt(t, d){ d.x += (t.x - d.x) * SPRING; d.y += (t.y - d.y) * SPRING; }
+function step(){
+  lerpPt(P.M1.p1, D.M1.p1); lerpPt(P.M1.p2, D.M1.p2);
+  lerpPt(P.M2.p1, D.M2.p1); lerpPt(P.M2.p2, D.M2.p2);
+  drawScene();
+  if (!settled()) raf = requestAnimationFrame(step);
+  else {
+    raf = null;
+    D.M1.p1 = clone(P.M1.p1); D.M1.p2 = clone(P.M1.p2);
+    D.M2.p1 = clone(P.M2.p1); D.M2.p2 = clone(P.M2.p2);
+    drawScene();
+  }
+}
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+
 // pickers
-function makePicker(hostId, klass, getKey, setKey){
+function makePicker(hostId, klass, mirrorObj){
   var host = document.getElementById(hostId);
   host.innerHTML = "";
-  Object.keys(MIRRORS).forEach(function(k){
+  Object.keys(PRESETS).forEach(function(k){
     var b = document.createElement("button");
-    b.className = "preset-btn " + klass + (getKey() === k ? " active" : "");
-    b.textContent = MIRRORS[k].label;
+    b.className = "preset-btn " + klass + (mirrorObj.preset === k ? " active" : "");
+    b.textContent = PRESETS[k].label;
     b.dataset.key = k;
     b.onclick = function(){
-      setKey(k);
-      host.querySelectorAll(".preset-btn").forEach(function(x){ x.classList.remove("active"); });
-      b.classList.add("active");
-      drawScene(); notifyHeight();
+      mirrorObj.preset = k;
+      mirrorObj.p1 = clone(PRESETS[k].p1);
+      mirrorObj.p2 = clone(PRESETS[k].p2);
+      updateActiveChips();
+      kick();
     };
     host.appendChild(b);
   });
 }
-makePicker("picker-m1", "m1", function(){ return M1KEY; }, function(v){ M1KEY = v; });
-makePicker("picker-m2", "m2", function(){ return M2KEY; }, function(v){ M2KEY = v; });
+function updateActiveChips(){
+  ["picker-m1", "picker-m2"].forEach(function(hostId, idx){
+    var mirror = idx === 0 ? P.M1 : P.M2;
+    document.querySelectorAll("#" + hostId + " .preset-btn").forEach(function(b){
+      if (b.dataset.key === mirror.preset) b.classList.add("active");
+      else b.classList.remove("active");
+    });
+  });
+}
+makePicker("picker-m1", "m1", P.M1);
+makePicker("picker-m2", "m2", P.M2);
 
 function notifyHeight(){
   var h = document.getElementById("wrap").offsetHeight + 30;
