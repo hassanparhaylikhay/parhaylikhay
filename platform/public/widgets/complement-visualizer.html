@@ -11,28 +11,34 @@
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 16px 16px; }
-  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 20px 18px; }
   .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:14px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
   .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
 
+  .headline { display:flex; align-items:baseline; justify-content:center; gap:14px; flex-wrap:wrap; margin: 8px 0 16px; padding: 14px 8px; }
+  .headline .col { display:flex; align-items:baseline; gap:8px; }
+  .headline .big { font-family:'Geist Mono',monospace; font-size:42px; font-weight:700; line-height:1; min-width:110px; transition: color 0.3s ease; display:flex; align-items:center; justify-content:center; }
+  .headline .big .katex { font-size:1em; }
+  .headline .big.pa  { color:#00abfa; justify-content:flex-end; }
+  .headline .big.pac { color:#ff4670; justify-content:flex-start; }
+  .headline .lab { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.5px; text-transform:uppercase; }
+  .headline .arrow { font-family:'Geist Mono',monospace; font-size:24px; color:#3a4a5a; padding:0 4px; }
+
   #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:default; }
   #stage.grabbing { cursor:grabbing; }
   #stage.hover-grab { cursor:grab; }
-  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; line-height:1; }
   .lbl-host .katex { font-size:1em; }
 
-  .readouts { display:flex; gap:10px; margin-top:12px; }
-  .readout { flex:1; padding:11px 12px; border-radius:8px; text-align:center; }
-  .readout .tag { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; margin-bottom:6px; opacity:0.85; }
-  .readout .val { font-size:16px; color:#f0eeea; line-height:1; min-height:22px; display:flex; align-items:center; justify-content:center; }
-  .readout .val .katex { font-size:1em; }
-  .readout.pa  { border:1px solid rgba(0,171,250,0.30); background:rgba(0,171,250,0.05); }
-  .readout.pa  .tag { color:#00abfa; }
-  .readout.pac { border:1px solid rgba(255,70,112,0.30); background:rgba(255,70,112,0.05); }
-  .readout.pac .tag { color:#ff4670; }
-  .readout.sum { border:1px solid rgba(15,238,137,0.30); background:rgba(15,238,137,0.05); }
-  .readout.sum .tag { color:#0fee89; }
+  .actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; justify-content:center; }
+  .act-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:6px 12px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; }
+  .act-btn:hover { color:#fff067; border-color:#3a4a5a; }
+  .act-btn.active { color:#fff067; border-color:#fff067; background:rgba(255,240,103,0.06); }
+
+  .footer { font-family:'Geist Mono',monospace; font-size:12px; color:#3a4a5a; text-align:center; margin-top:14px; line-height:1.5; }
+  .footer .id { color:#0fee89; font-weight:600; }
+  .footer .id .katex { font-size:1em; }
 
   @keyframes pulse-glow {
     0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
@@ -45,29 +51,37 @@
 <div class="wrap" id="wrap">
   <div class="head">
     <span class="step-title">EVENT A AND ITS COMPLEMENT</span>
-    <span class="meta" id="meta">drag the divider</span>
+    <span class="meta">drag, or tap a snap value</span>
   </div>
 
-  <svg id="stage" viewBox="0 0 480 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <div class="headline">
+    <span class="col">
+      <span class="big pa" id="pa-display"></span>
+      <span class="lab">P(A)</span>
+    </span>
+    <span class="arrow">+</span>
+    <span class="col">
+      <span class="big pac" id="pac-display"></span>
+      <span class="lab">P(A')</span>
+    </span>
+    <span class="arrow">=</span>
+    <span class="col">
+      <span class="big" style="color:#0fee89" id="sum-display">1</span>
+      <span class="lab">always</span>
+    </span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 140" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
     <g id="g-bg"></g>
     <g id="g-regions"></g>
     <g id="g-labels"></g>
     <g id="g-divider"></g>
   </svg>
 
-  <div class="readouts">
-    <div class="readout pa">
-      <div class="tag">P(A)</div>
-      <div class="val" id="r-pa"></div>
-    </div>
-    <div class="readout pac">
-      <div class="tag">P(A')</div>
-      <div class="val" id="r-pac"></div>
-    </div>
-    <div class="readout sum">
-      <div class="tag">P(A) + P(A')</div>
-      <div class="val" id="r-sum"></div>
-    </div>
+  <div class="actions" id="snap-actions"></div>
+
+  <div class="footer">
+    <span class="id" id="identity"></span>
   </div>
 </div>
 
@@ -79,11 +93,30 @@ var COL = {
   faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
 };
 
-var SVG_W = 480, SVG_H = 200;
-var BOX_LEFT = 40, BOX_RIGHT = 440, BOX_TOP = 40, BOX_BOT = 160;
+var SVG_W = 480, SVG_H = 140;
+var BOX_LEFT = 30, BOX_RIGHT = 450, BOX_TOP = 16, BOX_BOT = 116;
 var BOX_W = BOX_RIGHT - BOX_LEFT;
-var P = { p: 0.4 };
-var D = { p: 0.4 };
+
+var SNAPS = [
+  { n:0, d:1, label:"0"        },
+  { n:1, d:4, label:"\\tfrac{1}{4}" },
+  { n:1, d:3, label:"\\tfrac{1}{3}" },
+  { n:2, d:5, label:"\\tfrac{2}{5}" },
+  { n:1, d:2, label:"\\tfrac{1}{2}" },
+  { n:3, d:5, label:"\\tfrac{3}{5}" },
+  { n:2, d:3, label:"\\tfrac{2}{3}" },
+  { n:3, d:4, label:"\\tfrac{3}{4}" },
+  { n:1, d:1, label:"1"        }
+];
+// Broader snap pool the divider can rest on (richer than the buttons)
+var FRACTIONS = [
+  {n:0, d:1}, {n:1, d:10}, {n:1, d:5}, {n:1, d:4}, {n:3, d:10},
+  {n:1, d:3}, {n:2, d:5}, {n:1, d:2}, {n:3, d:5}, {n:2, d:3},
+  {n:7, d:10}, {n:3, d:4}, {n:4, d:5}, {n:9, d:10}, {n:1, d:1}
+];
+
+var P = { p: 2/5 };
+var D = { p: 2/5 };
 var SPRING = 0.22, EPS = 0.0008;
 var raf = null;
 
@@ -93,28 +126,22 @@ function tryRender(target, tex){
     catch(e){ target.textContent = tex; }
   } else setTimeout(function(){ tryRender(target, tex); }, 50);
 }
-function svgKaTeXLabel(parent, x, y, tex, color, align){
+function svgKaTeXLabel(parent, x, y, tex, color, align, width){
   align = align || "center";
+  width = width || 100;
   var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
-  fo.setAttribute("x", x - 60); fo.setAttribute("y", y - 12);
-  fo.setAttribute("width", 120); fo.setAttribute("height", 24);
+  fo.setAttribute("x", x - width/2); fo.setAttribute("y", y - 11);
+  fo.setAttribute("width", width); fo.setAttribute("height", 22);
   fo.style.overflow = "visible"; fo.style.pointerEvents = "none";
   var div = document.createElement("div");
-  div.style.height = "24px"; div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.height = "22px"; div.style.display = "flex"; div.style.alignItems = "center";
   div.style.justifyContent = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
   div.className = "lbl-host"; div.style.color = color || COL.off;
   fo.appendChild(div); parent.appendChild(fo);
   tryRender(div, tex);
 }
 function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
-function gcd(a, b){ a = Math.abs(a); b = Math.abs(b); while (b){ var t = b; b = a % b; a = t; } return a; }
 
-// snap to common fractions
-var FRACTIONS = [
-  {n:0, d:1}, {n:1, d:10}, {n:1, d:5}, {n:1, d:4}, {n:3, d:10},
-  {n:1, d:3}, {n:2, d:5}, {n:1, d:2}, {n:3, d:5}, {n:2, d:3},
-  {n:7, d:10}, {n:3, d:4}, {n:4, d:5}, {n:9, d:10}, {n:1, d:1}
-];
 function snapFraction(p){
   var best = FRACTIONS[0], dBest = Math.abs(p - 0);
   for (var i = 1; i < FRACTIONS.length; i++){
@@ -125,10 +152,19 @@ function snapFraction(p){
   return best;
 }
 
+function matchSnapIndex(p){
+  // Return the index of the snap button whose value is closest to p, or -1 if none is exact
+  for (var i = 0; i < SNAPS.length; i++){
+    var v = SNAPS[i].n / SNAPS[i].d;
+    if (Math.abs(v - p) < 1e-6) return i;
+  }
+  return -1;
+}
+
+// ----- background -----
 function drawBackground(){
   var g = document.getElementById("g-bg");
   clear(g);
-  // outer rectangle (Ω, the sample space)
   var r = document.createElementNS("http://www.w3.org/2000/svg","rect");
   r.setAttribute("x", BOX_LEFT); r.setAttribute("y", BOX_TOP);
   r.setAttribute("width", BOX_W); r.setAttribute("height", BOX_BOT - BOX_TOP);
@@ -136,9 +172,8 @@ function drawBackground(){
   r.setAttribute("fill", "none");
   r.setAttribute("stroke", "#3a4a5a"); r.setAttribute("stroke-width", 1.2);
   g.appendChild(r);
-  // Ω label, top-right
-  svgKaTeXLabel(g, BOX_RIGHT - 16, BOX_TOP - 16, "\\Omega", "#7a7875", "right");
-  svgKaTeXLabel(g, BOX_LEFT + 60, BOX_TOP - 16, "\\text{sample space (everything possible)}", "#3a4a5a", "left");
+  // Ω at top-right corner
+  svgKaTeXLabel(g, BOX_RIGHT - 12, BOX_TOP - 8, "\\Omega", "#7a7875", "right", 30);
 }
 
 function drawRegions(){
@@ -146,23 +181,19 @@ function drawRegions(){
   clear(g);
   var p = D.p;
   var x = BOX_LEFT + p * BOX_W;
-  // A on left (blue), A' on right (pink)
-  // A region (clipped path so corners follow the rounded box)
   if (p > 0.001){
-    var aPath = document.createElementNS("http://www.w3.org/2000/svg","path");
-    aPath.setAttribute("d", roundedLeft(BOX_LEFT, BOX_TOP, x - BOX_LEFT, BOX_BOT - BOX_TOP, 8));
-    aPath.setAttribute("fill", "rgba(0,171,250,0.22)");
-    g.appendChild(aPath);
+    var a = document.createElementNS("http://www.w3.org/2000/svg","path");
+    a.setAttribute("d", roundedLeft(BOX_LEFT, BOX_TOP, x - BOX_LEFT, BOX_BOT - BOX_TOP, 8));
+    a.setAttribute("fill", "rgba(0,171,250,0.22)");
+    g.appendChild(a);
   }
   if (p < 0.999){
-    var acPath = document.createElementNS("http://www.w3.org/2000/svg","path");
-    acPath.setAttribute("d", roundedRight(x, BOX_TOP, BOX_RIGHT - x, BOX_BOT - BOX_TOP, 8));
-    acPath.setAttribute("fill", "rgba(255,70,112,0.18)");
-    g.appendChild(acPath);
+    var ac = document.createElementNS("http://www.w3.org/2000/svg","path");
+    ac.setAttribute("d", roundedRight(x, BOX_TOP, BOX_RIGHT - x, BOX_BOT - BOX_TOP, 8));
+    ac.setAttribute("fill", "rgba(255,70,112,0.18)");
+    g.appendChild(ac);
   }
 }
-
-// rounded-left rectangle path (rounds top-left and bottom-left corners; right edge straight)
 function roundedLeft(x, y, w, h, r){
   r = Math.min(r, w, h / 2);
   return "M " + (x + r) + " " + y +
@@ -187,16 +218,13 @@ function drawLabels(){
   var g = document.getElementById("g-labels");
   clear(g);
   var p = D.p;
-  // A label centered in the A region
-  if (p > 0.07){
+  if (p > 0.08){
     var aMid = BOX_LEFT + (p * BOX_W) / 2;
-    svgKaTeXLabel(g, aMid, (BOX_TOP + BOX_BOT) / 2 - 6, "A", "#00abfa");
-    svgKaTeXLabel(g, aMid, (BOX_TOP + BOX_BOT) / 2 + 16, "\\text{event}", "#3a4a5a");
+    svgKaTeXLabel(g, aMid, (BOX_TOP + BOX_BOT) / 2, "A", "#00abfa", "center", 40);
   }
-  if (p < 0.93){
+  if (p < 0.92){
     var acMid = BOX_LEFT + p * BOX_W + ((1 - p) * BOX_W) / 2;
-    svgKaTeXLabel(g, acMid, (BOX_TOP + BOX_BOT) / 2 - 6, "A'", "#ff4670");
-    svgKaTeXLabel(g, acMid, (BOX_TOP + BOX_BOT) / 2 + 16, "\\text{not A}", "#3a4a5a");
+    svgKaTeXLabel(g, acMid, (BOX_TOP + BOX_BOT) / 2, "A'", "#ff4670", "center", 40);
   }
 }
 
@@ -204,51 +232,79 @@ function drawDivider(){
   var g = document.getElementById("g-divider");
   clear(g);
   var x = BOX_LEFT + D.p * BOX_W;
-  // vertical divider line (drag target)
   var l = document.createElementNS("http://www.w3.org/2000/svg","line");
   l.setAttribute("x1", x); l.setAttribute("x2", x);
-  l.setAttribute("y1", BOX_TOP - 8); l.setAttribute("y2", BOX_BOT + 8);
+  l.setAttribute("y1", BOX_TOP - 6); l.setAttribute("y2", BOX_BOT + 6);
   l.setAttribute("stroke", "#fff067"); l.setAttribute("stroke-width", 2);
   l.setAttribute("opacity", 0.85);
   g.appendChild(l);
-  // handle at middle
   var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
   c.setAttribute("cx", x); c.setAttribute("cy", (BOX_TOP + BOX_BOT) / 2);
-  c.setAttribute("r", 9);
+  c.setAttribute("r", 8);
   c.setAttribute("fill", "#fff067");
   c.setAttribute("stroke", "#0b1118"); c.setAttribute("stroke-width", 2);
   c.setAttribute("class", "handle"); c.style.color = "#fff067";
   g.appendChild(c);
 }
 
-function fmtFraction(p, hex){
+function fmtFraction(p){
   if (p === 0) return "0";
   if (p === 1) return "1";
   var fr = snapFraction(p);
-  if (fr.d === 1){
-    return "{\\color{" + hex + "}" + fr.n + "}";
-  }
-  return "{\\color{" + hex + "}\\dfrac{" + fr.n + "}{" + fr.d + "}}";
+  if (fr.d === 1) return String(fr.n);
+  return "\\dfrac{" + fr.n + "}{" + fr.d + "}";
 }
 
-function renderReadouts(){
+function renderHeadline(){
   var p = P.p;
-  var pa = document.getElementById("r-pa");
-  pa.innerHTML = "";
-  tryRender(pa, fmtFraction(p, "#00abfa"));
-  var pac = document.getElementById("r-pac");
-  pac.innerHTML = "";
-  tryRender(pac, fmtFraction(1 - p, "#ff4670"));
-  var sum = document.getElementById("r-sum");
-  sum.innerHTML = "";
-  tryRender(sum, "{\\color{#0fee89}1}");
+  var paEl = document.getElementById("pa-display");
+  var pacEl = document.getElementById("pac-display");
+  paEl.innerHTML = ""; pacEl.innerHTML = "";
+  tryRender(paEl, fmtFraction(p));
+  tryRender(pacEl, fmtFraction(1 - p));
+}
+
+function buildSnapActions(){
+  var host = document.getElementById("snap-actions");
+  host.innerHTML = "";
+  SNAPS.forEach(function(s, i){
+    var b = document.createElement("button");
+    b.className = "act-btn";
+    b.dataset.idx = i;
+    var span = document.createElement("span");
+    tryRender(span, s.label);
+    b.appendChild(span);
+    b.addEventListener("click", function(){
+      P.p = s.n / s.d;
+      kick();
+    });
+    host.appendChild(b);
+  });
+}
+
+function paintActiveSnap(){
+  var idx = matchSnapIndex(P.p);
+  document.querySelectorAll(".act-btn").forEach(function(b, i){
+    b.classList.toggle("active", i === idx);
+  });
+}
+
+function renderIdentity(){
+  var p = P.p;
+  var fEl = document.getElementById("identity");
+  fEl.innerHTML = "";
+  var paTex = fmtFraction(p);
+  var pacTex = fmtFraction(1 - p);
+  tryRender(fEl, "{\\color{#00abfa}P(A)} + {\\color{#ff4670}P(A')} = " + paTex + " + " + pacTex + " = {\\color{#0fee89}1}");
 }
 
 function refresh(){
   drawRegions();
   drawLabels();
   drawDivider();
-  renderReadouts();
+  renderHeadline();
+  renderIdentity();
+  paintActiveSnap();
 }
 
 // drag
@@ -326,6 +382,7 @@ function notifyHeight(){
 window.addEventListener("resize", notifyHeight);
 
 drawBackground();
+buildSnapActions();
 refresh();
 setTimeout(notifyHeight, 200);
 </script>

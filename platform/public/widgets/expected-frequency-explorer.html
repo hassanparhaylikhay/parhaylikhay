@@ -11,62 +11,79 @@
   *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
   html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
   body { padding:14px 16px 16px; }
-  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 20px 18px; }
   .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:14px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
   .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
 
-  .panel-tag { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px; margin-top:10px; }
+  .headline { display:flex; align-items:baseline; justify-content:center; gap:10px; flex-wrap:wrap; margin:8px 0 16px; padding:14px 8px; }
+  .headline .col { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .headline .big { font-family:'Geist Mono',monospace; font-size:42px; font-weight:700; line-height:1; transition: color 0.3s ease; display:flex; align-items:center; justify-content:center; }
+  .headline .big .katex { font-size:1em; }
+  .headline .big.p   { color:#00abfa; min-width:80px; }
+  .headline .big.n   { color:#fff067; min-width:80px; }
+  .headline .big.exp { color:#0fee89; min-width:80px; }
+  .headline .lab { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.5px; text-transform:uppercase; }
+  .headline .op { font-family:'Geist Mono',monospace; font-size:24px; color:#3a4a5a; padding:0 4px; align-self:center; }
 
-  #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:default; }
-  #stage.grabbing { cursor:grabbing; }
-  #stage.hover-grab { cursor:grab; }
-  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
-  .lbl-host .katex { font-size:1em; }
+  .snap-row { display:flex; gap:5px; flex-wrap:wrap; justify-content:center; margin-bottom:8px; align-items:center; }
+  .snap-row .label-lead { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.5px; text-transform:uppercase; margin-right:6px; }
+  .snap-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:5px 10px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; min-width:42px; display:flex; align-items:center; justify-content:center; }
+  .snap-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
+  .snap-btn.active.p   { color:#00abfa; border-color:#00abfa; background:rgba(0,171,250,0.08); }
+  .snap-btn.active.n   { color:#fff067; border-color:#fff067; background:rgba(255,240,103,0.08); }
+  .snap-btn .katex { font-size:1em; }
 
-  .formula-strip { display:flex; align-items:center; gap:14px; padding:13px 16px; margin-top:14px; background:rgba(15,238,137,0.04); border:1px solid rgba(15,238,137,0.20); border-radius:8px; }
-  .formula-strip .tag { font-family:'Geist Mono',monospace; font-size:10px; color:#0fee89; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; flex:0 0 auto; }
-  .formula-strip .eq { font-size:19px; color:#f0eeea; }
-  .formula-strip .eq .katex { font-size:1em; }
-
-  .dots-grid { display:grid; gap:4px; margin-top:10px; padding:12px; background:#070b10; border:1px solid #141e2a; border-radius:8px; min-height:80px; }
-  .dot { width:10px; height:10px; border-radius:50%; transition: background 0.25s ease, opacity 0.25s ease; }
+  .vis-panel { padding:14px; background:#070b10; border:1px solid #141e2a; border-radius:8px; margin-top:14px; min-height:96px; display:flex; align-items:center; justify-content:center; }
+  .dots-grid { display:grid; gap:4px; width:100%; }
+  .dot { aspect-ratio:1/1; border-radius:50%; transition: background 0.3s ease, opacity 0.3s ease; }
   .dot.success { background:#0fee89; }
   .dot.miss    { background:#3a4a5a; opacity:0.55; }
+  .summary-bar { display:flex; gap:0; height:22px; border-radius:5px; overflow:hidden; width:100%; }
+  .summary-bar .fill-success { background:#0fee89; transition: width 0.3s ease; display:flex; align-items:center; justify-content:center; color:#0b1118; font-family:'Geist Mono',monospace; font-size:11px; font-weight:700; }
+  .summary-bar .fill-miss    { background:#3a4a5a; transition: width 0.3s ease; display:flex; align-items:center; justify-content:center; color:#c8c6be; font-family:'Geist Mono',monospace; font-size:11px; font-weight:700; }
 
-  .summary-bar { display:flex; gap:0; height:18px; border-radius:5px; overflow:hidden; margin-top:10px; }
-  .summary-bar .fill-success { background:#0fee89; transition: width 0.3s ease; display:flex; align-items:center; justify-content:center; color:#0b1118; font-family:'Geist Mono',monospace; font-size:10px; font-weight:700; }
-  .summary-bar .fill-miss    { background:#3a4a5a; transition: width 0.3s ease; display:flex; align-items:center; justify-content:center; color:#c8c6be; font-family:'Geist Mono',monospace; font-size:10px; font-weight:700; }
-
-  @keyframes pulse-glow {
-    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
-    50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
-  }
-  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+  .footer { font-family:'Geist Mono',monospace; font-size:12px; color:#3a4a5a; text-align:center; margin-top:14px; line-height:1.5; }
+  .footer .id { color:#7a7875; }
+  .footer .id .katex { font-size:1em; }
 </style>
 </head>
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
-    <span class="step-title">EXPECTED NUMBER OF OUTCOMES</span>
-    <span class="meta">drag both sliders</span>
+    <span class="step-title">EXPECTED COUNT</span>
+    <span class="meta">tap a probability, tap a trial count</span>
   </div>
 
-  <svg id="stage" viewBox="0 0 480 180" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
-    <g id="g-p-track"></g>
-    <g id="g-p-marker"></g>
-    <g id="g-n-track"></g>
-    <g id="g-n-marker"></g>
-    <g id="g-labels"></g>
-  </svg>
-
-  <div class="formula-strip">
-    <span class="tag">expected</span>
-    <span class="eq" id="formula"></span>
+  <div class="headline">
+    <span class="col">
+      <span class="big p" id="p-display"></span>
+      <span class="lab">probability</span>
+    </span>
+    <span class="op">×</span>
+    <span class="col">
+      <span class="big n" id="n-display">100</span>
+      <span class="lab">trials</span>
+    </span>
+    <span class="op">=</span>
+    <span class="col">
+      <span class="big exp" id="exp-display"></span>
+      <span class="lab">expected</span>
+    </span>
   </div>
 
-  <div class="panel-tag" id="vis-tag">visual</div>
-  <div id="vis-host"></div>
+  <div class="snap-row" id="p-snaps">
+    <span class="label-lead">p</span>
+  </div>
+  <div class="snap-row" id="n-snaps">
+    <span class="label-lead">n</span>
+  </div>
+
+  <div class="vis-panel" id="vis-host"></div>
+
+  <div class="footer">
+    <span class="id" id="formula"></span>
+  </div>
 </div>
 
 <script>
@@ -77,30 +94,26 @@ var COL = {
   faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
 };
 
-// Layout for the two sliders inside the SVG
-var SVG_W = 480, SVG_H = 180;
-var P_Y = 50, N_Y = 130;
-var TRACK_LEFT = 50, TRACK_RIGHT = 430;
-var TRACK_W = TRACK_RIGHT - TRACK_LEFT;
-
-// State
-var FRACTIONS = [
-  {n:0, d:1}, {n:1, d:20}, {n:1, d:10}, {n:1, d:8}, {n:1, d:6},
-  {n:1, d:5}, {n:1, d:4}, {n:3, d:10}, {n:1, d:3}, {n:3, d:8},
-  {n:2, d:5}, {n:9, d:20}, {n:1, d:2}, {n:11, d:20}, {n:3, d:5},
-  {n:5, d:8}, {n:2, d:3}, {n:7, d:10}, {n:3, d:4}, {n:4, d:5},
-  {n:5, d:6}, {n:7, d:8}, {n:9, d:10}, {n:19, d:20}, {n:1, d:1}
+var P_SNAPS = [
+  { n:1,  d:10, label:"\\tfrac{1}{10}" },
+  { n:1,  d:5,  label:"\\tfrac{1}{5}"  },
+  { n:1,  d:4,  label:"\\tfrac{1}{4}"  },
+  { n:1,  d:3,  label:"\\tfrac{1}{3}"  },
+  { n:2,  d:5,  label:"\\tfrac{2}{5}"  },
+  { n:1,  d:2,  label:"\\tfrac{1}{2}"  },
+  { n:3,  d:5,  label:"\\tfrac{3}{5}"  },
+  { n:2,  d:3,  label:"\\tfrac{2}{3}"  },
+  { n:3,  d:4,  label:"\\tfrac{3}{4}"  },
+  { n:4,  d:5,  label:"\\tfrac{4}{5}"  },
+  { n:9,  d:10, label:"\\tfrac{9}{10}" }
 ];
-var N_VALUES = [10, 20, 25, 40, 50, 80, 100, 200, 250, 500, 1000];
+var N_SNAPS = [10, 20, 50, 100, 200, 500, 1000];
 
-var P = { pFrac: {n:1, d:4}, nIdx: 4 };  // initial: P = 1/4, N = 50
-var D = { pVal: 0.25, nIdx: 4 };
-var SPRING = 0.22, EPS = 0.0008;
-var raf = null;
+var state = { pIdx: 5, nIdx: 3 };   // p = 1/2, n = 100
 
-function pValOfFrac(f){ return f.n / f.d; }
-function pVal(){ return pValOfFrac(P.pFrac); }
-function nVal(){ return N_VALUES[P.nIdx]; }
+function pFrac(){ return P_SNAPS[state.pIdx]; }
+function pVal(){ var f = pFrac(); return f.n / f.d; }
+function nVal(){ return N_SNAPS[state.nIdx]; }
 
 function tryRender(target, tex){
   if (typeof katex !== "undefined"){
@@ -108,151 +121,74 @@ function tryRender(target, tex){
     catch(e){ target.textContent = tex; }
   } else setTimeout(function(){ tryRender(target, tex); }, 50);
 }
-function svgKaTeXLabel(parent, x, y, tex, color, align){
-  align = align || "center";
-  var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
-  fo.setAttribute("x", x - 50); fo.setAttribute("y", y - 11);
-  fo.setAttribute("width", 100); fo.setAttribute("height", 22);
-  fo.style.overflow = "visible"; fo.style.pointerEvents = "none";
-  var div = document.createElement("div");
-  div.style.height = "22px"; div.style.display = "flex"; div.style.alignItems = "center";
-  div.style.justifyContent = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
-  div.className = "lbl-host"; div.style.color = color || COL.off;
-  fo.appendChild(div); parent.appendChild(fo);
-  tryRender(div, tex);
-}
-function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
 
-function snapFraction(p){
-  var best = FRACTIONS[0], dBest = Math.abs(p - 0);
-  for (var i = 1; i < FRACTIONS.length; i++){
-    var v = FRACTIONS[i].n / FRACTIONS[i].d;
-    var d = Math.abs(p - v);
-    if (d < dBest){ dBest = d; best = FRACTIONS[i]; }
-  }
-  return best;
-}
+function gcd(a, b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=b; b=a%b; a=t; } return a; }
 
-function drawTracks(){
-  var gpt = document.getElementById("g-p-track");
-  var gnt = document.getElementById("g-n-track");
-  var gl  = document.getElementById("g-labels");
-  clear(gpt); clear(gnt); clear(gl);
-  // P track (blue, with gradient effect)
-  var base = document.createElementNS("http://www.w3.org/2000/svg","rect");
-  base.setAttribute("x", TRACK_LEFT); base.setAttribute("y", P_Y - 4);
-  base.setAttribute("width", TRACK_W); base.setAttribute("height", 8);
-  base.setAttribute("rx", 4);
-  base.setAttribute("fill", "#141e2a");
-  gpt.appendChild(base);
-  // ticks at 0, 0.25, 0.5, 0.75, 1
-  [0, 0.25, 0.5, 0.75, 1].forEach(function(v){
-    var x = TRACK_LEFT + v * TRACK_W;
-    var t = document.createElementNS("http://www.w3.org/2000/svg","line");
-    t.setAttribute("x1", x); t.setAttribute("x2", x);
-    t.setAttribute("y1", P_Y - 10); t.setAttribute("y2", P_Y + 10);
-    t.setAttribute("stroke", "#3a4a5a"); t.setAttribute("stroke-width", 1);
-    gpt.appendChild(t);
-    var lab = (v === 0 || v === 1) ? String(v) : (v === 0.25 ? "\\tfrac{1}{4}" : (v === 0.5 ? "\\tfrac{1}{2}" : "\\tfrac{3}{4}"));
-    svgKaTeXLabel(gl, x, P_Y + 22, lab, "#7a7875");
+function buildPSnaps(){
+  var host = document.getElementById("p-snaps");
+  host.innerHTML = '<span class="label-lead">p</span>';
+  P_SNAPS.forEach(function(s, i){
+    var b = document.createElement("button");
+    b.className = "snap-btn" + (state.pIdx === i ? " active p" : "");
+    var span = document.createElement("span");
+    tryRender(span, s.label);
+    b.appendChild(span);
+    b.addEventListener("click", function(){
+      state.pIdx = i;
+      render();
+    });
+    host.appendChild(b);
   });
-  // Labels
-  svgKaTeXLabel(gl, TRACK_LEFT - 28, P_Y, "p =", "#00abfa", "right");
-
-  // N track
-  var base2 = document.createElementNS("http://www.w3.org/2000/svg","rect");
-  base2.setAttribute("x", TRACK_LEFT); base2.setAttribute("y", N_Y - 4);
-  base2.setAttribute("width", TRACK_W); base2.setAttribute("height", 8);
-  base2.setAttribute("rx", 4);
-  base2.setAttribute("fill", "#141e2a");
-  gnt.appendChild(base2);
-  // ticks at each N value
-  N_VALUES.forEach(function(v, i){
-    var x = TRACK_LEFT + (i / (N_VALUES.length - 1)) * TRACK_W;
-    var t = document.createElementNS("http://www.w3.org/2000/svg","line");
-    t.setAttribute("x1", x); t.setAttribute("x2", x);
-    t.setAttribute("y1", N_Y - 10); t.setAttribute("y2", N_Y + 10);
-    t.setAttribute("stroke", "#3a4a5a"); t.setAttribute("stroke-width", 1);
-    gnt.appendChild(t);
-    // label only for some
-    if (v === 10 || v === 100 || v === 1000 || v === 50){
-      svgKaTeXLabel(gl, x, N_Y + 22, String(v), "#7a7875");
-    }
+}
+function buildNSnaps(){
+  var host = document.getElementById("n-snaps");
+  host.innerHTML = '<span class="label-lead">n</span>';
+  N_SNAPS.forEach(function(v, i){
+    var b = document.createElement("button");
+    b.className = "snap-btn" + (state.nIdx === i ? " active n" : "");
+    b.textContent = v.toLocaleString();
+    b.addEventListener("click", function(){
+      state.nIdx = i;
+      render();
+    });
+    host.appendChild(b);
   });
-  svgKaTeXLabel(gl, TRACK_LEFT - 28, N_Y, "n =", "#fff067", "right");
 }
 
-function drawMarkers(){
-  var gpm = document.getElementById("g-p-marker");
-  var gnm = document.getElementById("g-n-marker");
-  clear(gpm); clear(gnm);
-  // P marker
-  var px = TRACK_LEFT + D.pVal * TRACK_W;
-  var pVL = document.createElementNS("http://www.w3.org/2000/svg","line");
-  pVL.setAttribute("x1", px); pVL.setAttribute("x2", px);
-  pVL.setAttribute("y1", P_Y - 14); pVL.setAttribute("y2", P_Y + 14);
-  pVL.setAttribute("stroke", "#00abfa"); pVL.setAttribute("stroke-width", 1.5);
-  pVL.setAttribute("opacity", 0.7);
-  gpm.appendChild(pVL);
-  var pC = document.createElementNS("http://www.w3.org/2000/svg","circle");
-  pC.setAttribute("cx", px); pC.setAttribute("cy", P_Y);
-  pC.setAttribute("r", 9);
-  pC.setAttribute("fill", "#00abfa");
-  pC.setAttribute("stroke", "#0b1118"); pC.setAttribute("stroke-width", 2);
-  pC.setAttribute("class", "handle"); pC.style.color = "#00abfa";
-  gpm.appendChild(pC);
-  // N marker
-  var nx = TRACK_LEFT + (D.nIdx / (N_VALUES.length - 1)) * TRACK_W;
-  var nVL = document.createElementNS("http://www.w3.org/2000/svg","line");
-  nVL.setAttribute("x1", nx); nVL.setAttribute("x2", nx);
-  nVL.setAttribute("y1", N_Y - 14); nVL.setAttribute("y2", N_Y + 14);
-  nVL.setAttribute("stroke", "#fff067"); nVL.setAttribute("stroke-width", 1.5);
-  nVL.setAttribute("opacity", 0.7);
-  gnm.appendChild(nVL);
-  var nC = document.createElementNS("http://www.w3.org/2000/svg","circle");
-  nC.setAttribute("cx", nx); nC.setAttribute("cy", N_Y);
-  nC.setAttribute("r", 9);
-  nC.setAttribute("fill", "#fff067");
-  nC.setAttribute("stroke", "#0b1118"); nC.setAttribute("stroke-width", 2);
-  nC.setAttribute("class", "handle"); nC.style.color = "#fff067";
-  gnm.appendChild(nC);
-}
-
-function renderFormula(){
-  var p = pVal();
+function renderHeadline(){
+  var p = pFrac();
   var n = nVal();
-  var expected = p * n;
-  var el = document.getElementById("formula");
-  el.innerHTML = "";
-  // Format: Expected = p × n = (P.pFrac.n / P.pFrac.d) × n = answer
-  var fracTex = P.pFrac.d === 1 ? String(P.pFrac.n) : "\\tfrac{" + P.pFrac.n + "}{" + P.pFrac.d + "}";
-  var exactStr;
-  // Simplify: expected = (P.pFrac.n / P.pFrac.d) * n
-  var num = P.pFrac.n * n;
-  var den = P.pFrac.d;
-  var g = (function(a, b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=b; b=a%b; a=t; } return a; })(num, den);
-  if (den === 1) exactStr = String(num);
-  else if (num % den === 0) exactStr = String(num / den);
-  else if (g > 1) exactStr = "\\tfrac{" + (num/g) + "}{" + (den/g) + "} \\approx " + expected.toFixed(2);
-  else exactStr = "\\tfrac{" + num + "}{" + den + "} \\approx " + expected.toFixed(2);
-  var tex = "\\text{Expected} = p \\times n = {\\color{#00abfa}" + fracTex + "} \\times {\\color{#fff067}" + n + "} = {\\color{#0fee89}" + exactStr + "}";
-  tryRender(el, tex);
+  var pEl = document.getElementById("p-display");
+  var nEl = document.getElementById("n-display");
+  var eEl = document.getElementById("exp-display");
+  pEl.innerHTML = ""; eEl.innerHTML = "";
+  tryRender(pEl, p.d === 1 ? String(p.n) : "\\tfrac{" + p.n + "}{" + p.d + "}");
+  nEl.textContent = n.toLocaleString();
+  // Expected = p * n. If divides evenly, integer; else fraction or decimal.
+  var num = p.n * n;
+  var den = p.d;
+  if (num % den === 0){
+    tryRender(eEl, String(num / den));
+  } else {
+    var g = gcd(num, den);
+    if (g > 1){
+      tryRender(eEl, "\\tfrac{" + (num/g) + "}{" + (den/g) + "}");
+    } else {
+      tryRender(eEl, "\\tfrac{" + num + "}{" + den + "}");
+    }
+  }
 }
 
 function renderVisual(){
   var host = document.getElementById("vis-host");
   host.innerHTML = "";
-  var visTag = document.getElementById("vis-tag");
   var p = pVal();
   var n = nVal();
   var expected = p * n;
   var expRounded = Math.round(expected);
   if (n <= 200){
-    visTag.textContent = "expected " + expRounded.toLocaleString() + " of " + n.toLocaleString() + " trials";
-    // dots grid: n dots, top expRounded are green (success), rest grey
     var grid = document.createElement("div");
     grid.className = "dots-grid";
-    // Pick number of columns based on n
     var cols;
     if (n <= 25) cols = 5;
     else if (n <= 50) cols = 10;
@@ -266,7 +202,6 @@ function renderVisual(){
     }
     host.appendChild(grid);
   } else {
-    visTag.textContent = "proportional bar (" + expRounded.toLocaleString() + " expected of " + n.toLocaleString() + ")";
     var bar = document.createElement("div");
     bar.className = "summary-bar";
     var pct = (p * 100).toFixed(1);
@@ -278,87 +213,30 @@ function renderVisual(){
   }
 }
 
-function refresh(){
-  drawMarkers();
-  renderFormula();
+function renderFormula(){
+  var p = pFrac();
+  var n = nVal();
+  var fEl = document.getElementById("formula");
+  fEl.innerHTML = "";
+  var pTex = p.d === 1 ? String(p.n) : "\\tfrac{" + p.n + "}{" + p.d + "}";
+  var num = p.n * n, den = p.d;
+  var expTex;
+  if (num % den === 0) expTex = String(num / den);
+  else {
+    var g = gcd(num, den);
+    expTex = g > 1 ? "\\tfrac{" + (num/g) + "}{" + (den/g) + "}" : "\\tfrac{" + num + "}{" + den + "}";
+  }
+  tryRender(fEl, "{\\color{#00abfa}" + pTex + "} \\times {\\color{#fff067}" + n + "} = {\\color{#0fee89}" + expTex + "}");
+}
+
+function render(){
+  buildPSnaps();
+  buildNSnaps();
+  renderHeadline();
   renderVisual();
+  renderFormula();
   notifyHeight();
 }
-
-// pointer drag
-var stage = document.getElementById("stage");
-var dragging = null;  // 'p' | 'n' | null
-function svgPt(e){
-  var pt = stage.createSVGPoint();
-  pt.x = e.clientX; pt.y = e.clientY;
-  return pt.matrixTransform(stage.getScreenCTM().inverse());
-}
-function nearTrack(m, y){
-  return m.x >= TRACK_LEFT - 12 && m.x <= TRACK_RIGHT + 12 &&
-         m.y >= y - 18 && m.y <= y + 18;
-}
-function nearAnyHandle(m){
-  return nearTrack(m, P_Y) ? "p" : (nearTrack(m, N_Y) ? "n" : null);
-}
-stage.addEventListener("pointerdown", function(e){
-  var m = svgPt(e);
-  var which = nearAnyHandle(m);
-  if (!which) return;
-  e.preventDefault();
-  dragging = which;
-  stage.setPointerCapture(e.pointerId);
-  stage.classList.add("grabbing");
-  applyDrag(m);
-});
-stage.addEventListener("pointermove", function(e){
-  var m = svgPt(e);
-  if (!dragging){
-    if (nearAnyHandle(m)) stage.classList.add("hover-grab");
-    else stage.classList.remove("hover-grab");
-    return;
-  }
-  e.preventDefault();
-  applyDrag(m);
-});
-function endDrag(e){
-  if (!dragging) return;
-  dragging = null;
-  try { stage.releasePointerCapture(e.pointerId); } catch(_){}
-  stage.classList.remove("grabbing");
-}
-stage.addEventListener("pointerup", endDrag);
-stage.addEventListener("pointercancel", endDrag);
-stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover-grab"); });
-
-function applyDrag(m){
-  if (dragging === "p"){
-    var p = Math.max(0, Math.min(1, (m.x - TRACK_LEFT) / TRACK_W));
-    P.pFrac = snapFraction(p);
-  } else if (dragging === "n"){
-    var ratio = Math.max(0, Math.min(1, (m.x - TRACK_LEFT) / TRACK_W));
-    var idx = Math.round(ratio * (N_VALUES.length - 1));
-    P.nIdx = idx;
-  }
-  kick();
-}
-
-function settled(){
-  var p = pVal();
-  return Math.abs(p - D.pVal) < EPS && Math.abs(P.nIdx - D.nIdx) < EPS;
-}
-function step(){
-  D.pVal += (pVal() - D.pVal) * SPRING;
-  D.nIdx += (P.nIdx - D.nIdx) * SPRING;
-  refresh();
-  if (!settled()) raf = requestAnimationFrame(step);
-  else {
-    raf = null;
-    D.pVal = pVal();
-    D.nIdx = P.nIdx;
-    refresh();
-  }
-}
-function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
 
 function notifyHeight(){
   var h = document.getElementById("wrap").offsetHeight + 30;
@@ -368,8 +246,7 @@ function notifyHeight(){
 }
 window.addEventListener("resize", notifyHeight);
 
-drawTracks();
-refresh();
+render();
 setTimeout(notifyHeight, 200);
 </script>
 </body>
