@@ -599,7 +599,15 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "02", code: "8.2", title: "Relative and expected frequencies" },
+      {
+        slug: "02", code: "8.2", title: "Relative and expected frequencies",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Relative frequency from an experiment" },
+          { slug: "p2",     label: "P2", title: "Expected frequency" },
+          { slug: "p3",     label: "P3", title: "Fair, biased, and random" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "03", code: "8.3", title: "Probability of combined events" },
     ],
   },

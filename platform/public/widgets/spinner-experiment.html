@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Spinner Experiment</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+  .panel-tag { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px; margin-top:14px; }
+
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .sectors { display:flex; gap:10px; margin-bottom:6px; }
+  .col-card { flex:1; padding:9px 10px; border-radius:8px; border:1px solid; background:#0b1118; }
+  .col-card .row1 { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .col-card .swatch { width:14px; height:14px; border-radius:50%; }
+  .col-card .name { font-family:'Geist Mono',monospace; font-size:9.5px; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; }
+  .col-card .count { font-family:'Geist Mono',monospace; font-size:16px; color:#f0eeea; line-height:1; margin:4px 0 6px; text-align:center; }
+  .col-card .btns { display:flex; gap:4px; }
+  .col-card .btn { flex:1; background:#0b1118; border:1px solid currentColor; color:currentColor; font-family:'Geist Mono',monospace; font-size:12px; font-weight:700; padding:2px 0; border-radius:4px; cursor:pointer; opacity:0.7; transition:all 0.12s ease; }
+  .col-card .btn:hover { opacity:1; }
+  .col-card .btn:disabled { opacity:0.25; cursor:not-allowed; }
+
+  .stage-row { display:grid; grid-template-columns: 220px 1fr; gap:14px; align-items:start; margin-top:6px; }
+  @media (max-width: 540px){ .stage-row { grid-template-columns: 1fr; } }
+  #spinner { display:block; width:100%; height:auto; }
+  .tally-panel { display:flex; flex-direction:column; gap:6px; padding:10px 12px; background:#070b10; border:1px solid #141e2a; border-radius:8px; min-height:200px; }
+  .tally-panel .total { font-family:'Geist Mono',monospace; font-size:10.5px; color:#3a4a5a; letter-spacing:0.5px; text-transform:uppercase; }
+  .tally-panel .total .n { color:#fff067; font-weight:700; }
+  .tally-row { display:grid; grid-template-columns: 40px 1fr 60px; align-items:center; gap:6px; padding:6px 0; font-family:'Geist Mono',monospace; font-size:12px; }
+  .tally-row .swatch-tiny { width:12px; height:12px; border-radius:50%; }
+  .tally-row .label { display:flex; align-items:center; gap:8px; font-weight:600; }
+  .tally-row .bar { height:10px; background:#141e2a; border-radius:3px; overflow:hidden; position:relative; }
+  .tally-row .fill-obs { position:absolute; left:0; top:0; bottom:0; transition: width 0.3s ease; }
+  .tally-row .fill-theo { position:absolute; left:0; top:0; bottom:0; border-left:2px dashed; }
+  .tally-row .vals { font-size:11px; color:#7a7875; text-align:right; }
+  .tally-row .vals .obs { color:#f0eeea; font-weight:700; }
+
+  .chart-host { margin-top:14px; padding:10px 12px; background:#070b10; border:1px solid #141e2a; border-radius:8px; }
+  .chart-host .ctitle { display:flex; justify-content:space-between; align-items:baseline; font-family:'Geist Mono',monospace; font-size:10.5px; color:#3a4a5a; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px; }
+  #chart { display:block; width:100%; height:auto; }
+
+  .actions { display:flex; gap:6px; margin-top:14px; flex-wrap:wrap; }
+  .act-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:6px 12px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; }
+  .act-btn:hover:not(:disabled) { color:#fff067; border-color:#3a4a5a; }
+  .act-btn:disabled { opacity:0.35; cursor:not-allowed; }
+  .act-btn.primary { color:#fff067; border-color:rgba(255,240,103,0.4); background:rgba(255,240,103,0.06); }
+  .act-btn.primary:hover:not(:disabled) { background:rgba(255,240,103,0.12); }
+  .act-btn.reset { margin-left:auto; color:#ff4670; border-color:rgba(255,70,112,0.3); }
+  .act-btn.reset:hover { color:#ff4670; border-color:#ff4670; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">SPINNER EXPERIMENT</span>
+    <span class="meta">set the sectors, then spin</span>
+  </div>
+
+  <div class="panel-tag">sectors on the spinner</div>
+  <div class="sectors" id="sectors"></div>
+
+  <div class="stage-row">
+    <svg id="spinner" viewBox="0 0 220 220" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <g id="g-wheel" style="transform-origin: 110px 110px; transform: rotate(0deg)">
+        <g id="g-slices"></g>
+      </g>
+      <g id="g-pointer"></g>
+      <g id="g-center"></g>
+    </svg>
+    <div class="tally-panel">
+      <div class="total">trials: <span class="n" id="tot-n">0</span></div>
+      <div id="tally"></div>
+    </div>
+  </div>
+
+  <div class="chart-host">
+    <div class="ctitle">
+      <span>RELATIVE FREQUENCY CONVERGES TO PROBABILITY</span>
+      <span id="chart-meta">empty — spin to start</span>
+    </div>
+    <svg id="chart" viewBox="0 0 480 140" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+      <g id="chart-bg"></g>
+      <g id="chart-theo"></g>
+      <g id="chart-lines"></g>
+      <g id="chart-axes"></g>
+    </svg>
+  </div>
+
+  <div class="actions">
+    <button class="act-btn primary" id="spin-1">spin once</button>
+    <button class="act-btn" id="spin-10">+10</button>
+    <button class="act-btn" id="spin-100">+100</button>
+    <button class="act-btn" id="spin-1000">+1000</button>
+    <button class="act-btn reset" id="reset">↻ reset trials</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COLOURS = [
+  { key:"red",   hex:"#ff4670", name:"red" },
+  { key:"blue",  hex:"#00abfa", name:"blue" },
+  { key:"green", hex:"#0fee89", name:"green" }
+];
+
+// State: sector counts (number of equal slices), and observed tallies
+var state = {
+  red: 1, blue: 2, green: 3,   // 6 slices total → P(red)=1/6, P(blue)=2/6=1/3, P(green)=3/6=1/2
+  tally: { red:0, blue:0, green:0 },
+  history: [],                  // each entry: { n, red, blue, green }
+  wheelRotation: 0,              // current rotation in degrees (display)
+  spinning: false                // animation guard
+};
+var MAX_PER = 8;
+var MIN_TOTAL = 1;
+
+function totalSlices(){ return state.red + state.blue + state.green; }
+function totalTrials(){ return state.tally.red + state.tally.blue + state.tally.green; }
+function colourOf(key){ return COLOURS.filter(function(c){return c.key===key;})[0]; }
+function theoFor(key){
+  var t = totalSlices();
+  return t > 0 ? state[key] / t : 0;
+}
+function relFreqFor(key){
+  var n = totalTrials();
+  return n > 0 ? state.tally[key] / n : 0;
+}
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+
+// ----- sector controls -----
+function buildSectorControls(){
+  var host = document.getElementById("sectors");
+  host.innerHTML = "";
+  COLOURS.forEach(function(c){
+    var card = document.createElement("div");
+    card.className = "col-card";
+    card.style.color = c.hex;
+    card.style.borderColor = "rgba(255,255,255,0.06)";
+    card.style.background = "rgba(255,255,255,0.02)";
+    card.innerHTML =
+      '<div class="row1">' +
+        '<span class="swatch" style="background:' + c.hex + '"></span>' +
+        '<span class="name" style="color:' + c.hex + '">' + c.name + '</span>' +
+      '</div>' +
+      '<div class="count">' + state[c.key] + '</div>' +
+      '<div class="btns">' +
+        '<button class="btn" data-act="minus">−</button>' +
+        '<button class="btn" data-act="plus">+</button>' +
+      '</div>';
+    card.querySelector('[data-act="plus"]').addEventListener("click", function(){
+      if (state[c.key] < MAX_PER && !state.spinning){
+        state[c.key]++;
+        // Spinner geometry changed → invalidate trials (they belonged to a different sector layout)
+        resetTrials();
+        renderAll();
+      }
+    });
+    card.querySelector('[data-act="minus"]').addEventListener("click", function(){
+      if (state[c.key] > 0 && (totalSlices() - 1) >= MIN_TOTAL && !state.spinning){
+        state[c.key]--;
+        resetTrials();
+        renderAll();
+      }
+    });
+    host.appendChild(card);
+  });
+}
+
+// ----- spinner geometry -----
+// Slices are laid out clockwise from the top (12 o'clock).
+function slicePath(cx, cy, r, startDeg, endDeg){
+  // In SVG, angles measured from +x axis (3 o'clock), counterclockwise mathematically
+  // but SVG y is down, so visually CCW math == CW screen. To start from the top and go CW,
+  // we offset by -90 degrees and use sweep-flag = 1.
+  var s = (startDeg - 90) * Math.PI / 180;
+  var e = (endDeg - 90) * Math.PI / 180;
+  var x1 = cx + r * Math.cos(s), y1 = cy + r * Math.sin(s);
+  var x2 = cx + r * Math.cos(e), y2 = cy + r * Math.sin(e);
+  var large = (endDeg - startDeg) > 180 ? 1 : 0;
+  return "M " + cx + " " + cy +
+         " L " + x1.toFixed(2) + " " + y1.toFixed(2) +
+         " A " + r + " " + r + " 0 " + large + " 1 " + x2.toFixed(2) + " " + y2.toFixed(2) +
+         " Z";
+}
+
+function getSliceList(){
+  // Returns array of { color, startDeg, endDeg, key } for each unit slice.
+  var list = [];
+  var t = totalSlices();
+  if (t === 0) return list;
+  var sliceAngle = 360 / t;
+  var current = 0;
+  COLOURS.forEach(function(c){
+    for (var i = 0; i < state[c.key]; i++){
+      list.push({ key:c.key, color:c.hex, startDeg: current, endDeg: current + sliceAngle });
+      current += sliceAngle;
+    }
+  });
+  return list;
+}
+
+function drawSpinner(){
+  var g = document.getElementById("g-slices");
+  clear(g);
+  var t = totalSlices();
+  if (t === 0){
+    // empty placeholder
+    var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx", 110); c.setAttribute("cy", 110); c.setAttribute("r", 88);
+    c.setAttribute("fill", "#141e2a"); c.setAttribute("stroke", "#3a4a5a"); c.setAttribute("stroke-width", 1.2);
+    g.appendChild(c);
+  } else {
+    var slices = getSliceList();
+    slices.forEach(function(s){
+      var p = document.createElementNS("http://www.w3.org/2000/svg","path");
+      p.setAttribute("d", slicePath(110, 110, 88, s.startDeg, s.endDeg));
+      p.setAttribute("fill", s.color);
+      p.setAttribute("fill-opacity", 0.85);
+      p.setAttribute("stroke", "#0b1118");
+      p.setAttribute("stroke-width", 1);
+      g.appendChild(p);
+    });
+  }
+  // pointer (drawn outside the rotating group)
+  var pg = document.getElementById("g-pointer");
+  clear(pg);
+  var pointer = document.createElementNS("http://www.w3.org/2000/svg","path");
+  // a downward-pointing triangle just above the wheel at 12 o'clock
+  pointer.setAttribute("d", "M 110 10 L 102 26 L 118 26 Z");
+  pointer.setAttribute("fill", "#fff067");
+  pointer.setAttribute("stroke", "#0b1118");
+  pointer.setAttribute("stroke-width", 1.2);
+  pg.appendChild(pointer);
+  // centre dot
+  var cg = document.getElementById("g-center");
+  clear(cg);
+  var dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  dot.setAttribute("cx", 110); dot.setAttribute("cy", 110); dot.setAttribute("r", 7);
+  dot.setAttribute("fill", "#0b1118"); dot.setAttribute("stroke", "#3a4a5a"); dot.setAttribute("stroke-width", 1.2);
+  cg.appendChild(dot);
+}
+
+function setWheelRotation(deg){
+  state.wheelRotation = deg;
+  document.getElementById("g-wheel").style.transform = "rotate(" + deg + "deg)";
+}
+
+// ----- tally panel -----
+function drawTally(){
+  var host = document.getElementById("tally");
+  host.innerHTML = "";
+  var total = totalTrials();
+  COLOURS.forEach(function(c){
+    var obs = state.tally[c.key];
+    var rel = total > 0 ? obs / total : 0;
+    var theo = theoFor(c.key);
+    var row = document.createElement("div");
+    row.className = "tally-row";
+    row.innerHTML =
+      '<div class="label" style="color:' + c.hex + '">' +
+        '<span class="swatch-tiny" style="background:' + c.hex + '"></span>' + c.name +
+      '</div>' +
+      '<div class="bar">' +
+        '<div class="fill-obs" style="width:' + (rel * 100).toFixed(1) + '%; background:' + c.hex + '"></div>' +
+        '<div class="fill-theo" style="width:' + (theo * 100).toFixed(1) + '%; border-color:' + c.hex + '"></div>' +
+      '</div>' +
+      '<div class="vals"><span class="obs">' + obs + '</span> / ' + total + '</div>';
+    host.appendChild(row);
+  });
+  document.getElementById("tot-n").textContent = total;
+}
+
+// ----- convergence chart -----
+function drawChart(){
+  var CW = 480, CH = 140, PAD_L = 32, PAD_R = 8, PAD_T = 10, PAD_B = 20;
+  var bg = document.getElementById("chart-bg");
+  var theo = document.getElementById("chart-theo");
+  var lines = document.getElementById("chart-lines");
+  var axes = document.getElementById("chart-axes");
+  clear(bg); clear(theo); clear(lines); clear(axes);
+
+  // grid background lines at y = 0, 0.25, 0.5, 0.75, 1
+  [0, 0.25, 0.5, 0.75, 1].forEach(function(v){
+    var y = PAD_T + (1 - v) * (CH - PAD_T - PAD_B);
+    var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", PAD_L); l.setAttribute("x2", CW - PAD_R);
+    l.setAttribute("y1", y); l.setAttribute("y2", y);
+    l.setAttribute("stroke", "#141e2a"); l.setAttribute("stroke-width", 0.6);
+    bg.appendChild(l);
+    // axis label
+    var lbl = document.createElementNS("http://www.w3.org/2000/svg","text");
+    lbl.setAttribute("x", PAD_L - 6); lbl.setAttribute("y", y + 3);
+    lbl.setAttribute("text-anchor", "end");
+    lbl.setAttribute("fill", "#3a4a5a"); lbl.setAttribute("font-size", "9");
+    lbl.setAttribute("font-family", "Geist Mono, monospace");
+    lbl.textContent = v.toFixed(2).replace(/0$/, "");
+    bg.appendChild(lbl);
+  });
+
+  // Theoretical probability lines (dashed)
+  COLOURS.forEach(function(c){
+    var p = theoFor(c.key);
+    if (totalSlices() === 0) return;
+    var y = PAD_T + (1 - p) * (CH - PAD_T - PAD_B);
+    var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", PAD_L); l.setAttribute("x2", CW - PAD_R);
+    l.setAttribute("y1", y); l.setAttribute("y2", y);
+    l.setAttribute("stroke", c.hex); l.setAttribute("stroke-width", 1);
+    l.setAttribute("stroke-dasharray", "5 4"); l.setAttribute("opacity", 0.5);
+    theo.appendChild(l);
+  });
+
+  // X-axis label and number-of-trials grid
+  var maxN = Math.max(10, state.history.length > 0 ? state.history[state.history.length - 1].n : 0);
+  // Tick at 0 and maxN
+  [0, maxN].forEach(function(v, i){
+    var x = PAD_L + (v / maxN) * (CW - PAD_L - PAD_R);
+    var lbl = document.createElementNS("http://www.w3.org/2000/svg","text");
+    lbl.setAttribute("x", x); lbl.setAttribute("y", CH - 4);
+    lbl.setAttribute("text-anchor", i === 0 ? "start" : "end");
+    lbl.setAttribute("fill", "#3a4a5a"); lbl.setAttribute("font-size", "9");
+    lbl.setAttribute("font-family", "Geist Mono, monospace");
+    lbl.textContent = v.toString();
+    axes.appendChild(lbl);
+  });
+  // "trials" label
+  var xLbl = document.createElementNS("http://www.w3.org/2000/svg","text");
+  xLbl.setAttribute("x", (CW + PAD_L) / 2); xLbl.setAttribute("y", CH - 4);
+  xLbl.setAttribute("text-anchor", "middle");
+  xLbl.setAttribute("fill", "#3a4a5a"); xLbl.setAttribute("font-size", "9");
+  xLbl.setAttribute("font-family", "Geist Mono, monospace");
+  xLbl.textContent = "trials →";
+  axes.appendChild(xLbl);
+
+  // observed lines (poly)
+  if (state.history.length > 0){
+    COLOURS.forEach(function(c){
+      var pts = "";
+      state.history.forEach(function(h, i){
+        var rel = h.n > 0 ? h[c.key] / h.n : 0;
+        var x = PAD_L + (h.n / maxN) * (CW - PAD_L - PAD_R);
+        var y = PAD_T + (1 - rel) * (CH - PAD_T - PAD_B);
+        pts += x.toFixed(2) + "," + y.toFixed(2) + " ";
+      });
+      var poly = document.createElementNS("http://www.w3.org/2000/svg","polyline");
+      poly.setAttribute("points", pts.trim());
+      poly.setAttribute("fill", "none");
+      poly.setAttribute("stroke", c.hex); poly.setAttribute("stroke-width", 1.6);
+      poly.setAttribute("stroke-linejoin", "round");
+      poly.setAttribute("opacity", 0.95);
+      lines.appendChild(poly);
+    });
+  }
+
+  var meta = document.getElementById("chart-meta");
+  if (totalTrials() === 0){
+    meta.textContent = "empty — spin to start";
+  } else {
+    meta.textContent = "dashed = theoretical · solid = observed · n = " + totalTrials();
+  }
+}
+
+// ----- spinning -----
+function pickWeightedOutcome(){
+  // Returns one of the colour keys, weighted by sector count
+  var slices = getSliceList();
+  if (slices.length === 0) return null;
+  var idx = Math.floor(Math.random() * slices.length);
+  return slices[idx].key;
+}
+
+function pickRandomFinalRotation(){
+  // Pick a final wheel rotation so the pointer lands inside a random slice.
+  // Pointer is fixed at the top (angle 0). After rotation R, the slice currently
+  // at logical angle θ ends up at θ + R. The pointer at the top "sees" the slice
+  // whose post-rotation angle range contains 0. We want a random slice; pick its
+  // midpoint angle in the wheel frame, and target final rotation R such that
+  // (slice_mid + R) ≡ 0 (mod 360), i.e. R = -slice_mid (mod 360). Add a few full
+  // turns for a satisfying spin.
+  var slices = getSliceList();
+  if (slices.length === 0) return null;
+  var idx = Math.floor(Math.random() * slices.length);
+  var s = slices[idx];
+  var mid = (s.startDeg + s.endDeg) / 2;
+  // Jitter within the slice
+  var spread = (s.endDeg - s.startDeg) * 0.5;
+  var pick = mid + (Math.random() - 0.5) * spread;
+  // Choose a target rotation R such that the slice ends up at the top.
+  // The wheel currently sits at state.wheelRotation. We need final R where
+  // (pick + R) ≡ 0 (mod 360), and final R is at least state.wheelRotation + 360*4.
+  var targetMod = (-pick) % 360;
+  if (targetMod < 0) targetMod += 360;
+  var current = state.wheelRotation;
+  var currentMod = ((current % 360) + 360) % 360;
+  var delta = targetMod - currentMod;
+  if (delta < 0) delta += 360;
+  var extraTurns = 4 + Math.floor(Math.random() * 2); // 4-5 full spins
+  var totalAdd = delta + extraTurns * 360;
+  return { finalRotation: current + totalAdd, outcomeKey: s.key };
+}
+
+function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+
+function animateSpin(finalRotation, onDone){
+  state.spinning = true;
+  setActionsDisabled(true);
+  var startRotation = state.wheelRotation;
+  var duration = 1500;  // ms
+  var startTime = performance.now();
+  function step(now){
+    var elapsed = now - startTime;
+    var t = Math.min(1, elapsed / duration);
+    var eased = easeOutCubic(t);
+    var r = startRotation + (finalRotation - startRotation) * eased;
+    setWheelRotation(r);
+    if (t < 1){
+      requestAnimationFrame(step);
+    } else {
+      state.spinning = false;
+      setActionsDisabled(false);
+      onDone();
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+function spinOnce(){
+  if (state.spinning) return;
+  if (totalSlices() === 0) return;
+  var target = pickRandomFinalRotation();
+  if (!target) return;
+  animateSpin(target.finalRotation, function(){
+    recordOutcome(target.outcomeKey);
+    renderTallyAndChart();
+  });
+}
+
+function spinMany(n){
+  if (state.spinning) return;
+  if (totalSlices() === 0) return;
+  // No animation, just batch sample.
+  for (var i = 0; i < n; i++){
+    var key = pickWeightedOutcome();
+    if (key) recordOutcomeQuiet(key);
+  }
+  // Snapshot for the chart
+  pushHistory();
+  renderTallyAndChart();
+}
+
+function recordOutcome(key){
+  state.tally[key]++;
+  pushHistory();
+}
+function recordOutcomeQuiet(key){
+  state.tally[key]++;
+  // For large batches, sample the history at logarithmic-ish intervals to keep the chart smooth.
+  var n = totalTrials();
+  // Sample at: every step up to 20, then every 5 up to 100, every 25 up to 500, every 100 thereafter
+  var keep = false;
+  if (n <= 20) keep = true;
+  else if (n <= 100) keep = (n % 5 === 0);
+  else if (n <= 500) keep = (n % 25 === 0);
+  else keep = (n % 100 === 0);
+  if (keep) pushHistory();
+}
+function pushHistory(){
+  state.history.push({
+    n: totalTrials(),
+    red: state.tally.red,
+    blue: state.tally.blue,
+    green: state.tally.green
+  });
+}
+
+function resetTrials(){
+  state.tally = { red:0, blue:0, green:0 };
+  state.history = [];
+  setWheelRotation(0);
+}
+
+function setActionsDisabled(disabled){
+  document.getElementById("spin-1").disabled = disabled;
+  document.getElementById("spin-10").disabled = disabled;
+  document.getElementById("spin-100").disabled = disabled;
+  document.getElementById("spin-1000").disabled = disabled;
+  document.getElementById("reset").disabled = disabled;
+}
+
+// ----- render -----
+function renderAll(){
+  drawSpinner();
+  drawTally();
+  drawChart();
+  notifyHeight();
+}
+function renderTallyAndChart(){
+  drawTally();
+  drawChart();
+  notifyHeight();
+}
+
+// ----- handlers -----
+document.getElementById("spin-1").addEventListener("click", spinOnce);
+document.getElementById("spin-10").addEventListener("click", function(){ spinMany(10); });
+document.getElementById("spin-100").addEventListener("click", function(){ spinMany(100); });
+document.getElementById("spin-1000").addEventListener("click", function(){ spinMany(1000); });
+document.getElementById("reset").addEventListener("click", function(){
+  resetTrials();
+  renderAll();
+});
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+buildSectorControls();
+renderAll();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

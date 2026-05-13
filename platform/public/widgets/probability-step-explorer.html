@@ -307,6 +307,181 @@ var PRESETS = {
         favourable: null
       }
     ]
+  },
+
+  // ----- 8.2 presets -----
+
+  "p1-relative-frequency": {
+    title: "WORKED EXAMPLE · RELATIVE FREQUENCY",
+    meta: "results from 80 spinner trials",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE EXPERIMENT",
+        lines: [
+          "A student spins a three-colour spinner $80$ times. The results:",
+          "red: $12$, blue: $35$, green: $33$.",
+          "Find the relative frequency of red."
+        ]
+      },
+      {
+        tag: "STEP 2 · WRITE THE FORMULA",
+        lines: [
+          "$\\text{relative frequency} = \\dfrac{\\text{count of that outcome}}{\\text{total trials}}$"
+        ]
+      },
+      {
+        tag: "STEP 3 · SUBSTITUTE",
+        lines: [
+          "Red count: $12$. Total trials: $80$.",
+          "$\\text{rel freq}(\\text{red}) = \\dfrac{12}{80}$"
+        ]
+      },
+      {
+        tag: "STEP 4 · SIMPLIFY",
+        lines: [
+          "$\\gcd(12, 80) = 4$, so divide both top and bottom by $4$:",
+          "$\\dfrac{12}{80} = \\dfrac{3}{20}$",
+          "Decimal: $0.15$. Percent: $15\\%$."
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{rel freq}(\\text{red}) = \\boxed{\\dfrac{3}{20}}",
+        marks: "[B1 for $\\tfrac{12}{80}$; B1 for $\\tfrac{3}{20}$ simplified]"
+      }
+    ]
+  },
+
+  "p2-expected-frequency": {
+    title: "WORKED EXAMPLE · PREDICT FROM PROBABILITY",
+    meta: "a biased coin, 50 tosses",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE SETUP",
+        lines: [
+          "A weighted coin lands heads with probability $0.7$.",
+          "If the coin is tossed $50$ times, how many heads do we expect?"
+        ]
+      },
+      {
+        tag: "STEP 2 · FORMULA",
+        lines: [
+          "$\\text{expected count} = p \\times n$",
+          "$p$ is the probability of the event, $n$ is the number of trials."
+        ]
+      },
+      {
+        tag: "STEP 3 · SUBSTITUTE",
+        lines: [
+          "$p = 0.7$ and $n = 50$.",
+          "$\\text{expected heads} = 0.7 \\times 50$"
+        ]
+      },
+      {
+        tag: "STEP 4 · COMPUTE",
+        lines: [
+          "$0.7 \\times 50 = 35$",
+          "So we expect about $35$ heads in $50$ tosses."
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{expected heads} = \\boxed{35}",
+        marks: "[M1 for $0.7 \\times 50$; A1 for $35$]"
+      }
+    ]
+  },
+
+  "p3-fair-or-biased": {
+    title: "WORKED EXAMPLE · IS THE SPINNER FAIR?",
+    meta: "four-colour spinner, 100 spins",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE QUESTION",
+        lines: [
+          "A spinner has four equal-sized sectors: red, blue, green, yellow.",
+          "It is spun $100$ times. Results: red $18$, blue $26$, green $27$, yellow $29$.",
+          "Do the results suggest the spinner is FAIR?"
+        ]
+      },
+      {
+        tag: "STEP 2 · EXPECTED IF FAIR",
+        lines: [
+          "If the spinner is fair, each colour has probability $\\tfrac{1}{4}$.",
+          "Expected count for each: $\\tfrac{1}{4} \\times 100 = 25$.",
+          "So the expected results would be $25, 25, 25, 25$."
+        ]
+      },
+      {
+        tag: "STEP 3 · COMPARE",
+        lines: [
+          "Observed: $18, 26, 27, 29$. Expected: $25, 25, 25, 25$.",
+          "Differences: $-7, +1, +2, +4$.",
+          "All four observed counts are reasonably close to $25$. The biggest gap is for red ($7$ below)."
+        ]
+      },
+      {
+        tag: "STEP 4 · JUDGE",
+        lines: [
+          "Small differences from the expected count are normal: random results bounce around the long-run probability, especially with only $100$ trials.",
+          "There is no strong evidence the spinner is biased. We say the results are consistent with a fair spinner."
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{The spinner appears } \\boxed{\\text{fair}}",
+        marks: "[B1 for $25$ as the expected count per colour; B1 for a sensible comparison and conclusion]"
+      }
+    ]
+  },
+
+  "p2-review-comprehensive": {
+    title: "COMPREHENSIVE WORKED EXAMPLE",
+    meta: "spinner experiment with prediction",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE EXPERIMENT",
+        lines: [
+          "Aisha designs a $5$-section spinner. She spins it $200$ times and records:",
+          "red $48$, blue $50$, green $42$, yellow $30$, orange $30$.",
+          "(a) Find the relative frequency of red.",
+          "(b) Estimate the probability of yellow on the next spin.",
+          "(c) If the spinner is spun a further $500$ times, how many yellows do we expect?"
+        ]
+      },
+      {
+        tag: "PART (a) · RELATIVE FREQUENCY OF RED",
+        lines: [
+          "$\\text{rel freq}(\\text{red}) = \\dfrac{48}{200}$",
+          "Simplify: $\\gcd(48, 200) = 8$, so $\\dfrac{48}{200} = \\dfrac{6}{25}$.",
+          "Decimal: $0.24$."
+        ]
+      },
+      {
+        tag: "PART (b) · ESTIMATE P(YELLOW)",
+        lines: [
+          "With no other information, our best estimate of $P(\\text{yellow})$ is the relative frequency.",
+          "$P(\\text{yellow}) \\approx \\dfrac{30}{200} = \\dfrac{3}{20} = 0.15$"
+        ]
+      },
+      {
+        tag: "PART (c) · EXPECTED YELLOWS IN 500 SPINS",
+        lines: [
+          "Use the formula: expected count $= p \\times n$.",
+          "$p \\approx 0.15$, $n = 500$.",
+          "$\\text{expected} = 0.15 \\times 500 = 75$"
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{(a) } \\boxed{\\tfrac{6}{25}}, \\quad \\text{(b) } \\boxed{0.15}, \\quad \\text{(c) } \\boxed{75 \\text{ yellows}}",
+        marks: "(a) [B1] · (b) [B1] · (c) [M1 for $0.15 \\times 500$; A1 for $75$]"
+      }
+    ]
   }
 };
 
