@@ -482,6 +482,284 @@ var PRESETS = {
         marks: "(a) [B1] · (b) [B1] · (c) [M1 for $0.15 \\times 500$; A1 for $75$]"
       }
     ]
+  },
+
+  // ----- 8.3 presets -----
+
+  "p1-two-dice-sum-7": {
+    title: "WORKED EXAMPLE · TWO DICE SUM = 7",
+    meta: "two fair six-sided dice",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · WHAT WE'RE DOING",
+        lines: [
+          "Two fair six-sided dice are rolled. We want the probability that the SUM of the two scores is exactly $7$.",
+          "Equally likely outcomes total: $6 \\times 6 = 36$."
+        ]
+      },
+      {
+        tag: "STEP 2 · LIST THE FAVOURABLE OUTCOMES",
+        lines: [
+          "Pairs (die A, die B) whose sum is $7$:",
+          "$(1, 6), (2, 5), (3, 4), (4, 3), (5, 2), (6, 1)$",
+          "That is $6$ favourable outcomes."
+        ]
+      },
+      {
+        tag: "STEP 3 · WRITE THE PROBABILITY",
+        lines: [
+          "$P(\\text{sum} = 7) = \\dfrac{6}{36}$",
+          "Simplify: $\\gcd(6, 36) = 6$, so $\\dfrac{6}{36} = \\dfrac{1}{6}$."
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(\\text{sum} = 7) = \\boxed{\\dfrac{1}{6}}",
+        marks: "[M1 for a complete sample space OR listing $6$ correct pairs; A1 for $\\tfrac{1}{6}$]"
+      }
+    ]
+  },
+
+  "p1-two-spinners": {
+    title: "WORKED EXAMPLE · TWO SPINNERS",
+    meta: "spinner A (1,1,3,5) + spinner B (2,4,6,8)",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE EXPERIMENT",
+        lines: [
+          "Spinner A has sectors $\\{1, 1, 3, 5\\}$. Spinner B has sectors $\\{2, 4, 6, 8\\}$.",
+          "Both are spun and the scores are added.",
+          "Find the probability that the sum is greater than $10$."
+        ]
+      },
+      {
+        tag: "STEP 2 · BUILD THE SAMPLE SPACE",
+        lines: [
+          "All combinations (A-score, B-score) and their sum. $4 \\times 4 = 16$ outcomes.",
+          "Tabulating all $16$ sums: $3, 5, 7, 9; \\, 3, 5, 7, 9; \\, 5, 7, 9, 11; \\, 7, 9, 11, 13$.",
+          "The first two rows are identical because spinner A has two $1$s."
+        ]
+      },
+      {
+        tag: "STEP 3 · COUNT FAVOURABLE",
+        lines: [
+          "Sums greater than $10$: $11, 11, 13$. That is $3$ outcomes out of $16$.",
+          "$P(\\text{sum} > 10) = \\dfrac{3}{16}$",
+          "$\\gcd(3, 16) = 1$, so already simplified."
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(\\text{sum} > 10) = \\boxed{\\dfrac{3}{16}}",
+        marks: "[M1 for a complete sample space; A1 for $\\tfrac{3}{16}$]"
+      }
+    ]
+  },
+
+  "p2-tree-with-replacement": {
+    title: "WORKED EXAMPLE · TWO INDEPENDENT TESTS",
+    meta: "P(pass) = 0.65 on each test",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE SETUP",
+        lines: [
+          "A student takes a driving test twice. Each time, the probability they pass is $0.65$, independent of the other attempt.",
+          "Find the probability that they pass exactly ONE of the two tests."
+        ]
+      },
+      {
+        tag: "STEP 2 · LIST THE PATHS",
+        lines: [
+          "There are two ways to pass exactly one: pass-then-fail (PF), or fail-then-pass (FP).",
+          "$P(\\text{P}) = 0.65$, $P(\\text{F}) = 1 - 0.65 = 0.35$.",
+          "Multiply along each path:",
+          "$P(\\text{PF}) = 0.65 \\times 0.35$ and $P(\\text{FP}) = 0.35 \\times 0.65$"
+        ]
+      },
+      {
+        tag: "STEP 3 · ADD THE TWO PATHS",
+        lines: [
+          "$P(\\text{exactly one pass}) = P(\\text{PF}) + P(\\text{FP})$",
+          "$= 0.65 \\times 0.35 + 0.35 \\times 0.65 = 2 \\times 0.65 \\times 0.35$",
+          "$= 0.455$"
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(\\text{exactly one pass}) = \\boxed{0.455}",
+        marks: "[M1 for $2 \\times 0.65 \\times 0.35$; A1 for $0.455$ or $\\tfrac{91}{200}$]"
+      }
+    ]
+  },
+
+  "p3-without-replacement": {
+    title: "WORKED EXAMPLE · TWO DRAWS WITHOUT REPLACEMENT",
+    meta: "bag of 8 red and 7 blue counters",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE EXPERIMENT",
+        lines: [
+          "A bag has $8$ red counters and $7$ blue counters. Two counters are drawn at random WITHOUT replacement.",
+          "Find $P(\\text{both red})$."
+        ]
+      },
+      {
+        tag: "STEP 2 · FIRST DRAW",
+        lines: [
+          "Total $= 8 + 7 = 15$ counters. Reds: $8$.",
+          "$P(\\text{first red}) = \\dfrac{8}{15}$"
+        ]
+      },
+      {
+        tag: "STEP 3 · SECOND DRAW (DENOMINATORS DROP)",
+        lines: [
+          "If the first counter was red and is NOT replaced, there are $7$ reds left out of $14$ counters.",
+          "$P(\\text{second red} \\mid \\text{first red}) = \\dfrac{7}{14} = \\dfrac{1}{2}$"
+        ]
+      },
+      {
+        tag: "STEP 4 · MULTIPLY ALONG THE BRANCH",
+        lines: [
+          "$P(\\text{both red}) = \\dfrac{8}{15} \\times \\dfrac{7}{14}$",
+          "$= \\dfrac{56}{210} = \\dfrac{4}{15}$"
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(\\text{both red}) = \\boxed{\\dfrac{4}{15}}",
+        marks: "[M1 for $\\tfrac{8}{15} \\times \\tfrac{7}{14}$; A1 for $\\tfrac{4}{15}$]"
+      }
+    ]
+  },
+
+  "p3-at-least-one-complement": {
+    title: "WORKED EXAMPLE · USE THE COMPLEMENT FOR 'AT LEAST ONE'",
+    meta: "bag of 8 red and 7 blue, two draws",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE QUESTION",
+        lines: [
+          "Same bag as before: $8$ red and $7$ blue counters. Two are drawn without replacement.",
+          "Find $P(\\text{at least one red})$."
+        ]
+      },
+      {
+        tag: "STEP 2 · WHY DIRECT COUNTING IS UGLY",
+        lines: [
+          "Directly, 'at least one red' has three cases: red-red, red-blue, blue-red.",
+          "All three would need their own multiplications, then we add them."
+        ]
+      },
+      {
+        tag: "STEP 3 · USE THE COMPLEMENT",
+        lines: [
+          "$P(\\text{at least one red}) = 1 - P(\\text{no reds})$",
+          "$P(\\text{no reds}) = P(\\text{first blue}) \\times P(\\text{second blue} \\mid \\text{first blue})$",
+          "$= \\dfrac{7}{15} \\times \\dfrac{6}{14} = \\dfrac{42}{210} = \\dfrac{1}{5}$"
+        ]
+      },
+      {
+        tag: "STEP 4 · SUBTRACT FROM 1",
+        lines: [
+          "$P(\\text{at least one red}) = 1 - \\dfrac{1}{5} = \\dfrac{4}{5}$"
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(\\text{at least one red}) = \\boxed{\\dfrac{4}{5}}",
+        marks: "[M1 for $1 - \\tfrac{7}{15} \\times \\tfrac{6}{14}$; M1 for $\\tfrac{1}{5}$; A1 for $\\tfrac{4}{5}$]"
+      }
+    ]
+  },
+
+  "p4-venn-combined": {
+    title: "WORKED EXAMPLE · READ A VENN DIAGRAM",
+    meta: "20 students, A = plays cricket, B = plays football",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE DATA",
+        lines: [
+          "Of $20$ students: $8$ play only cricket; $5$ play both cricket and football; $4$ play only football; $3$ play neither.",
+          "Find $P(A)$, $P(A \\cap B)$, and $P(A \\cup B)$, where $A$ is 'plays cricket' and $B$ is 'plays football'."
+        ]
+      },
+      {
+        tag: "STEP 2 · P(A) (PLAYS CRICKET)",
+        lines: [
+          "The whole circle $A$ holds: cricket only $+$ both $= 8 + 5 = 13$.",
+          "$P(A) = \\dfrac{13}{20}$"
+        ]
+      },
+      {
+        tag: "STEP 3 · P(A ∩ B) (PLAYS BOTH)",
+        lines: [
+          "Only the overlap counts: $5$ students.",
+          "$P(A \\cap B) = \\dfrac{5}{20} = \\dfrac{1}{4}$"
+        ]
+      },
+      {
+        tag: "STEP 4 · P(A ∪ B) (PLAYS AT LEAST ONE)",
+        lines: [
+          "All three inside regions: $8 + 5 + 4 = 17$.",
+          "$P(A \\cup B) = \\dfrac{17}{20}$",
+          "Check using inclusion-exclusion: $P(A) + P(B) - P(A \\cap B) = \\dfrac{13}{20} + \\dfrac{9}{20} - \\dfrac{5}{20} = \\dfrac{17}{20}$ \\checkmark"
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(A) = \\boxed{\\tfrac{13}{20}}, \\; P(A \\cap B) = \\boxed{\\tfrac{1}{4}}, \\; P(A \\cup B) = \\boxed{\\tfrac{17}{20}}",
+        marks: "[B1 for each part]"
+      }
+    ]
+  },
+
+  "review-8p3-comprehensive": {
+    title: "COMPREHENSIVE WORKED EXAMPLE",
+    meta: "bag of marbles, three draws without replacement",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE EXPERIMENT",
+        lines: [
+          "A bag contains $4$ red and $6$ blue marbles. Three are drawn at random without replacement.",
+          "(a) Find $P(\\text{first red})$.",
+          "(b) Find $P(\\text{all three red})$.",
+          "(c) Find $P(\\text{at least one red})$ using the complement."
+        ]
+      },
+      {
+        tag: "PART (a) · FIRST RED",
+        lines: [
+          "$P(\\text{first red}) = \\dfrac{4}{10} = \\dfrac{2}{5}$"
+        ]
+      },
+      {
+        tag: "PART (b) · ALL THREE RED",
+        lines: [
+          "$P(\\text{all three red}) = \\dfrac{4}{10} \\times \\dfrac{3}{9} \\times \\dfrac{2}{8}$",
+          "$= \\dfrac{24}{720} = \\dfrac{1}{30}$"
+        ]
+      },
+      {
+        tag: "PART (c) · AT LEAST ONE RED (COMPLEMENT)",
+        lines: [
+          "$P(\\text{at least one red}) = 1 - P(\\text{no reds})$",
+          "$P(\\text{no reds}) = \\dfrac{6}{10} \\times \\dfrac{5}{9} \\times \\dfrac{4}{8} = \\dfrac{120}{720} = \\dfrac{1}{6}$",
+          "$P(\\text{at least one red}) = 1 - \\dfrac{1}{6} = \\dfrac{5}{6}$"
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{(a) } \\boxed{\\tfrac{2}{5}}, \\; \\text{(b) } \\boxed{\\tfrac{1}{30}}, \\; \\text{(c) } \\boxed{\\tfrac{5}{6}}",
+        marks: "(a) [B1] · (b) [M1 for $\\tfrac{4}{10} \\times \\tfrac{3}{9} \\times \\tfrac{2}{8}$; A1] · (c) [M1 for $1 - \\tfrac{6}{10} \\times \\tfrac{5}{9} \\times \\tfrac{4}{8}$; A1]"
+      }
+    ]
   }
 };
 

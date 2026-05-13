@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Sample Space Grid Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+  .panel-tag { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px; margin-top:10px; }
+
+  .conditions { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+  .cond-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:10.5px; font-weight:600; letter-spacing:0.4px; padding:6px 10px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; }
+  .cond-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
+  .cond-btn.active { color:#fff067; border-color:#fff067; background:rgba(255,240,103,0.06); }
+
+  .grid-wrap { display:flex; justify-content:center; margin: 10px 0 6px; }
+  #grid { display:grid; grid-template-columns: 24px repeat(6, 44px); grid-template-rows: 24px repeat(6, 44px); gap:3px; }
+  .gcell { display:flex; align-items:center; justify-content:center; border-radius:5px; font-family:'Geist Mono',monospace; font-size:13px; }
+  .hdr { color:#7a7875; font-weight:600; font-size:11px; }
+  .hdr-a { background:rgba(0,171,250,0.1); color:#00abfa; }
+  .hdr-b { background:rgba(255,70,112,0.1); color:#ff4670; }
+  .cell { background:rgba(58,74,90,0.18); border:1px solid #141e2a; color:#c8c6be; transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease, opacity 0.25s ease, border-color 0.25s ease, filter 0.25s ease; font-weight:600; }
+  .cell.match { background:rgba(15,238,137,0.15); border-color:rgba(15,238,137,0.5); color:#0fee89; }
+  .cell.miss  { opacity:0.32; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1px currentColor); }
+    50%      { filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 7px currentColor); }
+  }
+  .cell.match { animation: pulse-glow 1.8s ease-in-out infinite; color:#0fee89; }
+
+  .legend { font-family:'Geist Mono',monospace; font-size:10.5px; color:#7a7875; text-align:center; margin-bottom:14px; line-height:1.6; }
+  .legend .die-a { color:#00abfa; }
+  .legend .die-b { color:#ff4670; }
+  .legend .val { color:#fff067; }
+
+  .formula-strip { display:flex; align-items:center; gap:14px; padding:11px 14px; margin-top:8px; background:rgba(15,238,137,0.04); border:1px solid rgba(15,238,137,0.20); border-radius:8px; }
+  .formula-strip .tag { font-family:'Geist Mono',monospace; font-size:10px; color:#0fee89; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; flex:0 0 auto; }
+  .formula-strip .eq { font-size:17px; color:#f0eeea; }
+  .formula-strip .eq .katex { font-size:1em; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">SAMPLE SPACE · TWO DICE</span>
+    <span class="meta">tap a condition</span>
+  </div>
+
+  <div class="panel-tag">conditions</div>
+  <div class="conditions" id="conditions"></div>
+
+  <div class="legend">
+    rows = <span class="die-b">die B</span> · columns = <span class="die-a">die A</span> · each cell shows <span class="val">A + B</span>
+  </div>
+
+  <div class="grid-wrap">
+    <div id="grid"></div>
+  </div>
+
+  <div class="formula-strip">
+    <span class="tag" id="formula-tag">probability</span>
+    <span class="eq" id="formula"></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", pink:"#ff4670", yellow:"#fff067", green:"#0fee89",
+  faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+// Each condition: { id, label, displayTeX, test(a, b), eventTeX }
+var CONDITIONS = [
+  { id:"sum-7",     label:"sum = 7",          displayTeX:"\\text{sum} = 7",        test:function(a,b){return a+b===7;},  eventTeX:"\\text{sum} = 7" },
+  { id:"sum-gt-9",  label:"sum > 9",          displayTeX:"\\text{sum} > 9",        test:function(a,b){return a+b>9;},    eventTeX:"\\text{sum} > 9" },
+  { id:"sum-lt-5",  label:"sum < 5",          displayTeX:"\\text{sum} < 5",        test:function(a,b){return a+b<5;},    eventTeX:"\\text{sum} < 5" },
+  { id:"doubles",   label:"double",           displayTeX:"\\text{double}",         test:function(a,b){return a===b;},    eventTeX:"\\text{double}" },
+  { id:"both-even", label:"both even",        displayTeX:"\\text{both even}",      test:function(a,b){return a%2===0 && b%2===0;}, eventTeX:"\\text{both even}" },
+  { id:"any-six",   label:"at least one 6",   displayTeX:"\\text{at least one } 6", test:function(a,b){return a===6||b===6;}, eventTeX:"\\text{at least one } 6" }
+];
+
+var state = { activeId: "sum-7" };
+
+function activeCondition(){ return CONDITIONS.filter(function(c){return c.id===state.activeId;})[0]; }
+function gcd(a, b){ a=Math.abs(a); b=Math.abs(b); while(b){var t=b;b=a%b;a=t;} return a; }
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+
+function buildConditions(){
+  var host = document.getElementById("conditions");
+  host.innerHTML = "";
+  CONDITIONS.forEach(function(c){
+    var b = document.createElement("button");
+    b.className = "cond-btn" + (state.activeId === c.id ? " active" : "");
+    b.textContent = c.label;
+    b.addEventListener("click", function(){
+      state.activeId = c.id;
+      render();
+    });
+    host.appendChild(b);
+  });
+}
+
+function buildGrid(){
+  var grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  // Top-left corner cell (blank)
+  var corner = document.createElement("div");
+  corner.className = "gcell";
+  grid.appendChild(corner);
+  // Top row headers (die A: 1..6)
+  for (var a = 1; a <= 6; a++){
+    var h = document.createElement("div");
+    h.className = "gcell hdr hdr-a";
+    h.textContent = a;
+    grid.appendChild(h);
+  }
+  // Each subsequent row: left header (die B value) then 6 cells
+  for (var b = 1; b <= 6; b++){
+    var lh = document.createElement("div");
+    lh.className = "gcell hdr hdr-b";
+    lh.textContent = b;
+    grid.appendChild(lh);
+    for (var a2 = 1; a2 <= 6; a2++){
+      var cell = document.createElement("div");
+      cell.className = "gcell cell";
+      cell.dataset.a = a2; cell.dataset.b = b;
+      cell.textContent = (a2 + b);
+      grid.appendChild(cell);
+    }
+  }
+}
+
+function applyHighlights(){
+  var cond = activeCondition();
+  var cells = document.querySelectorAll(".gcell.cell");
+  cells.forEach(function(c){
+    var a = parseInt(c.dataset.a, 10);
+    var b = parseInt(c.dataset.b, 10);
+    var match = cond.test(a, b);
+    c.classList.toggle("match", match);
+    c.classList.toggle("miss",  !match);
+  });
+}
+
+function renderFormula(){
+  var cond = activeCondition();
+  var fav = 0;
+  for (var a = 1; a <= 6; a++){
+    for (var b = 1; b <= 6; b++){
+      if (cond.test(a, b)) fav++;
+    }
+  }
+  var tot = 36;
+  var tagEl = document.getElementById("formula-tag");
+  tagEl.textContent = "P(" + cond.label + ")";
+  var el = document.getElementById("formula");
+  el.innerHTML = "";
+  if (fav === 0){
+    tryRender(el, "P(\\," + cond.eventTeX + "\\,) = \\dfrac{0}{36} = 0");
+    return;
+  }
+  if (fav === 36){
+    tryRender(el, "P(\\,) = \\dfrac{36}{36} = 1");
+    return;
+  }
+  var g = gcd(fav, tot);
+  var sf = fav / g, st = tot / g;
+  var tex = "P(\\,{\\color{#0fee89}" + cond.eventTeX + "}\\,) = \\dfrac{{\\color{#0fee89}" + fav + "}}{36}";
+  if (g > 1){
+    tex += " = \\dfrac{{\\color{#0fee89}" + sf + "}}{" + st + "}";
+  }
+  // decimal
+  var dec = fav / 36;
+  var decStr;
+  if (Math.abs(dec - Math.round(dec * 100) / 100) < 1e-9){
+    decStr = (Math.round(dec * 100) / 100).toString();
+  } else {
+    decStr = dec.toFixed(3);
+  }
+  tex += " \\approx " + decStr;
+  tryRender(el, tex);
+}
+
+function render(){
+  buildConditions();
+  applyHighlights();
+  renderFormula();
+  notifyHeight();
+}
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+buildConditions();
+buildGrid();
+applyHighlights();
+renderFormula();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

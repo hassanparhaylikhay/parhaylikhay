@@ -608,7 +608,16 @@ export const UNITS: Unit[] = [
           { slug: "review", label: "R",  title: "Review & practice", isReview: true },
         ],
       },
-      { slug: "03", code: "8.3", title: "Probability of combined events" },
+      {
+        slug: "03", code: "8.3", title: "Probability of combined events",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Sample space diagrams" },
+          { slug: "p2",     label: "P2", title: "Tree diagrams (with replacement)" },
+          { slug: "p3",     label: "P3", title: "Tree diagrams (without replacement)" },
+          { slug: "p4",     label: "P4", title: "Venn diagrams for combined events" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
     ],
   },
   {

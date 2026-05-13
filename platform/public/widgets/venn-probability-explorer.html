@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Venn Probability Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+  .panel-tag { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px; margin-top:12px; }
+
+  #stage { display:block; width:100%; height:auto; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .regions { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-top:4px; }
+  .rcard { padding:10px; border-radius:8px; border:1px solid; background:#0b1118; }
+  .rcard .name { font-family:'Geist Mono',monospace; font-size:9.5px; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; margin-bottom:4px; }
+  .rcard .count { font-family:'Geist Mono',monospace; font-size:18px; color:#f0eeea; text-align:center; margin:4px 0 6px; }
+  .rcard .btns { display:flex; gap:4px; }
+  .rcard .btn { flex:1; background:#0b1118; border:1px solid currentColor; color:currentColor; font-family:'Geist Mono',monospace; font-size:12px; font-weight:700; padding:2px 0; border-radius:4px; cursor:pointer; opacity:0.7; transition:all 0.12s ease; }
+  .rcard .btn:hover { opacity:1; }
+  .rcard .btn:disabled { opacity:0.25; cursor:not-allowed; }
+
+  .readouts { display:grid; grid-template-columns:repeat(4, 1fr); gap:10px; margin-top:10px; }
+  .readout { padding:10px; border-radius:8px; text-align:center; border:1px solid; }
+  .readout .tag { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:0.4px; text-transform:uppercase; font-weight:600; margin-bottom:6px; }
+  .readout .val { font-size:15px; color:#f0eeea; min-height:22px; display:flex; align-items:center; justify-content:center; }
+  .readout .val .katex { font-size:1em; }
+
+  .iden-strip { display:flex; align-items:center; gap:10px; padding:10px 14px; margin-top:10px; background:rgba(15,238,137,0.04); border:1px solid rgba(15,238,137,0.20); border-radius:8px; }
+  .iden-strip .tag { font-family:'Geist Mono',monospace; font-size:10px; color:#0fee89; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; flex:0 0 auto; }
+  .iden-strip .eq { font-size:14px; color:#f0eeea; }
+  .iden-strip .eq .katex { font-size:1em; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">VENN DIAGRAM · TWO EVENTS</span>
+    <span class="meta">use +/- to fill regions</span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 240" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-rect"></g>
+    <g id="g-circles"></g>
+    <g id="g-labels"></g>
+    <g id="g-counts"></g>
+    <g id="g-total"></g>
+  </svg>
+
+  <div class="panel-tag">region counts</div>
+  <div class="regions" id="regions"></div>
+
+  <div class="panel-tag">probabilities</div>
+  <div class="readouts" id="readouts"></div>
+
+  <div class="iden-strip">
+    <span class="tag">inclusion-exclusion</span>
+    <span class="eq" id="iden"></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", pink:"#ff4670", yellow:"#fff067", green:"#0fee89",
+  faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+var REGIONS = [
+  { id:"aOnly",   label:"A only", colour:"#00abfa", desc:"in A, not B" },
+  { id:"both",    label:"A ∩ B",  colour:"#fff067", desc:"in both A and B" },
+  { id:"bOnly",   label:"B only", colour:"#ff4670", desc:"in B, not A" },
+  { id:"neither", label:"neither", colour:"#7a7875", desc:"outside both" }
+];
+
+var state = { aOnly:5, both:3, bOnly:4, neither:2 };
+var MAX_PER = 9;
+
+function total(){ return state.aOnly + state.both + state.bOnly + state.neither; }
+function countA(){ return state.aOnly + state.both; }
+function countB(){ return state.bOnly + state.both; }
+function countUnion(){ return state.aOnly + state.both + state.bOnly; }
+
+function gcd(a, b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=b; b=a%b; a=t; } return a; }
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function svgKaTeXLabel(parent, x, y, tex, color, align, width){
+  align = align || "center";
+  width = width || 100;
+  var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
+  fo.setAttribute("x", x - width/2); fo.setAttribute("y", y - 11);
+  fo.setAttribute("width", width); fo.setAttribute("height", 22);
+  fo.style.overflow = "visible"; fo.style.pointerEvents = "none";
+  var div = document.createElement("div");
+  div.style.height = "22px"; div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
+  div.className = "lbl-host"; div.style.color = color || COL.off;
+  fo.appendChild(div); parent.appendChild(fo);
+  tryRender(div, tex);
+}
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+
+function drawVenn(){
+  var gR = document.getElementById("g-rect");
+  var gC = document.getElementById("g-circles");
+  var gL = document.getElementById("g-labels");
+  var gN = document.getElementById("g-counts");
+  var gT = document.getElementById("g-total");
+  clear(gR); clear(gC); clear(gL); clear(gN); clear(gT);
+
+  var W = 480, H = 240;
+  var BOX_X = 30, BOX_Y = 24, BOX_W = 420, BOX_H = 190;
+  // Sample space rect
+  var rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
+  rect.setAttribute("x", BOX_X); rect.setAttribute("y", BOX_Y);
+  rect.setAttribute("width", BOX_W); rect.setAttribute("height", BOX_H);
+  rect.setAttribute("rx", 10);
+  rect.setAttribute("fill", "none");
+  rect.setAttribute("stroke", "#3a4a5a"); rect.setAttribute("stroke-width", 1.2);
+  gR.appendChild(rect);
+  // Ω label top-right
+  svgKaTeXLabel(gT, BOX_X + BOX_W - 22, BOX_Y + 12, "\\Omega = " + total(), "#7a7875", "center", 60);
+
+  // Circles A (left) and B (right), overlapping
+  var cy = BOX_Y + BOX_H / 2 + 6;
+  var rAx = BOX_X + 130;
+  var rBx = BOX_X + 290;
+  var R = 90;
+
+  var cA = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  cA.setAttribute("cx", rAx); cA.setAttribute("cy", cy); cA.setAttribute("r", R);
+  cA.setAttribute("fill", "rgba(0,171,250,0.12)");
+  cA.setAttribute("stroke", "#00abfa"); cA.setAttribute("stroke-width", 1.5);
+  gC.appendChild(cA);
+  var cB = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  cB.setAttribute("cx", rBx); cB.setAttribute("cy", cy); cB.setAttribute("r", R);
+  cB.setAttribute("fill", "rgba(255,70,112,0.12)");
+  cB.setAttribute("stroke", "#ff4670"); cB.setAttribute("stroke-width", 1.5);
+  gC.appendChild(cB);
+
+  // Set-name labels
+  svgKaTeXLabel(gL, rAx - R + 14, cy - R + 6, "A", COL.blue, "center", 30);
+  svgKaTeXLabel(gL, rBx + R - 14, cy - R + 6, "B", COL.pink, "center", 30);
+
+  // Region counts: in "A only" (centred between left edge of A and intersection start),
+  // in "both" (between the two centres), in "B only" (mirror), and "neither" (top-left of box, near corner).
+  // A-only centre at rAx - 38
+  // B-only centre at rBx + 38
+  // Both centre at (rAx + rBx) / 2
+  // Neither at bottom-right corner of the rectangle, outside both circles
+  function bigCount(g, x, y, value, color){
+    var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", x); t.setAttribute("y", y);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("dominant-baseline", "central");
+    t.setAttribute("fill", color);
+    t.setAttribute("font-family", "Geist Mono, monospace");
+    t.setAttribute("font-size", "22");
+    t.setAttribute("font-weight", "700");
+    t.textContent = String(value);
+    g.appendChild(t);
+  }
+  bigCount(gN, rAx - 38, cy, state.aOnly, COL.blue);
+  bigCount(gN, (rAx + rBx) / 2, cy, state.both, COL.yellow);
+  bigCount(gN, rBx + 38, cy, state.bOnly, COL.pink);
+  // Neither: position bottom-left of the rectangle, outside both circles
+  bigCount(gN, BOX_X + 50, BOX_Y + BOX_H - 28, state.neither, COL.grey);
+}
+
+function buildRegions(){
+  var host = document.getElementById("regions");
+  host.innerHTML = "";
+  REGIONS.forEach(function(r){
+    var card = document.createElement("div");
+    card.className = "rcard";
+    card.style.color = r.colour;
+    card.style.borderColor = "rgba(255,255,255,0.06)";
+    card.style.background = "rgba(255,255,255,0.02)";
+    card.innerHTML =
+      '<div class="name" style="color:' + r.colour + '">' + r.label + '</div>' +
+      '<div class="count">' + state[r.id] + '</div>' +
+      '<div class="btns">' +
+        '<button class="btn" data-r="' + r.id + '" data-act="minus">−</button>' +
+        '<button class="btn" data-r="' + r.id + '" data-act="plus">+</button>' +
+      '</div>';
+    host.appendChild(card);
+  });
+  host.querySelectorAll(".btn").forEach(function(b){
+    b.addEventListener("click", function(){
+      var r = b.dataset.r;
+      var act = b.dataset.act;
+      if (act === "plus"){
+        if (state[r] < MAX_PER){
+          state[r]++;
+          render();
+        }
+      } else {
+        if (state[r] > 0){
+          state[r]--;
+          render();
+        }
+      }
+    });
+  });
+}
+
+function fracTex(num, den, color){
+  if (den === 0) return "\\text{empty}";
+  if (num === 0) return "{\\color{" + color + "}0}";
+  if (num === den) return "{\\color{" + color + "}1}";
+  var g = gcd(num, den);
+  if (g === 1) return "{\\color{" + color + "}\\dfrac{" + num + "}{" + den + "}}";
+  return "{\\color{" + color + "}\\dfrac{" + (num/g) + "}{" + (den/g) + "}}";
+}
+
+function renderReadouts(){
+  var host = document.getElementById("readouts");
+  host.innerHTML = "";
+  var N = total();
+  var defs = [
+    { tag:"P(A)",      num:countA(),     col:"#00abfa" },
+    { tag:"P(B)",      num:countB(),     col:"#ff4670" },
+    { tag:"P(A ∩ B)",  num:state.both,   col:"#fff067" },
+    { tag:"P(A ∪ B)",  num:countUnion(), col:"#0fee89" }
+  ];
+  defs.forEach(function(d){
+    var card = document.createElement("div");
+    card.className = "readout";
+    card.style.borderColor = d.col + "55";
+    card.style.background = d.col + "0d";
+    card.innerHTML = '<div class="tag" style="color:' + d.col + '">' + d.tag + '</div><div class="val"></div>';
+    host.appendChild(card);
+    var v = card.querySelector(".val");
+    if (N === 0) tryRender(v, "\\text{empty}");
+    else tryRender(v, fracTex(d.num, N, d.col));
+  });
+  // Inclusion-exclusion line
+  var idEl = document.getElementById("iden");
+  idEl.innerHTML = "";
+  if (N === 0){
+    tryRender(idEl, "\\text{empty sample space}");
+    return;
+  }
+  var pA = countA(), pB = countB(), pAB = state.both, pUnion = countUnion();
+  var tex = "P(A) + P(B) - P(A \\cap B) \\;=\\; " +
+    fracTex(pA, N, "#00abfa") + " + " + fracTex(pB, N, "#ff4670") + " - " + fracTex(pAB, N, "#fff067") +
+    " \\;=\\; " + fracTex(pUnion, N, "#0fee89") + " \\;=\\; P(A \\cup B)";
+  tryRender(idEl, tex);
+}
+
+function render(){
+  drawVenn();
+  buildRegions();
+  renderReadouts();
+  notifyHeight();
+}
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+render();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>
