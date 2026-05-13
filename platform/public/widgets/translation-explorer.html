@@ -56,6 +56,15 @@
     50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
   }
   .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+
+  /* Lesson Mode: blend into the parent page; hide chrome that distracts from the puzzle. */
+  body.lesson-mode { background: transparent; padding: 0; }
+  body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
+  body.lesson-mode .head { display: none; }
+  body.lesson-mode .controls { display: none; }
+  body.lesson-mode .vector-strip { margin-top: 14px; }
+  body.lesson-mode.solved .vector-strip { border-color: rgba(15,238,137,0.45); background: rgba(15,238,137,0.05); }
+  body.lesson-mode.solved .vector-strip .tag { color: #0fee89; }
 </style>
 </head>
 <body>
@@ -119,10 +128,24 @@ function snapHalf(v){ return Math.round(v * 2) / 2; }
 var OBJ = [ {x:1,y:1}, {x:4,y:1}, {x:2,y:3} ];
 var LABELS = ['A','B','C'];
 
+// ----- Lesson Mode params (no-op when not embedded as a lesson) -----
+var URL_PARAMS = new URLSearchParams(window.location.search);
+var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
+var TARGET = (function(){
+  var t = URL_PARAMS.get("target");
+  if (!t) return null;
+  var p = t.split(",").map(parseFloat);
+  if (p.length !== 2 || !isFinite(p[0]) || !isFinite(p[1])) return null;
+  return { tx: p[0], ty: p[1] };
+})();
+var SOLVED = false;
+if (LESSON_MODE) document.body.classList.add("lesson-mode");
+
 // ----- state -----
-var P = { tx: 3, ty: -2 };
-var D = { tx: 3, ty: -2 };
-var DEFAULTS = { tx: 3, ty: -2 };
+var INIT = (LESSON_MODE && TARGET) ? { tx: 0, ty: 0 } : { tx: 3, ty: -2 };
+var P = { tx: INIT.tx, ty: INIT.ty };
+var D = { tx: INIT.tx, ty: INIT.ty };
+var DEFAULTS = { tx: INIT.tx, ty: INIT.ty };
 var SPRING = 0.22, EPS = 0.005;
 var raf = null;
 
@@ -253,6 +276,21 @@ function drawScene(){
   var gVec = document.getElementById("g-vec");
   var gGuides = document.getElementById("g-guides");
   clear(gVec); clear(gGuides);
+
+  // Lesson Mode target: faint dashed pink outline showing where the image must land
+  if (LESSON_MODE && TARGET){
+    var TGT = OBJ.map(function(p){ return { x: p.x + TARGET.tx, y: p.y + TARGET.ty }; });
+    var pts = TGT.map(function(p){ return toSx(p.x) + "," + toSy(p.y); }).join(" ");
+    var ghost = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+    ghost.setAttribute("points", pts);
+    ghost.setAttribute("fill", "none");
+    ghost.setAttribute("stroke", SOLVED ? COL.green : COL.pink);
+    ghost.setAttribute("stroke-width", "1.6");
+    ghost.setAttribute("stroke-dasharray", "5 4");
+    ghost.setAttribute("opacity", SOLVED ? "0.4" : "0.7");
+    ghost.style.transition = "stroke 300ms, opacity 300ms";
+    gGuides.appendChild(ghost);
+  }
 
   // ghost arrows from each object vertex to its image vertex (faint yellow)
   OBJ.forEach(function(p){
@@ -406,7 +444,19 @@ function step(){
     drawScene(); renderColumn();
   }
 }
-function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); checkLessonSuccess(); }
+
+function checkLessonSuccess(){
+  if (!LESSON_MODE || !TARGET || SOLVED) return;
+  if (P.tx === TARGET.tx && P.ty === TARGET.ty){
+    SOLVED = true;
+    document.body.classList.add("solved");
+    if (window.parent && window.parent !== window){
+      window.parent.postMessage({ type: "pl-lesson-success", widget: "translation", value: { tx: P.tx, ty: P.ty } }, "*");
+    }
+    drawScene();
+  }
+}
 
 // ----- preset buttons -----
 function renderControls(){

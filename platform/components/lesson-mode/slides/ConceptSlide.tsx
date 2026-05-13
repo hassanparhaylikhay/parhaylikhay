@@ -2,22 +2,27 @@
 
 import { useEffect, useState } from "react"
 import Visual from "../Visual"
+import UnderstoodButton from "./_UnderstoodButton"
 import type { ConceptSlide as ConceptSlideT } from "@/lib/lesson-mode/types"
 
 /**
  * ConceptSlide — introduces an idea.
  *
  * Two flavours:
- *   - Plain concept: title + visual + prompt. Advance manual.
+ *   - Plain concept: title + visual + prompt + "I understood" button.
  *   - Tap-to-reveal: each tap unlocks the next item. With advance=onSuccess
  *     the slide reports complete once every reveal is shown.
  */
 export default function ConceptSlide({
   slide,
   onComplete,
+  onAdvance,
+  canAdvance,
 }: {
   slide: ConceptSlideT
   onComplete: (data?: Record<string, unknown>) => void
+  onAdvance?: () => void
+  canAdvance?: boolean
 }) {
   const reveals = slide.reveals ?? []
   const [revealed, setRevealed] = useState(0)
@@ -64,6 +69,11 @@ export default function ConceptSlide({
             </button>
           )}
         </div>
+      )}
+
+      {/* Student-led advance: only show on manual-advance slides. */}
+      {slide.advance === "manual" && canAdvance && (
+        <UnderstoodButton onClick={onAdvance} />
       )}
     </div>
   )

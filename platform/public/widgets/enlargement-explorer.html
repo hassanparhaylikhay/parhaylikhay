@@ -39,6 +39,15 @@
     50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
   }
   .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+
+  /* Lesson Mode shell: blend with the slide canvas, hide preset shortcuts. */
+  body.lesson-mode { background: transparent; padding: 0; }
+  body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
+  body.lesson-mode .head { display: none; }
+  body.lesson-mode .controls { display: none; }
+  body.lesson-mode .ms-strip { margin-top: 14px; }
+  body.lesson-mode.solved .ms-strip { border-color: rgba(15,238,137,0.45); background: rgba(15,238,137,0.05); }
+  body.lesson-mode.solved .ms-strip .tag { color: #0fee89; }
 </style>
 </head>
 <body>
@@ -98,9 +107,25 @@ var OBJ = [ {x:2,y:1}, {x:4,y:1}, {x:2,y:2} ];
 var LABELS = ['A','B','C'];
 
 // state
-var P = { cx: 0, cy: 0, k: 2 };
-var D = { cx: 0, cy: 0, k: 2 };
-var DEFAULTS = { cx: 0, cy: 0, k: 2 };
+// ----- Lesson Mode params -----
+var URL_PARAMS = new URLSearchParams(window.location.search);
+var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
+var TARGET = (function(){
+  var t = URL_PARAMS.get("target");
+  if (!t) return null;
+  var p = t.split(",").map(parseFloat);
+  if (p.length < 1 || !isFinite(p[0])) return null;
+  // target=k or target=k,cx,cy
+  return { k: p[0], cx: isFinite(p[1]) ? p[1] : null, cy: isFinite(p[2]) ? p[2] : null };
+})();
+var SOLVED = false;
+if (LESSON_MODE) document.body.classList.add("lesson-mode");
+
+// ----- state ----- (Lesson Mode with target starts at k=1 so the student has to FIND the value)
+var INIT = (LESSON_MODE && TARGET) ? { cx: TARGET.cx != null ? TARGET.cx : 0, cy: TARGET.cy != null ? TARGET.cy : 0, k: 1 } : { cx: 0, cy: 0, k: 2 };
+var P = { cx: INIT.cx, cy: INIT.cy, k: INIT.k };
+var D = { cx: INIT.cx, cy: INIT.cy, k: INIT.k };
+var DEFAULTS = { cx: INIT.cx, cy: INIT.cy, k: INIT.k };
 var SPRING = 0.22, EPS = 0.005;
 var raf = null;
 
@@ -212,6 +237,21 @@ function drawScene(){
     ray.setAttribute("opacity", 0.45);
     gR.appendChild(ray);
   });
+
+  // Lesson Mode target: dashed pink outline showing where the image must land
+  if (LESSON_MODE && TARGET){
+    var TGT = OBJ.map(function(p){ return enlargePt(p, TARGET.cx != null ? TARGET.cx : D.cx, TARGET.cy != null ? TARGET.cy : D.cy, TARGET.k); });
+    var tpts = TGT.map(function(p){ return toSx(p.x) + "," + toSy(p.y); }).join(" ");
+    var ghost = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+    ghost.setAttribute("points", tpts);
+    ghost.setAttribute("fill", "none");
+    ghost.setAttribute("stroke", SOLVED ? COL.green : COL.pink);
+    ghost.setAttribute("stroke-width", "1.6");
+    ghost.setAttribute("stroke-dasharray", "5 4");
+    ghost.setAttribute("opacity", SOLVED ? "0.4" : "0.7");
+    ghost.style.transition = "stroke 300ms, opacity 300ms";
+    gI.appendChild(ghost);
+  }
 
   drawPoly(gO, OBJ, "rgba(0,171,250,0.10)", COL.blue, 2);
   var IMG = OBJ.map(function(p){ return enlargePt(p, D.cx, D.cy, D.k); });
@@ -326,7 +366,20 @@ function step(){
   if (!settled()) raf = requestAnimationFrame(step);
   else { raf = null; D.cx = P.cx; D.cy = P.cy; D.k = P.k; drawScene(); renderMS(); }
 }
-function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); checkLessonSuccess(); }
+
+function checkLessonSuccess(){
+  if (!LESSON_MODE || !TARGET || SOLVED) return;
+  if (Math.abs(P.k - TARGET.k) > 0.01) return;
+  if (TARGET.cx != null && Math.abs(P.cx - TARGET.cx) > 0.01) return;
+  if (TARGET.cy != null && Math.abs(P.cy - TARGET.cy) > 0.01) return;
+  SOLVED = true;
+  document.body.classList.add("solved");
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-lesson-success", widget: "enlargement", value: { k: P.k, cx: P.cx, cy: P.cy } }, "*");
+  }
+  drawScene();
+}
 
 var PRESETS = [
   ["2","SF = 2"], ["3","SF = 3"], ["0.5","SF = ½"], ["-1","SF = −1"], ["-2","SF = −2"]

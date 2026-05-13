@@ -1,12 +1,19 @@
 "use client"
 
 import Visual from "../Visual"
+import UnderstoodButton from "./_UnderstoodButton"
 import type { RecapSlide as RecapSlideT } from "@/lib/lesson-mode/types"
 
 /**
- * RecapSlide — closes a section. Visual + small bullets. Advance manual.
+ * RecapSlide — closes a section. Visual + small bullets. Student-led advance.
  */
-export default function RecapSlide({ slide }: { slide: RecapSlideT }) {
+export default function RecapSlide({
+  slide,
+  onAdvance,
+}: {
+  slide: RecapSlideT
+  onAdvance?: () => void
+}) {
   return (
     <div className="w-full flex flex-col items-center gap-6">
       {slide.title && (
@@ -35,6 +42,8 @@ export default function RecapSlide({ slide }: { slide: RecapSlideT }) {
           ))}
         </ul>
       )}
+
+      <UnderstoodButton onClick={onAdvance} label="got it" />
     </div>
   )
 }

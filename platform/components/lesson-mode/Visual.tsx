@@ -31,7 +31,9 @@ function IframeVisual({ src, height }: { src: string; height: number }) {
     function onMsg(e: MessageEvent) {
       const data = e.data
       if (data?.type === "pl-widget-resize" && ref.current?.contentWindow === e.source) {
-        ref.current.style.height = `${data.height}px`
+        // Cap so the slide chrome + understood button stay visible without scroll.
+        const cap = Math.max(360, Math.min(window.innerHeight - 280, 520))
+        ref.current.style.height = `${Math.min(data.height, cap)}px`
       }
     }
     window.addEventListener("message", onMsg)
@@ -42,8 +44,8 @@ function IframeVisual({ src, height }: { src: string; height: number }) {
       ref={ref}
       src={src}
       loading="lazy"
-      className="w-full max-w-[760px] border-0 rounded-lg block mx-auto"
-      style={{ height }}
+      className="w-full max-w-[820px] border-0 rounded-lg block mx-auto"
+      style={{ height, background: "transparent" }}
     />
   )
 }

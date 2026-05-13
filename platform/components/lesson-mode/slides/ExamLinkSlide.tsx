@@ -12,12 +12,16 @@ import type { ExamLinkSlide as ExamLinkSlideT, InteractionSlide as InteractionSl
 export default function ExamLinkSlide({
   slide,
   onComplete,
+  onAdvance,
   savedData,
 }: {
   slide: ExamLinkSlideT
   onComplete: (data?: Record<string, unknown>) => void
+  onAdvance?: () => void
   savedData?: Record<string, unknown>
 }) {
+  // Suppress unused — non-interaction examLink doesn't need onAdvance yet.
+  void onAdvance
   return (
     <div className="w-full flex flex-col items-center gap-5">
       {slide.markCode && (

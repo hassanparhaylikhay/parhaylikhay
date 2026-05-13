@@ -8,6 +8,7 @@ import SelectFromOptions, { type SelectFromOptionsConfig } from "../interactions
 import PlaceLabel, { type PlaceLabelConfig } from "../interactions/PlaceLabel"
 import OrderSteps, { type OrderStepsConfig } from "../interactions/OrderSteps"
 import AdjustSlider, { type AdjustSliderConfig } from "../interactions/AdjustSlider"
+import WidgetCanvas, { type WidgetCanvasConfig } from "../interactions/WidgetCanvas"
 
 /**
  * InteractionSlide — routes a slide of kind="interaction" (or "verify") to the
@@ -44,6 +45,7 @@ export default function InteractionSlide({
           case "placeLabel":          return <PlaceLabel          {...(props as { config: PlaceLabelConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
           case "orderSteps":          return <OrderSteps          {...(props as { config: OrderStepsConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
           case "adjustSlider":        return <AdjustSlider        {...(props as { config: AdjustSliderConfig;        onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
+          case "widgetCanvas":        return <WidgetCanvas        {...(props as { config: WidgetCanvasConfig;        onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
         }
       })()}
     </div>

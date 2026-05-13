@@ -23,6 +23,7 @@ export type InteractionKind =
   | "placeLabel"           // drag labels onto slots
   | "orderSteps"           // arrange steps in order
   | "adjustSlider"         // change a parameter, watch the geometry, settle on a value
+  | "widgetCanvas"         // embed a polished HTML widget; listens for pl-lesson-success
 
 export interface InteractionSpec {
   kind: InteractionKind

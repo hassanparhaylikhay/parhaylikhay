@@ -29,9 +29,24 @@ export default async function LessonModeLayout({
   if (topic.parts && !topic.parts.find(p => p.slug === partSlug)) notFound()
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#07090d] flex">
-      <Sidebar />
-      <main className="flex-1 min-w-0 h-screen overflow-hidden">{children}</main>
+    <div className="h-screen w-screen overflow-hidden bg-[#07090d] flex flex-col">
+      {/* Slim brand strip — keeps the platform identity without crowding the canvas. */}
+      <header className="h-11 shrink-0 flex items-center justify-between px-4 sm:px-6 border-b border-[#0f161f]">
+        <a href="/dashboard" className="flex items-center" aria-label="Parhaylikhay">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/PL-LOGO.png" alt="Parhaylikhay" style={{ height: 22 }} />
+        </a>
+        <p className="hidden sm:block text-[10.5px] font-mono uppercase tracking-[2px] text-[#3a4a5a]">
+          Lesson Mode
+        </p>
+        <span className="hidden sm:block text-[11px] font-mono text-[#3a4a5a] truncate max-w-[180px]">
+          {user.email}
+        </span>
+      </header>
+      <div className="flex-1 min-h-0 flex">
+        <Sidebar />
+        <main className="flex-1 min-w-0 h-full overflow-hidden">{children}</main>
+      </div>
     </div>
   )
 }

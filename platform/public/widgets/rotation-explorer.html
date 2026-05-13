@@ -39,6 +39,11 @@
     50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
   }
   .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+
+  body.lesson-mode { background: transparent; padding: 0; }
+  body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
+  body.lesson-mode .head { display: none; }
+  body.lesson-mode .controls { display: none; }
 </style>
 </head>
 <body>
@@ -68,6 +73,7 @@
 
 <script>
 "use strict";
+if (new URLSearchParams(window.location.search).get("lessonMode") === "1") document.body.classList.add("lesson-mode");
 
 var COL = {
   blue:"#00abfa", yellow:"#fff067", orange:"#ff822c", green:"#0fee89",

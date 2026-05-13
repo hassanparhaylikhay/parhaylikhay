@@ -2,7 +2,7 @@
   "lessonId": "07-01-p1",
   "source": { "unit": "07", "topic": "01", "part": "p1" },
   "title": "The four transformations",
-  "estimatedMinutes": 12,
+  "estimatedMinutes": 14,
   "slides": [
     {
       "id": "01-hook",
@@ -65,10 +65,10 @@
       "kind": "concept",
       "title": "Three of them don't change size",
       "advance": "manual",
-      "prompt": "Translation, reflection, rotation — every length and angle stays the same. Only enlargement makes the shape bigger or smaller.",
+      "prompt": "Translation, reflection, rotation: every length and every angle stays the same. Only enlargement makes the shape bigger or smaller.",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;gap:14px;justify-content:center;flex-wrap:wrap'><div style='text-align:center;opacity:1'><div style='width:96px;height:74px;border-radius:8px;border:1px solid #00abfa55;background:rgba(0,171,250,0.04);display:flex;align-items:center;justify-content:center'><div style='color:#00abfa;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>SAME SIZE</div></div><div style='color:#c8c6be;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>translation</div></div><div style='text-align:center'><div style='width:96px;height:74px;border-radius:8px;border:1px solid #fff06755;background:rgba(255,240,103,0.04);display:flex;align-items:center;justify-content:center'><div style='color:#fff067;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>SAME SIZE</div></div><div style='color:#c8c6be;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>reflection</div></div><div style='text-align:center'><div style='width:96px;height:74px;border-radius:8px;border:1px solid #ff822c55;background:rgba(255,130,44,0.04);display:flex;align-items:center;justify-content:center'><div style='color:#ff822c;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>SAME SIZE</div></div><div style='color:#c8c6be;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>rotation</div></div><div style='text-align:center;opacity:0.5'><div style='width:96px;height:74px;border-radius:8px;border:1px dashed #3a4a5a;background:transparent;display:flex;align-items:center;justify-content:center'><div style='color:#7a7875;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>DIFFERENT</div></div><div style='color:#7a7875;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>enlargement</div></div></div>"
+        "content": "<div style='display:flex;gap:14px;justify-content:center;flex-wrap:wrap'><div style='text-align:center'><div style='width:96px;height:74px;border-radius:8px;border:1px solid #00abfa55;background:rgba(0,171,250,0.04);display:flex;align-items:center;justify-content:center'><div style='color:#00abfa;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>SAME SIZE</div></div><div style='color:#c8c6be;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>translation</div></div><div style='text-align:center'><div style='width:96px;height:74px;border-radius:8px;border:1px solid #fff06755;background:rgba(255,240,103,0.04);display:flex;align-items:center;justify-content:center'><div style='color:#fff067;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>SAME SIZE</div></div><div style='color:#c8c6be;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>reflection</div></div><div style='text-align:center'><div style='width:96px;height:74px;border-radius:8px;border:1px solid #ff822c55;background:rgba(255,130,44,0.04);display:flex;align-items:center;justify-content:center'><div style='color:#ff822c;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>SAME SIZE</div></div><div style='color:#c8c6be;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>rotation</div></div><div style='text-align:center;opacity:0.55'><div style='width:96px;height:74px;border-radius:8px;border:1px dashed #3a4a5a;background:transparent;display:flex;align-items:center;justify-content:center'><div style='color:#7a7875;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>DIFFERENT</div></div><div style='color:#7a7875;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>enlargement</div></div></div>"
       }
     },
 
@@ -107,53 +107,79 @@
     },
 
     {
-      "id": "07-translation-rule",
+      "id": "07-translation-explore",
       "kind": "concept",
-      "title": "Translation: just one column vector",
+      "title": "Translation: drag the triangle anywhere",
       "advance": "manual",
-      "prompt": "Every point slides the same amount. That amount is a column vector.",
-      "visual": {
-        "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px'><svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gtr' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gtr)'/><polygon points='60,140 100,140 80,100' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='200,80 240,80 220,40' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/><line x1='80' y1='100' x2='220' y2='40' stroke='#fff067' stroke-width='1.2' stroke-dasharray='4 3'/><polygon points='220,40 215,46 216,38' fill='#fff067'/></svg><div style='font-family:Geist Mono,monospace;font-size:12.5px;color:#00abfa;padding:7px 16px;border-radius:6px;background:rgba(0,171,250,0.06);border:1px solid #00abfa44'>shift by \\(\\begin{pmatrix} a \\\\ b \\end{pmatrix}\\)</div></div>"
-      }
+      "prompt": "Drag the yellow tip or the pink triangle. The column vector below updates live.",
+      "visual": { "kind": "iframe", "src": "/widgets/translation-explorer.html?lessonMode=1", "height": 520 }
     },
 
     {
-      "id": "08-drag-by-vector",
+      "id": "08-translation-target-1",
       "kind": "interaction",
-      "title": "Drag this triangle so it slides by ⟨3, −2⟩",
+      "title": "Slide it 3 right and 2 down",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "dragToPosition",
-        "hint": "Right 3, down 2. The pink outline is where it should land.",
+        "kind": "widgetCanvas",
+        "hint": "Drag the yellow tip until the column vector reads ⟨3, −2⟩.",
         "config": {
-          "prompt": "Slide it 3 right and 2 down.",
-          "xRange": [-1, 8],
-          "yRange": [-3, 5],
-          "shape": [[0, 0], [2, 0], [1, 2]],
-          "startOffset": [0, 0],
-          "targetOffset": [3, -2],
-          "snap": 1,
-          "successText": "Every point moved by ⟨3, −2⟩.",
-          "showTarget": true
+          "src": "/widgets/translation-explorer.html",
+          "target": "3,-2",
+          "widget": "translation",
+          "prompt": "Drag until the image lands on the pink outline. The shift you want is $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$.",
+          "successText": "Every point moved by ⟨3, −2⟩. That's the entire description."
         }
       }
     },
 
     {
-      "id": "09-reflection-rule",
-      "kind": "concept",
-      "title": "Reflection: just the mirror line",
-      "advance": "manual",
-      "prompt": "Every point flips to the other side of a line. You only need to name the line.",
-      "visual": {
-        "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px'><svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gref' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gref)'/><line x1='160' y1='10' x2='160' y2='190' stroke='#fff067' stroke-width='1.3' stroke-dasharray='4 3'/><polygon points='60,140 60,80 110,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='260,140 260,80 210,110' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg><div style='font-family:Geist Mono,monospace;font-size:12.5px;color:#fff067;padding:7px 16px;border-radius:6px;background:rgba(255,240,103,0.06);border:1px solid #fff06744'>mirror: \\(x = 0\\)</div></div>"
+      "id": "09-translation-target-2",
+      "kind": "interaction",
+      "title": "Now slide by ⟨−4, 3⟩",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Negative x means LEFT. Positive y means UP.",
+        "config": {
+          "src": "/widgets/translation-explorer.html",
+          "target": "-4,3",
+          "widget": "translation",
+          "prompt": "Same triangle, different vector: $\\begin{pmatrix} -4 \\\\ 3 \\end{pmatrix}$. Left and up.",
+          "successText": "Negatives flip direction. Other than that, same idea."
+        }
       }
     },
 
     {
-      "id": "10-which-mirror",
+      "id": "10-translation-target-3",
+      "kind": "interaction",
+      "title": "Pure horizontal: ⟨5, 0⟩",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "y-component is 0. Move ONLY along the x-axis.",
+        "config": {
+          "src": "/widgets/translation-explorer.html",
+          "target": "5,0",
+          "widget": "translation",
+          "prompt": "Slide $\\begin{pmatrix} 5 \\\\ 0 \\end{pmatrix}$. The image stays at the same height.",
+          "successText": "A zero component means no shift in that direction. Same exam logic."
+        }
+      }
+    },
+
+    {
+      "id": "11-reflection-explore",
+      "kind": "concept",
+      "title": "Reflection: one mirror line",
+      "advance": "manual",
+      "prompt": "Drag the yellow handle to move the mirror. Watch the pink image flip to the other side.",
+      "visual": { "kind": "iframe", "src": "/widgets/reflection-explorer.html?lessonMode=1", "height": 520 }
+    },
+
+    {
+      "id": "12-which-mirror",
       "kind": "interaction",
       "title": "Which mirror line did this?",
       "advance": "onSuccess",
@@ -165,8 +191,8 @@
           "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gqm' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gqm)'/><line x1='10' y1='100' x2='310' y2='100' stroke='#1a3350' stroke-width='0.5'/><line x1='160' y1='10' x2='160' y2='190' stroke='#1a3350' stroke-width='0.5'/><polygon points='60,140 60,80 110,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='220,40 160,40 190,90' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg>",
           "options": [
             { "id": "opt-y-eq-x", "text": "Reflection in $y = x$", "isCorrect": true },
-            { "id": "opt-x-axis", "text": "Reflection in the $x$-axis", "whyWrong": "An $x$-axis reflection flips top-bottom only. The pink would still be on the left." },
-            { "id": "opt-y-axis", "text": "Reflection in the $y$-axis", "whyWrong": "A $y$-axis reflection flips left-right only. The pink would still be near the bottom." },
+            { "id": "opt-x-axis", "text": "Reflection in the $x$-axis", "whyWrong": "An $x$-axis reflection flips top-to-bottom only. The pink would still be on the left." },
+            { "id": "opt-y-axis", "text": "Reflection in the $y$-axis", "whyWrong": "A $y$-axis reflection flips left-to-right only. The pink would still be near the bottom." },
             { "id": "opt-y-eq-neg-x", "text": "Reflection in $y = -x$", "whyWrong": "$y = -x$ would put the image in the bottom-right, not the top." }
           ],
           "successText": "$y = x$ is the diagonal through the origin going up-right."
@@ -175,7 +201,7 @@
     },
 
     {
-      "id": "11-words-vs-equation",
+      "id": "13-words-vs-equation",
       "kind": "examLink",
       "title": "Words don't earn marks. Equations do.",
       "markCode": "B1",
@@ -190,25 +216,22 @@
             { "id": "opt-words",    "text": "“reflected diagonally”", "whyWrong": "Words don't earn the mark. The examiner needs the equation of the mirror line." },
             { "id": "opt-equation", "text": "“reflection in the line $y = x$”", "isCorrect": true }
           ],
-          "successText": "Always give the mirror as an equation: $y = x$, $y = -x$, $x = 0$, $y = 0$, never as words."
+          "successText": "Always give the mirror as an equation: $y = x$, $y = -x$, $x = 0$, $y = 0$. Never words."
         }
       }
     },
 
     {
-      "id": "12-rotation-three",
+      "id": "14-rotation-explore",
       "kind": "concept",
       "title": "Rotation: three things, all needed",
       "advance": "manual",
-      "prompt": "Spin needs a centre to spin around, an angle to spin through, and a direction to spin in.",
-      "visual": {
-        "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px'><svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='grot' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#grot)'/><polygon points='190,140 240,140 215,100' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='160,170 160,120 120,145' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/><circle cx='160' cy='170' r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='2'/><path d='M 210 162 A 60 60 0 0 1 156 124' fill='none' stroke='#ff822c' stroke-width='1.3' stroke-dasharray='3 3'/></svg><div style='display:flex;gap:10px;flex-wrap:wrap;justify-content:center'><div style='font-family:Geist Mono,monospace;font-size:11.5px;color:#fff067;padding:6px 12px;border-radius:6px;background:rgba(255,240,103,0.06);border:1px solid #fff06744'>centre · \\((0,0)\\)</div><div style='font-family:Geist Mono,monospace;font-size:11.5px;color:#ff822c;padding:6px 12px;border-radius:6px;background:rgba(255,130,44,0.06);border:1px solid #ff822c44'>angle · \\(90°\\)</div><div style='font-family:Geist Mono,monospace;font-size:11.5px;color:#ff4670;padding:6px 12px;border-radius:6px;background:rgba(255,70,112,0.06);border:1px solid #ff467044'>direction · anticlockwise</div></div></div>"
-      }
+      "prompt": "Drag the yellow centre, or the pink handle to change the angle. Notice three things change.",
+      "visual": { "kind": "iframe", "src": "/widgets/rotation-explorer.html?lessonMode=1", "height": 520 }
     },
 
     {
-      "id": "13-rotation-labels",
+      "id": "15-rotation-labels",
       "kind": "interaction",
       "title": "Describe this rotation",
       "advance": "onSuccess",
@@ -231,13 +254,13 @@
             { "id": "lab-acw",    "text": "anticlockwise" },
             { "id": "lab-cw",     "text": "clockwise" }
           ],
-          "successText": "All three together: rotation, 90° anticlockwise, centre (0,0)."
+          "successText": "All three together: rotation, 90° anticlockwise, centre (0, 0)."
         }
       }
     },
 
     {
-      "id": "14-miss-one",
+      "id": "16-miss-one",
       "kind": "examLink",
       "title": "Miss one, lose the mark",
       "markCode": "B1",
@@ -256,64 +279,97 @@
     },
 
     {
-      "id": "15-enlargement-two",
+      "id": "17-enlargement-explore",
       "kind": "concept",
       "title": "Enlargement: centre and scale factor",
       "advance": "manual",
-      "prompt": "Pick a centre, pick a number to multiply distances by. Done.",
-      "visual": {
-        "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px'><svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gen' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gen)'/><circle cx='40' cy='170' r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='2'/><line x1='40' y1='170' x2='280' y2='50' stroke='#3a4a5a' stroke-width='0.7' stroke-dasharray='3 3'/><line x1='40' y1='170' x2='210' y2='150' stroke='#3a4a5a' stroke-width='0.7' stroke-dasharray='3 3'/><line x1='40' y1='170' x2='270' y2='120' stroke='#3a4a5a' stroke-width='0.7' stroke-dasharray='3 3'/><polygon points='100,160 130,160 115,140' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='160,150 220,150 190,110' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg><div style='display:flex;gap:10px;flex-wrap:wrap;justify-content:center'><div style='font-family:Geist Mono,monospace;font-size:11.5px;color:#fff067;padding:6px 12px;border-radius:6px;background:rgba(255,240,103,0.06);border:1px solid #fff06744'>centre · yellow dot</div><div style='font-family:Geist Mono,monospace;font-size:11.5px;color:#ff4670;padding:6px 12px;border-radius:6px;background:rgba(255,70,112,0.06);border:1px solid #ff467044'>scale factor · \\(2\\)</div></div></div>"
-      }
+      "prompt": "Drag the yellow centre. Drag the pink handle to change the scale factor. Two things, that's all.",
+      "visual": { "kind": "iframe", "src": "/widgets/enlargement-explorer.html?lessonMode=1", "height": 520 }
     },
 
     {
-      "id": "16-find-k",
+      "id": "18-find-k-2",
       "kind": "interaction",
-      "title": "Find the scale factor",
+      "title": "Find scale factor k = 2",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "manipulateAndVerify",
-        "hint": "The pink target is twice as far from the centre as the blue object.",
+        "kind": "widgetCanvas",
+        "hint": "Distances from the centre double when k = 2.",
         "config": {
-          "prompt": "Drag the yellow handle until blue scales onto pink.",
-          "xRange": [-1, 9],
-          "yRange": [-1, 6],
-          "handles": [
-            { "id": "k", "x": 1, "y": 5, "xRange": [1, 5], "yRange": [5, 5], "snap": 1, "color": "#fff067" }
-          ],
-          "renderScene": "function(h, color){ var k = h.k.x; var SVG_W=480, SVG_H=320, PAD=28; var xMin=-1, xMax=9, yMin=-1, yMax=6; var ux=(SVG_W-2*PAD)/(xMax-xMin); var uy=(SVG_H-2*PAD)/(yMax-yMin); var u=Math.min(ux,uy); var ox=(SVG_W-u*(xMax-xMin))/2; var oy=(SVG_H-u*(yMax-yMin))/2; function P(mx,my){ return [ox+(mx-xMin)*u, oy+(yMax-my)*u]; } function poly(verts, fill, stroke){ var d = verts.map(function(v,i){ var p=P(v[0],v[1]); return (i==0?'M':'L')+p[0]+' '+p[1]; }).join(' ')+' Z'; return '<path d=\"'+d+'\" fill=\"'+fill+'\" stroke=\"'+stroke+'\" stroke-width=\"1.6\"/>'; } var C=[1,1]; var obj=[[2,1],[3,1],[2.5,2]]; var img=obj.map(function(v){return [C[0]+k*(v[0]-C[0]), C[1]+k*(v[1]-C[1])]; }); var target=obj.map(function(v){return [C[0]+2*(v[0]-C[0]), C[1]+2*(v[1]-C[1])]; }); var rays=''; for(var i=0;i<obj.length;i++){ var p1=P(C[0],C[1]); var p2=P(C[0]+4*(obj[i][0]-C[0]), C[1]+4*(obj[i][1]-C[1])); rays+='<line x1=\"'+p1[0]+'\" y1=\"'+p1[1]+'\" x2=\"'+p2[0]+'\" y2=\"'+p2[1]+'\" stroke=\"'+color.faint+'\" stroke-width=\"0.6\" stroke-dasharray=\"3 3\"/>'; } var cp=P(C[0],C[1]); return rays + poly(target, 'transparent', color.pink) + '<circle cx=\"'+cp[0]+'\" cy=\"'+cp[1]+'\" r=\"4\" fill=\"'+color.yellow+'\" stroke=\"#0b1118\" stroke-width=\"1.5\"/>' + poly(obj, 'rgba(0,171,250,0.18)', color.blue) + poly(img, 'rgba(15,238,137,0.18)', color.green); }",
-          "successTest": "function(h){ return h.k.x === 2; }",
-          "readoutHtml": "function(h){ return 'scale factor &nbsp;$k = ' + h.k.x + '$'; }",
-          "successText": "$k = 2$. Every distance from the centre is doubled."
+          "src": "/widgets/enlargement-explorer.html",
+          "target": "2,0,0",
+          "widget": "enlargement",
+          "prompt": "Drag the pink handle along the ray until the image fills the pink outline. Centre stays at $(0, 0)$, target $k = 2$.",
+          "successText": "$k = 2$: every distance from the centre doubled."
         }
       }
     },
 
     {
-      "id": "17-negative-k",
+      "id": "19-find-k-3",
       "kind": "interaction",
-      "title": "Negative scale factor flips through the centre",
+      "title": "Now k = 3",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "adjustSlider",
-        "hint": "Push k past zero and watch where pink goes.",
+        "kind": "widgetCanvas",
+        "hint": "Three times the distance, three times bigger.",
         "config": {
-          "prompt": "Drag k from positive to negative. Watch what happens at zero.",
-          "varName": "k",
-          "min": -2,
-          "max": 2,
-          "step": 0.5,
-          "initial": 1,
-          "advanceOnExplore": true,
-          "renderSvg": "function(v, color){ var SVG_W=440, SVG_H=240, PAD=22; var xMin=-5, xMax=5, yMin=-3, yMax=3; var ux=(SVG_W-2*PAD)/(xMax-xMin); var uy=(SVG_H-2*PAD)/(yMax-yMin); var u=Math.min(ux,uy); var ox=(SVG_W-u*(xMax-xMin))/2; var oy=(SVG_H-u*(yMax-yMin))/2; function P(mx,my){ return [ox+(mx-xMin)*u, oy+(yMax-my)*u]; } function poly(verts, fill, stroke){ var d = verts.map(function(v2,i){ var p=P(v2[0],v2[1]); return (i==0?'M':'L')+p[0]+' '+p[1]; }).join(' ')+' Z'; return '<path d=\"'+d+'\" fill=\"'+fill+'\" stroke=\"'+stroke+'\" stroke-width=\"1.6\"/>'; } function grid(){ var g=''; for(var x=Math.ceil(xMin); x<=Math.floor(xMax); x++){ var p1=P(x,yMin), p2=P(x,yMax); g+='<line x1=\"'+p1[0]+'\" y1=\"'+p1[1]+'\" x2=\"'+p2[0]+'\" y2=\"'+p2[1]+'\" stroke=\"#1a3350\" stroke-width=\"'+(x==0?1:0.5)+'\" opacity=\"'+(x==0?0.5:0.25)+'\"/>'; } for(var y=Math.ceil(yMin); y<=Math.floor(yMax); y++){ var q1=P(xMin,y), q2=P(xMax,y); g+='<line x1=\"'+q1[0]+'\" y1=\"'+q1[1]+'\" x2=\"'+q2[0]+'\" y2=\"'+q2[1]+'\" stroke=\"#1a3350\" stroke-width=\"'+(y==0?1:0.5)+'\" opacity=\"'+(y==0?0.5:0.25)+'\"/>'; } return g; } var C=[0,0]; var obj=[[1,0.5],[2,0.5],[1.5,1.5]]; var img=obj.map(function(p){return [C[0]+v*(p[0]-C[0]), C[1]+v*(p[1]-C[1])]; }); var cp=P(C[0],C[1]); return '<svg viewBox=\"0 0 '+SVG_W+' '+SVG_H+'\" style=\"display:block;width:100%;height:auto\" xmlns=\"http://www.w3.org/2000/svg\">'+grid()+poly(obj,'rgba(0,171,250,0.22)','#00abfa')+ poly(img, v<0?'rgba(255,70,112,0.22)':'rgba(15,238,137,0.22)', v<0?'#ff4670':'#0fee89') +'<circle cx=\"'+cp[0]+'\" cy=\"'+cp[1]+'\" r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\"/></svg>'; }",
-          "successText": "When $k < 0$, the image lands on the opposite side of the centre."
+          "src": "/widgets/enlargement-explorer.html",
+          "target": "3,0,0",
+          "widget": "enlargement",
+          "prompt": "Same centre at $(0, 0)$. This time the image should be three times the size: $k = 3$.",
+          "successText": "Same logic, bigger scale. The shape is similar, just three times larger."
         }
       }
     },
 
     {
-      "id": "18-recap-patterns",
+      "id": "20-find-k-half",
+      "kind": "interaction",
+      "title": "Can scale factor be less than 1?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Distances are halved. The image is smaller than the object, but it's still called an enlargement.",
+        "config": {
+          "src": "/widgets/enlargement-explorer.html",
+          "target": "0.5,0,0",
+          "widget": "enlargement",
+          "prompt": "Shrink the image to half size: $k = \\tfrac{1}{2}$. Yes, this still counts as an enlargement.",
+          "successText": "$k = \\tfrac{1}{2}$ is an enlargement too. Cambridge uses the word 'enlargement' even when the image shrinks."
+        }
+      }
+    },
+
+    {
+      "id": "21-negative-k-explore",
+      "kind": "concept",
+      "title": "What if k goes negative?",
+      "advance": "manual",
+      "prompt": "Drag the pink handle past the centre. The image flips to the opposite side.",
+      "visual": { "kind": "iframe", "src": "/widgets/enlargement-explorer.html?lessonMode=1", "height": 520 }
+    },
+
+    {
+      "id": "22-find-k-neg2",
+      "kind": "interaction",
+      "title": "Find k = −2",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Negative scale factors land the image on the opposite side of the centre, twice as far.",
+        "config": {
+          "src": "/widgets/enlargement-explorer.html",
+          "target": "-2,0,0",
+          "widget": "enlargement",
+          "prompt": "Place the image so $k = -2$. It should be twice the size and on the opposite side of the origin.",
+          "successText": "Negative $k$ flips through the centre and scales. Both behaviours from one number."
+        }
+      }
+    },
+
+    {
+      "id": "23-recap-patterns",
       "kind": "recap",
       "title": "The four mark-scheme patterns",
       "advance": "manual",
@@ -325,13 +381,13 @@
     },
 
     {
-      "id": "19-verify-type",
+      "id": "24-verify-type",
       "kind": "verify",
       "title": "Identify the move",
       "advance": "onSuccess",
       "interaction": {
         "kind": "selectFromOptions",
-        "hint": "Look at how blue and pink relate. Same shape and size? Different size? Flipped?",
+        "hint": "Look at how blue relates to pink. Same shape and size? Different size? Flipped?",
         "config": {
           "prompt": "Blue maps to pink. Which transformation is it?",
           "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gvt' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gvt)'/><polygon points='60,150 100,150 80,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='180,90 220,90 200,50' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg>",
@@ -348,13 +404,13 @@
     },
 
     {
-      "id": "20-verify-rule",
+      "id": "25-verify-rule",
       "kind": "verify",
       "title": "Now describe it fully",
       "advance": "onSuccess",
       "interaction": {
         "kind": "selectFromOptions",
-        "hint": "Pick the vertex on the blue and the matching one on the pink. Count the shift.",
+        "hint": "Pick a vertex on the blue and the matching one on the pink. Count the grid shift.",
         "config": {
           "prompt": "Same diagram. Which column vector slides blue onto pink?",
           "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gvr' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gvr)'/><polygon points='60,150 100,150 80,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='180,90 220,90 200,50' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg>",
@@ -364,20 +420,20 @@
             { "id": "opt-negative-x","text": "$\\begin{pmatrix} -4 \\\\ 2 \\end{pmatrix}$", "whyWrong": "Negative x means LEFT. Pink is to the RIGHT of blue, so x is positive." },
             { "id": "opt-both-neg",  "text": "$\\begin{pmatrix} -4 \\\\ -2 \\end{pmatrix}$","whyWrong": "Both signs wrong. Pink is up-right of blue, so both components are positive." }
           ],
-          "successText": "Translation by $\\begin{pmatrix} 4 \\\\ 2 \\end{pmatrix}$ — type plus rule, both correct."
+          "successText": "Translation by $\\begin{pmatrix} 4 \\\\ 2 \\end{pmatrix}$. Type plus rule, both correct."
         }
       }
     },
 
     {
-      "id": "21-order-phrase",
+      "id": "26-order-phrase",
       "kind": "examLink",
       "title": "Put the exam answer together",
       "markCode": "B1 + B1",
       "advance": "onSuccess",
       "interaction": {
         "kind": "orderSteps",
-        "hint": "Type first, then the rule. Read the answer aloud — it should flow as one sentence.",
+        "hint": "Type first, then the rule. Read the answer aloud: it should flow as one sentence.",
         "config": {
           "prompt": "Arrange the four tiles into a proper exam answer.",
           "goalLabel": "describe this rotation",
@@ -393,7 +449,7 @@
     },
 
     {
-      "id": "22-recap-final",
+      "id": "27-recap-final",
       "kind": "recap",
       "title": "You can now describe any single move",
       "advance": "manual",

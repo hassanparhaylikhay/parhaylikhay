@@ -141,8 +141,8 @@ export const interactionStyles = `
 .pl-success-pulse { animation: pl-success-pulse 600ms ease-out; }
 
 @keyframes pl-reveal {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.pl-reveal { animation: pl-reveal 400ms ease-out forwards; }
+.pl-reveal { animation: pl-reveal 520ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 `

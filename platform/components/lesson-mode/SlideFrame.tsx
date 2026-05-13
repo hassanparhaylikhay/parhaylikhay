@@ -29,6 +29,10 @@ type Props = {
   totalSlides: number
   title?: string
   canAdvance: boolean
+  /** Last slide reads as "finish" instead of "next". */
+  isFinish?: boolean
+  /** When true, the slide content fills the canvas (no 920px max-width). */
+  wide?: boolean
   showExplainAgain?: boolean
   hintText?: string
   exitHref: string
@@ -43,6 +47,8 @@ export default function SlideFrame({
   totalSlides,
   title,
   canAdvance,
+  isFinish,
+  wide,
   showExplainAgain,
   hintText,
   exitHref,
@@ -96,10 +102,10 @@ export default function SlideFrame({
       </header>
 
       {/* ── centre canvas ───────────────────────────────────────────── */}
-      <section className="flex-1 min-h-0 overflow-hidden flex flex-col items-center justify-center px-4 sm:px-8 py-6">
+      <section className="flex-1 min-h-0 overflow-auto flex flex-col items-center justify-center px-4 sm:px-8 py-6">
         <div
           key={slideKey}
-          className="w-full max-w-[920px] flex flex-col items-center justify-center pl-fade-in"
+          className={`w-full flex flex-col items-center justify-center pl-fade-in ${wide ? "max-w-[1200px]" : "max-w-[920px]"}`}
         >
           {children}
         </div>
@@ -143,7 +149,7 @@ export default function SlideFrame({
               : "text-[#3a4a5a] cursor-not-allowed"
           }`}
         >
-          <span className="hidden sm:inline">{slideIdx === totalSlides - 1 ? "finish" : "next"}</span>
+          <span className="hidden sm:inline">{isFinish || slideIdx === totalSlides - 1 ? "finish" : "next"}</span>
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
             <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -151,12 +157,13 @@ export default function SlideFrame({
       </footer>
 
       <style jsx>{`
+        /* Apple-style spring curve: fast out, slow settle. Not bouncy, just smooth. */
         :global(.pl-fade-in) {
-          animation: pl-fade-in 400ms ease-out;
+          animation: pl-fade-in 520ms cubic-bezier(0.16, 1, 0.3, 1);
         }
         @keyframes pl-fade-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to   { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; transform: translateY(10px) scale(0.985); }
+          to   { opacity: 1; transform: translateY(0)   scale(1);     }
         }
       `}</style>
     </div>

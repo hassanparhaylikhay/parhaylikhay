@@ -55,12 +55,18 @@ export default function LessonRunner({ lesson }: Props) {
 
   const goNext = useCallback(() => {
     if (!canAdvance) return
-    if (idx >= total - 1) return
+    if (idx >= total - 1) {
+      // Last slide: finish navigates back to revision notes
+      if (typeof window !== "undefined") {
+        window.location.href = `/dashboard/maths/${lesson.source.unit}/${lesson.source.topic}/${lesson.source.part}`
+      }
+      return
+    }
     setShowAlt(false)
     const nextIdx = idx + 1
     setIdx(nextIdx)
     if (progress) persist({ ...progress, currentSlideIdx: nextIdx })
-  }, [canAdvance, idx, total, progress, persist])
+  }, [canAdvance, idx, total, progress, persist, lesson.source])
 
   const goPrev = useCallback(() => {
     if (idx <= 0) return
@@ -96,6 +102,8 @@ export default function LessonRunner({ lesson }: Props) {
     )
   }
 
+  const wide = isWideSlide(slide)
+
   return (
     <>
       <style jsx global>{interactionStyles}</style>
@@ -104,6 +112,7 @@ export default function LessonRunner({ lesson }: Props) {
         totalSlides={total}
         title={slide.title ?? lesson.title}
         canAdvance={canAdvance}
+        wide={wide}
         showExplainAgain={Boolean(slide.altExplain) && !showAlt}
         hintText={getHint(slide)}
         exitHref={exitHref}
@@ -114,6 +123,8 @@ export default function LessonRunner({ lesson }: Props) {
         <SlideDispatcher
           slide={showAlt && slide.altExplain ? applyAltExplain(slide) : slide}
           onComplete={markComplete}
+          onAdvance={goNext}
+          canAdvance={canAdvance}
           savedData={slideState?.data}
         />
       </SlideFrame>
@@ -121,27 +132,46 @@ export default function LessonRunner({ lesson }: Props) {
   )
 }
 
+function isWideSlide(slide: Slide): boolean {
+  if (slide.kind === "interaction" || slide.kind === "verify") {
+    return slide.interaction?.kind === "widgetCanvas"
+  }
+  if (slide.kind === "examLink") {
+    return slide.interaction?.kind === "widgetCanvas"
+  }
+  // Concept / hook / recap that hosts an iframe visual gets the wider canvas too.
+  if (slide.kind === "concept" || slide.kind === "hook" || slide.kind === "recap") {
+    const v = (slide as { visual?: { kind?: string } }).visual
+    if (v?.kind === "iframe") return true
+  }
+  return false
+}
+
 function SlideDispatcher({
   slide,
   onComplete,
+  onAdvance,
+  canAdvance,
   savedData,
 }: {
   slide: Slide
   onComplete: (data?: Record<string, unknown>) => void
+  onAdvance: () => void
+  canAdvance: boolean
   savedData?: Record<string, unknown>
 }) {
   switch (slide.kind) {
     case "hook":
-      return <HookSlide slide={slide} />
+      return <HookSlide slide={slide} onAdvance={onAdvance} />
     case "concept":
-      return <ConceptSlide slide={slide} onComplete={onComplete} />
+      return <ConceptSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} canAdvance={canAdvance} />
     case "interaction":
     case "verify":
       return <InteractionSlide slide={slide} onComplete={onComplete} savedData={savedData} />
     case "recap":
-      return <RecapSlide slide={slide} />
+      return <RecapSlide slide={slide} onAdvance={onAdvance} />
     case "examLink":
-      return <ExamLinkSlide slide={slide} onComplete={onComplete} savedData={savedData} />
+      return <ExamLinkSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} />
   }
 }
 

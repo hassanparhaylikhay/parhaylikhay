@@ -129,9 +129,12 @@ export default function Sidebar() {
     </nav>
   )
 
+  const inLessonMode = anchorIdx >= 0 && segs[anchorIdx] === "lesson-mode"
+  const asideHeight = inLessonMode ? "h-[calc(100vh-44px)] top-11" : "h-[calc(100vh-56px)] top-14"
+
   return (
     <>
-      <aside className="hidden md:block w-64 shrink-0 border-r border-[#141e2a] sticky top-14 h-[calc(100vh-56px)] overflow-y-auto">
+      <aside className={`hidden md:block w-64 shrink-0 border-r border-[#141e2a] sticky overflow-y-auto ${asideHeight}`}>
         {content}
       </aside>
 

@@ -31,7 +31,7 @@ async function LessonModeCard({ unit, topic, part }: { unit: string; topic: stri
           </div>
           <div className="min-w-0">
             <p className="text-[11px] font-mono uppercase tracking-[2px] text-[#00abfa] mb-0.5">Lesson Mode</p>
-            <p className="text-[13px] text-[#c8c6be] truncate">A guided, slide-by-slide walkthrough — ~12 minutes.</p>
+            <p className="text-[13px] text-[#c8c6be] truncate">A guided, slide-by-slide walkthrough. About 12 minutes.</p>
           </div>
         </div>
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#3a4a5a] group-hover:text-[#00abfa] transition-colors shrink-0">
