@@ -165,10 +165,12 @@ function drawVenn(){
   gR.appendChild(rect);
   svgKaTeXLabel(gT, BOX_X + BOX_W - 22, BOX_Y + 10, "\\Omega = " + total(), "#7a7875", "right", 60);
 
+  // Geometry: pick centre-to-centre distance < 2*R so the circles actually overlap.
+  // With R = 78 the circles need centres ≤ 156 apart; we use 120 → ~36px-wide lens.
   var cy = BOX_Y + BOX_H / 2 + 4;
-  var rAx = BOX_X + 130;
-  var rBx = BOX_X + 290;
   var R = 78;
+  var rAx = BOX_X + 150;
+  var rBx = BOX_X + 270;
 
   var cA = document.createElementNS("http://www.w3.org/2000/svg","circle");
   cA.setAttribute("cx", rAx); cA.setAttribute("cy", cy); cA.setAttribute("r", R);
@@ -196,10 +198,11 @@ function drawVenn(){
     t.textContent = String(value);
     g.appendChild(t);
   }
-  bigCount(gN, rAx - 36, cy, state.aOnly, COL.blue);
+  // Labels: "A only" sits in the left crescent, "A∩B" in the lens, "B only" in the right crescent.
+  bigCount(gN, rAx - 42, cy, state.aOnly, COL.blue);
   bigCount(gN, (rAx + rBx) / 2, cy, state.both, COL.yellow);
-  bigCount(gN, rBx + 36, cy, state.bOnly, COL.pink);
-  bigCount(gN, BOX_X + 46, BOX_Y + BOX_H - 22, state.neither, COL.grey);
+  bigCount(gN, rBx + 42, cy, state.bOnly, COL.pink);
+  bigCount(gN, BOX_X + 24, BOX_Y + BOX_H - 22, state.neither, COL.grey);
 }
 
 // ---- headline (inclusion-exclusion live) ----
