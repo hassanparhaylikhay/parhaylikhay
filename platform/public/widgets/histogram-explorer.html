@@ -186,12 +186,14 @@ function drawAxes(){
   xlbl.textContent = "score";
   g.appendChild(xlbl);
   // y label
+  // y-axis title: anchor at start, place INSIDE the chart area at the top so
+  // the text never extends off the left edge of the SVG viewBox.
   var ylbl = document.createElementNS("http://www.w3.org/2000/svg","text");
-  ylbl.setAttribute("x", PAD_L - 8); ylbl.setAttribute("y", PAD_T - 4);
-  ylbl.setAttribute("text-anchor", "end");
+  ylbl.setAttribute("x", PAD_L + 4); ylbl.setAttribute("y", PAD_T - 2);
+  ylbl.setAttribute("text-anchor", "start");
   ylbl.setAttribute("fill", "#3a4a5a"); ylbl.setAttribute("font-size", "10");
   ylbl.setAttribute("font-family", "Geist Mono, monospace");
-  ylbl.textContent = "freq density";
+  ylbl.textContent = "frequency density";
   g.appendChild(ylbl);
 }
 
