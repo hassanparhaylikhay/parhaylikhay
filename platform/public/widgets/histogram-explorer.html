@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Histogram Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 20px 18px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  .headline { display:flex; align-items:baseline; justify-content:center; gap:10px; flex-wrap:wrap; margin:8px 0 14px; padding:12px 8px; }
+  .headline .col { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:78px; }
+  .headline .big { font-family:'Geist Mono',monospace; font-size:32px; font-weight:700; line-height:1; min-height:34px; display:flex; align-items:center; justify-content:center; transition: color 0.3s ease; }
+  .headline .big.f { color:#00abfa; }
+  .headline .big.w { color:#fff067; }
+  .headline .big.d { color:#0fee89; }
+  .headline .lab { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.5px; text-transform:uppercase; }
+  .headline .op { font-family:'Geist Mono',monospace; font-size:22px; color:#3a4a5a; padding:0 4px; align-self:center; }
+
+  #chart { display:block; width:100%; height:auto; user-select:none; cursor:default; overflow:visible; }
+  #chart .bar { cursor:pointer; transition: fill-opacity 0.18s ease; }
+  #chart .bar:hover { fill-opacity:0.95 !important; }
+
+  .bars-table { display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; margin-top:12px; }
+  .bcard { padding:8px 6px; border-radius:6px; border:1px solid rgba(255,255,255,0.06); background:rgba(255,255,255,0.02); cursor:pointer; transition: all 0.12s ease; text-align:center; }
+  .bcard:hover { border-color:#3a4a5a; }
+  .bcard.active { border-color:#fff067; background:rgba(255,240,103,0.06); }
+  .bcard .range { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.3px; margin-bottom:2px; }
+  .bcard .freq { font-family:'Geist Mono',monospace; font-size:14px; font-weight:700; color:#00abfa; }
+
+  .footer { font-family:'Geist Mono',monospace; font-size:11.5px; color:#3a4a5a; text-align:center; margin-top:10px; line-height:1.6; }
+  .footer .id .katex { font-size:1em; }
+  .footer .id { color:#7a7875; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">HISTOGRAM · FREQUENCY DENSITY</span>
+    <span class="meta">tap a bar</span>
+  </div>
+
+  <div class="headline">
+    <span class="col">
+      <span class="big f" id="freq-val">12</span>
+      <span class="lab">freq</span>
+    </span>
+    <span class="op">÷</span>
+    <span class="col">
+      <span class="big w" id="width-val">10</span>
+      <span class="lab">width</span>
+    </span>
+    <span class="op">=</span>
+    <span class="col">
+      <span class="big d" id="dens-val">1.2</span>
+      <span class="lab">density</span>
+    </span>
+  </div>
+
+  <svg id="chart" viewBox="0 0 480 260" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-grid"></g>
+    <g id="g-bars"></g>
+    <g id="g-axes"></g>
+  </svg>
+
+  <div class="bars-table" id="bars-table"></div>
+
+  <div class="footer">
+    <span class="id" id="formula-line"></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", pink:"#ff4670", yellow:"#fff067", green:"#0fee89",
+  orange:"#ff822c", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+// Sample dataset: unequal class widths. The killer insight of histograms.
+var BARS = [
+  { lo: 0,  hi: 10,  freq: 4,  colour:"#00abfa" },
+  { lo: 10, hi: 20,  freq: 12, colour:"#0fee89" },
+  { lo: 20, hi: 30,  freq: 18, colour:"#fff067" },
+  { lo: 30, hi: 50,  freq: 16, colour:"#ff822c" },
+  { lo: 50, hi: 100, freq: 10, colour:"#ff4670" }
+];
+
+var state = { selected: 1 };
+
+function widthOf(b){ return b.hi - b.lo; }
+function densityOf(b){ return b.freq / widthOf(b); }
+function maxX(){ return BARS[BARS.length - 1].hi; }
+function maxDensity(){
+  var m = 0;
+  BARS.forEach(function(b){ if (densityOf(b) > m) m = densityOf(b); });
+  return m;
+}
+
+var SVG_W = 480, SVG_H = 260;
+var PAD_L = 40, PAD_R = 14, PAD_T = 14, PAD_B = 34;
+var PLOT_W = SVG_W - PAD_L - PAD_R;
+var PLOT_H = SVG_H - PAD_T - PAD_B;
+
+function xToSx(x){ return PAD_L + x / maxX() * PLOT_W; }
+function dToSy(d){ return PAD_T + PLOT_H - (d / Math.max(2, maxDensity() + 0.4)) * PLOT_H; }
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+
+function drawGrid(){
+  var g = document.getElementById("g-grid");
+  clear(g);
+  // Horizontal grid lines at integer densities
+  var dMax = Math.max(2, maxDensity() + 0.4);
+  for (var d = 0; d <= Math.ceil(dMax); d += 0.5){
+    var y = dToSy(d);
+    var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", PAD_L); l.setAttribute("x2", PAD_L + PLOT_W);
+    l.setAttribute("y1", y); l.setAttribute("y2", y);
+    l.setAttribute("stroke", "#141e2a"); l.setAttribute("stroke-width", 0.6);
+    g.appendChild(l);
+    // Label every full unit
+    if (Math.abs(d - Math.round(d)) < 1e-9){
+      var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x", PAD_L - 6); t.setAttribute("y", y + 3);
+      t.setAttribute("text-anchor", "end");
+      t.setAttribute("fill", "#7a7875"); t.setAttribute("font-size", "10");
+      t.setAttribute("font-family", "Geist Mono, monospace");
+      t.textContent = d;
+      g.appendChild(t);
+    }
+  }
+}
+
+function drawAxes(){
+  var g = document.getElementById("g-axes");
+  clear(g);
+  // x-axis
+  var xa = document.createElementNS("http://www.w3.org/2000/svg","line");
+  xa.setAttribute("x1", PAD_L); xa.setAttribute("x2", PAD_L + PLOT_W);
+  xa.setAttribute("y1", dToSy(0)); xa.setAttribute("y2", dToSy(0));
+  xa.setAttribute("stroke", "#3a4a5a"); xa.setAttribute("stroke-width", 1.2);
+  g.appendChild(xa);
+  // y-axis
+  var ya = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ya.setAttribute("x1", PAD_L); ya.setAttribute("x2", PAD_L);
+  ya.setAttribute("y1", PAD_T); ya.setAttribute("y2", PAD_T + PLOT_H);
+  ya.setAttribute("stroke", "#3a4a5a"); ya.setAttribute("stroke-width", 1.2);
+  g.appendChild(ya);
+  // x labels (class boundaries)
+  var seen = {};
+  BARS.forEach(function(b){
+    [b.lo, b.hi].forEach(function(v){
+      if (seen[v]) return;
+      seen[v] = true;
+      var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x", xToSx(v)); t.setAttribute("y", dToSy(0) + 16);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("fill", "#7a7875"); t.setAttribute("font-size", "10");
+      t.setAttribute("font-family", "Geist Mono, monospace");
+      t.textContent = v;
+      g.appendChild(t);
+    });
+  });
+  // x label
+  var xlbl = document.createElementNS("http://www.w3.org/2000/svg","text");
+  xlbl.setAttribute("x", (PAD_L + PAD_L + PLOT_W) / 2); xlbl.setAttribute("y", dToSy(0) + 30);
+  xlbl.setAttribute("text-anchor", "middle");
+  xlbl.setAttribute("fill", "#3a4a5a"); xlbl.setAttribute("font-size", "10");
+  xlbl.setAttribute("font-family", "Geist Mono, monospace");
+  xlbl.textContent = "score";
+  g.appendChild(xlbl);
+  // y label
+  var ylbl = document.createElementNS("http://www.w3.org/2000/svg","text");
+  ylbl.setAttribute("x", PAD_L - 8); ylbl.setAttribute("y", PAD_T - 4);
+  ylbl.setAttribute("text-anchor", "end");
+  ylbl.setAttribute("fill", "#3a4a5a"); ylbl.setAttribute("font-size", "10");
+  ylbl.setAttribute("font-family", "Geist Mono, monospace");
+  ylbl.textContent = "freq density";
+  g.appendChild(ylbl);
+}
+
+function drawBars(){
+  var g = document.getElementById("g-bars");
+  clear(g);
+  BARS.forEach(function(b, i){
+    var x1 = xToSx(b.lo), x2 = xToSx(b.hi);
+    var y = dToSy(densityOf(b));
+    var h = dToSy(0) - y;
+    var r = document.createElementNS("http://www.w3.org/2000/svg","rect");
+    r.setAttribute("x", x1); r.setAttribute("y", y);
+    r.setAttribute("width", x2 - x1); r.setAttribute("height", h);
+    r.setAttribute("rx", 2);
+    r.setAttribute("fill", b.colour);
+    r.setAttribute("fill-opacity", state.selected === i ? "0.85" : "0.5");
+    r.setAttribute("stroke", b.colour); r.setAttribute("stroke-width", state.selected === i ? "2" : "1.2");
+    r.setAttribute("class", "bar");
+    r.dataset.idx = i;
+    r.addEventListener("click", function(){
+      state.selected = i;
+      render();
+    });
+    g.appendChild(r);
+    // Frequency label inside the bar at the top
+    if (h > 18){
+      var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x", (x1 + x2) / 2); t.setAttribute("y", y + 14);
+      t.setAttribute("text-anchor", "middle");
+      t.setAttribute("fill", "#0b1118");
+      t.setAttribute("font-size", "11");
+      t.setAttribute("font-family", "Geist Mono, monospace");
+      t.setAttribute("font-weight", "700");
+      t.textContent = "f=" + b.freq;
+      g.appendChild(t);
+    }
+  });
+}
+
+function renderHeadline(){
+  var b = BARS[state.selected];
+  document.getElementById("freq-val").textContent = b.freq;
+  document.getElementById("width-val").textContent = widthOf(b);
+  var d = densityOf(b);
+  document.getElementById("dens-val").textContent = (Math.abs(d - Math.round(d)) < 1e-9) ? String(Math.round(d)) : d.toFixed(2);
+}
+
+function buildBarsTable(){
+  var host = document.getElementById("bars-table");
+  host.innerHTML = "";
+  BARS.forEach(function(b, i){
+    var card = document.createElement("div");
+    card.className = "bcard" + (state.selected === i ? " active" : "");
+    card.style.color = b.colour;
+    card.innerHTML =
+      '<div class="range">' + b.lo + '–' + b.hi + '</div>' +
+      '<div class="freq" style="color:' + b.colour + '">' + b.freq + '</div>';
+    card.addEventListener("click", function(){
+      state.selected = i;
+      render();
+    });
+    host.appendChild(card);
+  });
+}
+
+function renderFooter(){
+  var fEl = document.getElementById("formula-line");
+  fEl.innerHTML = "";
+  tryRender(fEl, "\\text{freq density} = \\dfrac{\\text{frequency}}{\\text{class width}}");
+}
+
+function render(){
+  drawGrid();
+  drawAxes();
+  drawBars();
+  renderHeadline();
+  buildBarsTable();
+  renderFooter();
+  notifyHeight();
+}
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+render();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

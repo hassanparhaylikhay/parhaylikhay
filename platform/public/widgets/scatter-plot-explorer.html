@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Scatter Plot Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 20px 18px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  .headline { display:flex; align-items:baseline; justify-content:center; gap:14px; flex-wrap:wrap; margin:8px 0 14px; padding:14px 8px; }
+  .headline .col { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:120px; }
+  .headline .big { font-family:'Geist Mono',monospace; font-size:24px; font-weight:700; letter-spacing:1px; line-height:1; transition: color 0.3s ease; min-height:28px; display:flex; align-items:center; justify-content:center; text-transform:uppercase; }
+  .headline .lab { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.5px; text-transform:uppercase; }
+  .headline .arrow { font-family:'Geist Mono',monospace; font-size:18px; color:#3a4a5a; padding:0 2px; align-self:center; }
+
+  #stage { display:block; width:100%; height:auto; user-select:none; touch-action:none; cursor:default; overflow:visible; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; line-height:1; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1px currentColor); }
+    50%      { filter: drop-shadow(0 0 3px currentColor) drop-shadow(0 0 6px currentColor); }
+  }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+
+  .actions { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:10px; }
+  .act-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:5px 10px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; }
+  .act-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
+  .act-btn.lobf { color:#00abfa; border-color:rgba(0,171,250,0.3); }
+  .act-btn.lobf.active { background:rgba(0,171,250,0.08); }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">SCATTER · CORRELATION</span>
+    <span class="meta">drag a point to reposition</span>
+  </div>
+
+  <div class="headline">
+    <span class="col">
+      <span class="big" id="type-val" style="color:#0fee89">POSITIVE</span>
+      <span class="lab">type</span>
+    </span>
+    <span class="arrow">·</span>
+    <span class="col">
+      <span class="big" id="strength-val" style="color:#fff067">STRONG</span>
+      <span class="lab">strength</span>
+    </span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 280" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-grid"></g>
+    <g id="g-axes"></g>
+    <g id="g-lobf"></g>
+    <g id="g-points"></g>
+  </svg>
+
+  <div class="actions">
+    <button class="act-btn lobf active" id="toggle-lobf">line of best fit · ON</button>
+    <button class="act-btn" data-preset="strong-pos">strong +</button>
+    <button class="act-btn" data-preset="weak-pos">weak +</button>
+    <button class="act-btn" data-preset="strong-neg">strong −</button>
+    <button class="act-btn" data-preset="weak-neg">weak −</button>
+    <button class="act-btn" data-preset="none">no correlation</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", pink:"#ff4670", yellow:"#fff067", green:"#0fee89",
+  orange:"#ff822c", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+var X_MIN = 0, X_MAX = 10, Y_MIN = 0, Y_MAX = 10;
+var SVG_W = 480, SVG_H = 280;
+var PAD_L = 36, PAD_R = 12, PAD_T = 14, PAD_B = 30;
+var PLOT_W = SVG_W - PAD_L - PAD_R;
+var PLOT_H = SVG_H - PAD_T - PAD_B;
+
+var PRESETS = {
+  "strong-pos":  [{x:1,y:1.5},{x:2,y:2.2},{x:3,y:3.6},{x:4,y:4.2},{x:5,y:5.4},{x:6,y:6.1},{x:7,y:7.3},{x:8,y:8.6},{x:9,y:9.2}],
+  "weak-pos":    [{x:1,y:3},{x:2,y:2},{x:3,y:5},{x:4,y:3.5},{x:5,y:6.5},{x:6,y:4.5},{x:7,y:7},{x:8,y:6},{x:9,y:8}],
+  "strong-neg":  [{x:1,y:9.2},{x:2,y:8.4},{x:3,y:7.6},{x:4,y:6.5},{x:5,y:5.4},{x:6,y:4.5},{x:7,y:3.6},{x:8,y:2.4},{x:9,y:1.6}],
+  "weak-neg":    [{x:1,y:7},{x:2,y:8},{x:3,y:5.5},{x:4,y:7},{x:5,y:4.5},{x:6,y:6},{x:7,y:3.5},{x:8,y:5},{x:9,y:3}],
+  "none":        [{x:1,y:5},{x:2,y:3},{x:3,y:7},{x:4,y:2.5},{x:5,y:6},{x:6,y:5.5},{x:7,y:4},{x:8,y:8},{x:9,y:5}]
+};
+
+var state = {
+  pts: PRESETS["strong-pos"].slice(),
+  showLOBF: true
+};
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+function xToSx(x){ return PAD_L + (x - X_MIN) / (X_MAX - X_MIN) * PLOT_W; }
+function yToSy(y){ return PAD_T + PLOT_H - (y - Y_MIN) / (Y_MAX - Y_MIN) * PLOT_H; }
+function sxToX(sx){ return X_MIN + (sx - PAD_L) / PLOT_W * (X_MAX - X_MIN); }
+function syToY(sy){ return Y_MIN + (PAD_T + PLOT_H - sy) / PLOT_H * (Y_MAX - Y_MIN); }
+
+function correlationStats(){
+  var n = state.pts.length;
+  if (n < 2) return { r: 0, m: 0, b: 5 };
+  var sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0;
+  state.pts.forEach(function(p){
+    sx += p.x; sy += p.y;
+    sxx += p.x * p.x; syy += p.y * p.y;
+    sxy += p.x * p.y;
+  });
+  var num = n * sxy - sx * sy;
+  var denX = n * sxx - sx * sx;
+  var denY = n * syy - sy * sy;
+  var r = denX === 0 || denY === 0 ? 0 : num / Math.sqrt(denX * denY);
+  var m = denX === 0 ? 0 : num / denX;
+  var b = (sy - m * sx) / n;
+  return { r: r, m: m, b: b };
+}
+
+function classifyCorrelation(r){
+  var ar = Math.abs(r);
+  var type, typeColor;
+  if (ar < 0.18) { type = "NONE";     typeColor = "#7a7875"; }
+  else if (r > 0){ type = "POSITIVE"; typeColor = "#0fee89"; }
+  else           { type = "NEGATIVE"; typeColor = "#ff4670"; }
+  var strength, strengthColor;
+  if (ar < 0.18)      { strength = "—";        strengthColor = "#7a7875"; }
+  else if (ar < 0.55) { strength = "WEAK";     strengthColor = "#ff822c"; }
+  else if (ar < 0.80) { strength = "MODERATE"; strengthColor = "#fff067"; }
+  else                { strength = "STRONG";   strengthColor = "#0fee89"; }
+  return { type: type, typeColor: typeColor, strength: strength, strengthColor: strengthColor };
+}
+
+function drawAxes(){
+  var gA = document.getElementById("g-axes");
+  var gG = document.getElementById("g-grid");
+  clear(gA); clear(gG);
+  // grid
+  for (var v = 0; v <= 10; v += 2){
+    var xx = xToSx(v);
+    var ll = document.createElementNS("http://www.w3.org/2000/svg","line");
+    ll.setAttribute("x1", xx); ll.setAttribute("x2", xx);
+    ll.setAttribute("y1", PAD_T); ll.setAttribute("y2", PAD_T + PLOT_H);
+    ll.setAttribute("stroke", "#141e2a"); ll.setAttribute("stroke-width", 0.6);
+    gG.appendChild(ll);
+    var yy = yToSy(v);
+    var lh = document.createElementNS("http://www.w3.org/2000/svg","line");
+    lh.setAttribute("x1", PAD_L); lh.setAttribute("x2", PAD_L + PLOT_W);
+    lh.setAttribute("y1", yy); lh.setAttribute("y2", yy);
+    lh.setAttribute("stroke", "#141e2a"); lh.setAttribute("stroke-width", 0.6);
+    gG.appendChild(lh);
+  }
+  // axes
+  var xa = document.createElementNS("http://www.w3.org/2000/svg","line");
+  xa.setAttribute("x1", PAD_L); xa.setAttribute("x2", PAD_L + PLOT_W);
+  xa.setAttribute("y1", yToSy(0)); xa.setAttribute("y2", yToSy(0));
+  xa.setAttribute("stroke", "#3a4a5a"); xa.setAttribute("stroke-width", 1.2);
+  gA.appendChild(xa);
+  var ya = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ya.setAttribute("x1", PAD_L); ya.setAttribute("x2", PAD_L);
+  ya.setAttribute("y1", PAD_T); ya.setAttribute("y2", PAD_T + PLOT_H);
+  ya.setAttribute("stroke", "#3a4a5a"); ya.setAttribute("stroke-width", 1.2);
+  gA.appendChild(ya);
+  // labels
+  for (var v2 = 0; v2 <= 10; v2 += 2){
+    var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", xToSx(v2)); t.setAttribute("y", PAD_T + PLOT_H + 16);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("fill", "#7a7875"); t.setAttribute("font-size", "10");
+    t.setAttribute("font-family", "Geist Mono, monospace");
+    t.textContent = v2;
+    gA.appendChild(t);
+    var tt = document.createElementNS("http://www.w3.org/2000/svg","text");
+    tt.setAttribute("x", PAD_L - 6); tt.setAttribute("y", yToSy(v2) + 4);
+    tt.setAttribute("text-anchor", "end");
+    tt.setAttribute("fill", "#7a7875"); tt.setAttribute("font-size", "10");
+    tt.setAttribute("font-family", "Geist Mono, monospace");
+    tt.textContent = v2;
+    gA.appendChild(tt);
+  }
+}
+
+function drawLOBF(){
+  var g = document.getElementById("g-lobf");
+  clear(g);
+  if (!state.showLOBF) return;
+  if (state.pts.length < 2) return;
+  var s = correlationStats();
+  // Clip the line to the visible plot
+  var x1 = X_MIN, x2 = X_MAX;
+  var y1 = s.m * x1 + s.b;
+  var y2 = s.m * x2 + s.b;
+  // Clip y to [Y_MIN, Y_MAX] by reparam if needed
+  function clipped(){
+    if (Math.abs(s.m) < 1e-9){
+      // horizontal line, just clip to box
+      return { x1: x1, y1: y1, x2: x2, y2: y2 };
+    }
+    var pts = [[x1, y1], [x2, y2]];
+    // Find intersections with y=0 and y=Y_MAX
+    var intersections = [];
+    [Y_MIN, Y_MAX].forEach(function(yv){
+      var xv = (yv - s.b) / s.m;
+      if (xv >= X_MIN - 0.01 && xv <= X_MAX + 0.01) intersections.push([xv, yv]);
+    });
+    [X_MIN, X_MAX].forEach(function(xv){
+      var yv = s.m * xv + s.b;
+      if (yv >= Y_MIN - 0.01 && yv <= Y_MAX + 0.01) intersections.push([xv, yv]);
+    });
+    if (intersections.length < 2) return null;
+    // Sort by x, take first and last
+    intersections.sort(function(a,b){return a[0]-b[0];});
+    return { x1: intersections[0][0], y1: intersections[0][1],
+             x2: intersections[intersections.length-1][0], y2: intersections[intersections.length-1][1] };
+  }
+  var c = clipped();
+  if (!c) return;
+  var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+  l.setAttribute("x1", xToSx(c.x1)); l.setAttribute("x2", xToSx(c.x2));
+  l.setAttribute("y1", yToSy(c.y1)); l.setAttribute("y2", yToSy(c.y2));
+  l.setAttribute("stroke", "#00abfa"); l.setAttribute("stroke-width", 2);
+  l.setAttribute("stroke-dasharray", "5 3");
+  l.setAttribute("opacity", 0.85);
+  g.appendChild(l);
+}
+
+function drawPoints(){
+  var g = document.getElementById("g-points");
+  clear(g);
+  state.pts.forEach(function(p, i){
+    var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx", xToSx(p.x)); c.setAttribute("cy", yToSy(p.y));
+    c.setAttribute("r", 5);
+    c.setAttribute("fill", "#fff067");
+    c.setAttribute("stroke", "#0b1118"); c.setAttribute("stroke-width", 1.5);
+    c.setAttribute("class", "handle"); c.style.color = "#fff067";
+    c.dataset.idx = i;
+    g.appendChild(c);
+  });
+}
+
+function renderHeadline(){
+  var s = correlationStats();
+  var c = classifyCorrelation(s.r);
+  var tEl = document.getElementById("type-val");
+  var stEl = document.getElementById("strength-val");
+  tEl.textContent = c.type;
+  tEl.style.color = c.typeColor;
+  stEl.textContent = c.strength;
+  stEl.style.color = c.strengthColor;
+}
+
+// drag
+var stage = document.getElementById("stage");
+var dragIdx = null;
+function svgPt(e){
+  var pt = stage.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(stage.getScreenCTM().inverse());
+}
+function hitPoint(pt){
+  var best = null, bestD = 14;
+  state.pts.forEach(function(p, i){
+    var x = xToSx(p.x), y = yToSy(p.y);
+    var d = Math.sqrt((x-pt.x)*(x-pt.x) + (y-pt.y)*(y-pt.y));
+    if (d < bestD){ bestD = d; best = i; }
+  });
+  return best;
+}
+stage.addEventListener("pointerdown", function(e){
+  var pt = svgPt(e);
+  var idx = hitPoint(pt);
+  if (idx == null) return;
+  e.preventDefault();
+  dragIdx = idx;
+  stage.setPointerCapture(e.pointerId);
+  stage.classList.add("grabbing");
+});
+stage.addEventListener("pointermove", function(e){
+  var pt = svgPt(e);
+  if (dragIdx == null){
+    if (hitPoint(pt) != null) stage.classList.add("hover-grab");
+    else stage.classList.remove("hover-grab");
+    return;
+  }
+  e.preventDefault();
+  var nx = Math.max(X_MIN, Math.min(X_MAX, sxToX(pt.x)));
+  var ny = Math.max(Y_MIN, Math.min(Y_MAX, syToY(pt.y)));
+  // round to 0.5
+  state.pts[dragIdx] = { x: Math.round(nx * 2) / 2, y: Math.round(ny * 2) / 2 };
+  refresh();
+});
+function endDrag(e){
+  if (dragIdx == null) return;
+  dragIdx = null;
+  try { stage.releasePointerCapture(e.pointerId); } catch(_){}
+  stage.classList.remove("grabbing");
+}
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover-grab"); });
+
+document.getElementById("toggle-lobf").addEventListener("click", function(){
+  state.showLOBF = !state.showLOBF;
+  this.classList.toggle("active", state.showLOBF);
+  this.textContent = "line of best fit · " + (state.showLOBF ? "ON" : "OFF");
+  refresh();
+});
+document.querySelectorAll("[data-preset]").forEach(function(b){
+  b.addEventListener("click", function(){
+    state.pts = PRESETS[b.dataset.preset].map(function(p){ return { x: p.x, y: p.y }; });
+    refresh();
+  });
+});
+
+function refresh(){
+  drawAxes();
+  drawLOBF();
+  drawPoints();
+  renderHeadline();
+  notifyHeight();
+}
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+refresh();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

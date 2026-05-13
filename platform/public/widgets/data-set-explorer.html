@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Data Set Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 20px 18px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  .headline { display:flex; align-items:baseline; justify-content:center; gap:14px; flex-wrap:wrap; margin:8px 0 14px; padding:10px 8px; }
+  .headline .col { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:84px; }
+  .headline .big { font-family:'Geist Mono',monospace; font-size:30px; font-weight:700; line-height:1; transition: color 0.3s ease; min-height:34px; display:flex; align-items:center; justify-content:center; }
+  .headline .big.mean   { color:#00abfa; }
+  .headline .big.median { color:#ff4670; }
+  .headline .big.mode   { color:#0fee89; }
+  .headline .big.range  { color:#fff067; }
+  .headline .lab { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.5px; text-transform:uppercase; }
+
+  #stage { display:block; width:100%; height:auto; user-select:none; touch-action:none; cursor:default; overflow:visible; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:10px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 7px currentColor); }
+  }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+
+  .actions { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+  .act-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:5px 10px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; }
+  .act-btn:hover:not(:disabled) { color:#f0eeea; border-color:#3a4a5a; }
+  .act-btn:disabled { opacity:0.3; cursor:not-allowed; }
+  .act-btn.primary { color:#fff067; border-color:rgba(255,240,103,0.4); background:rgba(255,240,103,0.06); }
+  .act-btn.primary:hover:not(:disabled) { background:rgba(255,240,103,0.12); }
+
+  .footer { font-family:'Geist Mono',monospace; font-size:11.5px; color:#3a4a5a; text-align:center; margin-top:10px; line-height:1.6; }
+  .footer .id { color:#7a7875; }
+  .footer .id .katex { font-size:1em; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">DATA SET</span>
+    <span class="meta">drag a dot to change its value</span>
+  </div>
+
+  <div class="headline">
+    <span class="col">
+      <span class="big mean"   id="mean-val">5.0</span>
+      <span class="lab">mean</span>
+    </span>
+    <span class="col">
+      <span class="big median" id="median-val">5</span>
+      <span class="lab">median</span>
+    </span>
+    <span class="col">
+      <span class="big mode"   id="mode-val">5</span>
+      <span class="lab">mode</span>
+    </span>
+    <span class="col">
+      <span class="big range"  id="range-val">6</span>
+      <span class="lab">range</span>
+    </span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 180" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-axis"></g>
+    <g id="g-markers"></g>
+    <g id="g-dots"></g>
+  </svg>
+
+  <div class="actions">
+    <button class="act-btn" id="remove-pt">− remove</button>
+    <button class="act-btn primary" id="add-pt">+ add point</button>
+    <button class="act-btn" data-preset="uniform">uniform</button>
+    <button class="act-btn" data-preset="cluster">cluster</button>
+    <button class="act-btn" data-preset="outlier">outlier</button>
+    <button class="act-btn" data-preset="bimodal">bimodal</button>
+  </div>
+
+  <div class="footer">
+    <span class="id" id="footer-line"></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", pink:"#ff4670", yellow:"#fff067", green:"#0fee89",
+  faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+var X_MIN = 0, X_MAX = 20;
+var SVG_W = 480, SVG_H = 180;
+var AXIS_Y = 130;
+var DOT_PX_PER_STACK = 14;
+
+var state = {
+  data: [3, 4, 5, 5, 7, 9]
+};
+
+var PRESETS = {
+  uniform:  [2, 4, 6, 8, 10, 12, 14],
+  cluster:  [5, 6, 6, 6, 7, 7, 8],
+  outlier:  [3, 4, 5, 5, 6, 6, 18],
+  bimodal:  [2, 3, 3, 4, 9, 10, 10, 11]
+};
+
+var MAX_N = 12;
+var MIN_N = 2;
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+
+function xToSx(x){
+  return 30 + (x - X_MIN) / (X_MAX - X_MIN) * (SVG_W - 60);
+}
+function sxToX(sx){
+  return X_MIN + (sx - 30) / (SVG_W - 60) * (X_MAX - X_MIN);
+}
+
+// ---- statistics ----
+function mean(){
+  if (state.data.length === 0) return null;
+  var s = 0; for (var i = 0; i < state.data.length; i++) s += state.data[i];
+  return s / state.data.length;
+}
+function median(){
+  if (state.data.length === 0) return null;
+  var sorted = state.data.slice().sort(function(a,b){return a-b;});
+  var n = sorted.length;
+  if (n % 2 === 1) return sorted[(n-1)/2];
+  return (sorted[n/2 - 1] + sorted[n/2]) / 2;
+}
+function mode(){
+  if (state.data.length === 0) return [];
+  var counts = {};
+  state.data.forEach(function(v){ counts[v] = (counts[v]||0) + 1; });
+  var max = 0;
+  Object.keys(counts).forEach(function(k){ if (counts[k] > max) max = counts[k]; });
+  if (max <= 1) return [];  // no mode
+  var modes = [];
+  Object.keys(counts).forEach(function(k){ if (counts[k] === max) modes.push(parseInt(k, 10)); });
+  modes.sort(function(a,b){return a-b;});
+  return modes;
+}
+function rangeStat(){
+  if (state.data.length === 0) return null;
+  var mn = state.data[0], mx = state.data[0];
+  for (var i = 1; i < state.data.length; i++){
+    if (state.data[i] < mn) mn = state.data[i];
+    if (state.data[i] > mx) mx = state.data[i];
+  }
+  return mx - mn;
+}
+
+function formatMean(v){
+  if (v === null) return "—";
+  if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+  return v.toFixed(2);
+}
+function formatMedian(v){
+  if (v === null) return "—";
+  if (Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
+  // Half-integer
+  if (Math.abs(2*v - Math.round(2*v)) < 1e-9) return (v).toFixed(1);
+  return v.toFixed(2);
+}
+function formatMode(arr){
+  if (arr.length === 0) return "—";
+  if (arr.length > 3) return arr.slice(0,2).join(", ") + ", …";
+  return arr.join(", ");
+}
+
+// ---- drawing ----
+function drawAxis(){
+  var g = document.getElementById("g-axis");
+  clear(g);
+  var line = document.createElementNS("http://www.w3.org/2000/svg","line");
+  line.setAttribute("x1", xToSx(X_MIN)); line.setAttribute("x2", xToSx(X_MAX));
+  line.setAttribute("y1", AXIS_Y); line.setAttribute("y2", AXIS_Y);
+  line.setAttribute("stroke", "#3a4a5a"); line.setAttribute("stroke-width", 1.2);
+  g.appendChild(line);
+  // Ticks every 2
+  for (var v = X_MIN; v <= X_MAX; v += 2){
+    var tx = xToSx(v);
+    var tick = document.createElementNS("http://www.w3.org/2000/svg","line");
+    tick.setAttribute("x1", tx); tick.setAttribute("x2", tx);
+    tick.setAttribute("y1", AXIS_Y); tick.setAttribute("y2", AXIS_Y + 5);
+    tick.setAttribute("stroke", "#3a4a5a"); tick.setAttribute("stroke-width", 1);
+    g.appendChild(tick);
+    var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", tx); t.setAttribute("y", AXIS_Y + 18);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("fill", "#7a7875"); t.setAttribute("font-size", "10");
+    t.setAttribute("font-family", "Geist Mono, monospace");
+    t.textContent = v;
+    g.appendChild(t);
+  }
+  // Minor ticks every 1
+  for (var v2 = X_MIN; v2 <= X_MAX; v2++){
+    if (v2 % 2 === 0) continue;
+    var tx2 = xToSx(v2);
+    var minor = document.createElementNS("http://www.w3.org/2000/svg","line");
+    minor.setAttribute("x1", tx2); minor.setAttribute("x2", tx2);
+    minor.setAttribute("y1", AXIS_Y); minor.setAttribute("y2", AXIS_Y + 3);
+    minor.setAttribute("stroke", "#3a4a5a"); minor.setAttribute("stroke-width", 0.7);
+    g.appendChild(minor);
+  }
+}
+
+function drawMarkers(){
+  var g = document.getElementById("g-markers");
+  clear(g);
+  var m = mean(), med = median();
+  function markerLine(v, color, top, label){
+    if (v === null) return;
+    var x = xToSx(v);
+    var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", x); l.setAttribute("x2", x);
+    l.setAttribute("y1", top); l.setAttribute("y2", AXIS_Y);
+    l.setAttribute("stroke", color); l.setAttribute("stroke-width", 1.5);
+    l.setAttribute("stroke-dasharray", "4 3");
+    l.setAttribute("opacity", 0.7);
+    g.appendChild(l);
+    var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", x); t.setAttribute("y", top - 4);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("fill", color); t.setAttribute("font-size", "9.5");
+    t.setAttribute("font-family", "Geist Mono, monospace");
+    t.setAttribute("font-weight", "700");
+    t.textContent = label;
+    g.appendChild(t);
+  }
+  // Mean above, median slightly higher to avoid overlap
+  var meanIsClose = (m !== null && med !== null && Math.abs(m - med) < 0.4);
+  markerLine(med, "#ff4670", 16, "median");
+  markerLine(m,   "#00abfa", meanIsClose ? 38 : 16, "mean");
+}
+
+// dragInfo: which data index is being dragged
+var dragIdx = null;
+function drawDots(){
+  var g = document.getElementById("g-dots");
+  clear(g);
+  // Stack dots at the same value vertically
+  var stacks = {};  // value → array of indices (in original order)
+  state.data.forEach(function(v, i){
+    if (!stacks[v]) stacks[v] = [];
+    stacks[v].push(i);
+  });
+  Object.keys(stacks).forEach(function(k){
+    var v = parseInt(k, 10);
+    var indices = stacks[k];
+    var x = xToSx(v);
+    indices.forEach(function(idx, stackPos){
+      var y = AXIS_Y - 12 - stackPos * DOT_PX_PER_STACK;
+      var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      c.setAttribute("cx", x); c.setAttribute("cy", y);
+      c.setAttribute("r", 6);
+      c.setAttribute("fill", "#fff067");
+      c.setAttribute("stroke", "#0b1118"); c.setAttribute("stroke-width", 1.5);
+      c.setAttribute("class", "handle"); c.style.color = "#fff067";
+      c.dataset.idx = idx;
+      g.appendChild(c);
+    });
+  });
+}
+
+// ---- headline + footer ----
+function renderHeadline(){
+  document.getElementById("mean-val").textContent = formatMean(mean());
+  document.getElementById("median-val").textContent = formatMedian(median());
+  document.getElementById("mode-val").textContent = formatMode(mode());
+  document.getElementById("range-val").textContent = rangeStat() === null ? "—" : rangeStat();
+}
+function renderFooter(){
+  var fEl = document.getElementById("footer-line");
+  fEl.innerHTML = "";
+  var dataSorted = state.data.slice().sort(function(a,b){return a-b;});
+  var n = state.data.length;
+  var listTex = dataSorted.length <= 12 ? dataSorted.join(",\\ ") : "\\ldots";
+  tryRender(fEl, "n = " + n + " \\quad \\cdot \\quad \\text{sorted: } " + listTex);
+}
+
+// ---- update ----
+function refresh(){
+  drawAxis();
+  drawMarkers();
+  drawDots();
+  renderHeadline();
+  renderFooter();
+  document.getElementById("add-pt").disabled = (state.data.length >= MAX_N);
+  document.getElementById("remove-pt").disabled = (state.data.length <= MIN_N);
+  notifyHeight();
+}
+
+// ---- drag ----
+var stage = document.getElementById("stage");
+function svgPt(e){
+  var pt = stage.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(stage.getScreenCTM().inverse());
+}
+function hitDot(pt){
+  // Find a dot near pt
+  var stacks = {};
+  state.data.forEach(function(v, i){
+    if (!stacks[v]) stacks[v] = [];
+    stacks[v].push(i);
+  });
+  var bestIdx = null, bestDist = 14;
+  Object.keys(stacks).forEach(function(k){
+    var v = parseInt(k, 10);
+    var x = xToSx(v);
+    stacks[k].forEach(function(idx, stackPos){
+      var y = AXIS_Y - 12 - stackPos * DOT_PX_PER_STACK;
+      var d = Math.sqrt((x - pt.x)*(x - pt.x) + (y - pt.y)*(y - pt.y));
+      if (d < bestDist){ bestDist = d; bestIdx = idx; }
+    });
+  });
+  return bestIdx;
+}
+
+stage.addEventListener("pointerdown", function(e){
+  var pt = svgPt(e);
+  var idx = hitDot(pt);
+  if (idx == null) return;
+  e.preventDefault();
+  dragIdx = idx;
+  stage.setPointerCapture(e.pointerId);
+  stage.classList.add("grabbing");
+});
+stage.addEventListener("pointermove", function(e){
+  var pt = svgPt(e);
+  if (dragIdx == null){
+    if (hitDot(pt) != null) stage.classList.add("hover-grab");
+    else stage.classList.remove("hover-grab");
+    return;
+  }
+  e.preventDefault();
+  var x = sxToX(pt.x);
+  var clamped = Math.max(X_MIN, Math.min(X_MAX, Math.round(x)));
+  if (state.data[dragIdx] !== clamped){
+    state.data[dragIdx] = clamped;
+    refresh();
+  }
+});
+function endDrag(e){
+  if (dragIdx == null) return;
+  dragIdx = null;
+  try { stage.releasePointerCapture(e.pointerId); } catch(_){}
+  stage.classList.remove("grabbing");
+}
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover-grab"); });
+
+// ---- actions ----
+document.getElementById("add-pt").addEventListener("click", function(){
+  if (state.data.length >= MAX_N) return;
+  // Add new point at the current median (or middle of range)
+  var med = median();
+  var v = med == null ? Math.round((X_MIN + X_MAX) / 2) : Math.round(med);
+  state.data.push(v);
+  refresh();
+});
+document.getElementById("remove-pt").addEventListener("click", function(){
+  if (state.data.length <= MIN_N) return;
+  state.data.pop();
+  refresh();
+});
+document.querySelectorAll("[data-preset]").forEach(function(b){
+  b.addEventListener("click", function(){
+    var key = b.dataset.preset;
+    state.data = PRESETS[key].slice();
+    refresh();
+  });
+});
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+refresh();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

@@ -760,6 +760,223 @@ var PRESETS = {
         marks: "(a) [B1] · (b) [M1 for $\\tfrac{4}{10} \\times \\tfrac{3}{9} \\times \\tfrac{2}{8}$; A1] · (c) [M1 for $1 - \\tfrac{6}{10} \\times \\tfrac{5}{9} \\times \\tfrac{4}{8}$; A1]"
       }
     ]
+  },
+
+  // ----- Unit 9 stats presets -----
+
+  "stats-averages-small": {
+    title: "WORKED EXAMPLE · MEAN MEDIAN MODE RANGE",
+    meta: "small data set",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE DATA",
+        lines: [
+          "Nine students scored: $3, 5, 7, 4, 5, 6, 8, 5, 4$.",
+          "Find the mean, median, mode, and range."
+        ]
+      },
+      {
+        tag: "STEP 2 · MEAN",
+        lines: [
+          "Add and divide by the count.",
+          "$\\text{sum} = 3 + 5 + 7 + 4 + 5 + 6 + 8 + 5 + 4 = 47$",
+          "$\\text{mean} = \\dfrac{47}{9} \\approx 5.22$"
+        ]
+      },
+      {
+        tag: "STEP 3 · MEDIAN",
+        lines: [
+          "Sort: $3, 4, 4, 5, 5, 5, 6, 7, 8$. With $n=9$, the median is the $5$th value.",
+          "$\\text{median} = 5$"
+        ]
+      },
+      {
+        tag: "STEP 4 · MODE AND RANGE",
+        lines: [
+          "Mode = most common = $5$ (appears three times).",
+          "Range = largest $-$ smallest = $8 - 3 = 5$."
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{mean} \\approx \\boxed{5.22},\\; \\text{median} = \\boxed{5},\\; \\text{mode} = \\boxed{5},\\; \\text{range} = \\boxed{5}",
+        marks: "[B1 mean; B1 median; B1 mode; B1 range]"
+      }
+    ]
+  },
+
+  "stats-grouped-mean": {
+    title: "WORKED EXAMPLE · ESTIMATED MEAN FROM GROUPED DATA",
+    meta: "test scores in 5 classes",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE TABLE",
+        lines: [
+          "Test scores grouped:",
+          "$0$-$10$ (mid $5$): $f = 2$ · $10$-$20$ (mid $15$): $f = 6$ · $20$-$30$ (mid $25$): $f = 11$",
+          "$30$-$40$ (mid $35$): $f = 14$ · $40$-$50$ (mid $45$): $f = 7$.",
+          "Estimate the mean."
+        ]
+      },
+      {
+        tag: "STEP 2 · MULTIPLY MIDPOINT BY FREQUENCY",
+        lines: [
+          "$5 \\times 2 = 10$",
+          "$15 \\times 6 = 90$",
+          "$25 \\times 11 = 275$",
+          "$35 \\times 14 = 490$",
+          "$45 \\times 7 = 315$"
+        ]
+      },
+      {
+        tag: "STEP 3 · ADD AND DIVIDE",
+        lines: [
+          "$\\sum fx = 10 + 90 + 275 + 490 + 315 = 1180$",
+          "$\\sum f = 2 + 6 + 11 + 14 + 7 = 40$",
+          "$\\text{estimated mean} = \\dfrac{1180}{40} = 29.5$"
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{estimated mean} = \\boxed{29.5}",
+        marks: "[M1 for $\\sum fx$; M1 for division by $\\sum f$; A1 for $29.5$]"
+      }
+    ]
+  },
+
+  "stats-pie-angle": {
+    title: "WORKED EXAMPLE · ANGLE IN A PIE CHART",
+    meta: "60 students surveyed",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE DATA",
+        lines: [
+          "Of $60$ students, $25$ prefer cricket. The data is drawn as a pie chart.",
+          "Find the angle of the cricket sector."
+        ]
+      },
+      {
+        tag: "STEP 2 · FRACTION OF THE WHOLE",
+        lines: [
+          "Cricket fraction: $\\dfrac{25}{60} = \\dfrac{5}{12}$ of the students."
+        ]
+      },
+      {
+        tag: "STEP 3 · APPLY TO 360°",
+        lines: [
+          "$\\text{angle} = \\dfrac{25}{60} \\times 360° = \\dfrac{5}{12} \\times 360° = 150°$"
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{angle} = \\boxed{150°}",
+        marks: "[M1 for $\\tfrac{25}{60} \\times 360$; A1 for $150°$]"
+      }
+    ]
+  },
+
+  "stats-cf-quartiles": {
+    title: "WORKED EXAMPLE · MEDIAN AND IQR FROM A CF CURVE",
+    meta: "60 students, test scores",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · IDENTIFY READING POSITIONS",
+        lines: [
+          "Total students: $n = 60$.",
+          "Median position: $\\dfrac{n}{2} = 30$.",
+          "Lower quartile position: $\\dfrac{n}{4} = 15$.",
+          "Upper quartile position: $\\dfrac{3n}{4} = 45$."
+        ]
+      },
+      {
+        tag: "STEP 2 · READ ACROSS FROM EACH CF",
+        lines: [
+          "From the curve: at CF = $30$, score $\\approx 38$ (median).",
+          "At CF = $15$, score $\\approx 26$ (Q1).",
+          "At CF = $45$, score $\\approx 49$ (Q3)."
+        ]
+      },
+      {
+        tag: "STEP 3 · INTERQUARTILE RANGE",
+        lines: [
+          "IQR $= Q_3 - Q_1 = 49 - 26 = 23$."
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{median} \\approx \\boxed{38},\\; \\text{IQR} \\approx \\boxed{23}",
+        marks: "[B1 for the median; B1 for $Q_1$; B1 for $Q_3$; B1 for IQR]"
+      }
+    ]
+  },
+
+  "stats-frequency-density": {
+    title: "WORKED EXAMPLE · FREQUENCY DENSITY",
+    meta: "unequal class widths",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE TABLE",
+        lines: [
+          "Class $30$-$50$ has $16$ students. Class width $= 20$.",
+          "Find the frequency density for this class, and use it to set the bar height for the histogram."
+        ]
+      },
+      {
+        tag: "STEP 2 · FORMULA",
+        lines: [
+          "$\\text{frequency density} = \\dfrac{\\text{frequency}}{\\text{class width}}$"
+        ]
+      },
+      {
+        tag: "STEP 3 · SUBSTITUTE",
+        lines: [
+          "$\\text{f.d.} = \\dfrac{16}{20} = 0.8$"
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{frequency density} = \\boxed{0.8}",
+        marks: "[M1 for $16 / 20$; A1 for $0.8$]"
+      }
+    ]
+  },
+
+  "stats-scatter-interpret": {
+    title: "WORKED EXAMPLE · INTERPRET A SCATTER DIAGRAM",
+    meta: "hours studied vs test score",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE OBSERVATION",
+        lines: [
+          "Ten students each had their study hours and test score recorded. As hours studied went UP, test scores generally went UP too. The points form a clear upward trend."
+        ]
+      },
+      {
+        tag: "STEP 2 · STATE THE CORRELATION",
+        lines: [
+          "Type: $\\text{POSITIVE}$ (both go up together).",
+          "Strength: $\\text{STRONG}$ (the points cluster closely along a line)."
+        ]
+      },
+      {
+        tag: "STEP 3 · USE THE LINE OF BEST FIT",
+        lines: [
+          "A line of best fit is a single straight line drawn by eye so the points are roughly evenly spread either side.",
+          "To estimate the score for a student who studied for $5$ hours, read ACROSS from $5$ on the $x$-axis to the line, then DOWN to the $y$-axis: estimate $\\approx 60$."
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\text{strong positive correlation}; \\text{ estimated score} \\approx \\boxed{60}",
+        marks: "[B1 for 'positive'; B1 for 'strong'; B1 for the read-off]"
+      }
+    ]
   }
 };
 

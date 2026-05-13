@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Cumulative Frequency Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 20px 18px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  .headline { display:flex; align-items:baseline; justify-content:center; gap:14px; flex-wrap:wrap; margin:8px 0 14px; padding:14px 8px; }
+  .headline .col { display:flex; flex-direction:column; align-items:center; gap:4px; min-width:100px; }
+  .headline .big { font-family:'Geist Mono',monospace; font-size:36px; font-weight:700; line-height:1; min-height:38px; display:flex; align-items:center; justify-content:center; transition: color 0.3s ease; }
+  .headline .big.cf { color:#00abfa; }
+  .headline .big.x  { color:#fff067; }
+  .headline .lab { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.5px; text-transform:uppercase; }
+  .headline .arrow { font-family:'Geist Mono',monospace; font-size:18px; color:#3a4a5a; padding:0 4px; align-self:center; }
+
+  #chart { display:block; width:100%; height:auto; user-select:none; touch-action:none; cursor:default; overflow:visible; }
+  #chart.grabbing { cursor:grabbing; }
+  #chart.hover-grab { cursor:grab; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1px currentColor); }
+    50%      { filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 7px currentColor); }
+  }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+
+  .actions { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:12px; }
+  .act-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:5px 10px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; }
+  .act-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
+  .act-btn.active { color:#fff067; border-color:#fff067; background:rgba(255,240,103,0.06); }
+
+  .footer { font-family:'Geist Mono',monospace; font-size:11.5px; color:#3a4a5a; text-align:center; margin-top:12px; line-height:1.6; }
+  .footer .id { color:#7a7875; }
+  .footer .id .katex { font-size:1em; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">CUMULATIVE FREQUENCY</span>
+    <span class="meta">drag the yellow line, or tap a quartile</span>
+  </div>
+
+  <div class="headline">
+    <span class="col">
+      <span class="big cf" id="cf-val">30</span>
+      <span class="lab">CF</span>
+    </span>
+    <span class="arrow">↔</span>
+    <span class="col">
+      <span class="big x" id="x-val">37.9</span>
+      <span class="lab">score</span>
+    </span>
+  </div>
+
+  <svg id="chart" viewBox="0 0 480 260" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-grid"></g>
+    <g id="g-curve"></g>
+    <g id="g-proj"></g>
+    <g id="g-axes"></g>
+    <g id="g-marker"></g>
+  </svg>
+
+  <div class="actions">
+    <button class="act-btn" data-snap="q1">Q1</button>
+    <button class="act-btn" data-snap="median">median</button>
+    <button class="act-btn" data-snap="q3">Q3</button>
+    <button class="act-btn" id="reset">↻ reset</button>
+  </div>
+
+  <div class="footer">
+    <span class="id" id="iqr-line"></span>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", pink:"#ff4670", yellow:"#fff067", green:"#0fee89",
+  orange:"#ff822c", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+// Sample data: test scores, 60 students. Class boundaries 0,10,...,80.
+var CLASS_BOUNDS = [0, 10, 20, 30, 40, 50, 60, 70, 80];
+var FREQUENCIES = [2, 6, 11, 14, 13, 9, 4, 1];
+var N = FREQUENCIES.reduce(function(s, f){ return s + f; }, 0);  // 60
+// Cumulative frequency at each upper boundary
+var CF_AT_UB = [0];
+(function(){
+  var c = 0;
+  for (var i = 0; i < FREQUENCIES.length; i++){
+    c += FREQUENCIES[i];
+    CF_AT_UB.push(c);
+  }
+})();
+
+// Plot config
+var X_MIN = 0, X_MAX = 80;
+var Y_MIN = 0, Y_MAX = N;  // 0 to 60
+var SVG_W = 480, SVG_H = 260;
+var PAD_L = 38, PAD_R = 14, PAD_T = 16, PAD_B = 34;
+var PLOT_W = SVG_W - PAD_L - PAD_R;
+var PLOT_H = SVG_H - PAD_T - PAD_B;
+
+var P = { cf: 30 };
+var D = { cf: 30 };
+var SPRING = 0.22, EPS = 0.04;
+var raf = null;
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+
+function xToSx(x){ return PAD_L + (x - X_MIN) / (X_MAX - X_MIN) * PLOT_W; }
+function yToSy(y){ return PAD_T + PLOT_H - (y - Y_MIN) / (Y_MAX - Y_MIN) * PLOT_H; }
+function sxToX(sx){ return X_MIN + (sx - PAD_L) / PLOT_W * (X_MAX - X_MIN); }
+function syToY(sy){ return Y_MIN + (PAD_T + PLOT_H - sy) / PLOT_H * (Y_MAX - Y_MIN); }
+
+// Linear interpolation: given CF, find corresponding x along the curve.
+function xForCF(cf){
+  cf = Math.max(0, Math.min(N, cf));
+  for (var i = 0; i < CF_AT_UB.length - 1; i++){
+    var c0 = CF_AT_UB[i], c1 = CF_AT_UB[i + 1];
+    if (cf >= c0 && cf <= c1){
+      var b0 = CLASS_BOUNDS[i], b1 = CLASS_BOUNDS[i + 1];
+      if (c1 === c0) return b0;
+      return b0 + ((cf - c0) / (c1 - c0)) * (b1 - b0);
+    }
+  }
+  return CLASS_BOUNDS[CLASS_BOUNDS.length - 1];
+}
+
+function drawGrid(){
+  var g = document.getElementById("g-grid");
+  clear(g);
+  // Vertical grid lines at every class boundary
+  CLASS_BOUNDS.forEach(function(b){
+    var x = xToSx(b);
+    var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", x); l.setAttribute("x2", x);
+    l.setAttribute("y1", PAD_T); l.setAttribute("y2", PAD_T + PLOT_H);
+    l.setAttribute("stroke", "#141e2a"); l.setAttribute("stroke-width", 0.6);
+    g.appendChild(l);
+  });
+  // Horizontal at every 10 CF (since N=60, lines at 0,10,...,60)
+  for (var y = 0; y <= N; y += 10){
+    var sy = yToSy(y);
+    var lh = document.createElementNS("http://www.w3.org/2000/svg","line");
+    lh.setAttribute("x1", PAD_L); lh.setAttribute("x2", PAD_L + PLOT_W);
+    lh.setAttribute("y1", sy); lh.setAttribute("y2", sy);
+    lh.setAttribute("stroke", "#141e2a"); lh.setAttribute("stroke-width", 0.6);
+    g.appendChild(lh);
+  }
+}
+
+function drawAxes(){
+  var g = document.getElementById("g-axes");
+  clear(g);
+  // y-axis line
+  var ya = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ya.setAttribute("x1", PAD_L); ya.setAttribute("x2", PAD_L);
+  ya.setAttribute("y1", PAD_T); ya.setAttribute("y2", PAD_T + PLOT_H);
+  ya.setAttribute("stroke", "#3a4a5a"); ya.setAttribute("stroke-width", 1.2);
+  g.appendChild(ya);
+  // x-axis line
+  var xa = document.createElementNS("http://www.w3.org/2000/svg","line");
+  xa.setAttribute("x1", PAD_L); xa.setAttribute("x2", PAD_L + PLOT_W);
+  xa.setAttribute("y1", yToSy(0)); xa.setAttribute("y2", yToSy(0));
+  xa.setAttribute("stroke", "#3a4a5a"); xa.setAttribute("stroke-width", 1.2);
+  g.appendChild(xa);
+  // x labels
+  CLASS_BOUNDS.forEach(function(b){
+    var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", xToSx(b)); t.setAttribute("y", PAD_T + PLOT_H + 16);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("fill", "#7a7875"); t.setAttribute("font-size", "10");
+    t.setAttribute("font-family", "Geist Mono, monospace");
+    t.textContent = b;
+    g.appendChild(t);
+  });
+  // x-axis title
+  var xlbl = document.createElementNS("http://www.w3.org/2000/svg","text");
+  xlbl.setAttribute("x", (PAD_L + PAD_L + PLOT_W) / 2); xlbl.setAttribute("y", PAD_T + PLOT_H + 28);
+  xlbl.setAttribute("text-anchor", "middle");
+  xlbl.setAttribute("fill", "#3a4a5a"); xlbl.setAttribute("font-size", "10");
+  xlbl.setAttribute("font-family", "Geist Mono, monospace");
+  xlbl.textContent = "score";
+  g.appendChild(xlbl);
+  // y labels
+  for (var y = 0; y <= N; y += 10){
+    var t2 = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t2.setAttribute("x", PAD_L - 6); t2.setAttribute("y", yToSy(y) + 3);
+    t2.setAttribute("text-anchor", "end");
+    t2.setAttribute("fill", "#7a7875"); t2.setAttribute("font-size", "10");
+    t2.setAttribute("font-family", "Geist Mono, monospace");
+    t2.textContent = y;
+    g.appendChild(t2);
+  }
+  var ylbl = document.createElementNS("http://www.w3.org/2000/svg","text");
+  ylbl.setAttribute("x", PAD_L - 8); ylbl.setAttribute("y", PAD_T - 4);
+  ylbl.setAttribute("text-anchor", "end");
+  ylbl.setAttribute("fill", "#3a4a5a"); ylbl.setAttribute("font-size", "10");
+  ylbl.setAttribute("font-family", "Geist Mono, monospace");
+  ylbl.textContent = "CF";
+  g.appendChild(ylbl);
+}
+
+function drawCurve(){
+  var g = document.getElementById("g-curve");
+  clear(g);
+  // Polyline through (CLASS_BOUNDS[i], CF_AT_UB[i])
+  var pts = [];
+  for (var i = 0; i < CLASS_BOUNDS.length; i++){
+    pts.push(xToSx(CLASS_BOUNDS[i]).toFixed(2) + "," + yToSy(CF_AT_UB[i]).toFixed(2));
+  }
+  var poly = document.createElementNS("http://www.w3.org/2000/svg","polyline");
+  poly.setAttribute("points", pts.join(" "));
+  poly.setAttribute("fill", "none");
+  poly.setAttribute("stroke", "#0fee89");
+  poly.setAttribute("stroke-width", 2);
+  poly.setAttribute("stroke-linejoin", "round");
+  g.appendChild(poly);
+  // Dots at each data point
+  for (var j = 0; j < CLASS_BOUNDS.length; j++){
+    var dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    dot.setAttribute("cx", xToSx(CLASS_BOUNDS[j])); dot.setAttribute("cy", yToSy(CF_AT_UB[j]));
+    dot.setAttribute("r", 2.5);
+    dot.setAttribute("fill", "#0fee89");
+    g.appendChild(dot);
+  }
+}
+
+function drawProjection(){
+  var g = document.getElementById("g-proj");
+  clear(g);
+  var cf = D.cf;
+  var x = xForCF(cf);
+  var sxR = xToSx(x);
+  var syY = yToSy(cf);
+  // Horizontal line: from y-axis at this CF, to the curve
+  var hl = document.createElementNS("http://www.w3.org/2000/svg","line");
+  hl.setAttribute("x1", PAD_L); hl.setAttribute("x2", sxR);
+  hl.setAttribute("y1", syY); hl.setAttribute("y2", syY);
+  hl.setAttribute("stroke", "#00abfa"); hl.setAttribute("stroke-width", 1.6);
+  hl.setAttribute("stroke-dasharray", "5 3");
+  hl.setAttribute("opacity", 0.85);
+  g.appendChild(hl);
+  // Vertical line: from curve down to x-axis
+  var vl = document.createElementNS("http://www.w3.org/2000/svg","line");
+  vl.setAttribute("x1", sxR); vl.setAttribute("x2", sxR);
+  vl.setAttribute("y1", syY); vl.setAttribute("y2", yToSy(0));
+  vl.setAttribute("stroke", "#fff067"); vl.setAttribute("stroke-width", 1.6);
+  vl.setAttribute("stroke-dasharray", "5 3");
+  vl.setAttribute("opacity", 0.85);
+  g.appendChild(vl);
+}
+
+function drawMarker(){
+  var g = document.getElementById("g-marker");
+  clear(g);
+  var cf = D.cf;
+  var x = xForCF(cf);
+  var sxR = xToSx(x);
+  var syY = yToSy(cf);
+  // Big draggable dot AT the curve at the current CF
+  var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("cx", sxR); c.setAttribute("cy", syY);
+  c.setAttribute("r", 7);
+  c.setAttribute("fill", "#fff067");
+  c.setAttribute("stroke", "#0b1118"); c.setAttribute("stroke-width", 2);
+  c.setAttribute("class", "handle"); c.style.color = "#fff067";
+  g.appendChild(c);
+}
+
+function renderHeadline(){
+  var cf = P.cf;
+  var x = xForCF(cf);
+  document.getElementById("cf-val").textContent = (Math.abs(cf - Math.round(cf)) < 0.05) ? String(Math.round(cf)) : cf.toFixed(1);
+  document.getElementById("x-val").textContent = x.toFixed(1);
+}
+
+function paintActive(){
+  document.querySelectorAll("[data-snap]").forEach(function(b){
+    b.classList.remove("active");
+  });
+  var cf = P.cf;
+  if (Math.abs(cf - N/4)  < 0.01) document.querySelector('[data-snap="q1"]').classList.add("active");
+  if (Math.abs(cf - N/2)  < 0.01) document.querySelector('[data-snap="median"]').classList.add("active");
+  if (Math.abs(cf - 3*N/4) < 0.01) document.querySelector('[data-snap="q3"]').classList.add("active");
+}
+
+function renderFooter(){
+  var fEl = document.getElementById("iqr-line");
+  fEl.innerHTML = "";
+  // Always show Q1, Q3, IQR as the supporting facts
+  var q1 = xForCF(N/4), med = xForCF(N/2), q3 = xForCF(3*N/4);
+  var iqr = q3 - q1;
+  tryRender(fEl,
+    "Q_1 = " + q1.toFixed(1) + " \\quad \\text{median} = " + med.toFixed(1) + " \\quad Q_3 = " + q3.toFixed(1) +
+    " \\quad \\Rightarrow \\quad \\text{IQR} = " + iqr.toFixed(1));
+}
+
+function refresh(){
+  drawProjection();
+  drawMarker();
+  renderHeadline();
+  paintActive();
+  renderFooter();
+}
+
+// drag
+var chart = document.getElementById("chart");
+var dragging = false;
+function svgPt(e){
+  var pt = chart.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(chart.getScreenCTM().inverse());
+}
+function nearMarker(pt){
+  var x = xForCF(D.cf);
+  var sx = xToSx(x), sy = yToSy(D.cf);
+  var d = Math.sqrt((sx - pt.x)*(sx - pt.x) + (sy - pt.y)*(sy - pt.y));
+  return d < 14;
+}
+function nearCurve(pt){
+  // Allow dragging anywhere over the plot area
+  return pt.x >= PAD_L - 8 && pt.x <= PAD_L + PLOT_W + 8 &&
+         pt.y >= PAD_T - 8 && pt.y <= PAD_T + PLOT_H + 8;
+}
+chart.addEventListener("pointerdown", function(e){
+  var pt = svgPt(e);
+  if (!nearCurve(pt)) return;
+  e.preventDefault();
+  dragging = true;
+  chart.setPointerCapture(e.pointerId);
+  chart.classList.add("grabbing");
+  applyDrag(pt);
+});
+chart.addEventListener("pointermove", function(e){
+  var pt = svgPt(e);
+  if (!dragging){
+    if (nearMarker(pt)) chart.classList.add("hover-grab");
+    else chart.classList.remove("hover-grab");
+    return;
+  }
+  e.preventDefault();
+  applyDrag(pt);
+});
+function endDrag(e){
+  if (!dragging) return;
+  dragging = false;
+  try { chart.releasePointerCapture(e.pointerId); } catch(_){}
+  chart.classList.remove("grabbing");
+}
+chart.addEventListener("pointerup", endDrag);
+chart.addEventListener("pointercancel", endDrag);
+chart.addEventListener("pointerleave", function(){ chart.classList.remove("hover-grab"); });
+
+function applyDrag(pt){
+  // Map y-coordinate of pointer to CF (clamped to 0..N)
+  var cf = syToY(pt.y);
+  cf = Math.max(0, Math.min(N, cf));
+  P.cf = cf;
+  kick();
+}
+
+document.querySelectorAll("[data-snap]").forEach(function(b){
+  b.addEventListener("click", function(){
+    var s = b.dataset.snap;
+    if (s === "q1") P.cf = N/4;
+    else if (s === "median") P.cf = N/2;
+    else if (s === "q3") P.cf = 3*N/4;
+    kick();
+  });
+});
+document.getElementById("reset").addEventListener("click", function(){
+  P.cf = 30;
+  kick();
+});
+
+function settled(){ return Math.abs(P.cf - D.cf) < EPS; }
+function step(){
+  D.cf += (P.cf - D.cf) * SPRING;
+  refresh();
+  if (!settled()) raf = requestAnimationFrame(step);
+  else {
+    raf = null;
+    D.cf = P.cf;
+    refresh();
+  }
+}
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+drawGrid();
+drawAxes();
+drawCurve();
+refresh();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

@@ -623,13 +623,62 @@ export const UNITS: Unit[] = [
   {
     slug: "09", title: "Statistics", color: "#ff822c",
     topics: [
-      { slug: "01", code: "9.1", title: "Classifying statistical data" },
-      { slug: "02", code: "9.2", title: "Interpreting statistical data" },
-      { slug: "03", code: "9.3", title: "Averages and measures of spread" },
-      { slug: "04", code: "9.4", title: "Statistical charts and diagrams" },
-      { slug: "05", code: "9.5", title: "Scatter diagrams" },
-      { slug: "06", code: "9.6", title: "Cumulative frequency diagrams" },
-      { slug: "07", code: "9.7", title: "Histograms" },
+      {
+        slug: "01", code: "9.1", title: "Classifying statistical data",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Tally tables and frequency tables" },
+          { slug: "p2",     label: "P2", title: "Two-way tables" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "02", code: "9.2", title: "Interpreting statistical data",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Reading tables and charts" },
+          { slug: "p2",     label: "P2", title: "Comparing two data sets" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "03", code: "9.3", title: "Averages and measures of spread",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Mean, median, mode" },
+          { slug: "p2",     label: "P2", title: "Range and which average to use" },
+          { slug: "p3",     label: "P3", title: "Mean and modal class from grouped data" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "04", code: "9.4", title: "Statistical charts and diagrams",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Bar charts and pictograms" },
+          { slug: "p2",     label: "P2", title: "Pie charts" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "05", code: "9.5", title: "Scatter diagrams",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Correlation and scatter" },
+          { slug: "p2",     label: "P2", title: "Line of best fit" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "06", code: "9.6", title: "Cumulative frequency diagrams",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Building the cumulative frequency curve" },
+          { slug: "p2",     label: "P2", title: "Median, quartiles, and interquartile range" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
+      {
+        slug: "07", code: "9.7", title: "Histograms",
+        parts: [
+          { slug: "p1",     label: "P1", title: "Frequency density and histograms" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
     ],
   },
 ]

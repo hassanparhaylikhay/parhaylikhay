@@ -87,6 +87,13 @@ const LESSON_FOLDERS: Record<string, string> = {
   "08-01": "08-01-intro-to-probability",
   "08-02": "08-02-relative-expected-frequencies",
   "08-03": "08-03-combined-events",
+  "09-01": "09-01-classifying-data",
+  "09-02": "09-02-interpreting-data",
+  "09-03": "09-03-averages-spread",
+  "09-04": "09-04-charts-diagrams",
+  "09-05": "09-05-scatter-diagrams",
+  "09-06": "09-06-cumulative-frequency",
+  "09-07": "09-07-histograms",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public
