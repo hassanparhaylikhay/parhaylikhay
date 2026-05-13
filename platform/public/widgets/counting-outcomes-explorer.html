@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Counting Outcomes Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  .panel-tag { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px; }
+
+  .colour-controls { display:flex; gap:10px; margin-top:4px; margin-bottom:14px; }
+  .col-card { flex:1; padding:10px; border-radius:8px; border:1px solid; background:#0b1118; cursor:pointer; transition: all 0.12s ease; }
+  .col-card:hover { transform: translateY(-1px); }
+  .col-card.active { box-shadow: 0 0 0 1.5px currentColor; }
+  .col-card .row1 { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .col-card .swatch { width:18px; height:18px; border-radius:50%; }
+  .col-card .name { font-family:'Geist Mono',monospace; font-size:9.5px; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; }
+  .col-card .count { font-family:'Geist Mono',monospace; font-size:18px; color:#f0eeea; line-height:1; margin:4px 0 6px; }
+  .col-card .btns { display:flex; gap:4px; }
+  .col-card .btn { flex:1; background:#0b1118; border:1px solid currentColor; color:currentColor; font-family:'Geist Mono',monospace; font-size:13px; font-weight:700; padding:2px 0; border-radius:4px; cursor:pointer; opacity:0.7; transition:all 0.12s ease; }
+  .col-card .btn:hover { opacity:1; }
+  .col-card .btn:disabled { opacity:0.25; cursor:not-allowed; }
+
+  .bag { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; padding:14px; background:#070b10; border:1px solid #141e2a; border-radius:8px; min-height:96px; align-items:center; }
+  .counter { width:30px; height:30px; border-radius:50%; border:2px solid #0b1118; transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 10px currentColor); }
+  }
+  .counter.active { animation: pulse-glow 1.8s ease-in-out infinite; }
+  .counter.inactive { opacity:0.28; }
+
+  .formula-strip { display:flex; align-items:center; gap:14px; padding:11px 14px; margin-top:12px; background:rgba(0,171,250,0.04); border:1px solid rgba(0,171,250,0.18); border-radius:8px; }
+  .formula-strip .tag { font-family:'Geist Mono',monospace; font-size:10px; color:#00abfa; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; flex:0 0 auto; }
+  .formula-strip .eq { font-size:17px; color:#f0eeea; }
+  .formula-strip .eq .katex { font-size:1em; }
+
+  .reset-row { display:flex; padding:10px 0 0; }
+  .reset-btn { margin-left:auto; background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:5px 10px; border-radius:4px; cursor:pointer; transition: all 0.12s ease; }
+  .reset-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">A BAG OF COUNTERS</span>
+    <span class="meta">tap a colour card to pick what you want P(...) of</span>
+  </div>
+
+  <div class="panel-tag">colours in the bag</div>
+  <div class="colour-controls" id="controls"></div>
+
+  <div class="panel-tag">the bag</div>
+  <div class="bag" id="bag"></div>
+
+  <div class="formula-strip">
+    <span class="tag" id="formula-tag">P(red)</span>
+    <span class="eq" id="formula"></span>
+  </div>
+
+  <div class="reset-row">
+    <button class="reset-btn" id="reset">↻ reset</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COLOURS = [
+  { key:"red",    hex:"#ff4670", name:"red" },
+  { key:"blue",   hex:"#00abfa", name:"blue" },
+  { key:"green",  hex:"#0fee89", name:"green" },
+  { key:"yellow", hex:"#fff067", name:"yellow" }
+];
+
+var DEFAULTS = { red:4, blue:3, green:2, yellow:1, active:"red" };
+var state = {
+  red: 4, blue: 3, green: 2, yellow: 1,
+  active: "red"
+};
+var MAX_PER_COLOUR = 9;
+var MAX_TOTAL = 20;
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+
+function total(){ return state.red + state.blue + state.green + state.yellow; }
+
+function gcd(a, b){ a = Math.abs(a); b = Math.abs(b); while (b){ var t = b; b = a % b; a = t; } return a; }
+
+function buildControls(){
+  var host = document.getElementById("controls");
+  host.innerHTML = "";
+  COLOURS.forEach(function(c){
+    var card = document.createElement("div");
+    card.className = "col-card" + (state.active === c.key ? " active" : "");
+    card.style.color = c.hex;
+    card.style.borderColor = "rgba(255,255,255,0.06)";
+    card.style.background = "rgba(255,255,255,0.02)";
+    card.dataset.key = c.key;
+    card.innerHTML =
+      '<div class="row1">' +
+        '<span class="swatch" style="background:' + c.hex + '"></span>' +
+        '<span class="name" style="color:' + c.hex + '">' + c.name + '</span>' +
+      '</div>' +
+      '<div class="count" data-count="">' + state[c.key] + '</div>' +
+      '<div class="btns">' +
+        '<button class="btn" data-act="minus">−</button>' +
+        '<button class="btn" data-act="plus">+</button>' +
+      '</div>';
+    card.addEventListener("click", function(e){
+      // Set active colour, unless clicking +/- button
+      var t = e.target;
+      if (t.classList && t.classList.contains("btn")) return;
+      state.active = c.key;
+      render();
+    });
+    card.querySelector('[data-act="plus"]').addEventListener("click", function(e){
+      e.stopPropagation();
+      if (state[c.key] < MAX_PER_COLOUR && total() < MAX_TOTAL){
+        state[c.key]++;
+        render();
+      }
+    });
+    card.querySelector('[data-act="minus"]').addEventListener("click", function(e){
+      e.stopPropagation();
+      if (state[c.key] > 0){
+        state[c.key]--;
+        render();
+      }
+    });
+    host.appendChild(card);
+  });
+}
+
+function renderBag(){
+  var bag = document.getElementById("bag");
+  bag.innerHTML = "";
+  COLOURS.forEach(function(c){
+    for (var i = 0; i < state[c.key]; i++){
+      var d = document.createElement("div");
+      d.className = "counter " + (state.active === c.key ? "active" : "inactive");
+      d.style.background = c.hex;
+      d.style.color = c.hex;
+      bag.appendChild(d);
+    }
+  });
+  if (total() === 0){
+    var note = document.createElement("div");
+    note.style.color = "#3a4a5a"; note.style.fontSize = "12px";
+    note.textContent = "empty bag — add some counters above";
+    bag.appendChild(note);
+  }
+}
+
+function renderFormula(){
+  var fav = state[state.active];
+  var tot = total();
+  var c = COLOURS.filter(function(x){ return x.key === state.active; })[0];
+  var hex = c.hex;
+  var tagEl = document.getElementById("formula-tag");
+  tagEl.textContent = "P(" + c.name + ")";
+  tagEl.style.color = hex;
+
+  var el = document.getElementById("formula");
+  el.innerHTML = "";
+
+  if (tot === 0){
+    tryRender(el, "P(\\text{" + c.name + "}) = \\text{undefined (empty bag)}");
+    return;
+  }
+  if (fav === 0){
+    tryRender(el, "P(\\text{" + c.name + "}) = \\dfrac{0}{" + tot + "} = 0");
+    return;
+  }
+  if (fav === tot){
+    tryRender(el, "P(\\text{" + c.name + "}) = \\dfrac{" + fav + "}{" + tot + "} = 1");
+    return;
+  }
+  var g = gcd(fav, tot);
+  var sFav = fav / g, sTot = tot / g;
+  var dec = (fav / tot);
+  // Build the readout: full fraction = simplified fraction = decimal
+  var tex = "P(\\text{" + c.name + "}) = \\dfrac{{\\color{" + hex + "}" + fav + "}}{" + tot + "}";
+  if (g > 1){
+    tex += " = \\dfrac{{\\color{" + hex + "}" + sFav + "}}{" + sTot + "}";
+  }
+  // decimal: 2dp unless exact
+  var decStr;
+  if (Math.abs(dec - Math.round(dec * 10) / 10) < 1e-9){
+    decStr = (Math.round(dec * 10) / 10).toString();
+  } else if (Math.abs(dec - Math.round(dec * 100) / 100) < 1e-9){
+    decStr = (Math.round(dec * 100) / 100).toFixed(2);
+  } else {
+    decStr = dec.toFixed(3);
+  }
+  tex += " = " + decStr;
+  tryRender(el, tex);
+}
+
+function render(){
+  // Re-build controls so counts/active states refresh
+  buildControls();
+  renderBag();
+  renderFormula();
+  notifyHeight();
+}
+
+document.getElementById("reset").addEventListener("click", function(){
+  state.red = DEFAULTS.red;
+  state.blue = DEFAULTS.blue;
+  state.green = DEFAULTS.green;
+  state.yellow = DEFAULTS.yellow;
+  state.active = DEFAULTS.active;
+  render();
+});
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+render();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

@@ -84,6 +84,7 @@ const LESSON_FOLDERS: Record<string, string> = {
   "07-02": "07-02-vectors-2d",
   "07-03": "07-03-magnitude",
   "07-04": "07-04-vector-geometry",
+  "08-01": "08-01-intro-to-probability",
 }
 
 // Map of "{unit}-{topic}-{part|'_'}" → widget URL served from /public

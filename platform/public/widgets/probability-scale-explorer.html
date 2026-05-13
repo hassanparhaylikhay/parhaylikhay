@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Probability Scale Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:default; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .readouts { display:flex; gap:10px; margin-top:12px; }
+  .readout { flex:1; padding:11px 12px; border-radius:8px; text-align:center; }
+  .readout .tag { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; margin-bottom:6px; opacity:0.85; }
+  .readout .val { font-size:19px; color:#f0eeea; line-height:1; min-height:22px; display:flex; align-items:center; justify-content:center; }
+  .readout .val .katex { font-size:1em; }
+  .readout.fr  { border:1px solid rgba(0,171,250,0.30); background:rgba(0,171,250,0.05); }
+  .readout.fr  .tag { color:#00abfa; }
+  .readout.dec { border:1px solid rgba(255,240,103,0.30); background:rgba(255,240,103,0.05); }
+  .readout.dec .tag { color:#fff067; }
+  .readout.pct { border:1px solid rgba(15,238,137,0.30); background:rgba(15,238,137,0.05); }
+  .readout.pct .tag { color:#0fee89; }
+
+  .preset-row { display:flex; gap:6px; margin-top:12px; flex-wrap:wrap; }
+  .preset-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:10.5px; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; padding:5px 10px; border-radius:4px; cursor:pointer; transition: all 0.12s ease; }
+  .preset-btn:hover { color:#f0eeea; border-color:#3a4a5a; }
+  .preset-btn.active { color:#fff067; border-color:#fff067; background:rgba(255,240,103,0.06); }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 10px currentColor); }
+  }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">PROBABILITY SCALE</span>
+    <span class="meta" id="meta">drag the marker</span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 220" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="bar-grad" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0%"   stop-color="#ff4670"/>
+        <stop offset="50%"  stop-color="#fff067"/>
+        <stop offset="100%" stop-color="#0fee89"/>
+      </linearGradient>
+    </defs>
+    <g id="g-bar"></g>
+    <g id="g-ticks"></g>
+    <g id="g-anchors"></g>
+    <g id="g-words"></g>
+    <g id="g-marker"></g>
+  </svg>
+
+  <div class="readouts">
+    <div class="readout fr">
+      <div class="tag">fraction</div>
+      <div class="val" id="r-frac"></div>
+    </div>
+    <div class="readout dec">
+      <div class="tag">decimal</div>
+      <div class="val" id="r-dec"></div>
+    </div>
+    <div class="readout pct">
+      <div class="tag">percent</div>
+      <div class="val" id="r-pct"></div>
+    </div>
+  </div>
+
+  <div class="preset-row">
+    <button class="preset-btn" data-p="0">impossible</button>
+    <button class="preset-btn" data-p="0.25">unlikely</button>
+    <button class="preset-btn" data-p="0.5">even chance</button>
+    <button class="preset-btn" data-p="0.75">likely</button>
+    <button class="preset-btn" data-p="1">certain</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", yellow:"#fff067", orange:"#ff822c", green:"#0fee89",
+  pink:"#ff4670", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+// world
+var SVG_W = 480, SVG_H = 220;
+var BAR_LEFT = 40, BAR_RIGHT = 440, BAR_Y = 130;
+var BAR_W = BAR_RIGHT - BAR_LEFT;
+
+function pToX(p){ return BAR_LEFT + p * BAR_W; }
+function xToP(x){ return Math.max(0, Math.min(1, (x - BAR_LEFT) / BAR_W)); }
+
+// snap to common fractions
+var FRACTIONS = [
+  {n:0, d:1},     {n:1, d:20},   {n:1, d:10},  {n:1, d:8},  {n:1, d:6},
+  {n:1, d:5},     {n:1, d:4},    {n:3, d:10},  {n:1, d:3},  {n:3, d:8},
+  {n:2, d:5},     {n:9, d:20},   {n:1, d:2},   {n:11, d:20},{n:3, d:5},
+  {n:5, d:8},     {n:2, d:3},    {n:7, d:10},  {n:3, d:4},  {n:4, d:5},
+  {n:5, d:6},     {n:7, d:8},    {n:9, d:10},  {n:19,d:20}, {n:1, d:1}
+];
+function snapFraction(p){
+  var best = FRACTIONS[0], dBest = Math.abs(p - 0);
+  for (var i = 1; i < FRACTIONS.length; i++){
+    var v = FRACTIONS[i].n / FRACTIONS[i].d;
+    var d = Math.abs(p - v);
+    if (d < dBest){ dBest = d; best = FRACTIONS[i]; }
+  }
+  return best;
+}
+
+function verbalFor(p){
+  if (p === 0) return { word:"IMPOSSIBLE", color:"#ff4670" };
+  if (p === 1) return { word:"CERTAIN",    color:"#0fee89" };
+  if (p < 0.1) return { word:"VERY UNLIKELY", color:"#ff4670" };
+  if (p < 0.4) return { word:"UNLIKELY",      color:"#ff822c" };
+  if (p < 0.45)return { word:"LESS THAN EVEN",color:"#ff822c" };
+  if (p <= 0.55) return { word:"ABOUT EVEN",  color:"#fff067" };
+  if (p < 0.6) return { word:"MORE THAN EVEN",color:"#fff067" };
+  if (p < 0.9) return { word:"LIKELY",        color:"#0fee89" };
+  return         { word:"VERY LIKELY",        color:"#0fee89" };
+}
+
+// KaTeX helpers
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function svgKaTeXLabel(parent, x, y, tex, color, align){
+  align = align || "center";
+  var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
+  fo.setAttribute("x", x - 50); fo.setAttribute("y", y - 11);
+  fo.setAttribute("width", 100); fo.setAttribute("height", 22);
+  fo.style.overflow = "visible"; fo.style.pointerEvents = "none";
+  var div = document.createElement("div");
+  div.style.height = "22px"; div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
+  div.className = "lbl-host"; div.style.color = color || COL.off;
+  fo.appendChild(div); parent.appendChild(fo);
+  tryRender(div, tex);
+}
+
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+
+// State
+var P = { p: 0.5 };  // target
+var D = { p: 0.5 };  // display (lerped)
+var SPRING = 0.22, EPS = 0.0008;
+var raf = null;
+
+// draw scale (static)
+function drawBar(){
+  var g = document.getElementById("g-bar");
+  clear(g);
+  // dark base bar
+  var base = document.createElementNS("http://www.w3.org/2000/svg","rect");
+  base.setAttribute("x", BAR_LEFT); base.setAttribute("y", BAR_Y - 6);
+  base.setAttribute("width", BAR_W); base.setAttribute("height", 12);
+  base.setAttribute("rx", 6);
+  base.setAttribute("fill", "#141e2a");
+  g.appendChild(base);
+  // gradient progress bar (always full, low opacity)
+  var grad = document.createElementNS("http://www.w3.org/2000/svg","rect");
+  grad.setAttribute("x", BAR_LEFT); grad.setAttribute("y", BAR_Y - 6);
+  grad.setAttribute("width", BAR_W); grad.setAttribute("height", 12);
+  grad.setAttribute("rx", 6);
+  grad.setAttribute("fill", "url(#bar-grad)");
+  grad.setAttribute("opacity", 0.55);
+  g.appendChild(grad);
+}
+
+function drawTicksAndAnchors(){
+  var gT = document.getElementById("g-ticks");
+  var gA = document.getElementById("g-anchors");
+  clear(gT); clear(gA);
+
+  // five named anchors
+  var anchors = [
+    { p:0,    label:"0",   word:"impossible",   col:"#ff4670" },
+    { p:0.25, label:"\\tfrac{1}{4}", word:"unlikely",  col:"#ff822c" },
+    { p:0.5,  label:"\\tfrac{1}{2}", word:"even chance",col:"#fff067" },
+    { p:0.75, label:"\\tfrac{3}{4}", word:"likely",    col:"#0fee89" },
+    { p:1,    label:"1",   word:"certain",      col:"#0fee89" }
+  ];
+  for (var i = 0; i < anchors.length; i++){
+    var a = anchors[i];
+    var x = pToX(a.p);
+    // vertical tick line
+    var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", x); l.setAttribute("x2", x);
+    l.setAttribute("y1", BAR_Y - 12); l.setAttribute("y2", BAR_Y + 12);
+    l.setAttribute("stroke", "#3a4a5a"); l.setAttribute("stroke-width", 1);
+    gT.appendChild(l);
+    // KaTeX numeric label above
+    svgKaTeXLabel(gT, x, BAR_Y - 26, a.label, "#7a7875");
+    // word label below
+    svgKaTeXLabel(gT, x, BAR_Y + 28, "\\text{" + a.word + "}", a.col);
+  }
+}
+
+function drawMarker(){
+  var g = document.getElementById("g-marker");
+  clear(g);
+  var x = pToX(D.p);
+  // marker vertical line
+  var vl = document.createElementNS("http://www.w3.org/2000/svg","line");
+  vl.setAttribute("x1", x); vl.setAttribute("x2", x);
+  vl.setAttribute("y1", BAR_Y - 26); vl.setAttribute("y2", BAR_Y + 16);
+  vl.setAttribute("stroke", "#fff067"); vl.setAttribute("stroke-width", 2);
+  vl.setAttribute("opacity", 0.7);
+  g.appendChild(vl);
+  // big draggable circle
+  var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("cx", x); c.setAttribute("cy", BAR_Y);
+  c.setAttribute("r", 10);
+  c.setAttribute("fill", "#fff067");
+  c.setAttribute("stroke", "#0b1118"); c.setAttribute("stroke-width", 2);
+  c.setAttribute("class", "handle"); c.style.color = "#fff067";
+  g.appendChild(c);
+}
+
+function drawWord(){
+  var g = document.getElementById("g-words");
+  clear(g);
+  var v = verbalFor(P.p);
+  // big descriptive word above the scale
+  var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
+  fo.setAttribute("x", 40); fo.setAttribute("y", 28);
+  fo.setAttribute("width", 400); fo.setAttribute("height", 44);
+  fo.style.overflow = "visible"; fo.style.pointerEvents = "none";
+  var div = document.createElement("div");
+  div.style.height = "44px"; div.style.display = "flex";
+  div.style.alignItems = "center"; div.style.justifyContent = "center";
+  div.style.fontFamily = "'Geist Mono', monospace";
+  div.style.fontSize = "22px"; div.style.letterSpacing = "1.2px";
+  div.style.fontWeight = "700"; div.style.color = v.color;
+  div.textContent = v.word;
+  fo.appendChild(div);
+  g.appendChild(fo);
+}
+
+function renderReadouts(){
+  var p = P.p;
+  // fraction: snap to nearest common
+  var fr = snapFraction(p);
+  var fracEl = document.getElementById("r-frac");
+  fracEl.innerHTML = "";
+  if (fr.d === 1){
+    tryRender(fracEl, "{\\color{#00abfa}" + fr.n + "}");
+  } else {
+    tryRender(fracEl, "{\\color{#00abfa}\\dfrac{" + fr.n + "}{" + fr.d + "}}");
+  }
+  // decimal: 0 or 1 exact, else 2 dp
+  var decEl = document.getElementById("r-dec");
+  decEl.innerHTML = "";
+  var decStr;
+  if (p === 0) decStr = "0";
+  else if (p === 1) decStr = "1";
+  else decStr = p.toFixed(2);
+  tryRender(decEl, "{\\color{#fff067}" + decStr + "}");
+  // percent
+  var pctEl = document.getElementById("r-pct");
+  pctEl.innerHTML = "";
+  var pctStr;
+  if (p === 0) pctStr = "0\\%";
+  else if (p === 1) pctStr = "100\\%";
+  else pctStr = (p * 100).toFixed(0) + "\\%";
+  tryRender(pctEl, "{\\color{#0fee89}" + pctStr + "}");
+}
+
+function refresh(){
+  drawMarker();
+  drawWord();
+  renderReadouts();
+  // update active preset button
+  var preset = document.querySelector(".preset-btn.active");
+  if (preset) preset.classList.remove("active");
+  var match = document.querySelector('.preset-btn[data-p="' + P.p + '"]');
+  if (match) match.classList.add("active");
+}
+
+// drag
+var stage = document.getElementById("stage");
+var dragging = false;
+function svgPt(e){
+  var pt = stage.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(stage.getScreenCTM().inverse());
+}
+function withinHandle(m){
+  var x = pToX(D.p);
+  var dx = m.x - x, dy = m.y - BAR_Y;
+  return Math.sqrt(dx*dx + dy*dy) < 14;
+}
+function withinBar(m){
+  return m.x >= BAR_LEFT - 8 && m.x <= BAR_RIGHT + 8 &&
+         m.y >= BAR_Y - 16  && m.y <= BAR_Y + 16;
+}
+
+stage.addEventListener("pointerdown", function(e){
+  var m = svgPt(e);
+  if (!withinBar(m)) return;
+  e.preventDefault();
+  dragging = true;
+  stage.setPointerCapture(e.pointerId);
+  stage.classList.add("grabbing");
+  applyDrag(m);
+});
+stage.addEventListener("pointermove", function(e){
+  var m = svgPt(e);
+  if (!dragging){
+    if (withinHandle(m)) stage.classList.add("hover-grab");
+    else stage.classList.remove("hover-grab");
+    return;
+  }
+  e.preventDefault();
+  applyDrag(m);
+});
+function endDrag(e){
+  if (!dragging) return;
+  dragging = false;
+  try { stage.releasePointerCapture(e.pointerId); } catch(_){}
+  stage.classList.remove("grabbing");
+}
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover-grab"); });
+
+function applyDrag(m){
+  var p = xToP(m.x);
+  // snap to nearest common fraction value
+  var fr = snapFraction(p);
+  P.p = fr.n / fr.d;
+  kick();
+}
+
+// preset buttons
+document.querySelectorAll(".preset-btn").forEach(function(b){
+  b.addEventListener("click", function(){
+    P.p = parseFloat(b.dataset.p);
+    kick();
+  });
+});
+
+// spring
+function settled(){ return Math.abs(P.p - D.p) < EPS; }
+function step(){
+  D.p += (P.p - D.p) * SPRING;
+  refresh();
+  if (!settled()) raf = requestAnimationFrame(step);
+  else {
+    raf = null;
+    D.p = P.p;
+    refresh();
+  }
+}
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+drawBar();
+drawTicksAndAnchors();
+refresh();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

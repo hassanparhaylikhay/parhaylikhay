@@ -590,7 +590,15 @@ export const UNITS: Unit[] = [
   {
     slug: "08", title: "Probability", color: "#0fee89",
     topics: [
-      { slug: "01", code: "8.1", title: "Introduction to probability" },
+      {
+        slug: "01", code: "8.1", title: "Introduction to probability",
+        parts: [
+          { slug: "p1",     label: "P1", title: "The probability scale" },
+          { slug: "p2",     label: "P2", title: "Finding P(A) from a list, table, or diagram" },
+          { slug: "p3",     label: "P3", title: "The complement: P(A') = 1 − P(A)" },
+          { slug: "review", label: "R",  title: "Review & practice", isReview: true },
+        ],
+      },
       { slug: "02", code: "8.2", title: "Relative and expected frequencies" },
       { slug: "03", code: "8.3", title: "Probability of combined events" },
     ],

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Probability · Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  .stage { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; align-items:center; padding:18px 12px; background:#070b10; border:1px solid #141e2a; border-radius:8px; min-height:140px; }
+  .chip { width:46px; height:46px; border-radius:8px; border:2px solid; display:flex; align-items:center; justify-content:center; transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease, background 0.3s ease; font-family:'Geist Mono', monospace; font-size:14px; font-weight:600; }
+  .chip .katex { font-size:1em; }
+  .chip.list-item { width:auto; min-width:38px; padding:0 12px; }
+  .chip.faded { opacity:0.22; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 9px currentColor); }
+  }
+  .chip.glow { animation: pulse-glow 1.6s ease-in-out infinite; }
+
+  .panel { display:flex; flex-direction:column; gap:8px; padding:14px 4px 4px; border-top:1px solid #141e2a; margin-top:12px; min-height:120px; }
+  .eq-row { font-size:15px; line-height:1.5; color:#f0eeea; }
+  .eq-row.tag { font-family:'Geist Mono',monospace; font-size:10.5px; color:#fff067; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:2px; font-weight:600; }
+  .eq-row.ans { font-weight:700; font-size:16.5px; }
+  .eq-row .katex { font-size:1em; }
+  .eq-row.fade-in { animation: fade-up 0.42s ease forwards; opacity:0; }
+  @keyframes fade-up { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+  .nav { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid #141e2a; }
+  .nav-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:6px 12px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; }
+  .nav-btn:hover:not(:disabled) { color:#fff067; border-color:#3a4a5a; }
+  .nav-btn:disabled { opacity:0.35; cursor:not-allowed; }
+  .step-count { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .step-count .cur { color:#fff067; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">WORKED EXAMPLE</span>
+    <span class="meta" id="meta"></span>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="panel" id="panel"></div>
+
+  <div class="nav">
+    <button class="nav-btn" id="prev">← prev</button>
+    <span class="step-count"><span class="cur" id="cur">1</span> / <span id="tot">5</span></span>
+    <button class="nav-btn" id="next">next →</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", yellow:"#fff067", orange:"#ff822c", green:"#0fee89",
+  pink:"#ff4670", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+// Preset structure:
+//   outcomes: array of { label: TeX-string, color: hex, kind: "shape"|"list" (default "shape") }
+//   steps: array of { tag, lines, ans, marks, favourable: [indices], variant: "list"|"grid" }
+//
+// "favourable" indices receive .glow; others are .faded.
+// If favourable is null, all chips show at normal opacity.
+
+var PRESETS = {
+  "p1-place-on-scale": {
+    title: "WORKED EXAMPLE · ROLL A FAIR DIE",
+    meta: "outcomes on a six-sided die",
+    outcomes: [
+      { label:"1", color:"#7a7875" },
+      { label:"2", color:"#7a7875" },
+      { label:"3", color:"#7a7875" },
+      { label:"4", color:"#7a7875" },
+      { label:"5", color:"#7a7875" },
+      { label:"6", color:"#7a7875" }
+    ],
+    steps: [
+      {
+        tag: "STEP 1 · LIST THE OUTCOMES",
+        lines: [
+          "A fair die has six faces, numbered $1$ through $6$.",
+          "Each face is equally likely to land facing up. So there are $6$ equally likely outcomes."
+        ]
+      },
+      {
+        tag: "STEP 2 · COUNT THE FAVOURABLE OUTCOMES",
+        lines: [
+          "We want $P(\\text{rolling an even number})$.",
+          "The even faces are $2, 4, 6$. That is $3$ favourable outcomes."
+        ],
+        favourable: [1, 3, 5]
+      },
+      {
+        tag: "STEP 3 · WRITE THE PROBABILITY",
+        lines: [
+          "$P(\\text{even}) = \\dfrac{\\text{favourable}}{\\text{total}} = \\dfrac{3}{6}$"
+        ],
+        favourable: [1, 3, 5]
+      },
+      {
+        tag: "STEP 4 · SIMPLIFY",
+        lines: [
+          "Simplify the fraction.",
+          "$P(\\text{even}) = \\dfrac{3}{6} = \\dfrac{1}{2}$",
+          "Decimal: $0.5$. Percentage: $50\\%$. This is the 'even chance' value on the scale."
+        ],
+        favourable: [1, 3, 5]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(\\text{even}) = \\boxed{\\dfrac{1}{2}}",
+        marks: "[B1 for $\\tfrac{3}{6}$ or $\\tfrac{1}{2}$ as a fraction]",
+        favourable: [1, 3, 5]
+      }
+    ]
+  },
+
+  "p2-cards": {
+    title: "WORKED EXAMPLE · CARDS WITH SHAPES",
+    meta: "10 cards: shapes (square/triangle) in red or green",
+    outcomes: [
+      { label:"\\square", color:"#0fee89" },
+      { label:"\\square", color:"#0fee89" },
+      { label:"\\square", color:"#0fee89" },
+      { label:"\\square", color:"#ff4670" },
+      { label:"\\triangle", color:"#0fee89" },
+      { label:"\\triangle", color:"#0fee89" },
+      { label:"\\triangle", color:"#0fee89" },
+      { label:"\\triangle", color:"#0fee89" },
+      { label:"\\triangle", color:"#ff4670" },
+      { label:"\\triangle", color:"#ff4670" }
+    ],
+    steps: [
+      {
+        tag: "STEP 1 · WHAT'S IN THE BAG",
+        lines: [
+          "Ten cards in total. Each card is either a square or a triangle, coloured red or green.",
+          "Breakdown: $3$ green squares, $1$ red square, $4$ green triangles, $2$ red triangles."
+        ]
+      },
+      {
+        tag: "STEP 2 · WHICH CARDS COUNT FOR P(GREEN)",
+        lines: [
+          "We want $P(\\text{the card is green})$.",
+          "Green cards: $3$ green squares $+$ $4$ green triangles $= 7$ cards.",
+          "Total cards $= 10$."
+        ],
+        favourable: [0, 1, 2, 4, 5, 6, 7]
+      },
+      {
+        tag: "STEP 3 · WRITE AND SIMPLIFY",
+        lines: [
+          "$P(\\text{green}) = \\dfrac{\\text{green cards}}{\\text{total}} = \\dfrac{7}{10}$",
+          "$\\dfrac{7}{10}$ cannot be simplified ($\\gcd(7, 10) = 1$).",
+          "Decimal: $0.7$. Percentage: $70\\%$."
+        ],
+        favourable: [0, 1, 2, 4, 5, 6, 7]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(\\text{green}) = \\boxed{\\dfrac{7}{10}}",
+        marks: "[B1 for $\\tfrac{7}{10}$]",
+        favourable: [0, 1, 2, 4, 5, 6, 7]
+      }
+    ]
+  },
+
+  "p2-children": {
+    title: "WORKED EXAMPLE · TV HOURS FROM A LIST",
+    meta: "list of hours each child watched",
+    outcomes: [
+      { label:"1",  color:"#3a4a5a", kind:"list" },
+      { label:"2",  color:"#3a4a5a", kind:"list" },
+      { label:"2",  color:"#3a4a5a", kind:"list" },
+      { label:"2",  color:"#3a4a5a", kind:"list" },
+      { label:"6",  color:"#3a4a5a", kind:"list" },
+      { label:"7",  color:"#3a4a5a", kind:"list" },
+      { label:"7",  color:"#3a4a5a", kind:"list" },
+      { label:"8",  color:"#3a4a5a", kind:"list" },
+      { label:"10", color:"#3a4a5a", kind:"list" }
+    ],
+    steps: [
+      {
+        tag: "STEP 1 · READ THE DATA",
+        lines: [
+          "Nine children. The hours each one watched TV last week:",
+          "$1,\\, 2,\\, 2,\\, 2,\\, 6,\\, 7,\\, 7,\\, 8,\\, 10$.",
+          "Find the probability that a randomly chosen child watched MORE THAN $6$ hours."
+        ]
+      },
+      {
+        tag: "STEP 2 · FIND THE FAVOURABLE CHILDREN",
+        lines: [
+          '"More than $6$" means strictly greater than $6$. So $6$ itself does NOT count.',
+          "Children who qualify: $7, 7, 8, 10$. That is $4$ children."
+        ],
+        favourable: [5, 6, 7, 8]
+      },
+      {
+        tag: "STEP 3 · WRITE THE PROBABILITY",
+        lines: [
+          "$P(\\text{more than 6 hours}) = \\dfrac{4}{9}$",
+          "$\\gcd(4, 9) = 1$, so this is already in lowest terms.",
+          "Decimal: $\\approx 0.444$. Percentage: $\\approx 44.4\\%$."
+        ],
+        favourable: [5, 6, 7, 8]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(\\text{more than 6 hours}) = \\boxed{\\dfrac{4}{9}}",
+        marks: "[B1 for $\\tfrac{4}{9}$]",
+        favourable: [5, 6, 7, 8]
+      }
+    ]
+  },
+
+  "p3-complement": {
+    title: "WORKED EXAMPLE · USE THE COMPLEMENT",
+    meta: "weather forecast",
+    outcomes: [],
+    steps: [
+      {
+        tag: "STEP 1 · WHAT WE KNOW",
+        lines: [
+          "A weather app says the probability it rains in Karachi tomorrow is $\\dfrac{2}{5}$.",
+          "Find the probability it does NOT rain in Karachi tomorrow."
+        ]
+      },
+      {
+        tag: "STEP 2 · IDENTIFY THE COMPLEMENT",
+        lines: [
+          'Let $A$ be the event "it rains". Then $A''$ is the event "it does not rain".',
+          "$P(A) = \\dfrac{2}{5}$, so $P(A') = 1 - P(A)$."
+        ]
+      },
+      {
+        tag: "STEP 3 · COMPUTE",
+        lines: [
+          "$P(A') = 1 - \\dfrac{2}{5}$",
+          "Rewrite $1$ as $\\dfrac{5}{5}$: $P(A') = \\dfrac{5}{5} - \\dfrac{2}{5} = \\dfrac{3}{5}$"
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(\\text{no rain}) = \\boxed{\\dfrac{3}{5}}",
+        marks: "[B1 for $1 - \\tfrac{2}{5}$ or $\\tfrac{3}{5}$]"
+      }
+    ]
+  },
+
+  "review-comprehensive": {
+    title: "COMPREHENSIVE WORKED EXAMPLE",
+    meta: "bag of 12 marbles",
+    outcomes: [
+      { label:"R", color:"#ff4670" }, { label:"R", color:"#ff4670" }, { label:"R", color:"#ff4670" }, { label:"R", color:"#ff4670" }, { label:"R", color:"#ff4670" },
+      { label:"B", color:"#00abfa" }, { label:"B", color:"#00abfa" }, { label:"B", color:"#00abfa" }, { label:"B", color:"#00abfa" },
+      { label:"G", color:"#0fee89" }, { label:"G", color:"#0fee89" }, { label:"G", color:"#0fee89" }
+    ],
+    steps: [
+      {
+        tag: "STEP 1 · COUNT THE MARBLES",
+        lines: [
+          "A bag has $5$ red, $4$ blue, and $3$ green marbles. Total $= 12$.",
+          "(a) Find $P(\\text{red})$.",
+          "(b) Find $P(\\text{not red})$."
+        ]
+      },
+      {
+        tag: "PART (a) · COUNT THE REDS",
+        lines: [
+          "There are $5$ red marbles out of $12$ total.",
+          "$P(\\text{red}) = \\dfrac{5}{12}$",
+          "$\\gcd(5, 12) = 1$, already in lowest terms."
+        ],
+        favourable: [0, 1, 2, 3, 4]
+      },
+      {
+        tag: "PART (b) · USE THE COMPLEMENT",
+        lines: [
+          'Method 1: "not red" means $4$ blue $+$ $3$ green $= 7$ marbles.',
+          "$P(\\text{not red}) = \\dfrac{7}{12}$",
+          "Method 2 (faster): use $P(A') = 1 - P(A)$.",
+          "$P(\\text{not red}) = 1 - \\dfrac{5}{12} = \\dfrac{12}{12} - \\dfrac{5}{12} = \\dfrac{7}{12}$",
+          "Both methods agree. The complement is usually the faster path."
+        ],
+        favourable: [5, 6, 7, 8, 9, 10, 11]
+      },
+      {
+        tag: "ANSWER",
+        ans: "P(\\text{red}) = \\boxed{\\dfrac{5}{12}}, \\quad P(\\text{not red}) = \\boxed{\\dfrac{7}{12}}",
+        marks: "(a) [B1 for $\\tfrac{5}{12}$] · (b) [B1 for $\\tfrac{7}{12}$ or $1 - \\tfrac{5}{12}$]",
+        favourable: null
+      }
+    ]
+  }
+};
+
+function getPreset(){
+  var params = new URLSearchParams(window.location.search);
+  var key = params.get("preset") || "p1-place-on-scale";
+  return PRESETS[key] || PRESETS["p1-place-on-scale"];
+}
+
+var PRESET = getPreset();
+var STEP = 0;
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+
+function clear(el){ while (el.firstChild) el.removeChild(el.firstChild); }
+
+function drawStage(){
+  var stage = document.getElementById("stage");
+  clear(stage);
+  var step = PRESET.steps[STEP];
+  var fav = step.favourable;
+  if (!PRESET.outcomes || PRESET.outcomes.length === 0){
+    var blank = document.createElement("div");
+    blank.style.color = "#3a4a5a"; blank.style.fontSize = "13px";
+    blank.style.textAlign = "center"; blank.style.padding = "20px 0";
+    blank.textContent = "see equations below";
+    stage.appendChild(blank);
+    return;
+  }
+  PRESET.outcomes.forEach(function(o, i){
+    var chip = document.createElement("div");
+    var isList = o.kind === "list";
+    chip.className = "chip" + (isList ? " list-item" : "");
+    chip.style.borderColor = o.color;
+    chip.style.background = (o.color === "#3a4a5a") ? "rgba(58,74,90,0.18)" : (o.color + "22");
+    chip.style.color = o.color;
+    var labelHost = document.createElement("span");
+    labelHost.style.color = o.color;
+    tryRender(labelHost, o.label);
+    chip.appendChild(labelHost);
+    var inFav = fav && fav.indexOf(i) >= 0;
+    if (fav){
+      if (inFav){
+        chip.classList.add("glow");
+      } else {
+        chip.classList.add("faded");
+      }
+    }
+    stage.appendChild(chip);
+  });
+}
+
+function renderMixed(target, str){
+  target.innerHTML = "";
+  var parts = String(str).split("$");
+  for (var i = 0; i < parts.length; i++){
+    if (i % 2 === 0){
+      target.appendChild(document.createTextNode(parts[i]));
+    } else {
+      var span = document.createElement("span");
+      tryRender(span, parts[i]);
+      target.appendChild(span);
+    }
+  }
+}
+
+function renderPanel(){
+  var panel = document.getElementById("panel");
+  panel.innerHTML = "";
+  var step = PRESET.steps[STEP];
+  if (step.tag){
+    var t = document.createElement("div");
+    t.className = "eq-row tag fade-in";
+    t.textContent = step.tag;
+    panel.appendChild(t);
+  }
+  var delay = 60;
+  if (step.lines){
+    step.lines.forEach(function(line, i){
+      var d = document.createElement("div");
+      d.className = "eq-row fade-in";
+      d.style.animationDelay = (delay + i * 60) + "ms";
+      renderMixed(d, line);
+      panel.appendChild(d);
+    });
+    delay += step.lines.length * 60;
+  }
+  if (step.ans){
+    var a = document.createElement("div");
+    a.className = "eq-row ans fade-in";
+    a.style.animationDelay = delay + "ms";
+    tryRender(a, step.ans);
+    panel.appendChild(a);
+    delay += 60;
+  }
+  if (step.marks){
+    var m = document.createElement("div");
+    m.className = "eq-row fade-in";
+    m.style.animationDelay = delay + "ms";
+    m.style.color = "#7a7875";
+    m.style.fontSize = "12.5px";
+    renderMixed(m, step.marks);
+    panel.appendChild(m);
+  }
+}
+
+function render(){
+  drawStage();
+  renderPanel();
+  document.getElementById("cur").textContent = (STEP + 1);
+  document.getElementById("prev").disabled = (STEP === 0);
+  document.getElementById("next").disabled = (STEP === PRESET.steps.length - 1);
+  notifyHeight();
+}
+
+document.getElementById("prev").addEventListener("click", function(){
+  if (STEP > 0){ STEP--; render(); }
+});
+document.getElementById("next").addEventListener("click", function(){
+  if (STEP < PRESET.steps.length - 1){ STEP++; render(); }
+});
+
+document.getElementById("title").textContent = PRESET.title;
+document.getElementById("meta").textContent = PRESET.meta || "";
+document.getElementById("tot").textContent = PRESET.steps.length;
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+render();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

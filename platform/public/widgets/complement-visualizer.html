@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Complement Visualizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:default; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .readouts { display:flex; gap:10px; margin-top:12px; }
+  .readout { flex:1; padding:11px 12px; border-radius:8px; text-align:center; }
+  .readout .tag { font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; margin-bottom:6px; opacity:0.85; }
+  .readout .val { font-size:16px; color:#f0eeea; line-height:1; min-height:22px; display:flex; align-items:center; justify-content:center; }
+  .readout .val .katex { font-size:1em; }
+  .readout.pa  { border:1px solid rgba(0,171,250,0.30); background:rgba(0,171,250,0.05); }
+  .readout.pa  .tag { color:#00abfa; }
+  .readout.pac { border:1px solid rgba(255,70,112,0.30); background:rgba(255,70,112,0.05); }
+  .readout.pac .tag { color:#ff4670; }
+  .readout.sum { border:1px solid rgba(15,238,137,0.30); background:rgba(15,238,137,0.05); }
+  .readout.sum .tag { color:#0fee89; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 10px currentColor); }
+  }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">EVENT A AND ITS COMPLEMENT</span>
+    <span class="meta" id="meta">drag the divider</span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-bg"></g>
+    <g id="g-regions"></g>
+    <g id="g-labels"></g>
+    <g id="g-divider"></g>
+  </svg>
+
+  <div class="readouts">
+    <div class="readout pa">
+      <div class="tag">P(A)</div>
+      <div class="val" id="r-pa"></div>
+    </div>
+    <div class="readout pac">
+      <div class="tag">P(A')</div>
+      <div class="val" id="r-pac"></div>
+    </div>
+    <div class="readout sum">
+      <div class="tag">P(A) + P(A')</div>
+      <div class="val" id="r-sum"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", pink:"#ff4670", yellow:"#fff067", green:"#0fee89",
+  faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+var SVG_W = 480, SVG_H = 200;
+var BOX_LEFT = 40, BOX_RIGHT = 440, BOX_TOP = 40, BOX_BOT = 160;
+var BOX_W = BOX_RIGHT - BOX_LEFT;
+var P = { p: 0.4 };
+var D = { p: 0.4 };
+var SPRING = 0.22, EPS = 0.0008;
+var raf = null;
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function svgKaTeXLabel(parent, x, y, tex, color, align){
+  align = align || "center";
+  var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
+  fo.setAttribute("x", x - 60); fo.setAttribute("y", y - 12);
+  fo.setAttribute("width", 120); fo.setAttribute("height", 24);
+  fo.style.overflow = "visible"; fo.style.pointerEvents = "none";
+  var div = document.createElement("div");
+  div.style.height = "24px"; div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
+  div.className = "lbl-host"; div.style.color = color || COL.off;
+  fo.appendChild(div); parent.appendChild(fo);
+  tryRender(div, tex);
+}
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+function gcd(a, b){ a = Math.abs(a); b = Math.abs(b); while (b){ var t = b; b = a % b; a = t; } return a; }
+
+// snap to common fractions
+var FRACTIONS = [
+  {n:0, d:1}, {n:1, d:10}, {n:1, d:5}, {n:1, d:4}, {n:3, d:10},
+  {n:1, d:3}, {n:2, d:5}, {n:1, d:2}, {n:3, d:5}, {n:2, d:3},
+  {n:7, d:10}, {n:3, d:4}, {n:4, d:5}, {n:9, d:10}, {n:1, d:1}
+];
+function snapFraction(p){
+  var best = FRACTIONS[0], dBest = Math.abs(p - 0);
+  for (var i = 1; i < FRACTIONS.length; i++){
+    var v = FRACTIONS[i].n / FRACTIONS[i].d;
+    var d = Math.abs(p - v);
+    if (d < dBest){ dBest = d; best = FRACTIONS[i]; }
+  }
+  return best;
+}
+
+function drawBackground(){
+  var g = document.getElementById("g-bg");
+  clear(g);
+  // outer rectangle (Ω, the sample space)
+  var r = document.createElementNS("http://www.w3.org/2000/svg","rect");
+  r.setAttribute("x", BOX_LEFT); r.setAttribute("y", BOX_TOP);
+  r.setAttribute("width", BOX_W); r.setAttribute("height", BOX_BOT - BOX_TOP);
+  r.setAttribute("rx", 8);
+  r.setAttribute("fill", "none");
+  r.setAttribute("stroke", "#3a4a5a"); r.setAttribute("stroke-width", 1.2);
+  g.appendChild(r);
+  // Ω label, top-right
+  svgKaTeXLabel(g, BOX_RIGHT - 16, BOX_TOP - 16, "\\Omega", "#7a7875", "right");
+  svgKaTeXLabel(g, BOX_LEFT + 60, BOX_TOP - 16, "\\text{sample space (everything possible)}", "#3a4a5a", "left");
+}
+
+function drawRegions(){
+  var g = document.getElementById("g-regions");
+  clear(g);
+  var p = D.p;
+  var x = BOX_LEFT + p * BOX_W;
+  // A on left (blue), A' on right (pink)
+  // A region (clipped path so corners follow the rounded box)
+  if (p > 0.001){
+    var aPath = document.createElementNS("http://www.w3.org/2000/svg","path");
+    aPath.setAttribute("d", roundedLeft(BOX_LEFT, BOX_TOP, x - BOX_LEFT, BOX_BOT - BOX_TOP, 8));
+    aPath.setAttribute("fill", "rgba(0,171,250,0.22)");
+    g.appendChild(aPath);
+  }
+  if (p < 0.999){
+    var acPath = document.createElementNS("http://www.w3.org/2000/svg","path");
+    acPath.setAttribute("d", roundedRight(x, BOX_TOP, BOX_RIGHT - x, BOX_BOT - BOX_TOP, 8));
+    acPath.setAttribute("fill", "rgba(255,70,112,0.18)");
+    g.appendChild(acPath);
+  }
+}
+
+// rounded-left rectangle path (rounds top-left and bottom-left corners; right edge straight)
+function roundedLeft(x, y, w, h, r){
+  r = Math.min(r, w, h / 2);
+  return "M " + (x + r) + " " + y +
+         " L " + (x + w) + " " + y +
+         " L " + (x + w) + " " + (y + h) +
+         " L " + (x + r) + " " + (y + h) +
+         " Q " + x + " " + (y + h) + " " + x + " " + (y + h - r) +
+         " L " + x + " " + (y + r) +
+         " Q " + x + " " + y + " " + (x + r) + " " + y + " Z";
+}
+function roundedRight(x, y, w, h, r){
+  r = Math.min(r, w, h / 2);
+  return "M " + x + " " + y +
+         " L " + (x + w - r) + " " + y +
+         " Q " + (x + w) + " " + y + " " + (x + w) + " " + (y + r) +
+         " L " + (x + w) + " " + (y + h - r) +
+         " Q " + (x + w) + " " + (y + h) + " " + (x + w - r) + " " + (y + h) +
+         " L " + x + " " + (y + h) + " Z";
+}
+
+function drawLabels(){
+  var g = document.getElementById("g-labels");
+  clear(g);
+  var p = D.p;
+  // A label centered in the A region
+  if (p > 0.07){
+    var aMid = BOX_LEFT + (p * BOX_W) / 2;
+    svgKaTeXLabel(g, aMid, (BOX_TOP + BOX_BOT) / 2 - 6, "A", "#00abfa");
+    svgKaTeXLabel(g, aMid, (BOX_TOP + BOX_BOT) / 2 + 16, "\\text{event}", "#3a4a5a");
+  }
+  if (p < 0.93){
+    var acMid = BOX_LEFT + p * BOX_W + ((1 - p) * BOX_W) / 2;
+    svgKaTeXLabel(g, acMid, (BOX_TOP + BOX_BOT) / 2 - 6, "A'", "#ff4670");
+    svgKaTeXLabel(g, acMid, (BOX_TOP + BOX_BOT) / 2 + 16, "\\text{not A}", "#3a4a5a");
+  }
+}
+
+function drawDivider(){
+  var g = document.getElementById("g-divider");
+  clear(g);
+  var x = BOX_LEFT + D.p * BOX_W;
+  // vertical divider line (drag target)
+  var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+  l.setAttribute("x1", x); l.setAttribute("x2", x);
+  l.setAttribute("y1", BOX_TOP - 8); l.setAttribute("y2", BOX_BOT + 8);
+  l.setAttribute("stroke", "#fff067"); l.setAttribute("stroke-width", 2);
+  l.setAttribute("opacity", 0.85);
+  g.appendChild(l);
+  // handle at middle
+  var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  c.setAttribute("cx", x); c.setAttribute("cy", (BOX_TOP + BOX_BOT) / 2);
+  c.setAttribute("r", 9);
+  c.setAttribute("fill", "#fff067");
+  c.setAttribute("stroke", "#0b1118"); c.setAttribute("stroke-width", 2);
+  c.setAttribute("class", "handle"); c.style.color = "#fff067";
+  g.appendChild(c);
+}
+
+function fmtFraction(p, hex){
+  if (p === 0) return "0";
+  if (p === 1) return "1";
+  var fr = snapFraction(p);
+  if (fr.d === 1){
+    return "{\\color{" + hex + "}" + fr.n + "}";
+  }
+  return "{\\color{" + hex + "}\\dfrac{" + fr.n + "}{" + fr.d + "}}";
+}
+
+function renderReadouts(){
+  var p = P.p;
+  var pa = document.getElementById("r-pa");
+  pa.innerHTML = "";
+  tryRender(pa, fmtFraction(p, "#00abfa"));
+  var pac = document.getElementById("r-pac");
+  pac.innerHTML = "";
+  tryRender(pac, fmtFraction(1 - p, "#ff4670"));
+  var sum = document.getElementById("r-sum");
+  sum.innerHTML = "";
+  tryRender(sum, "{\\color{#0fee89}1}");
+}
+
+function refresh(){
+  drawRegions();
+  drawLabels();
+  drawDivider();
+  renderReadouts();
+}
+
+// drag
+var stage = document.getElementById("stage");
+var dragging = false;
+function svgPt(e){
+  var pt = stage.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(stage.getScreenCTM().inverse());
+}
+function withinHandle(m){
+  var x = BOX_LEFT + D.p * BOX_W;
+  var cy = (BOX_TOP + BOX_BOT) / 2;
+  return Math.abs(m.x - x) < 14 && Math.abs(m.y - cy) < 24;
+}
+function withinBox(m){
+  return m.x >= BOX_LEFT - 12 && m.x <= BOX_RIGHT + 12 &&
+         m.y >= BOX_TOP - 12  && m.y <= BOX_BOT + 12;
+}
+stage.addEventListener("pointerdown", function(e){
+  var m = svgPt(e);
+  if (!withinBox(m)) return;
+  e.preventDefault();
+  dragging = true;
+  stage.setPointerCapture(e.pointerId);
+  stage.classList.add("grabbing");
+  applyDrag(m);
+});
+stage.addEventListener("pointermove", function(e){
+  var m = svgPt(e);
+  if (!dragging){
+    if (withinHandle(m)) stage.classList.add("hover-grab");
+    else stage.classList.remove("hover-grab");
+    return;
+  }
+  e.preventDefault();
+  applyDrag(m);
+});
+function endDrag(e){
+  if (!dragging) return;
+  dragging = false;
+  try { stage.releasePointerCapture(e.pointerId); } catch(_){}
+  stage.classList.remove("grabbing");
+}
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover-grab"); });
+
+function applyDrag(m){
+  var p = Math.max(0, Math.min(1, (m.x - BOX_LEFT) / BOX_W));
+  var fr = snapFraction(p);
+  P.p = fr.n / fr.d;
+  kick();
+}
+
+function settled(){ return Math.abs(P.p - D.p) < EPS; }
+function step(){
+  D.p += (P.p - D.p) * SPRING;
+  refresh();
+  if (!settled()) raf = requestAnimationFrame(step);
+  else {
+    raf = null;
+    D.p = P.p;
+    refresh();
+  }
+}
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+drawBackground();
+refresh();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>
