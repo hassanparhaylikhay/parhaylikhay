@@ -18,11 +18,13 @@ import "katex/dist/katex.min.css"
 function preprocess(md: string): string {
   let out = md
 
-  // Common-mistakes list: wrap the bullets after a "## Common mistakes" or
-  // "## Common mistakes and exam traps" heading in a .mistake-list container.
-  // CSS renders each <li> with a pink left border (no icon).
+  // Common-mistakes list: wrap the bullets after any "## Common mistakes..."
+  // heading in a .mistake-list container. Accepts the bare form plus any
+  // suffix authors use on review pages ("across the unit", "(across the
+  // unit)", "recap", "and exam traps"). CSS renders each <li> with a pink
+  // left border (no icon).
   out = out.replace(
-    /^(## Common mistakes(?: and exam traps)?\n\n)((?:- [^\n]+\n?)+)/gm,
+    /^(## Common mistakes(?: [^\n]+)?\n\n)((?:- [^\n]+\n?)+)/gm,
     (_m, heading: string, bullets: string) =>
       `${heading}<div class="mistake-list">\n\n${bullets}\n</div>\n\n`,
   )
