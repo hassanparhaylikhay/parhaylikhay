@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>The Birthday Problem</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:16px 20px 18px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  .headline { display:flex; align-items:baseline; justify-content:center; gap:14px; flex-wrap:wrap; margin: 8px 0 14px; padding: 14px 8px; }
+  .headline .n-wrap { display:flex; align-items:baseline; gap:8px; }
+  .headline .n { font-family:'Geist Mono',monospace; font-size:48px; font-weight:700; color:#fff067; line-height:1; min-width:80px; text-align:right; transition: color 0.3s ease; }
+  .headline .n-label { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.5px; text-transform:uppercase; }
+  .headline .arrow { font-family:'Geist Mono',monospace; font-size:18px; color:#3a4a5a; padding: 0 2px; }
+  .headline .p-wrap { display:flex; align-items:baseline; gap:8px; }
+  .headline .p { font-family:'Geist Mono',monospace; font-size:48px; font-weight:700; line-height:1; min-width:120px; text-align:left; transition: color 0.3s ease; }
+  .headline .p-label { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.5px; text-transform:uppercase; }
+
+  #chart { display:block; width:100%; height:auto; user-select:none; touch-action:none; cursor:grab; overflow:visible; }
+  #chart.grabbing { cursor:grabbing; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .people-strip { display:grid; grid-template-columns:repeat(30, 1fr); gap:3px; margin-top:14px; padding:10px; background:#070b10; border:1px solid #141e2a; border-radius:8px; }
+  .dot { aspect-ratio:1/1; border-radius:50%; background:#141e2a; transition: background 0.35s ease, opacity 0.35s ease; }
+  .dot.in { background:#fff067; }
+  .dot.in.match { background:#ff4670; }
+
+  .actions { display:flex; gap:6px; margin-top:12px; flex-wrap:wrap; }
+  .act-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:6px 12px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; }
+  .act-btn:hover:not(:disabled) { color:#fff067; border-color:#3a4a5a; }
+  .act-btn:disabled { opacity:0.35; cursor:not-allowed; }
+  .act-btn.primary { color:#fff067; border-color:rgba(255,240,103,0.4); background:rgba(255,240,103,0.06); }
+  .act-btn.primary:hover:not(:disabled) { background:rgba(255,240,103,0.12); }
+  .act-btn.reset { margin-left:auto; color:#7a7875; }
+
+  .footer { font-family:'Geist Mono',monospace; font-size:11px; color:#3a4a5a; text-align:center; margin-top:12px; line-height:1.5; }
+  .footer .formula { color:#7a7875; }
+  .footer .formula .katex { font-size:1em; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">THE BIRTHDAY PROBLEM</span>
+    <span class="meta">how many for a 50/50 chance?</span>
+  </div>
+
+  <div class="headline">
+    <span class="n-wrap">
+      <span class="n" id="n-display">1</span>
+      <span class="n-label">people</span>
+    </span>
+    <span class="arrow">→</span>
+    <span class="p-wrap">
+      <span class="p" id="p-display" style="color:#7a7875">0%</span>
+      <span class="p-label">chance a pair shares a birthday</span>
+    </span>
+  </div>
+
+  <svg id="chart" viewBox="0 0 480 170" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-grid"></g>
+    <g id="g-curve"></g>
+    <g id="g-milestones"></g>
+    <g id="g-marker"></g>
+    <g id="g-axes"></g>
+  </svg>
+
+  <div class="people-strip" id="people"></div>
+
+  <div class="actions">
+    <button class="act-btn" id="minus">− 1</button>
+    <button class="act-btn primary" id="plus">+ 1 person</button>
+    <button class="act-btn" id="jump-23">jump to 23</button>
+    <button class="act-btn" id="jump-50">jump to 50</button>
+    <button class="act-btn reset" id="reset">↻ reset</button>
+  </div>
+
+  <div class="footer">
+    <div class="formula" id="formula"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", yellow:"#fff067", orange:"#ff822c", green:"#0fee89",
+  pink:"#ff4670", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+var MAX_N = 60;
+var DAYS = 365;
+
+// Pre-compute P(at least one collision) for N = 0..MAX_N
+var P_COLL = [0];
+(function(){
+  var pNo = 1;
+  for (var n = 1; n <= MAX_N; n++){
+    pNo *= (DAYS - (n - 1)) / DAYS;
+    P_COLL.push(1 - pNo);
+  }
+})();
+
+function pColl(n){ return P_COLL[Math.max(0, Math.min(MAX_N, n))]; }
+
+// State
+var P = { n: 1 };       // target N
+var D = { n: 1 };       // display N (lerped, can be fractional during animation)
+var SPRING = 0.22, EPS = 0.003;
+var raf = null;
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+
+// Color graded by probability magnitude
+function colorForP(p){
+  if (p < 0.10) return "#3a4a5a";
+  if (p < 0.30) return "#7a7875";
+  if (p < 0.50) return "#ff822c";
+  if (p < 0.80) return "#fff067";
+  return "#0fee89";
+}
+
+// ---- chart geometry ----
+var CW = 480, CH = 170;
+var PAD_L = 36, PAD_R = 12, PAD_T = 18, PAD_B = 26;
+var X0 = PAD_L, X1 = CW - PAD_R;
+var Y0 = PAD_T, Y1 = CH - PAD_B;
+
+function xFor(n){ return X0 + (n / MAX_N) * (X1 - X0); }
+function yFor(p){ return Y1 - p * (Y1 - Y0); }
+
+function drawGridAndAxes(){
+  var g = document.getElementById("g-grid");
+  var ga = document.getElementById("g-axes");
+  clear(g); clear(ga);
+  // Horizontal grid lines at p = 0, 0.25, 0.5, 0.75, 1
+  [0, 0.25, 0.5, 0.75, 1].forEach(function(p){
+    var y = yFor(p);
+    var line = document.createElementNS("http://www.w3.org/2000/svg","line");
+    line.setAttribute("x1", X0); line.setAttribute("x2", X1);
+    line.setAttribute("y1", y); line.setAttribute("y2", y);
+    line.setAttribute("stroke", "#141e2a");
+    line.setAttribute("stroke-width", 0.6);
+    g.appendChild(line);
+    // Label
+    var lbl = document.createElementNS("http://www.w3.org/2000/svg","text");
+    lbl.setAttribute("x", X0 - 6); lbl.setAttribute("y", y + 3);
+    lbl.setAttribute("text-anchor", "end");
+    lbl.setAttribute("fill", "#3a4a5a"); lbl.setAttribute("font-size", "9");
+    lbl.setAttribute("font-family", "Geist Mono, monospace");
+    lbl.textContent = (p === 0 || p === 1) ? p.toString() : (p * 100) + "%";
+    g.appendChild(lbl);
+  });
+  // X-axis labels at 0, 23, 50, 60
+  [0, 23, 50, 60].forEach(function(n){
+    var x = xFor(n);
+    var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", x); t.setAttribute("y", CH - 8);
+    t.setAttribute("text-anchor", n === 0 ? "start" : (n === 60 ? "end" : "middle"));
+    t.setAttribute("fill", "#3a4a5a"); t.setAttribute("font-size", "9");
+    t.setAttribute("font-family", "Geist Mono, monospace");
+    t.textContent = n;
+    ga.appendChild(t);
+  });
+  // X-axis label
+  var xLbl = document.createElementNS("http://www.w3.org/2000/svg","text");
+  xLbl.setAttribute("x", (X0 + X1) / 2); xLbl.setAttribute("y", CH - 8);
+  xLbl.setAttribute("text-anchor", "middle");
+  xLbl.setAttribute("fill", "#3a4a5a"); xLbl.setAttribute("font-size", "9");
+  xLbl.setAttribute("font-family", "Geist Mono, monospace");
+  xLbl.textContent = "people";
+  // Push it slightly outside the bounding tick labels
+  xLbl.setAttribute("y", CH - 18);
+  // Skip — leaves it cleaner to omit. Comment kept for clarity.
+}
+
+function drawCurve(){
+  var g = document.getElementById("g-curve");
+  clear(g);
+  var pts = [];
+  for (var n = 0; n <= MAX_N; n++){
+    pts.push(xFor(n).toFixed(2) + "," + yFor(pColl(n)).toFixed(2));
+  }
+  var poly = document.createElementNS("http://www.w3.org/2000/svg","polyline");
+  poly.setAttribute("points", pts.join(" "));
+  poly.setAttribute("fill", "none");
+  poly.setAttribute("stroke", "#fff067");
+  poly.setAttribute("stroke-width", 2);
+  poly.setAttribute("stroke-linejoin", "round");
+  poly.setAttribute("opacity", 0.85);
+  g.appendChild(poly);
+}
+
+function drawMilestones(){
+  var g = document.getElementById("g-milestones");
+  clear(g);
+  // Special N values: where P first crosses 50% (N=23), 90% (N=41), 99% (N=57).
+  var marks = [
+    { n: 23, label: "23",  color: "#fff067", offsetY: -6 },
+    { n: 41, label: "41",  color: "#0fee89", offsetY: -6 },
+    { n: 57, label: "57",  color: "#0fee89", offsetY: -6 }
+  ];
+  marks.forEach(function(m){
+    var x = xFor(m.n);
+    var y = yFor(pColl(m.n));
+    var dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    dot.setAttribute("cx", x); dot.setAttribute("cy", y);
+    dot.setAttribute("r", 3.5);
+    dot.setAttribute("fill", m.color);
+    dot.setAttribute("stroke", "#0b1118"); dot.setAttribute("stroke-width", 1.2);
+    g.appendChild(dot);
+    var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", x); t.setAttribute("y", y - 10);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("fill", m.color);
+    t.setAttribute("font-size", "10");
+    t.setAttribute("font-family", "Geist Mono, monospace");
+    t.setAttribute("font-weight", "600");
+    t.setAttribute("opacity", "0.85");
+    t.textContent = m.label;
+    g.appendChild(t);
+  });
+}
+
+function drawMarker(){
+  var g = document.getElementById("g-marker");
+  clear(g);
+  var n = D.n;
+  var p = pColl(Math.round(n));
+  // Use lerped n for x and interpolated p for y so the marker moves smoothly
+  var nLo = Math.floor(n), nHi = Math.ceil(n);
+  var pLerp = nLo === nHi ? pColl(nLo) : pColl(nLo) + (pColl(nHi) - pColl(nLo)) * (n - nLo);
+  var x = xFor(n);
+  var y = yFor(pLerp);
+  // Vertical drop line
+  var vl = document.createElementNS("http://www.w3.org/2000/svg","line");
+  vl.setAttribute("x1", x); vl.setAttribute("x2", x);
+  vl.setAttribute("y1", Y0); vl.setAttribute("y2", Y1);
+  vl.setAttribute("stroke", "#fff067");
+  vl.setAttribute("stroke-width", 1);
+  vl.setAttribute("opacity", 0.35);
+  vl.setAttribute("stroke-dasharray", "3 3");
+  g.appendChild(vl);
+  // Big dot at the curve point
+  var dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  dot.setAttribute("cx", x); dot.setAttribute("cy", y);
+  dot.setAttribute("r", 6);
+  dot.setAttribute("fill", "#fff067");
+  dot.setAttribute("stroke", "#0b1118"); dot.setAttribute("stroke-width", 1.5);
+  g.appendChild(dot);
+}
+
+// ---- people grid ----
+function buildPeople(){
+  var host = document.getElementById("people");
+  host.innerHTML = "";
+  for (var i = 0; i < MAX_N; i++){
+    var d = document.createElement("div");
+    d.className = "dot";
+    host.appendChild(d);
+  }
+}
+
+function paintPeople(){
+  var host = document.getElementById("people");
+  var dots = host.children;
+  var nRound = Math.round(D.n);
+  for (var i = 0; i < dots.length; i++){
+    dots[i].classList.toggle("in", i < nRound);
+  }
+}
+
+// ---- headline ----
+function renderHeadline(){
+  var nRound = Math.round(P.n);
+  var p = pColl(nRound);
+  var nEl = document.getElementById("n-display");
+  var pEl = document.getElementById("p-display");
+  nEl.textContent = nRound;
+  // Format probability
+  var pctStr;
+  if (p === 0) pctStr = "0%";
+  else if (p < 0.001) pctStr = "<0.1%";
+  else if (p >= 0.999) pctStr = ">99.9%";
+  else pctStr = (p * 100).toFixed(1) + "%";
+  pEl.textContent = pctStr;
+  pEl.style.color = colorForP(p);
+  // Formula
+  var fEl = document.getElementById("formula");
+  fEl.innerHTML = "";
+  if (nRound <= 1){
+    tryRender(fEl, "\\text{a single person cannot share with anyone}");
+  } else if (nRound <= 4){
+    // Show the expansion for small N
+    var top = "365";
+    for (var k = 1; k < nRound; k++){
+      top += " \\times " + (365 - k);
+    }
+    var bot = "365^{" + nRound + "}";
+    tryRender(fEl, "P = 1 - \\dfrac{" + top + "}{" + bot + "}");
+  } else {
+    tryRender(fEl, "P = 1 - \\dfrac{365 \\times 364 \\times \\ldots \\times (366 - " + nRound + ")}{365^{" + nRound + "}}");
+  }
+}
+
+function refresh(){
+  drawMarker();
+  paintPeople();
+  renderHeadline();
+  updateButtons();
+}
+
+function updateButtons(){
+  document.getElementById("minus").disabled = (P.n <= 0);
+  document.getElementById("plus").disabled = (P.n >= MAX_N);
+}
+
+// ---- spring lerp ----
+function settled(){ return Math.abs(P.n - D.n) < EPS; }
+function step(){
+  D.n += (P.n - D.n) * SPRING;
+  refresh();
+  if (!settled()) raf = requestAnimationFrame(step);
+  else {
+    raf = null;
+    D.n = P.n;
+    refresh();
+  }
+}
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+
+// ---- chart drag ----
+var chart = document.getElementById("chart");
+var dragging = false;
+function svgPt(e){
+  var pt = chart.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  return pt.matrixTransform(chart.getScreenCTM().inverse());
+}
+chart.addEventListener("pointerdown", function(e){
+  e.preventDefault();
+  dragging = true;
+  chart.setPointerCapture(e.pointerId);
+  chart.classList.add("grabbing");
+  applyDrag(svgPt(e));
+});
+chart.addEventListener("pointermove", function(e){
+  if (!dragging) return;
+  e.preventDefault();
+  applyDrag(svgPt(e));
+});
+function endDrag(e){
+  if (!dragging) return;
+  dragging = false;
+  try { chart.releasePointerCapture(e.pointerId); } catch(_){}
+  chart.classList.remove("grabbing");
+}
+chart.addEventListener("pointerup", endDrag);
+chart.addEventListener("pointercancel", endDrag);
+function applyDrag(pt){
+  // Map x to N
+  var rel = (pt.x - X0) / (X1 - X0);
+  rel = Math.max(0, Math.min(1, rel));
+  var n = Math.round(rel * MAX_N);
+  if (n !== P.n){
+    P.n = n;
+    kick();
+  }
+}
+
+// ---- buttons ----
+document.getElementById("minus").addEventListener("click", function(){
+  if (P.n > 0){ P.n--; kick(); }
+});
+document.getElementById("plus").addEventListener("click", function(){
+  if (P.n < MAX_N){ P.n++; kick(); }
+});
+document.getElementById("jump-23").addEventListener("click", function(){
+  P.n = 23; kick();
+});
+document.getElementById("jump-50").addEventListener("click", function(){
+  P.n = 50; kick();
+});
+document.getElementById("reset").addEventListener("click", function(){
+  P.n = 1; kick();
+});
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+drawGridAndAxes();
+drawCurve();
+drawMilestones();
+buildPeople();
+refresh();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>

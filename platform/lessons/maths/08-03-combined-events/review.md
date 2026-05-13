@@ -166,4 +166,36 @@ The complement turned a $33$-cell counting problem into a $3$-cell counting prob
 - **Inclusion-exclusion**: $P(A \cup B) = P(A) + P(B) - P(A \cap B)$.
 - **Method marks** are typically for setting up the calculation correctly; **accuracy marks** are for the simplified numerical answer.
 
-That completes Unit 8 on probability. You now have every tool needed for the probability questions on your exam: the scale and direct counting from 8.1, the relative-frequency / expected-frequency / fairness ideas from 8.2, and the combined-events toolkit from 8.3. The next unit, 9, switches to statistics: tabulating data, computing averages, and drawing the charts that visualise both.
+That completes the syllabus for Unit 8. You now have every tool needed for the probability questions on your exam: the scale and direct counting from 8.1, the relative-frequency / expected-frequency / fairness ideas from 8.2, and the combined-events toolkit from 8.3.
+
+## One last surprise: how many people for a 50/50 chance?
+
+Here is a question. Imagine a room slowly filling up with people. Each person has a birthday on some day of the year. How many people do you need in the room before there is a $50\%$ chance that at least TWO of them share the same birthday?
+
+Most people guess somewhere around half a year, $\sim 180$. The answer is much smaller. Drag along the curve, or tap "jump to $23$", and see for yourself:
+
+<iframe src="/widgets/birthday-problem-explorer.html" style="width:100%;max-width:696px;height:580px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
+
+**Twenty-three.** With just $23$ people, the chance of a shared birthday is already over $50\%$. With $41$, it is over $90\%$. With $57$, it is over $99\%$.
+
+This is the **birthday problem**, and the maths uses exactly the toolkit from this unit. The trick is the complement: instead of asking "what is the probability of at least one shared birthday?", ask the much easier question "what is the probability that ALL $n$ birthdays are DIFFERENT?" Then subtract from $1$.
+
+If $n$ people walk into the room one at a time, the probability that EACH new person's birthday is different from everyone before them is:
+
+$$P(\text{all different}) = \underbrace{\dfrac{365}{365}}_{\text{1st}} \times \underbrace{\dfrac{364}{365}}_{\text{2nd}} \times \underbrace{\dfrac{363}{365}}_{\text{3rd}} \times \cdots \times \dfrac{366 - n}{365}$$
+
+That is the same "multiply along a path" rule from p2 and p3 of this unit. Each new person has fewer "safe" days available (one less for each previous person), so the denominators stay at $365$ but the numerators tick down: $365, 364, 363, \ldots$.
+
+Then by the complement:
+
+$$P(\text{at least two share}) = 1 - P(\text{all different})$$
+
+Plug in $n = 23$ and you get $1 - 0.493 = 0.507$. Just over half.
+
+Why is the answer so much smaller than people expect? Because with $23$ people there are $\binom{23}{2} = 253$ different PAIRS that could share a birthday, not just $23$ chances of matching one specific person. The chances pile up much faster than intuition tracks.
+
+This question is not on your exam. But it uses the same single skill: 1 minus the product of decreasing fractions. The most powerful tool in this entire unit, applied to a question that nobody believes the answer to the first time they hear it. That is what probability does best.
+
+## Onwards
+
+The next unit, 9, switches to statistics: tabulating data, computing averages, and drawing the charts that visualise both. You will use the counting skills from this unit constantly there.
