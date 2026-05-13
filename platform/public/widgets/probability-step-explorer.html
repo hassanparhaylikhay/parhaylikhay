@@ -505,17 +505,24 @@ function clear(el){ while (el.firstChild) el.removeChild(el.firstChild); }
 
 function drawStage(){
   var stage = document.getElementById("stage");
+  var panel = document.getElementById("panel");
   clear(stage);
   var step = PRESET.steps[STEP];
   var fav = step.favourable;
   if (!PRESET.outcomes || PRESET.outcomes.length === 0){
-    var blank = document.createElement("div");
-    blank.style.color = "#3a4a5a"; blank.style.fontSize = "13px";
-    blank.style.textAlign = "center"; blank.style.padding = "20px 0";
-    blank.textContent = "see equations below";
-    stage.appendChild(blank);
+    // No chips for this preset — hide the stage entirely so the equations
+    // panel becomes the main content area without an empty rectangle above it.
+    stage.style.display = "none";
+    panel.style.borderTop = "0";
+    panel.style.marginTop = "0";
+    panel.style.paddingTop = "0";
     return;
   }
+  // Restore stage and panel chrome when chips are present
+  stage.style.display = "";
+  panel.style.borderTop = "";
+  panel.style.marginTop = "";
+  panel.style.paddingTop = "";
   PRESET.outcomes.forEach(function(o, i){
     var chip = document.createElement("div");
     var isList = o.kind === "list";
