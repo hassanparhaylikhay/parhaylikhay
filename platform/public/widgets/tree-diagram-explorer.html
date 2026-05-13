@@ -15,25 +15,13 @@
   .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; gap:14px; }
   .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
   .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
-  .panel-tag { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:6px; margin-top:10px; }
-
-  .controls { display:flex; gap:10px; margin-bottom:8px; align-items:stretch; flex-wrap:wrap; }
-  .col-card { flex:1; min-width:120px; padding:9px 10px; border-radius:8px; border:1px solid; background:#0b1118; }
-  .col-card .row1 { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
-  .col-card .swatch { width:14px; height:14px; border-radius:50%; }
-  .col-card .name { font-family:'Geist Mono',monospace; font-size:9.5px; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; }
-  .col-card .count { font-family:'Geist Mono',monospace; font-size:16px; color:#f0eeea; line-height:1; margin:4px 0 6px; text-align:center; }
-  .col-card .btns { display:flex; gap:4px; }
-  .col-card .btn { flex:1; background:#0b1118; border:1px solid currentColor; color:currentColor; font-family:'Geist Mono',monospace; font-size:12px; font-weight:700; padding:2px 0; border-radius:4px; cursor:pointer; opacity:0.7; transition:all 0.12s ease; }
-  .col-card .btn:hover { opacity:1; }
-  .col-card .btn:disabled { opacity:0.25; cursor:not-allowed; }
-
-  .mode-card { display:flex; flex-direction:column; gap:4px; padding:9px 10px; border-radius:8px; border:1px solid #141e2a; min-width:160px; }
-  .mode-card .label { font-family:'Geist Mono',monospace; font-size:9.5px; color:#3a4a5a; letter-spacing:0.5px; text-transform:uppercase; font-weight:600; }
-  .mode-card .toggle { display:flex; gap:0; border:1px solid #141e2a; border-radius:5px; overflow:hidden; }
-  .mode-card .toggle .opt { flex:1; padding:6px 4px; text-align:center; font-family:'Geist Mono',monospace; font-size:10px; letter-spacing:0.4px; font-weight:600; color:#7a7875; cursor:pointer; background:#0b1118; transition: all 0.12s ease; }
-  .mode-card .toggle .opt.active { color:#fff067; background:rgba(255,240,103,0.06); }
-  .mode-card .toggle .opt:hover:not(.active) { color:#c8c6be; }
+  .bag-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
+  .col-pill { display:flex; align-items:center; gap:6px; padding:4px 6px 4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,0.08); background:rgba(255,255,255,0.02); }
+  .col-pill .swatch { width:10px; height:10px; border-radius:50%; }
+  .col-pill .count { font-family:'Geist Mono',monospace; font-size:13px; font-weight:700; min-width:14px; text-align:center; }
+  .col-pill .btn { background:transparent; border:0; color:inherit; font-family:'Geist Mono',monospace; font-size:14px; font-weight:700; line-height:1; padding:2px 8px; border-radius:4px; cursor:pointer; opacity:0.55; transition: opacity 0.12s ease; }
+  .col-pill .btn:hover:not(:disabled) { opacity:1; }
+  .col-pill .btn:disabled { opacity:0.15; cursor:not-allowed; }
 
   .targets { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
   .tgt-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:10.5px; font-weight:600; letter-spacing:0.4px; padding:6px 10px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; }
@@ -53,44 +41,25 @@
 <body>
 <div class="wrap" id="wrap">
   <div class="head">
-    <span class="step-title">TWO-STAGE EXPERIMENT</span>
-    <span class="meta">set the bag, the mode, and the target</span>
+    <span class="step-title" id="head-title">TWO-STAGE EXPERIMENT</span>
+    <span class="meta" id="head-meta">tap a target outcome</span>
   </div>
 
-  <div class="panel-tag">the bag</div>
-  <div class="controls" id="controls">
-    <div class="col-card" id="card-red" style="color:#ff4670;border-color:rgba(255,255,255,0.06);background:rgba(255,255,255,0.02)">
-      <div class="row1">
-        <span class="swatch" style="background:#ff4670"></span>
-        <span class="name" style="color:#ff4670">red</span>
-      </div>
-      <div class="count" id="count-red">3</div>
-      <div class="btns">
-        <button class="btn" data-c="red" data-act="minus">−</button>
-        <button class="btn" data-c="red" data-act="plus">+</button>
-      </div>
-    </div>
-    <div class="col-card" id="card-blue" style="color:#00abfa;border-color:rgba(255,255,255,0.06);background:rgba(255,255,255,0.02)">
-      <div class="row1">
-        <span class="swatch" style="background:#00abfa"></span>
-        <span class="name" style="color:#00abfa">blue</span>
-      </div>
-      <div class="count" id="count-blue">5</div>
-      <div class="btns">
-        <button class="btn" data-c="blue" data-act="minus">−</button>
-        <button class="btn" data-c="blue" data-act="plus">+</button>
-      </div>
-    </div>
-    <div class="mode-card">
-      <div class="label">replacement</div>
-      <div class="toggle">
-        <div class="opt active" data-mode="with">WITH</div>
-        <div class="opt" data-mode="without">WITHOUT</div>
-      </div>
-    </div>
+  <div class="bag-row" id="bag-row">
+    <span class="col-pill" style="color:#ff4670">
+      <span class="swatch" style="background:#ff4670"></span>
+      <button class="btn" data-c="red" data-act="minus">−</button>
+      <span class="count" id="count-red">3</span>
+      <button class="btn" data-c="red" data-act="plus">+</button>
+    </span>
+    <span class="col-pill" style="color:#00abfa">
+      <span class="swatch" style="background:#00abfa"></span>
+      <button class="btn" data-c="blue" data-act="minus">−</button>
+      <span class="count" id="count-blue">5</span>
+      <button class="btn" data-c="blue" data-act="plus">+</button>
+    </span>
   </div>
 
-  <div class="panel-tag">target outcome (two draws)</div>
   <div class="targets" id="targets"></div>
 
   <svg id="tree" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
@@ -433,15 +402,17 @@ document.querySelectorAll(".col-card .btn").forEach(function(b){
     }
   });
 });
-// Mode toggle
-document.querySelectorAll(".mode-card .opt").forEach(function(o){
-  o.addEventListener("click", function(){
-    document.querySelectorAll(".mode-card .opt").forEach(function(x){ x.classList.remove("active"); });
-    o.classList.add("active");
-    state.mode = o.dataset.mode;
-    render();
-  });
-});
+// Mode is locked by URL param: ?mode=with or ?mode=without. No UI toggle.
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var m = params.get("mode");
+  if (m === "with" || m === "without") state.mode = m;
+  // Title reflects the locked mode so the student knows which world they are in.
+  var title = state.mode === "without"
+    ? "TREE · WITHOUT REPLACEMENT"
+    : "TREE · WITH REPLACEMENT";
+  document.getElementById("head-title").textContent = title;
+})();
 
 function notifyHeight(){
   var h = document.getElementById("wrap").offsetHeight + 30;
