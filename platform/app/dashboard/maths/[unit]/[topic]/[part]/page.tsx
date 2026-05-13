@@ -1,10 +1,46 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import fs from "node:fs/promises"
+import path from "node:path"
 import { UNITS, getPrevNext, urlFor } from "../../../data"
 import { loadLessonPart } from "@/lib/lesson-loader"
 import LessonBody from "../lesson-body"
 import InlineCheck from "../inline-check"
 import WidgetFrame from "../widget-frame"
+
+async function LessonModeCard({ unit, topic, part }: { unit: string; topic: string; part: string }) {
+  // Only render the entry card if a lesson.json exists for this part.
+  const lessonPath = path.join(process.cwd(), "content", "lessons", `${unit}-${topic}-${part}`, "lesson.json")
+  try {
+    await fs.access(lessonPath)
+  } catch {
+    return null
+  }
+
+  return (
+    <Link
+      href={`/dashboard/lesson-mode/${unit}/${topic}/${part}`}
+      className="group block rounded-xl border border-[#00abfa33] bg-gradient-to-br from-[#00abfa14] to-[#0b1118] px-5 py-4 hover:border-[#00abfa66] hover:from-[#00abfa1e] transition-all duration-300"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-lg bg-[#00abfa18] border border-[#00abfa44] flex items-center justify-center shrink-0">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M5 3l8 5-8 5V3z" fill="#00abfa" />
+            </svg>
+          </div>
+          <div className="min-w-0">
+            <p className="text-[11px] font-mono uppercase tracking-[2px] text-[#00abfa] mb-0.5">Lesson Mode</p>
+            <p className="text-[13px] text-[#c8c6be] truncate">A guided, slide-by-slide walkthrough — ~12 minutes.</p>
+          </div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#3a4a5a] group-hover:text-[#00abfa] transition-colors shrink-0">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </Link>
+  )
+}
 
 export default async function PartPage({
   params,
@@ -49,7 +85,13 @@ export default async function PartPage({
           </span>
           <span className="text-[11px] font-mono text-[#3a4a5a]">{topic.code} · {topic.title}</span>
         </div>
-        <h1 className="text-[28px] font-bold text-[#f0eeea] tracking-tight leading-tight">{part.title}</h1>
+        <h1 className="text-[28px] font-bold text-[#f0eeea] tracking-tight leading-tight mb-6">{part.title}</h1>
+
+        <LessonModeCard
+          unit={unitSlug}
+          topic={topicSlug}
+          part={partSlug}
+        />
       </div>
 
       {/* Body */}

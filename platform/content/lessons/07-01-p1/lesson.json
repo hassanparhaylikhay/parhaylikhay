@@ -1,0 +1,418 @@
+{
+  "lessonId": "07-01-p1",
+  "source": { "unit": "07", "topic": "01", "part": "p1" },
+  "title": "The four transformations",
+  "estimatedMinutes": 12,
+  "slides": [
+    {
+      "id": "01-hook",
+      "kind": "hook",
+      "advance": "manual",
+      "prompt": "Something happened to this triangle. What changed?",
+      "visual": {
+        "kind": "shape",
+        "svg": "<svg viewBox='0 0 360 220' style='display:block;width:100%;max-width:520px;height:auto;background:#0b1118;border-radius:12px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='hook-grid' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='360' height='220' fill='url(#hook-grid)'/><polygon points='80,160 130,160 105,118' fill='rgba(0,171,250,0.65)' stroke='#00abfa' stroke-width='1.5'><animateTransform attributeName='transform' type='translate' values='0 0; 0 0; 130 -30; 130 -30; 0 0' keyTimes='0;0.15;0.45;0.7;1' dur='4.5s' repeatCount='indefinite'/></polygon><polygon points='80,160 130,160 105,118' fill='none' stroke='#3a4a5a' stroke-width='1' stroke-dasharray='3 3' opacity='0.55'/></svg>"
+      }
+    },
+
+    {
+      "id": "02-four-moves",
+      "kind": "concept",
+      "title": "Four ways to move a shape",
+      "advance": "manual",
+      "prompt": "Slide. Flip. Spin. Resize. Every transformation on your exam is one of these four.",
+      "visual": {
+        "kind": "row",
+        "gap": 14,
+        "children": [
+          { "kind": "html", "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg><div style='color:#00abfa;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>SLIDE</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg><div style='color:#fff067;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>FLIP</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg><div style='color:#ff822c;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>SPIN</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg><div style='color:#ff4670;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>RESIZE</div></div>" }
+        ]
+      }
+    },
+
+    {
+      "id": "03-match-name",
+      "kind": "interaction",
+      "title": "Match each move to its proper name",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "placeLabel",
+        "hint": "Translation slides. Reflection flips. Rotation spins. Enlargement resizes.",
+        "config": {
+          "prompt": "Drag each name onto the move it describes.",
+          "slots": [
+            { "id": "s-slide",  "hint": "?", "correctLabelId": "lab-translation", "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" },
+            { "id": "s-flip",   "hint": "?", "correctLabelId": "lab-reflection",  "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" },
+            { "id": "s-spin",   "hint": "?", "correctLabelId": "lab-rotation",    "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg>" },
+            { "id": "s-resize", "hint": "?", "correctLabelId": "lab-enlargement", "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" }
+          ],
+          "labels": [
+            { "id": "lab-translation", "text": "translation" },
+            { "id": "lab-reflection",  "text": "reflection" },
+            { "id": "lab-rotation",    "text": "rotation" },
+            { "id": "lab-enlargement", "text": "enlargement" }
+          ],
+          "successText": "These are the exact four names your exam will use."
+        }
+      }
+    },
+
+    {
+      "id": "04-three-keep-size",
+      "kind": "concept",
+      "title": "Three of them don't change size",
+      "advance": "manual",
+      "prompt": "Translation, reflection, rotation — every length and angle stays the same. Only enlargement makes the shape bigger or smaller.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;gap:14px;justify-content:center;flex-wrap:wrap'><div style='text-align:center;opacity:1'><div style='width:96px;height:74px;border-radius:8px;border:1px solid #00abfa55;background:rgba(0,171,250,0.04);display:flex;align-items:center;justify-content:center'><div style='color:#00abfa;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>SAME SIZE</div></div><div style='color:#c8c6be;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>translation</div></div><div style='text-align:center'><div style='width:96px;height:74px;border-radius:8px;border:1px solid #fff06755;background:rgba(255,240,103,0.04);display:flex;align-items:center;justify-content:center'><div style='color:#fff067;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>SAME SIZE</div></div><div style='color:#c8c6be;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>reflection</div></div><div style='text-align:center'><div style='width:96px;height:74px;border-radius:8px;border:1px solid #ff822c55;background:rgba(255,130,44,0.04);display:flex;align-items:center;justify-content:center'><div style='color:#ff822c;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>SAME SIZE</div></div><div style='color:#c8c6be;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>rotation</div></div><div style='text-align:center;opacity:0.5'><div style='width:96px;height:74px;border-radius:8px;border:1px dashed #3a4a5a;background:transparent;display:flex;align-items:center;justify-content:center'><div style='color:#7a7875;font-family:Geist Mono,monospace;font-size:10px;letter-spacing:0.5px'>DIFFERENT</div></div><div style='color:#7a7875;font-family:Geist Mono,monospace;font-size:10.5px;margin-top:6px'>enlargement</div></div></div>"
+      }
+    },
+
+    {
+      "id": "05-odd-one-out",
+      "kind": "interaction",
+      "title": "Tap the one that changes the size",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "clickToIdentify",
+        "hint": "Watch each animation. Three keep the triangle the same size.",
+        "config": {
+          "prompt": "Three keep the size. One doesn't. Which?",
+          "regions": [
+            { "id": "r-translate", "label": "translation", "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" },
+            { "id": "r-reflect", "label": "reflection", "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" },
+            { "id": "r-rotate", "label": "rotation", "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg>" },
+            { "id": "r-enlarge", "label": "enlargement", "isCorrect": true, "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" }
+          ],
+          "successText": "Enlargement scales the shape. The image is similar, not congruent.",
+          "revealId": "r-enlarge"
+        }
+      }
+    },
+
+    {
+      "id": "06-describe-bridge",
+      "kind": "concept",
+      "title": "Naming the move isn't enough",
+      "advance": "manual",
+      "prompt": "On your exam, you also have to describe the rule precisely. Different moves need different rules.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;gap:8px;max-width:380px;margin:0 auto;font-family:Geist Mono,monospace;font-size:12px'><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #00abfa44;background:rgba(0,171,250,0.04)'><span style='color:#00abfa'>translation</span><span style='color:#7a7875'>1 thing</span></div><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #fff06744;background:rgba(255,240,103,0.04)'><span style='color:#fff067'>reflection</span><span style='color:#7a7875'>1 thing</span></div><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #ff822c44;background:rgba(255,130,44,0.04)'><span style='color:#ff822c'>rotation</span><span style='color:#7a7875'>3 things</span></div><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #ff467044;background:rgba(255,70,112,0.04)'><span style='color:#ff4670'>enlargement</span><span style='color:#7a7875'>2 things</span></div></div>"
+      }
+    },
+
+    {
+      "id": "07-translation-rule",
+      "kind": "concept",
+      "title": "Translation: just one column vector",
+      "advance": "manual",
+      "prompt": "Every point slides the same amount. That amount is a column vector.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px'><svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gtr' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gtr)'/><polygon points='60,140 100,140 80,100' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='200,80 240,80 220,40' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/><line x1='80' y1='100' x2='220' y2='40' stroke='#fff067' stroke-width='1.2' stroke-dasharray='4 3'/><polygon points='220,40 215,46 216,38' fill='#fff067'/></svg><div style='font-family:Geist Mono,monospace;font-size:12.5px;color:#00abfa;padding:7px 16px;border-radius:6px;background:rgba(0,171,250,0.06);border:1px solid #00abfa44'>shift by \\(\\begin{pmatrix} a \\\\ b \\end{pmatrix}\\)</div></div>"
+      }
+    },
+
+    {
+      "id": "08-drag-by-vector",
+      "kind": "interaction",
+      "title": "Drag this triangle so it slides by ⟨3, −2⟩",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "dragToPosition",
+        "hint": "Right 3, down 2. The pink outline is where it should land.",
+        "config": {
+          "prompt": "Slide it 3 right and 2 down.",
+          "xRange": [-1, 8],
+          "yRange": [-3, 5],
+          "shape": [[0, 0], [2, 0], [1, 2]],
+          "startOffset": [0, 0],
+          "targetOffset": [3, -2],
+          "snap": 1,
+          "successText": "Every point moved by ⟨3, −2⟩.",
+          "showTarget": true
+        }
+      }
+    },
+
+    {
+      "id": "09-reflection-rule",
+      "kind": "concept",
+      "title": "Reflection: just the mirror line",
+      "advance": "manual",
+      "prompt": "Every point flips to the other side of a line. You only need to name the line.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px'><svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gref' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gref)'/><line x1='160' y1='10' x2='160' y2='190' stroke='#fff067' stroke-width='1.3' stroke-dasharray='4 3'/><polygon points='60,140 60,80 110,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='260,140 260,80 210,110' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg><div style='font-family:Geist Mono,monospace;font-size:12.5px;color:#fff067;padding:7px 16px;border-radius:6px;background:rgba(255,240,103,0.06);border:1px solid #fff06744'>mirror: \\(x = 0\\)</div></div>"
+      }
+    },
+
+    {
+      "id": "10-which-mirror",
+      "kind": "interaction",
+      "title": "Which mirror line did this?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Imagine folding the page along each line. Which one lands blue on pink?",
+        "config": {
+          "prompt": "The blue triangle was reflected to land on the pink. Which mirror did it?",
+          "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gqm' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gqm)'/><line x1='10' y1='100' x2='310' y2='100' stroke='#1a3350' stroke-width='0.5'/><line x1='160' y1='10' x2='160' y2='190' stroke='#1a3350' stroke-width='0.5'/><polygon points='60,140 60,80 110,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='220,40 160,40 190,90' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg>",
+          "options": [
+            { "id": "opt-y-eq-x", "text": "Reflection in $y = x$", "isCorrect": true },
+            { "id": "opt-x-axis", "text": "Reflection in the $x$-axis", "whyWrong": "An $x$-axis reflection flips top-bottom only. The pink would still be on the left." },
+            { "id": "opt-y-axis", "text": "Reflection in the $y$-axis", "whyWrong": "A $y$-axis reflection flips left-right only. The pink would still be near the bottom." },
+            { "id": "opt-y-eq-neg-x", "text": "Reflection in $y = -x$", "whyWrong": "$y = -x$ would put the image in the bottom-right, not the top." }
+          ],
+          "successText": "$y = x$ is the diagonal through the origin going up-right."
+        }
+      }
+    },
+
+    {
+      "id": "11-words-vs-equation",
+      "kind": "examLink",
+      "title": "Words don't earn marks. Equations do.",
+      "markCode": "B1",
+      "advance": "onSuccess",
+      "prompt": "Which student answer earns the mark?",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "The mark scheme needs the mirror as an equation.",
+        "config": {
+          "prompt": "Two students describe the same reflection. Which one earns the mark?",
+          "options": [
+            { "id": "opt-words",    "text": "“reflected diagonally”", "whyWrong": "Words don't earn the mark. The examiner needs the equation of the mirror line." },
+            { "id": "opt-equation", "text": "“reflection in the line $y = x$”", "isCorrect": true }
+          ],
+          "successText": "Always give the mirror as an equation: $y = x$, $y = -x$, $x = 0$, $y = 0$, never as words."
+        }
+      }
+    },
+
+    {
+      "id": "12-rotation-three",
+      "kind": "concept",
+      "title": "Rotation: three things, all needed",
+      "advance": "manual",
+      "prompt": "Spin needs a centre to spin around, an angle to spin through, and a direction to spin in.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px'><svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='grot' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#grot)'/><polygon points='190,140 240,140 215,100' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='160,170 160,120 120,145' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/><circle cx='160' cy='170' r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='2'/><path d='M 210 162 A 60 60 0 0 1 156 124' fill='none' stroke='#ff822c' stroke-width='1.3' stroke-dasharray='3 3'/></svg><div style='display:flex;gap:10px;flex-wrap:wrap;justify-content:center'><div style='font-family:Geist Mono,monospace;font-size:11.5px;color:#fff067;padding:6px 12px;border-radius:6px;background:rgba(255,240,103,0.06);border:1px solid #fff06744'>centre · \\((0,0)\\)</div><div style='font-family:Geist Mono,monospace;font-size:11.5px;color:#ff822c;padding:6px 12px;border-radius:6px;background:rgba(255,130,44,0.06);border:1px solid #ff822c44'>angle · \\(90°\\)</div><div style='font-family:Geist Mono,monospace;font-size:11.5px;color:#ff4670;padding:6px 12px;border-radius:6px;background:rgba(255,70,112,0.06);border:1px solid #ff467044'>direction · anticlockwise</div></div></div>"
+      }
+    },
+
+    {
+      "id": "13-rotation-labels",
+      "kind": "interaction",
+      "title": "Describe this rotation",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "placeLabel",
+        "hint": "Centre is the yellow dot. Angle is how far it turned. Direction is which way.",
+        "config": {
+          "prompt": "Fill in the three slots from the tiles below.",
+          "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='grl' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#grl)'/><polygon points='190,140 240,140 215,100' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='160,170 160,120 120,145' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/><circle cx='160' cy='170' r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='2'/><path d='M 210 162 A 60 60 0 0 1 156 124' fill='none' stroke='#ff822c' stroke-width='1.3' stroke-dasharray='3 3'/></svg>",
+          "slots": [
+            { "id": "slot-centre",    "hint": "CENTRE",    "correctLabelId": "lab-origin" },
+            { "id": "slot-angle",     "hint": "ANGLE",     "correctLabelId": "lab-90" },
+            { "id": "slot-direction", "hint": "DIRECTION", "correctLabelId": "lab-acw" }
+          ],
+          "labels": [
+            { "id": "lab-origin", "text": "$(0,0)$" },
+            { "id": "lab-12",     "text": "$(1,2)$" },
+            { "id": "lab-90",     "text": "$90°$" },
+            { "id": "lab-45",     "text": "$45°$" },
+            { "id": "lab-acw",    "text": "anticlockwise" },
+            { "id": "lab-cw",     "text": "clockwise" }
+          ],
+          "successText": "All three together: rotation, 90° anticlockwise, centre (0,0)."
+        }
+      }
+    },
+
+    {
+      "id": "14-miss-one",
+      "kind": "examLink",
+      "title": "Miss one, lose the mark",
+      "markCode": "B1",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "config": {
+          "prompt": "Two students describe the same rotation. Which one earns full marks?",
+          "options": [
+            { "id": "opt-partial", "text": "“Rotation about $(0,0)$, $90°$”", "whyWrong": "No direction. Clockwise or anticlockwise? Mark scheme needs all three." },
+            { "id": "opt-full",    "text": "“Rotation, $90°$ anticlockwise, about $(0,0)$”", "isCorrect": true }
+          ],
+          "successText": "Centre + angle + direction. All three or zero marks."
+        }
+      }
+    },
+
+    {
+      "id": "15-enlargement-two",
+      "kind": "concept",
+      "title": "Enlargement: centre and scale factor",
+      "advance": "manual",
+      "prompt": "Pick a centre, pick a number to multiply distances by. Done.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px'><svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gen' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gen)'/><circle cx='40' cy='170' r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='2'/><line x1='40' y1='170' x2='280' y2='50' stroke='#3a4a5a' stroke-width='0.7' stroke-dasharray='3 3'/><line x1='40' y1='170' x2='210' y2='150' stroke='#3a4a5a' stroke-width='0.7' stroke-dasharray='3 3'/><line x1='40' y1='170' x2='270' y2='120' stroke='#3a4a5a' stroke-width='0.7' stroke-dasharray='3 3'/><polygon points='100,160 130,160 115,140' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='160,150 220,150 190,110' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg><div style='display:flex;gap:10px;flex-wrap:wrap;justify-content:center'><div style='font-family:Geist Mono,monospace;font-size:11.5px;color:#fff067;padding:6px 12px;border-radius:6px;background:rgba(255,240,103,0.06);border:1px solid #fff06744'>centre · yellow dot</div><div style='font-family:Geist Mono,monospace;font-size:11.5px;color:#ff4670;padding:6px 12px;border-radius:6px;background:rgba(255,70,112,0.06);border:1px solid #ff467044'>scale factor · \\(2\\)</div></div></div>"
+      }
+    },
+
+    {
+      "id": "16-find-k",
+      "kind": "interaction",
+      "title": "Find the scale factor",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "manipulateAndVerify",
+        "hint": "The pink target is twice as far from the centre as the blue object.",
+        "config": {
+          "prompt": "Drag the yellow handle until blue scales onto pink.",
+          "xRange": [-1, 9],
+          "yRange": [-1, 6],
+          "handles": [
+            { "id": "k", "x": 1, "y": 5, "xRange": [1, 5], "yRange": [5, 5], "snap": 1, "color": "#fff067" }
+          ],
+          "renderScene": "function(h, color){ var k = h.k.x; var SVG_W=480, SVG_H=320, PAD=28; var xMin=-1, xMax=9, yMin=-1, yMax=6; var ux=(SVG_W-2*PAD)/(xMax-xMin); var uy=(SVG_H-2*PAD)/(yMax-yMin); var u=Math.min(ux,uy); var ox=(SVG_W-u*(xMax-xMin))/2; var oy=(SVG_H-u*(yMax-yMin))/2; function P(mx,my){ return [ox+(mx-xMin)*u, oy+(yMax-my)*u]; } function poly(verts, fill, stroke){ var d = verts.map(function(v,i){ var p=P(v[0],v[1]); return (i==0?'M':'L')+p[0]+' '+p[1]; }).join(' ')+' Z'; return '<path d=\"'+d+'\" fill=\"'+fill+'\" stroke=\"'+stroke+'\" stroke-width=\"1.6\"/>'; } var C=[1,1]; var obj=[[2,1],[3,1],[2.5,2]]; var img=obj.map(function(v){return [C[0]+k*(v[0]-C[0]), C[1]+k*(v[1]-C[1])]; }); var target=obj.map(function(v){return [C[0]+2*(v[0]-C[0]), C[1]+2*(v[1]-C[1])]; }); var rays=''; for(var i=0;i<obj.length;i++){ var p1=P(C[0],C[1]); var p2=P(C[0]+4*(obj[i][0]-C[0]), C[1]+4*(obj[i][1]-C[1])); rays+='<line x1=\"'+p1[0]+'\" y1=\"'+p1[1]+'\" x2=\"'+p2[0]+'\" y2=\"'+p2[1]+'\" stroke=\"'+color.faint+'\" stroke-width=\"0.6\" stroke-dasharray=\"3 3\"/>'; } var cp=P(C[0],C[1]); return rays + poly(target, 'transparent', color.pink) + '<circle cx=\"'+cp[0]+'\" cy=\"'+cp[1]+'\" r=\"4\" fill=\"'+color.yellow+'\" stroke=\"#0b1118\" stroke-width=\"1.5\"/>' + poly(obj, 'rgba(0,171,250,0.18)', color.blue) + poly(img, 'rgba(15,238,137,0.18)', color.green); }",
+          "successTest": "function(h){ return h.k.x === 2; }",
+          "readoutHtml": "function(h){ return 'scale factor &nbsp;$k = ' + h.k.x + '$'; }",
+          "successText": "$k = 2$. Every distance from the centre is doubled."
+        }
+      }
+    },
+
+    {
+      "id": "17-negative-k",
+      "kind": "interaction",
+      "title": "Negative scale factor flips through the centre",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "adjustSlider",
+        "hint": "Push k past zero and watch where pink goes.",
+        "config": {
+          "prompt": "Drag k from positive to negative. Watch what happens at zero.",
+          "varName": "k",
+          "min": -2,
+          "max": 2,
+          "step": 0.5,
+          "initial": 1,
+          "advanceOnExplore": true,
+          "renderSvg": "function(v, color){ var SVG_W=440, SVG_H=240, PAD=22; var xMin=-5, xMax=5, yMin=-3, yMax=3; var ux=(SVG_W-2*PAD)/(xMax-xMin); var uy=(SVG_H-2*PAD)/(yMax-yMin); var u=Math.min(ux,uy); var ox=(SVG_W-u*(xMax-xMin))/2; var oy=(SVG_H-u*(yMax-yMin))/2; function P(mx,my){ return [ox+(mx-xMin)*u, oy+(yMax-my)*u]; } function poly(verts, fill, stroke){ var d = verts.map(function(v2,i){ var p=P(v2[0],v2[1]); return (i==0?'M':'L')+p[0]+' '+p[1]; }).join(' ')+' Z'; return '<path d=\"'+d+'\" fill=\"'+fill+'\" stroke=\"'+stroke+'\" stroke-width=\"1.6\"/>'; } function grid(){ var g=''; for(var x=Math.ceil(xMin); x<=Math.floor(xMax); x++){ var p1=P(x,yMin), p2=P(x,yMax); g+='<line x1=\"'+p1[0]+'\" y1=\"'+p1[1]+'\" x2=\"'+p2[0]+'\" y2=\"'+p2[1]+'\" stroke=\"#1a3350\" stroke-width=\"'+(x==0?1:0.5)+'\" opacity=\"'+(x==0?0.5:0.25)+'\"/>'; } for(var y=Math.ceil(yMin); y<=Math.floor(yMax); y++){ var q1=P(xMin,y), q2=P(xMax,y); g+='<line x1=\"'+q1[0]+'\" y1=\"'+q1[1]+'\" x2=\"'+q2[0]+'\" y2=\"'+q2[1]+'\" stroke=\"#1a3350\" stroke-width=\"'+(y==0?1:0.5)+'\" opacity=\"'+(y==0?0.5:0.25)+'\"/>'; } return g; } var C=[0,0]; var obj=[[1,0.5],[2,0.5],[1.5,1.5]]; var img=obj.map(function(p){return [C[0]+v*(p[0]-C[0]), C[1]+v*(p[1]-C[1])]; }); var cp=P(C[0],C[1]); return '<svg viewBox=\"0 0 '+SVG_W+' '+SVG_H+'\" style=\"display:block;width:100%;height:auto\" xmlns=\"http://www.w3.org/2000/svg\">'+grid()+poly(obj,'rgba(0,171,250,0.22)','#00abfa')+ poly(img, v<0?'rgba(255,70,112,0.22)':'rgba(15,238,137,0.22)', v<0?'#ff4670':'#0fee89') +'<circle cx=\"'+cp[0]+'\" cy=\"'+cp[1]+'\" r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\"/></svg>'; }",
+          "successText": "When $k < 0$, the image lands on the opposite side of the centre."
+        }
+      }
+    },
+
+    {
+      "id": "18-recap-patterns",
+      "kind": "recap",
+      "title": "The four mark-scheme patterns",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;gap:8px;max-width:480px;margin:0 auto;font-family:Geist,system-ui,sans-serif;font-size:13.5px'><div style='display:flex;justify-content:space-between;gap:14px;padding:10px 14px;border-radius:8px;border:1px solid #00abfa44;background:rgba(0,171,250,0.04)'><span style='color:#00abfa;font-family:Geist Mono,monospace;font-size:11.5px;align-self:center'>TRANSLATION</span><span style='color:#c8c6be;align-self:center;text-align:right'>by \\(\\begin{pmatrix} a \\\\ b \\end{pmatrix}\\)</span></div><div style='display:flex;justify-content:space-between;gap:14px;padding:10px 14px;border-radius:8px;border:1px solid #fff06744;background:rgba(255,240,103,0.04)'><span style='color:#fff067;font-family:Geist Mono,monospace;font-size:11.5px;align-self:center'>REFLECTION</span><span style='color:#c8c6be;align-self:center;text-align:right'>in the line \\(y = x\\)</span></div><div style='display:flex;justify-content:space-between;gap:14px;padding:10px 14px;border-radius:8px;border:1px solid #ff822c44;background:rgba(255,130,44,0.04)'><span style='color:#ff822c;font-family:Geist Mono,monospace;font-size:11.5px;align-self:center'>ROTATION</span><span style='color:#c8c6be;align-self:center;text-align:right'>\\(90°\\) anticlockwise, centre \\((0,0)\\)</span></div><div style='display:flex;justify-content:space-between;gap:14px;padding:10px 14px;border-radius:8px;border:1px solid #ff467044;background:rgba(255,70,112,0.04)'><span style='color:#ff4670;font-family:Geist Mono,monospace;font-size:11.5px;align-self:center'>ENLARGEMENT</span><span style='color:#c8c6be;align-self:center;text-align:right'>scale factor \\(2\\), centre \\((1,1)\\)</span></div></div>"
+      },
+      "prompt": "Memorise the right-hand column. That's the difference between zero and full marks."
+    },
+
+    {
+      "id": "19-verify-type",
+      "kind": "verify",
+      "title": "Identify the move",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Look at how blue and pink relate. Same shape and size? Different size? Flipped?",
+        "config": {
+          "prompt": "Blue maps to pink. Which transformation is it?",
+          "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gvt' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gvt)'/><polygon points='60,150 100,150 80,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='180,90 220,90 200,50' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg>",
+          "options": [
+            { "id": "opt-translation", "text": "Translation", "isCorrect": true },
+            { "id": "opt-reflection",  "text": "Reflection", "whyWrong": "If it were a reflection, the triangle would be flipped. This one looks identical, just shifted." },
+            { "id": "opt-rotation",    "text": "Rotation", "whyWrong": "A rotation would change the orientation of the triangle. Both look the same here." },
+            { "id": "opt-enlargement", "text": "Enlargement", "whyWrong": "The triangles are the same size. Enlargement would scale one of them." }
+          ],
+          "layout": "row",
+          "successText": "Same shape, same size, same orientation. That's a translation."
+        }
+      }
+    },
+
+    {
+      "id": "20-verify-rule",
+      "kind": "verify",
+      "title": "Now describe it fully",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Pick the vertex on the blue and the matching one on the pink. Count the shift.",
+        "config": {
+          "prompt": "Same diagram. Which column vector slides blue onto pink?",
+          "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gvr' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gvr)'/><polygon points='60,150 100,150 80,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='180,90 220,90 200,50' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg>",
+          "options": [
+            { "id": "opt-correct",   "text": "$\\begin{pmatrix} 4 \\\\ 2 \\end{pmatrix}$",  "isCorrect": true },
+            { "id": "opt-wrong-y",   "text": "$\\begin{pmatrix} 4 \\\\ -2 \\end{pmatrix}$", "whyWrong": "Pink is higher up on the page than blue. Up means positive y, not negative." },
+            { "id": "opt-negative-x","text": "$\\begin{pmatrix} -4 \\\\ 2 \\end{pmatrix}$", "whyWrong": "Negative x means LEFT. Pink is to the RIGHT of blue, so x is positive." },
+            { "id": "opt-both-neg",  "text": "$\\begin{pmatrix} -4 \\\\ -2 \\end{pmatrix}$","whyWrong": "Both signs wrong. Pink is up-right of blue, so both components are positive." }
+          ],
+          "successText": "Translation by $\\begin{pmatrix} 4 \\\\ 2 \\end{pmatrix}$ — type plus rule, both correct."
+        }
+      }
+    },
+
+    {
+      "id": "21-order-phrase",
+      "kind": "examLink",
+      "title": "Put the exam answer together",
+      "markCode": "B1 + B1",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "orderSteps",
+        "hint": "Type first, then the rule. Read the answer aloud — it should flow as one sentence.",
+        "config": {
+          "prompt": "Arrange the four tiles into a proper exam answer.",
+          "goalLabel": "describe this rotation",
+          "steps": [
+            { "id": "s1", "text": "Rotation," },
+            { "id": "s2", "text": "$90°$" },
+            { "id": "s3", "text": "anticlockwise," },
+            { "id": "s4", "text": "about $(0, 0)$." }
+          ],
+          "successText": "“Rotation, 90° anticlockwise, about (0, 0).” Three pieces of information, one clean sentence."
+        }
+      }
+    },
+
+    {
+      "id": "22-recap-final",
+      "kind": "recap",
+      "title": "You can now describe any single move",
+      "advance": "manual",
+      "prompt": "Four moves. Four mark-scheme patterns. Type first, then rule.",
+      "visual": {
+        "kind": "row",
+        "gap": 12,
+        "children": [
+          { "kind": "html", "content": "<div style='text-align:center;width:100px'><div style='width:100px;height:80px;border-radius:8px;border:1px solid #00abfa55;background:rgba(0,171,250,0.04);display:flex;align-items:center;justify-content:center'><span style='color:#00abfa;font-family:Geist Mono,monospace;font-size:9px;text-align:center;line-height:1.4;padding:4px'>BY<br/>⟨a, b⟩</span></div><div style='color:#00abfa;font-family:Geist Mono,monospace;font-size:10px;margin-top:5px'>translation</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center;width:100px'><div style='width:100px;height:80px;border-radius:8px;border:1px solid #fff06755;background:rgba(255,240,103,0.04);display:flex;align-items:center;justify-content:center'><span style='color:#fff067;font-family:Geist Mono,monospace;font-size:9px;text-align:center;line-height:1.4;padding:4px'>IN LINE<br/>y = ?</span></div><div style='color:#fff067;font-family:Geist Mono,monospace;font-size:10px;margin-top:5px'>reflection</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center;width:100px'><div style='width:100px;height:80px;border-radius:8px;border:1px solid #ff822c55;background:rgba(255,130,44,0.04);display:flex;align-items:center;justify-content:center'><span style='color:#ff822c;font-family:Geist Mono,monospace;font-size:9px;text-align:center;line-height:1.4;padding:4px'>ANGLE +<br/>DIR + CTR</span></div><div style='color:#ff822c;font-family:Geist Mono,monospace;font-size:10px;margin-top:5px'>rotation</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center;width:100px'><div style='width:100px;height:80px;border-radius:8px;border:1px solid #ff467055;background:rgba(255,70,112,0.04);display:flex;align-items:center;justify-content:center'><span style='color:#ff4670;font-family:Geist Mono,monospace;font-size:9px;text-align:center;line-height:1.4;padding:4px'>SF +<br/>CENTRE</span></div><div style='color:#ff4670;font-family:Geist Mono,monospace;font-size:10px;margin-top:5px'>enlargement</div></div>" }
+        ]
+      },
+      "bullets": [
+        "Always name the type first.",
+        "Then give the rule that goes with that type.",
+        "Both halves needed for full marks."
+      ]
+    }
+  ]
+}

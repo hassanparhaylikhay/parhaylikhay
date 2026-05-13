@@ -1,0 +1,176 @@
+"use client"
+
+import "katex/dist/katex.min.css"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import type { Lesson, Slide, LessonProgress } from "@/lib/lesson-mode/types"
+import { loadProgress, saveProgress, updateSlideState } from "@/lib/lesson-mode/storage"
+import SlideFrame from "./SlideFrame"
+import HookSlide from "./slides/HookSlide"
+import ConceptSlide from "./slides/ConceptSlide"
+import InteractionSlide from "./slides/InteractionSlide"
+import RecapSlide from "./slides/RecapSlide"
+import ExamLinkSlide from "./slides/ExamLinkSlide"
+import { interactionStyles } from "./interactions/_shared"
+
+/**
+ * LessonRunner — orchestrates slides, navigation, progress, persistence.
+ */
+type Props = { lesson: Lesson }
+
+export default function LessonRunner({ lesson }: Props) {
+  const total = lesson.slides.length
+  const [idx, setIdx] = useState(0)
+  const [progress, setProgress] = useState<LessonProgress | null>(null)
+  const [hydrated, setHydrated] = useState(false)
+  const [showAlt, setShowAlt] = useState(false)
+
+  useEffect(() => {
+    let alive = true
+    loadProgress(lesson.lessonId).then(p => {
+      if (!alive) return
+      setProgress(p)
+      setIdx(Math.min(p.currentSlideIdx, total - 1))
+      setHydrated(true)
+    })
+    return () => { alive = false }
+  }, [lesson.lessonId, total])
+
+  const slide = lesson.slides[idx]
+  const slideState = progress?.slideStates[slide?.id ?? ""]
+
+  const canAdvance = useMemo(() => {
+    if (!slide) return false
+    if (slide.advance === "manual") return true
+    if (slide.advance === "onSuccess") return slideState?.completed ?? false
+    if (typeof slide.advance === "object" && slide.advance.kind === "timer") {
+      return slideState?.completed ?? false
+    }
+    return false
+  }, [slide, slideState])
+
+  const persist = useCallback((next: LessonProgress) => {
+    setProgress(next)
+    void saveProgress(next)
+  }, [])
+
+  const goNext = useCallback(() => {
+    if (!canAdvance) return
+    if (idx >= total - 1) return
+    setShowAlt(false)
+    const nextIdx = idx + 1
+    setIdx(nextIdx)
+    if (progress) persist({ ...progress, currentSlideIdx: nextIdx })
+  }, [canAdvance, idx, total, progress, persist])
+
+  const goPrev = useCallback(() => {
+    if (idx <= 0) return
+    setShowAlt(false)
+    const prevIdx = idx - 1
+    setIdx(prevIdx)
+    if (progress) persist({ ...progress, currentSlideIdx: prevIdx })
+  }, [idx, progress, persist])
+
+  const markComplete = useCallback((data?: Record<string, unknown>) => {
+    if (!progress || !slide) return
+    const next = updateSlideState(progress, slide.id, { completed: true, data })
+    next.currentSlideIdx = idx
+    persist(next)
+  }, [progress, slide, idx, persist])
+
+  // Optional timer-based advance
+  useEffect(() => {
+    if (!slide) return
+    if (typeof slide.advance !== "object" || slide.advance.kind !== "timer") return
+    if (slideState?.completed) return
+    const t = setTimeout(() => markComplete({ via: "timer" }), slide.advance.afterMs)
+    return () => clearTimeout(t)
+  }, [slide, slideState, markComplete])
+
+  const exitHref = `/dashboard/maths/${lesson.source.unit}/${lesson.source.topic}/${lesson.source.part}`
+
+  if (!hydrated || !slide || !progress) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <p className="text-[11px] font-mono text-[#3a4a5a] tracking-[2px] uppercase">loading…</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <style jsx global>{interactionStyles}</style>
+      <SlideFrame
+        slideIdx={idx}
+        totalSlides={total}
+        title={slide.title ?? lesson.title}
+        canAdvance={canAdvance}
+        showExplainAgain={Boolean(slide.altExplain) && !showAlt}
+        hintText={getHint(slide)}
+        exitHref={exitHref}
+        onPrev={goPrev}
+        onNext={goNext}
+        onExplainAgain={() => setShowAlt(true)}
+      >
+        <SlideDispatcher
+          slide={showAlt && slide.altExplain ? applyAltExplain(slide) : slide}
+          onComplete={markComplete}
+          savedData={slideState?.data}
+        />
+      </SlideFrame>
+    </>
+  )
+}
+
+function SlideDispatcher({
+  slide,
+  onComplete,
+  savedData,
+}: {
+  slide: Slide
+  onComplete: (data?: Record<string, unknown>) => void
+  savedData?: Record<string, unknown>
+}) {
+  switch (slide.kind) {
+    case "hook":
+      return <HookSlide slide={slide} />
+    case "concept":
+      return <ConceptSlide slide={slide} onComplete={onComplete} />
+    case "interaction":
+    case "verify":
+      return <InteractionSlide slide={slide} onComplete={onComplete} savedData={savedData} />
+    case "recap":
+      return <RecapSlide slide={slide} />
+    case "examLink":
+      return <ExamLinkSlide slide={slide} onComplete={onComplete} savedData={savedData} />
+  }
+}
+
+function getHint(slide: Slide): string | undefined {
+  if (slide.kind === "interaction" || slide.kind === "verify") {
+    return slide.interaction?.hint
+  }
+  if (slide.kind === "examLink") {
+    return slide.interaction?.hint
+  }
+  return undefined
+}
+
+/**
+ * When the student taps "explain another way", we overlay the altExplain
+ * fields onto a shallow copy of the current slide so the same dispatcher
+ * can render it without a separate path.
+ */
+function applyAltExplain(slide: Slide): Slide {
+  const alt = slide.altExplain
+  if (!alt) return slide
+  // shallow merge; interaction wins over visual if provided
+  const next: Slide = { ...slide }
+  if (alt.prompt !== undefined) next.prompt = alt.prompt
+  if (alt.visual !== undefined && "visual" in next) {
+    (next as { visual?: unknown }).visual = alt.visual
+  }
+  if (alt.interaction !== undefined && (next.kind === "interaction" || next.kind === "verify")) {
+    next.interaction = alt.interaction
+  }
+  return next
+}

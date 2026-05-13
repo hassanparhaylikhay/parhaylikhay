@@ -9,12 +9,16 @@ export default function Sidebar() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  // Parse /dashboard/maths/[unit]/[topic]/[part?]
+  // Parse /dashboard/maths/[unit]/[topic]/[part?]  OR  /dashboard/lesson-mode/[unit]/[topic]/[part]
   const segs = pathname.split("/").filter(Boolean)
-  const mathsIdx = segs.indexOf("maths")
-  const currentUnitSlug  = mathsIdx >= 0 ? segs[mathsIdx + 1] ?? null : null
-  const currentTopicSlug = mathsIdx >= 0 ? segs[mathsIdx + 2] ?? null : null
-  const currentPartSlug  = mathsIdx >= 0 ? segs[mathsIdx + 3] ?? null : null
+  const anchorIdx = (() => {
+    const m = segs.indexOf("maths"); if (m >= 0) return m
+    const l = segs.indexOf("lesson-mode"); if (l >= 0) return l
+    return -1
+  })()
+  const currentUnitSlug  = anchorIdx >= 0 ? segs[anchorIdx + 1] ?? null : null
+  const currentTopicSlug = anchorIdx >= 0 ? segs[anchorIdx + 2] ?? null : null
+  const currentPartSlug  = anchorIdx >= 0 ? segs[anchorIdx + 3] ?? null : null
 
   const content = (
     <nav className="py-4">
