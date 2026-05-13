@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Vector Geometry · Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 16px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 18px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; gap:14px; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  svg { display:block; width:100%; height:auto; user-select:none; overflow:visible; }
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .panel { display:flex; flex-direction:column; gap:8px; padding:14px 4px 4px; border-top:1px solid #141e2a; margin-top:10px; min-height:120px; }
+  .eq-row { font-size:15px; line-height:1.5; color:#f0eeea; }
+  .eq-row.tag { font-family:'Geist Mono',monospace; font-size:10.5px; color:#fff067; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:2px; font-weight:600; }
+  .eq-row.ans { font-weight:700; font-size:16.5px; }
+  .eq-row .katex { font-size:1em; }
+  .eq-row.fade-in { animation: fade-up 0.42s ease forwards; opacity:0; }
+  @keyframes fade-up { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+
+  .nav { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid #141e2a; }
+  .nav-btn { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:6px 12px; border-radius:5px; cursor:pointer; transition: all 0.12s ease; }
+  .nav-btn:hover:not(:disabled) { color:#fff067; border-color:#3a4a5a; }
+  .nav-btn:disabled { opacity:0.35; cursor:not-allowed; }
+  .step-count { font-family:'Geist Mono',monospace; font-size:11px; color:#7a7875; letter-spacing:0.4px; }
+  .step-count .cur { color:#fff067; }
+
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 10px currentColor); }
+  }
+  .glow { animation: pulse-glow 1.6s ease-in-out infinite; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title" id="title">WORKED EXAMPLE</span>
+    <span class="meta" id="meta"></span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+    <g id="g-grid"></g>
+    <g id="g-fig"></g>
+    <g id="g-arrows"></g>
+    <g id="g-points"></g>
+    <g id="g-labels"></g>
+  </svg>
+
+  <div class="panel" id="panel"></div>
+
+  <div class="nav">
+    <button class="nav-btn" id="prev">← prev</button>
+    <span class="step-count"><span class="cur" id="cur">1</span> / <span id="tot">5</span></span>
+    <button class="nav-btn" id="next">next →</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+var COL = {
+  blue:"#00abfa", yellow:"#fff067", orange:"#ff822c", green:"#0fee89",
+  pink:"#ff4670", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
+};
+
+// Each preset declares a figure (a dict of named points) and a list of steps.
+// A step has:
+//   tag, lines, ans, marks               — panel content
+//   arrows: [ {from, to, color, label, opacity?} ]   — drawn this step
+//   edges: [ {from, to, color?, dashed?, opacity?} ] — faint figure outline
+//   showPoints: ["O", "A", "B", ...]                 — which named points are visible
+//   pointColors: { name: color }                     — overrides per point
+//
+var PRESETS = {
+  "p1-find-AB": {
+    title: "WORKED EXAMPLE · FIND AB FROM OA AND OB",
+    range: { xmin:-1, xmax:7, ymin:-1, ymax:6 },
+    points: { O:{x:0,y:0}, A:{x:5,y:1}, B:{x:1,y:4} },
+    baseEdges: [
+      { from:"O", to:"A", dashed:true, color:"#3a4a5a", opacity:0.6 },
+      { from:"O", to:"B", dashed:true, color:"#3a4a5a", opacity:0.6 },
+      { from:"A", to:"B", dashed:true, color:"#3a4a5a", opacity:0.6 }
+    ],
+    steps: [
+      {
+        tag: "STEP 1 · WHAT WE'RE GIVEN",
+        lines: [
+          "$O$ is the origin. $\\overrightarrow{OA} = \\mathbf{a}$ and $\\overrightarrow{OB} = \\mathbf{b}$.",
+          "Find $\\overrightarrow{AB}$ in terms of $\\mathbf{a}$ and $\\mathbf{b}$."
+        ],
+        showPoints: ["O","A","B"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}" },
+          { from:"O", to:"B", color:COL.pink, label:"\\mathbf{b}" }
+        ]
+      },
+      {
+        tag: "STEP 2 · HEAD-TO-TAIL ROUTE",
+        lines: [
+          "To get from $A$ to $B$, go via $O$: first walk backwards along $\\overrightarrow{OA}$ to $O$, then along $\\overrightarrow{OB}$ to $B$.",
+          "$\\overrightarrow{AB} = \\overrightarrow{AO} + \\overrightarrow{OB}$"
+        ],
+        showPoints: ["O","A","B"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}", opacity:0.25 },
+          { from:"O", to:"B", color:COL.pink, label:"\\mathbf{b}", opacity:0.25 },
+          { from:"A", to:"O", color:COL.orange, label:"\\overrightarrow{AO}" },
+          { from:"O", to:"B", color:COL.pink, label:"\\overrightarrow{OB}" }
+        ]
+      },
+      {
+        tag: "STEP 3 · REVERSE THE FIRST ARROW",
+        lines: [
+          "$\\overrightarrow{AO}$ is the reverse of $\\overrightarrow{OA}$, so it equals $-\\mathbf{a}$.",
+          "$\\overrightarrow{OB} = \\mathbf{b}$.",
+          "$\\overrightarrow{AB} = -\\mathbf{a} + \\mathbf{b}$"
+        ],
+        showPoints: ["O","A","B"],
+        arrows: [
+          { from:"A", to:"O", color:COL.orange, label:"-\\mathbf{a}" },
+          { from:"O", to:"B", color:COL.pink, label:"\\mathbf{b}" }
+        ]
+      },
+      {
+        tag: "STEP 4 · TIDY UP THE ANSWER",
+        lines: [
+          "Order matters for reading the answer: write the $\\mathbf{b}$ term first if its sign is positive.",
+          "$\\overrightarrow{AB} = \\mathbf{b} - \\mathbf{a}$",
+          "This is the same pattern as the column rule from 7.2: image minus object."
+        ],
+        showPoints: ["O","A","B"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}", opacity:0.3 },
+          { from:"O", to:"B", color:COL.pink, label:"\\mathbf{b}", opacity:0.3 },
+          { from:"A", to:"B", color:COL.yellow, label:"\\mathbf{b} - \\mathbf{a}" }
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\overrightarrow{AB} = \\boxed{\\mathbf{b} - \\mathbf{a}}",
+        marks: "[B1 for $\\mathbf{b} - \\mathbf{a}$]",
+        showPoints: ["O","A","B"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}", opacity:0.3 },
+          { from:"O", to:"B", color:COL.pink, label:"\\mathbf{b}", opacity:0.3 },
+          { from:"A", to:"B", color:COL.yellow, label:"\\mathbf{b} - \\mathbf{a}" }
+        ]
+      }
+    ]
+  },
+
+  "p2-parallelogram-diagonals": {
+    title: "WORKED EXAMPLE · DIAGONAL OF A PARALLELOGRAM",
+    range: { xmin:-1, xmax:8, ymin:-1, ymax:5 },
+    // OABC parallelogram: O at origin, A reached by a, C reached by c, B = A + c
+    points: { O:{x:0,y:0}, A:{x:5,y:1}, C:{x:2,y:3}, B:{x:7,y:4} },
+    baseEdges: [
+      { from:"O", to:"A", dashed:true, color:"#3a4a5a", opacity:0.6 },
+      { from:"A", to:"B", dashed:true, color:"#3a4a5a", opacity:0.6 },
+      { from:"B", to:"C", dashed:true, color:"#3a4a5a", opacity:0.6 },
+      { from:"C", to:"O", dashed:true, color:"#3a4a5a", opacity:0.6 }
+    ],
+    steps: [
+      {
+        tag: "STEP 1 · THE PARALLELOGRAM",
+        lines: [
+          "$OABC$ is a parallelogram with $\\overrightarrow{OA} = \\mathbf{a}$ and $\\overrightarrow{OC} = \\mathbf{c}$.",
+          "Find $\\overrightarrow{AC}$ and $\\overrightarrow{OB}$ in terms of $\\mathbf{a}$ and $\\mathbf{c}$."
+        ],
+        showPoints: ["O","A","B","C"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}" },
+          { from:"O", to:"C", color:COL.pink, label:"\\mathbf{c}" }
+        ]
+      },
+      {
+        tag: "STEP 2 · DIAGONAL AC (ROUTE THROUGH O)",
+        lines: [
+          "$\\overrightarrow{AC} = \\overrightarrow{AO} + \\overrightarrow{OC} = -\\mathbf{a} + \\mathbf{c}$",
+          "Same pattern as before: end minus start."
+        ],
+        showPoints: ["O","A","B","C"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}", opacity:0.3 },
+          { from:"O", to:"C", color:COL.pink, label:"\\mathbf{c}", opacity:0.3 },
+          { from:"A", to:"C", color:COL.yellow, label:"\\mathbf{c} - \\mathbf{a}" }
+        ]
+      },
+      {
+        tag: "STEP 3 · DIAGONAL OB (ROUTE THROUGH A)",
+        lines: [
+          "From $O$ to $B$, walk along $\\overrightarrow{OA}$, then along $\\overrightarrow{AB}$.",
+          "Since $OABC$ is a parallelogram, $\\overrightarrow{AB} = \\overrightarrow{OC} = \\mathbf{c}$ (opposite sides equal).",
+          "$\\overrightarrow{OB} = \\mathbf{a} + \\mathbf{c}$"
+        ],
+        showPoints: ["O","A","B","C"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}" },
+          { from:"A", to:"B", color:COL.pink, label:"\\mathbf{c}" },
+          { from:"O", to:"B", color:COL.green, label:"\\mathbf{a} + \\mathbf{c}", opacity:0.85 }
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\overrightarrow{AC} = \\boxed{\\mathbf{c} - \\mathbf{a}}, \\quad \\overrightarrow{OB} = \\boxed{\\mathbf{a} + \\mathbf{c}}",
+        marks: "[B1 for $\\mathbf{c} - \\mathbf{a}$; B1 for $\\mathbf{a} + \\mathbf{c}$]",
+        showPoints: ["O","A","B","C"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}" },
+          { from:"O", to:"C", color:COL.pink, label:"\\mathbf{c}" },
+          { from:"A", to:"C", color:COL.yellow, label:"\\mathbf{c} - \\mathbf{a}", opacity:0.85 },
+          { from:"O", to:"B", color:COL.green, label:"\\mathbf{a} + \\mathbf{c}", opacity:0.85 }
+        ]
+      }
+    ]
+  },
+
+  "p3-ratio-split": {
+    title: "WORKED EXAMPLE · POINT ON AB IN A 3:2 RATIO",
+    range: { xmin:-1, xmax:7, ymin:-1, ymax:6 },
+    // T divides AB with AT:TB = 3:2, so T = A + 0.6(B - A)
+    points: {
+      O:{x:0,y:0}, A:{x:5,y:1}, B:{x:1,y:4},
+      T:{x:5 + 0.6*(1-5), y:1 + 0.6*(4-1)}  // = (2.6, 2.8)
+    },
+    baseEdges: [
+      { from:"O", to:"A", dashed:true, color:"#3a4a5a", opacity:0.6 },
+      { from:"O", to:"B", dashed:true, color:"#3a4a5a", opacity:0.6 },
+      { from:"A", to:"B", dashed:false, color:"#3a4a5a", opacity:0.8 }
+    ],
+    steps: [
+      {
+        tag: "STEP 1 · WHAT WE'RE GIVEN",
+        lines: [
+          "Triangle $OAB$ with $\\overrightarrow{OA} = \\mathbf{a}$ and $\\overrightarrow{OB} = \\mathbf{b}$.",
+          "Point $T$ lies on $AB$ with $AT : TB = 3 : 2$.",
+          "Find $\\overrightarrow{OT}$ in terms of $\\mathbf{a}$ and $\\mathbf{b}$."
+        ],
+        showPoints: ["O","A","B","T"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}" },
+          { from:"O", to:"B", color:COL.pink, label:"\\mathbf{b}" }
+        ]
+      },
+      {
+        tag: "STEP 2 · INTERPRET THE RATIO",
+        lines: [
+          "$AT : TB = 3 : 2$ splits $AB$ into $5$ equal parts, with $T$ three of those parts from $A$.",
+          "So $\\overrightarrow{AT} = \\tfrac{3}{5}\\,\\overrightarrow{AB}$.",
+          "And $\\overrightarrow{AB} = \\mathbf{b} - \\mathbf{a}$ from part p1.",
+          "Therefore $\\overrightarrow{AT} = \\tfrac{3}{5}(\\mathbf{b} - \\mathbf{a})$."
+        ],
+        showPoints: ["O","A","B","T"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}", opacity:0.3 },
+          { from:"O", to:"B", color:COL.pink, label:"\\mathbf{b}", opacity:0.3 },
+          { from:"A", to:"B", color:COL.yellow, label:"\\mathbf{b} - \\mathbf{a}", opacity:0.4 },
+          { from:"A", to:"T", color:COL.orange, label:"\\tfrac{3}{5}(\\mathbf{b} - \\mathbf{a})" }
+        ]
+      },
+      {
+        tag: "STEP 3 · ROUTE TO T VIA A",
+        lines: [
+          "$\\overrightarrow{OT} = \\overrightarrow{OA} + \\overrightarrow{AT}$",
+          "$\\overrightarrow{OT} = \\mathbf{a} + \\tfrac{3}{5}(\\mathbf{b} - \\mathbf{a})$"
+        ],
+        showPoints: ["O","A","B","T"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}" },
+          { from:"A", to:"T", color:COL.orange, label:"\\tfrac{3}{5}(\\mathbf{b} - \\mathbf{a})" },
+          { from:"O", to:"T", color:COL.green, label:"\\overrightarrow{OT}", opacity:0.85 }
+        ]
+      },
+      {
+        tag: "STEP 4 · EXPAND AND SIMPLIFY",
+        lines: [
+          "Expand the brackets and collect $\\mathbf{a}$ and $\\mathbf{b}$ terms separately.",
+          "$\\overrightarrow{OT} = \\mathbf{a} + \\tfrac{3}{5}\\mathbf{b} - \\tfrac{3}{5}\\mathbf{a}$",
+          "$\\phantom{\\overrightarrow{OT}} = \\tfrac{2}{5}\\mathbf{a} + \\tfrac{3}{5}\\mathbf{b}$"
+        ],
+        showPoints: ["O","A","B","T"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}", opacity:0.4 },
+          { from:"O", to:"B", color:COL.pink, label:"\\mathbf{b}", opacity:0.4 },
+          { from:"O", to:"T", color:COL.green, label:"\\tfrac{2}{5}\\mathbf{a} + \\tfrac{3}{5}\\mathbf{b}" }
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\overrightarrow{OT} = \\boxed{\\tfrac{2}{5}\\mathbf{a} + \\tfrac{3}{5}\\mathbf{b}}",
+        marks: "[M1 for $\\overrightarrow{OA} + \\overrightarrow{AT}$ route; M1 for $\\tfrac{3}{5}(\\mathbf{b} - \\mathbf{a})$; A1 for the tidy form]",
+        showPoints: ["O","A","B","T"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}", opacity:0.4 },
+          { from:"O", to:"B", color:COL.pink, label:"\\mathbf{b}", opacity:0.4 },
+          { from:"O", to:"T", color:COL.green, label:"\\tfrac{2}{5}\\mathbf{a} + \\tfrac{3}{5}\\mathbf{b}" }
+        ]
+      }
+    ]
+  },
+
+  "p3-parallel-test": {
+    title: "WORKED EXAMPLE · ARE TWO VECTORS PARALLEL?",
+    range: { xmin:-1, xmax:7, ymin:-1, ymax:6 },
+    // X is colinear with O and 2a + 3b direction
+    points: {
+      O:{x:0,y:0}, X:{x:2,y:3}, Y:{x:4,y:6},
+      A:{x:1,y:0}, B:{x:0,y:1}
+    },
+    baseEdges: [],
+    steps: [
+      {
+        tag: "STEP 1 · THE QUESTION",
+        lines: [
+          "$\\overrightarrow{PX} = 2\\mathbf{a} + 3\\mathbf{b}$ and $\\overrightarrow{PY} = 4\\mathbf{a} + 6\\mathbf{b}$.",
+          "Show that $P, X, Y$ are collinear (lie on the same straight line)."
+        ],
+        showPoints: ["O","X","Y"],
+        pointColors: { O:COL.grey, X:COL.blue, Y:COL.green },
+        pointLabels: { O:"P", X:"X", Y:"Y" },
+        arrows: [
+          { from:"O", to:"X", color:COL.blue, label:"2\\mathbf{a} + 3\\mathbf{b}" },
+          { from:"O", to:"Y", color:COL.green, label:"4\\mathbf{a} + 6\\mathbf{b}", opacity:0.85 }
+        ]
+      },
+      {
+        tag: "STEP 2 · FACTOR OUT",
+        lines: [
+          "Try to write $\\overrightarrow{PY}$ as a number times $\\overrightarrow{PX}$.",
+          "$\\overrightarrow{PY} = 4\\mathbf{a} + 6\\mathbf{b} = 2(2\\mathbf{a} + 3\\mathbf{b}) = 2\\,\\overrightarrow{PX}$"
+        ],
+        showPoints: ["O","X","Y"],
+        pointColors: { O:COL.grey, X:COL.blue, Y:COL.green },
+        pointLabels: { O:"P", X:"X", Y:"Y" },
+        arrows: [
+          { from:"O", to:"X", color:COL.blue, label:"\\overrightarrow{PX}" },
+          { from:"O", to:"Y", color:COL.green, label:"2\\,\\overrightarrow{PX}" }
+        ]
+      },
+      {
+        tag: "STEP 3 · WHAT THIS MEANS",
+        lines: [
+          "Since $\\overrightarrow{PY}$ is a scalar multiple of $\\overrightarrow{PX}$, the two arrows are PARALLEL.",
+          "Because they BOTH START AT $P$, the three points must lie on the same line.",
+          "$P, X, Y$ are collinear."
+        ],
+        showPoints: ["O","X","Y"],
+        pointColors: { O:COL.grey, X:COL.blue, Y:COL.green },
+        pointLabels: { O:"P", X:"X", Y:"Y" },
+        arrows: [
+          { from:"O", to:"X", color:COL.blue, label:"\\overrightarrow{PX}" },
+          { from:"O", to:"Y", color:COL.green, label:"2\\,\\overrightarrow{PX}" }
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\overrightarrow{PY} = 2\\,\\overrightarrow{PX} \\Rightarrow \\boxed{P, X, Y \\text{ collinear}}",
+        marks: "[M1 for $\\overrightarrow{PY} = 2\\,\\overrightarrow{PX}$ or factor of $2$ stated; A1 for the conclusion with reasoning]",
+        showPoints: ["O","X","Y"],
+        pointColors: { O:COL.grey, X:COL.blue, Y:COL.green },
+        pointLabels: { O:"P", X:"X", Y:"Y" },
+        arrows: [
+          { from:"O", to:"X", color:COL.blue, label:"\\overrightarrow{PX}" },
+          { from:"O", to:"Y", color:COL.green, label:"2\\,\\overrightarrow{PX}" }
+        ]
+      }
+    ]
+  },
+
+  "review-comprehensive": {
+    title: "COMPREHENSIVE WORKED EXAMPLE · TRIANGLE WITH RATIO POINT",
+    range: { xmin:-1, xmax:7, ymin:-1, ymax:6 },
+    // Triangle OAB, T on AB with AT:TB = 3:2
+    points: {
+      O:{x:0,y:0}, A:{x:5,y:1}, B:{x:1,y:4},
+      T:{x:5 + 0.6*(1-5), y:1 + 0.6*(4-1)}  // (2.6, 2.8)
+    },
+    baseEdges: [
+      { from:"O", to:"A", dashed:true, color:"#3a4a5a", opacity:0.6 },
+      { from:"O", to:"B", dashed:true, color:"#3a4a5a", opacity:0.6 },
+      { from:"A", to:"B", dashed:false, color:"#3a4a5a", opacity:0.8 }
+    ],
+    steps: [
+      {
+        tag: "STEP 1 · THE PROBLEM",
+        lines: [
+          "$O$ is the origin. $\\overrightarrow{OA} = \\mathbf{a}$ and $\\overrightarrow{OB} = 4\\mathbf{b}$.",
+          "$T$ is on $AB$ with $AT : TB = 3 : 2$.",
+          "(a) Find $\\overrightarrow{AB}$ in terms of $\\mathbf{a}$ and $\\mathbf{b}$.",
+          "(b) Show that the position vector of $T$ is $\\tfrac{2}{5}(\\mathbf{a} + 6\\mathbf{b})$."
+        ],
+        showPoints: ["O","A","B","T"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}" },
+          { from:"O", to:"B", color:COL.pink, label:"4\\mathbf{b}" }
+        ]
+      },
+      {
+        tag: "PART (a) · ROUTE FROM A TO B",
+        lines: [
+          "$\\overrightarrow{AB} = \\overrightarrow{AO} + \\overrightarrow{OB}$",
+          "$\\phantom{\\overrightarrow{AB}} = -\\mathbf{a} + 4\\mathbf{b}$",
+          "$\\phantom{\\overrightarrow{AB}} = 4\\mathbf{b} - \\mathbf{a}$",
+          "[B1]"
+        ],
+        showPoints: ["O","A","B","T"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}", opacity:0.3 },
+          { from:"O", to:"B", color:COL.pink, label:"4\\mathbf{b}", opacity:0.3 },
+          { from:"A", to:"B", color:COL.yellow, label:"4\\mathbf{b} - \\mathbf{a}" }
+        ]
+      },
+      {
+        tag: "PART (b) · USE THE RATIO",
+        lines: [
+          "$T$ is $\\tfrac{3}{5}$ of the way from $A$ to $B$, so",
+          "$\\overrightarrow{AT} = \\tfrac{3}{5}\\,\\overrightarrow{AB} = \\tfrac{3}{5}(4\\mathbf{b} - \\mathbf{a})$"
+        ],
+        showPoints: ["O","A","B","T"],
+        arrows: [
+          { from:"A", to:"B", color:COL.yellow, label:"4\\mathbf{b} - \\mathbf{a}", opacity:0.4 },
+          { from:"A", to:"T", color:COL.orange, label:"\\tfrac{3}{5}(4\\mathbf{b} - \\mathbf{a})" }
+        ]
+      },
+      {
+        tag: "PART (b) · ADD ROUTES",
+        lines: [
+          "$\\overrightarrow{OT} = \\overrightarrow{OA} + \\overrightarrow{AT} = \\mathbf{a} + \\tfrac{3}{5}(4\\mathbf{b} - \\mathbf{a})$",
+          "Expand and collect:",
+          "$\\overrightarrow{OT} = \\mathbf{a} + \\tfrac{12}{5}\\mathbf{b} - \\tfrac{3}{5}\\mathbf{a} = \\tfrac{2}{5}\\mathbf{a} + \\tfrac{12}{5}\\mathbf{b}$",
+          "$\\phantom{\\overrightarrow{OT}} = \\tfrac{1}{5}(2\\mathbf{a} + 12\\mathbf{b}) = \\tfrac{2}{5}(\\mathbf{a} + 6\\mathbf{b})$"
+        ],
+        showPoints: ["O","A","B","T"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}", opacity:0.4 },
+          { from:"A", to:"T", color:COL.orange, label:"\\tfrac{3}{5}(4\\mathbf{b} - \\mathbf{a})" },
+          { from:"O", to:"T", color:COL.green, label:"\\overrightarrow{OT}" }
+        ]
+      },
+      {
+        tag: "ANSWER",
+        ans: "\\overrightarrow{AB} = \\boxed{4\\mathbf{b} - \\mathbf{a}}, \\quad \\overrightarrow{OT} = \\boxed{\\tfrac{2}{5}(\\mathbf{a} + 6\\mathbf{b})}",
+        marks: "(a) [B1] · (b) [M1 for $\\overrightarrow{OA} + \\overrightarrow{AT}$ soi; M1 for $\\tfrac{3}{5}(4\\mathbf{b} - \\mathbf{a})$ oe; A1 for the tidy form]",
+        showPoints: ["O","A","B","T"],
+        arrows: [
+          { from:"O", to:"A", color:COL.blue, label:"\\mathbf{a}", opacity:0.3 },
+          { from:"O", to:"B", color:COL.pink, label:"4\\mathbf{b}", opacity:0.3 },
+          { from:"A", to:"B", color:COL.yellow, label:"4\\mathbf{b} - \\mathbf{a}", opacity:0.4 },
+          { from:"O", to:"T", color:COL.green, label:"\\tfrac{2}{5}(\\mathbf{a} + 6\\mathbf{b})" }
+        ]
+      }
+    ]
+  }
+};
+
+function getPreset(){
+  var params = new URLSearchParams(window.location.search);
+  var key = params.get("preset") || "p1-find-AB";
+  return PRESETS[key] || PRESETS["p1-find-AB"];
+}
+
+var PRESET = getPreset();
+var STEP = 0;
+
+// world (per preset)
+var SVG_W = 480, SVG_H = 320;
+var X_MIN = PRESET.range.xmin, X_MAX = PRESET.range.xmax;
+var Y_MIN = PRESET.range.ymin, Y_MAX = PRESET.range.ymax;
+var pxPerX = SVG_W / (X_MAX - X_MIN);
+var pxPerY = SVG_H / (Y_MAX - Y_MIN);
+var UNIT = Math.min(pxPerX, pxPerY);
+var ORIGIN_PX = {
+  x: (SVG_W - (X_MAX - X_MIN) * UNIT) / 2 - X_MIN * UNIT,
+  y: SVG_H - (-Y_MIN) * UNIT - (SVG_H - (Y_MAX - Y_MIN) * UNIT) / 2
+};
+function toSx(x){ return ORIGIN_PX.x + x * UNIT; }
+function toSy(y){ return ORIGIN_PX.y - y * UNIT; }
+
+function tryRender(target, tex){
+  if (typeof katex !== "undefined"){
+    try { katex.render(tex, target, { throwOnError:false, output:"html" }); }
+    catch(e){ target.textContent = tex; }
+  } else setTimeout(function(){ tryRender(target, tex); }, 50);
+}
+function svgKaTeXLabel(parent, x, y, tex, color, align){
+  align = align || "center";
+  var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
+  fo.setAttribute("x", x - 50); fo.setAttribute("y", y - 11);
+  fo.setAttribute("width", 100); fo.setAttribute("height", 22);
+  fo.style.overflow = "visible"; fo.style.pointerEvents = "none";
+  var div = document.createElement("div");
+  div.style.height = "22px"; div.style.display = "flex"; div.style.alignItems = "center";
+  div.style.justifyContent = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
+  div.className = "lbl-host"; div.style.color = color || COL.off;
+  fo.appendChild(div); parent.appendChild(fo);
+  tryRender(div, tex);
+}
+
+function clear(g){ while(g.firstChild) g.removeChild(g.firstChild); }
+
+function drawGrid(){
+  var gG = document.getElementById("g-grid");
+  clear(gG);
+  for (var x = Math.ceil(X_MIN); x <= X_MAX; x++){
+    var l = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l.setAttribute("x1", toSx(x)); l.setAttribute("x2", toSx(x));
+    l.setAttribute("y1", toSy(Y_MIN)); l.setAttribute("y2", toSy(Y_MAX));
+    l.setAttribute("stroke", "#141e2a"); l.setAttribute("stroke-width", 0.6);
+    gG.appendChild(l);
+  }
+  for (var y = Math.ceil(Y_MIN); y <= Y_MAX; y++){
+    var l2 = document.createElementNS("http://www.w3.org/2000/svg","line");
+    l2.setAttribute("y1", toSy(y)); l2.setAttribute("y2", toSy(y));
+    l2.setAttribute("x1", toSx(X_MIN)); l2.setAttribute("x2", toSx(X_MAX));
+    l2.setAttribute("stroke", "#141e2a"); l2.setAttribute("stroke-width", 0.6);
+    gG.appendChild(l2);
+  }
+}
+
+function drawArrow(g, fromPt, toPt, color, width, opacity, label){
+  if (opacity == null) opacity = 1;
+  var x1 = toSx(fromPt.x), y1 = toSy(fromPt.y);
+  var x2 = toSx(toPt.x),   y2 = toSy(toPt.y);
+  var dx = x2 - x1, dy = y2 - y1;
+  var L = Math.sqrt(dx*dx + dy*dy);
+  if (L < 4) return;
+  var ux = dx / L, uy = dy / L;
+  var head = 11;
+  var bx = x2 - ux * head, by = y2 - uy * head;
+  var ln = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ln.setAttribute("x1", x1); ln.setAttribute("y1", y1);
+  ln.setAttribute("x2", bx); ln.setAttribute("y2", by);
+  ln.setAttribute("stroke", color); ln.setAttribute("stroke-width", width);
+  ln.setAttribute("stroke-linecap", "round"); ln.setAttribute("opacity", opacity);
+  g.appendChild(ln);
+  var w = 6;
+  var tri = document.createElementNS("http://www.w3.org/2000/svg","path");
+  tri.setAttribute("d", "M " + x2 + " " + y2 +
+    " L " + (x2 - ux*head + uy*w) + " " + (y2 - uy*head - ux*w) +
+    " L " + (x2 - ux*head - uy*w) + " " + (y2 - uy*head + ux*w) + " Z");
+  tri.setAttribute("fill", color); tri.setAttribute("opacity", opacity);
+  g.appendChild(tri);
+}
+
+function drawDashedEdge(g, fromPt, toPt, color, opacity){
+  var x1 = toSx(fromPt.x), y1 = toSy(fromPt.y);
+  var x2 = toSx(toPt.x),   y2 = toSy(toPt.y);
+  var ln = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ln.setAttribute("x1", x1); ln.setAttribute("y1", y1);
+  ln.setAttribute("x2", x2); ln.setAttribute("y2", y2);
+  ln.setAttribute("stroke", color); ln.setAttribute("stroke-width", 1);
+  ln.setAttribute("stroke-dasharray", "4 4");
+  ln.setAttribute("opacity", opacity); ln.setAttribute("stroke-linecap", "round");
+  g.appendChild(ln);
+}
+function drawSolidEdge(g, fromPt, toPt, color, opacity){
+  var x1 = toSx(fromPt.x), y1 = toSy(fromPt.y);
+  var x2 = toSx(toPt.x),   y2 = toSy(toPt.y);
+  var ln = document.createElementNS("http://www.w3.org/2000/svg","line");
+  ln.setAttribute("x1", x1); ln.setAttribute("y1", y1);
+  ln.setAttribute("x2", x2); ln.setAttribute("y2", y2);
+  ln.setAttribute("stroke", color); ln.setAttribute("stroke-width", 1);
+  ln.setAttribute("opacity", opacity); ln.setAttribute("stroke-linecap", "round");
+  g.appendChild(ln);
+}
+
+function centroidOfShown(showPoints){
+  var sx = 0, sy = 0, n = 0;
+  for (var i = 0; i < showPoints.length; i++){
+    var p = PRESET.points[showPoints[i]];
+    if (p){ sx += p.x; sy += p.y; n++; }
+  }
+  return n > 0 ? { x: sx / n, y: sy / n } : { x: 0, y: 0 };
+}
+
+function drawScene(){
+  var gFig = document.getElementById("g-fig");
+  var gArr = document.getElementById("g-arrows");
+  var gPts = document.getElementById("g-points");
+  var gLab = document.getElementById("g-labels");
+  clear(gFig); clear(gArr); clear(gPts); clear(gLab);
+
+  var step = PRESET.steps[STEP];
+
+  // base edges (faint outline of the whole figure)
+  (PRESET.baseEdges || []).forEach(function(e){
+    var p1 = PRESET.points[e.from], p2 = PRESET.points[e.to];
+    if (!p1 || !p2) return;
+    if (e.dashed) drawDashedEdge(gFig, p1, p2, e.color || COL.faint, e.opacity == null ? 0.6 : e.opacity);
+    else          drawSolidEdge(gFig, p1, p2, e.color || COL.faint, e.opacity == null ? 0.8 : e.opacity);
+  });
+
+  // arrows for this step
+  (step.arrows || []).forEach(function(a){
+    var p1 = PRESET.points[a.from], p2 = PRESET.points[a.to];
+    if (!p1 || !p2) return;
+    drawArrow(gArr, p1, p2, a.color || COL.yellow, 2.4, a.opacity == null ? 1 : a.opacity, a.label);
+    if (a.label){
+      var dx = p2.x - p1.x, dy = p2.y - p1.y;
+      var L = Math.sqrt(dx*dx + dy*dy);
+      if (L > 0.4){
+        var nx = -dy / L, ny = dx / L;
+        // push label OUTSIDE the figure (away from centroid of shown points)
+        var c = centroidOfShown(step.showPoints || Object.keys(PRESET.points));
+        var midX = (p1.x + p2.x) / 2, midY = (p1.y + p2.y) / 2;
+        var towardC = { x: c.x - midX, y: c.y - midY };
+        if (nx * towardC.x + ny * towardC.y > 0){ nx = -nx; ny = -ny; }
+        var off = 0.5;
+        svgKaTeXLabel(gLab, toSx(midX + nx * off), toSy(midY + ny * off),
+          a.label, a.color || COL.yellow, "center");
+      }
+    }
+  });
+
+  // points
+  var showPoints = step.showPoints || Object.keys(PRESET.points);
+  var pointColors = step.pointColors || {};
+  var pointLabels = step.pointLabels || {};
+  showPoints.forEach(function(name){
+    var p = PRESET.points[name];
+    if (!p) return;
+    var color = pointColors[name] || (name === "O" || name === "P" ? COL.grey : (name === "A" ? COL.blue : (name === "B" ? COL.pink : (name === "T" ? COL.green : COL.off))));
+    var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx", toSx(p.x)); c.setAttribute("cy", toSy(p.y));
+    c.setAttribute("r", 6); c.setAttribute("fill", color);
+    c.setAttribute("stroke", "#0b1118"); c.setAttribute("stroke-width", 1.5);
+    gPts.appendChild(c);
+
+    // place label away from centroid
+    var ctr = centroidOfShown(showPoints);
+    var dirx = p.x - ctr.x, diry = p.y - ctr.y;
+    var Ld = Math.sqrt(dirx*dirx + diry*diry);
+    if (Ld < 0.1){ dirx = 0; diry = -1; Ld = 1; }
+    var off = 0.55;
+    var labelText = pointLabels[name] || name;
+    svgKaTeXLabel(gLab, toSx(p.x + dirx / Ld * off), toSy(p.y + diry / Ld * off),
+      labelText, color, "center");
+  });
+}
+
+function renderMixed(target, str){
+  target.innerHTML = "";
+  var parts = String(str).split("$");
+  for (var i = 0; i < parts.length; i++){
+    if (i % 2 === 0){
+      target.appendChild(document.createTextNode(parts[i]));
+    } else {
+      var span = document.createElement("span");
+      tryRender(span, parts[i]);
+      target.appendChild(span);
+    }
+  }
+}
+
+function renderPanel(){
+  var panel = document.getElementById("panel");
+  panel.innerHTML = "";
+  var step = PRESET.steps[STEP];
+  if (step.tag){
+    var t = document.createElement("div");
+    t.className = "eq-row tag fade-in";
+    t.textContent = step.tag;
+    panel.appendChild(t);
+  }
+  var delay = 60;
+  if (step.lines){
+    step.lines.forEach(function(line, i){
+      var d = document.createElement("div");
+      d.className = "eq-row fade-in";
+      d.style.animationDelay = (delay + i * 60) + "ms";
+      renderMixed(d, line);
+      panel.appendChild(d);
+    });
+    delay += step.lines.length * 60;
+  }
+  if (step.ans){
+    var a = document.createElement("div");
+    a.className = "eq-row ans fade-in";
+    a.style.animationDelay = delay + "ms";
+    tryRender(a, step.ans);
+    panel.appendChild(a);
+    delay += 60;
+  }
+  if (step.marks){
+    var m = document.createElement("div");
+    m.className = "eq-row fade-in";
+    m.style.animationDelay = delay + "ms";
+    m.style.color = "#7a7875";
+    m.style.fontSize = "12.5px";
+    renderMixed(m, step.marks);
+    panel.appendChild(m);
+  }
+}
+
+function render(){
+  drawScene();
+  renderPanel();
+  document.getElementById("cur").textContent = (STEP + 1);
+  document.getElementById("prev").disabled = (STEP === 0);
+  document.getElementById("next").disabled = (STEP === PRESET.steps.length - 1);
+  notifyHeight();
+}
+
+document.getElementById("prev").addEventListener("click", function(){
+  if (STEP > 0){ STEP--; render(); }
+});
+document.getElementById("next").addEventListener("click", function(){
+  if (STEP < PRESET.steps.length - 1){ STEP++; render(); }
+});
+
+document.getElementById("title").textContent = PRESET.title;
+document.getElementById("tot").textContent = PRESET.steps.length;
+
+function notifyHeight(){
+  var h = document.getElementById("wrap").offsetHeight + 30;
+  if (window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  }
+}
+window.addEventListener("resize", notifyHeight);
+
+drawGrid();
+render();
+setTimeout(notifyHeight, 200);
+</script>
+</body>
+</html>
