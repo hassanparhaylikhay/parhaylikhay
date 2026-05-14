@@ -27,28 +27,49 @@ export default function Visual({ spec }: { spec: VisualSpec }) {
 
 function IframeVisual({ src, height }: { src: string; height: number }) {
   const ref = useRef<HTMLIFrameElement | null>(null)
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+  // Suppress unused — height is now derived from container size, not the prop.
+  void height
+
   useEffect(() => {
-    function onMsg(e: MessageEvent) {
-      const data = e.data
-      if (data?.type === "pl-widget-resize" && ref.current?.contentWindow === e.source) {
-        // Conservative cap: title (~60) + iframe (cap) + prompt (~60) + button (~50)
-        // + 4 gaps × ~16 (gap-4) + section padding (~32) + chrome (144) ≤ vh.
-        // Solve for cap: cap ≤ vh - ~410. Hard max 380 on large screens.
-        const cap = Math.max(240, Math.min(window.innerHeight - 410, 380))
-        ref.current.style.height = `${Math.min(data.height, cap)}px`
-      }
+    function fit() {
+      const ifr = ref.current
+      const wrap = wrapRef.current
+      if (!ifr || !wrap) return
+      // Transformation widgets are SVG viewBox 480x320 (aspect 1.5) plus a
+      // vector / mark-scheme strip below (~70px in lesson mode). We size the
+      // iframe so the widget's intrinsic height fits exactly — no clipping,
+      // no postMessage-after-load flash.
+      const SVG_ASPECT = 480 / 320
+      const STRIP = 70
+      // brand bar 44 + progress 44 + nav 56 + title ~60 + prompt ~60
+      // + understood button ~50 + gaps ~50 + safety = 380
+      const RESERVED = 380
+      const availableW = wrap.clientWidth
+      const availableH = Math.max(260, window.innerHeight - RESERVED)
+      const widthByHeight = SVG_ASPECT * (availableH - STRIP)
+      const w = Math.max(300, Math.min(availableW, widthByHeight))
+      const h = w / SVG_ASPECT + STRIP
+      ifr.style.width  = `${Math.round(w)}px`
+      ifr.style.height = `${Math.round(h)}px`
     }
-    window.addEventListener("message", onMsg)
-    return () => window.removeEventListener("message", onMsg)
+    fit()
+    const ro = new ResizeObserver(fit)
+    if (wrapRef.current) ro.observe(wrapRef.current)
+    window.addEventListener("resize", fit)
+    return () => { ro.disconnect(); window.removeEventListener("resize", fit) }
   }, [])
+
   return (
-    <iframe
-      ref={ref}
-      src={src}
-      loading="lazy"
-      className="w-full max-w-[820px] border-0 rounded-lg block mx-auto"
-      style={{ height, background: "transparent" }}
-    />
+    <div ref={wrapRef} className="w-full flex justify-center">
+      <iframe
+        ref={ref}
+        src={src}
+        loading="lazy"
+        className="block"
+        style={{ border: 0, background: "transparent" }}
+      />
+    </div>
   )
 }
 
