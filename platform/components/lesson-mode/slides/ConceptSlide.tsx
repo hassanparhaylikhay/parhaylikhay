@@ -38,7 +38,7 @@ export default function ConceptSlide({
   }, [hasReveals, allRevealed, slide.advance])
 
   return (
-    <div className="w-full flex flex-col items-center gap-6">
+    <div className="w-full flex flex-col items-center gap-4 sm:gap-5">
       {slide.title && (
         <h2 className="text-[24px] sm:text-[30px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[760px] leading-tight">
           {slide.title}

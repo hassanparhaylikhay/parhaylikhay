@@ -102,12 +102,20 @@ export default function SlideFrame({
       </header>
 
       {/* ── centre canvas ───────────────────────────────────────────── */}
-      <section className="flex-1 min-h-0 overflow-auto flex flex-col items-center justify-center px-4 sm:px-8 py-3 sm:py-4">
-        <div
-          key={slideKey}
-          className={`w-full flex flex-col items-center justify-center pl-fade-in ${wide ? "max-w-[1200px]" : "max-w-[920px]"}`}
-        >
-          {children}
+      {/*
+       * Two-layer scroll trick: outer section scrolls, inner wrapper is
+       * min-h-full and centers via flex. This way content centers when it
+       * fits and stays fully accessible when it overflows (no clipping of
+       * top OR bottom on small viewports).
+       */}
+      <section className="flex-1 min-h-0 overflow-y-auto">
+        <div className="min-h-full flex flex-col items-center justify-center px-4 sm:px-8 py-3 sm:py-4">
+          <div
+            key={slideKey}
+            className={`w-full flex flex-col items-center pl-fade-in ${wide ? "max-w-[1200px]" : "max-w-[920px]"}`}
+          >
+            {children}
+          </div>
         </div>
       </section>
 

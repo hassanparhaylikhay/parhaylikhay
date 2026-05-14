@@ -31,8 +31,10 @@ function IframeVisual({ src, height }: { src: string; height: number }) {
     function onMsg(e: MessageEvent) {
       const data = e.data
       if (data?.type === "pl-widget-resize" && ref.current?.contentWindow === e.source) {
-        // Cap so title + prompt + understood button all stay in viewport, no scroll.
-        const cap = Math.max(300, Math.min(window.innerHeight - 340, 440))
+        // Conservative cap: title (~60) + iframe (cap) + prompt (~60) + button (~50)
+        // + 4 gaps × ~16 (gap-4) + section padding (~32) + chrome (144) ≤ vh.
+        // Solve for cap: cap ≤ vh - ~410. Hard max 380 on large screens.
+        const cap = Math.max(240, Math.min(window.innerHeight - 410, 380))
         ref.current.style.height = `${Math.min(data.height, cap)}px`
       }
     }

@@ -22,7 +22,7 @@ export default function UnderstoodButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="mt-8 group flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-[#1a3350] bg-[#0b1118] hover:bg-[#0d1a28] hover:border-[#00abfa66] transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
+      className="mt-3 sm:mt-4 group flex items-center gap-2.5 px-5 py-2.5 rounded-full border border-[#1a3350] bg-[#0b1118] hover:bg-[#0d1a28] hover:border-[#00abfa66] transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed"
     >
       <span className="text-[12.5px] font-mono uppercase tracking-[1.5px] text-[#7a7875] group-hover:text-[#0fee89] transition-colors duration-300">
         {label}

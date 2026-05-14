@@ -17,7 +17,7 @@ export default function HookSlide({
   onAdvance?: () => void
 }) {
   return (
-    <div className="w-full flex flex-col items-center gap-8">
+    <div className="w-full flex flex-col items-center gap-5 sm:gap-6">
       {slide.title && (
         <h1 className="text-[26px] sm:text-[34px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[760px] leading-tight">
           {slide.title}
