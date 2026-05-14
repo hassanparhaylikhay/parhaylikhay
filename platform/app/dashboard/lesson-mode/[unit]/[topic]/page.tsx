@@ -1,22 +1,25 @@
 import { notFound } from "next/navigation"
-import { UNITS } from "../../../../maths/data"
-import { loadLesson, lessonIdFromParts } from "@/lib/lesson-mode/loader"
+import { UNITS } from "../../../maths/data"
+import { loadLesson, lessonIdForTopic } from "@/lib/lesson-mode/loader"
 import LessonRunner from "@/components/lesson-mode/LessonRunner"
 
+/**
+ * Lesson Mode page — one continuous lesson per TOPIC (e.g. 7.1 Transformations).
+ * The whole subunit (P1..Pn + review) is taught in a single ~50-slide flow.
+ */
 export default async function LessonModePage({
   params,
 }: {
-  params: Promise<{ unit: string; topic: string; part: string }>
+  params: Promise<{ unit: string; topic: string }>
 }) {
-  const { unit: unitSlug, topic: topicSlug, part: partSlug } = await params
+  const { unit: unitSlug, topic: topicSlug } = await params
 
   const unit = UNITS.find(u => u.slug === unitSlug)
   if (!unit) notFound()
   const topic = unit.topics.find(t => t.slug === topicSlug)
   if (!topic) notFound()
-  if (topic.parts && !topic.parts.find(p => p.slug === partSlug)) notFound()
 
-  const lessonId = lessonIdFromParts(unitSlug, topicSlug, partSlug)
+  const lessonId = lessonIdForTopic(unitSlug, topicSlug)
   const lesson = await loadLesson(lessonId)
 
   if (!lesson) {
@@ -30,11 +33,11 @@ export default async function LessonModePage({
             This lesson isn&apos;t ready yet
           </h1>
           <p className="text-[13px] text-[#7a7875] leading-relaxed mb-6">
-            We&apos;re still writing the slide-by-slide version of this part.
+            We&apos;re still writing the slide-by-slide version of this topic.
             Use the revision notes for now.
           </p>
           <a
-            href={`/dashboard/maths/${unitSlug}/${topicSlug}/${partSlug}`}
+            href={`/dashboard/maths/${unitSlug}/${topicSlug}`}
             className="inline-block text-[12px] font-mono text-[#00abfa] hover:text-[#7ed1ff] transition-colors"
           >
             ← Back to revision notes

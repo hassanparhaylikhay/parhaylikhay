@@ -1,9 +1,43 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import fs from "node:fs/promises"
+import path from "node:path"
 import { UNITS, getPrevNext, urlFor } from "../../data"
 import { loadLesson } from "@/lib/lesson-loader"
 import LessonBody from "./lesson-body"
 import WidgetFrame from "./widget-frame"
+
+async function topicHasLessonMode(unit: string, topic: string): Promise<boolean> {
+  const lessonPath = path.join(process.cwd(), "content", "lessons", `${unit}-${topic}`, "lesson.json")
+  try { await fs.access(lessonPath); return true } catch { return false }
+}
+
+function TopicLessonModeCard({ unit, topic, partsCount }: { unit: string; topic: string; partsCount: number }) {
+  return (
+    <Link
+      href={`/dashboard/lesson-mode/${unit}/${topic}`}
+      className="group block rounded-xl border border-[#00abfa44] bg-gradient-to-br from-[#00abfa1a] via-[#0b1118] to-[#0b1118] px-6 py-5 hover:border-[#00abfa88] hover:from-[#00abfa28] transition-all duration-300 mb-10"
+    >
+      <div className="flex items-start gap-4">
+        <div className="w-11 h-11 rounded-lg bg-[#00abfa1f] border border-[#00abfa55] flex items-center justify-center shrink-0">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M5 3l8 5-8 5V3z" fill="#00abfa" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-mono uppercase tracking-[2px] text-[#00abfa] mb-1">Lesson Mode · new</p>
+          <p className="text-[15px] text-[#f0eeea] font-semibold leading-tight">Learn the whole topic in one guided flow</p>
+          <p className="text-[13px] text-[#7a7875] mt-1.5 leading-relaxed">
+            Slide-by-slide with drag, place, identify. Covers all {partsCount} parts plus the comprehensive worked example.
+          </p>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-[#3a4a5a] group-hover:text-[#00abfa] transition-colors shrink-0 mt-1">
+          <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </Link>
+  )
+}
 
 export default async function TopicPage({
   params,
@@ -18,6 +52,7 @@ export default async function TopicPage({
 
   // ── Multi-part topic: render TOC ──
   if (topic.parts && topic.parts.length > 0) {
+    const lessonModeAvailable = await topicHasLessonMode(unitSlug, topicSlug)
     return (
       <main className="max-w-[760px] mx-auto px-8 py-12">
 
@@ -36,6 +71,10 @@ export default async function TopicPage({
             This topic is split into {topic.parts.filter(p => !p.isReview).length} short parts plus a review. Work through them in order. Each part has a quick check at the end.
           </p>
         </div>
+
+        {lessonModeAvailable && (
+          <TopicLessonModeCard unit={unitSlug} topic={topicSlug} partsCount={topic.parts.filter(p => !p.isReview).length} />
+        )}
 
         <div className="rounded-xl border border-[#141e2a] overflow-hidden mb-12">
           {topic.parts.map((part, i) => (

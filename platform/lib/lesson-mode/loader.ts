@@ -3,10 +3,10 @@ import path from "node:path"
 import type { Lesson } from "./types"
 
 /**
- * Loads a Lesson JSON file from /content/lessons/<lessonId>/lesson.json.
+ * Loads a topic-level Lesson JSON from /content/lessons/<lessonId>/lesson.json.
  * Server-side only. Returns null if the file is missing or malformed.
  *
- * lessonId is derived from the URL path: "07-01-p1" for unit 07, topic 01, part p1.
+ * lessonId for a topic is "<unit>-<topic>", e.g. "07-01" for unit 7, topic 1.
  */
 export async function loadLesson(lessonId: string): Promise<Lesson | null> {
   const filePath = path.join(process.cwd(), "content", "lessons", lessonId, "lesson.json")
@@ -22,6 +22,6 @@ export async function loadLesson(lessonId: string): Promise<Lesson | null> {
   }
 }
 
-export function lessonIdFromParts(unit: string, topic: string, part: string): string {
-  return `${unit}-${topic}-${part}`
+export function lessonIdForTopic(unit: string, topic: string): string {
+  return `${unit}-${topic}`
 }

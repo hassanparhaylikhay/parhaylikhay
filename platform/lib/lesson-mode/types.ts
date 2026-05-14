@@ -107,10 +107,10 @@ export type Slide =
 // ─── lesson ────────────────────────────────────────────────────────────
 
 export interface Lesson {
-  /** Stable identifier, used as the storage key (e.g. "07-01-p1"). */
+  /** Stable identifier, used as the storage key (e.g. "07-01" for the whole topic). */
   lessonId: string
-  /** Maps the lesson back to the revision-notes route — used for the exit button. */
-  source: { unit: string; topic: string; part: string }
+  /** Maps the lesson back to the topic page (used for the exit button). */
+  source: { unit: string; topic: string }
   title: string
   /** Rough length for the entry card. */
   estimatedMinutes?: number

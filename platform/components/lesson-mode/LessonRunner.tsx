@@ -56,9 +56,8 @@ export default function LessonRunner({ lesson }: Props) {
   const goNext = useCallback(() => {
     if (!canAdvance) return
     if (idx >= total - 1) {
-      // Last slide: finish navigates back to revision notes
       if (typeof window !== "undefined") {
-        window.location.href = `/dashboard/maths/${lesson.source.unit}/${lesson.source.topic}/${lesson.source.part}`
+        window.location.href = `/dashboard/maths/${lesson.source.unit}/${lesson.source.topic}`
       }
       return
     }
@@ -92,7 +91,7 @@ export default function LessonRunner({ lesson }: Props) {
     return () => clearTimeout(t)
   }, [slide, slideState, markComplete])
 
-  const exitHref = `/dashboard/maths/${lesson.source.unit}/${lesson.source.topic}/${lesson.source.part}`
+  const exitHref = `/dashboard/maths/${lesson.source.unit}/${lesson.source.topic}`
 
   if (!hydrated || !slide || !progress) {
     return (

@@ -1,0 +1,983 @@
+{
+  "lessonId": "07-01",
+  "source": { "unit": "07", "topic": "01" },
+  "title": "Transformations: the whole topic",
+  "estimatedMinutes": 28,
+  "slides": [
+
+    {
+      "id": "01-hook",
+      "kind": "hook",
+      "advance": "manual",
+      "prompt": "Something happened to this triangle. What changed?",
+      "visual": {
+        "kind": "shape",
+        "svg": "<svg viewBox='0 0 360 220' style='display:block;width:100%;max-width:520px;height:auto;background:#0b1118;border-radius:12px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='hook-grid' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='360' height='220' fill='url(#hook-grid)'/><polygon points='80,160 130,160 105,118' fill='rgba(0,171,250,0.65)' stroke='#00abfa' stroke-width='1.5'><animateTransform attributeName='transform' type='translate' values='0 0; 0 0; 130 -30; 130 -30; 0 0' keyTimes='0;0.15;0.45;0.7;1' dur='4.5s' repeatCount='indefinite'/></polygon><polygon points='80,160 130,160 105,118' fill='none' stroke='#3a4a5a' stroke-width='1' stroke-dasharray='3 3' opacity='0.55'/></svg>"
+      }
+    },
+
+    {
+      "id": "02-four-moves",
+      "kind": "concept",
+      "title": "Four ways to move a shape",
+      "advance": "manual",
+      "prompt": "Slide. Flip. Spin. Resize. Every transformation on your exam is one of these four.",
+      "visual": {
+        "kind": "row",
+        "gap": 14,
+        "children": [
+          { "kind": "html", "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg><div style='color:#00abfa;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>SLIDE</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg><div style='color:#fff067;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>FLIP</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg><div style='color:#ff822c;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>SPIN</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg><div style='color:#ff4670;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>RESIZE</div></div>" }
+        ]
+      }
+    },
+
+    {
+      "id": "03-match-name",
+      "kind": "interaction",
+      "title": "Match each move to its proper name",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "placeLabel",
+        "hint": "Translation slides. Reflection flips. Rotation spins. Enlargement resizes.",
+        "config": {
+          "prompt": "Drag each name onto the move it describes.",
+          "slots": [
+            { "id": "s-slide",  "hint": "?", "correctLabelId": "lab-translation", "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" },
+            { "id": "s-flip",   "hint": "?", "correctLabelId": "lab-reflection",  "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" },
+            { "id": "s-spin",   "hint": "?", "correctLabelId": "lab-rotation",    "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg>" },
+            { "id": "s-resize", "hint": "?", "correctLabelId": "lab-enlargement", "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" }
+          ],
+          "labels": [
+            { "id": "lab-translation", "text": "translation" },
+            { "id": "lab-reflection",  "text": "reflection" },
+            { "id": "lab-rotation",    "text": "rotation" },
+            { "id": "lab-enlargement", "text": "enlargement" }
+          ],
+          "successText": "These are the exact four names your exam will use."
+        }
+      }
+    },
+
+    {
+      "id": "04-which-changes-size",
+      "kind": "interaction",
+      "title": "Which one changes the size?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "clickToIdentify",
+        "hint": "Watch each animation. Three keep the triangle the same size.",
+        "config": {
+          "prompt": "Three keep the size. One doesn't. Which?",
+          "regions": [
+            { "id": "r-translate", "label": "translation", "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" },
+            { "id": "r-reflect", "label": "reflection", "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" },
+            { "id": "r-rotate", "label": "rotation", "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg>" },
+            { "id": "r-enlarge", "label": "enlargement", "isCorrect": true, "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>" }
+          ],
+          "successText": "Enlargement scales the shape. The image is similar, not congruent.",
+          "revealId": "r-enlarge"
+        }
+      }
+    },
+
+    {
+      "id": "05-describe-bridge",
+      "kind": "concept",
+      "title": "Naming the move isn't enough",
+      "advance": "manual",
+      "prompt": "On your exam, you also have to describe the rule precisely. Different moves need different rules.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;gap:8px;max-width:380px;margin:0 auto;font-family:Geist Mono,monospace;font-size:12px'><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #00abfa44;background:rgba(0,171,250,0.04)'><span style='color:#00abfa'>translation</span><span style='color:#7a7875'>1 thing</span></div><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #fff06744;background:rgba(255,240,103,0.04)'><span style='color:#fff067'>reflection</span><span style='color:#7a7875'>1 thing</span></div><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #ff822c44;background:rgba(255,130,44,0.04)'><span style='color:#ff822c'>rotation</span><span style='color:#7a7875'>3 things</span></div><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #ff467044;background:rgba(255,70,112,0.04)'><span style='color:#ff4670'>enlargement</span><span style='color:#7a7875'>2 things</span></div></div>"
+      }
+    },
+
+    {
+      "id": "06-q-no-size-change",
+      "kind": "interaction",
+      "title": "Quick check before we dig in",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Three of these always keep length, angle, and orientation the same.",
+        "config": {
+          "prompt": "Which transformation does NOT change the size of the shape?",
+          "options": [
+            { "id": "opt-enl", "text": "enlargement", "whyWrong": "Enlargement is the one that changes size. The others all keep length and angle." },
+            { "id": "opt-ref", "text": "reflection", "isCorrect": true },
+            { "id": "opt-rot", "text": "rotation", "isCorrect": true },
+            { "id": "opt-tra", "text": "translation", "isCorrect": true }
+          ],
+          "layout": "row",
+          "successText": "Reflection, rotation and translation all keep every length and every angle. Only enlargement changes size."
+        }
+      }
+    },
+
+    {
+      "id": "07-translation-explore",
+      "kind": "concept",
+      "title": "Translation: drag the triangle anywhere",
+      "advance": "manual",
+      "prompt": "Every point slides the same amount. That amount is a column vector. Drag and watch.",
+      "visual": { "kind": "iframe", "src": "/widgets/translation-explorer.html?lessonMode=1", "height": 460 }
+    },
+
+    {
+      "id": "08-translation-target-1",
+      "kind": "interaction",
+      "title": "Slide it 3 right and 2 down",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Drag the yellow tip until the column vector reads ⟨3, −2⟩.",
+        "config": {
+          "src": "/widgets/translation-explorer.html",
+          "target": "3,-2",
+          "widget": "translation",
+          "prompt": "Drag until the image lands on the pink outline. The shift you want is $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$.",
+          "successText": "Every point moved by ⟨3, −2⟩. That's the entire description."
+        }
+      }
+    },
+
+    {
+      "id": "09-q-translate-point",
+      "kind": "interaction",
+      "title": "Where does this point go?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Add the column vector to the coordinate: top to $x$, bottom to $y$.",
+        "config": {
+          "prompt": "A translation by $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$ moves the point $(1, 5)$ to...",
+          "options": [
+            { "id": "opt-a", "text": "$(4, 3)$",   "isCorrect": true },
+            { "id": "opt-b", "text": "$(4, 7)$",   "whyWrong": "You added $5 + 2$ instead of $5 + (-2)$. The bottom number is $-2$, so subtract." },
+            { "id": "opt-c", "text": "$(-2, 3)$",  "whyWrong": "You subtracted instead of added: $1 - 3 = -2$. The top number is positive $3$, so add." },
+            { "id": "opt-d", "text": "$(3, -10)$", "whyWrong": "You multiplied instead of added. A translation adds the vector, never multiplies." }
+          ],
+          "layout": "row",
+          "successText": "$(1 + 3,\\ 5 + (-2)) = (4, 3)$. Top shifts $x$, bottom shifts $y$."
+        }
+      }
+    },
+
+    {
+      "id": "10-translation-target-2",
+      "kind": "interaction",
+      "title": "Now slide by ⟨−4, 3⟩",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Negative x means LEFT. Positive y means UP.",
+        "config": {
+          "src": "/widgets/translation-explorer.html",
+          "target": "-4,3",
+          "widget": "translation",
+          "prompt": "Different vector: $\\begin{pmatrix} -4 \\\\ 3 \\end{pmatrix}$. Left and up.",
+          "successText": "Negatives flip direction. Other than that, same idea."
+        }
+      }
+    },
+
+    {
+      "id": "11-q-find-vector",
+      "kind": "interaction",
+      "title": "Going backwards",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Subtract: image minus object. The order matters.",
+        "config": {
+          "prompt": "A point $(2, -1)$ has been translated to $(-3, 4)$. The column vector is...",
+          "options": [
+            { "id": "opt-a", "text": "$\\begin{pmatrix} -5 \\\\ 5 \\end{pmatrix}$",  "isCorrect": true },
+            { "id": "opt-b", "text": "$\\begin{pmatrix} 5 \\\\ -5 \\end{pmatrix}$",  "whyWrong": "You did object minus image. Always image minus object." },
+            { "id": "opt-c", "text": "$\\begin{pmatrix} -3 \\\\ 4 \\end{pmatrix}$",  "whyWrong": "You used the image coordinates as the vector. The vector is the SHIFT, not the destination." },
+            { "id": "opt-d", "text": "$\\begin{pmatrix} 2 \\\\ -1 \\end{pmatrix}$",  "whyWrong": "Those are the object coordinates, not the shift." }
+          ],
+          "successText": "$(-3 - 2,\\ 4 - (-1)) = (-5, 5)$. Image minus object, always."
+        }
+      }
+    },
+
+    {
+      "id": "12-translation-target-3",
+      "kind": "interaction",
+      "title": "Pure horizontal: ⟨5, 0⟩",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "y-component is 0. Move ONLY along the x-axis.",
+        "config": {
+          "src": "/widgets/translation-explorer.html",
+          "target": "5,0",
+          "widget": "translation",
+          "prompt": "Slide $\\begin{pmatrix} 5 \\\\ 0 \\end{pmatrix}$. The image stays at the same height.",
+          "successText": "A zero component means no shift in that direction. Same exam logic."
+        }
+      }
+    },
+
+    {
+      "id": "13-q-combine-translations",
+      "kind": "interaction",
+      "title": "Two translations in a row",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Add component by component. Order doesn't matter for two translations.",
+        "config": {
+          "prompt": "Translate by $\\begin{pmatrix} 2 \\\\ 1 \\end{pmatrix}$ then by $\\begin{pmatrix} 3 \\\\ -4 \\end{pmatrix}$. The single equivalent translation is...",
+          "options": [
+            { "id": "opt-a", "text": "$\\begin{pmatrix} 5 \\\\ -3 \\end{pmatrix}$",  "isCorrect": true },
+            { "id": "opt-b", "text": "$\\begin{pmatrix} 6 \\\\ -4 \\end{pmatrix}$",  "whyWrong": "You multiplied $2 \\times 3$ on top. Translations add, never multiply." },
+            { "id": "opt-c", "text": "$\\begin{pmatrix} -1 \\\\ 5 \\end{pmatrix}$",  "whyWrong": "You subtracted instead of added." },
+            { "id": "opt-d", "text": "$\\begin{pmatrix} 1 \\\\ -3 \\end{pmatrix}$",   "whyWrong": "Top should be $2 + 3 = 5$, not $1$." }
+          ],
+          "successText": "Top: $2 + 3 = 5$. Bottom: $1 + (-4) = -3$. Two translations always collapse into one."
+        }
+      }
+    },
+
+    {
+      "id": "14-translation-examlink",
+      "kind": "examLink",
+      "title": "Translation in one breath",
+      "markCode": "B1 + B1",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "orderSteps",
+        "hint": "Type first, then the rule.",
+        "config": {
+          "prompt": "Arrange the tiles into a proper exam answer.",
+          "goalLabel": "describe this translation",
+          "steps": [
+            { "id": "s1", "text": "Translation" },
+            { "id": "s2", "text": "by" },
+            { "id": "s3", "text": "$\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$" }
+          ],
+          "successText": "“Translation by $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$.” One word, one vector, full marks."
+        }
+      }
+    },
+
+    {
+      "id": "15-reflection-explore",
+      "kind": "concept",
+      "title": "Reflection: drag the mirror line",
+      "advance": "manual",
+      "prompt": "Every point flips to the other side of a line. Drag the yellow handles to move the mirror.",
+      "visual": { "kind": "iframe", "src": "/widgets/reflection-explorer.html?lessonMode=1", "height": 460 }
+    },
+
+    {
+      "id": "16-q-reflect-y-x",
+      "kind": "interaction",
+      "title": "Reflect this point in $y = x$",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Reflecting in $y = x$ swaps the two coordinates: $(x, y) \\to (y, x)$.",
+        "config": {
+          "prompt": "The point $(3, 5)$ reflected in $y = x$ becomes...",
+          "options": [
+            { "id": "opt-a", "text": "$(5, 3)$",   "isCorrect": true },
+            { "id": "opt-b", "text": "$(-3, -5)$", "whyWrong": "You flipped both signs. That's a $180°$ rotation, not a reflection in $y = x$." },
+            { "id": "opt-c", "text": "$(-5, -3)$", "whyWrong": "Close: $y = -x$ would do that. But $y = x$ just swaps, doesn't flip signs." },
+            { "id": "opt-d", "text": "$(3, -5)$",  "whyWrong": "That's a reflection in the $x$-axis. The mirror $y = x$ is the diagonal." }
+          ],
+          "layout": "row",
+          "successText": "Reflecting in $y = x$ just swaps the two coordinates. Quick rule for this mirror only."
+        }
+      }
+    },
+
+    {
+      "id": "17-q-reflect-x-axis",
+      "kind": "interaction",
+      "title": "And in the $x$-axis?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Reflecting in the $x$-axis ($y = 0$) flips the sign of $y$ only.",
+        "config": {
+          "prompt": "The point $(2, -4)$ reflected in the $x$-axis becomes...",
+          "options": [
+            { "id": "opt-a", "text": "$(2, 4)$",   "isCorrect": true },
+            { "id": "opt-b", "text": "$(-2, -4)$", "whyWrong": "That flips $x$, not $y$. That would be a reflection in the $y$-axis." },
+            { "id": "opt-c", "text": "$(-2, 4)$",  "whyWrong": "You flipped both signs. The $x$-axis only flips $y$." },
+            { "id": "opt-d", "text": "$(4, 2)$",   "whyWrong": "That's a swap, which is the rule for $y = x$, not the $x$-axis." }
+          ],
+          "layout": "row",
+          "successText": "$(x, y) \\to (x, -y)$. Only the $y$ flips when the mirror is the $x$-axis."
+        }
+      }
+    },
+
+    {
+      "id": "18-mirror-rules",
+      "kind": "concept",
+      "title": "Four mirrors, four swap rules",
+      "advance": "manual",
+      "prompt": "Memorise these four. They cover almost every Cambridge reflection question.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:480px;margin:0 auto;font-family:Geist Mono,monospace;font-size:13px'><div style='padding:10px 14px;border-radius:8px;border:1px solid #00abfa44;background:rgba(0,171,250,0.04)'><span style='color:#00abfa;font-weight:600'>\\(y = 0\\)</span> &nbsp;<span style='color:#7a7875'>flip sign of \\(y\\)</span><div style='color:#c8c6be;margin-top:4px'>\\((x,y) \\to (x,-y)\\)</div></div><div style='padding:10px 14px;border-radius:8px;border:1px solid #fff06744;background:rgba(255,240,103,0.04)'><span style='color:#fff067;font-weight:600'>\\(x = 0\\)</span> &nbsp;<span style='color:#7a7875'>flip sign of \\(x\\)</span><div style='color:#c8c6be;margin-top:4px'>\\((x,y) \\to (-x,y)\\)</div></div><div style='padding:10px 14px;border-radius:8px;border:1px solid #ff822c44;background:rgba(255,130,44,0.04)'><span style='color:#ff822c;font-weight:600'>\\(y = x\\)</span> &nbsp;<span style='color:#7a7875'>swap the two</span><div style='color:#c8c6be;margin-top:4px'>\\((x,y) \\to (y,x)\\)</div></div><div style='padding:10px 14px;border-radius:8px;border:1px solid #0fee8944;background:rgba(15,238,137,0.04)'><span style='color:#0fee89;font-weight:600'>\\(y = -x\\)</span> &nbsp;<span style='color:#7a7875'>swap and flip both</span><div style='color:#c8c6be;margin-top:4px'>\\((x,y) \\to (-y,-x)\\)</div></div></div>"
+      }
+    },
+
+    {
+      "id": "19-which-mirror",
+      "kind": "interaction",
+      "title": "Which mirror line did this?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Imagine folding the page along each line. Which one lands blue on pink?",
+        "config": {
+          "prompt": "The blue triangle was reflected to land on the pink. Which mirror did it?",
+          "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gqm' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gqm)'/><line x1='10' y1='100' x2='310' y2='100' stroke='#1a3350' stroke-width='0.5'/><line x1='160' y1='10' x2='160' y2='190' stroke='#1a3350' stroke-width='0.5'/><polygon points='60,140 60,80 110,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='220,40 160,40 190,90' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg>",
+          "options": [
+            { "id": "opt-yex",  "text": "Reflection in $y = x$", "isCorrect": true },
+            { "id": "opt-xax",  "text": "Reflection in the $x$-axis", "whyWrong": "The $x$-axis flips top-bottom only. Pink would still be on the left." },
+            { "id": "opt-yax",  "text": "Reflection in the $y$-axis", "whyWrong": "The $y$-axis flips left-right only. Pink would still be near the bottom." },
+            { "id": "opt-ynex", "text": "Reflection in $y = -x$", "whyWrong": "$y = -x$ sends the image to the bottom-right, not the top." }
+          ],
+          "successText": "$y = x$ is the diagonal through the origin going up-right."
+        }
+      }
+    },
+
+    {
+      "id": "20-words-vs-equation",
+      "kind": "examLink",
+      "title": "Words don't earn marks. Equations do.",
+      "markCode": "B1",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "config": {
+          "prompt": "Two students describe the same reflection. Which one earns the mark?",
+          "options": [
+            { "id": "opt-words", "text": "“reflected diagonally”", "whyWrong": "Words don't earn the mark. The examiner needs the equation of the mirror line." },
+            { "id": "opt-eq",    "text": "“reflection in the line $y = x$”", "isCorrect": true }
+          ],
+          "successText": "Always give the mirror as an equation: $y = x$, $y = -x$, $x = 0$, $y = 0$. Never words."
+        }
+      }
+    },
+
+    {
+      "id": "21-orientation-flips",
+      "kind": "concept",
+      "title": "After a reflection, orientation reverses",
+      "advance": "manual",
+      "prompt": "Lengths and angles stay the same (the image is congruent). But the labelling order flips: clockwise becomes anticlockwise.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;align-items:center;justify-content:center;gap:24px;font-family:Geist Mono,monospace;font-size:12px'><div style='text-align:center'><svg viewBox='0 0 120 100' style='display:block;width:140px;height:auto;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='20,80 90,80 55,20' fill='rgba(0,171,250,0.5)' stroke='#00abfa' stroke-width='1.5'/><text x='10' y='90' fill='#00abfa' font-family='Geist Mono, monospace' font-size='11'>A</text><text x='95' y='90' fill='#00abfa' font-family='Geist Mono, monospace' font-size='11'>B</text><text x='49' y='15' fill='#00abfa' font-family='Geist Mono, monospace' font-size='11'>C</text></svg><div style='color:#00abfa;margin-top:6px'>object · A→B→C clockwise</div></div><div style='font-size:24px;color:#fff067'>→</div><div style='text-align:center'><svg viewBox='0 0 120 100' style='display:block;width:140px;height:auto;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='100,80 30,80 65,20' fill='rgba(255,70,112,0.5)' stroke='#ff4670' stroke-width='1.5'/><text x='105' y='90' fill='#ff4670' font-family='Geist Mono, monospace' font-size='11'>A&apos;</text><text x='14' y='90' fill='#ff4670' font-family='Geist Mono, monospace' font-size='11'>B&apos;</text><text x='59' y='15' fill='#ff4670' font-family='Geist Mono, monospace' font-size='11'>C&apos;</text></svg><div style='color:#ff4670;margin-top:6px'>image · A&apos;→B&apos;→C&apos; anticlockwise</div></div></div>"
+      }
+    },
+
+    {
+      "id": "22-rotation-explore",
+      "kind": "concept",
+      "title": "Rotation: drag the centre, drag the angle",
+      "advance": "manual",
+      "prompt": "Three things describe any rotation. A point to spin around, an angle to spin through, and a direction.",
+      "visual": { "kind": "iframe", "src": "/widgets/rotation-explorer.html?lessonMode=1", "height": 460 }
+    },
+
+    {
+      "id": "23-q-three-things",
+      "kind": "interaction",
+      "title": "What three things describe a rotation?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Where to spin around, how far, which way.",
+        "config": {
+          "prompt": "A rotation is fully described by THREE things. They are...",
+          "options": [
+            { "id": "opt-a", "text": "centre, angle, direction",        "isCorrect": true },
+            { "id": "opt-b", "text": "centre, angle, mirror line",      "whyWrong": "Mirror lines are for reflections, not rotations." },
+            { "id": "opt-c", "text": "scale factor, centre, angle",     "whyWrong": "Scale factor is for enlargements, not rotations." },
+            { "id": "opt-d", "text": "column vector and angle",         "whyWrong": "Column vectors are for translations. Rotations have a centre, not a vector." }
+          ],
+          "successText": "Centre + angle + direction. Drop any one and Cambridge takes a mark off."
+        }
+      }
+    },
+
+    {
+      "id": "24-rotation-labels",
+      "kind": "interaction",
+      "title": "Describe this specific rotation",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "placeLabel",
+        "hint": "Centre is where it spun around. Angle is how far. Direction is which way.",
+        "config": {
+          "prompt": "Fill in the three slots from the tiles below.",
+          "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='grl' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#grl)'/><polygon points='190,140 240,140 215,100' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='160,170 160,120 120,145' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/><circle cx='160' cy='170' r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='2'/><path d='M 210 162 A 60 60 0 0 1 156 124' fill='none' stroke='#ff822c' stroke-width='1.3' stroke-dasharray='3 3'/></svg>",
+          "slots": [
+            { "id": "slot-centre",    "hint": "CENTRE",    "correctLabelId": "lab-origin" },
+            { "id": "slot-angle",     "hint": "ANGLE",     "correctLabelId": "lab-90" },
+            { "id": "slot-direction", "hint": "DIRECTION", "correctLabelId": "lab-acw" }
+          ],
+          "labels": [
+            { "id": "lab-origin", "text": "$(0,0)$" },
+            { "id": "lab-12",     "text": "$(1,2)$" },
+            { "id": "lab-90",     "text": "$90°$" },
+            { "id": "lab-45",     "text": "$45°$" },
+            { "id": "lab-acw",    "text": "anticlockwise" },
+            { "id": "lab-cw",     "text": "clockwise" }
+          ],
+          "successText": "Rotation, $90°$ anticlockwise, centre $(0, 0)$."
+        }
+      }
+    },
+
+    {
+      "id": "25-q-90-clockwise",
+      "kind": "interaction",
+      "title": "Same rotation, two names",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "A full turn is $360°$. Subtract from a full turn to flip direction.",
+        "config": {
+          "prompt": "A rotation of $90°$ clockwise gives the same image as which anticlockwise rotation?",
+          "options": [
+            { "id": "opt-a", "text": "$270°$ anticlockwise", "isCorrect": true },
+            { "id": "opt-b", "text": "$90°$ anticlockwise",  "whyWrong": "That's the same magnitude but opposite direction. Image would land in a different place." },
+            { "id": "opt-c", "text": "$180°$ anticlockwise", "whyWrong": "$180°$ goes too far. $90°$ clockwise is $90°$ short of a full turn anticlockwise." },
+            { "id": "opt-d", "text": "$-90°$ clockwise",     "whyWrong": "That's still clockwise. We need an anticlockwise equivalent." }
+          ],
+          "successText": "$360° - 90° = 270°$. Cambridge accepts either form."
+        }
+      }
+    },
+
+    {
+      "id": "26-q-rotate-point",
+      "kind": "interaction",
+      "title": "Rotate this point",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "$90°$ anticlockwise about the origin: $(x, y) \\to (-y, x)$.",
+        "config": {
+          "prompt": "Rotating $(3, 0)$ by $90°$ anticlockwise about the origin gives...",
+          "options": [
+            { "id": "opt-a", "text": "$(0, 3)$",  "isCorrect": true },
+            { "id": "opt-b", "text": "$(-3, 0)$", "whyWrong": "That's a $180°$ rotation, not $90°$." },
+            { "id": "opt-c", "text": "$(0, -3)$", "whyWrong": "That's $90°$ clockwise, the opposite direction." },
+            { "id": "opt-d", "text": "$(3, 0)$",  "whyWrong": "That's no rotation. The point did move." }
+          ],
+          "layout": "row",
+          "successText": "$(3, 0) \\to (-0, 3) = (0, 3)$. The rule $(x, y) \\to (-y, x)$ does it."
+        }
+      }
+    },
+
+    {
+      "id": "27-q-180-rotation",
+      "kind": "interaction",
+      "title": "And $180°$ about the origin?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Direction doesn't matter for $180°$. Both signs flip.",
+        "config": {
+          "prompt": "A rotation of $180°$ about the origin sends $(x, y)$ to...",
+          "options": [
+            { "id": "opt-a", "text": "$(-x, -y)$", "isCorrect": true },
+            { "id": "opt-b", "text": "$(y, x)$",   "whyWrong": "That's a reflection in $y = x$, not a rotation." },
+            { "id": "opt-c", "text": "$(-x, y)$",  "whyWrong": "Only $x$ flipped. That's a reflection in the $y$-axis." },
+            { "id": "opt-d", "text": "$(x, -y)$",  "whyWrong": "Only $y$ flipped. That's a reflection in the $x$-axis." }
+          ],
+          "layout": "row",
+          "successText": "$180°$: both signs flip. The image lands on the opposite side of the centre, same distance away."
+        }
+      }
+    },
+
+    {
+      "id": "28-rotation-coord-rules",
+      "kind": "concept",
+      "title": "Three rotations about the origin",
+      "advance": "manual",
+      "prompt": "These three coordinate rules cover almost every Cambridge rotation question. Memorise them.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;gap:10px;max-width:480px;margin:0 auto;font-family:Geist Mono,monospace;font-size:13.5px;line-height:1.6'><div style='padding:10px 14px;border-radius:8px;border:1px solid #00abfa44;background:rgba(0,171,250,0.04)'><span style='color:#00abfa;font-weight:600'>\\(90°\\) anticlockwise</span><div style='color:#c8c6be;margin-top:4px'>\\((x, y) \\to (-y, x)\\)</div></div><div style='padding:10px 14px;border-radius:8px;border:1px solid #fff06744;background:rgba(255,240,103,0.04)'><span style='color:#fff067;font-weight:600'>\\(180°\\) (either way)</span><div style='color:#c8c6be;margin-top:4px'>\\((x, y) \\to (-x, -y)\\)</div></div><div style='padding:10px 14px;border-radius:8px;border:1px solid #ff822c44;background:rgba(255,130,44,0.04)'><span style='color:#ff822c;font-weight:600'>\\(90°\\) clockwise</span><div style='color:#c8c6be;margin-top:4px'>\\((x, y) \\to (y, -x)\\)</div></div></div>"
+      }
+    },
+
+    {
+      "id": "29-rotation-examlink",
+      "kind": "examLink",
+      "title": "Miss one, lose the mark",
+      "markCode": "B3",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "config": {
+          "prompt": "Two students describe the same rotation. Which one earns full marks?",
+          "options": [
+            { "id": "opt-partial", "text": "“Rotation about $(0,0)$, $90°$”", "whyWrong": "No direction. Clockwise or anticlockwise? Mark scheme needs all three." },
+            { "id": "opt-full",    "text": "“Rotation, $90°$ anticlockwise, about $(0,0)$”", "isCorrect": true }
+          ],
+          "successText": "Centre + angle + direction. All three or zero marks."
+        }
+      }
+    },
+
+    {
+      "id": "30-enlargement-explore",
+      "kind": "concept",
+      "title": "Enlargement: centre and scale factor",
+      "advance": "manual",
+      "prompt": "Two things define an enlargement. A point to scale from, and the scale factor.",
+      "visual": { "kind": "iframe", "src": "/widgets/enlargement-explorer.html?lessonMode=1", "height": 460 }
+    },
+
+    {
+      "id": "31-find-k-2",
+      "kind": "interaction",
+      "title": "Find scale factor $k = 2$",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Distances from the centre double when $k = 2$.",
+        "config": {
+          "src": "/widgets/enlargement-explorer.html",
+          "target": "2,0,0",
+          "widget": "enlargement",
+          "prompt": "Drag the pink handle along the ray until the image fills the pink outline. Centre stays at $(0, 0)$, target $k = 2$.",
+          "successText": "$k = 2$: every distance from the centre doubled."
+        }
+      }
+    },
+
+    {
+      "id": "32-find-k-3",
+      "kind": "interaction",
+      "title": "Now $k = 3$",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Three times the distance, three times bigger.",
+        "config": {
+          "src": "/widgets/enlargement-explorer.html",
+          "target": "3,0,0",
+          "widget": "enlargement",
+          "prompt": "Same centre. This time the image should be three times the size: $k = 3$.",
+          "successText": "Same logic, bigger scale. The shape is similar, just three times larger."
+        }
+      }
+    },
+
+    {
+      "id": "33-q-k-times-point",
+      "kind": "interaction",
+      "title": "Where does this point go?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "When the centre is the origin, every coordinate just multiplies by $k$.",
+        "config": {
+          "prompt": "Under an enlargement with scale factor $3$ and centre $(0, 0)$, the point $(2, 1)$ maps to...",
+          "options": [
+            { "id": "opt-a", "text": "$(6, 3)$", "isCorrect": true },
+            { "id": "opt-b", "text": "$(5, 4)$", "whyWrong": "You added $3$ instead of multiplied. Enlargement multiplies, doesn't add." },
+            { "id": "opt-c", "text": "$(3, 1)$", "whyWrong": "You only changed one coordinate. Both multiply by $k$." },
+            { "id": "opt-d", "text": "$(2, 3)$", "whyWrong": "You swapped the coordinates. That's a reflection in $y = x$, not an enlargement." }
+          ],
+          "layout": "row",
+          "successText": "$(3 \\cdot 2,\\ 3 \\cdot 1) = (6, 3)$. From the origin, every coordinate scales by $k$."
+        }
+      }
+    },
+
+    {
+      "id": "34-find-k-half",
+      "kind": "interaction",
+      "title": "Can scale factor be less than 1?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Distances halve. Image is smaller. Still called an enlargement.",
+        "config": {
+          "src": "/widgets/enlargement-explorer.html",
+          "target": "0.5,0,0",
+          "widget": "enlargement",
+          "prompt": "Shrink the image to half size: $k = \\tfrac{1}{2}$. Yes, this still counts as an enlargement.",
+          "successText": "$k = \\tfrac{1}{2}$ is an enlargement too. The word covers shrinking as well as growing."
+        }
+      }
+    },
+
+    {
+      "id": "35-q-area-scales",
+      "kind": "interaction",
+      "title": "What happens to area?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Lengths scale by $k$. Areas scale by $k^2$ — square the scale factor.",
+        "config": {
+          "prompt": "After an enlargement with scale factor $\\tfrac{1}{2}$, the image area is...",
+          "options": [
+            { "id": "opt-a", "text": "one quarter of the object area", "isCorrect": true },
+            { "id": "opt-b", "text": "half the object area",            "whyWrong": "Half is what happens to lengths. Areas use $k^2 = \\tfrac{1}{4}$." },
+            { "id": "opt-c", "text": "double the object area",          "whyWrong": "Both wrong direction and wrong factor." },
+            { "id": "opt-d", "text": "the same",                        "whyWrong": "Only if $k = 1$. Here $k = \\tfrac{1}{2}$, so area must change." }
+          ],
+          "successText": "Areas scale by $k^2$. $\\left(\\tfrac{1}{2}\\right)^2 = \\tfrac{1}{4}$. Volume would be $k^3 = \\tfrac{1}{8}$."
+        }
+      }
+    },
+
+    {
+      "id": "36-negative-k-concept",
+      "kind": "concept",
+      "title": "Negative $k$ flips through the centre",
+      "advance": "manual",
+      "prompt": "A negative scale factor sends the image to the OPPOSITE side of the centre, then scales it. $k = -2$ is twice the size, on the other side.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;justify-content:center'><svg viewBox='0 0 320 160' style='display:block;width:100%;max-width:480px;height:auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gneg' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='160' fill='url(#gneg)'/><line x1='10' y1='80' x2='310' y2='80' stroke='#1a3350' stroke-width='0.5'/><line x1='160' y1='10' x2='160' y2='150' stroke='#1a3350' stroke-width='0.5'/><circle cx='160' cy='80' r='5' fill='#fff067' stroke='#0b1118' stroke-width='2'/><polygon points='190,80 210,80 200,60' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='100,80 60,80 80,120' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/><text x='195' y='95' fill='#00abfa' font-family='Geist Mono,monospace' font-size='10'>object</text><text x='62' y='95' fill='#ff4670' font-family='Geist Mono,monospace' font-size='10'>image, k = -2</text><text x='150' y='95' fill='#fff067' font-family='Geist Mono,monospace' font-size='10'>centre</text></svg></div>"
+      }
+    },
+
+    {
+      "id": "37-find-k-neg2",
+      "kind": "interaction",
+      "title": "Find $k = -2$",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Push the pink handle past the centre to the opposite side.",
+        "config": {
+          "src": "/widgets/enlargement-explorer.html",
+          "target": "-2,0,0",
+          "widget": "enlargement",
+          "prompt": "Place the image so $k = -2$. Twice the size, opposite side of the origin.",
+          "successText": "Negative $k$ flips through the centre AND scales. Both behaviours from one number."
+        }
+      }
+    },
+
+    {
+      "id": "38-enlargement-examlink",
+      "kind": "examLink",
+      "title": "Enlargement in one breath",
+      "markCode": "B3",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "orderSteps",
+        "hint": "Type first, then the rule. Scale factor goes before centre.",
+        "config": {
+          "prompt": "Arrange the tiles into a proper exam answer.",
+          "goalLabel": "describe this enlargement",
+          "steps": [
+            { "id": "s1", "text": "Enlargement," },
+            { "id": "s2", "text": "scale factor $2$," },
+            { "id": "s3", "text": "centre $(1, 1)$." }
+          ],
+          "successText": "“Enlargement, scale factor $2$, centre $(1, 1)$.” Three pieces, three marks."
+        }
+      }
+    },
+
+    {
+      "id": "39-combining-explore",
+      "kind": "concept",
+      "title": "Combining: do one, then another",
+      "advance": "manual",
+      "prompt": "Two transformations in a row. The result is often a different transformation than you'd guess.",
+      "visual": { "kind": "iframe", "src": "/widgets/two-reflections-explorer.html?lessonMode=1", "height": 460 }
+    },
+
+    {
+      "id": "40-q-order-matters",
+      "kind": "interaction",
+      "title": "Does order matter?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Try translate-then-rotate versus rotate-then-translate. Different landing spots.",
+        "config": {
+          "prompt": "When two transformations are applied in sequence, the ORDER of the two...",
+          "options": [
+            { "id": "opt-a", "text": "matters: doing A then B usually gives a different image than B then A", "isCorrect": true },
+            { "id": "opt-b", "text": "never matters",                       "whyWrong": "Try rotate $90°$ then translate vs translate then rotate. They land in different places." },
+            { "id": "opt-c", "text": "matters only for reflections",        "whyWrong": "Most pairs depend on order. Translations are the special exception." },
+            { "id": "opt-d", "text": "matters only for rotations",          "whyWrong": "Order matters across most pairs of transformations." }
+          ],
+          "successText": "Order almost always matters. Two translations are the one exception (you can add their vectors in either order)."
+        }
+      }
+    },
+
+    {
+      "id": "41-q-parallel-mirrors",
+      "kind": "interaction",
+      "title": "Two parallel mirrors",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Two reflections undo the flip. So no flip remains in the final image.",
+        "config": {
+          "prompt": "Reflecting in two PARALLEL mirrors is equivalent to...",
+          "options": [
+            { "id": "opt-a", "text": "a translation",  "isCorrect": true },
+            { "id": "opt-b", "text": "a rotation",      "whyWrong": "Rotations come from intersecting mirrors, not parallel ones." },
+            { "id": "opt-c", "text": "another reflection","whyWrong": "Two reflections flip twice — no flip remains." },
+            { "id": "opt-d", "text": "an enlargement",  "whyWrong": "Sizes don't change under any reflection. No enlargement possible." }
+          ],
+          "layout": "row",
+          "successText": "Two parallel mirrors slide the shape by twice the gap between them. A translation."
+        }
+      }
+    },
+
+    {
+      "id": "42-q-intersecting-mirrors",
+      "kind": "interaction",
+      "title": "Two intersecting mirrors",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Where the mirrors cross is special — it's the only point both reflections leave alone.",
+        "config": {
+          "prompt": "Reflecting in two INTERSECTING mirrors is equivalent to...",
+          "options": [
+            { "id": "opt-a", "text": "a rotation about the intersection point", "isCorrect": true },
+            { "id": "opt-b", "text": "a translation",       "whyWrong": "Translations come from parallel mirrors. Intersecting mirrors give rotation." },
+            { "id": "opt-c", "text": "an enlargement",       "whyWrong": "Reflections never change size." },
+            { "id": "opt-d", "text": "always a $180°$ rotation", "whyWrong": "The angle is TWICE the angle between the mirrors, not always $180°$." }
+          ],
+          "successText": "The angle of rotation is twice the angle between the two mirrors."
+        }
+      }
+    },
+
+    {
+      "id": "43-q-two-reflections-result",
+      "kind": "interaction",
+      "title": "Two specific reflections",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "$y = 0$ and $y = x$ cross at the origin. Angle between them is $45°$. Double it.",
+        "config": {
+          "prompt": "A reflection in $y = 0$ followed by a reflection in $y = x$ is equivalent to...",
+          "options": [
+            { "id": "opt-a", "text": "a rotation $90°$ anticlockwise about the origin", "isCorrect": true },
+            { "id": "opt-b", "text": "a rotation $90°$ clockwise about the origin",     "whyWrong": "Reversing the mirror order would flip the direction. Here it's $y=0$ first, then $y=x$, which gives anticlockwise." },
+            { "id": "opt-c", "text": "a translation by $(0, x)$",                       "whyWrong": "Parallel mirrors would give a translation. These two mirrors intersect at the origin." },
+            { "id": "opt-d", "text": "a reflection in $y = -x$",                        "whyWrong": "Two reflections never give another reflection. The image flips an even number of times overall." }
+          ],
+          "successText": "$45°$ between the mirrors. Doubled gives $90°$. Direction is from $y=0$ toward $y=x$: anticlockwise."
+        }
+      }
+    },
+
+    {
+      "id": "44-q-parallel-translation",
+      "kind": "interaction",
+      "title": "Two parallel mirrors give a translation",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Vector is twice the perpendicular gap, from the first mirror to the second.",
+        "config": {
+          "prompt": "Reflecting in $y = 0$ then in $y = 1$ is equivalent to...",
+          "options": [
+            { "id": "opt-a", "text": "a translation by $\\begin{pmatrix} 0 \\\\ 2 \\end{pmatrix}$", "isCorrect": true },
+            { "id": "opt-b", "text": "a rotation $90°$ about the origin",                          "whyWrong": "Parallel mirrors give a translation, not a rotation." },
+            { "id": "opt-c", "text": "a reflection in $y = 0.5$",                                   "whyWrong": "Two reflections never give a third reflection." },
+            { "id": "opt-d", "text": "an enlargement with $k = 2$",                                 "whyWrong": "Reflections don't change size, so no enlargement." }
+          ],
+          "successText": "Gap is $1$ unit, doubled gives $2$. Direction is from $y=0$ up to $y=1$: positive $y$."
+        }
+      }
+    },
+
+    {
+      "id": "45-decision-tree",
+      "kind": "concept",
+      "title": "The decision tree",
+      "advance": "manual",
+      "prompt": "Given an object and an image, work through these four questions in order. Each \"yes\" or \"no\" narrows it down.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='font-family:Geist Mono,monospace;font-size:12.5px;line-height:1.5;max-width:520px;margin:0 auto'><div style='display:flex;gap:10px;align-items:stretch;margin-bottom:8px'><div style='flex:1.5;padding:10px 12px;border:1.5px solid #fff067;border-radius:8px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center'>Same size?</div><div style='align-self:center;color:#7a7875;font-size:10.5px'>NO →</div><div style='flex:1;padding:10px 12px;border:1.5px solid #ff4670;border-radius:8px;background:rgba(255,70,112,0.06);text-align:center'><div style='color:#ff4670;font-weight:700'>ENLARGEMENT</div></div></div><div style='text-align:center;color:#3a4a5a;font-size:10px;padding:4px 0'>↓ YES</div><div style='display:flex;gap:10px;align-items:stretch;margin-bottom:8px'><div style='flex:1.5;padding:10px 12px;border:1.5px solid #fff067;border-radius:8px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center'>Orientation flipped?</div><div style='align-self:center;color:#7a7875;font-size:10.5px'>YES →</div><div style='flex:1;padding:10px 12px;border:1.5px solid #ff822c;border-radius:8px;background:rgba(255,130,44,0.06);text-align:center'><div style='color:#ff822c;font-weight:700'>REFLECTION</div></div></div><div style='text-align:center;color:#3a4a5a;font-size:10px;padding:4px 0'>↓ NO</div><div style='display:flex;gap:10px;align-items:stretch;margin-bottom:8px'><div style='flex:1.5;padding:10px 12px;border:1.5px solid #fff067;border-radius:8px;background:rgba(255,240,103,0.06);color:#fff067;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center'>Every vertex shifts by same vector?</div><div style='align-self:center;color:#7a7875;font-size:10.5px'>YES →</div><div style='flex:1;padding:10px 12px;border:1.5px solid #00abfa;border-radius:8px;background:rgba(0,171,250,0.06);text-align:center'><div style='color:#00abfa;font-weight:700'>TRANSLATION</div></div></div><div style='text-align:center;color:#3a4a5a;font-size:10px;padding:4px 0'>↓ NO</div><div style='display:flex;justify-content:center'><div style='padding:10px 18px;border:1.5px solid #0fee89;border-radius:8px;background:rgba(15,238,137,0.06);text-align:center'><div style='color:#0fee89;font-weight:700'>ROTATION</div></div></div></div>"
+      }
+    },
+
+    {
+      "id": "46-verify-type",
+      "kind": "verify",
+      "title": "Identify the move",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Apply the decision tree: same size? orientation flipped? same shift?",
+        "config": {
+          "prompt": "Blue maps to pink. Which transformation is it?",
+          "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gvt' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gvt)'/><polygon points='60,150 100,150 80,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='180,90 220,90 200,50' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg>",
+          "options": [
+            { "id": "opt-translation", "text": "Translation", "isCorrect": true },
+            { "id": "opt-reflection",  "text": "Reflection", "whyWrong": "Reflection would flip orientation. The triangles point the same way here." },
+            { "id": "opt-rotation",    "text": "Rotation", "whyWrong": "Rotation changes the orientation. Both look the same here." },
+            { "id": "opt-enlargement", "text": "Enlargement", "whyWrong": "The triangles are the same size. No enlargement." }
+          ],
+          "layout": "row",
+          "successText": "Same shape, same size, same orientation. That's a translation."
+        }
+      }
+    },
+
+    {
+      "id": "47-verify-rule",
+      "kind": "verify",
+      "title": "Now describe it fully",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Pick a vertex on the blue and the matching one on the pink. Count the grid shift.",
+        "config": {
+          "prompt": "Same diagram. Which column vector slides blue onto pink?",
+          "contextHtml": "<svg viewBox='0 0 320 200' style='display:block;width:100%;max-width:420px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='gvr' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='320' height='200' fill='url(#gvr)'/><polygon points='60,150 100,150 80,110' fill='rgba(0,171,250,0.55)' stroke='#00abfa' stroke-width='1.5'/><polygon points='180,90 220,90 200,50' fill='rgba(255,70,112,0.55)' stroke='#ff4670' stroke-width='1.5'/></svg>",
+          "options": [
+            { "id": "opt-correct",   "text": "$\\begin{pmatrix} 4 \\\\ 2 \\end{pmatrix}$",  "isCorrect": true },
+            { "id": "opt-wrong-y",   "text": "$\\begin{pmatrix} 4 \\\\ -2 \\end{pmatrix}$", "whyWrong": "Pink is higher up on the page than blue. Up means positive $y$, not negative." },
+            { "id": "opt-negative-x","text": "$\\begin{pmatrix} -4 \\\\ 2 \\end{pmatrix}$", "whyWrong": "Negative $x$ means LEFT. Pink is to the RIGHT of blue." },
+            { "id": "opt-both-neg",  "text": "$\\begin{pmatrix} -4 \\\\ -2 \\end{pmatrix}$","whyWrong": "Pink is up-right of blue, so both components are positive." }
+          ],
+          "successText": "Translation by $\\begin{pmatrix} 4 \\\\ 2 \\end{pmatrix}$. Type plus rule, both correct."
+        }
+      }
+    },
+
+    {
+      "id": "48-comp-part-a",
+      "kind": "verify",
+      "title": "Comprehensive · part (a)",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Reflecting in $y = x$ swaps each coordinate.",
+        "config": {
+          "prompt": "Triangle $T$ has vertices $A(1, 1), B(4, 1), C(1, 3)$. Reflect $T$ in $y = x$. Which is the image $T_1$?",
+          "options": [
+            { "id": "opt-a", "text": "$A_1(1,1),\\ B_1(1,4),\\ C_1(3,1)$",   "isCorrect": true },
+            { "id": "opt-b", "text": "$A_1(-1,-1),\\ B_1(-4,-1),\\ C_1(-1,-3)$", "whyWrong": "That's a $180°$ rotation, not a reflection in $y = x$." },
+            { "id": "opt-c", "text": "$A_1(1,-1),\\ B_1(4,-1),\\ C_1(1,-3)$", "whyWrong": "That's a reflection in the $x$-axis. Wrong mirror." },
+            { "id": "opt-d", "text": "$A_1(-1,1),\\ B_1(-4,1),\\ C_1(-1,3)$", "whyWrong": "That's a reflection in the $y$-axis." }
+          ],
+          "successText": "Swap each coordinate: $(1,1) \\to (1,1)$, $(4,1) \\to (1,4)$, $(1,3) \\to (3,1)$."
+        }
+      }
+    },
+
+    {
+      "id": "49-comp-part-b",
+      "kind": "verify",
+      "title": "Comprehensive · part (b)",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "$90°$ clockwise about the origin: $(x, y) \\to (y, -x)$.",
+        "config": {
+          "prompt": "Rotate $T_1\\ (A_1(1,1), B_1(1,4), C_1(3,1))$ by $90°$ clockwise about the origin. Image $T_2$?",
+          "options": [
+            { "id": "opt-a", "text": "$A_2(1,-1),\\ B_2(4,-1),\\ C_2(1,-3)$", "isCorrect": true },
+            { "id": "opt-b", "text": "$A_2(-1,1),\\ B_2(-4,1),\\ C_2(-1,3)$", "whyWrong": "That's anticlockwise: $(x,y) \\to (-y,x)$. The question asks clockwise." },
+            { "id": "opt-c", "text": "$A_2(-1,-1),\\ B_2(-1,-4),\\ C_2(-3,-1)$", "whyWrong": "That's a $180°$ rotation, not $90°$." },
+            { "id": "opt-d", "text": "$A_2(1,1),\\ B_2(1,4),\\ C_2(3,1)$", "whyWrong": "That's no rotation. The triangle did rotate $90°$ clockwise." }
+          ],
+          "successText": "$(x, y) \\to (y, -x)$. So $(1,1) \\to (1,-1)$, $(1,4) \\to (4,-1)$, $(3,1) \\to (1,-3)$."
+        }
+      }
+    },
+
+    {
+      "id": "50-comp-part-c",
+      "kind": "verify",
+      "title": "Comprehensive · part (c)",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Compare each $T$ vertex to its $T_2$ vertex. $x$ stays, $y$ flips sign.",
+        "config": {
+          "prompt": "Now describe the SINGLE transformation that maps $T\\ (1,1),(4,1),(1,3)$ onto $T_2\\ (1,-1),(4,-1),(1,-3)$.",
+          "options": [
+            { "id": "opt-a", "text": "Reflection in the line $y = 0$",  "isCorrect": true },
+            { "id": "opt-b", "text": "Reflection in the line $x = 0$",  "whyWrong": "$x = 0$ would flip $x$, not $y$. But $x$ is unchanged here." },
+            { "id": "opt-c", "text": "Rotation $180°$ about the origin", "whyWrong": "That flips BOTH signs. Here only $y$ flips." },
+            { "id": "opt-d", "text": "Reflection in the line $y = x$",   "whyWrong": "That swaps coordinates. Here coordinates aren't swapped." }
+          ],
+          "successText": "Every $y$ has its sign flipped; $x$ stays. That's reflection in the $x$-axis ($y = 0$)."
+        }
+      }
+    },
+
+    {
+      "id": "51-final-examlink",
+      "kind": "examLink",
+      "title": "Put a rotation answer together",
+      "markCode": "B3",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "orderSteps",
+        "hint": "Type, angle, direction, then centre.",
+        "config": {
+          "prompt": "Arrange the four tiles into a proper exam answer.",
+          "goalLabel": "describe this rotation",
+          "steps": [
+            { "id": "s1", "text": "Rotation," },
+            { "id": "s2", "text": "$90°$" },
+            { "id": "s3", "text": "anticlockwise," },
+            { "id": "s4", "text": "about $(0, 0)$." }
+          ],
+          "successText": "“Rotation, $90°$ anticlockwise, about $(0, 0)$.” Three pieces of information, one clean sentence."
+        }
+      }
+    },
+
+    {
+      "id": "52-recap-final",
+      "kind": "recap",
+      "title": "You can now describe any single move",
+      "advance": "manual",
+      "prompt": "Four transformations. Four mark-scheme patterns. Plus the rules for combining them.",
+      "visual": {
+        "kind": "row",
+        "gap": 10,
+        "children": [
+          { "kind": "html", "content": "<div style='text-align:center;width:100px'><div style='width:100px;height:80px;border-radius:8px;border:1px solid #00abfa55;background:rgba(0,171,250,0.04);display:flex;align-items:center;justify-content:center'><span style='color:#00abfa;font-family:Geist Mono,monospace;font-size:9px;text-align:center;line-height:1.4;padding:4px'>BY<br/>⟨a, b⟩</span></div><div style='color:#00abfa;font-family:Geist Mono,monospace;font-size:10px;margin-top:5px'>translation</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center;width:100px'><div style='width:100px;height:80px;border-radius:8px;border:1px solid #fff06755;background:rgba(255,240,103,0.04);display:flex;align-items:center;justify-content:center'><span style='color:#fff067;font-family:Geist Mono,monospace;font-size:9px;text-align:center;line-height:1.4;padding:4px'>IN LINE<br/>y = ?</span></div><div style='color:#fff067;font-family:Geist Mono,monospace;font-size:10px;margin-top:5px'>reflection</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center;width:100px'><div style='width:100px;height:80px;border-radius:8px;border:1px solid #ff822c55;background:rgba(255,130,44,0.04);display:flex;align-items:center;justify-content:center'><span style='color:#ff822c;font-family:Geist Mono,monospace;font-size:9px;text-align:center;line-height:1.4;padding:4px'>ANGLE +<br/>DIR + CTR</span></div><div style='color:#ff822c;font-family:Geist Mono,monospace;font-size:10px;margin-top:5px'>rotation</div></div>" },
+          { "kind": "html", "content": "<div style='text-align:center;width:100px'><div style='width:100px;height:80px;border-radius:8px;border:1px solid #ff467055;background:rgba(255,70,112,0.04);display:flex;align-items:center;justify-content:center'><span style='color:#ff4670;font-family:Geist Mono,monospace;font-size:9px;text-align:center;line-height:1.4;padding:4px'>SF +<br/>CENTRE</span></div><div style='color:#ff4670;font-family:Geist Mono,monospace;font-size:10px;margin-top:5px'>enlargement</div></div>" }
+        ]
+      },
+      "bullets": [
+        "Name the type first, then give the rule.",
+        "Parallel mirrors → translation; intersecting mirrors → rotation.",
+        "Two translations → add the column vectors.",
+        "Lengths scale by $k$, areas by $k^2$, volumes by $k^3$."
+      ]
+    }
+
+  ]
+}
