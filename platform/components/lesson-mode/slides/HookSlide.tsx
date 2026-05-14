@@ -2,6 +2,7 @@
 
 import Visual from "../Visual"
 import UnderstoodButton from "./_UnderstoodButton"
+import { MixedText } from "../interactions/_shared"
 import type { HookSlide as HookSlideT } from "@/lib/lesson-mode/types"
 
 /**
@@ -18,13 +19,16 @@ export default function HookSlide({
   return (
     <div className="w-full flex flex-col items-center gap-8">
       {slide.title && (
-        <h1 className="text-[24px] sm:text-[28px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[640px]">
+        <h1 className="text-[26px] sm:text-[34px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[760px] leading-tight">
           {slide.title}
         </h1>
       )}
       <Visual spec={slide.visual} />
       {slide.prompt && (
-        <p className="text-[14px] sm:text-[15px] text-[#7a7875] text-center max-w-[560px]">{slide.prompt}</p>
+        <MixedText
+          text={slide.prompt}
+          className="block text-[17px] sm:text-[20px] text-[#c8c6be] text-center max-w-[680px] leading-relaxed"
+        />
       )}
       <UnderstoodButton onClick={onAdvance} label="let's go" />
     </div>

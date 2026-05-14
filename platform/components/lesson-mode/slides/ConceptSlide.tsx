@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Visual from "../Visual"
 import UnderstoodButton from "./_UnderstoodButton"
+import { MixedText } from "../interactions/_shared"
 import type { ConceptSlide as ConceptSlideT } from "@/lib/lesson-mode/types"
 
 /**
@@ -39,7 +40,7 @@ export default function ConceptSlide({
   return (
     <div className="w-full flex flex-col items-center gap-6">
       {slide.title && (
-        <h2 className="text-[20px] sm:text-[24px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[640px]">
+        <h2 className="text-[24px] sm:text-[30px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[760px] leading-tight">
           {slide.title}
         </h2>
       )}
@@ -47,9 +48,10 @@ export default function ConceptSlide({
       {slide.visual && <Visual spec={slide.visual} />}
 
       {slide.prompt && (
-        <p className="text-[14.5px] sm:text-[15.5px] text-[#c8c6be] leading-relaxed text-center max-w-[560px]">
-          {slide.prompt}
-        </p>
+        <MixedText
+          text={slide.prompt}
+          className="block text-[17px] sm:text-[20px] text-[#c8c6be] leading-relaxed text-center max-w-[680px]"
+        />
       )}
 
       {hasReveals && (

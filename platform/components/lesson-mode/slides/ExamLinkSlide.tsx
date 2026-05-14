@@ -2,6 +2,7 @@
 
 import Visual from "../Visual"
 import InteractionSlide from "./InteractionSlide"
+import { MixedText } from "../interactions/_shared"
 import type { ExamLinkSlide as ExamLinkSlideT, InteractionSlide as InteractionSlideT } from "@/lib/lesson-mode/types"
 
 /**
@@ -31,7 +32,7 @@ export default function ExamLinkSlide({
       )}
 
       {slide.title && (
-        <h2 className="text-[20px] sm:text-[24px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[640px]">
+        <h2 className="text-[24px] sm:text-[30px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[760px] leading-tight">
           {slide.title}
         </h2>
       )}
@@ -51,9 +52,10 @@ export default function ExamLinkSlide({
         <>
           {slide.visual && <Visual spec={slide.visual} />}
           {slide.prompt && (
-            <p className="text-[14.5px] text-[#c8c6be] text-center max-w-[560px] leading-relaxed">
-              {slide.prompt}
-            </p>
+            <MixedText
+              text={slide.prompt}
+              className="block text-[17px] sm:text-[19px] text-[#c8c6be] text-center max-w-[680px] leading-relaxed"
+            />
           )}
         </>
       )}

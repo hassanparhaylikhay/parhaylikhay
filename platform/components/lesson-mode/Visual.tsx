@@ -31,8 +31,8 @@ function IframeVisual({ src, height }: { src: string; height: number }) {
     function onMsg(e: MessageEvent) {
       const data = e.data
       if (data?.type === "pl-widget-resize" && ref.current?.contentWindow === e.source) {
-        // Cap so the slide chrome + understood button stay visible without scroll.
-        const cap = Math.max(360, Math.min(window.innerHeight - 280, 520))
+        // Cap so title + prompt + understood button all stay in viewport, no scroll.
+        const cap = Math.max(300, Math.min(window.innerHeight - 340, 440))
         ref.current.style.height = `${Math.min(data.height, cap)}px`
       }
     }

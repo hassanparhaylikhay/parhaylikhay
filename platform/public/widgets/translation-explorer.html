@@ -57,8 +57,8 @@
   }
   .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
 
-  /* Lesson Mode: blend into the parent page; hide chrome that distracts from the puzzle. */
-  body.lesson-mode { background: transparent; padding: 0; }
+  /* Lesson Mode: match the platform bg exactly so the widget appears embedded, not overlaid. */
+  html.lesson-mode, body.lesson-mode { background: #07090d; padding: 0; }
   body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
   body.lesson-mode .head { display: none; }
   body.lesson-mode .controls { display: none; }
@@ -139,7 +139,7 @@ var TARGET = (function(){
   return { tx: p[0], ty: p[1] };
 })();
 var SOLVED = false;
-if (LESSON_MODE) document.body.classList.add("lesson-mode");
+if (LESSON_MODE) { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
 
 // ----- state -----
 var INIT = (LESSON_MODE && TARGET) ? { tx: 0, ty: 0 } : { tx: 3, ty: -2 };

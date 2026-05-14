@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import katex from "katex"
-import { COLOR, Prompt, HelperRow, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Option = {
   id: string
@@ -98,14 +98,16 @@ export default function SelectFromOptions({ config, onComplete }: InteractionPro
       </div>
 
       {wrongPick?.whyWrong && (
-        <p className="mt-4 text-[12.5px] text-[#ff4670] pl-reveal text-center max-w-[480px]">
-          {wrongPick.whyWrong}
-        </p>
+        <MixedText
+          text={wrongPick.whyWrong}
+          className="mt-4 block text-[15px] text-[#ff4670] pl-reveal text-center max-w-[560px] leading-relaxed"
+        />
       )}
       {isResolved && config.successText && (
-        <p className="mt-6 text-[13px] text-[#0fee89] pl-reveal text-center max-w-[560px]">
-          {config.successText}
-        </p>
+        <MixedText
+          text={config.successText}
+          className="mt-6 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"
+        />
       )}
 
       <HelperRow
@@ -129,7 +131,7 @@ function OptionText({ text, color }: { text: string; color: string }) {
   // Split on $...$ and render odd indices as KaTeX
   const parts = text.split(/(\$[^$]+\$)/g)
   return (
-    <span className="text-[13.5px] sm:text-[14.5px] leading-relaxed transition-colors duration-300" style={{ color }}>
+    <span className="text-[15.5px] sm:text-[16.5px] leading-relaxed transition-colors duration-300" style={{ color }}>
       {parts.map((p, i) => {
         if (p.startsWith("$") && p.endsWith("$") && p.length > 2) {
           const tex = p.slice(1, -1)

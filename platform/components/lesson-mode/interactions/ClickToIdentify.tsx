@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { COLOR, Prompt, HelperRow, useShake, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, HelperRow, MixedText, useShake, type InteractionProps } from "./_shared"
 
 type Region = {
   id: string
@@ -105,9 +105,10 @@ export default function ClickToIdentify({ config, onComplete }: InteractionProps
       </div>
 
       {(isLocked || revealed) && config.successText && (
-        <p className="mt-6 text-[13px] text-[#0fee89] pl-reveal text-center max-w-[560px]">
-          {config.successText}
-        </p>
+        <MixedText
+          text={config.successText}
+          className="mt-6 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"
+        />
       )}
 
       <HelperRow

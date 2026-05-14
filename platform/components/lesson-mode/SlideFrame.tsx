@@ -102,7 +102,7 @@ export default function SlideFrame({
       </header>
 
       {/* ── centre canvas ───────────────────────────────────────────── */}
-      <section className="flex-1 min-h-0 overflow-auto flex flex-col items-center justify-center px-4 sm:px-8 py-6">
+      <section className="flex-1 min-h-0 overflow-auto flex flex-col items-center justify-center px-4 sm:px-8 py-3 sm:py-4">
         <div
           key={slideKey}
           className={`w-full flex flex-col items-center justify-center pl-fade-in ${wide ? "max-w-[1200px]" : "max-w-[920px]"}`}

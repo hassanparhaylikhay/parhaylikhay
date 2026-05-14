@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import katex from "katex"
-import { COLOR, Prompt, HelperRow, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Handle = {
   id: string
@@ -198,9 +198,10 @@ export default function ManipulateAndVerify({ config, onComplete }: InteractionP
       </div>
 
       {done && config.successText && (
-        <p className="mt-5 text-[13px] text-[#0fee89] pl-reveal text-center max-w-[520px]">
-          {config.successText}
-        </p>
+        <MixedText
+          text={config.successText}
+          className="mt-5 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"
+        />
       )}
 
       <HelperRow />

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { COLOR, type InteractionProps } from "./_shared"
+import { COLOR, MixedText, type InteractionProps } from "./_shared"
 
 export type WidgetCanvasConfig = {
   /** Widget URL. The component appends `lessonMode=1` plus any target params. */
@@ -12,18 +12,17 @@ export type WidgetCanvasConfig = {
   prompt?: string
   /** Text revealed in the side panel once the widget fires pl-lesson-success. */
   successText?: string
-  /** Widget name (translation, enlargement, etc.) — used to filter postMessages. */
+  /** Widget name (translation, enlargement, etc.). */
   widget?: string
 }
 
 /**
  * WidgetCanvas — embeds a polished HTML/Canvas widget and listens for the
- * `pl-lesson-success` postMessage that the widget fires when the student
- * meets the target.
+ * `pl-lesson-success` postMessage that the widget fires when the target is met.
  *
- * Layout: widget on the left / top (manipulative-first), prompt + status on
- * the right / bottom. On mobile this stacks vertically with the manipulative
- * first so the student always lands on the live thing they can touch.
+ * Layout: widget on the left (desktop) or top (mobile). Prompt + status on the
+ * right (desktop) or below (mobile). Side-by-side from md (768px) up, so iPad
+ * landscape and small laptops also get the dominant-canvas feel.
  */
 export default function WidgetCanvas({ config, onComplete }: InteractionProps<WidgetCanvasConfig>) {
   const [solved, setSolved] = useState(false)
@@ -40,8 +39,8 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
       if (!d || typeof d !== "object") return
       if (iframeRef.current?.contentWindow !== e.source) return
       if (d.type === "pl-widget-resize" && typeof d.height === "number") {
-        // Cap iframe height — never taller than 80vh on desktop, full natural height on mobile.
-        const cap = Math.max(420, Math.min(window.innerHeight - 200, 720))
+        // Hard cap so the slide chrome + side panel stay above the fold on small laptops.
+        const cap = Math.max(320, Math.min(window.innerHeight - 220, 540))
         iframeRef.current.style.height = `${Math.min(d.height, cap)}px`
       } else if (d.type === "pl-lesson-success") {
         if (solved) return
@@ -54,28 +53,31 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
   }, [config.widget, onComplete, solved])
 
   return (
-    <div className="w-full flex flex-col lg:flex-row gap-5 lg:gap-7 items-stretch">
-      {/* manipulative — claims most of the canvas */}
+    <div className="w-full flex flex-col md:flex-row gap-5 md:gap-7 items-stretch">
+      {/* manipulative — claims the canvas */}
       <div className="flex-1 min-w-0 flex items-center">
         <iframe
           ref={iframeRef}
           src={finalSrc}
           loading="lazy"
           className="w-full block"
-          style={{ height: 520, border: 0, background: "transparent" }}
+          style={{ height: 460, border: 0, background: "transparent" }}
         />
       </div>
 
-      {/* side panel — prompt + status */}
-      <aside className="lg:w-[300px] shrink-0 flex flex-col gap-4">
+      {/* side panel */}
+      <aside className="md:w-[300px] shrink-0 flex flex-col gap-4 justify-center">
         {config.prompt && (
-          <p className="text-[15px] sm:text-[16px] text-[#c8c6be] leading-snug">{config.prompt}</p>
+          <MixedText
+            text={config.prompt}
+            className="text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug"
+          />
         )}
         <div
-          className="rounded-lg border px-4 py-3 transition-colors duration-300"
+          className="rounded-lg border px-4 py-3.5 transition-colors duration-300"
           style={{
             borderColor: solved ? "rgba(15,238,137,0.45)" : COLOR.border,
-            background: solved ? "rgba(15,238,137,0.05)" : COLOR.card,
+            background: solved ? "rgba(15,238,137,0.05)" : "transparent",
           }}
         >
           <p
@@ -84,9 +86,11 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
           >
             {solved ? "solved" : "your turn"}
           </p>
-          <p className="text-[13px] leading-relaxed" style={{ color: solved ? COLOR.green : COLOR.text }}>
-            {solved ? config.successText ?? "Nicely done." : "Drag the yellow handles until the shape matches the pink outline."}
-          </p>
+          <MixedText
+            text={solved ? config.successText ?? "Nicely done." : "Drag the yellow handles until the shape matches the pink outline."}
+            className="text-[15px] sm:text-[16px] leading-relaxed"
+            style={{ color: solved ? COLOR.green : COLOR.text }}
+          />
         </div>
       </aside>
     </div>

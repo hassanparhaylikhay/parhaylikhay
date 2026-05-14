@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import katex from "katex"
-import { COLOR, Prompt, HelperRow, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Step = {
   id: string
@@ -198,9 +198,10 @@ export default function OrderSteps({ config, onComplete }: InteractionProps<Orde
       )}
 
       {done && config.successText && (
-        <p className="mt-6 text-[13px] text-[#0fee89] pl-reveal text-center max-w-[520px]">
-          {config.successText}
-        </p>
+        <MixedText
+          text={config.successText}
+          className="mt-6 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"
+        />
       )}
 
       <HelperRow onShowMe={!done ? showMe : undefined} />
@@ -211,7 +212,7 @@ export default function OrderSteps({ config, onComplete }: InteractionProps<Orde
 function TileText({ text, color }: { text: string; color: string }) {
   const parts = text.split(/(\$[^$]+\$)/g)
   return (
-    <span className="text-[13px] sm:text-[14px] font-medium transition-colors duration-300" style={{ color }}>
+    <span className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color }}>
       {parts.map((p, i) => {
         if (p.startsWith("$") && p.endsWith("$") && p.length > 2) {
           const html = katex.renderToString(p.slice(1, -1), { throwOnError: false, displayMode: false, output: "html" })

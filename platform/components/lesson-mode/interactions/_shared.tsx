@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import katex from "katex"
 
 /**
  * Common bits used by every interaction component.
@@ -30,12 +31,57 @@ export const COLOR = {
 }
 
 /**
- * One-line prompt above the canvas. Geist text, soft white, single line.
+ * MixedText — renders a string that may contain inline $...$ KaTeX. Drop-in for
+ * any user-facing label, prompt, success message, or option text. Catches both
+ * single-dollar inline math and plain prose in the same render pass.
+ */
+export function MixedText({
+  text,
+  className,
+  style,
+}: {
+  text: string | undefined | null
+  className?: string
+  style?: React.CSSProperties
+}) {
+  if (!text) return null
+  const parts = text.split(/(\$[^$]+\$)/g)
+  return (
+    <span className={className} style={style}>
+      {parts.map((p, i) => {
+        if (p.startsWith("$") && p.endsWith("$") && p.length > 2) {
+          try {
+            const html = katex.renderToString(p.slice(1, -1), {
+              throwOnError: false,
+              displayMode: false,
+              output: "html",
+            })
+            return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />
+          } catch {
+            return <span key={i}>{p}</span>
+          }
+        }
+        return <span key={i}>{p}</span>
+      })}
+    </span>
+  )
+}
+
+/**
+ * The single instructional sentence above each interaction's canvas.
+ * Big, soft-white, centered. Inline math via MixedText.
  */
 export function Prompt({ children }: { children: React.ReactNode }) {
   if (!children) return null
+  if (typeof children === "string") {
+    return (
+      <p className="text-[18px] sm:text-[22px] text-[#c8c6be] leading-snug max-w-[720px] text-center mb-6">
+        <MixedText text={children} />
+      </p>
+    )
+  }
   return (
-    <p className="text-[15px] sm:text-[16px] text-[#c8c6be] leading-snug max-w-[640px] text-center mb-6">
+    <p className="text-[18px] sm:text-[22px] text-[#c8c6be] leading-snug max-w-[720px] text-center mb-6">
       {children}
     </p>
   )

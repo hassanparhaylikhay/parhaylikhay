@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { COLOR, Prompt, HelperRow, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Vertex = [number, number]
 
@@ -217,9 +217,10 @@ export default function DragToPosition({ config, onComplete }: InteractionProps<
       </div>
 
       {done && config.successText && (
-        <p className="mt-5 text-[13px] text-[#0fee89] pl-reveal text-center max-w-[520px]">
-          {config.successText}
-        </p>
+        <MixedText
+          text={config.successText}
+          className="mt-5 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[560px] leading-relaxed"
+        />
       )}
 
       <HelperRow onShowMe={!done && !revealed ? revealAnswer : undefined} />
