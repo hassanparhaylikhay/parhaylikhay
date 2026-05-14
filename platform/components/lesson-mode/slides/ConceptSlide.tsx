@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Visual from "../Visual"
 import UnderstoodButton from "./_UnderstoodButton"
-import { MixedText } from "../interactions/_shared"
+import { MixedText, ReadoutPanel, useWidgetReadout } from "../interactions/_shared"
 import type { ConceptSlide as ConceptSlideT } from "@/lib/lesson-mode/types"
 
 /**
@@ -44,31 +44,7 @@ export default function ConceptSlide({
   const isIframe = slide.visual?.kind === "iframe"
 
   if (isIframe) {
-    return (
-      <div className="w-full flex flex-col md:flex-row gap-5 md:gap-8 items-center md:items-stretch">
-        <div className="flex-1 min-w-0 flex items-center justify-center">
-          {slide.visual && <Visual spec={slide.visual} />}
-        </div>
-        <aside className="w-full md:w-[320px] shrink-0 flex flex-col gap-4 md:gap-5 justify-center md:py-4">
-          {slide.title && (
-            <h2 className="text-[22px] sm:text-[26px] font-semibold text-[#f0eeea] tracking-tight leading-tight">
-              {slide.title}
-            </h2>
-          )}
-          {slide.prompt && (
-            <MixedText
-              text={slide.prompt}
-              className="block text-[16px] sm:text-[18px] text-[#c8c6be] leading-relaxed"
-            />
-          )}
-          {slide.advance === "manual" && canAdvance && (
-            <div className="md:mt-2">
-              <UnderstoodButton onClick={onAdvance} />
-            </div>
-          )}
-        </aside>
-      </div>
-    )
+    return <ConceptIframeLayout slide={slide} onAdvance={onAdvance} canAdvance={canAdvance} />
   }
 
   // Centered stack for non-iframe visuals (small inline diagrams, recaps, etc.)
@@ -111,6 +87,54 @@ export default function ConceptSlide({
       {slide.advance === "manual" && canAdvance && !hasReveals && (
         <UnderstoodButton onClick={onAdvance} />
       )}
+    </div>
+  )
+}
+
+/**
+ * Side-by-side layout for concept slides whose visual is a live widget.
+ * The manipulative claims most of the canvas; a 320px right panel hosts
+ * title + prompt + live readout + understood button. The readout comes
+ * from the widget's pl-lesson-readout postMessage so the student sees
+ * the column-vector / scale-factor / mirror-equation update next to the
+ * prompt instead of inside a strip below the canvas.
+ */
+function ConceptIframeLayout({
+  slide,
+  onAdvance,
+  canAdvance,
+}: {
+  slide: ConceptSlideT
+  onAdvance?: () => void
+  canAdvance?: boolean
+}) {
+  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+  const readout = useWidgetReadout(iframeRef)
+
+  return (
+    <div className="w-full flex flex-col lg:flex-row gap-5 lg:gap-8 items-center lg:items-stretch">
+      <div className="flex-1 min-w-0 flex items-center justify-center">
+        {slide.visual && <Visual spec={slide.visual} iframeRef={iframeRef} />}
+      </div>
+      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 lg:gap-5 justify-center lg:py-4">
+        {slide.title && (
+          <h2 className="text-[22px] sm:text-[26px] font-semibold text-[#f0eeea] tracking-tight leading-tight">
+            {slide.title}
+          </h2>
+        )}
+        {slide.prompt && (
+          <MixedText
+            text={slide.prompt}
+            className="block text-[16px] sm:text-[18px] text-[#c8c6be] leading-relaxed"
+          />
+        )}
+        <ReadoutPanel readout={readout} />
+        {slide.advance === "manual" && canAdvance && (
+          <div className="lg:mt-2">
+            <UnderstoodButton onClick={onAdvance} />
+          </div>
+        )}
+      </aside>
     </div>
   )
 }

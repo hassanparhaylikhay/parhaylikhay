@@ -57,14 +57,14 @@
   }
   .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
 
-  /* Lesson Mode: match the platform bg exactly so the widget appears embedded, not overlaid. */
+  /* Lesson Mode: match the platform bg exactly so the widget appears embedded, not overlaid.
+     The vector strip is hidden because the slide's side panel renders a bigger live readout
+     under the prompt instead. */
   html.lesson-mode, body.lesson-mode { background: #07090d; padding: 0; }
   body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
   body.lesson-mode .head { display: none; }
   body.lesson-mode .controls { display: none; }
-  body.lesson-mode .vector-strip { margin-top: 14px; }
-  body.lesson-mode.solved .vector-strip { border-color: rgba(15,238,137,0.45); background: rgba(15,238,137,0.05); }
-  body.lesson-mode.solved .vector-strip .tag { color: #0fee89; }
+  body.lesson-mode .vector-strip { display: none; }
 </style>
 </head>
 <body>
@@ -345,6 +345,10 @@ function renderColumn(){
   // Use TARGET (P) values so the readout snaps with the user, not the spring.
   var tex = "\\begin{pmatrix} {\\color{#00abfa}" + fmtNum(P.tx) + "} \\\\ {\\color{#ff822c}" + fmtNum(P.ty) + "} \\end{pmatrix}";
   tryRender(el, tex);
+  // Lesson Mode: relay the live readout to the parent so the slide panel can display it.
+  if (LESSON_MODE && window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-lesson-readout", label: "column vector", tex: tex }, "*");
+  }
 }
 
 // ----- point-in-polygon -----

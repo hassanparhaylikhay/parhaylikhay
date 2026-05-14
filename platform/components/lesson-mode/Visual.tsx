@@ -6,9 +6,17 @@ import type { VisualSpec } from "@/lib/lesson-mode/types"
 
 /**
  * Visual — renders a VisualSpec union. Used by hook / concept / recap / examLink slides.
+ * iframeRef is optional; concept slides pass it through so they can listen for the
+ * widget's pl-lesson-readout postMessage.
  */
-export default function Visual({ spec }: { spec: VisualSpec }) {
-  if (spec.kind === "iframe") return <IframeVisual src={spec.src} height={spec.height ?? 480} />
+export default function Visual({
+  spec,
+  iframeRef,
+}: {
+  spec: VisualSpec
+  iframeRef?: React.RefObject<HTMLIFrameElement | null>
+}) {
+  if (spec.kind === "iframe") return <IframeVisual src={spec.src} externalRef={iframeRef} />
   if (spec.kind === "html")   return <HtmlVisual content={spec.content} />
   if (spec.kind === "katex")  return <KatexVisual tex={spec.tex} display={spec.display !== false} />
   if (spec.kind === "shape")  return <ShapeVisual svg={spec.svg} />
@@ -25,32 +33,32 @@ export default function Visual({ spec }: { spec: VisualSpec }) {
   return null
 }
 
-function IframeVisual({ src, height }: { src: string; height: number }) {
-  const ref = useRef<HTMLIFrameElement | null>(null)
+function IframeVisual({
+  src,
+  externalRef,
+}: {
+  src: string
+  externalRef?: React.RefObject<HTMLIFrameElement | null>
+}) {
+  const internalRef = useRef<HTMLIFrameElement | null>(null)
   const wrapRef = useRef<HTMLDivElement | null>(null)
-  // Suppress unused — height is now derived from container size, not the prop.
-  void height
 
   useEffect(() => {
     function fit() {
-      const ifr = ref.current
+      const ifr = internalRef.current
       const wrap = wrapRef.current
       if (!ifr || !wrap) return
-      // Transformation widgets are SVG viewBox 480x320 (aspect 1.5) plus a
-      // vector / mark-scheme strip below (~70px in lesson mode). We size the
-      // iframe so the widget's intrinsic height fits exactly — no clipping,
-      // no postMessage-after-load flash.
+      // In lesson mode the widget's internal strip is hidden, so the iframe
+      // hosts the SVG only. Pure aspect-ratio fit: width = min(containerW,
+      // 1.5 × availableHeight). Height = width / 1.5.
       const SVG_ASPECT = 480 / 320
-      const STRIP = 70
-      // chrome only: brand bar 44 + progress 44 + nav 56 + section padding 24
-      // + safety = 200. The slide layout puts title/prompt/button in a side
-      // panel beside the manipulative, so they don't eat the vertical budget.
+      // chrome (44 + 44 + 56) + section padding (24) + safety = 180
       const RESERVED = 200
       const availableW = wrap.clientWidth
-      const availableH = Math.max(320, window.innerHeight - RESERVED)
-      const widthByHeight = SVG_ASPECT * (availableH - STRIP)
+      const availableH = Math.max(280, window.innerHeight - RESERVED)
+      const widthByHeight = SVG_ASPECT * availableH
       const w = Math.max(320, Math.min(availableW, widthByHeight))
-      const h = w / SVG_ASPECT + STRIP
+      const h = w / SVG_ASPECT
       ifr.style.width  = `${Math.round(w)}px`
       ifr.style.height = `${Math.round(h)}px`
     }
@@ -61,10 +69,15 @@ function IframeVisual({ src, height }: { src: string; height: number }) {
     return () => { ro.disconnect(); window.removeEventListener("resize", fit) }
   }, [])
 
+  function setRefs(el: HTMLIFrameElement | null) {
+    internalRef.current = el
+    if (externalRef) externalRef.current = el
+  }
+
   return (
     <div ref={wrapRef} className="w-full flex justify-center">
       <iframe
-        ref={ref}
+        ref={setRefs}
         src={src}
         loading="lazy"
         className="block"

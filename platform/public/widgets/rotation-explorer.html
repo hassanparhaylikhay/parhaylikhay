@@ -44,6 +44,7 @@
   body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
   body.lesson-mode .head { display: none; }
   body.lesson-mode .controls { display: none; }
+  body.lesson-mode .ms-strip { display: none; }
 </style>
 </head>
 <body>
@@ -73,7 +74,8 @@
 
 <script>
 "use strict";
-if (new URLSearchParams(window.location.search).get("lessonMode") === "1") { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
+var LESSON_MODE = new URLSearchParams(window.location.search).get("lessonMode") === "1";
+if (LESSON_MODE) { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
 
 var COL = {
   blue:"#00abfa", yellow:"#fff067", orange:"#ff822c", green:"#0fee89",
@@ -272,10 +274,15 @@ function renderMS(){
   // Use TARGET (P) values so the readout snaps with the user, not the spring.
   var deg = Math.round(P.angle);
   var dir = deg >= 0 ? "anticlockwise" : "clockwise";
+  var tex;
   if (deg === 0){
-    tryRender(el, "\\text{Rotation, } 0° \\text{, centre } (" + fmtNum(P.cx) + ", " + fmtNum(P.cy) + ")");
+    tex = "\\text{Rotation, } 0° \\text{, centre } (" + fmtNum(P.cx) + ", " + fmtNum(P.cy) + ")";
   } else {
-    tryRender(el, "\\text{Rotation, } " + Math.abs(deg) + "° \\text{ " + dir + ", centre } (" + fmtNum(P.cx) + ", " + fmtNum(P.cy) + ")");
+    tex = "\\text{Rotation, } " + Math.abs(deg) + "° \\text{ " + dir + ", centre } (" + fmtNum(P.cx) + ", " + fmtNum(P.cy) + ")";
+  }
+  tryRender(el, tex);
+  if (typeof LESSON_MODE !== "undefined" && LESSON_MODE && window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-lesson-readout", label: "current", tex: tex }, "*");
   }
 }
 

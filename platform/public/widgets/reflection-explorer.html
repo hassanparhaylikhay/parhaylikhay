@@ -47,6 +47,7 @@
   body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
   body.lesson-mode .head { display: none; }
   body.lesson-mode .controls { display: none; }
+  body.lesson-mode .mirror-strip { display: none; }
 </style>
 </head>
 <body>
@@ -77,7 +78,8 @@
 
 <script>
 "use strict";
-if (new URLSearchParams(window.location.search).get("lessonMode") === "1") { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
+var LESSON_MODE = new URLSearchParams(window.location.search).get("lessonMode") === "1";
+if (LESSON_MODE) { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
 
 var COL = {
   blue:   "#00abfa",
@@ -295,7 +297,11 @@ function renderMirrorEq(){
   var el = document.getElementById("eq-display");
   el.innerHTML = "";
   // Use TARGET (P) values so the equation snaps with the user, not the spring.
-  tryRender(el, mirrorEquationTex(P.p1, P.p2));
+  var tex = mirrorEquationTex(P.p1, P.p2);
+  tryRender(el, tex);
+  if (typeof LESSON_MODE !== "undefined" && LESSON_MODE && window.parent && window.parent !== window){
+    window.parent.postMessage({ type: "pl-lesson-readout", label: "mirror line", tex: tex }, "*");
+  }
 }
 
 // ----- hit-test -----

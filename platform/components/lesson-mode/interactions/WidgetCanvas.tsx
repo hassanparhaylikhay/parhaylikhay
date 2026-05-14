@@ -1,56 +1,51 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { COLOR, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, MixedText, ReadoutPanel, useWidgetReadout, type InteractionProps } from "./_shared"
 
 export type WidgetCanvasConfig = {
-  /** Widget URL. The component appends `lessonMode=1` plus any target params. */
   src: string
-  /** Optional target spec passed to the widget as `?target=...`. */
   target?: string
-  /** One-line instruction shown in the side panel. */
   prompt?: string
-  /** Text revealed in the side panel once the widget fires pl-lesson-success. */
   successText?: string
-  /** Widget name (translation, enlargement, etc.). */
   widget?: string
 }
 
 /**
- * WidgetCanvas — embeds a polished HTML/Canvas widget and listens for the
- * `pl-lesson-success` postMessage. Sizes the iframe up-front (no flash) so the
- * widget renders at exactly the right size from initial paint.
+ * WidgetCanvas — embeds a polished HTML widget and listens for
+ * `pl-lesson-success` (puzzle solved) and `pl-lesson-readout` (live state).
  *
- * Layout: widget on the left (desktop) or top (mobile). Prompt + status panel
- * on the right (desktop) or below (mobile). Stacks at md (<768px).
+ * Layout: side-by-side from lg (≥1024px), stacked below (iPad landscape and
+ * narrower stacks so the manipulative is never squeezed thin). The iframe
+ * is sized up-front from the column width + viewport height so the widget
+ * renders at its right size from initial paint, no flash-then-clip.
  */
 export default function WidgetCanvas({ config, onComplete }: InteractionProps<WidgetCanvasConfig>) {
   const [solved, setSolved] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const colRef = useRef<HTMLDivElement | null>(null)
+  const readout = useWidgetReadout(iframeRef)
 
   const params = new URLSearchParams()
   params.set("lessonMode", "1")
   if (config.target) params.set("target", config.target)
   const finalSrc = config.src + (config.src.includes("?") ? "&" : "?") + params.toString()
 
-  // Up-front sizing — set iframe dimensions BEFORE the widget paints,
-  // and again on container resize. The widget's natural height ≈ SVG + strip,
-  // which we match so nothing clips and there's no postMessage flash.
+  // Up-front sizing: width is the SVG aspect (1.5) of usable height, capped
+  // by column width. Strip is hidden in lesson mode so the iframe = SVG only.
   useEffect(() => {
     function fit() {
       const ifr = iframeRef.current
       const col = colRef.current
       if (!ifr || !col) return
       const SVG_ASPECT = 480 / 320
-      const STRIP = 70
-      // chrome (44 + 44 + 56) + section padding (24) + safety = 188
+      // chrome (44 + 44 + 56) + section padding (24) + tiny safety = 180
       const RESERVED = 200
       const availableW = col.clientWidth
-      const availableH = Math.max(260, window.innerHeight - RESERVED)
-      const widthByHeight = SVG_ASPECT * (availableH - STRIP)
-      const w = Math.max(300, Math.min(availableW, widthByHeight))
-      const h = w / SVG_ASPECT + STRIP
+      const availableH = Math.max(300, window.innerHeight - RESERVED)
+      const widthByHeight = SVG_ASPECT * availableH
+      const w = Math.max(320, Math.min(availableW, widthByHeight))
+      const h = w / SVG_ASPECT
       ifr.style.width  = `${Math.round(w)}px`
       ifr.style.height = `${Math.round(h)}px`
     }
@@ -61,7 +56,6 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
     return () => { ro.disconnect(); window.removeEventListener("resize", fit) }
   }, [])
 
-  // Only listen for success — height is fully owned by the React side.
   useEffect(() => {
     function onMsg(e: MessageEvent) {
       const d = e.data
@@ -78,8 +72,7 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
   }, [config.widget, onComplete, solved])
 
   return (
-    <div className="w-full flex flex-col md:flex-row gap-5 md:gap-7 items-center md:items-stretch">
-      {/* manipulative — claims the canvas */}
+    <div className="w-full flex flex-col lg:flex-row gap-5 lg:gap-7 items-center lg:items-stretch">
       <div ref={colRef} className="flex-1 min-w-0 flex items-center justify-center">
         <iframe
           ref={iframeRef}
@@ -90,14 +83,14 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
         />
       </div>
 
-      {/* side panel */}
-      <aside className="md:w-[300px] shrink-0 flex flex-col gap-4 justify-center">
+      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 justify-center">
         {config.prompt && (
           <MixedText
             text={config.prompt}
             className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug"
           />
         )}
+        <ReadoutPanel readout={readout} solved={solved} />
         <div
           className="rounded-lg border px-4 py-3.5 transition-colors duration-300"
           style={{

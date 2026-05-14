@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState, type RefObject } from "react"
 import katex from "katex"
 
 /**
@@ -124,6 +124,66 @@ export function SuccessFlash({ visible }: { visible: boolean }) {
         boxShadow: visible ? "inset 0 0 0 1px rgba(15,238,137,0.6), 0 0 40px -10px rgba(15,238,137,0.5)" : "none",
       }}
     />
+  )
+}
+
+/**
+ * useWidgetReadout — listens for `pl-lesson-readout` postMessages from the
+ * embedded widget and returns the latest { label, tex } pair. Used in the
+ * side panel so the column-vector / scale-factor / mirror-equation readout
+ * lives next to the prompt, not below the manipulative.
+ */
+export function useWidgetReadout(iframeRef: RefObject<HTMLIFrameElement | null>): { label: string; tex: string } | null {
+  const [state, setState] = useState<{ label: string; tex: string } | null>(null)
+  useEffect(() => {
+    function onMsg(e: MessageEvent) {
+      const d = e.data
+      if (!d || typeof d !== "object") return
+      if (d.type !== "pl-lesson-readout") return
+      if (iframeRef.current?.contentWindow !== e.source) return
+      setState({ label: String(d.label ?? ""), tex: String(d.tex ?? "") })
+    }
+    window.addEventListener("message", onMsg)
+    return () => window.removeEventListener("message", onMsg)
+  }, [iframeRef])
+  return state
+}
+
+/**
+ * ReadoutPanel — the side-panel widget showing the live state of the widget
+ * (e.g. "column vector  ⟨3, −2⟩"). Renders KaTeX.
+ */
+export function ReadoutPanel({ readout, solved }: { readout: { label: string; tex: string } | null; solved?: boolean }) {
+  const ref = useRef<HTMLDivElement | null>(null)
+  useEffect(() => {
+    if (!ref.current || !readout) return
+    try {
+      katex.render(readout.tex, ref.current, { throwOnError: false, displayMode: true, output: "html" })
+    } catch {
+      if (ref.current) ref.current.textContent = readout.tex
+    }
+  }, [readout])
+  if (!readout) return null
+  return (
+    <div
+      className="rounded-lg border px-4 py-3 transition-colors duration-300"
+      style={{
+        borderColor: solved ? "rgba(15,238,137,0.45)" : COLOR.border,
+        background: solved ? "rgba(15,238,137,0.05)" : "transparent",
+      }}
+    >
+      <p
+        className="text-[10.5px] font-mono uppercase tracking-[2px] mb-1.5"
+        style={{ color: solved ? COLOR.green : COLOR.yellow }}
+      >
+        {readout.label}
+      </p>
+      <div
+        ref={ref}
+        className="text-[18px] sm:text-[20px]"
+        style={{ color: solved ? COLOR.green : COLOR.white }}
+      />
+    </div>
   )
 }
 
