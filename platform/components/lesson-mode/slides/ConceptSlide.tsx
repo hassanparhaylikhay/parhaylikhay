@@ -9,10 +9,14 @@ import type { ConceptSlide as ConceptSlideT } from "@/lib/lesson-mode/types"
 /**
  * ConceptSlide — introduces an idea.
  *
- * Two flavours:
- *   - Plain concept: title + visual + prompt + "I understood" button.
- *   - Tap-to-reveal: each tap unlocks the next item. With advance=onSuccess
- *     the slide reports complete once every reveal is shown.
+ * Two layouts based on the visual kind:
+ *   - iframe visual (a live manipulative): side-by-side with title + prompt
+ *     + understood button in a 320 px right panel, manipulative claims the
+ *     remaining width AND full available height. Stacks on mobile.
+ *   - any other visual: centered vertical stack, the original layout.
+ *
+ * The split exists so manipulative-driven concept slides feel like a canvas
+ * rather than a centred card crammed between text blocks.
  */
 export default function ConceptSlide({
   slide,
@@ -37,6 +41,37 @@ export default function ConceptSlide({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasReveals, allRevealed, slide.advance])
 
+  const isIframe = slide.visual?.kind === "iframe"
+
+  if (isIframe) {
+    return (
+      <div className="w-full flex flex-col md:flex-row gap-5 md:gap-8 items-center md:items-stretch">
+        <div className="flex-1 min-w-0 flex items-center justify-center">
+          {slide.visual && <Visual spec={slide.visual} />}
+        </div>
+        <aside className="w-full md:w-[320px] shrink-0 flex flex-col gap-4 md:gap-5 justify-center md:py-4">
+          {slide.title && (
+            <h2 className="text-[22px] sm:text-[26px] font-semibold text-[#f0eeea] tracking-tight leading-tight">
+              {slide.title}
+            </h2>
+          )}
+          {slide.prompt && (
+            <MixedText
+              text={slide.prompt}
+              className="block text-[16px] sm:text-[18px] text-[#c8c6be] leading-relaxed"
+            />
+          )}
+          {slide.advance === "manual" && canAdvance && (
+            <div className="md:mt-2">
+              <UnderstoodButton onClick={onAdvance} />
+            </div>
+          )}
+        </aside>
+      </div>
+    )
+  }
+
+  // Centered stack for non-iframe visuals (small inline diagrams, recaps, etc.)
   return (
     <div className="w-full flex flex-col items-center gap-4 sm:gap-5">
       {slide.title && (
@@ -73,8 +108,7 @@ export default function ConceptSlide({
         </div>
       )}
 
-      {/* Student-led advance: only show on manual-advance slides. */}
-      {slide.advance === "manual" && canAdvance && (
+      {slide.advance === "manual" && canAdvance && !hasReveals && (
         <UnderstoodButton onClick={onAdvance} />
       )}
     </div>

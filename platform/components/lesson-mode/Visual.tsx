@@ -42,13 +42,14 @@ function IframeVisual({ src, height }: { src: string; height: number }) {
       // no postMessage-after-load flash.
       const SVG_ASPECT = 480 / 320
       const STRIP = 70
-      // brand bar 44 + progress 44 + nav 56 + title ~60 + prompt ~60
-      // + understood button ~50 + gaps ~50 + safety = 380
-      const RESERVED = 380
+      // chrome only: brand bar 44 + progress 44 + nav 56 + section padding 24
+      // + safety = 200. The slide layout puts title/prompt/button in a side
+      // panel beside the manipulative, so they don't eat the vertical budget.
+      const RESERVED = 200
       const availableW = wrap.clientWidth
-      const availableH = Math.max(260, window.innerHeight - RESERVED)
+      const availableH = Math.max(320, window.innerHeight - RESERVED)
       const widthByHeight = SVG_ASPECT * (availableH - STRIP)
-      const w = Math.max(300, Math.min(availableW, widthByHeight))
+      const w = Math.max(320, Math.min(availableW, widthByHeight))
       const h = w / SVG_ASPECT + STRIP
       ifr.style.width  = `${Math.round(w)}px`
       ifr.style.height = `${Math.round(h)}px`
