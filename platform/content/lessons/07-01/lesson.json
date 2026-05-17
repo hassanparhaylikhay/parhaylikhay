@@ -590,17 +590,6 @@
       }
     },
     {
-      "id": "18-mirror-rules",
-      "kind": "concept",
-      "title": "Four mirrors, four swap rules",
-      "advance": "manual",
-      "prompt": "Memorise these four. They cover almost every Cambridge reflection question.",
-      "visual": {
-        "kind": "html",
-        "content": "<div style='display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:480px;margin:0 auto;font-family:Geist Mono,monospace;font-size:13px'><div style='padding:10px 14px;border-radius:8px;border:1px solid #00abfa44;background:rgba(0,171,250,0.04)'><span style='color:#00abfa;font-weight:600'>\\(y = 0\\)</span> &nbsp;<span style='color:#7a7875'>flip sign of \\(y\\)</span><div style='color:#c8c6be;margin-top:4px'>\\((x,y) \\to (x,-y)\\)</div></div><div style='padding:10px 14px;border-radius:8px;border:1px solid #fff06744;background:rgba(255,240,103,0.04)'><span style='color:#fff067;font-weight:600'>\\(x = 0\\)</span> &nbsp;<span style='color:#7a7875'>flip sign of \\(x\\)</span><div style='color:#c8c6be;margin-top:4px'>\\((x,y) \\to (-x,y)\\)</div></div><div style='padding:10px 14px;border-radius:8px;border:1px solid #ff822c44;background:rgba(255,130,44,0.04)'><span style='color:#ff822c;font-weight:600'>\\(y = x\\)</span> &nbsp;<span style='color:#7a7875'>swap the two</span><div style='color:#c8c6be;margin-top:4px'>\\((x,y) \\to (y,x)\\)</div></div><div style='padding:10px 14px;border-radius:8px;border:1px solid #0fee8944;background:rgba(15,238,137,0.04)'><span style='color:#0fee89;font-weight:600'>\\(y = -x\\)</span> &nbsp;<span style='color:#7a7875'>swap and flip both</span><div style='color:#c8c6be;margin-top:4px'>\\((x,y) \\to (-y,-x)\\)</div></div></div>"
-      }
-    },
-    {
       "id": "19-which-mirror",
       "kind": "interaction",
       "title": "Which mirror line did this?",
