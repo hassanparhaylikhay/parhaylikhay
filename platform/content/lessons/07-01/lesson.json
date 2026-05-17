@@ -193,7 +193,7 @@
           "src": "/widgets/translation-explorer.html",
           "target": "3,-2",
           "widget": "translation",
-          "prompt": "Drag until the image lands on the pink outline. The shift you want is $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$.",
+          "prompt": "Drag until the image lands on the pink outline. Shift = $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$.",
           "successText": "Every point moved by ⟨3, −2⟩. That's the entire description."
         }
       }
@@ -207,7 +207,7 @@
         "kind": "clickOnGrid",
         "hint": "Add the column vector to the coordinate: top to $x$, bottom to $y$.",
         "config": {
-          "prompt": "A translation by $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$ moves the blue point $P$. Tap where it lands.",
+          "prompt": "$\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$ moves the blue point $P$. Tap where it lands.",
           "xRange": [
             -7,
             9
@@ -426,7 +426,7 @@
           "src": "/widgets/reflection-explorer.html",
           "target": "y=x",
           "widget": "reflection",
-          "prompt": "Drag the mirror so the blue reflects onto the pink outline. The mirror is the line $y = x$.",
+          "prompt": "Drag the mirror so blue reflects onto the pink outline. The mirror: $y = x$.",
           "successText": "Mirror set to $y = x$. The reflection swaps $x$ and $y$."
         }
       }
@@ -494,7 +494,7 @@
         "kind": "clickOnGrid",
         "hint": "Reflecting in $y = x$ swaps the two coordinates: $(x, y) \\to (y, x)$.",
         "config": {
-          "prompt": "Reflect the blue point $P\\ (3, 5)$ in the yellow mirror $y = x$. Tap where the image lands.",
+          "prompt": "Reflect $P\\ (3, 5)$ in the yellow mirror $y = x$. Tap the image.",
           "xRange": [
             -7,
             9
@@ -1039,7 +1039,7 @@
           "src": "/widgets/enlargement-explorer.html",
           "target": "2,0,0",
           "widget": "enlargement",
-          "prompt": "Drag the pink handle along the ray until the image fills the pink outline. Centre stays at $(0, 0)$, target $k = 2$.",
+          "prompt": "Drag the pink handle until $k = 2$. Centre stays at $(0, 0)$.",
           "successText": "$k = 2$: every distance from the centre doubled."
         }
       }
@@ -1132,7 +1132,7 @@
           "target": "0.5,0,0",
           "noOutline": true,
           "widget": "enlargement",
-          "prompt": "Shrink the image to half size: $k = \\tfrac{1}{2}$. Yes, this still counts as an enlargement.",
+          "prompt": "Shrink the image to half size: $k = \\tfrac{1}{2}$. Still an enlargement.",
           "successText": "$k = \\tfrac{1}{2}$ is an enlargement too. The word covers shrinking as well as growing."
         }
       }
@@ -1197,7 +1197,7 @@
           "target": "-1,0,0",
           "noOutline": true,
           "widget": "enlargement",
-          "prompt": "Place the image so $k = -1$. Same size as the object, on the opposite side of $(0, 0)$.",
+          "prompt": "Set $k = -1$. Same size as the object, opposite side of $(0, 0)$.",
           "successText": "$k = -1$ is the same as a $180°$ rotation about the centre. Same size, flipped."
         }
       }
