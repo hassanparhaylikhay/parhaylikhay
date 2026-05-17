@@ -117,9 +117,16 @@ var OBJ = [ {x:1,y:1}, {x:4,y:1}, {x:2,y:3} ];
 var LABELS = ['A','B','C'];
 
 // ----- state -----
-var P = { cx: 0, cy: 0, angle: 90 };
-var D = { cx: 0, cy: 0, angle: 90 };
-var DEFAULTS = { cx: 0, cy: 0, angle: 90 };
+// In Lesson Mode with a target, start at angle 0 (no rotation) so the puzzle
+// never renders already-solved. Centre defaults to origin unless the target
+// also has centre (0,0), in which case shift to (2,0) so the centre handle
+// still needs to be dragged.
+var INIT = (LESSON_MODE && TARGET)
+  ? { cx: (TARGET.cx === 0 && TARGET.cy === 0) ? 2 : 0, cy: 0, angle: 0 }
+  : { cx: 0, cy: 0, angle: 90 };
+var P = { cx: INIT.cx, cy: INIT.cy, angle: INIT.angle };
+var D = { cx: INIT.cx, cy: INIT.cy, angle: INIT.angle };
+var DEFAULTS = { cx: INIT.cx, cy: INIT.cy, angle: INIT.angle };
 var SPRING = 0.22, EPS = 0.005;
 var raf = null;
 

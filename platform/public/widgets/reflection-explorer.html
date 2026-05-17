@@ -162,8 +162,14 @@ var OBJ = [ {x:1,y:1}, {x:4,y:1}, {x:2,y:3} ];
 var LABELS = ['A','B','C'];
 
 // ----- state -----
-var P = { p1: {x:-4,y:-4}, p2: {x:4,y:4}, preset: "yx" };
-var D = { p1: {x:-4,y:-4}, p2: {x:4,y:4} };
+// In Lesson Mode with a target, start the mirror at a NEUTRAL position that
+// can't accidentally satisfy any of the common targets (y=x, y=-x, y=0, x=0).
+// Otherwise the puzzle would render already-solved.
+var INIT_P = (LESSON_MODE && TARGET)
+  ? { p1: {x:-3,y:2}, p2: {x:3,y:2.5}, preset: null }   // odd, non-axial line
+  : { p1: {x:-4,y:-4}, p2: {x:4,y:4}, preset: "yx" };
+var P = { p1: {x: INIT_P.p1.x, y: INIT_P.p1.y}, p2: {x: INIT_P.p2.x, y: INIT_P.p2.y}, preset: INIT_P.preset };
+var D = { p1: {x: INIT_P.p1.x, y: INIT_P.p1.y}, p2: {x: INIT_P.p2.x, y: INIT_P.p2.y} };
 var DEFAULTS = JSON.parse(JSON.stringify(P));
 var SPRING = 0.22, EPS = 0.005;
 var raf = null;
