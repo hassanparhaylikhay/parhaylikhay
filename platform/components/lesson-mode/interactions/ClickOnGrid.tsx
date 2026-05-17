@@ -63,11 +63,12 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
   const [yMin, yMax] = config.yRange
   const SVG_W = 480
   const SVG_H = 320
-  // Match the transformation widgets' grid formula exactly: no padding,
-  // grid fills width, origin offset same way. Ensures the visible coordinate
-  // window inside the card lines up between iframe widgets and this SVG.
-  const pxPerX = SVG_W / (xMax - xMin)
-  const pxPerY = SVG_H / (yMax - yMin)
+  // 28 px inner padding so the grid sits inside the card with a small margin
+  // (cleaner look than the grid running edge-to-edge). The transformation
+  // widgets use the same padding in lesson mode so the two render identically.
+  const PAD = 28
+  const pxPerX = (SVG_W - 2 * PAD) / (xMax - xMin)
+  const pxPerY = (SVG_H - 2 * PAD) / (yMax - yMin)
   const u = Math.min(pxPerX, pxPerY)
   const ORIG_X = (SVG_W - (xMax - xMin) * u) / 2 - xMin * u
   const ORIG_Y = SVG_H - (-yMin) * u - (SVG_H - (yMax - yMin) * u) / 2

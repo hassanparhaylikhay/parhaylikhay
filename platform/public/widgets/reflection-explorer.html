@@ -142,8 +142,11 @@ var COL = {
 // ----- world -----
 var SVG_W = 480, SVG_H = 320;
 var X_MIN = -7, X_MAX = 9, Y_MIN = -5, Y_MAX = 5;
-var pxPerX = SVG_W / (X_MAX - X_MIN);
-var pxPerY = SVG_H / (Y_MAX - Y_MIN);
+// Lesson mode pads the grid inside the card to match ClickOnGrid.
+// Revision notes embed (no lesson mode) keeps the full-bleed grid.
+var GRID_PAD = LESSON_MODE ? 28 : 0;
+var pxPerX = (SVG_W - 2*GRID_PAD) / (X_MAX - X_MIN);
+var pxPerY = (SVG_H - 2*GRID_PAD) / (Y_MAX - Y_MIN);
 var UNIT = Math.min(pxPerX, pxPerY);
 var ORIGIN_PX = {
   x: (SVG_W - (X_MAX - X_MIN) * UNIT) / 2 - X_MIN * UNIT,
