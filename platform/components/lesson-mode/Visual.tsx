@@ -80,8 +80,8 @@ function IframeVisual({
         ref={setRefs}
         src={src}
         loading="lazy"
-        className="block"
-        style={{ border: 0, background: "transparent" }}
+        className="block rounded-xl"
+        style={{ background: "#0b1118", border: "1px solid #141e2a" }}
       />
     </div>
   )

@@ -40,10 +40,10 @@
   }
   .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
 
-  /* Lesson Mode shell: match platform bg so the widget appears embedded.
-     The internal mark-scheme strip is hidden — the slide's side panel
-     hosts a larger live readout right under the prompt instead. */
-  html.lesson-mode, body.lesson-mode { background: #07090d; padding: 0; }
+  /* Lesson Mode shell: html/body are transparent so the React-side iframe
+     element can carry the card background + border. Internal mark-scheme
+     strip hidden — side panel hosts the live readout instead. */
+  html.lesson-mode, body.lesson-mode { background: transparent; padding: 0; }
   body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
   body.lesson-mode .head { display: none; }
   body.lesson-mode .controls { display: none; }

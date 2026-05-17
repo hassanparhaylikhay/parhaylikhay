@@ -57,10 +57,11 @@
   }
   .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
 
-  /* Lesson Mode: match the platform bg exactly so the widget appears embedded, not overlaid.
-     The vector strip is hidden because the slide's side panel renders a bigger live readout
-     under the prompt instead. */
-  html.lesson-mode, body.lesson-mode { background: #07090d; padding: 0; }
+  /* Lesson Mode: the iframe element itself carries the card background + border (set on
+     the React side), so the widget's html/body are transparent and let that card show
+     through. The vector strip is hidden because the slide's side panel renders the live
+     readout instead. */
+  html.lesson-mode, body.lesson-mode { background: transparent; padding: 0; }
   body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
   body.lesson-mode .head { display: none; }
   body.lesson-mode .controls { display: none; }

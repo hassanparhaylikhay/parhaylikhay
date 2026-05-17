@@ -82,8 +82,12 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
           ref={iframeRef}
           src={finalSrc}
           loading="lazy"
-          className="block"
-          style={{ border: 0, background: "transparent" }}
+          className={`block rounded-xl ${solved ? "pl-success-pulse" : ""}`}
+          style={{
+            background: COLOR.card,
+            border: `1px solid ${solved ? COLOR.green : COLOR.border}`,
+            transition: "border-color 300ms",
+          }}
         />
       </div>
 
