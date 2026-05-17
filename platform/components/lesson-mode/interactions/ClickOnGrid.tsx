@@ -1,36 +1,30 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import katex from "katex"
-import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, MixedText, type InteractionProps } from "./_shared"
 
 type ScenePoint = { x: number; y: number; color?: string; label?: string; primed?: boolean }
 type SceneLine  = { from: [number, number]; to: [number, number]; color?: string; dashed?: boolean; label?: string }
 
 export type ClickOnGridConfig = {
   prompt?: string
-  /** Coordinate bounds (in maths units). */
   xRange: [number, number]
   yRange: [number, number]
-  /** Static scene shown before any click — points, mirror lines, centres, etc. */
-  scene?: {
-    points?: ScenePoint[]
-    lines?: SceneLine[]
-  }
-  /** The grid point the student must click. */
+  scene?: { points?: ScenePoint[]; lines?: SceneLine[] }
   target: { x: number; y: number }
-  /** Tolerance in maths units. Default 0. */
   tolerance?: number
   successText?: string
 }
 
 /**
- * ClickOnGrid — student taps a coordinate on the grid. Correct tap pulses green
- * and fires onComplete; wrong tap shakes + drops a brief red marker that fades.
+ * ClickOnGrid — student taps a coordinate on the grid. Same layout and
+ * sizing rules as WidgetCanvas so the click puzzles feel like a sibling
+ * of the drag puzzles: grid takes the canvas on the left (lg+) or top
+ * (mobile), prompt + status sit in a 320 px right panel.
  *
- * Visual styling mirrors the transformation widgets (translation-explorer etc.):
- * same grid colour, axis weight, KaTeX-rendered tick labels and vertex labels,
- * so the click puzzles feel like a sibling of the drag puzzles.
+ * Visual styling (grid colour, axis weight, KaTeX tick labels, vertex
+ * dot shape and label position) mirrors the transformation widgets.
  */
 export default function ClickOnGrid({ config, onComplete }: InteractionProps<ClickOnGridConfig>) {
   const [pick, setPick] = useState<{ x: number; y: number; correct: boolean } | null>(null)
@@ -38,6 +32,31 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
   const [wrongFlashId, setWrongFlashId] = useState(0)
   const [revealed, setRevealed] = useState(false)
   const svgRef = useRef<SVGSVGElement | null>(null)
+  const colRef = useRef<HTMLDivElement | null>(null)
+
+  // Up-front sizing — match WidgetCanvas so click puzzles and drag puzzles
+  // visually occupy the same area of the canvas.
+  useEffect(() => {
+    function fit() {
+      const svg = svgRef.current
+      const col = colRef.current
+      if (!svg || !col) return
+      const ASPECT = 480 / 320
+      const RESERVED = 200
+      const availableW = col.clientWidth
+      const availableH = Math.max(300, window.innerHeight - RESERVED)
+      const widthByHeight = ASPECT * availableH
+      const w = Math.max(320, Math.min(availableW, widthByHeight))
+      const h = w / ASPECT
+      svg.style.width  = `${Math.round(w)}px`
+      svg.style.height = `${Math.round(h)}px`
+    }
+    fit()
+    const ro = new ResizeObserver(fit)
+    if (colRef.current) ro.observe(colRef.current)
+    window.addEventListener("resize", fit)
+    return () => { ro.disconnect(); window.removeEventListener("resize", fit) }
+  }, [])
 
   const tol = config.tolerance ?? 0
   const [xMin, xMax] = config.xRange
@@ -77,7 +96,7 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
     }
   }
 
-  // ── grid + axes (same colours as the transformation widgets) ─────────
+  // grid
   const gridLines: React.ReactElement[] = []
   for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
     const [px] = toPx(x, 0)
@@ -92,7 +111,7 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
     gridLines.push(<line key={`gy${y}`} x1={px1} y1={py} x2={px2} y2={py} stroke="#141e2a" strokeWidth={0.7} />)
   }
 
-  // ── tick numbers via KaTeX foreignObject (matches widget look) ────────
+  // tick numbers (KaTeX, matching widget look)
   const ticks: React.ReactElement[] = []
   for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
     if (x === 0) continue
@@ -116,16 +135,20 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
   }
 
   return (
-    <div className="w-full flex flex-col items-center">
-      <Prompt>{config.prompt}</Prompt>
-
-      <div className="relative w-full max-w-[560px]">
+    <div className="w-full flex flex-col lg:flex-row gap-5 lg:gap-7 items-center lg:items-stretch">
+      {/* grid canvas — claims the canvas */}
+      <div ref={colRef} className="flex-1 min-w-0 flex items-center justify-center">
         <svg
           ref={svgRef}
           viewBox={`0 0 ${SVG_W} ${SVG_H}`}
           onPointerDown={handleClick}
-          className={`block w-full h-auto rounded-xl border touch-none ${done ? "pl-success-pulse" : ""}`}
-          style={{ background: COLOR.card, borderColor: done ? COLOR.green : COLOR.border, transition: "border-color 300ms", cursor: done ? "default" : "crosshair" }}
+          className={`block rounded-xl border touch-none ${done ? "pl-success-pulse" : ""}`}
+          style={{
+            background: COLOR.card,
+            borderColor: done ? COLOR.green : COLOR.border,
+            transition: "border-color 300ms",
+            cursor: done ? "default" : "crosshair",
+          }}
         >
           <g>{gridLines}</g>
 
@@ -165,7 +188,7 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
             )
           })}
 
-          {/* scene points — matches widget vertex style: small filled dot, KaTeX label */}
+          {/* scene points — match widget vertex style */}
           {config.scene?.points?.map((p, i) => {
             const [px, py] = toPx(p.x, p.y)
             const col = p.color ?? COLOR.blue
@@ -210,14 +233,42 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
         </svg>
       </div>
 
-      {done && config.successText && (
-        <MixedText
-          text={config.successText}
-          className="mt-5 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"
-        />
-      )}
-
-      <HelperRow onShowMe={!done ? () => { setRevealed(true); setDone(true); onComplete({ revealed: true }) } : undefined} />
+      {/* side panel — same shape as WidgetCanvas */}
+      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 justify-center">
+        {config.prompt && (
+          <MixedText
+            text={config.prompt}
+            className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug"
+          />
+        )}
+        <div
+          className="rounded-lg border px-4 py-3.5 transition-colors duration-300"
+          style={{
+            borderColor: done ? "rgba(15,238,137,0.45)" : COLOR.border,
+            background: done ? "rgba(15,238,137,0.05)" : "transparent",
+          }}
+        >
+          <p
+            className="text-[10.5px] font-mono uppercase tracking-[2px] mb-1.5 transition-colors duration-300"
+            style={{ color: done ? COLOR.green : COLOR.faint }}
+          >
+            {done ? "correct" : "your turn"}
+          </p>
+          <MixedText
+            text={done ? config.successText ?? "Nicely done." : "Tap the grid square where the image should land."}
+            className="block text-[15px] sm:text-[16px] leading-relaxed"
+            style={{ color: done ? COLOR.green : COLOR.text }}
+          />
+        </div>
+        {!done && (
+          <button
+            onClick={() => { setRevealed(true); setDone(true); onComplete({ revealed: true }) }}
+            className="self-start text-[11px] font-mono text-[#3a4a5a] hover:text-[#7a7875] transition-colors"
+          >
+            show me
+          </button>
+        )}
+      </aside>
     </div>
   )
 }

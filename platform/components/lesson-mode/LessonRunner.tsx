@@ -131,14 +131,15 @@ export default function LessonRunner({ lesson }: Props) {
   )
 }
 
+const WIDE_INTERACTION_KINDS = new Set(["widgetCanvas", "clickOnGrid"])
+
 function isWideSlide(slide: Slide): boolean {
   if (slide.kind === "interaction" || slide.kind === "verify") {
-    return slide.interaction?.kind === "widgetCanvas"
+    return WIDE_INTERACTION_KINDS.has(slide.interaction?.kind ?? "")
   }
   if (slide.kind === "examLink") {
-    return slide.interaction?.kind === "widgetCanvas"
+    return WIDE_INTERACTION_KINDS.has(slide.interaction?.kind ?? "")
   }
-  // Concept / hook / recap that hosts an iframe visual gets the wider canvas too.
   if (slide.kind === "concept" || slide.kind === "hook" || slide.kind === "recap") {
     const v = (slide as { visual?: { kind?: string } }).visual
     if (v?.kind === "iframe") return true
