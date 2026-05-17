@@ -158,7 +158,10 @@ export function ReadoutPanel({ readout, solved }: { readout: { label: string; te
   useEffect(() => {
     if (!ref.current || !readout) return
     try {
-      katex.render(readout.tex, ref.current, { throwOnError: false, displayMode: true, output: "html" })
+      // Inline mode (displayMode: false) lets KaTeX break the line between
+      // \text blocks. Display mode produced one unbreakable inline-block that
+      // overflowed the 320 px side panel when the readout was long.
+      katex.render(readout.tex, ref.current, { throwOnError: false, displayMode: false, output: "html" })
     } catch {
       if (ref.current) ref.current.textContent = readout.tex
     }
@@ -170,6 +173,8 @@ export function ReadoutPanel({ readout, solved }: { readout: { label: string; te
       style={{
         borderColor: solved ? "rgba(15,238,137,0.45)" : COLOR.border,
         background: solved ? "rgba(15,238,137,0.05)" : "transparent",
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
       }}
     >
       <p
@@ -180,8 +185,8 @@ export function ReadoutPanel({ readout, solved }: { readout: { label: string; te
       </p>
       <div
         ref={ref}
-        className="text-[18px] sm:text-[20px]"
-        style={{ color: solved ? COLOR.green : COLOR.white }}
+        className="text-[15px] sm:text-[16px] leading-relaxed"
+        style={{ color: solved ? COLOR.green : COLOR.white, whiteSpace: "normal" }}
       />
     </div>
   )

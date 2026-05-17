@@ -309,6 +309,7 @@ function renderMS(){
   // Use TARGET (P) values so the readout snaps with the user, not the spring.
   var deg = Math.round(P.angle);
   var dir = deg >= 0 ? "anticlockwise" : "clockwise";
+  // Full string for the revision-notes embed (which has more room).
   var tex;
   if (deg === 0){
     tex = "\\text{Rotation, } 0° \\text{, centre } (" + fmtNum(P.cx) + ", " + fmtNum(P.cy) + ")";
@@ -316,8 +317,17 @@ function renderMS(){
     tex = "\\text{Rotation, } " + Math.abs(deg) + "° \\text{ " + dir + ", centre } (" + fmtNum(P.cx) + ", " + fmtNum(P.cy) + ")";
   }
   tryRender(el, tex);
+  // Compact version for the lesson-mode side panel — the slide title already
+  // says "Rotation" so don't repeat it. Also wrap each piece in its own \text
+  // block so KaTeX inline mode can break the line at any natural boundary.
   if (typeof LESSON_MODE !== "undefined" && LESSON_MODE && window.parent && window.parent !== window){
-    window.parent.postMessage({ type: "pl-lesson-readout", label: "current", tex: tex }, "*");
+    var shortTex;
+    if (deg === 0){
+      shortTex = "0°,\\ \\text{centre } (" + fmtNum(P.cx) + ", " + fmtNum(P.cy) + ")";
+    } else {
+      shortTex = Math.abs(deg) + "° \\ \\text{" + dir + ", centre } (" + fmtNum(P.cx) + ", " + fmtNum(P.cy) + ")";
+    }
+    window.parent.postMessage({ type: "pl-lesson-readout", label: "current", tex: shortTex }, "*");
   }
 }
 
