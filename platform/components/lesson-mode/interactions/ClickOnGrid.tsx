@@ -34,16 +34,21 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
   const svgRef = useRef<SVGSVGElement | null>(null)
   const colRef = useRef<HTMLDivElement | null>(null)
 
-  // Up-front sizing — match WidgetCanvas so click puzzles and drag puzzles
-  // visually occupy the same area of the canvas.
+  // Up-front sizing — match WidgetCanvas. We size against the PARENT minus
+  // the aside reserve to avoid first-paint races that let col.clientWidth
+  // return a too-large value and push the aside off-screen.
   useEffect(() => {
     function fit() {
       const svg = svgRef.current
       const col = colRef.current
       if (!svg || !col) return
+      const parent = col.parentElement
       const ASPECT = 480 / 320
       const RESERVED = 200
-      const availableW = col.clientWidth
+      const isWide = typeof window !== "undefined" && window.innerWidth >= 1024
+      const ASIDE_RESERVE = isWide ? 320 + 28 : 0
+      const parentW = parent ? parent.clientWidth : col.clientWidth
+      const availableW = Math.max(280, parentW - ASIDE_RESERVE)
       const availableH = Math.max(300, window.innerHeight - RESERVED)
       const widthByHeight = ASPECT * availableH
       const w = Math.max(320, Math.min(availableW, widthByHeight))
@@ -53,7 +58,7 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
     }
     fit()
     const ro = new ResizeObserver(fit)
-    if (colRef.current) ro.observe(colRef.current)
+    if (colRef.current?.parentElement) ro.observe(colRef.current.parentElement)
     window.addEventListener("resize", fit)
     return () => { ro.disconnect(); window.removeEventListener("resize", fit) }
   }, [])
@@ -239,11 +244,11 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
       </div>
 
       {/* side panel — same shape as WidgetCanvas */}
-      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 justify-center">
+      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
         {config.prompt && (
           <MixedText
             text={config.prompt}
-            className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug"
+            className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full"
           />
         )}
         <div

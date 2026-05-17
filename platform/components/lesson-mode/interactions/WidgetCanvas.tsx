@@ -36,16 +36,23 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
   const finalSrc = config.src + (config.src.includes("?") ? "&" : "?") + params.toString()
 
   // Up-front sizing: width is the SVG aspect (1.5) of usable height, capped
-  // by column width. Strip is hidden in lesson mode so the iframe = SVG only.
+  // by the column width that's actually available after the aside takes its
+  // 320 px. We read from the PARENT (the outer flex-row div) and subtract
+  // the aside reserve explicitly — relying on col.clientWidth alone was
+  // unreliable on first paint and let the iframe exceed the slide's max
+  // width, pushing the aside off-screen.
   useEffect(() => {
     function fit() {
       const ifr = iframeRef.current
       const col = colRef.current
       if (!ifr || !col) return
+      const parent = col.parentElement
       const SVG_ASPECT = 480 / 320
-      // chrome (44 + 44 + 56) + section padding (24) + tiny safety = 180
       const RESERVED = 200
-      const availableW = col.clientWidth
+      const isWide = typeof window !== "undefined" && window.innerWidth >= 1024
+      const ASIDE_RESERVE = isWide ? 320 + 28 : 0   // panel + gap when side-by-side
+      const parentW = parent ? parent.clientWidth : col.clientWidth
+      const availableW = Math.max(280, parentW - ASIDE_RESERVE)
       const availableH = Math.max(300, window.innerHeight - RESERVED)
       const widthByHeight = SVG_ASPECT * availableH
       const w = Math.max(320, Math.min(availableW, widthByHeight))
@@ -55,7 +62,7 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
     }
     fit()
     const ro = new ResizeObserver(fit)
-    if (colRef.current) ro.observe(colRef.current)
+    if (colRef.current?.parentElement) ro.observe(colRef.current.parentElement)
     window.addEventListener("resize", fit)
     return () => { ro.disconnect(); window.removeEventListener("resize", fit) }
   }, [])
@@ -91,11 +98,11 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
         />
       </div>
 
-      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 justify-center">
+      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
         {config.prompt && (
           <MixedText
             text={config.prompt}
-            className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug"
+            className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full"
           />
         )}
         <ReadoutPanel readout={readout} solved={solved} />
