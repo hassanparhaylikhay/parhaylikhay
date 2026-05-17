@@ -6,17 +6,6 @@
   "slides": [
 
     {
-      "id": "01-hook",
-      "kind": "hook",
-      "advance": "manual",
-      "prompt": "Something happened to this triangle. What changed?",
-      "visual": {
-        "kind": "shape",
-        "svg": "<svg viewBox='0 0 360 220' style='display:block;width:100%;max-width:520px;height:auto;background:#0b1118;border-radius:12px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='hook-grid' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#1a3350' stroke-width='0.5' opacity='0.4'/></pattern></defs><rect width='360' height='220' fill='url(#hook-grid)'/><polygon points='80,160 130,160 105,118' fill='rgba(0,171,250,0.65)' stroke='#00abfa' stroke-width='1.5'><animateTransform attributeName='transform' type='translate' values='0 0; 0 0; 130 -30; 130 -30; 0 0' keyTimes='0;0.15;0.45;0.7;1' dur='4.5s' repeatCount='indefinite'/></polygon><polygon points='80,160 130,160 105,118' fill='none' stroke='#3a4a5a' stroke-width='1' stroke-dasharray='3 3' opacity='0.55'/></svg>"
-      }
-    },
-
-    {
       "id": "02-four-moves",
       "kind": "concept",
       "title": "Four ways to move a shape",
