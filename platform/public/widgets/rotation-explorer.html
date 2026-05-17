@@ -280,14 +280,9 @@ function drawScene(){
   OBJ.forEach(function(p,i){ drawVertexDot(gObj, p, COL.blue, LABELS[i], false); });
   IMG.forEach(function(p,i){ drawVertexDot(gImg, p, COL.pink, LABELS[i] + "'", true); });
 
-  // centre handle
-  var cc = document.createElementNS("http://www.w3.org/2000/svg","circle");
-  cc.setAttribute("cx", toSx(D.cx)); cc.setAttribute("cy", toSy(D.cy));
-  cc.setAttribute("r", 7); cc.setAttribute("fill", COL.yellow);
-  cc.setAttribute("stroke", "#0b1118"); cc.setAttribute("stroke-width", 1.5);
-  cc.setAttribute("class", "handle"); cc.style.color = COL.yellow;
-  gH.appendChild(cc);
-  // A' handle (pink-ringed yellow dot at image of OBJ[0])
+  // A' handle (pink-ringed yellow dot at image of OBJ[0]) — drawn first so
+  // the centre handle below sits on TOP and is always grabbable when the
+  // two overlap.
   var aPrime = rotatePt(OBJ[0], D.cx, D.cy, D.angle);
   var ah = document.createElementNS("http://www.w3.org/2000/svg","circle");
   ah.setAttribute("cx", toSx(aPrime.x)); ah.setAttribute("cy", toSy(aPrime.y));
@@ -295,6 +290,13 @@ function drawScene(){
   ah.setAttribute("stroke", COL.pink); ah.setAttribute("stroke-width", 2);
   ah.setAttribute("class", "handle"); ah.style.color = COL.yellow;
   gH.appendChild(ah);
+  // centre handle — drawn LAST so it stacks on top of the angle handle.
+  var cc = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  cc.setAttribute("cx", toSx(D.cx)); cc.setAttribute("cy", toSy(D.cy));
+  cc.setAttribute("r", 7); cc.setAttribute("fill", COL.yellow);
+  cc.setAttribute("stroke", "#0b1118"); cc.setAttribute("stroke-width", 1.5);
+  cc.setAttribute("class", "handle"); cc.style.color = COL.yellow;
+  gH.appendChild(cc);
 }
 
 // ----- mark scheme -----
@@ -332,10 +334,14 @@ function renderMS(){
 }
 
 // ----- hit-test -----
+// Centre is checked FIRST so when the centre and the angle handle land
+// on top of each other (e.g. a zero-radius rotation, or any time the
+// centre sits at the same point as A'), the centre still wins the click.
+// Matches the SVG render order (centre drawn last → on top).
 function hitTest(m){
+  if (dist2(m, { x: D.cx, y: D.cy }) < 0.6 * 0.6) return { kind: "centre" };
   var aPrime = rotatePt(OBJ[0], D.cx, D.cy, D.angle);
   if (dist2(m, aPrime) < 0.6 * 0.6) return { kind: "aprime" };
-  if (dist2(m, { x: D.cx, y: D.cy }) < 0.6 * 0.6) return { kind: "centre" };
   return null;
 }
 function applyDrag(info, m){
