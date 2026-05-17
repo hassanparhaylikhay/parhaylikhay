@@ -204,33 +204,33 @@
       "title": "Where does this point go?",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "selectFromOptions",
+        "kind": "clickOnGrid",
         "hint": "Add the column vector to the coordinate: top to $x$, bottom to $y$.",
         "config": {
-          "prompt": "A translation by $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$ moves the point $(1, 5)$ to...",
-          "options": [
-            {
-              "id": "opt-b",
-              "text": "$(4, 7)$",
-              "whyWrong": "You added $5 + 2$ instead of $5 + (-2)$. The bottom number is $-2$, so subtract."
-            },
-            {
-              "id": "opt-c",
-              "text": "$(-2, 3)$",
-              "whyWrong": "You subtracted instead of added: $1 - 3 = -2$. The top number is positive $3$, so add."
-            },
-            {
-              "id": "opt-a",
-              "text": "$(4, 3)$",
-              "isCorrect": true
-            },
-            {
-              "id": "opt-d",
-              "text": "$(3, -10)$",
-              "whyWrong": "You multiplied instead of added. A translation adds the vector, never multiplies."
-            }
+          "prompt": "A translation by $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$ moves the blue point $P$. Tap where it lands.",
+          "xRange": [
+            -7,
+            9
           ],
-          "layout": "row",
+          "yRange": [
+            -5,
+            5
+          ],
+          "scene": {
+            "points": [
+              {
+                "x": 1,
+                "y": 5,
+                "color": "#00abfa",
+                "label": "P",
+                "primed": true
+              }
+            ]
+          },
+          "target": {
+            "x": 4,
+            "y": 3
+          },
           "successText": "$(1 + 3,\\ 5 + (-2)) = (4, 3)$. Top shifts $x$, bottom shifts $y$."
         }
       }
@@ -491,34 +491,49 @@
       "title": "Reflect this point in $y = x$",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "selectFromOptions",
+        "kind": "clickOnGrid",
         "hint": "Reflecting in $y = x$ swaps the two coordinates: $(x, y) \\to (y, x)$.",
         "config": {
-          "prompt": "The point $(3, 5)$ reflected in $y = x$ becomes...",
-          "options": [
-            {
-              "id": "opt-b",
-              "text": "$(-3, -5)$",
-              "whyWrong": "You flipped both signs. That's a $180°$ rotation, not a reflection in $y = x$."
-            },
-            {
-              "id": "opt-a",
-              "text": "$(5, 3)$",
-              "isCorrect": true
-            },
-            {
-              "id": "opt-c",
-              "text": "$(-5, -3)$",
-              "whyWrong": "Close: $y = -x$ would do that. But $y = x$ just swaps, doesn't flip signs."
-            },
-            {
-              "id": "opt-d",
-              "text": "$(3, -5)$",
-              "whyWrong": "That's a reflection in the $x$-axis. The mirror $y = x$ is the diagonal."
-            }
+          "prompt": "Reflect the blue point $P\\ (3, 5)$ in the yellow mirror $y = x$. Tap where the image lands.",
+          "xRange": [
+            -7,
+            9
           ],
-          "layout": "row",
-          "successText": "Reflecting in $y = x$ just swaps the two coordinates. Quick rule for this mirror only."
+          "yRange": [
+            -5,
+            5
+          ],
+          "scene": {
+            "lines": [
+              {
+                "from": [
+                  -5,
+                  -5
+                ],
+                "to": [
+                  5,
+                  5
+                ],
+                "color": "#fff067",
+                "dashed": true,
+                "label": "y = x"
+              }
+            ],
+            "points": [
+              {
+                "x": 3,
+                "y": 5,
+                "color": "#00abfa",
+                "label": "P",
+                "primed": true
+              }
+            ]
+          },
+          "target": {
+            "x": 5,
+            "y": 3
+          },
+          "successText": "Reflecting in $y = x$ just swaps the two coordinates. $(3, 5) \\to (5, 3)$."
         }
       }
     },
@@ -528,33 +543,48 @@
       "title": "And in the $x$-axis?",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "selectFromOptions",
+        "kind": "clickOnGrid",
         "hint": "Reflecting in the $x$-axis ($y = 0$) flips the sign of $y$ only.",
         "config": {
-          "prompt": "The point $(2, -4)$ reflected in the $x$-axis becomes...",
-          "options": [
-            {
-              "id": "opt-b",
-              "text": "$(-2, -4)$",
-              "whyWrong": "That flips $x$, not $y$. That would be a reflection in the $y$-axis."
-            },
-            {
-              "id": "opt-c",
-              "text": "$(-2, 4)$",
-              "whyWrong": "You flipped both signs. The $x$-axis only flips $y$."
-            },
-            {
-              "id": "opt-a",
-              "text": "$(2, 4)$",
-              "isCorrect": true
-            },
-            {
-              "id": "opt-d",
-              "text": "$(4, 2)$",
-              "whyWrong": "That's a swap, which is the rule for $y = x$, not the $x$-axis."
-            }
+          "prompt": "Reflect the blue point $P\\ (2, -4)$ in the $x$-axis. Tap where the image lands.",
+          "xRange": [
+            -7,
+            9
           ],
-          "layout": "row",
+          "yRange": [
+            -5,
+            5
+          ],
+          "scene": {
+            "lines": [
+              {
+                "from": [
+                  -7,
+                  0
+                ],
+                "to": [
+                  9,
+                  0
+                ],
+                "color": "#fff067",
+                "dashed": true,
+                "label": "y = 0"
+              }
+            ],
+            "points": [
+              {
+                "x": 2,
+                "y": -4,
+                "color": "#00abfa",
+                "label": "P",
+                "primed": true
+              }
+            ]
+          },
+          "target": {
+            "x": 2,
+            "y": 4
+          },
           "successText": "$(x, y) \\to (x, -y)$. Only the $y$ flips when the mirror is the $x$-axis."
         }
       }
@@ -874,33 +904,39 @@
       "title": "Rotate this point",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "selectFromOptions",
+        "kind": "clickOnGrid",
         "hint": "$90°$ anticlockwise about the origin: $(x, y) \\to (-y, x)$.",
         "config": {
-          "prompt": "Rotating $(3, 0)$ by $90°$ anticlockwise about the origin gives...",
-          "options": [
-            {
-              "id": "opt-b",
-              "text": "$(-3, 0)$",
-              "whyWrong": "That's a $180°$ rotation, not $90°$."
-            },
-            {
-              "id": "opt-c",
-              "text": "$(0, -3)$",
-              "whyWrong": "That's $90°$ clockwise, the opposite direction."
-            },
-            {
-              "id": "opt-a",
-              "text": "$(0, 3)$",
-              "isCorrect": true
-            },
-            {
-              "id": "opt-d",
-              "text": "$(3, 0)$",
-              "whyWrong": "That's no rotation. The point did move."
-            }
+          "prompt": "Rotate the blue point $P\\ (3, 0)$ by $90°$ anticlockwise about the origin. Tap the image.",
+          "xRange": [
+            -7,
+            9
           ],
-          "layout": "row",
+          "yRange": [
+            -5,
+            5
+          ],
+          "scene": {
+            "points": [
+              {
+                "x": 0,
+                "y": 0,
+                "color": "#fff067",
+                "label": "centre"
+              },
+              {
+                "x": 3,
+                "y": 0,
+                "color": "#00abfa",
+                "label": "P",
+                "primed": true
+              }
+            ]
+          },
+          "target": {
+            "x": 0,
+            "y": 3
+          },
           "successText": "$(3, 0) \\to (-0, 3) = (0, 3)$. The rule $(x, y) \\to (-y, x)$ does it."
         }
       }
@@ -1043,33 +1079,53 @@
       "title": "Where does this point go?",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "selectFromOptions",
-        "hint": "When the centre is the origin, every coordinate just multiplies by $k$.",
+        "kind": "clickOnGrid",
+        "hint": "When the centre is the origin, multiply both coordinates by $k$.",
         "config": {
-          "prompt": "Under an enlargement with scale factor $3$ and centre $(0, 0)$, the point $(2, 1)$ maps to...",
-          "options": [
-            {
-              "id": "opt-a",
-              "text": "$(6, 3)$",
-              "isCorrect": true
-            },
-            {
-              "id": "opt-b",
-              "text": "$(5, 4)$",
-              "whyWrong": "You added $3$ instead of multiplied. Enlargement multiplies, doesn't add."
-            },
-            {
-              "id": "opt-c",
-              "text": "$(3, 1)$",
-              "whyWrong": "You only changed one coordinate. Both multiply by $k$."
-            },
-            {
-              "id": "opt-d",
-              "text": "$(2, 3)$",
-              "whyWrong": "You swapped the coordinates. That's a reflection in $y = x$, not an enlargement."
-            }
+          "prompt": "Enlarge the blue point $P\\ (2, 1)$ from the origin with $k = 3$. Tap the image.",
+          "xRange": [
+            -7,
+            9
           ],
-          "layout": "row",
+          "yRange": [
+            -5,
+            5
+          ],
+          "scene": {
+            "points": [
+              {
+                "x": 0,
+                "y": 0,
+                "color": "#fff067",
+                "label": "centre"
+              },
+              {
+                "x": 2,
+                "y": 1,
+                "color": "#00abfa",
+                "label": "P",
+                "primed": true
+              }
+            ],
+            "lines": [
+              {
+                "from": [
+                  0,
+                  0
+                ],
+                "to": [
+                  8,
+                  4
+                ],
+                "color": "#3a4a5a",
+                "dashed": true
+              }
+            ]
+          },
+          "target": {
+            "x": 6,
+            "y": 3
+          },
           "successText": "$(3 \\cdot 2,\\ 3 \\cdot 1) = (6, 3)$. From the origin, every coordinate scales by $k$."
         }
       }

@@ -9,6 +9,7 @@ import PlaceLabel, { type PlaceLabelConfig } from "../interactions/PlaceLabel"
 import OrderSteps, { type OrderStepsConfig } from "../interactions/OrderSteps"
 import AdjustSlider, { type AdjustSliderConfig } from "../interactions/AdjustSlider"
 import WidgetCanvas, { type WidgetCanvasConfig } from "../interactions/WidgetCanvas"
+import ClickOnGrid, { type ClickOnGridConfig } from "../interactions/ClickOnGrid"
 import { MixedText } from "../interactions/_shared"
 
 /**
@@ -47,6 +48,7 @@ export default function InteractionSlide({
           case "orderSteps":          return <OrderSteps          {...(props as { config: OrderStepsConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
           case "adjustSlider":        return <AdjustSlider        {...(props as { config: AdjustSliderConfig;        onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
           case "widgetCanvas":        return <WidgetCanvas        {...(props as { config: WidgetCanvasConfig;        onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
+          case "clickOnGrid":         return <ClickOnGrid         {...(props as { config: ClickOnGridConfig;         onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
         }
       })()}
     </div>

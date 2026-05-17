@@ -24,6 +24,7 @@ export type InteractionKind =
   | "orderSteps"           // arrange steps in order
   | "adjustSlider"         // change a parameter, watch the geometry, settle on a value
   | "widgetCanvas"         // embed a polished HTML widget; listens for pl-lesson-success
+  | "clickOnGrid"          // tap a grid coordinate; verifies against a target point
 
 export interface InteractionSpec {
   kind: InteractionKind
