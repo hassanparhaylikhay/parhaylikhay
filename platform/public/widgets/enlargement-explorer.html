@@ -78,6 +78,20 @@
 <script>
 "use strict";
 
+// Lesson Mode params first — used by the world-coordinate block below.
+var URL_PARAMS = new URLSearchParams(window.location.search);
+var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
+var NO_OUTLINE = URL_PARAMS.get("noOutline") === "1";
+var TARGET = (function(){
+  var t = URL_PARAMS.get("target");
+  if (!t) return null;
+  var p = t.split(",").map(parseFloat);
+  if (p.length < 1 || !isFinite(p[0])) return null;
+  return { k: p[0], cx: isFinite(p[1]) ? p[1] : null, cy: isFinite(p[2]) ? p[2] : null };
+})();
+var SOLVED = false;
+if (LESSON_MODE) { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
+
 var COL = {
   blue:"#00abfa", yellow:"#fff067", orange:"#ff822c", green:"#0fee89",
   pink:"#ff4670", faint:"#3a4a5a", grey:"#7a7875", off:"#f0eeea"
@@ -108,22 +122,6 @@ function snapQuarter(v){ return Math.round(v * 4) / 4; }
 // object (small enough that x3 still fits the plot)
 var OBJ = [ {x:2,y:1}, {x:4,y:1}, {x:2,y:2} ];
 var LABELS = ['A','B','C'];
-
-// state
-// ----- Lesson Mode params -----
-var URL_PARAMS = new URLSearchParams(window.location.search);
-var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
-var NO_OUTLINE = URL_PARAMS.get("noOutline") === "1";
-var TARGET = (function(){
-  var t = URL_PARAMS.get("target");
-  if (!t) return null;
-  var p = t.split(",").map(parseFloat);
-  if (p.length < 1 || !isFinite(p[0])) return null;
-  // target=k or target=k,cx,cy
-  return { k: p[0], cx: isFinite(p[1]) ? p[1] : null, cy: isFinite(p[2]) ? p[2] : null };
-})();
-var SOLVED = false;
-if (LESSON_MODE) { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
 
 // ----- state ----- (Lesson Mode with target starts at k=1 so the student has to FIND the value)
 var INIT = (LESSON_MODE && TARGET) ? { cx: TARGET.cx != null ? TARGET.cx : 0, cy: TARGET.cy != null ? TARGET.cy : 0, k: 1 } : { cx: 0, cy: 0, k: 2 };

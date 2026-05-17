@@ -97,6 +97,21 @@
 <script>
 "use strict";
 
+// Lesson Mode params MUST come first — they're read by the world-coordinate
+// block immediately below (grid padding depends on LESSON_MODE).
+var URL_PARAMS = new URLSearchParams(window.location.search);
+var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
+var NO_OUTLINE = URL_PARAMS.get("noOutline") === "1";
+var TARGET = (function(){
+  var t = URL_PARAMS.get("target");
+  if (!t) return null;
+  var p = t.split(",").map(parseFloat);
+  if (p.length !== 2 || !isFinite(p[0]) || !isFinite(p[1])) return null;
+  return { tx: p[0], ty: p[1] };
+})();
+var SOLVED = false;
+if (LESSON_MODE) { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
+
 var COL = {
   blue:   "#00abfa",
   yellow: "#fff067",
@@ -132,20 +147,6 @@ function snapHalf(v){ return Math.round(v * 2) / 2; }
 // ----- object triangle -----
 var OBJ = [ {x:1,y:1}, {x:4,y:1}, {x:2,y:3} ];
 var LABELS = ['A','B','C'];
-
-// ----- Lesson Mode params (no-op when not embedded as a lesson) -----
-var URL_PARAMS = new URLSearchParams(window.location.search);
-var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
-var NO_OUTLINE = URL_PARAMS.get("noOutline") === "1";
-var TARGET = (function(){
-  var t = URL_PARAMS.get("target");
-  if (!t) return null;
-  var p = t.split(",").map(parseFloat);
-  if (p.length !== 2 || !isFinite(p[0]) || !isFinite(p[1])) return null;
-  return { tx: p[0], ty: p[1] };
-})();
-var SOLVED = false;
-if (LESSON_MODE) { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
 
 // ----- state -----
 var INIT = (LESSON_MODE && TARGET) ? { tx: 0, ty: 0 } : { tx: 3, ty: -2 };
