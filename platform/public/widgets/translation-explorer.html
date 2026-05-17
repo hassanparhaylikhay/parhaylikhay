@@ -131,6 +131,7 @@ var LABELS = ['A','B','C'];
 // ----- Lesson Mode params (no-op when not embedded as a lesson) -----
 var URL_PARAMS = new URLSearchParams(window.location.search);
 var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
+var NO_OUTLINE = URL_PARAMS.get("noOutline") === "1";
 var TARGET = (function(){
   var t = URL_PARAMS.get("target");
   if (!t) return null;
@@ -277,8 +278,8 @@ function drawScene(){
   var gGuides = document.getElementById("g-guides");
   clear(gVec); clear(gGuides);
 
-  // Lesson Mode target: faint dashed pink outline showing where the image must land
-  if (LESSON_MODE && TARGET){
+  // Lesson Mode target outline (suppressed when noOutline=1 so the student computes blind)
+  if (LESSON_MODE && TARGET && !NO_OUTLINE){
     var TGT = OBJ.map(function(p){ return { x: p.x + TARGET.tx, y: p.y + TARGET.ty }; });
     var pts = TGT.map(function(p){ return toSx(p.x) + "," + toSy(p.y); }).join(" ");
     var ghost = document.createElementNS("http://www.w3.org/2000/svg","polygon");

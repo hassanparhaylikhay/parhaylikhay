@@ -74,7 +74,18 @@
 
 <script>
 "use strict";
-var LESSON_MODE = new URLSearchParams(window.location.search).get("lessonMode") === "1";
+var URL_PARAMS = new URLSearchParams(window.location.search);
+var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
+var NO_OUTLINE = URL_PARAMS.get("noOutline") === "1";
+/** target=cx,cy,angle  — angle in degrees, positive = anticlockwise. */
+var TARGET = (function(){
+  var t = URL_PARAMS.get("target");
+  if (!t) return null;
+  var p = t.split(",").map(parseFloat);
+  if (p.length !== 3 || !p.every(isFinite)) return null;
+  return { cx: p[0], cy: p[1], angle: p[2] };
+})();
+var SOLVED = false;
 if (LESSON_MODE) { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
 
 var COL = {
@@ -238,6 +249,20 @@ function drawScene(){
     gArc.appendChild(rad);
   });
 
+  // Lesson Mode target outline: dashed pink ghost of the image after target rotation.
+  if (LESSON_MODE && TARGET && !NO_OUTLINE){
+    var TGT = OBJ.map(function(p){ return rotatePt(p, TARGET.cx, TARGET.cy, TARGET.angle); });
+    var tpts = TGT.map(function(p){ return toSx(p.x) + "," + toSy(p.y); }).join(" ");
+    var ghost = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+    ghost.setAttribute("points", tpts);
+    ghost.setAttribute("fill", "none");
+    ghost.setAttribute("stroke", SOLVED ? COL.green : COL.pink);
+    ghost.setAttribute("stroke-width", "1.6");
+    ghost.setAttribute("stroke-dasharray", "5 4");
+    ghost.setAttribute("opacity", SOLVED ? "0.4" : "0.7");
+    gImg.appendChild(ghost);
+  }
+
   // shapes
   drawPoly(gObj, OBJ, "rgba(0,171,250,0.10)", COL.blue, 2);
   var IMG = OBJ.map(function(p){ return rotatePt(p, D.cx, D.cy, D.angle); });
@@ -364,7 +389,24 @@ function step(){
   if (!settled()) raf = requestAnimationFrame(step);
   else { raf = null; D.cx = P.cx; D.cy = P.cy; D.angle = P.angle; drawScene(); renderMS(); }
 }
-function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); checkLessonSuccess(); }
+
+function checkLessonSuccess(){
+  if (!LESSON_MODE || !TARGET || SOLVED) return;
+  var d = P.angle - TARGET.angle;
+  while (d > 180) d -= 360;
+  while (d < -180) d += 360;
+  if (Math.abs(P.cx - TARGET.cx) < 0.01 &&
+      Math.abs(P.cy - TARGET.cy) < 0.01 &&
+      Math.abs(d) < 0.5){
+    SOLVED = true;
+    document.body.classList.add("solved");
+    if (window.parent && window.parent !== window){
+      window.parent.postMessage({ type: "pl-lesson-success", widget: "rotation", value: { cx: P.cx, cy: P.cy, angle: P.angle } }, "*");
+    }
+    drawScene();
+  }
+}
 
 // ----- presets -----
 var PRESETS = [

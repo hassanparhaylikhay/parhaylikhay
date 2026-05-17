@@ -6,6 +6,9 @@ import { COLOR, MixedText, ReadoutPanel, useWidgetReadout, type InteractionProps
 export type WidgetCanvasConfig = {
   src: string
   target?: string
+  /** When true, the widget hides its dashed target outline so the student must compute the
+   *  answer blind. Use for follow-up practice after one guided example. */
+  noOutline?: boolean
   prompt?: string
   successText?: string
   widget?: string
@@ -29,6 +32,7 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
   const params = new URLSearchParams()
   params.set("lessonMode", "1")
   if (config.target) params.set("target", config.target)
+  if (config.noOutline) params.set("noOutline", "1")
   const finalSrc = config.src + (config.src.includes("?") ? "&" : "?") + params.toString()
 
   // Up-front sizing: width is the SVG aspect (1.5) of usable height, capped

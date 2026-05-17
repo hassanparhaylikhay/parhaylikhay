@@ -78,8 +78,55 @@
 
 <script>
 "use strict";
-var LESSON_MODE = new URLSearchParams(window.location.search).get("lessonMode") === "1";
+var URL_PARAMS = new URLSearchParams(window.location.search);
+var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
+var NO_OUTLINE = URL_PARAMS.get("noOutline") === "1";
+/**
+ * TARGET parsing for reflection puzzles. Supported syntaxes:
+ *   target=y=x       (the diagonal through origin, going up-right)
+ *   target=y=-x      (the diagonal through origin, going up-left)
+ *   target=y=0       (the x-axis)
+ *   target=x=0       (the y-axis)
+ *   target=y=k       (horizontal line at height k, e.g. y=2)
+ *   target=x=h       (vertical line at x = h, e.g. x=3)
+ */
+var TARGET = (function(){
+  var t = URL_PARAMS.get("target");
+  if (!t) return null;
+  var m = t.match(/^(y|x)\s*=\s*(-?x|-?y|-?\d+(?:\.\d+)?)$/);
+  if (!m) return null;
+  return { lhs: m[1], rhs: m[2] };
+})();
+var SOLVED = false;
 if (LESSON_MODE) { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); }
+
+function evalLhs(p, t){ return t.lhs === "y" ? p.y : p.x; }
+function evalRhs(p, t){
+  if (t.rhs === "x")  return p.x;
+  if (t.rhs === "-x") return -p.x;
+  if (t.rhs === "y")  return p.y;
+  if (t.rhs === "-y") return -p.y;
+  return parseFloat(t.rhs);
+}
+function onTargetLine(p){
+  if (!TARGET) return false;
+  return Math.abs(evalLhs(p, TARGET) - evalRhs(p, TARGET)) < 0.05;
+}
+function pointsOnTargetLine(){
+  if (!TARGET) return null;
+  // Two distinct points on the target line that fall inside the visible grid
+  if (TARGET.lhs === "y" && TARGET.rhs === "x")  return [{x:-5,y:-5}, {x:5,y:5}];
+  if (TARGET.lhs === "y" && TARGET.rhs === "-x") return [{x:-5,y:5}, {x:5,y:-5}];
+  if (TARGET.lhs === "y") {
+    var yv = parseFloat(TARGET.rhs);
+    return [{x:X_MIN,y:yv}, {x:X_MAX,y:yv}];
+  }
+  if (TARGET.lhs === "x") {
+    var xv = parseFloat(TARGET.rhs);
+    return [{x:xv,y:Y_MIN}, {x:xv,y:Y_MAX}];
+  }
+  return null;
+}
 
 var COL = {
   blue:   "#00abfa",
@@ -218,6 +265,23 @@ function drawScene(){
   var gI = document.getElementById("g-image");
   var gH = document.getElementById("g-handles");
   clear(gM); clear(gB); clear(gO); clear(gI); clear(gH);
+
+  // Lesson Mode target outline: dashed pink ghost of the image after target reflection.
+  if (LESSON_MODE && TARGET && !NO_OUTLINE){
+    var tp = pointsOnTargetLine();
+    if (tp){
+      var ghost = OBJ.map(function(p){ return reflectPtLine(p, tp[0], tp[1]); });
+      var pts = ghost.map(function(p){ return toSx(p.x) + "," + toSy(p.y); }).join(" ");
+      var poly = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+      poly.setAttribute("points", pts);
+      poly.setAttribute("fill", "none");
+      poly.setAttribute("stroke", SOLVED ? COL.green : COL.pink);
+      poly.setAttribute("stroke-width", "1.6");
+      poly.setAttribute("stroke-dasharray", "5 4");
+      poly.setAttribute("opacity", SOLVED ? "0.4" : "0.7");
+      gB.appendChild(poly);
+    }
+  }
 
   // mirror line extended
   var dx = D.p2.x - D.p1.x, dy = D.p2.y - D.p1.y;
@@ -371,7 +435,19 @@ function step(){
   if (!settled()) raf = requestAnimationFrame(step);
   else { raf = null; D.p1 = { x: P.p1.x, y: P.p1.y }; D.p2 = { x: P.p2.x, y: P.p2.y }; drawScene(); renderMirrorEq(); }
 }
-function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); }
+function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); checkLessonSuccess(); }
+
+function checkLessonSuccess(){
+  if (!LESSON_MODE || !TARGET || SOLVED) return;
+  if (onTargetLine(P.p1) && onTargetLine(P.p2)){
+    SOLVED = true;
+    document.body.classList.add("solved");
+    if (window.parent && window.parent !== window){
+      window.parent.postMessage({ type: "pl-lesson-success", widget: "reflection", value: { p1: P.p1, p2: P.p2 } }, "*");
+    }
+    drawScene();
+  }
+}
 
 // ----- presets -----
 var PRESETS = [
