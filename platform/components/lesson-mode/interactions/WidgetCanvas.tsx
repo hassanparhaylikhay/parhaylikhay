@@ -41,18 +41,24 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
   // the aside reserve explicitly — relying on col.clientWidth alone was
   // unreliable on first paint and let the iframe exceed the slide's max
   // width, pushing the aside off-screen.
+  // Compute sizing from window.innerWidth directly. DOM clientWidth reads were
+  // unreliable on first paint — sometimes returning a wider value than the flex
+  // layout would settle on, letting the iframe push the aside off-screen.
   useEffect(() => {
     function fit() {
       const ifr = iframeRef.current
-      const col = colRef.current
-      if (!ifr || !col) return
-      const parent = col.parentElement
+      if (!ifr) return
       const SVG_ASPECT = 480 / 320
       const RESERVED = 200
-      const isWide = typeof window !== "undefined" && window.innerWidth >= 1024
-      const ASIDE_RESERVE = isWide ? 320 + 28 : 0   // panel + gap when side-by-side
-      const parentW = parent ? parent.clientWidth : col.clientWidth
-      const availableW = Math.max(280, parentW - ASIDE_RESERVE)
+      const vw = window.innerWidth
+      // App chrome: dashboard sidebar (256 px) appears at md (≥768).
+      const SIDEBAR_W = vw >= 768 ? 256 : 0
+      const SLIDE_PAD = 64                                  // px-8 each side
+      const SLIDE_MAX = 1200
+      const slideW = Math.min(vw - SIDEBAR_W - SLIDE_PAD, SLIDE_MAX)
+      const isWide = vw >= 1024
+      const ASIDE_RESERVE = isWide ? 320 + 28 : 0           // panel + gap when side-by-side
+      const availableW = Math.max(280, slideW - ASIDE_RESERVE)
       const availableH = Math.max(300, window.innerHeight - RESERVED)
       const widthByHeight = SVG_ASPECT * availableH
       const w = Math.max(320, Math.min(availableW, widthByHeight))
@@ -61,10 +67,8 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
       ifr.style.height = `${Math.round(h)}px`
     }
     fit()
-    const ro = new ResizeObserver(fit)
-    if (colRef.current?.parentElement) ro.observe(colRef.current.parentElement)
     window.addEventListener("resize", fit)
-    return () => { ro.disconnect(); window.removeEventListener("resize", fit) }
+    return () => { window.removeEventListener("resize", fit) }
   }, [])
 
   useEffect(() => {

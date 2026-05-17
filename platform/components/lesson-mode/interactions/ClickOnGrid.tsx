@@ -37,18 +37,21 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
   // Up-front sizing — match WidgetCanvas. We size against the PARENT minus
   // the aside reserve to avoid first-paint races that let col.clientWidth
   // return a too-large value and push the aside off-screen.
+  // Same sizing as WidgetCanvas: compute from window.innerWidth, no DOM reads.
   useEffect(() => {
     function fit() {
       const svg = svgRef.current
-      const col = colRef.current
-      if (!svg || !col) return
-      const parent = col.parentElement
+      if (!svg) return
       const ASPECT = 480 / 320
       const RESERVED = 200
-      const isWide = typeof window !== "undefined" && window.innerWidth >= 1024
+      const vw = window.innerWidth
+      const SIDEBAR_W = vw >= 768 ? 256 : 0
+      const SLIDE_PAD = 64
+      const SLIDE_MAX = 1200
+      const slideW = Math.min(vw - SIDEBAR_W - SLIDE_PAD, SLIDE_MAX)
+      const isWide = vw >= 1024
       const ASIDE_RESERVE = isWide ? 320 + 28 : 0
-      const parentW = parent ? parent.clientWidth : col.clientWidth
-      const availableW = Math.max(280, parentW - ASIDE_RESERVE)
+      const availableW = Math.max(280, slideW - ASIDE_RESERVE)
       const availableH = Math.max(300, window.innerHeight - RESERVED)
       const widthByHeight = ASPECT * availableH
       const w = Math.max(320, Math.min(availableW, widthByHeight))
@@ -57,10 +60,8 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
       svg.style.height = `${Math.round(h)}px`
     }
     fit()
-    const ro = new ResizeObserver(fit)
-    if (colRef.current?.parentElement) ro.observe(colRef.current.parentElement)
     window.addEventListener("resize", fit)
-    return () => { ro.disconnect(); window.removeEventListener("resize", fit) }
+    return () => { window.removeEventListener("resize", fit) }
   }, [])
 
   const tol = config.tolerance ?? 0
