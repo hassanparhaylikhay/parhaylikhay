@@ -33,7 +33,7 @@ export default function ExamLinkSlide({
 
       {slide.title && (
         <h2 className="text-[24px] sm:text-[30px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[760px] leading-tight">
-          {slide.title}
+          <MixedText text={slide.title} />
         </h2>
       )}
 

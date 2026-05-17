@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { MixedText } from "./interactions/_shared"
 
 /**
  * SlideFrame — the shared chrome around every slide.
@@ -134,9 +135,10 @@ export default function SlideFrame({
 
         <div className="flex items-center gap-5">
           {showHint && hintText && (
-            <span className="text-[11px] font-mono text-[#fff067] opacity-80 pl-fade-in">
-              {hintText}
-            </span>
+            <MixedText
+              text={hintText}
+              className="text-[11px] sm:text-[12px] font-mono text-[#fff067] opacity-80 pl-fade-in"
+            />
           )}
           {showExplainAgain && onExplainAgain && (
             <button

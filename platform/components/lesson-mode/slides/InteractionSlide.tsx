@@ -9,6 +9,7 @@ import PlaceLabel, { type PlaceLabelConfig } from "../interactions/PlaceLabel"
 import OrderSteps, { type OrderStepsConfig } from "../interactions/OrderSteps"
 import AdjustSlider, { type AdjustSliderConfig } from "../interactions/AdjustSlider"
 import WidgetCanvas, { type WidgetCanvasConfig } from "../interactions/WidgetCanvas"
+import { MixedText } from "../interactions/_shared"
 
 /**
  * InteractionSlide — routes a slide of kind="interaction" (or "verify") to the
@@ -31,7 +32,7 @@ export default function InteractionSlide({
     <div className="w-full flex flex-col items-center gap-4">
       {slide.title && (
         <h2 className="text-[18px] sm:text-[22px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[640px]">
-          {slide.title}
+          <MixedText text={slide.title} />
         </h2>
       )}
 

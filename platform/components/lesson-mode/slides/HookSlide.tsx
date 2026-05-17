@@ -20,7 +20,7 @@ export default function HookSlide({
     <div className="w-full flex flex-col items-center gap-5 sm:gap-6">
       {slide.title && (
         <h1 className="text-[26px] sm:text-[34px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[760px] leading-tight">
-          {slide.title}
+          <MixedText text={slide.title} />
         </h1>
       )}
       <Visual spec={slide.visual} />

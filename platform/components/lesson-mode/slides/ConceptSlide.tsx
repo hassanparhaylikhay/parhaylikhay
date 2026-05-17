@@ -52,7 +52,7 @@ export default function ConceptSlide({
     <div className="w-full flex flex-col items-center gap-4 sm:gap-5">
       {slide.title && (
         <h2 className="text-[24px] sm:text-[30px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[760px] leading-tight">
-          {slide.title}
+          <MixedText text={slide.title} />
         </h2>
       )}
 
@@ -119,7 +119,7 @@ function ConceptIframeLayout({
       <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 lg:gap-5 justify-center lg:py-4">
         {slide.title && (
           <h2 className="text-[22px] sm:text-[26px] font-semibold text-[#f0eeea] tracking-tight leading-tight">
-            {slide.title}
+            <MixedText text={slide.title} />
           </h2>
         )}
         {slide.prompt && (
