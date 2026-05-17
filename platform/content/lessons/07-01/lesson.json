@@ -73,18 +73,6 @@
     },
 
     {
-      "id": "05-describe-bridge",
-      "kind": "concept",
-      "title": "Naming the move isn't enough",
-      "advance": "manual",
-      "prompt": "On your exam, you also have to describe the rule precisely. Different moves need different rules.",
-      "visual": {
-        "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;gap:8px;max-width:380px;margin:0 auto;font-family:Geist Mono,monospace;font-size:12px'><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #00abfa44;background:rgba(0,171,250,0.04)'><span style='color:#00abfa'>translation</span><span style='color:#7a7875'>1 thing</span></div><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #fff06744;background:rgba(255,240,103,0.04)'><span style='color:#fff067'>reflection</span><span style='color:#7a7875'>1 thing</span></div><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #ff822c44;background:rgba(255,130,44,0.04)'><span style='color:#ff822c'>rotation</span><span style='color:#7a7875'>3 things</span></div><div style='display:flex;justify-content:space-between;padding:9px 14px;border-radius:8px;border:1px solid #ff467044;background:rgba(255,70,112,0.04)'><span style='color:#ff4670'>enlargement</span><span style='color:#7a7875'>2 things</span></div></div>"
-      }
-    },
-
-    {
       "id": "06-q-no-size-change",
       "kind": "interaction",
       "title": "Quick check before we dig in",
@@ -256,6 +244,18 @@
     },
 
     {
+      "id": "14b-translation-rule",
+      "kind": "concept",
+      "title": "Translation: that's the whole rule",
+      "advance": "manual",
+      "prompt": "Add a column vector to every point. No flip, no spin, no resize.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;justify-content:center'><div style='padding:16px 26px;border-radius:10px;border:1.5px solid #00abfa66;background:rgba(0,171,250,0.06);font-family:Geist Mono,monospace;font-size:16px;display:flex;align-items:center;gap:18px'><span style='color:#00abfa;font-weight:700'>translation</span><span style='color:#3a4a5a'>·</span><span style='color:#c8c6be'>1 column vector</span></div></div>"
+      }
+    },
+
+    {
       "id": "15-reflection-explore",
       "kind": "concept",
       "title": "Reflection: drag the mirror line",
@@ -358,6 +358,18 @@
           ],
           "successText": "Always give the mirror as an equation: $y = x$, $y = -x$, $x = 0$, $y = 0$. Never words."
         }
+      }
+    },
+
+    {
+      "id": "20b-reflection-rule",
+      "kind": "concept",
+      "title": "Reflection: that's the whole rule",
+      "advance": "manual",
+      "prompt": "Flip every point to the same distance on the other side of a mirror. State the mirror as an equation.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;justify-content:center'><div style='padding:16px 26px;border-radius:10px;border:1.5px solid #fff06766;background:rgba(255,240,103,0.06);font-family:Geist Mono,monospace;font-size:16px;display:flex;align-items:center;gap:18px'><span style='color:#fff067;font-weight:700'>reflection</span><span style='color:#3a4a5a'>·</span><span style='color:#c8c6be'>1 mirror equation</span></div></div>"
       }
     },
 
@@ -529,6 +541,18 @@
     },
 
     {
+      "id": "29b-rotation-rule",
+      "kind": "concept",
+      "title": "Rotation: that's the whole rule",
+      "advance": "manual",
+      "prompt": "Spin every point around a centre, through an angle, in one direction. Three facts, three marks.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;justify-content:center'><div style='padding:16px 26px;border-radius:10px;border:1.5px solid #ff822c66;background:rgba(255,130,44,0.06);font-family:Geist Mono,monospace;font-size:16px;display:flex;align-items:center;gap:18px'><span style='color:#ff822c;font-weight:700'>rotation</span><span style='color:#3a4a5a'>·</span><span style='color:#c8c6be'>centre + angle + direction</span></div></div>"
+      }
+    },
+
+    {
       "id": "30-enlargement-explore",
       "kind": "concept",
       "title": "Enlargement: centre and scale factor",
@@ -683,6 +707,18 @@
           ],
           "successText": "“Enlargement, scale factor $2$, centre $(1, 1)$.” Three pieces, three marks."
         }
+      }
+    },
+
+    {
+      "id": "38b-enlargement-rule",
+      "kind": "concept",
+      "title": "Enlargement: that's the whole rule",
+      "advance": "manual",
+      "prompt": "Multiply every distance from the centre by the scale factor. Two facts, plus the type name.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;justify-content:center'><div style='padding:16px 26px;border-radius:10px;border:1.5px solid #ff467066;background:rgba(255,70,112,0.06);font-family:Geist Mono,monospace;font-size:16px;display:flex;align-items:center;gap:18px'><span style='color:#ff4670;font-weight:700'>enlargement</span><span style='color:#3a4a5a'>·</span><span style='color:#c8c6be'>scale factor + centre</span></div></div>"
       }
     },
 
