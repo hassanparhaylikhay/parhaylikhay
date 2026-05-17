@@ -63,14 +63,16 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
   const [yMin, yMax] = config.yRange
   const SVG_W = 480
   const SVG_H = 320
-  const PAD = 28
-  const ux = (SVG_W - 2 * PAD) / (xMax - xMin)
-  const uy = (SVG_H - 2 * PAD) / (yMax - yMin)
-  const u = Math.min(ux, uy)
-  const ox = (SVG_W - u * (xMax - xMin)) / 2
-  const oy = (SVG_H - u * (yMax - yMin)) / 2
+  // Match the transformation widgets' grid formula exactly: no padding,
+  // grid fills width, origin offset same way. Ensures the visible coordinate
+  // window inside the card lines up between iframe widgets and this SVG.
+  const pxPerX = SVG_W / (xMax - xMin)
+  const pxPerY = SVG_H / (yMax - yMin)
+  const u = Math.min(pxPerX, pxPerY)
+  const ORIG_X = (SVG_W - (xMax - xMin) * u) / 2 - xMin * u
+  const ORIG_Y = SVG_H - (-yMin) * u - (SVG_H - (yMax - yMin) * u) / 2
 
-  const toPx = (mx: number, my: number) => [ox + (mx - xMin) * u, oy + (yMax - my) * u] as const
+  const toPx = (mx: number, my: number) => [ORIG_X + mx * u, ORIG_Y - my * u] as const
 
   function handleClick(e: React.PointerEvent<SVGSVGElement>) {
     if (done) return
@@ -79,8 +81,8 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
     const scale = SVG_W / rect.width
     const px = (e.clientX - rect.left) * scale
     const py = (e.clientY - rect.top) * scale
-    const mx = Math.round((px - ox) / u + xMin)
-    const my = Math.round(yMax - (py - oy) / u)
+    const mx = Math.round((px - ORIG_X) / u)
+    const my = Math.round((ORIG_Y - py) / u)
     const correct = Math.abs(mx - config.target.x) <= tol && Math.abs(my - config.target.y) <= tol
     if (correct) {
       setPick({ x: mx, y: my, correct: true })
@@ -111,24 +113,26 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
     gridLines.push(<line key={`gy${y}`} x1={px1} y1={py} x2={px2} y2={py} stroke="#141e2a" strokeWidth={0.7} />)
   }
 
-  // tick numbers (KaTeX, matching widget look)
+  // tick numbers — same offsets as the widgets' svgKaTeXLabel
+  // (centred 11 px below x-axis, centred 11 px left of y-axis)
   const ticks: React.ReactElement[] = []
   for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
     if (x === 0) continue
-    const [px, py] = toPx(x, 0)
+    const [px, py0] = toPx(x, 0)
+    const fy = py0 + 11 - 11
     ticks.push(
-      <foreignObject key={`tx${x}`} x={px - 50} y={py + 4} width={100} height={18} style={{ overflow: "visible", pointerEvents: "none" }}>
-        <div style={{ height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Geist Mono',monospace", fontSize: 11, color: COLOR.grey }}
+      <foreignObject key={`tx${x}`} x={px - 50} y={fy} width={100} height={22} style={{ overflow: "visible", pointerEvents: "none" }}>
+        <div style={{ height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Geist Mono',monospace", fontSize: 12, color: COLOR.grey }}
           dangerouslySetInnerHTML={{ __html: tryKatex(String(x)) }} />
       </foreignObject>
     )
   }
   for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
     if (y === 0) continue
-    const [px, py] = toPx(0, y)
+    const [px0, py] = toPx(0, y)
     ticks.push(
-      <foreignObject key={`ty${y}`} x={px - 60} y={py - 9} width={50} height={18} style={{ overflow: "visible", pointerEvents: "none" }}>
-        <div style={{ height: 18, display: "flex", alignItems: "center", justifyContent: "flex-end", fontFamily: "'Geist Mono',monospace", fontSize: 11, color: COLOR.grey }}
+      <foreignObject key={`ty${y}`} x={px0 - 11 - 50} y={py - 11} width={100} height={22} style={{ overflow: "visible", pointerEvents: "none" }}>
+        <div style={{ height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Geist Mono',monospace", fontSize: 12, color: COLOR.grey }}
           dangerouslySetInnerHTML={{ __html: tryKatex(String(y)) }} />
       </foreignObject>
     )
