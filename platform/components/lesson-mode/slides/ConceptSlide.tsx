@@ -112,11 +112,11 @@ function ConceptIframeLayout({
   const readout = useWidgetReadout(iframeRef)
 
   return (
-    <div className="w-full flex flex-col lg:flex-row gap-5 lg:gap-8 items-center lg:items-stretch">
+    <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-8 items-center xl:items-stretch">
       <div className="flex-1 min-w-0 flex items-center justify-center">
         {slide.visual && <Visual spec={slide.visual} iframeRef={iframeRef} />}
       </div>
-      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 lg:gap-5 justify-center lg:py-4">
+      <aside className="w-full xl:w-[320px] shrink-0 flex flex-col gap-4 xl:gap-5 justify-center xl:py-4">
         {slide.title && (
           <h2 className="text-[22px] sm:text-[26px] font-semibold text-[#f0eeea] tracking-tight leading-tight">
             <MixedText text={slide.title} />
@@ -130,7 +130,7 @@ function ConceptIframeLayout({
         )}
         <ReadoutPanel readout={readout} />
         {slide.advance === "manual" && canAdvance && (
-          <div className="lg:mt-2">
+          <div className="xl:mt-2">
             <UnderstoodButton onClick={onAdvance} />
           </div>
         )}

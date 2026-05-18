@@ -18,10 +18,10 @@ export type WidgetCanvasConfig = {
  * WidgetCanvas — embeds a polished HTML widget and listens for
  * `pl-lesson-success` (puzzle solved) and `pl-lesson-readout` (live state).
  *
- * Layout: side-by-side from lg (≥1024px), stacked below (iPad landscape and
- * narrower stacks so the manipulative is never squeezed thin). The iframe
- * is sized up-front from the column width + viewport height so the widget
- * renders at its right size from initial paint, no flash-then-clip.
+ * Layout: side-by-side from xl (≥1280px), stacked below. iPad-landscape and
+ * small-laptop viewports stack so the manipulative is never squeezed thin
+ * next to the 320 px aside. The iframe is sized up-front from window.innerWidth
+ * so the widget renders at its right size from initial paint, no flash-then-clip.
  */
 export default function WidgetCanvas({ config, onComplete }: InteractionProps<WidgetCanvasConfig>) {
   const [solved, setSolved] = useState(false)
@@ -56,7 +56,7 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
       const SLIDE_PAD = 64                                  // px-8 each side
       const SLIDE_MAX = 1200
       const slideW = Math.min(vw - SIDEBAR_W - SLIDE_PAD, SLIDE_MAX)
-      const isWide = vw >= 1024
+      const isWide = vw >= 1280
       const ASIDE_RESERVE = isWide ? 320 + 28 : 0           // panel + gap when side-by-side
       const availableW = Math.max(280, slideW - ASIDE_RESERVE)
       const availableH = Math.max(300, window.innerHeight - RESERVED)
@@ -87,7 +87,7 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
   }, [config.widget, onComplete, solved])
 
   return (
-    <div className="w-full flex flex-col lg:flex-row gap-5 lg:gap-7 items-center lg:items-stretch">
+    <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
       <div ref={colRef} className="flex-1 min-w-0 flex items-center justify-center">
         <iframe
           ref={iframeRef}
@@ -102,7 +102,7 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
         />
       </div>
 
-      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
+      <aside className="w-full xl:w-[320px] shrink-0 flex flex-col gap-4 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
         {config.prompt && (
           <MixedText
             text={config.prompt}

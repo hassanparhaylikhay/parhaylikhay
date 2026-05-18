@@ -20,8 +20,8 @@ export type ClickOnGridConfig = {
 /**
  * ClickOnGrid — student taps a coordinate on the grid. Same layout and
  * sizing rules as WidgetCanvas so the click puzzles feel like a sibling
- * of the drag puzzles: grid takes the canvas on the left (lg+) or top
- * (mobile), prompt + status sit in a 320 px right panel.
+ * of the drag puzzles: grid takes the canvas on the left at xl (≥1280 px),
+ * stacked above the side panel on smaller viewports.
  *
  * Visual styling (grid colour, axis weight, KaTeX tick labels, vertex
  * dot shape and label position) mirrors the transformation widgets.
@@ -49,7 +49,7 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
       const SLIDE_PAD = 64
       const SLIDE_MAX = 1200
       const slideW = Math.min(vw - SIDEBAR_W - SLIDE_PAD, SLIDE_MAX)
-      const isWide = vw >= 1024
+      const isWide = vw >= 1280
       const ASIDE_RESERVE = isWide ? 320 + 28 : 0
       const availableW = Math.max(280, slideW - ASIDE_RESERVE)
       const availableH = Math.max(300, window.innerHeight - RESERVED)
@@ -146,7 +146,7 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
   }
 
   return (
-    <div className="w-full flex flex-col lg:flex-row gap-5 lg:gap-7 items-center lg:items-stretch">
+    <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
       {/* grid canvas — claims the canvas */}
       <div ref={colRef} className="flex-1 min-w-0 flex items-center justify-center">
         <svg
@@ -245,7 +245,7 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
       </div>
 
       {/* side panel — same shape as WidgetCanvas */}
-      <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-4 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
+      <aside className="w-full xl:w-[320px] shrink-0 flex flex-col gap-4 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
         {config.prompt && (
           <MixedText
             text={config.prompt}
