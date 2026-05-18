@@ -43,7 +43,7 @@
       "advance": "onSuccess",
       "interaction": {
         "kind": "placeLabel",
-        "hint": "Translation slides. Reflection flips. Rotation spins. Enlargement resizes.",
+        "hint": "Translation slides, reflection flips, rotation spins, and enlargement resizes.",
         "config": {
           "prompt": "Drag each name onto the move it describes.",
           "slots": [
@@ -103,7 +103,7 @@
         "kind": "clickToIdentify",
         "hint": "Watch each animation. Three keep the triangle the same size.",
         "config": {
-          "prompt": "Three keep the size. One doesn't. Which?",
+          "prompt": "Which one of these four transformations changes the size of the shape?",
           "regions": [
             {
               "id": "r-translate",
@@ -1057,7 +1057,7 @@
           "target": "1.5,0,0",
           "noOutline": true,
           "widget": "enlargement",
-          "prompt": "Same centre $(0, 0)$. Scale by $k = 1.5$. No pink outline.",
+          "prompt": "Scale by $k = 1.5$ from the centre at $(0, 0)$. No pink outline this time.",
           "successText": "$k = 1.5$. Half again as big as the original."
         }
       }
@@ -1126,7 +1126,7 @@
       "advance": "onSuccess",
       "interaction": {
         "kind": "widgetCanvas",
-        "hint": "Distances halve. Image is smaller. Still called an enlargement.",
+        "hint": "Distances halve and the image gets smaller, but it's still called an enlargement.",
         "config": {
           "src": "/widgets/enlargement-explorer.html",
           "target": "0.5,0,0",
