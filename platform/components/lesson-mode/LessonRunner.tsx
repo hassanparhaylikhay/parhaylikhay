@@ -167,7 +167,7 @@ function SlideDispatcher({
       return <ConceptSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} canAdvance={canAdvance} />
     case "interaction":
     case "verify":
-      return <InteractionSlide slide={slide} onComplete={onComplete} savedData={savedData} />
+      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} />
     case "recap":
       return <RecapSlide slide={slide} onAdvance={onAdvance} />
     case "examLink":

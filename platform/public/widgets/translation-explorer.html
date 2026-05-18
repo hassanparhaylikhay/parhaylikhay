@@ -413,6 +413,7 @@ function evMath(e){
   return { x: fromSx(sp.x), y: fromSy(sp.y) };
 }
 stage.addEventListener("pointerdown", function(e){
+  if (SOLVED) return;     // lock the manipulative once the puzzle is solved
   var info = hitTest(evMath(e));
   if (!info) return;
   e.preventDefault();

@@ -26,7 +26,9 @@ export type ClickOnGridConfig = {
  * Visual styling (grid colour, axis weight, KaTeX tick labels, vertex
  * dot shape and label position) mirrors the transformation widgets.
  */
-export default function ClickOnGrid({ config, onComplete }: InteractionProps<ClickOnGridConfig>) {
+type ClickOnGridProps = InteractionProps<ClickOnGridConfig> & { onAdvance?: () => void }
+
+export default function ClickOnGrid({ config, onComplete, onAdvance }: ClickOnGridProps) {
   const [pick, setPick] = useState<{ x: number; y: number; correct: boolean } | null>(null)
   const [done, setDone] = useState(false)
   const [wrongFlashId, setWrongFlashId] = useState(0)
@@ -95,6 +97,9 @@ export default function ClickOnGrid({ config, onComplete }: InteractionProps<Cli
       setPick({ x: mx, y: my, correct: true })
       setDone(true)
       onComplete({ pick: { x: mx, y: my } })
+      // Auto-advance after a short pause. The SVG already locks further taps
+      // via the `done` check at the top of this handler.
+      if (onAdvance) setTimeout(onAdvance, 1400)
     } else {
       setPick({ x: mx, y: my, correct: false })
       const id = wrongFlashId + 1

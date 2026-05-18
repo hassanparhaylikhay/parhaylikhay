@@ -23,7 +23,9 @@ export type WidgetCanvasConfig = {
  * next to the 320 px aside. The iframe is sized up-front from window.innerWidth
  * so the widget renders at its right size from initial paint, no flash-then-clip.
  */
-export default function WidgetCanvas({ config, onComplete }: InteractionProps<WidgetCanvasConfig>) {
+type WidgetCanvasProps = InteractionProps<WidgetCanvasConfig> & { onAdvance?: () => void }
+
+export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCanvasProps) {
   const [solved, setSolved] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const colRef = useRef<HTMLDivElement | null>(null)
@@ -80,11 +82,15 @@ export default function WidgetCanvas({ config, onComplete }: InteractionProps<Wi
         if (solved) return
         setSolved(true)
         onComplete({ widget: config.widget ?? "unknown", value: d.value })
+        // Auto-advance to the next slide after a brief "you got it" pause.
+        // The widget locks input on its end (SOLVED check in pointerdown),
+        // so the student can savour the success state but can't drag away.
+        if (onAdvance) setTimeout(onAdvance, 1400)
       }
     }
     window.addEventListener("message", onMsg)
     return () => window.removeEventListener("message", onMsg)
-  }, [config.widget, onComplete, solved])
+  }, [config.widget, onComplete, onAdvance, solved])
 
   return (
     <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
