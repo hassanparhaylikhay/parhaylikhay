@@ -10,12 +10,18 @@ import OrderSteps, { type OrderStepsConfig } from "../interactions/OrderSteps"
 import AdjustSlider, { type AdjustSliderConfig } from "../interactions/AdjustSlider"
 import WidgetCanvas, { type WidgetCanvasConfig } from "../interactions/WidgetCanvas"
 import ClickOnGrid, { type ClickOnGridConfig } from "../interactions/ClickOnGrid"
-import { MixedText } from "../interactions/_shared"
 
 /**
  * InteractionSlide — routes a slide of kind="interaction" (or "verify") to the
- * right interaction component. Renders the slide title + prompt inside the
- * interaction's own header.
+ * right interaction component.
+ *
+ * The slide-level title is intentionally NOT rendered here. Every interaction
+ * already shows its own prompt (centered above the canvas for vertical-stack
+ * layouts, or in the side panel for widgetCanvas / clickOnGrid). A separate
+ * h2 above was redundant — and on widget puzzles with tall pmatrix titles it
+ * pushed the canvas below the fold and forced scroll. The title is still
+ * announced via SlideFrame's sr-only span and shown in the chrome top strip,
+ * so it remains accessible.
  */
 export default function InteractionSlide({
   slide,
@@ -30,13 +36,7 @@ export default function InteractionSlide({
   const baseConfig = { ...(inj.config as Record<string, unknown>), prompt: (inj.config as Record<string, unknown>).prompt ?? slide.prompt }
 
   return (
-    <div className="w-full flex flex-col items-center gap-4">
-      {slide.title && (
-        <h2 className="text-[18px] sm:text-[22px] font-semibold text-[#f0eeea] tracking-tight text-center max-w-[640px]">
-          <MixedText text={slide.title} />
-        </h2>
-      )}
-
+    <div className="w-full flex flex-col items-center">
       {(() => {
         const props = { config: baseConfig, onComplete, savedData }
         switch (inj.kind) {
