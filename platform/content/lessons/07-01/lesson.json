@@ -19,19 +19,19 @@
         "children": [
           {
             "kind": "html",
-            "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg><div style='color:#00abfa;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>SLIDE</div></div>"
+            "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:180px;height:144px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon></svg><div style='color:#00abfa;font-family:Geist Mono,monospace;font-size:12.5px;font-weight:600;margin-top:8px;letter-spacing:0.5px'>SLIDE</div></div>"
           },
           {
             "kind": "html",
-            "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg><div style='color:#fff067;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>FLIP</div></div>"
+            "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:180px;height:144px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon></svg><div style='color:#fff067;font-family:Geist Mono,monospace;font-size:12.5px;font-weight:600;margin-top:8px;letter-spacing:0.5px'>FLIP</div></div>"
           },
           {
             "kind": "html",
-            "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg><div style='color:#ff822c;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>SPIN</div></div>"
+            "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:180px;height:144px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg><div style='color:#ff822c;font-family:Geist Mono,monospace;font-size:12.5px;font-weight:600;margin-top:8px;letter-spacing:0.5px'>SPIN</div></div>"
           },
           {
             "kind": "html",
-            "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:110px;height:88px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg><div style='color:#ff4670;font-family:Geist Mono,monospace;font-size:10.5px;font-weight:600;margin-top:6px;letter-spacing:0.5px'>RESIZE</div></div>"
+            "content": "<div style='text-align:center'><svg viewBox='0 0 100 80' style='display:block;width:180px;height:144px;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon></svg><div style='color:#ff4670;font-family:Geist Mono,monospace;font-size:12.5px;font-weight:600;margin-top:8px;letter-spacing:0.5px'>RESIZE</div></div>"
           }
         ]
       }
@@ -51,25 +51,25 @@
               "id": "s-slide",
               "hint": "?",
               "correctLabelId": "lab-translation",
-              "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>"
+              "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon></svg>"
             },
             {
               "id": "s-flip",
               "hint": "?",
               "correctLabelId": "lab-reflection",
-              "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>"
+              "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon></svg>"
             },
             {
               "id": "s-spin",
               "hint": "?",
               "correctLabelId": "lab-rotation",
-              "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg>"
+              "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg>"
             },
             {
               "id": "s-resize",
               "hint": "?",
               "correctLabelId": "lab-enlargement",
-              "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>"
+              "visualHtml": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto;background:#070b10;border-radius:6px' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon></svg>"
             }
           ],
           "labels": [
@@ -108,23 +108,23 @@
             {
               "id": "r-translate",
               "label": "translation",
-              "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>"
+              "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='18,60 33,60 25,46' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='translate' values='0 0; 44 -22; 44 -22; 0 0' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon></svg>"
             },
             {
               "id": "r-reflect",
               "label": "reflection",
-              "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>"
+              "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><line x1='50' y1='8' x2='50' y2='72' stroke='#fff067' stroke-width='0.9' stroke-dasharray='2.5 2.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='22,56 22,24 40,40; 78,56 78,24 60,40; 78,56 78,24 60,40; 22,56 22,24 40,40' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon></svg>"
             },
             {
               "id": "r-rotate",
               "label": "rotation",
-              "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg>"
+              "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='55,42 78,42 67,26' fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animateTransform attributeName='transform' type='rotate' values='0 50 40; -90 50 40; -90 50 40; 0 50 40' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon><circle cx='50' cy='40' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg>"
             },
             {
               "id": "r-enlarge",
               "label": "enlargement",
               "isCorrect": true,
-              "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.45;0.7;1' dur='3.2s' repeatCount='indefinite'/></polygon></svg>"
+              "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon></svg>"
             }
           ],
           "successText": "Enlargement scales the shape. The image is similar, not congruent.",
