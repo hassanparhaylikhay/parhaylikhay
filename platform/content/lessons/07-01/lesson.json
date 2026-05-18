@@ -188,13 +188,13 @@
       "advance": "onSuccess",
       "interaction": {
         "kind": "widgetCanvas",
-        "hint": "Drag the yellow tip until the column vector reads ⟨3, −2⟩.",
+        "hint": "Drag the yellow tip until the column vector reads $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$.",
         "config": {
           "src": "/widgets/translation-explorer.html",
           "target": "3,-2",
           "widget": "translation",
           "prompt": "Drag until the image lands on the pink outline. Shift = $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$.",
-          "successText": "Every point moved by ⟨3, −2⟩. That's the entire description."
+          "successText": "Every point moved by $\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}$. That's the entire description."
         }
       }
     },
@@ -238,7 +238,7 @@
     {
       "id": "10-translation-target-2",
       "kind": "interaction",
-      "title": "Now you try: slide by ⟨−5, 1⟩",
+      "title": "Now you try: slide by $\\begin{pmatrix} -5 \\\\ 1 \\end{pmatrix}$",
       "advance": "onSuccess",
       "interaction": {
         "kind": "widgetCanvas",
@@ -292,7 +292,7 @@
     {
       "id": "12-translation-target-3",
       "kind": "interaction",
-      "title": "Pure horizontal: ⟨5, 0⟩",
+      "title": "Pure horizontal: $\\begin{pmatrix} 5 \\\\ 0 \\end{pmatrix}$",
       "advance": "onSuccess",
       "interaction": {
         "kind": "widgetCanvas",
@@ -310,7 +310,7 @@
     {
       "id": "12b-translation-target-4",
       "kind": "interaction",
-      "title": "One more: ⟨−2, −4⟩",
+      "title": "One more: $\\begin{pmatrix} -2 \\\\ -4 \\end{pmatrix}$",
       "advance": "onSuccess",
       "interaction": {
         "kind": "widgetCanvas",
