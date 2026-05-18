@@ -415,37 +415,37 @@
       }
     },
     {
-      "id": "15b-reflect-yx",
+      "id": "15b-reflect-y0",
       "kind": "interaction",
       "title": "Set the mirror to land on the pink ghost",
       "advance": "onSuccess",
       "interaction": {
         "kind": "widgetCanvas",
-        "hint": "The mirror you want is the diagonal through the origin going up-right.",
+        "hint": "The pink ghost is directly below blue. The mirror is the horizontal axis.",
         "config": {
           "src": "/widgets/reflection-explorer.html",
-          "target": "y=x",
+          "target": "y=0",
           "widget": "reflection",
-          "prompt": "Drag the mirror so blue reflects onto the pink outline. The mirror: $y = x$.",
-          "successText": "Mirror set to $y = x$. The reflection swaps $x$ and $y$."
+          "prompt": "Drag the mirror so blue reflects onto the pink outline. The mirror: $y = 0$ (the $x$-axis).",
+          "successText": "$y = 0$ is the $x$-axis. Reflecting flips the sign of $y$ on every point."
         }
       }
     },
     {
-      "id": "15c-reflect-y0",
+      "id": "15c-reflect-yx",
       "kind": "interaction",
-      "title": "Now you try: reflect in $y = 0$",
+      "title": "Now you try: reflect in $y = x$",
       "advance": "onSuccess",
       "interaction": {
         "kind": "widgetCanvas",
-        "hint": "$y = 0$ is the horizontal axis. Drag both ends of the mirror onto it.",
+        "hint": "$y = x$ is the diagonal through the origin going up-right.",
         "config": {
           "src": "/widgets/reflection-explorer.html",
-          "target": "y=0",
+          "target": "y=x",
           "noOutline": true,
           "widget": "reflection",
-          "prompt": "Place the mirror on the line $y = 0$ (the $x$-axis). No outline this time.",
-          "successText": "$y = 0$ is the $x$-axis. Reflecting flips the sign of $y$."
+          "prompt": "Place the mirror on $y = x$. No outline this time.",
+          "successText": "$y = x$ swaps the two coordinates: $(x, y) \\to (y, x)$."
         }
       }
     },

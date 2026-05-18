@@ -166,10 +166,11 @@ var LABELS = ['A','B','C'];
 
 // ----- state -----
 // In Lesson Mode with a target, start the mirror at a NEUTRAL position that
-// can't accidentally satisfy any of the common targets (y=x, y=-x, y=0, x=0).
-// Otherwise the puzzle would render already-solved.
+// (a) can't accidentally satisfy any common target (y=x, y=-x, y=0, x=0,
+// y=k, x=h) and (b) reads clearly as a "starting position you need to move"
+// rather than something that looks almost-aligned with an axis.
 var INIT_P = (LESSON_MODE && TARGET)
-  ? { p1: {x:-3,y:2}, p2: {x:3,y:2.5}, preset: null }   // odd, non-axial line
+  ? { p1: {x:-4,y:-3}, p2: {x:2,y:4}, preset: null }    // clearly slanted diagonal
   : { p1: {x:-4,y:-4}, p2: {x:4,y:4}, preset: "yx" };
 var P = { p1: {x: INIT_P.p1.x, y: INIT_P.p1.y}, p2: {x: INIT_P.p2.x, y: INIT_P.p2.y}, preset: INIT_P.preset };
 var D = { p1: {x: INIT_P.p1.x, y: INIT_P.p1.y}, p2: {x: INIT_P.p2.x, y: INIT_P.p2.y} };
