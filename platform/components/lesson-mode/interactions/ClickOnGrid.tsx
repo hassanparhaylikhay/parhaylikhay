@@ -99,7 +99,7 @@ export default function ClickOnGrid({ config, onComplete, onAdvance }: ClickOnGr
       onComplete({ pick: { x: mx, y: my } })
       // Auto-advance after a short pause. The SVG already locks further taps
       // via the `done` check at the top of this handler.
-      if (onAdvance) setTimeout(onAdvance, 1400)
+      if (onAdvance) setTimeout(onAdvance, 2800)
     } else {
       setPick({ x: mx, y: my, correct: false })
       const id = wrongFlashId + 1

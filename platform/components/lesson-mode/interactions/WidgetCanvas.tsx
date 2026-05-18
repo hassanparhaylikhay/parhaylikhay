@@ -85,7 +85,7 @@ export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCa
         // Auto-advance to the next slide after a brief "you got it" pause.
         // The widget locks input on its end (SOLVED check in pointerdown),
         // so the student can savour the success state but can't drag away.
-        if (onAdvance) setTimeout(onAdvance, 1400)
+        if (onAdvance) setTimeout(onAdvance, 2800)
       }
     }
     window.addEventListener("message", onMsg)
