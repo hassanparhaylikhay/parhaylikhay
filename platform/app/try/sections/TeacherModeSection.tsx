@@ -114,8 +114,6 @@ export default function TeacherModeSection() {
           <TabStrip tab={tab} setTab={setTab} />
           <Stage key={tab} tab={tab} />
         </div>
-
-        <BeyondLiveClassCard visible={visible} />
       </div>
     </Section>
   )
@@ -190,70 +188,3 @@ function Stage({ tab }: { tab: Tab }) {
   )
 }
 
-/**
- * BeyondLiveClassCard — replaces the standard "coming soon · feature
- * list with pills" pattern that reads as AI-generated marketing copy.
- *
- * Editorial treatment instead: one wide card, asymmetric layout, a
- * single typographic statement, no pills, no symmetric 3-column grid.
- * Reads as something a designer wrote, not a content model.
- */
-function BeyondLiveClassCard({ visible }: { visible: boolean }) {
-  return (
-    <div
-      className="mt-16 transition-all duration-[1000ms]"
-      style={{
-        opacity: visible ? 1 : 0,
-        transform: visible ? "translateY(0)" : "translateY(12px)",
-        transitionDelay: "260ms",
-        transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
-      }}
-    >
-      <div
-        className="relative rounded-2xl overflow-hidden border border-[#141e2a] bg-[#0b1118]"
-      >
-        {/* Hairline orange accent on the LEFT edge — a single visual anchor
-            instead of a full bordered/tinted card. */}
-        <div
-          aria-hidden
-          className="absolute left-0 top-0 bottom-0"
-          style={{
-            width: 3,
-            background: "linear-gradient(to bottom, rgba(255,130,44,0) 0%, #ff822c 28%, #ff822c 72%, rgba(255,130,44,0) 100%)",
-          }}
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-y-6 md:gap-x-10 lg:gap-x-14 px-6 sm:px-9 lg:px-12 py-9 lg:py-11">
-          {/* LEFT: stacked metadata. Mono, quiet, like a magazine column. */}
-          <div className="flex flex-col gap-3">
-            <p className="font-mono text-[10px] tracking-[2.5px] uppercase text-[#ff822c]">
-              next on the build
-            </p>
-            <p className="font-mono text-[10.5px] tracking-[1.4px] uppercase text-[#3a4a5a]">
-              v2 · in development
-            </p>
-            <p className="font-mono text-[10.5px] tracking-[1.4px] uppercase text-[#3a4a5a]">
-              early access · spring 2026
-            </p>
-          </div>
-
-          {/* RIGHT: typographic statement. One headline, one paragraph,
-              one quiet closer. No pills, no feature grid. */}
-          <div className="max-w-[58ch]">
-            <p className="font-sans text-[22px] sm:text-[26px] md:text-[30px] leading-[1.25] tracking-[-0.018em] text-[#f0eeea] font-medium">
-              Today, teachers run these live in class.
-              <br />
-              <span className="text-[#7a7875]">Soon, they assign them as homework, and the platform marks against the same logic.</span>
-            </p>
-            <p className="mt-6 text-[14.5px] leading-[1.7] text-[#c8c6be] max-w-[54ch]">
-              A teacher tags any manipulative or quiz as homework. The student attempts it on the same canvas they saw in class. The platform marks it the way the lesson teaches it, and the teacher sees, by name, who got stuck and on which step.
-            </p>
-            <p className="mt-5 font-sans text-[13px] leading-[1.6] text-[#3a4a5a] italic">
-              One platform. Both halves of the loop.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
