@@ -146,7 +146,12 @@ function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
 function snapHalf(v){ return Math.round(v * 2) / 2; }
 
 // ----- object triangle -----
+// OBJ is the TARGET (where the user dragged a vertex to). OBJ_D is the
+// DISPLAY (lerped toward OBJ each frame). Drawing reads OBJ_D so the
+// shape glides; teacher hit-tests + drag write to OBJ, the spring
+// catches up.
 var OBJ = [ {x:1,y:1}, {x:4,y:1}, {x:2,y:3} ];
+var OBJ_D = OBJ.map(function(p){ return { x: p.x, y: p.y }; });
 var LABELS = ['A','B','C'];
 
 // ----- state -----
@@ -300,8 +305,9 @@ function drawScene(){
     gGuides.appendChild(ghost);
   }
 
-  // ghost arrows from each object vertex to its image vertex (faint yellow)
-  OBJ.forEach(function(p){
+  // ghost arrows from each object vertex to its image vertex (faint yellow).
+  // Read OBJ_D so the arrows glide with the vertex as the spring settles.
+  OBJ_D.forEach(function(p){
     var q = { x: p.x + D.tx, y: p.y + D.ty };
     drawArrow(gGuides, p, q, "rgba(255,240,103,0.32)", 1.4, true, true);
   });
@@ -321,15 +327,16 @@ function drawScene(){
   var gObj = document.getElementById("g-object");
   var gImg = document.getElementById("g-image");
   clear(gObj); clear(gImg);
-  drawPoly(gObj, OBJ, "rgba(0,171,250,0.10)", COL.blue, 2);
-  var IMG = OBJ.map(function(p){ return { x: p.x + D.tx, y: p.y + D.ty }; });
+  drawPoly(gObj, OBJ_D, "rgba(0,171,250,0.10)", COL.blue, 2);
+  var IMG = OBJ_D.map(function(p){ return { x: p.x + D.tx, y: p.y + D.ty }; });
   drawPoly(gImg, IMG, "rgba(255,70,112,0.10)", COL.pink, 2);
-  OBJ.forEach(function(p,i){ drawVertexDot(gObj, p, COL.blue, LABELS[i], false); });
+  OBJ_D.forEach(function(p,i){ drawVertexDot(gObj, p, COL.blue, LABELS[i], false); });
   IMG.forEach(function(p,i){ drawVertexDot(gImg, p, COL.pink, LABELS[i] + "'", true); });
 
   // Teacher edit mode: pulsing yellow ring around every OBJ vertex signals draggable.
+  // Drawn at OBJ_D so the ring glides with the vertex when the teacher drags.
   if (TEACHER_EDIT){
-    OBJ.forEach(function(p){
+    OBJ_D.forEach(function(p){
       var ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
       ring.setAttribute("cx", toSx(p.x)); ring.setAttribute("cy", toSy(p.y));
       ring.setAttribute("r", 9);
@@ -391,8 +398,8 @@ function dist2(a, b){ var dx = a.x - b.x, dy = a.y - b.y; return dx*dx + dy*dy; 
 function hitTest(m){
   // 0. Teacher edit mode: OBJ vertex handles take priority — they sit on top of the source triangle.
   if (TEACHER_EDIT){
-    for (var oi = 0; oi < OBJ.length; oi++){
-      if (dist2(m, OBJ[oi]) < 0.6*0.6){
+    for (var oi = 0; oi < OBJ_D.length; oi++){
+      if (dist2(m, OBJ_D[oi]) < 0.6*0.6){
         return { kind: "obj-vertex", idx: oi };
       }
     }
@@ -401,8 +408,8 @@ function hitTest(m){
   if (dist2(m, { x: D.tx, y: D.ty }) < 0.6*0.6){
     return { kind: "tip" };
   }
-  // 2. pink triangle
-  var IMG = OBJ.map(function(p){ return { x: p.x + D.tx, y: p.y + D.ty }; });
+  // 2. pink triangle (visual position)
+  var IMG = OBJ_D.map(function(p){ return { x: p.x + D.tx, y: p.y + D.ty }; });
   if (pointInPoly(m, IMG)){
     var cx = (IMG[0].x + IMG[1].x + IMG[2].x) / 3;
     var cy = (IMG[0].y + IMG[1].y + IMG[2].y) / 3;
@@ -420,8 +427,9 @@ function applyDrag(info, m){
     P.tx = clamp(snapHalf(m.x), -8, 8);
     P.ty = clamp(snapHalf(m.y), -6, 6);
   } else if (info.kind === "shape"){
-    var ocx = (OBJ[0].x + OBJ[1].x + OBJ[2].x) / 3;
-    var ocy = (OBJ[0].y + OBJ[1].y + OBJ[2].y) / 3;
+    // Use OBJ_D (visual position) to match where the user grabbed.
+    var ocx = (OBJ_D[0].x + OBJ_D[1].x + OBJ_D[2].x) / 3;
+    var ocy = (OBJ_D[0].y + OBJ_D[1].y + OBJ_D[2].y) / 3;
     P.tx = clamp(snapHalf(m.x - info.grab.x - ocx), -8, 8);
     P.ty = clamp(snapHalf(m.y - info.grab.y - ocy), -6, 6);
   }
@@ -471,10 +479,21 @@ stage.addEventListener("pointercancel", endDrag);
 stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover-grab"); });
 
 // ----- spring loop -----
-function settled(){ return Math.abs(P.tx - D.tx) < EPS && Math.abs(P.ty - D.ty) < EPS; }
+function settled(){
+  if (Math.abs(P.tx - D.tx) >= EPS || Math.abs(P.ty - D.ty) >= EPS) return false;
+  for (var i = 0; i < OBJ.length; i++){
+    if (Math.abs(OBJ[i].x - OBJ_D[i].x) >= EPS) return false;
+    if (Math.abs(OBJ[i].y - OBJ_D[i].y) >= EPS) return false;
+  }
+  return true;
+}
 function step(){
   D.tx += (P.tx - D.tx) * SPRING;
   D.ty += (P.ty - D.ty) * SPRING;
+  for (var oi = 0; oi < OBJ.length; oi++){
+    OBJ_D[oi].x += (OBJ[oi].x - OBJ_D[oi].x) * SPRING;
+    OBJ_D[oi].y += (OBJ[oi].y - OBJ_D[oi].y) * SPRING;
+  }
   drawScene();
   renderColumn();
   if (!settled()){
@@ -482,6 +501,10 @@ function step(){
   } else {
     raf = null;
     D.tx = P.tx; D.ty = P.ty;
+    for (var si = 0; si < OBJ.length; si++){
+      OBJ_D[si].x = OBJ[si].x;
+      OBJ_D[si].y = OBJ[si].y;
+    }
     drawScene(); renderColumn();
   }
 }

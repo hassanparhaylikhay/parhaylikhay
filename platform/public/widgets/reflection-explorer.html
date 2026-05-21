@@ -163,6 +163,8 @@ function snapHalf(v){ return Math.round(v * 2) / 2; }
 
 // ----- object -----
 var OBJ = [ {x:1,y:1}, {x:4,y:1}, {x:2,y:3} ];
+// OBJ_D mirrors OBJ but is spring-lerped each frame so teacher vertex drags glide.
+var OBJ_D = OBJ.map(function(p){ return { x: p.x, y: p.y }; });
 var LABELS = ['A','B','C'];
 
 // ----- state -----
@@ -310,8 +312,9 @@ function drawScene(){
     gM.appendChild(line);
   }
 
-  // perpendicular bisectors per vertex (faint), plus midpoint dot
-  OBJ.forEach(function(p){
+  // perpendicular bisectors per vertex (faint), plus midpoint dot.
+  // Read OBJ_D so the bisectors track the vertex as it springs.
+  OBJ_D.forEach(function(p){
     var q = reflectPtLine(p, D.p1, D.p2);
     var bis = document.createElementNS("http://www.w3.org/2000/svg","line");
     bis.setAttribute("x1", toSx(p.x)); bis.setAttribute("y1", toSy(p.y));
@@ -328,16 +331,17 @@ function drawScene(){
     gB.appendChild(mp);
   });
 
-  // shapes
-  drawPoly(gO, OBJ, "rgba(0,171,250,0.10)", COL.blue, 2);
-  var IMG = OBJ.map(function(p){ return reflectPtLine(p, D.p1, D.p2); });
+  // shapes — drawn from OBJ_D so the source triangle glides with the spring.
+  drawPoly(gO, OBJ_D, "rgba(0,171,250,0.10)", COL.blue, 2);
+  var IMG = OBJ_D.map(function(p){ return reflectPtLine(p, D.p1, D.p2); });
   drawPoly(gI, IMG, "rgba(255,70,112,0.10)", COL.pink, 2);
-  OBJ.forEach(function(p,i){ drawVertexDot(gO, p, COL.blue, LABELS[i], false); });
+  OBJ_D.forEach(function(p,i){ drawVertexDot(gO, p, COL.blue, LABELS[i], false); });
   IMG.forEach(function(p,i){ drawVertexDot(gI, p, COL.pink, LABELS[i] + "'", true); });
 
-  // Teacher edit mode: pulsing yellow ring on each OBJ vertex.
+  // Teacher edit mode: pulsing yellow ring on each OBJ vertex (drawn at OBJ_D
+  // so the ring travels with the spring-lerped vertex).
   if (TEACHER_EDIT){
-    OBJ.forEach(function(p){
+    OBJ_D.forEach(function(p){
       var ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
       ring.setAttribute("cx", toSx(p.x)); ring.setAttribute("cy", toSy(p.y));
       ring.setAttribute("r", 9);
@@ -397,8 +401,8 @@ function renderMirrorEq(){
 // ----- hit-test -----
 function hitTest(m){
   if (TEACHER_EDIT){
-    for (var oi = 0; oi < OBJ.length; oi++){
-      if (dist2(m, OBJ[oi]) < 0.6*0.6) return { kind: "obj-vertex", idx: oi };
+    for (var oi = 0; oi < OBJ_D.length; oi++){
+      if (dist2(m, OBJ_D[oi]) < 0.6*0.6) return { kind: "obj-vertex", idx: oi };
     }
   }
   if (dist2(m, D.p1) < 0.6 * 0.6) return { kind: "p1" };
@@ -463,17 +467,35 @@ stage.addEventListener("pointerleave", function(){ stage.classList.remove("hover
 
 // ----- spring -----
 function settled(){
-  return Math.abs(P.p1.x - D.p1.x) < EPS && Math.abs(P.p1.y - D.p1.y) < EPS
-      && Math.abs(P.p2.x - D.p2.x) < EPS && Math.abs(P.p2.y - D.p2.y) < EPS;
+  if (Math.abs(P.p1.x - D.p1.x) >= EPS || Math.abs(P.p1.y - D.p1.y) >= EPS) return false;
+  if (Math.abs(P.p2.x - D.p2.x) >= EPS || Math.abs(P.p2.y - D.p2.y) >= EPS) return false;
+  for (var i = 0; i < OBJ.length; i++){
+    if (Math.abs(OBJ[i].x - OBJ_D[i].x) >= EPS) return false;
+    if (Math.abs(OBJ[i].y - OBJ_D[i].y) >= EPS) return false;
+  }
+  return true;
 }
 function step(){
   D.p1.x += (P.p1.x - D.p1.x) * SPRING;
   D.p1.y += (P.p1.y - D.p1.y) * SPRING;
   D.p2.x += (P.p2.x - D.p2.x) * SPRING;
   D.p2.y += (P.p2.y - D.p2.y) * SPRING;
+  for (var oi = 0; oi < OBJ.length; oi++){
+    OBJ_D[oi].x += (OBJ[oi].x - OBJ_D[oi].x) * SPRING;
+    OBJ_D[oi].y += (OBJ[oi].y - OBJ_D[oi].y) * SPRING;
+  }
   drawScene(); renderMirrorEq();
   if (!settled()) raf = requestAnimationFrame(step);
-  else { raf = null; D.p1 = { x: P.p1.x, y: P.p1.y }; D.p2 = { x: P.p2.x, y: P.p2.y }; drawScene(); renderMirrorEq(); }
+  else {
+    raf = null;
+    D.p1 = { x: P.p1.x, y: P.p1.y };
+    D.p2 = { x: P.p2.x, y: P.p2.y };
+    for (var si = 0; si < OBJ.length; si++){
+      OBJ_D[si].x = OBJ[si].x;
+      OBJ_D[si].y = OBJ[si].y;
+    }
+    drawScene(); renderMirrorEq();
+  }
 }
 function kick(){ if (raf == null) raf = requestAnimationFrame(step); notifyHeight(); checkLessonSuccess(); }
 

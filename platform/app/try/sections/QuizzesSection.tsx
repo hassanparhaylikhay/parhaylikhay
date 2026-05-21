@@ -20,7 +20,7 @@ import { COLOR } from "@/components/lesson-mode/interactions/_shared"
  *   3. Shape classifier   (five locked challenges on a 1-100 board)
  */
 
-type Tab = "venn" | "region" | "classifier"
+type Tab = "venn" | "classifier"
 
 const TABS: { key: Tab; label: string; href: string; description: string }[] = [
   {
@@ -31,15 +31,8 @@ const TABS: { key: Tab; label: string; href: string; description: string }[] = [
       "An expression like A' ∩ B appears. You shade the matching region by tapping. Wrong taps go pink, right ones lock green. The whole quiz lives in a single diagram, with five expressions to clear.",
   },
   {
-    key: "region",
-    label: "Region shader",
-    href: "/widgets/region-shader.html",
-    description:
-      "An inequality like y > 2x − 1 appears with a grid. Tap every square that sits inside the region. Get the boundary right too — strict inequalities are drawn dashed, inclusive are solid.",
-  },
-  {
     key: "classifier",
-    label: "Shape classifier",
+    label: "Number classifier",
     href: "/widgets/shape-classifier-grid.html",
     description:
       "A 1-100 grid, five locked challenges. Tap every number that fits the rule: primes, squares, multiples of seven. Each cleared challenge unlocks the next.",
@@ -86,7 +79,7 @@ export default function QuizzesSection() {
             Quizzes built for the topic. <span className="text-[#7a7875]">Not lifted from a worksheet.</span>
           </h2>
           <p className="mt-5 text-[15px] sm:text-[16px] leading-[1.55] text-[#7a7875] max-w-[58ch] mx-auto">
-            We don&apos;t throw multiple-choice at every topic. Set theory gets a Venn you shade. Inequalities get a region you fill. Number patterns get a 1-100 grid you tap. The quiz fits the shape of the maths.
+            We don&apos;t throw multiple-choice at every topic. Set theory gets a Venn you shade. Number patterns get a 1-100 grid you tap. The quiz fits the shape of the maths.
           </p>
         </div>
 
