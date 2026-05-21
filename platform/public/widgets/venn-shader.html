@@ -100,15 +100,15 @@
 
 var CARDS = [
   { expr: "A \\cap B",       regions: ["ab"],
-    why: 'In $A$ AND in $B$ — the lens-shaped overlap only.' },
+    why: 'In $A$ AND in $B$: the lens-shaped overlap only.' },
   { expr: "A \\cup B",       regions: ["a", "ab", "b"],
-    why: 'In $A$ OR in $B$ — both circles entirely, including the overlap.' },
+    why: 'In $A$ OR in $B$: both circles entirely, including the overlap.' },
   { expr: "A'",              regions: ["b", "none"],
     why: 'Everything NOT in $A$. That is the part of $B$ outside $A$, plus the corner of $\\xi$ outside both circles.' },
   { expr: "(A \\cup B)'",    regions: ["none"],
     why: '$A \\cup B$ is both circles. Its complement is everything outside both, i.e. only the corner of $\\xi$.' },
   { expr: "A \\cap B'",      regions: ["a"],
-    why: 'In $A$ AND not in $B$ — only the $A$-only crescent.' },
+    why: 'In $A$ AND not in $B$: only the $A$-only crescent.' },
   { expr: "A' \\cup B",      regions: ["ab", "b", "none"],
     why: 'Not in $A$ OR in $B$. Everything outside $A$ qualifies, plus everything in $B$ (including the overlap).' },
 ];
