@@ -102,6 +102,7 @@
 var URL_PARAMS = new URLSearchParams(window.location.search);
 var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
 var NO_OUTLINE = URL_PARAMS.get("noOutline") === "1";
+var TEACHER_EDIT = URL_PARAMS.get("teacher") === "1";
 var TARGET = (function(){
   var t = URL_PARAMS.get("target");
   if (!t) return null;
@@ -326,6 +327,21 @@ function drawScene(){
   OBJ.forEach(function(p,i){ drawVertexDot(gObj, p, COL.blue, LABELS[i], false); });
   IMG.forEach(function(p,i){ drawVertexDot(gImg, p, COL.pink, LABELS[i] + "'", true); });
 
+  // Teacher edit mode: pulsing yellow ring around every OBJ vertex signals draggable.
+  if (TEACHER_EDIT){
+    OBJ.forEach(function(p){
+      var ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      ring.setAttribute("cx", toSx(p.x)); ring.setAttribute("cy", toSy(p.y));
+      ring.setAttribute("r", 9);
+      ring.setAttribute("fill", "none");
+      ring.setAttribute("stroke", COL.yellow);
+      ring.setAttribute("stroke-width", 1.8);
+      ring.setAttribute("class", "handle");
+      ring.style.color = COL.yellow;
+      gObj.appendChild(ring);
+    });
+  }
+
   // yellow draggable handle at vector tip
   var gH = document.getElementById("g-handles");
   clear(gH);
@@ -373,6 +389,14 @@ function dist2(a, b){ var dx = a.x - b.x, dy = a.y - b.y; return dx*dx + dy*dy; 
 
 // ----- hit-test -----
 function hitTest(m){
+  // 0. Teacher edit mode: OBJ vertex handles take priority — they sit on top of the source triangle.
+  if (TEACHER_EDIT){
+    for (var oi = 0; oi < OBJ.length; oi++){
+      if (dist2(m, OBJ[oi]) < 0.6*0.6){
+        return { kind: "obj-vertex", idx: oi };
+      }
+    }
+  }
   // 1. yellow tip handle (display position)
   if (dist2(m, { x: D.tx, y: D.ty }) < 0.6*0.6){
     return { kind: "tip" };
@@ -387,7 +411,12 @@ function hitTest(m){
   return null;
 }
 function applyDrag(info, m){
-  if (info.kind === "tip"){
+  if (info.kind === "obj-vertex"){
+    OBJ[info.idx] = {
+      x: clamp(snapHalf(m.x), X_MIN + 0.5, X_MAX - 0.5),
+      y: clamp(snapHalf(m.y), Y_MIN + 0.5, Y_MAX - 0.5)
+    };
+  } else if (info.kind === "tip"){
     P.tx = clamp(snapHalf(m.x), -8, 8);
     P.ty = clamp(snapHalf(m.y), -6, 6);
   } else if (info.kind === "shape"){

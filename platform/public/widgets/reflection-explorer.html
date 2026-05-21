@@ -81,6 +81,7 @@
 var URL_PARAMS = new URLSearchParams(window.location.search);
 var LESSON_MODE = URL_PARAMS.get("lessonMode") === "1";
 var NO_OUTLINE = URL_PARAMS.get("noOutline") === "1";
+var TEACHER_EDIT = URL_PARAMS.get("teacher") === "1";
 /**
  * TARGET parsing for reflection puzzles. Supported syntaxes:
  *   target=y=x       (the diagonal through origin, going up-right)
@@ -334,6 +335,21 @@ function drawScene(){
   OBJ.forEach(function(p,i){ drawVertexDot(gO, p, COL.blue, LABELS[i], false); });
   IMG.forEach(function(p,i){ drawVertexDot(gI, p, COL.pink, LABELS[i] + "'", true); });
 
+  // Teacher edit mode: pulsing yellow ring on each OBJ vertex.
+  if (TEACHER_EDIT){
+    OBJ.forEach(function(p){
+      var ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      ring.setAttribute("cx", toSx(p.x)); ring.setAttribute("cy", toSy(p.y));
+      ring.setAttribute("r", 9);
+      ring.setAttribute("fill", "none");
+      ring.setAttribute("stroke", COL.yellow);
+      ring.setAttribute("stroke-width", 1.8);
+      ring.setAttribute("class", "handle");
+      ring.style.color = COL.yellow;
+      gO.appendChild(ring);
+    });
+  }
+
   // yellow handles
   [D.p1, D.p2].forEach(function(pt){
     var c = document.createElementNS("http://www.w3.org/2000/svg","circle");
@@ -380,12 +396,25 @@ function renderMirrorEq(){
 
 // ----- hit-test -----
 function hitTest(m){
+  if (TEACHER_EDIT){
+    for (var oi = 0; oi < OBJ.length; oi++){
+      if (dist2(m, OBJ[oi]) < 0.6*0.6) return { kind: "obj-vertex", idx: oi };
+    }
+  }
   if (dist2(m, D.p1) < 0.6 * 0.6) return { kind: "p1" };
   if (dist2(m, D.p2) < 0.6 * 0.6) return { kind: "p2" };
   return null;
 }
 function applyDrag(info, m){
   var s = { x: snapHalf(m.x), y: snapHalf(m.y) };
+  if (info.kind === "obj-vertex"){
+    OBJ[info.idx] = {
+      x: clamp(s.x, X_MIN + 0.5, X_MAX - 0.5),
+      y: clamp(s.y, Y_MIN + 0.5, Y_MAX - 0.5)
+    };
+    kick();
+    return;
+  }
   s = clampMath(s);
   if (info.kind === "p1") P.p1 = s;
   if (info.kind === "p2") P.p2 = s;
