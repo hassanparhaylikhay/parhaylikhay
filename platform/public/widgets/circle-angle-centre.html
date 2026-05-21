@@ -51,11 +51,28 @@ var canvas = document.getElementById('c');
 var ctx    = canvas.getContext('2d');
 var W = 560, H = 380;
 
+// Optional URL accent — when ?accent=red is supplied, swap the green
+// inscribed-angle palette for brand red. Lets the demo page contrast
+// embed this widget with a non-success colour scheme without forking
+// the file. Existing usages (no query string) stay green.
+var URL_PARAMS = (function() {
+  try { return new URLSearchParams(location.search); } catch (e) { return new URLSearchParams(); }
+})();
+var ACCENT      = URL_PARAMS.get('accent') === 'red' ? '#ff4670' : '#0fee89';
+var ACCENT_RGB  = URL_PARAMS.get('accent') === 'red' ? '255,70,112' : '15,238,137';
+var ACCENT_NAME = URL_PARAMS.get('accent') === 'red' ? 'red' : 'green';
+
 var DPR = window.devicePixelRatio || 1;
 canvas.width        = W * DPR;
 canvas.height       = H * DPR;
 canvas.style.width  = W + 'px';
-canvas.style.height = H + 'px';
+// Don't pin canvas height inline — the stylesheet's `height: auto` then
+// scales height proportionally when `max-width: 100%` shrinks the
+// width below 560 (e.g. when embedded in a narrow column on /try).
+// With the inline height locked at H px the circle squashed into an
+// oval the moment the iframe was narrower than 560 px.
+canvas.style.maxWidth = W + 'px';
+canvas.style.aspectRatio = W + ' / ' + H;
 ctx.scale(DPR, DPR);
 
 // Coordinate system
@@ -70,10 +87,21 @@ function ptOnCircle(t) { return { x: R * Math.cos(t), y: R * Math.sin(t) }; }
 
 function N(a) { return ((a % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI); }
 
-// Initial point angles
+// Initial point angles (these are the TARGETS — drag handlers update them).
 var tA = N(145 * Math.PI / 180);
 var tB = N( 35 * Math.PI / 180);
 var tP = N(255 * Math.PI / 180);
+
+// Spring-lerped DISPLAY values — what draw() actually positions
+// geometry from. Matches the smoothness pattern in translation /
+// reflection / rotation / enlargement widgets: target = where the
+// student has dragged to, display = the rendered value gliding
+// toward it. The readouts (cDeg / iDeg / KaTeX heading) still snap
+// to the target so the numbers don't lag.
+var dA = tA, dB = tB, dP = tP;
+var SPRING = 0.22, EPS = 0.0006;
+var pulseT = 0;     // continuous clock used for the idle handle pulse
+var lastFrame = 0;
 
 function minorIsCCW() {
   return N(tB - tA) <= Math.PI;
@@ -146,10 +174,23 @@ function hexAlpha(hex, a) {
   return 'rgba('+r+','+g+','+b+','+a+')';
 }
 
-function dot(cx, cy, color, r, glowing) {
+function dot(cx, cy, color, r, glowing, draggable) {
   if (glowing) {
-    ctx.fillStyle = hexAlpha(color, 0.18);
-    ctx.beginPath(); ctx.arc(cx, cy, r + 9, 0, 2*Math.PI); ctx.fill();
+    // Active grab/hover — a bright single halo.
+    ctx.fillStyle = hexAlpha(color, 0.22);
+    ctx.beginPath(); ctx.arc(cx, cy, r + 12, 0, 2*Math.PI); ctx.fill();
+    ctx.fillStyle = hexAlpha(color, 0.38);
+    ctx.beginPath(); ctx.arc(cx, cy, r + 6, 0, 2*Math.PI); ctx.fill();
+  } else if (draggable) {
+    // Idle pulse — three concentric haloes synced to the pulseT
+    // clock so the handle reads as "drag me" at a glance. Matches
+    // the prominence of the SVG `.handle` pulse-glow used in the
+    // transformation widgets (Unit 7.1 P1).
+    var phase = 0.5 - 0.5 * Math.cos(pulseT * 2 * Math.PI / 1.8);  // 0 → 1 → 0
+    ctx.fillStyle = hexAlpha(color, 0.06 + phase * 0.16);
+    ctx.beginPath(); ctx.arc(cx, cy, r + 10 + phase * 6, 0, 2*Math.PI); ctx.fill();
+    ctx.fillStyle = hexAlpha(color, 0.14 + phase * 0.22);
+    ctx.beginPath(); ctx.arc(cx, cy, r + 5 + phase * 3, 0, 2*Math.PI); ctx.fill();
   }
   ctx.fillStyle = color;
   ctx.beginPath(); ctx.arc(cx, cy, glowing ? r + 1 : r, 0, 2*Math.PI); ctx.fill();
@@ -172,12 +213,26 @@ function draw() {
   ctx.fillStyle = '#0b1118';
   ctx.fillRect(0, 0, W, H);
 
-  var A  = ptOnCircle(tA), B  = ptOnCircle(tB), P  = ptOnCircle(tP);
+  // Geometry positions come from the spring-lerped DISPLAY angles so
+  // every visual element glides smoothly with the drag.
+  var A  = ptOnCircle(dA), B  = ptOnCircle(dB), P  = ptOnCircle(dP);
   var Ac = toC(A.x, A.y),  Bc = toC(B.x, B.y),  Pc = toC(P.x, P.y);
+
+  // Readout numbers come from the TARGET angles so the labels snap to
+  // exactly what the student dragged to — no decimal parade as the
+  // spring settles.
   var ang = computeAngles();
   var cDeg = Math.round(ang.central  * 180 / Math.PI);
   var iDeg = Math.round(ang.inscribed * 180 / Math.PI);
-  var mm   = minorMidAngle();
+
+  // Display version of the minor arc mid-angle — used for label
+  // POSITION so the label drifts with the visual, not the target.
+  var dN = function(a) { return N(a); };
+  var dMm;
+  (function() {
+    var a = dN(dA), b = dN(dB), d = dN(b - a);
+    dMm = d <= Math.PI ? dN(a + d / 2) : dN(b + (2*Math.PI - d) / 2);
+  })();
 
   // 1. Full circle outline
   ctx.beginPath();
@@ -189,7 +244,7 @@ function draw() {
   // 2. Minor arc highlight (yellow)
   ctx.lineWidth = 3.5;
   ctx.strokeStyle = '#fff067';
-  arcBetween(CX, CY, R * S, -tA, -tB);
+  arcBetween(CX, CY, R * S, -dA, -dB);
 
   // 3. Dashed lines: O->A and O->B (blue)
   ctx.strokeStyle = 'rgba(0,171,250,0.55)';
@@ -200,8 +255,8 @@ function draw() {
   ctx.moveTo(CX, CY); ctx.lineTo(Bc.x, Bc.y);
   ctx.stroke();
 
-  // 4. Dashed lines: P->A and P->B (green)
-  ctx.strokeStyle = 'rgba(15,238,137,0.55)';
+  // 4. Dashed lines: P->A and P->B (accent — green by default, red via ?accent=red)
+  ctx.strokeStyle = 'rgba(' + ACCENT_RGB + ',0.55)';
   ctx.beginPath();
   ctx.moveTo(Pc.x, Pc.y); ctx.lineTo(Ac.x, Ac.y);
   ctx.moveTo(Pc.x, Pc.y); ctx.lineTo(Bc.x, Bc.y);
@@ -211,12 +266,12 @@ function draw() {
   // 5. Solid blue arc at O (radius 44)
   ctx.strokeStyle = '#00abfa';
   ctx.lineWidth = 2.5;
-  arcBetween(CX, CY, 44, -tA, -tB);
+  arcBetween(CX, CY, 44, -dA, -dB);
 
-  // 6. Solid green arc at P (radius 34)
+  // 6. Solid accent arc at P (radius 34)
   var dPA = Math.atan2(Ac.y - Pc.y, Ac.x - Pc.x);
   var dPB = Math.atan2(Bc.y - Pc.y, Bc.x - Pc.x);
-  ctx.strokeStyle = '#0fee89';
+  ctx.strokeStyle = ACCENT;
   ctx.lineWidth = 2.5;
   arcBetween(Pc.x, Pc.y, 34, dPA, dPB);
 
@@ -224,55 +279,86 @@ function draw() {
   ctx.fillStyle = '#fff067';
   ctx.beginPath(); ctx.arc(CX, CY, 5, 0, 2*Math.PI); ctx.fill();
 
-  // 8. Draggable points
-  dot(Ac.x, Ac.y, '#00abfa', 7, dragging === 'A' || hovering === 'A');
-  dot(Bc.x, Bc.y, '#00abfa', 7, dragging === 'B' || hovering === 'B');
-  dot(Pc.x, Pc.y, '#0fee89', 7, dragging === 'P' || hovering === 'P');
+  // 8. Draggable points — pass draggable=true so each gets the idle
+  //    pulse halo when not being actively grabbed/hovered.
+  dot(Ac.x, Ac.y, '#00abfa', 7, dragging === 'A' || hovering === 'A', true);
+  dot(Bc.x, Bc.y, '#00abfa', 7, dragging === 'B' || hovering === 'B', true);
+  dot(Pc.x, Pc.y, ACCENT,    7, dragging === 'P' || hovering === 'P', true);
 
-  // 9. Letter labels just outside circle
+  // 9. Letter labels just outside circle (positions track display)
   var lo = R * S + 20;
   ctx.font = "700 14px 'Geist', sans-serif";
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = '#00abfa';
-  ctx.fillText('A', CX + Math.cos(tA) * lo, CY - Math.sin(tA) * lo);
-  ctx.fillText('B', CX + Math.cos(tB) * lo, CY - Math.sin(tB) * lo);
-  ctx.fillStyle = '#0fee89';
-  ctx.fillText('P', CX + Math.cos(tP) * lo, CY - Math.sin(tP) * lo);
+  ctx.fillText('A', CX + Math.cos(dA) * lo, CY - Math.sin(dA) * lo);
+  ctx.fillText('B', CX + Math.cos(dB) * lo, CY - Math.sin(dB) * lo);
+  ctx.fillStyle = ACCENT;
+  ctx.fillText('P', CX + Math.cos(dP) * lo, CY - Math.sin(dP) * lo);
   ctx.fillStyle = '#fff067';
   ctx.fillText('O', CX + 11, CY - 10);
 
-  // 10. Angle value labels
-  // Central: near O toward minor arc midpoint
-  var cLx = CX + Math.cos(mm) * 78;
-  var cLy = CY - Math.sin(mm) * 78;
+  // 10. Angle value labels — position from display, number from target.
+  var cLx = CX + Math.cos(dMm) * 78;
+  var cLy = CY - Math.sin(dMm) * 78;
   label(cLx, cLy, '∠AOB = ' + cDeg + '°', '#00abfa', 12);
 
-  // Inscribed: near P, toward centre
-  var iLx = Pc.x - Math.cos(tP) * 56;
-  var iLy = Pc.y + Math.sin(tP) * 56;
-  label(iLx, iLy, '∠APB = ' + iDeg + '°', '#0fee89', 12);
+  var iLx = Pc.x - Math.cos(dP) * 56;
+  var iLy = Pc.y + Math.sin(dP) * 56;
+  label(iLx, iLy, '∠APB = ' + iDeg + '°', ACCENT, 12);
 
-  // 11. Bottom banner (green box, translucent green border)
-  var rel = cDeg + '°  =  2 ×  ' + iDeg + '°';
-  ctx.font = "600 12px 'Geist Mono', ui-monospace, monospace";
-  var rw = ctx.measureText(rel).width;
-  var bx = W/2 - rw/2 - 14, by = H - 28, bw = rw + 28, bh = 22;
-  ctx.fillStyle = 'rgba(15,238,137,0.08)';
-  ctx.fillRect(bx, by, bw, bh);
-  ctx.strokeStyle = 'rgba(15,238,137,0.45)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
-  ctx.fillStyle = '#0fee89';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(rel, W/2, by + bh/2 + 0.5);
+  // (Bottom banner intentionally removed — the KaTeX heading above the
+  // canvas already shows the live ∠AOB = 2 × ∠APB relation, so the
+  // in-canvas repeat was redundant.)
 
   // KaTeX heading with live values
   var tex = "\\textcolor{#00abfa}{\\angle AOB}"
-          + " = 2 \\times \\textcolor{#0fee89}{\\angle APB}"
+          + " = 2 \\times \\textcolor{" + ACCENT + "}{\\angle APB}"
           + " \\;\\;\\Rightarrow\\;\\; "
           + "\\textcolor{#00abfa}{" + cDeg + "^\\circ}"
-          + " = 2 \\times \\textcolor{#0fee89}{" + iDeg + "^\\circ}";
+          + " = 2 \\times \\textcolor{" + ACCENT + "}{" + iDeg + "^\\circ}";
   tryRender(document.getElementById("formula"), tex);
+}
+
+// Post a single message to the parent the very first time the visitor
+// presses any node. The /try contrast section listens for this to
+// dismiss its "drag" cue — DOM-event bubbling through to a parent
+// listener was unreliable in some browsers, so the widget signals
+// the moment explicitly.
+var _interactionPosted = false;
+function postInteractionOnce() {
+  if (_interactionPosted) return;
+  _interactionPosted = true;
+  if (window.parent !== window) {
+    try { window.parent.postMessage({ type: "pl-interaction", widget: "circle-angle-centre" }, "*"); } catch (e) {}
+  }
+}
+
+// ── Spring lerp + idle pulse loop ─────────────────────────────────────
+// Always running so the draggable-handle pulse stays alive; cheap (one
+// canvas redraw per frame, small canvas). On every tick we also
+// progress each display angle toward its target. Angle subtraction
+// wraps to the shortest path so a drag from 350° to 10° goes the short
+// way (+20°) instead of the long way (−340°).
+var raf = null;
+function lerpAng(cur, tgt) {
+  var diff = tgt - cur;
+  while (diff >  Math.PI) diff -= 2*Math.PI;
+  while (diff < -Math.PI) diff += 2*Math.PI;
+  if (Math.abs(diff) < EPS) return tgt;
+  return cur + diff * SPRING;
+}
+function tick(now) {
+  if (!lastFrame) lastFrame = now;
+  pulseT += (now - lastFrame) / 1000;
+  lastFrame = now;
+  dA = lerpAng(dA, tA);
+  dB = lerpAng(dB, tB);
+  dP = lerpAng(dP, tP);
+  draw();
+  raf = requestAnimationFrame(tick);
+}
+function kick() {
+  if (raf == null) { lastFrame = 0; raf = requestAnimationFrame(tick); }
 }
 
 // Interaction
@@ -304,7 +390,7 @@ canvas.addEventListener('mousedown', function(e) {
   if      (nearPoint(p.x, p.y, tA)) dragging = 'A';
   else if (nearPoint(p.x, p.y, tB)) dragging = 'B';
   else if (nearPoint(p.x, p.y, tP)) dragging = 'P';
-  if (dragging) e.preventDefault();
+  if (dragging) { postInteractionOnce(); e.preventDefault(); }
 });
 
 canvas.addEventListener('mousemove', function(e) {
@@ -314,7 +400,7 @@ canvas.addEventListener('mousemove', function(e) {
     if      (dragging === 'A') setA(t);
     else if (dragging === 'B') setB(t);
     else if (dragging === 'P') setP(t);
-    draw();
+    kick();
   } else {
     var prev = hovering;
     if      (nearPoint(p.x, p.y, tA)) hovering = 'A';
@@ -322,7 +408,7 @@ canvas.addEventListener('mousemove', function(e) {
     else if (nearPoint(p.x, p.y, tP)) hovering = 'P';
     else hovering = null;
     canvas.style.cursor = hovering ? 'grab' : 'default';
-    if (hovering !== prev) draw();
+    if (hovering !== prev) kick();
   }
 });
 
@@ -331,7 +417,7 @@ canvas.addEventListener('mouseleave', function() {
   if (dragging || hovering) {
     dragging = hovering = null;
     canvas.style.cursor = 'default';
-    draw();
+    kick();
   }
 });
 
@@ -340,7 +426,7 @@ canvas.addEventListener('touchstart', function(e) {
   if      (nearPoint(p.x, p.y, tA)) dragging = 'A';
   else if (nearPoint(p.x, p.y, tB)) dragging = 'B';
   else if (nearPoint(p.x, p.y, tP)) dragging = 'P';
-  if (dragging) e.preventDefault();
+  if (dragging) { postInteractionOnce(); e.preventDefault(); }
 }, { passive: false });
 
 canvas.addEventListener('touchmove', function(e) {
@@ -351,14 +437,16 @@ canvas.addEventListener('touchmove', function(e) {
   if      (dragging === 'A') setA(t);
   else if (dragging === 'B') setB(t);
   else if (dragging === 'P') setP(t);
-  draw();
+  kick();
 }, { passive: false });
 
 canvas.addEventListener('touchend', function() { dragging = null; });
 
-// Initial render (also retry once KaTeX loads)
-draw();
-window.addEventListener('load', draw);
+// Kick the rAF loop. From this point onward `tick()` repaints every
+// animation frame so the idle pulse on each draggable handle stays
+// alive and the spring lerp catches up to any target change.
+kick();
+window.addEventListener('load', kick);
 
 // postMessage resize hook
 var lastReported = 0, reportScheduled = false;

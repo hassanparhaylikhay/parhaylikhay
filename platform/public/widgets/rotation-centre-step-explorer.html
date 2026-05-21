@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Centre of Rotation · Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:14px; flex-wrap:wrap; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+
+  #stage { display:block; width:100%; height:auto; user-select:none; overflow:visible; touch-action:none; cursor:default; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
+
+  .lbl-host { font-family:'Geist Mono',monospace; font-size:12px; font-weight:600; line-height:1; }
+  .lbl-host .katex { font-size:1em; }
+
+  .controls { display:flex; gap:8px; align-items:center; padding:12px 0 4px; }
+  .ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:11px; font-weight:600;
+    padding:6px 14px; border-radius:4px; cursor:pointer;
+    transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+    text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .ctl:hover:not(:disabled) { color:#f0eeea; border-color:#3a4a5a; }
+  .ctl:disabled { opacity:0.35; cursor:not-allowed; }
+
+  /* Primed Next button — brighter + soft pulse until the visitor
+     advances the step explorer for the first time. As soon as next
+     is clicked, the `primed` class is dropped and the button settles
+     to its normal idle state. */
+  .ctl.primed {
+    background: rgba(255, 240, 103, 0.10);
+    border-color: rgba(255, 240, 103, 0.55);
+    color: #fff067;
+    animation: ctl-prime-pulse 1.9s ease-in-out infinite;
+  }
+  .ctl.primed:hover { background: rgba(255, 240, 103, 0.16); border-color: #fff067; color: #f0eeea; }
+  @keyframes ctl-prime-pulse {
+    0%, 100% { box-shadow: 0 0 0 0   rgba(255, 240, 103, 0.36); }
+    60%      { box-shadow: 0 0 0 6px rgba(255, 240, 103, 0);    }
+  }
+  .step-dots { flex:1; display:flex; justify-content:center; gap:8px; }
+  .step-dot {
+    width:6px; height:6px; border-radius:50%; background:#1a2330;
+    transition: background 0.3s cubic-bezier(0.16,1,0.3,1), transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .step-dot.active { background:#fff067; transform:scale(1.6); }
+  .step-dot.done { background:#3a4a5a; }
+
+  .footer {
+    margin-top:10px; padding:10px 12px;
+    font-size:13.5px; line-height:1.5; color:#c8c6be;
+    border-top:1px solid #141e2a;
+  }
+  .footer b { color:#f0eeea; }
+
+  /* Pulse animation on the draggable handles — same cadence as the
+     transformation widgets so the visual language is consistent.
+     `currentColor` is the handle's own brand colour (set via inline
+     style on each circle), so each handle pulses in its own hue. */
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 2px currentColor); }
+    50%      {
+      filter: drop-shadow(0 0 6px currentColor)
+              drop-shadow(0 0 11px currentColor)
+              drop-shadow(0 0 16px currentColor);
+    }
+  }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+
+  /* Tiny fade-in for new geometric elements as the step advances. */
+  .pl-fade-in { animation: pl-fade-in 700ms cubic-bezier(0.16,1,0.3,1) both; }
+  @keyframes pl-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">FINDING THE CENTRE OF ROTATION</span>
+    <span class="meta" id="meta">step 1 of 6</span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  <div class="controls">
+    <button class="ctl" id="prev" type="button">← prev</button>
+    <div class="step-dots" id="dots"></div>
+    <button class="ctl primed" id="next" type="button">next →</button>
+  </div>
+
+  <div class="footer" id="footer"></div>
+</div>
+
+<script>
+"use strict";
+
+// ── World ↔ canvas mapping (SVG y-down, math y-up) ─────────────────────
+var W = 480, H = 320;
+var X_MIN = -7, X_MAX = 8;   // 15 units wide
+var Y_MIN = -5, Y_MAX = 5;   //  10 units tall
+var pxX = W / (X_MAX - X_MIN);   // 32
+var pxY = H / (Y_MAX - Y_MIN);   // 32
+function sx(x) { return (x - X_MIN) * pxX; }
+function sy(y) { return H - (y - Y_MIN) * pxY; }
+function fx(px) { return px / pxX + X_MIN; }
+function fy(py) { return Y_MAX - py / pxY; }
+
+var stage = document.getElementById("stage");
+var NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs) {
+  var n = document.createElementNS(NS, tag);
+  for (var k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+
+// ── State ──────────────────────────────────────────────────────────────
+// Targets (where the user dragged to) and DISPLAYS (smoothed via spring
+// lerp every frame — matches the transformation widget pattern). Geometry
+// reads display values so the visual glides; nothing is shown numerically
+// here so the readout-snaps-to-target rule doesn't apply.
+var P = {
+  step: 0,
+  A: [{ x:-3, y:1 }, { x:-1, y:1 }, { x:-2, y:3 }],
+  C: { x: 1, y: 0 }
+};
+var D = {
+  A: P.A.map(function(p) { return { x:p.x, y:p.y }; }),
+  C: { x: P.C.x, y: P.C.y }
+};
+var SPRING = 0.22, EPS = 0.0015;
+
+// ── Geometry helpers ───────────────────────────────────────────────────
+// 90° clockwise rotation about centre C — matches the orientation chosen
+// for nice on-screen placement (object upper-left, image upper-right).
+function rotCW90(P, C) {
+  var dx = P.x - C.x, dy = P.y - C.y;
+  return { x: C.x + dy, y: C.y - dx };
+}
+function mid(P, Q) { return { x: (P.x+Q.x)/2, y: (P.y+Q.y)/2 }; }
+function len(v) { return Math.sqrt(v.x*v.x + v.y*v.y); }
+
+// Perpendicular bisector of segment PQ, returned as two endpoints far
+// enough apart to span the canvas.
+function perpBisector(P, Q) {
+  var m = mid(P, Q);
+  var dx = Q.x - P.x, dy = Q.y - P.y;
+  var L = Math.sqrt(dx*dx + dy*dy);
+  if (L < 0.001) return null;
+  var ux = -dy / L, uy = dx / L;       // perpendicular unit vector
+  var SPAN = 22;                       // covers the visible world
+  return {
+    a: { x: m.x - SPAN*ux, y: m.y - SPAN*uy },
+    b: { x: m.x + SPAN*ux, y: m.y + SPAN*uy }
+  };
+}
+
+// ── SVG drawing primitives ─────────────────────────────────────────────
+function svgLine(p, q, color, width, dash, cls) {
+  var attrs = {
+    x1: sx(p.x), y1: sy(p.y), x2: sx(q.x), y2: sy(q.y),
+    stroke: color, "stroke-width": width, "stroke-linecap": "round"
+  };
+  if (dash) attrs["stroke-dasharray"] = dash;
+  if (cls) attrs["class"] = cls;
+  return el("line", attrs);
+}
+function svgPolygon(pts, fill, stroke, width, cls) {
+  return el("polygon", {
+    points: pts.map(function(p) { return sx(p.x) + "," + sy(p.y); }).join(" "),
+    fill: fill, stroke: stroke, "stroke-width": width,
+    "stroke-linejoin": "round",
+    "class": cls || ""
+  });
+}
+function svgCircle(c, r, fill, stroke, strokeWidth, cls, data) {
+  var attrs = { cx: sx(c.x), cy: sy(c.y), r: r, fill: fill };
+  if (stroke) { attrs.stroke = stroke; attrs["stroke-width"] = strokeWidth || 1; }
+  if (cls) attrs["class"] = cls;
+  if (data) attrs["data-handle"] = data;
+  var node = el("circle", attrs);
+  // Drive the .handle CSS pulse-glow keyframe's `currentColor` so the
+  // drop-shadow paints in the handle's brand colour (otherwise it
+  // falls back to the inherited foreground colour, which on this dark
+  // canvas looks like a dull off-white glow).
+  if (fill && fill[0] === "#") node.style.color = fill;
+  return node;
+}
+// Lightweight SVG text label at a math point.
+function svgLabel(x, y, text, color, size) {
+  size = size || 13;
+  var t = el("text", {
+    x: sx(x), y: sy(y), fill: color, "font-family": "'Geist Mono', monospace",
+    "font-size": size, "font-weight": 600, "text-anchor": "middle",
+    "dominant-baseline": "middle"
+  });
+  t.textContent = text;
+  return t;
+}
+
+// ── Render ─────────────────────────────────────────────────────────────
+var foot = document.getElementById("footer");
+var meta = document.getElementById("meta");
+var dotsHost = document.getElementById("dots");
+
+var STEPS = [
+  { footer: "<b style='color:#00abfa'>A</b> rotated 90° clockwise to <b style='color:#ff4670'>A&prime;</b>. Where&apos;s the centre?" },
+  { footer: "Join <b style='color:#00abfa'>A<sub>1</sub></b> to <b style='color:#ff4670'>A<sub>1</sub>&prime;</b>." },
+  { footer: "Draw its <b style='color:#fff067'>perpendicular bisector</b>. The centre lies on it." },
+  { footer: "Join <b style='color:#00abfa'>A<sub>2</sub></b> to <b style='color:#ff4670'>A<sub>2</sub>&prime;</b>." },
+  { footer: "Draw its perpendicular bisector. The centre lies on this one too." },
+  { footer: "They meet at one point: <b style='color:#fff067'>the centre</b>. Drag any vertex or the centre, and the bisectors swivel but always cross at C." }
+];
+var TOTAL = STEPS.length;
+
+// Build step dots once.
+(function() {
+  for (var i = 0; i < TOTAL; i++) {
+    var d = document.createElement("div");
+    d.className = "step-dot";
+    dotsHost.appendChild(d);
+  }
+})();
+
+var lastDrawStep = -1;       // tracks step transitions so the fade-in
+                             // animation only fires on the FIRST draw
+                             // of a new step (otherwise the spring
+                             // loop's per-frame redraws made every
+                             // bisector flicker).
+function draw() {
+  var isStepTransition = (P.step !== lastDrawStep);
+  // Class only applied to NEW elements on the transition draw; same
+  // class on every subsequent draw would restart the animation.
+  var fadeCls = isStepTransition ? "pl-fade-in" : "";
+  lastDrawStep = P.step;
+
+  while (stage.firstChild) stage.removeChild(stage.firstChild);
+
+  // Coordinate grid
+  var g = el("g", { class: "grid" });
+  for (var x = X_MIN; x <= X_MAX; x++) {
+    g.appendChild(el("line", {
+      x1: sx(x), y1: 0, x2: sx(x), y2: H,
+      stroke: x === 0 ? "#243750" : "#141e2a",
+      "stroke-width": x === 0 ? 1 : 0.5
+    }));
+  }
+  for (var y = Y_MIN; y <= Y_MAX; y++) {
+    g.appendChild(el("line", {
+      x1: 0, y1: sy(y), x2: W, y2: sy(y),
+      stroke: y === 0 ? "#243750" : "#141e2a",
+      "stroke-width": y === 0 ? 1 : 0.5
+    }));
+  }
+  stage.appendChild(g);
+
+  // Image triangle from current display A + display C (90° CW).
+  var dAp = D.A.map(function(p) { return rotCW90(p, D.C); });
+
+  // Object + image triangles — always visible from step 0 onward.
+  stage.appendChild(svgPolygon(D.A,  "rgba(0,171,250,0.12)", "#00abfa", 2));
+  stage.appendChild(svgPolygon(dAp, "rgba(255,70,112,0.12)", "#ff4670", 2));
+
+  // Vertex labels for clarity (placed slightly off each vertex).
+  D.A.forEach(function(p, i) {
+    var off = vertexLabelOffset(D.A, i);
+    stage.appendChild(svgLabel(p.x + off.x, p.y + off.y,
+      "A" + (i+1), "#00abfa", 12));
+  });
+  dAp.forEach(function(p, i) {
+    var off = vertexLabelOffset(dAp, i);
+    stage.appendChild(svgLabel(p.x + off.x, p.y + off.y,
+      "A" + (i+1) + "′", "#ff4670", 12));
+  });
+
+  // Connection segments + perpendicular bisectors revealed step by step.
+  // `fadeCls` is the empty string on continuous redraws (drag), so the
+  // bisectors stay solidly visible while the student moves the shape.
+  if (P.step >= 1) {
+    stage.appendChild(svgLine(D.A[0], dAp[0], "#7a7875", 1.4, "4 4", fadeCls));
+  }
+  if (P.step >= 2) {
+    var b1 = perpBisector(D.A[0], dAp[0]);
+    if (b1) stage.appendChild(svgLine(b1.a, b1.b, "#fff067", 2, "", fadeCls));
+  }
+  if (P.step >= 3) {
+    stage.appendChild(svgLine(D.A[1], dAp[1], "#7a7875", 1.4, "4 4", fadeCls));
+  }
+  if (P.step >= 4) {
+    var b2 = perpBisector(D.A[1], dAp[1]);
+    if (b2) stage.appendChild(svgLine(b2.a, b2.b, "#fff067", 2, "", fadeCls));
+  }
+
+  // Centre of rotation — revealed at the final step.
+  if (P.step >= 5) {
+    var glow = el("circle", {
+      cx: sx(D.C.x), cy: sy(D.C.y), r: 14,
+      fill: "rgba(255,240,103,0.18)",
+      class: fadeCls,
+      style: "color:#fff067"
+    });
+    stage.appendChild(glow);
+    var dotCls = "handle centre-dot" + (fadeCls ? " " + fadeCls : "");
+    stage.appendChild(svgCircle(D.C, 6, "#fff067", "#0b1118", 1.5, dotCls, "C"));
+    stage.appendChild(svgLabel(D.C.x + 0.4, D.C.y - 0.5, "C", "#fff067", 13));
+  }
+
+  // Draggable vertex handles for triangle A — only enabled at the final
+  // step. Pulsing halo signals they're alive.
+  if (P.step >= 5) {
+    D.A.forEach(function(p, i) {
+      stage.appendChild(svgCircle(p, 6.5, "#00abfa", "#0b1118", 1.5,
+        "handle", "A" + i));
+    });
+  }
+
+  // Update chrome
+  meta.textContent = "step " + (P.step + 1) + " of " + TOTAL;
+  foot.innerHTML = STEPS[P.step].footer;
+  for (var i = 0; i < TOTAL; i++) {
+    var d = dotsHost.children[i];
+    d.classList.toggle("active", i === P.step);
+    d.classList.toggle("done",   i  <  P.step);
+  }
+  document.getElementById("prev").disabled = (P.step === 0);
+  document.getElementById("next").disabled = (P.step === TOTAL - 1);
+
+  reportHeight();
+}
+
+// Vertex label offset: push it AWAY from the triangle's centroid so the
+// letter doesn't sit on top of the shape's edges.
+function vertexLabelOffset(pts, i) {
+  var cx = (pts[0].x + pts[1].x + pts[2].x) / 3;
+  var cy = (pts[0].y + pts[1].y + pts[2].y) / 3;
+  var dx = pts[i].x - cx, dy = pts[i].y - cy;
+  var L = Math.sqrt(dx*dx + dy*dy);
+  if (L < 0.001) return { x: 0, y: 0.4 };
+  return { x: dx/L * 0.45, y: dy/L * 0.45 };
+}
+
+// ── Spring lerp ────────────────────────────────────────────────────────
+var raf = null;
+function settled() {
+  if (Math.abs(P.C.x - D.C.x) > EPS || Math.abs(P.C.y - D.C.y) > EPS) return false;
+  for (var i = 0; i < 3; i++) {
+    if (Math.abs(P.A[i].x - D.A[i].x) > EPS) return false;
+    if (Math.abs(P.A[i].y - D.A[i].y) > EPS) return false;
+  }
+  return true;
+}
+function tick() {
+  D.C.x += (P.C.x - D.C.x) * SPRING;
+  D.C.y += (P.C.y - D.C.y) * SPRING;
+  for (var i = 0; i < 3; i++) {
+    D.A[i].x += (P.A[i].x - D.A[i].x) * SPRING;
+    D.A[i].y += (P.A[i].y - D.A[i].y) * SPRING;
+  }
+  draw();
+  if (settled()) {
+    D.C.x = P.C.x; D.C.y = P.C.y;
+    for (var j = 0; j < 3; j++) { D.A[j].x = P.A[j].x; D.A[j].y = P.A[j].y; }
+    raf = null;
+  } else {
+    raf = requestAnimationFrame(tick);
+  }
+}
+function kick() { if (raf == null) raf = requestAnimationFrame(tick); }
+
+// ── Pointer interaction (active only in the final step) ────────────────
+var dragging = null;     // { type: "C" | "A0" | "A1" | "A2", grab: {dx,dy} }
+
+function evMath(e) {
+  var rect = stage.getBoundingClientRect();
+  var sxp = (e.clientX - rect.left) * (W / rect.width);
+  var syp = (e.clientY - rect.top)  * (H / rect.height);
+  return { x: fx(sxp), y: fy(syp) };
+}
+
+function clampPt(p) {
+  return {
+    x: Math.max(X_MIN + 0.4, Math.min(X_MAX - 0.4, p.x)),
+    y: Math.max(Y_MIN + 0.4, Math.min(Y_MAX - 0.4, p.y))
+  };
+}
+
+stage.addEventListener("pointerdown", function(e) {
+  if (P.step < 5) return;
+  var m = evMath(e);
+  // Hit centre first (priority)
+  if (Math.hypot(m.x - P.C.x, m.y - P.C.y) < 0.5) {
+    dragging = { type: "C", grab: { x: m.x - P.C.x, y: m.y - P.C.y } };
+  } else {
+    for (var i = 0; i < 3; i++) {
+      if (Math.hypot(m.x - P.A[i].x, m.y - P.A[i].y) < 0.5) {
+        dragging = { type: "A" + i, grab: { x: m.x - P.A[i].x, y: m.y - P.A[i].y } };
+        break;
+      }
+    }
+  }
+  if (dragging) {
+    stage.classList.add("grabbing");
+    stage.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
+});
+
+stage.addEventListener("pointermove", function(e) {
+  if (P.step < 5) return;
+  var m = evMath(e);
+  if (dragging) {
+    var target = clampPt({ x: m.x - dragging.grab.x, y: m.y - dragging.grab.y });
+    if (dragging.type === "C") { P.C.x = target.x; P.C.y = target.y; }
+    else {
+      var i = parseInt(dragging.type.slice(1), 10);
+      P.A[i].x = target.x; P.A[i].y = target.y;
+    }
+    kick();
+  } else {
+    // Hover cue
+    var over = false;
+    if (Math.hypot(m.x - P.C.x, m.y - P.C.y) < 0.5) over = true;
+    else {
+      for (var i = 0; i < 3 && !over; i++) {
+        if (Math.hypot(m.x - P.A[i].x, m.y - P.A[i].y) < 0.5) over = true;
+      }
+    }
+    stage.classList.toggle("hover-grab", over);
+  }
+});
+
+function endDrag(e) {
+  if (dragging) {
+    try { stage.releasePointerCapture(e.pointerId); } catch (_) {}
+    dragging = null;
+    stage.classList.remove("grabbing");
+  }
+}
+stage.addEventListener("pointerup",     endDrag);
+stage.addEventListener("pointercancel", endDrag);
+
+// ── Step buttons ───────────────────────────────────────────────────────
+document.getElementById("prev").addEventListener("click", function() {
+  if (P.step > 0) { P.step--; draw(); }
+});
+// The Next button starts in a "primed" attention-grabbing state.
+// As soon as the visitor presses it the brighter style + pulse drop.
+var nextBtn = document.getElementById("next");
+nextBtn.addEventListener("click", function() {
+  nextBtn.classList.remove("primed");
+  if (P.step < TOTAL - 1) { P.step++; draw(); }
+});
+
+// ── postMessage height reporter ────────────────────────────────────────
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bp = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bb = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bp + bb);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+    }
+  });
+}
+
+// ── Lesson mode flag (strips chrome when embedded) ─────────────────────
+(function() {
+  var qs = new URLSearchParams(location.search);
+  if (qs.get("lessonMode") === "1") {
+    document.body.classList.add("lesson-mode");
+    document.documentElement.classList.add("lesson-mode");
+  }
+})();
+
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+
+// Initial render
+draw();
+</script>
+</body>
+</html>

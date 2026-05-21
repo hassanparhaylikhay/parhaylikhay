@@ -71,10 +71,20 @@ function ptOnCircle(t) {
 
 function N(a) { return ((a % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI); }
 
-// Initial positions
+// Initial positions (TARGETS — drag handlers update these directly).
 var tT = N(270 * Math.PI / 180);  // T at the bottom
 var tA = N(330 * Math.PI / 180);  // A on the right
 var tB = N(120 * Math.PI / 180);  // B on the left/upper (alternate segment)
+
+// Spring-lerped DISPLAY mirrors — the drawing reads these so the visual
+// glides smoothly with the drag, matching the feel of the four
+// transformation widgets. The readouts still read TARGETS so the
+// numeric labels snap with the student's input.
+var dT = tT, dA = tA, dB = tB;
+var SPRING = 0.22, EPS = 0.0006;
+var pulseT = 0;
+var lastFrame = 0;
+var raf = null;
 
 var MIN_SEP = 12 * Math.PI / 180;
 
@@ -137,10 +147,16 @@ function setB(t) {
 }
 
 // Compute everything we need for drawing and for the angle readouts.
-function compute() {
-  var T = ptOnCircle(tT);
-  var A = ptOnCircle(tA);
-  var B = ptOnCircle(tB);
+// `aT, aA, aB` default to the targets so existing call sites keep
+// working; draw() passes the DISPLAY angles for visual geometry and
+// the TARGET angles for readouts.
+function compute(aT, aA, aB) {
+  if (aT === undefined) aT = tT;
+  if (aA === undefined) aA = tA;
+  if (aB === undefined) aB = tB;
+  var T = ptOnCircle(aT);
+  var A = ptOnCircle(aA);
+  var B = ptOnCircle(aB);
 
   // Tangent direction at T: perpendicular to OT (radius from O to T).
   // OT direction:
@@ -205,10 +221,22 @@ function backedLabel(x, y, text, color, size) {
   ctx.fillText(text, x, y);
 }
 
-function dot(x, y, color, r, glowing) {
+function dot(x, y, color, r, glowing, draggable) {
   if (glowing) {
-    ctx.fillStyle = hexAlpha(color, 0.20);
-    ctx.beginPath(); ctx.arc(x, y, r + 9, 0, 2 * Math.PI); ctx.fill();
+    // Active grab/hover — bright two-layer halo.
+    ctx.fillStyle = hexAlpha(color, 0.22);
+    ctx.beginPath(); ctx.arc(x, y, r + 12, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = hexAlpha(color, 0.40);
+    ctx.beginPath(); ctx.arc(x, y, r + 6, 0, 2 * Math.PI); ctx.fill();
+  } else if (draggable) {
+    // Idle pulse — three concentric haloes breathing together, scaled
+    // up to match the prominence of the `.handle` SVG glow on the
+    // transformation widgets so the student sees the points are alive.
+    var phase = 0.5 - 0.5 * Math.cos(pulseT * 2 * Math.PI / 1.8);
+    ctx.fillStyle = hexAlpha(color, 0.06 + phase * 0.16);
+    ctx.beginPath(); ctx.arc(x, y, r + 10 + phase * 6, 0, 2 * Math.PI); ctx.fill();
+    ctx.fillStyle = hexAlpha(color, 0.14 + phase * 0.22);
+    ctx.beginPath(); ctx.arc(x, y, r + 5 + phase * 3, 0, 2 * Math.PI); ctx.fill();
   }
   ctx.fillStyle = color;
   ctx.beginPath(); ctx.arc(x, y, glowing ? r + 1.5 : r, 0, 2 * Math.PI); ctx.fill();
@@ -243,6 +271,30 @@ function drawAngleArcVec(V, d1, d2, radius, color) {
   return midAng;
 }
 
+// ── Spring lerp + idle pulse loop ─────────────────────────────────────
+// Always-on rAF loop: each frame lerps display angles toward target
+// (shortest-path wrap-around safe) and advances the pulse clock.
+function lerpAng(cur, tgt) {
+  var diff = tgt - cur;
+  while (diff >  Math.PI) diff -= 2*Math.PI;
+  while (diff < -Math.PI) diff += 2*Math.PI;
+  if (Math.abs(diff) < EPS) return tgt;
+  return cur + diff * SPRING;
+}
+function tick(now) {
+  if (!lastFrame) lastFrame = now;
+  pulseT += (now - lastFrame) / 1000;
+  lastFrame = now;
+  dT = lerpAng(dT, tT);
+  dA = lerpAng(dA, tA);
+  dB = lerpAng(dB, tB);
+  draw();
+  raf = requestAnimationFrame(tick);
+}
+function kick() {
+  if (raf == null) { lastFrame = 0; raf = requestAnimationFrame(tick); }
+}
+
 var dragging = null, hovering = null;
 var HIT = 18;
 
@@ -270,8 +322,14 @@ function draw() {
   ctx.fillStyle = '#0b1118';
   ctx.fillRect(0, 0, W, H);
 
-  var s = compute();
+  // Geometry from the spring-lerped DISPLAY angles so the visual
+  // glides smoothly during a drag.
+  var s = compute(dT, dA, dB);
   var T = s.T, A = s.A, B = s.B;
+
+  // A second compute() against TARGET angles for the numeric readouts
+  // (deg labels + KaTeX heading) so they snap to the student's input.
+  var sT = compute(tT, tA, tB);
 
   // 1. Circle outline
   ctx.beginPath();
@@ -324,9 +382,10 @@ function draw() {
   var BAdir = { x: BA.x / ba, y: BA.y / ba };
   var midB = drawAngleArcVec(B, BTdir, BAdir, 28, '#fff067');
 
-  // 6. Angle labels (X deg at T, Y deg at B)
-  var Xdeg = Math.round(s.tangentChord * 180 / Math.PI);
-  var Ydeg = Math.round(s.inscribed * 180 / Math.PI);
+  // 6. Angle labels — values from the TARGET (so the number snaps with
+  //    the drag), positions from the DISPLAY (so they drift smoothly).
+  var Xdeg = Math.round(sT.tangentChord * 180 / Math.PI);
+  var Ydeg = Math.round(sT.inscribed * 180 / Math.PI);
 
   var labelOff = 44;
   backedLabel(T.x + Math.cos(midT) * labelOff, T.y + Math.sin(midT) * labelOff,
@@ -334,36 +393,25 @@ function draw() {
   backedLabel(B.x + Math.cos(midB) * labelOff, B.y + Math.sin(midB) * labelOff,
               Ydeg + ' deg', '#fff067', 11);
 
-  // 7. Vertex dots
-  dot(T.x, T.y, '#fff067', 7, dragging === 'T' || hovering === 'T');
-  dot(A.x, A.y, '#00abfa', 7, dragging === 'A' || hovering === 'A');
-  dot(B.x, B.y, '#0fee89', 7, dragging === 'B' || hovering === 'B');
+  // 7. Vertex dots — draggable=true gives each the idle pulse halo.
+  dot(T.x, T.y, '#fff067', 7, dragging === 'T' || hovering === 'T', true);
+  dot(A.x, A.y, '#00abfa', 7, dragging === 'A' || hovering === 'A', true);
+  dot(B.x, B.y, '#0fee89', 7, dragging === 'B' || hovering === 'B', true);
 
-  // 8. Outer letters
+  // 8. Outer letters — track display so they slide with the dots.
   var outR = R_PX + 18;
   ctx.font = "700 14px 'Geist', sans-serif";
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = '#fff067';
-  ctx.fillText('T', CX + Math.cos(tT) * outR, CY + Math.sin(tT) * outR);
+  ctx.fillText('T', CX + Math.cos(dT) * outR, CY + Math.sin(dT) * outR);
   ctx.fillStyle = '#00abfa';
-  ctx.fillText('A', CX + Math.cos(tA) * outR, CY + Math.sin(tA) * outR);
+  ctx.fillText('A', CX + Math.cos(dA) * outR, CY + Math.sin(dA) * outR);
   ctx.fillStyle = '#0fee89';
-  ctx.fillText('B', CX + Math.cos(tB) * outR, CY + Math.sin(tB) * outR);
+  ctx.fillText('B', CX + Math.cos(dB) * outR, CY + Math.sin(dB) * outR);
 
-  // 9. Bottom banner
-  var bannerY = H - 32;
-  var bannerH = 26;
-  var bannerW = 380;
-  var bx = (W - bannerW) / 2;
-  ctx.fillStyle = 'rgba(15,238,137,0.06)';
-  ctx.fillRect(bx, bannerY, bannerW, bannerH);
-  ctx.strokeStyle = 'rgba(15,238,137,0.45)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(bx, bannerY, bannerW, bannerH);
-  ctx.font = "600 12px 'Geist Mono', monospace";
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#0fee89';
-  ctx.fillText('tangent-chord ' + Xdeg + ' deg = inscribed ' + Ydeg + ' deg', W / 2, bannerY + bannerH / 2);
+  // (Bottom banner intentionally removed — the KaTeX heading above the
+  // canvas already shows the live tangent-chord = inscribed relation,
+  // so the in-canvas repeat was redundant.)
 
   // KaTeX heading
   var headTex =
@@ -389,7 +437,7 @@ canvas.addEventListener('mousemove', function(e) {
     if (dragging === 'T') setT(t);
     else if (dragging === 'A') setA(t);
     else if (dragging === 'B') setB(t);
-    draw();
+    kick();
   } else {
     var prev = hovering;
     hovering = null;
@@ -397,7 +445,7 @@ canvas.addEventListener('mousemove', function(e) {
     else if (nearPoint(p.x, p.y, tA)) hovering = 'A';
     else if (nearPoint(p.x, p.y, tB)) hovering = 'B';
     canvas.style.cursor = hovering ? 'grab' : 'default';
-    if (hovering !== prev) draw();
+    if (hovering !== prev) kick();
   }
 });
 
@@ -406,7 +454,7 @@ canvas.addEventListener('mouseleave', function() {
   if (dragging || hovering) {
     dragging = hovering = null;
     canvas.style.cursor = 'default';
-    draw();
+    kick();
   }
 });
 
@@ -426,12 +474,14 @@ canvas.addEventListener('touchmove', function(e) {
   if (dragging === 'T') setT(t);
   else if (dragging === 'A') setA(t);
   else if (dragging === 'B') setB(t);
-  draw();
+  kick();
 }, { passive: false });
 
 canvas.addEventListener('touchend', function() { dragging = null; });
 
-draw();
+// Start the always-on rAF loop — drives the spring lerp AND the
+// handle-pulse animation.
+kick();
 
 // ── postMessage resize ─────────────────────────────────────────────────────
 var lastReported = 0, reportScheduled = false;
