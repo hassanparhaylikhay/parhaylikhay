@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   // the likely cause. Setting outputFileTracingRoot explicitly tells
   // Next.js (and Vercel's adapter) exactly where the project root is
   // instead of letting it infer.
-  outputFileTracingRoot: path.resolve(__dirname),
+  outputFileTracingRoot: path.join(__dirname, ".."),
   async rewrites() {
     return {
       // beforeFiles runs before pages are checked — serves landing.html at /
