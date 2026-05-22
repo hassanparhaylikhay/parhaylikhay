@@ -418,7 +418,16 @@ function updateActivePreset(){
   });
 }
 
+function syncStageHeight(){
+  // iOS Safari doesn't reliably compute SVG height from viewBox + width:100%;
+  // setting style.height directly from clientWidth is rock-solid across browsers.
+  var s = document.getElementById("stage");
+  if (s && s.clientWidth > 0){
+    s.style.height = (s.clientWidth * SVG_H / SVG_W) + "px";
+  }
+}
 function notifyHeight(){
+  syncStageHeight();
   var h = document.getElementById("wrap").offsetHeight + 30;
   if (window.parent && window.parent !== window){
     window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
@@ -426,6 +435,7 @@ function notifyHeight(){
 }
 window.addEventListener("resize", notifyHeight);
 
+syncStageHeight();
 drawGridAxes();
 renderControls();
 drawScene();

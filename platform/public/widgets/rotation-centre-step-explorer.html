@@ -466,6 +466,15 @@ nextBtn.addEventListener("click", function() {
   if (P.step < TOTAL - 1) { P.step++; draw(); }
 });
 
+// iOS Safari doesn't reliably compute SVG height from viewBox + width:100%;
+// setting style.height directly from clientWidth is rock-solid across browsers.
+function syncStageHeight() {
+  var s = document.getElementById("stage");
+  if (s && s.clientWidth > 0) {
+    s.style.height = (s.clientWidth * 320 / 480) + "px";
+  }
+}
+
 // ── postMessage height reporter ────────────────────────────────────────
 var lastReported = 0, reportScheduled = false;
 function reportHeight() {
@@ -473,6 +482,7 @@ function reportHeight() {
   reportScheduled = true;
   requestAnimationFrame(function() {
     reportScheduled = false;
+    syncStageHeight();
     var wrap = document.getElementById("wrap");
     if (!wrap) return;
     var rect = wrap.getBoundingClientRect();
@@ -500,6 +510,7 @@ window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
 
 // Initial render
+syncStageHeight();
 draw();
 </script>
 </body>
