@@ -13,12 +13,20 @@ import { NextResponse } from "next/server"
  * harvest the queued entries.
  */
 type Payload = {
-  parent_name?: unknown
-  child_name?: unknown
-  school?: unknown
+  name?: unknown
+  role?: unknown
   email?: unknown
   whatsapp?: unknown
 }
+
+const ALLOWED_ROLES = new Set([
+  "Student",
+  "Parent",
+  "Teacher",
+  "School admin",
+  "Tutor",
+  "Other",
+])
 
 export async function POST(req: Request) {
   let body: Payload = {}
@@ -28,18 +36,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Invalid JSON" }, { status: 400 })
   }
 
-  const parent   = String(body.parent_name ?? "").trim().slice(0, 80)
-  const child    = String(body.child_name  ?? "").trim().slice(0, 80)
-  const school   = String(body.school      ?? "").trim().slice(0, 120)
-  const email    = String(body.email       ?? "").trim().slice(0, 120)
-  const whatsapp = String(body.whatsapp    ?? "").trim().slice(0, 40)
+  const name     = String(body.name     ?? "").trim().slice(0, 80)
+  const role     = String(body.role     ?? "").trim().slice(0, 40)
+  const email    = String(body.email    ?? "").trim().slice(0, 120)
+  const whatsapp = String(body.whatsapp ?? "").trim().slice(0, 40)
 
-  if (!email || !whatsapp) {
-    return NextResponse.json({ ok: false, error: "Missing email or WhatsApp" }, { status: 400 })
+  if (!name || !role || !email || !whatsapp) {
+    return NextResponse.json({ ok: false, error: "Missing required field" }, { status: 400 })
+  }
+  if (!ALLOWED_ROLES.has(role)) {
+    return NextResponse.json({ ok: false, error: "Invalid role" }, { status: 400 })
   }
 
   console.log("[try-signup]", JSON.stringify({
-    parent, child, school, email, whatsapp,
+    name, role, email, whatsapp,
     receivedAt: new Date().toISOString(),
   }))
 
