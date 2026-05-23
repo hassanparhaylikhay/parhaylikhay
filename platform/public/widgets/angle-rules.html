@@ -15,8 +15,12 @@
   .hint { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
   .stage { width:100%; aspect-ratio: 600 / 340; position:relative; user-select:none; touch-action:none; }
   svg { display:block; width:100%; height:100%; user-select:none; overflow:visible; }
-  .handle { cursor:grab; }
+  .handle { cursor:grab; animation: pulse-glow 1.8s ease-in-out infinite; }
   .handle.grabbing { cursor:grabbing; }
+  @keyframes pulse-glow {
+    0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
+    50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
+  }
   .formula {
     margin-top:12px; font-family:'Geist Mono',monospace;
     font-size:16px; line-height:1.6; color:#f0eeea; font-weight:600;
@@ -188,13 +192,17 @@ var dragHandle = null;
 var activePointerId = null;
 function makeHandle(point, opts) {
   opts = opts || {};
+  var fill = opts.fill || COL.yellow;
   var dot = el("circle", {
     cx: point.x, cy: point.y, r: 10,
-    fill: opts.fill || COL.yellow,
+    fill: fill,
     stroke: "#0b1118",
     "stroke-width": 2
   });
   dot.classList.add("handle");
+  // Set color so the pulse-glow drop-shadow (which uses currentColor)
+  // matches the handle's fill instead of bleeding white.
+  dot.style.color = fill;
   dot.dataset.idx = String(opts.idx);
   if (window.PointerEvent) {
     dot.addEventListener("pointerdown", onDown);
@@ -275,12 +283,15 @@ function clearLayers() {
 function buildRulePoint() {
   // 4 rays from a fixed centre.
   var centre = { x: W / 2, y: H / 2 };
+  // TARGET positions (where the user dragged a ray to).
   var rays = [
     { x: W / 2 + 150, y: H / 2 + 0,   color: COL.yellow },
     { x: W / 2 + 90,  y: H / 2 - 110, color: COL.green  },
     { x: W / 2 - 130, y: H / 2 - 50,  color: COL.orange },
     { x: W / 2 - 60,  y: H / 2 + 100, color: COL.pink   }
   ];
+  // DISPLAY positions — spring-lerp each frame toward rays so visuals glide.
+  var raysD = rays.map(function(r){ return { x:r.x, y:r.y, color:r.color }; });
   var labels = ["a", "b", "c", "d"];
   state.title = "RULE 1 — ANGLES AT A POINT";
   state.footer = "drag any of the four rays to change the angles";
@@ -293,6 +304,36 @@ function buildRulePoint() {
   var lockedOrder = rays.map(function(r, i) { return { i: i, ang: angOf(vec(centre, r)) }; })
     .sort(function(a, b) { return a.ang - b.ang; })
     .map(function(o) { return o.i; });
+
+  // Spring lerp infrastructure — match the transformation widgets' feel.
+  var SPRING = 0.22, EPS = 0.005;
+  var raf = null;
+  function settled() {
+    for (var i = 0; i < rays.length; i++) {
+      if (Math.abs(rays[i].x - raysD[i].x) >= EPS) return false;
+      if (Math.abs(rays[i].y - raysD[i].y) >= EPS) return false;
+    }
+    return true;
+  }
+  function springStep() {
+    for (var i = 0; i < rays.length; i++) {
+      raysD[i].x += (rays[i].x - raysD[i].x) * SPRING;
+      raysD[i].y += (rays[i].y - raysD[i].y) * SPRING;
+    }
+    redraw();
+    if (!settled()) {
+      raf = requestAnimationFrame(springStep);
+    } else {
+      raf = null;
+      for (var j = 0; j < rays.length; j++) {
+        raysD[j].x = rays[j].x;
+        raysD[j].y = rays[j].y;
+      }
+      redraw();
+    }
+  }
+  function kickSpring() { if (raf == null) raf = requestAnimationFrame(springStep); }
+
   state.onDrag = function(idx, p) {
     var v = vec(centre, p);
     var L = len(v); if (L < 50) { p.x = centre.x + 50 * v.x / L; p.y = centre.y + 50 * v.y / L; }
@@ -304,18 +345,20 @@ function buildRulePoint() {
     if (!sameCircularOrder(newOrder, lockedOrder)) {
       rays[idx].x = ox; rays[idx].y = oy;
     }
+    kickSpring();
   };
   state.render = function() {
     clearLayers();
     // Centre dot
     layerLines.appendChild(el("circle", { cx: centre.x, cy: centre.y, r: 4, fill: COL.faint }));
-    // Sort rays by angle around centre to get consecutive angles
-    var indexed = rays.map(function(r, i) {
+    // Sort by DISPLAY angle around centre so visuals (arcs, labels, handles)
+    // all glide together as the spring settles.
+    var indexed = raysD.map(function(r, i) {
       var a = angOf(vec(centre, r));
       return { idx: i, ang: a, pt: r };
     }).sort(function(a, b) { return a.ang - b.ang; });
-    // Lines from centre to each ray endpoint
-    rays.forEach(function(r) {
+    // Lines from centre to each ray endpoint (display position)
+    raysD.forEach(function(r) {
       layerLines.appendChild(el("line", {
         x1: centre.x, y1: centre.y, x2: r.x, y2: r.y,
         stroke: COL.edge, "stroke-width": 2.6, "stroke-linecap": "round"
@@ -332,7 +375,7 @@ function buildRulePoint() {
       var arcRadius = 30 + i * 8;             // 30, 38, 46, 54
       layerArcs.appendChild(el("path", {
         d: arcPathBetween(centre.x, centre.y, arcRadius, a1, a1 + sweep),
-        fill: "none", stroke: rays[here.idx].color, "stroke-width": 2,
+        fill: "none", stroke: raysD[here.idx].color, "stroke-width": 2,
         "stroke-linecap": "round"
       }));
       var midA = a1 + sweep / 2;
@@ -341,16 +384,16 @@ function buildRulePoint() {
         centre.x + Math.cos(midA) * lr,
         centre.y + Math.sin(midA) * lr,
         labels[here.idx] + " = " + fmtDeg(deg),
-        rays[here.idx].color
+        raysD[here.idx].color
       ));
-      displayValues.push({ label: labels[here.idx], deg: deg, color: rays[here.idx].color });
+      displayValues.push({ label: labels[here.idx], deg: deg, color: raysD[here.idx].color });
     }
-    // Handles
-    rays.forEach(function(r, i) { makeHandle(r, { fill: r.color, idx: i }); });
+    // Handles — drawn at display position so they glide with the rest.
+    raysD.forEach(function(r, i) { makeHandle(r, { fill: r.color, idx: i }); });
     // Build formula in source order (a, b, c, d) but using their CURRENT degrees
     state.formulaParts = labels.map(function(lab, i) {
       var deg = displayValues.find(function(v){ return v.label === lab; }).deg;
-      return { label: lab, deg: deg, color: rays[i].color };
+      return { label: lab, deg: deg, color: raysD[i].color };
     });
     state.sumValue = 360;
   };

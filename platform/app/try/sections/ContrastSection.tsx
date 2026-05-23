@@ -302,9 +302,13 @@ function NodeArrowHint({ hidden }: { hidden?: boolean }) {
     >
       {/* Chip sits a little to the left of A (which lives at ~30 %
           across, ~32 % down in the default state). Tiny arrow inside
-          the chip points right at A. */}
+          the chip points right at A.
+          Hidden on phone — the chip's %-anchored position drifts into
+          A's label space when the iframe gets narrow, and the widget
+          has its own footer hint ("drag A, B, or P:...") that covers
+          the same beat. */}
       <div
-        className="absolute flex items-center gap-1.5"
+        className="absolute hidden sm:flex items-center gap-1.5"
         style={{
           left: "5%",
           top: "30%",
