@@ -348,7 +348,7 @@ function NodeArrowHint({ hidden }: { hidden?: boolean }) {
         className="absolute flex sm:hidden flex-col items-center gap-1.5"
         style={{
           left: "50%",
-          top: "44px",
+          top: "58px",
           transform: "translateX(-50%)",
           animation: "pl-node-hint-bob 2s ease-in-out infinite",
         }}
