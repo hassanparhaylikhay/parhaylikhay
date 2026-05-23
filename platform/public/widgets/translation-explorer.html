@@ -172,24 +172,27 @@ function tryRender(target, tex){
   }
 }
 function svgKaTeXLabel(parent, x, y, tex, color, align){
+  // Plain SVG <text> instead of foreignObject + KaTeX. iOS Safari
+  // positions foreignObject HTML content at unscaled CSS coordinates
+  // rather than viewBox-transformed coordinates, which made axis ticks
+  // and vertex labels drift off-anchor on phones (down-right) and
+  // iPads (up-left). All labels in this widget are simple strings
+  // (axis numbers, vertex letters like "A" / "B'"), so plain SVG
+  // text reproduces the visual exactly and scales correctly with the
+  // viewBox on every browser.
   align = align || "center";
-  var fo = document.createElementNS("http://www.w3.org/2000/svg","foreignObject");
-  fo.setAttribute("x", x - 50);
-  fo.setAttribute("y", y - 11);
-  fo.setAttribute("width", 100);
-  fo.setAttribute("height", 22);
-  fo.style.overflow = "visible";
-  fo.style.pointerEvents = "none";
-  var div = document.createElement("div");
-  div.style.height = "22px";
-  div.style.display = "flex";
-  div.style.alignItems = "center";
-  div.style.justifyContent = align === "left" ? "flex-start" : (align === "right" ? "flex-end" : "center");
-  div.className = "lbl-host";
-  div.style.color = color || COL.off;
-  fo.appendChild(div);
-  parent.appendChild(fo);
-  tryRender(div, tex);
+  var t = document.createElementNS("http://www.w3.org/2000/svg","text");
+  t.setAttribute("x", x);
+  t.setAttribute("y", y);
+  t.setAttribute("fill", color || COL.off);
+  t.setAttribute("font-family", "'Geist Mono', ui-monospace, monospace");
+  t.setAttribute("font-size", "12");
+  t.setAttribute("font-weight", "600");
+  t.setAttribute("dominant-baseline", "middle");
+  t.setAttribute("text-anchor", align === "left" ? "start" : (align === "right" ? "end" : "middle"));
+  t.setAttribute("pointer-events", "none");
+  t.textContent = String(tex);
+  parent.appendChild(t);
 }
 
 // ----- drawing -----
