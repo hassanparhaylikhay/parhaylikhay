@@ -22,10 +22,9 @@ import { COLOR } from "@/components/lesson-mode/interactions/_shared"
  */
 
 const SLIDE_MS = 4400
-// Slide 2 holds the live puzzle, so it deserves more dwell-time than
-// the other slides — the visitor needs a moment to read the prompt
-// AND drag the triangle to land on the dashed outline.
-const SLIDE_2_MS = 11000
+// Brief success pause AFTER slide 2 is solved before moving to slide 3,
+// so the visitor sees the green confirmation state.
+const SLIDE_2_POST_SOLVE_MS = 2400
 
 export default function LessonModePreviewSection() {
   const [idx, setIdx] = useState(0)
@@ -48,13 +47,14 @@ export default function LessonModePreviewSection() {
     return () => obs.disconnect()
   }, [])
 
-  // Auto-advance, but only while the section is visible AND not paused
-  // AND the visitor hasn't started solving slide 2. Slide 2 gets the
-  // extended dwell time so the visitor can actually try the puzzle.
+  // Auto-advance, but only while the section is visible AND not paused.
+  // Slide 2 (the live puzzle) is a hard gate: stay there indefinitely
+  // until the visitor actually solves it, then advance after a short
+  // success pause so the green confirmation has time to land.
   useEffect(() => {
     if (!visible || paused) return
-    if (idx === 1 && solvedSlide2) return
-    const hold = idx === 1 ? SLIDE_2_MS : SLIDE_MS
+    if (idx === 1 && !solvedSlide2) return
+    const hold = idx === 1 ? SLIDE_2_POST_SOLVE_MS : SLIDE_MS
     const t = setTimeout(() => setIdx(i => (i + 1) % 3), hold)
     return () => clearTimeout(t)
   }, [idx, paused, visible, solvedSlide2])
