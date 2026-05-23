@@ -22,6 +22,11 @@ type Showcase = {
   accent: string
   /** Optional tab strip ABOVE the widget — used by the nets row. */
   tabs?: { label: string; src: string }[]
+  /** When true, the widget column bleeds past the section's mobile padding
+      so its canvas renders at viewport-edge width. Used for widgets whose
+      intrinsic aspect ratio is wide enough that the normal column makes
+      them look squashed on phone (alternate segment, angles at a point). */
+  bleedPhone?: boolean
 }
 
 const SHOWS: Showcase[] = [
@@ -34,6 +39,7 @@ const SHOWS: Showcase[] = [
     iframeHeight: 560,
     flip: false,
     accent: "#ff4670",
+    bleedPhone: true,
   },
   {
     topic: "nets of solids",
@@ -72,6 +78,7 @@ const SHOWS: Showcase[] = [
     iframeHeight: 520,
     flip: true,
     accent: "#ff822c",
+    bleedPhone: true,
   },
   {
     topic: "centre of rotation",
@@ -111,7 +118,16 @@ function ShowcaseRow({ show }: { show: Showcase }) {
     <FadeIn>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
         {/* Widget column */}
-        <div className={`order-1 ${show.flip ? "lg:order-2" : "lg:order-1"}`}>
+        <div
+          className={[
+            "order-1",
+            show.flip ? "lg:order-2" : "lg:order-1",
+            // bleedPhone: cancel the section's px-5 mobile padding so the
+            // canvas inside renders at near-viewport width. lg: restores
+            // standard spacing because there the row is two-column anyway.
+            show.bleedPhone ? "-mx-5 sm:mx-0" : "",
+          ].join(" ")}
+        >
           <WidgetSlab src={show.widget} height={show.iframeHeight} accent={show.accent} tabs={show.tabs} />
         </div>
         {/* Copy column. Mark-scheme phrasing card removed — the
