@@ -67,10 +67,11 @@ export default function TestimonialSection() {
             This is a <span className="text-[#ff4670]">game changer</span>.
           </blockquote>
 
-          {/* THREE NAMES below the centerpiece — film-credit style.
-              Schools in faint mono right under each name. */}
+          {/* THREE NAMES below the centerpiece — three equal columns,
+              divided by faint vertical hairlines on md+. Stacks on
+              mobile (no dividers). */}
           <div
-            className="mt-9 flex flex-wrap items-start justify-center gap-x-10 gap-y-5 transition-all duration-[900ms]"
+            className="mt-10 mx-auto max-w-[680px] grid grid-cols-1 sm:grid-cols-3 sm:divide-x sm:divide-[#1a2330] transition-all duration-[900ms]"
             style={{
               opacity: visible ? 1 : 0,
               transform: visible ? "translateY(0)" : "translateY(10px)",
@@ -84,13 +85,13 @@ export default function TestimonialSection() {
           </div>
 
           <p
-            className="mt-8 font-mono text-[10px] tracking-[2px] uppercase text-[#3a4a5a] transition-all duration-[900ms]"
+            className="mt-9 font-mono text-[10px] tracking-[2.5px] uppercase text-[#3a4a5a] transition-all duration-[900ms]"
             style={{
               opacity: visible ? 1 : 0,
               transitionDelay: "900ms",
             }}
           >
-            three students · three schools · one sentence
+            three voices · one sentence
           </p>
         </div>
 
@@ -139,11 +140,11 @@ export default function TestimonialSection() {
 
 function Attribution({ name, school }: { name: string; school: string }) {
   return (
-    <div className="text-center">
+    <div className="text-center px-3 py-3 sm:py-1">
       <p className="font-mono text-[13.5px] tracking-[1px] text-[#f0eeea]">
         {name}
       </p>
-      <p className="font-mono text-[10px] tracking-[1.5px] uppercase text-[#3a4a5a] mt-1.5">
+      <p className="font-mono text-[10px] tracking-[1.5px] uppercase text-[#3a4a5a] mt-1.5 leading-snug">
         {school}
       </p>
     </div>
