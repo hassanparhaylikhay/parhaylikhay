@@ -226,26 +226,31 @@ function ModeStage({ mode }: { mode: Mode }) {
 
 function ModeTabs({ mode, setMode }: { mode: Mode; setMode: (m: Mode) => void }) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-      {MODES.map(m => {
-        const active = m.key === mode
-        return (
-          <button
-            key={m.key}
-            onClick={() => setMode(m.key)}
-            className="font-mono text-[11px] sm:text-[12px] uppercase tracking-[1.5px] px-4 py-2.5 rounded-full transition-all duration-300"
-            style={{
-              background: active ? "rgba(255,240,103,0.10)" : "transparent",
-              color: active ? "#fff067" : "#7a7875",
-              border: `1px solid ${active ? "rgba(255,240,103,0.40)" : "#141e2a"}`,
-              transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
-            }}
-          >
-            {m.label}
-          </button>
-        )
-      })}
-    </div>
+    <>
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+        {MODES.map(m => {
+          const active = m.key === mode
+          return (
+            <button
+              key={m.key}
+              onClick={() => setMode(m.key)}
+              className="font-mono text-[11px] sm:text-[12px] uppercase tracking-[1.5px] px-4 py-2.5 rounded-full transition-all duration-300"
+              style={{
+                background: active ? "rgba(255,240,103,0.10)" : "transparent",
+                color: active ? "#fff067" : "#7a7875",
+                border: `1px solid ${active ? "rgba(255,240,103,0.40)" : "#141e2a"}`,
+                transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
+              }}
+            >
+              {m.label}
+            </button>
+          )
+        })}
+      </div>
+      <p className="text-center font-mono text-[10px] tracking-[1.5px] text-[#3a4a5a] mb-8">
+        + 100s more
+      </p>
+    </>
   )
 }
 

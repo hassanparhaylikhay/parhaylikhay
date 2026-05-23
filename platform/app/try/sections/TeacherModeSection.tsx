@@ -128,26 +128,31 @@ export default function TeacherModeSection() {
 
 function TabStrip({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
-      {TABS.map(t => {
-        const active = t.key === tab
-        return (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className="font-mono text-[11px] sm:text-[12px] uppercase tracking-[1.5px] px-4 py-2.5 rounded-full transition-all duration-300"
-            style={{
-              background: active ? "rgba(255,130,44,0.10)" : "transparent",
-              color: active ? "#ff822c" : "#7a7875",
-              border: `1px solid ${active ? "rgba(255,130,44,0.45)" : "#141e2a"}`,
-              transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
-            }}
-          >
-            {t.label}
-          </button>
-        )
-      })}
-    </div>
+    <>
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-2">
+        {TABS.map(t => {
+          const active = t.key === tab
+          return (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className="font-mono text-[11px] sm:text-[12px] uppercase tracking-[1.5px] px-4 py-2.5 rounded-full transition-all duration-300"
+              style={{
+                background: active ? "rgba(255,130,44,0.10)" : "transparent",
+                color: active ? "#ff822c" : "#7a7875",
+                border: `1px solid ${active ? "rgba(255,130,44,0.45)" : "#141e2a"}`,
+                transitionTimingFunction: "cubic-bezier(0.16,1,0.3,1)",
+              }}
+            >
+              {t.label}
+            </button>
+          )
+        })}
+      </div>
+      <p className="text-center font-mono text-[10px] tracking-[1.5px] text-[#3a4a5a] mb-8">
+        + 100s more
+      </p>
+    </>
   )
 }
 
