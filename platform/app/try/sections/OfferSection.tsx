@@ -140,18 +140,9 @@ export default function OfferSection() {
           }}
         >
           <p className="text-[13.5px] sm:text-[14px] leading-[1.65] text-[#7a7875] max-w-[44ch] mx-auto">
-            Free for everyone during early access. When we launch publicly, Parhaylikhay will be{" "}
-            <span className="text-[#c8c6be]">PKR 2,499/month</span> for one subject or{" "}
-            <span className="text-[#c8c6be]">PKR 3,999/month</span> for both Maths and Physics.
-          </p>
-          <p className="text-[13px] text-[#3a4a5a] mt-3 leading-[1.6]">
-            Cancel anytime. Annual plans save 20%.
+            Free for everyone during early access.
           </p>
         </div>
-
-        <p className="text-center font-mono text-[10px] tracking-[3px] uppercase text-[#1a2330] mt-16">
-          parhaylikhay · made in karachi
-        </p>
       </div>
     </Section>
   )
