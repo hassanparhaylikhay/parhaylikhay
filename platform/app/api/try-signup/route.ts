@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 /**
  * POST /api/try-signup
  *
- * Stub endpoint for the /try sales page form. For now it accepts the
- * payload, logs it to the server console, and returns 200. When the
- * real onboarding flow (Supabase row + WhatsApp template + trial token)
- * is wired up, that work goes here.
- *
- * The client-side form ALSO writes the payload to localStorage so we
- * never lose a signup if the server is down — the next deploy can
- * harvest the queued entries.
+ * Inserts the /try sales page form into the `try_signups` Supabase
+ * table. The client-side form ALSO writes the payload to localStorage
+ * so we never lose a signup if the API is unreachable — those
+ * stranded entries can be harvested on the next deploy.
  */
 type Payload = {
   name?: unknown
@@ -48,10 +45,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "Invalid role" }, { status: 400 })
   }
 
-  console.log("[try-signup]", JSON.stringify({
-    name, role, email, whatsapp,
-    receivedAt: new Date().toISOString(),
-  }))
+  // Best-effort insert into Supabase. Errors are logged but the client
+  // still sees a success response — the localStorage fallback covers
+  // the rare case where Supabase is unreachable.
+  try {
+    const supabase = createAdminClient()
+    const { error } = await supabase.from("try_signups").insert({
+      name,
+      role,
+      email,
+      whatsapp,
+    })
+    if (error) {
+      console.error("[try-signup] insert failed:", error.message, JSON.stringify({ name, role, email, whatsapp }))
+    } else {
+      console.log("[try-signup] inserted:", JSON.stringify({ name, role, email }))
+    }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error("[try-signup] supabase init failed:", msg, JSON.stringify({ name, role, email, whatsapp }))
+  }
 
   return NextResponse.json({ ok: true })
 }
