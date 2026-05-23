@@ -62,7 +62,8 @@ export default function RoadmapSection() {
             roadmap
           </p>
           <h2 className="font-sans text-[26px] sm:text-[32px] md:text-[38px] leading-[1.2] tracking-[-0.022em] text-[#f0eeea] max-w-[28ch] mx-auto font-medium">
-            Parhaylikhay is being built <span className="text-[#ff822c]">subject by subject</span>, the right way.<br className="hidden sm:block" />
+            Parhaylikhay is being built <span className="text-[#ff822c]">subject by subject</span>, the right way.{" "}
+            <br className="hidden sm:block" />
             Here&apos;s what&apos;s ready, and what&apos;s coming.
           </h2>
         </div>

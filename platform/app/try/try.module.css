@@ -16,39 +16,37 @@
   50%, 100% { opacity: 0; }
 }
 
-/* Scroll cue at the foot of the hero. Thin vertical line; a small
-   pellet drifts down it on a gentle loop. Stops drawing attention
-   once the visitor has scrolled past 200 px. */
-.scrollCue {
+/* Hero subhead red dash-underline. Same pattern as the main landing
+   page's .dash-underline: a pseudo-element grows from 0 → 100% width
+   once the carrying span gets .dashVisible. */
+.dashUnderline {
   position: relative;
-  width: 1px;
-  height: 56px;
-  background: linear-gradient(
-    to bottom,
-    rgba(240, 238, 234, 0) 0%,
-    rgba(240, 238, 234, 0.30) 30%,
-    rgba(240, 238, 234, 0.30) 70%,
-    rgba(240, 238, 234, 0) 100%
-  );
-  overflow: hidden;
+  display: inline-block;
 }
-.scrollCue::after {
+.dashUnderline::after {
   content: "";
   position: absolute;
-  left: -2px;
-  top: -10px;
-  width: 5px;
-  height: 14px;
-  border-radius: 5px;
-  background: #f0eeea;
-  animation: scroll-cue 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-  box-shadow: 0 0 8px rgba(240, 238, 234, 0.45);
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: #ff4670;
+  transition: width 1.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
-@keyframes scroll-cue {
-  0%   { transform: translateY(0); opacity: 0; }
-  20%  { opacity: 1; }
-  70%  { opacity: 1; }
-  100% { transform: translateY(72px); opacity: 0; }
+.dashVisible::after {
+  width: 100%;
+}
+
+/* Soft double-chevron bob at the foot of the hero. Slow, single-axis
+   gentle motion instead of the prior sliding-bead-in-line that read
+   as generic SaaS scroll indicator. */
+.chevronBob {
+  animation: chevron-bob 3.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+@keyframes chevron-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(4px); }
 }
 
 /* The CTA glow halo — subtle, alive, no shimmer.
@@ -188,9 +186,10 @@
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .caret,
-  .scrollCue::after,
+  .chevronBob,
   .ctaGlow::before,
   .pointerHint {
     animation: none;
   }
+  .dashUnderline::after { transition: none; }
 }

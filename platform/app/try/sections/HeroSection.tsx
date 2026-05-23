@@ -5,12 +5,12 @@ import Image from "next/image"
 import Section from "../components/Section"
 import styles from "../try.module.css"
 
-const HEADLINE = "Most Pakistani students learn maths by reading and watching."
-const SUBHEAD  = "Parhaylikhay teaches them by doing."
+const HEADLINE = "Most students learn maths by reading and watching."
 
 const WORD_STAGGER_MS = 90   // gap between consecutive word reveals
 const WORD_DURATION_MS = 700 // each word's fade-up duration
 const SUBHEAD_DELAY_MS = 380
+const UNDERLINE_DELAY_MS = 720  // after subhead lands, kick the red underline
 const CTA_DELAY_MS = 700
 
 /**
@@ -27,6 +27,7 @@ export default function HeroSection() {
 
   const [headStart, setHeadStart] = useState(false)
   const [showSub, setShowSub] = useState(false)
+  const [showUnderline, setShowUnderline] = useState(false)
   const [showCta, setShowCta] = useState(false)
 
   useEffect(() => {
@@ -36,12 +37,14 @@ export default function HeroSection() {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setHeadStart(true)
       setShowSub(true)
+      setShowUnderline(true)
       setShowCta(true)
       return
     }
     const t = [
       setTimeout(() => setHeadStart(true), 220),
       setTimeout(() => setShowSub(true), 220 + headlineDuration + SUBHEAD_DELAY_MS),
+      setTimeout(() => setShowUnderline(true), 220 + headlineDuration + SUBHEAD_DELAY_MS + UNDERLINE_DELAY_MS),
       setTimeout(() => setShowCta(true), 220 + headlineDuration + SUBHEAD_DELAY_MS + 600 + CTA_DELAY_MS),
     ]
     return () => t.forEach(clearTimeout)
@@ -120,14 +123,18 @@ export default function HeroSection() {
         </h1>
 
         <p
-          className="font-sans text-[18px] sm:text-[24px] md:text-[28px] text-[#fff067] mt-6 sm:mt-8 max-w-[26ch] transition-all duration-[800ms]"
+          className="font-sans text-[18px] sm:text-[24px] md:text-[28px] text-[#f0eeea] mt-6 sm:mt-8 max-w-[26ch] transition-all duration-[800ms]"
           style={{
             opacity: showSub ? 1 : 0,
             transform: showSub ? "translateY(0)" : "translateY(10px)",
             transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
           }}
         >
-          {SUBHEAD}
+          Parhaylikhay teaches them{" "}
+          <span className={`${styles.dashUnderline} ${showUnderline ? styles.dashVisible : ""}`}>
+            by doing
+          </span>
+          .
         </p>
 
         <div
@@ -152,15 +159,26 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Scroll cue at foot. */}
+      {/* Scroll cue at foot — minimal label + a soft double chevron
+          that bobs once every few seconds. Replaces the earlier
+          sliding-bead-in-line indicator, which read as generic SaaS. */}
       <div
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 transition-opacity duration-500"
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 transition-opacity duration-500"
         style={{ opacity: showCta ? 1 : 0 }}
       >
-        <span className="font-mono text-[9.5px] tracking-[2.5px] uppercase text-[#3a4a5a]">
-          scroll
+        <span className="font-mono text-[10px] tracking-[2.5px] uppercase text-[#7a7875]">
+          keep going
         </span>
-        <div className={styles.scrollCue} aria-hidden />
+        <svg
+          width="14" height="18" viewBox="0 0 14 18"
+          className={styles.chevronBob}
+          fill="none" stroke="#7a7875" strokeWidth="1.4"
+          strokeLinecap="round" strokeLinejoin="round"
+          aria-hidden
+        >
+          <path d="M2 5 L7 10 L12 5" />
+          <path d="M2 11 L7 16 L12 11" opacity="0.45" />
+        </svg>
       </div>
     </Section>
   )

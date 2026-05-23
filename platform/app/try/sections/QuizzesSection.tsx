@@ -106,7 +106,8 @@ export default function QuizzesSection() {
           }}
         >
           <p className="text-[17px] sm:text-[20px] leading-[1.5] text-[#c8c6be]">
-            <span className="text-[#f0eeea]">A different quiz for every topic.</span> Built so a student can&apos;t bluff through with pattern-matching.
+            <span className="text-[#f0eeea]">A different quiz for every topic.</span>{" "}
+            Built so a student can&apos;t bluff through with pattern-matching.
           </p>
         </div>
       </div>
