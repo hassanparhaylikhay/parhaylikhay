@@ -657,7 +657,9 @@ const userState = {};
 const displayState = {};
 const SPRING = 0.22;
 
-// Build controls
+// Build controls. If the URL carries a param matching a control's id
+// (e.g. ?mode=cubic&b=-2&c=1), it overrides that control's init —
+// useful for embedding the trainer with a non-trivial starting state.
 const controlsEl = document.getElementById("controls");
 mode.controls.forEach(ctrl => {
   const row = document.createElement("div");
@@ -665,6 +667,16 @@ mode.controls.forEach(ctrl => {
   const name = document.createElement("span");
   name.className = "name"; name.textContent = ctrl.name;
   row.appendChild(name);
+  let init = ctrl.init;
+  const override = params.get(ctrl.id);
+  if (override !== null && override !== "") {
+    if (ctrl.select) {
+      if (ctrl.select.includes(override)) init = override;
+    } else {
+      const v = parseFloat(override);
+      if (Number.isFinite(v)) init = Math.max(ctrl.min, Math.min(ctrl.max, v));
+    }
+  }
   if (ctrl.select) {
     const sel = document.createElement("select");
     sel.id = "ctrl-" + ctrl.id;
@@ -673,20 +685,20 @@ mode.controls.forEach(ctrl => {
       o.value = opt; o.textContent = opt;
       sel.appendChild(o);
     });
-    sel.value = ctrl.init;
+    sel.value = init;
     sel.addEventListener("change", e => {
       userState[ctrl.id] = e.target.value;
       displayState[ctrl.id] = e.target.value;
     });
     row.appendChild(sel);
-    userState[ctrl.id] = ctrl.init;
-    displayState[ctrl.id] = ctrl.init;
+    userState[ctrl.id] = init;
+    displayState[ctrl.id] = init;
   } else {
     const inp = document.createElement("input");
     inp.type = "range"; inp.id = "ctrl-" + ctrl.id;
-    inp.min = ctrl.min; inp.max = ctrl.max; inp.step = ctrl.step; inp.value = ctrl.init;
+    inp.min = ctrl.min; inp.max = ctrl.max; inp.step = ctrl.step; inp.value = init;
     const val = document.createElement("span");
-    val.className = "val"; val.id = "val-" + ctrl.id; val.textContent = ctrl.init;
+    val.className = "val"; val.id = "val-" + ctrl.id; val.textContent = fmt(init);
     inp.addEventListener("input", e => {
       const v = parseFloat(e.target.value);
       userState[ctrl.id] = v;
@@ -694,8 +706,8 @@ mode.controls.forEach(ctrl => {
     });
     row.appendChild(inp);
     row.appendChild(val);
-    userState[ctrl.id] = ctrl.init;
-    displayState[ctrl.id] = ctrl.init;
+    userState[ctrl.id] = init;
+    displayState[ctrl.id] = init;
   }
   controlsEl.appendChild(row);
 });

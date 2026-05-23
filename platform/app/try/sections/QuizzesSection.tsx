@@ -20,7 +20,7 @@ import { COLOR } from "@/components/lesson-mode/interactions/_shared"
  *   3. Shape classifier   (five locked challenges on a 1-100 board)
  */
 
-type Tab = "venn" | "classifier"
+type Tab = "venn" | "classifier" | "match-cubic"
 
 const TABS: { key: Tab; label: string; href: string; description: string }[] = [
   {
@@ -36,6 +36,13 @@ const TABS: { key: Tab; label: string; href: string; description: string }[] = [
     href: "/widgets/shape-classifier-grid.html",
     description:
       "A 1-100 grid, five locked challenges. Tap every number that fits the rule: primes, squares, multiples of seven. Each cleared challenge unlocks the next.",
+  },
+  {
+    key: "match-cubic",
+    label: "Match the cubic",
+    href: "/widgets/match-trainer.html?mode=cubic&b=-2&c=1",
+    description:
+      "A target cubic curve appears in faded gold. You drag the b and c sliders until your blue curve lands exactly on it. Forces the student to feel how each coefficient bends the shape — not memorise a recipe.",
   },
 ]
 
