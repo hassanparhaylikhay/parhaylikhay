@@ -115,7 +115,7 @@ export default function FounderSection() {
               </p>
               <p className="text-[22px] sm:text-[25px] md:text-[28px] leading-[1.4] text-[#f0eeea] font-medium tracking-[-0.014em] mb-8 max-w-[42ch]">
                 I&apos;m <span className="text-[#fff067]">Hassan</span>.<br />
-                I built Parhaylikhay so students can use technology to actually understand every concept visually, and never feel bored for a second.
+                For years I watched brilliant students switch off in maths class — not because they couldn&apos;t do it, but because no one ever made them feel it.
               </p>
               <p className="text-[18px] leading-[1.6] text-[#c8c6be] max-w-[44ch]">
                 I graduated in physics from <span className="text-[#f0eeea]">University College London</span>. Since then I&apos;ve taught more than <span className="text-[#f0eeea]">800 students</span>, one-to-one, in small groups, and in full classrooms. My students have come from <span className="text-[#f0eeea]">7 different countries</span>, including from world-renowned schools like <span className="text-[#f0eeea]">St Paul&apos;s School</span> in Hammersmith, London. I&apos;m also president and co-founder of <span className="text-[#f0eeea]">The Tribe</span>, a youth leadership ecosystem.
