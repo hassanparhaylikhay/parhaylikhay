@@ -25,7 +25,7 @@ import { COLOR } from "@/components/lesson-mode/interactions/_shared"
  * extends beyond live class.
  */
 
-type Tab = "graph" | "points" | "translation" | "reflection"
+type Tab = "graph" | "points" | "unit-circle" | "translation" | "reflection"
 
 const TABS: { key: Tab; label: string; href: string; description: string }[] = [
   {
@@ -41,6 +41,13 @@ const TABS: { key: Tab; label: string; href: string; description: string }[] = [
     href: "/widgets/points-fit-explorer.html",
     description:
       "Drop points anywhere on the grid. The widget fits a smooth curve through them. Useful for showing how data turns into a model, or for sketching the shape of a cubic by feel before naming it.",
+  },
+  {
+    key: "unit-circle",
+    label: "Unit circle",
+    href: "/widgets/unit-circle-trig.html",
+    description:
+      "Drag the point around the unit circle and the sine, cosine and tangent curves draw themselves in real time. Teachers use this to show a class why sin is a wave, why cos starts at 1, and why tan blows up at 90° — the closest thing to a live proof of where trigonometry comes from.",
   },
   {
     key: "translation",
