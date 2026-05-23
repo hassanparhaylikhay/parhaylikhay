@@ -48,7 +48,7 @@
     <span class="meta">drag the point · or use the slider</span>
   </div>
 
-  <svg id="stage" viewBox="0 0 660 380" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+  <svg id="stage" viewBox="0 0 660 440" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
     <g id="g-grid"></g>
     <g id="g-wave-static"></g>
     <g id="g-wave-trace"></g>
@@ -127,8 +127,8 @@ function svgKaTeXLabel(parent, x, y, tex, color, alignment, fontSizePx) {
 // This makes the geometry literally continuous: the y=1 dashed reference
 // line in the panel exits the top of the circle; tan(θ) is the y-coord
 // where the extended radius hits the panel's left edge.
-var SVG_W = 660, SVG_H = 380;
-var CX = 130, CY = 190, R = 100;       // circle centre + radius (px)
+var SVG_W = 660, SVG_H = 440;
+var CX = 130, CY = 220, R = 100;       // circle centre + radius (px)
 var WX = CX + R;                       // panel left edge = tangent line at x=1
 var WW = SVG_W - WX - 24;              // panel x extent
 var WCY = CY;                          // y=0 baseline ALIGNED with circle centre
