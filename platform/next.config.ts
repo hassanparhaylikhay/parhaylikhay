@@ -11,11 +11,14 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: path.join(__dirname, ".."),
   async rewrites() {
     return {
-      // beforeFiles runs before pages are checked — serves landing.html at /
+      // beforeFiles runs before pages are checked — serves /try at the
+      // root so parhaylikhay.com lands visitors directly on the demo.
+      // The browser URL stays "/" (rewrite, not redirect). The old
+      // marketing page remains directly accessible at /landing.html.
       beforeFiles: [
         {
           source: "/",
-          destination: "/landing.html",
+          destination: "/try",
         },
       ],
       afterFiles: [],
