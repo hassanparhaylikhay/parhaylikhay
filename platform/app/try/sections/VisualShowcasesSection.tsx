@@ -85,7 +85,7 @@ const SHOWS: Showcase[] = [
     topic: "centre of rotation",
     unit: "Cambridge 4024 · 7.1 · the hardest one",
     title: "The perpendicular bisectors meet at the centre. Every time.",
-    pitch: "Cambridge's hardest transformation question: given the object and its rotated image, find the centre. Walk the construction in six steps. Then drag any vertex or the centre, and watch the two bisectors swivel but always cross at the same point.",
+    pitch: "Cambridge's hardest transformation question: given the object and its 90° rotated image, find the centre. Walk the construction in six steps. Then drag any vertex or the centre, and watch the two bisectors swivel but always cross at the same point.",
     widget: "/widgets/rotation-centre-step-explorer.html",
     iframeHeight: 540,
     flip: false,
