@@ -348,20 +348,28 @@ function render() {
        " A " + arcR + " " + arcR + " 0 " + largeArc + " 0 " + arcEndX + " " + arcEndY,
     fill: "none", stroke: COL.yellow, "stroke-width": 2.2
   }));
-  // θ label — position at the angular midpoint, offset outward
-  var midA = thetaRad / 2;
-  var labR = arcR + 18;
-  svgKaTeXLabel(gLbl, CX + labR * Math.cos(midA), CY - labR * Math.sin(midA),
-    "{\\color{" + COL.yellow + "}\\theta = " + Math.round(theta) + "°}", null, "center", 12);
+  // Live in-canvas value labels (θ, cos θ, sin θ) — desktop only.
+  // On narrow viewports they crowd the small diagram and iOS Safari's
+  // foreignObject positioning bug pushes them outside their anchors,
+  // so we hide them entirely on phone. The mono numeric readouts that
+  // live BELOW the diagram still show the same values.
+  var hideFloatingLabels = (typeof window !== "undefined") && window.innerWidth < 640;
+  if (!hideFloatingLabels) {
+    // θ label — position at the angular midpoint, offset outward
+    var midA = thetaRad / 2;
+    var labR = arcR + 18;
+    svgKaTeXLabel(gLbl, CX + labR * Math.cos(midA), CY - labR * Math.sin(midA),
+      "{\\color{" + COL.yellow + "}\\theta = " + Math.round(theta) + "°}", null, "center", 12);
 
-  // Side labels — placed OUTSIDE the segments (won't render if the segment is too short)
-  if (Math.abs(cosV) > 0.18) {
-    svgKaTeXLabel(gLbl, (CX + Fx) / 2, Fy + (sinV >= 0 ? 18 : -18),
-      "{\\color{" + COL.blue + "}\\cos\\theta = " + fmtNum(cosV, 3) + "}", null, "center", 11);
-  }
-  if (Math.abs(sinV) > 0.18) {
-    svgKaTeXLabel(gLbl, Fx + (cosV >= 0 ? 50 : -50), (Fy + Py) / 2,
-      "{\\color{" + COL.orange + "}\\sin\\theta = " + fmtNum(sinV, 3) + "}", null, "center", 11);
+    // Side labels — placed OUTSIDE the segments (won't render if the segment is too short)
+    if (Math.abs(cosV) > 0.18) {
+      svgKaTeXLabel(gLbl, (CX + Fx) / 2, Fy + (sinV >= 0 ? 18 : -18),
+        "{\\color{" + COL.blue + "}\\cos\\theta = " + fmtNum(cosV, 3) + "}", null, "center", 11);
+    }
+    if (Math.abs(sinV) > 0.18) {
+      svgKaTeXLabel(gLbl, Fx + (cosV >= 0 ? 50 : -50), (Fy + Py) / 2,
+        "{\\color{" + COL.orange + "}\\sin\\theta = " + fmtNum(sinV, 3) + "}", null, "center", 11);
+    }
   }
 
   // Point P (yellow, draggable)
@@ -537,6 +545,9 @@ function reportHeight() {
 }
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
+// Re-render when viewport width crosses the phone/desktop boundary so
+// the floating cos/sin/θ labels appear or hide accordingly.
+window.addEventListener("resize", render);
 if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
 </script>
 </body>
