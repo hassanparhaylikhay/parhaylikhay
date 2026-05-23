@@ -50,6 +50,7 @@ const SHOWS: Showcase[] = [
     iframeHeight: 640,
     flip: true,
     accent: "#fff067",
+    bleedPhone: true,
     tabs: [
       { label: "Cube",     src: "/widgets/net-unfolder.html?solid=cube" },
       { label: "Cuboid",   src: "/widgets/net-unfolder.html?solid=cuboid" },

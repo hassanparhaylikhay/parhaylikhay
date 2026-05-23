@@ -15,8 +15,13 @@
   .hint { font-family:'Geist Mono',monospace; font-size:10px; color:#7a7875; letter-spacing:0.4px; }
   .stage { width:100%; aspect-ratio: 600 / 340; position:relative; user-select:none; touch-action:none; }
   svg { display:block; width:100%; height:100%; user-select:none; overflow:visible; }
-  .handle { cursor:grab; animation: pulse-glow 1.8s ease-in-out infinite; }
-  .handle.grabbing { cursor:grabbing; }
+  /* Transparent hit area underneath each handle catches touch on phone
+     where the visible 10px-radius dot is too small a target. The visible
+     dot pulses on top with pointer-events:none so taps fall through to
+     the hit circle. */
+  .handle-hit { cursor:grab; fill:transparent; }
+  .handle-hit.grabbing { cursor:grabbing; }
+  .handle { pointer-events:none; animation: pulse-glow 1.8s ease-in-out infinite; }
   @keyframes pulse-glow {
     0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
     50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
@@ -193,6 +198,20 @@ var activePointerId = null;
 function makeHandle(point, opts) {
   opts = opts || {};
   var fill = opts.fill || COL.yellow;
+  // Larger transparent hit area to give phone touches a reliable
+  // target. Visible dot above has pointer-events:none so taps fall
+  // through to this circle.
+  var hit = el("circle", {
+    cx: point.x, cy: point.y, r: 22
+  });
+  hit.classList.add("handle-hit");
+  hit.dataset.idx = String(opts.idx);
+  if (window.PointerEvent) {
+    hit.addEventListener("pointerdown", onDown);
+  } else {
+    hit.addEventListener("mousedown", onDownLegacy);
+  }
+  // Visible pulsing dot — rendered on top of the hit area.
   var dot = el("circle", {
     cx: point.x, cy: point.y, r: 10,
     fill: fill,
@@ -203,14 +222,9 @@ function makeHandle(point, opts) {
   // Set color so the pulse-glow drop-shadow (which uses currentColor)
   // matches the handle's fill instead of bleeding white.
   dot.style.color = fill;
-  dot.dataset.idx = String(opts.idx);
-  if (window.PointerEvent) {
-    dot.addEventListener("pointerdown", onDown);
-  } else {
-    dot.addEventListener("mousedown", onDownLegacy);
-  }
+  layerHandles.appendChild(hit);
   layerHandles.appendChild(dot);
-  return dot;
+  return hit;
 }
 function onDown(e) {
   dragHandle = e.currentTarget;
