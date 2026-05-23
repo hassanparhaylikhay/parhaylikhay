@@ -61,12 +61,16 @@ function TextbookCard() {
         the old way
       </div>
       <div
-        className="relative rounded-xl overflow-hidden border"
+        className="relative rounded-xl overflow-hidden border flex-1"
         style={{
           background: "#15171a",
           borderColor: "#1a1d22",
           boxShadow: "inset 0 1px 0 rgba(255,255,255,0.02)",
-          aspectRatio: "4 / 3.4",
+          // Mobile: enough vertical room for the prose + circle diagram
+          // without clipping. Desktop: items-stretch makes the card grow
+          // to match the right column's live widget height, so this
+          // floor is rarely the constraint there.
+          minHeight: 480,
         }}
       >
         {/* Faint paper grain — repeating horizontal lines for a printed-page feel. */}
