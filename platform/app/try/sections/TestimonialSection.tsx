@@ -79,8 +79,8 @@ export default function TestimonialSection() {
             }}
           >
             <Attribution name="Ayaan"  school="Year 10 · Foundation Public" />
-            <Attribution name="Maaz"   school="Nixor College" />
-            <Attribution name="Moiz"   school="Karachi Grammar School" />
+            <Attribution name="Maaz"   school="IBA" />
+            <Attribution name="Moiz"   school="Tutor" />
           </div>
 
           <p
