@@ -342,13 +342,13 @@ function NodeArrowHint({ hidden }: { hidden?: boolean }) {
       </div>
 
       {/* PHONE chip: top-center of the iframe with a downward arrow.
-          Anchored in pixels (top:10px) so it can't drift into the A
-          label like the desktop chip's %-position would. */}
+          Anchored in pixels (top:44px) so it sits below the APB angle
+          label at the top of the circle without colliding with it. */}
       <div
         className="absolute flex sm:hidden flex-col items-center gap-1.5"
         style={{
           left: "50%",
-          top: "10px",
+          top: "44px",
           transform: "translateX(-50%)",
           animation: "pl-node-hint-bob 2s ease-in-out infinite",
         }}
