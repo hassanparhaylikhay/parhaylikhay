@@ -307,6 +307,8 @@ function NodeArrowHint({ hidden }: { hidden?: boolean }) {
           A's label space when the iframe gets narrow, and the widget
           has its own footer hint ("drag A, B, or P:...") that covers
           the same beat. */}
+      {/* DESKTOP chip: sits to the LEFT of A (which lives at ~30 %
+          across, ~32 % down). Arrow inside the chip points right at A. */}
       <div
         className="absolute hidden sm:flex items-center gap-1.5"
         style={{
@@ -339,10 +341,50 @@ function NodeArrowHint({ hidden }: { hidden?: boolean }) {
         </svg>
       </div>
 
+      {/* PHONE chip: top-center of the iframe with a downward arrow.
+          Anchored in pixels (top:10px) so it can't drift into the A
+          label like the desktop chip's %-position would. */}
+      <div
+        className="absolute flex sm:hidden flex-col items-center gap-1.5"
+        style={{
+          left: "50%",
+          top: "10px",
+          transform: "translateX(-50%)",
+          animation: "pl-node-hint-bob 2s ease-in-out infinite",
+        }}
+      >
+        <span
+          className="font-mono text-[10px] tracking-[1.5px] uppercase text-[#ff4670] px-2 py-1 rounded"
+          style={{
+            background: "rgba(11, 17, 24, 0.92)",
+            border: "1px solid rgba(255, 70, 112, 0.55)",
+            boxShadow: "0 4px 14px -6px rgba(255, 70, 112, 0.55)",
+          }}
+        >
+          drag
+        </span>
+        <svg width="10" height="14" viewBox="0 0 10 14" fill="none" aria-hidden>
+          <line
+            x1="5" y1="0" x2="5" y2="9"
+            stroke="#ff4670" strokeWidth="1.5"
+            strokeDasharray="3 3" strokeLinecap="round"
+          />
+          <path
+            d="M 1.5 7 L 5 11 L 8.5 7"
+            stroke="#ff4670" strokeWidth="1.5"
+            fill="none" strokeLinecap="round" strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+
       <style jsx>{`
         @keyframes pl-node-hint-pulse {
           0%, 100% { transform: translateX(0);    opacity: 1;    }
           50%      { transform: translateX(-3px); opacity: 0.7;  }
+        }
+        @keyframes pl-node-hint-bob {
+          0%, 100% { transform: translate(-50%, 0);    opacity: 1;    }
+          50%      { transform: translate(-50%, 3px); opacity: 0.7;  }
         }
       `}</style>
     </div>

@@ -55,6 +55,21 @@
   /* Net (flat) state: top-down view for every solid. */
   .stage.is-flat .scene { transform: rotateX(0deg) rotateY(0deg); }
 
+  /* Phone: scale the entire scene down so wide unfolds (cylinder,
+     cone, prism, cuboid nets) fit inside the narrower stage instead
+     of being clipped by the stage's overflow:hidden. scale() comes
+     last in the transform chain so it compounds with the existing
+     3D rotations without changing their angles. */
+  @media (max-width: 480px) {
+    .scene.solid-cube,
+    .scene.solid-cuboid,
+    .scene.solid-prism,
+    .scene.solid-cylinder,
+    .scene.solid-cone { transform: rotateX(-22deg) rotateY(28deg) scale(0.75); }
+    .scene.solid-pyramid { transform: rotateY(15deg) rotateX(60deg) scale(0.75); }
+    .stage.is-flat .scene { transform: rotateX(0deg) rotateY(0deg) scale(0.75); }
+  }
+
   /* All hinges share preserve-3d + smooth transform transitions */
   .hinge {
     position:absolute;

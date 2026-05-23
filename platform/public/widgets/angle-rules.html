@@ -21,52 +21,6 @@
     0%, 100% { filter: drop-shadow(0 0 1.5px currentColor); }
     50%      { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 0 8px currentColor); }
   }
-
-  /* Drag cue — animated chip in the top-right corner with an arrow
-     pointing diagonally down-left into the diagram. Pixel offsets
-     (not %) so it stays visible even if the stage's aspect-ratio
-     layout collapses on iOS. Auto-fades on first pointerdown or
-     after a fallback timeout. */
-  .drag-cue {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    z-index: 10;
-    pointer-events: none;
-    animation: drag-cue-pulse 1.6s ease-in-out infinite;
-    transition: opacity 500ms cubic-bezier(0.16,1,0.3,1);
-  }
-  .drag-cue.hidden { opacity: 0; }
-  .drag-cue-chip {
-    font-family: 'Geist Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.8px;
-    text-transform: uppercase;
-    color: #fff067;
-    background: rgba(11, 17, 24, 0.92);
-    border: 1px solid rgba(255, 240, 103, 0.55);
-    padding: 5px 10px;
-    border-radius: 5px;
-    box-shadow: 0 4px 16px -4px rgba(255, 240, 103, 0.55);
-    white-space: nowrap;
-  }
-  .drag-cue-arrow { width: 16px; height: 16px; }
-  .drag-cue-arrow line,
-  .drag-cue-arrow path {
-    stroke: #fff067;
-    stroke-width: 1.6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    fill: none;
-  }
-  @keyframes drag-cue-pulse {
-    0%, 100% { transform: translate(0,   0);   opacity: 1;    }
-    50%      { transform: translate(2px, 2px); opacity: 0.7;  }
-  }
   .formula {
     margin-top:12px; font-family:'Geist Mono',monospace;
     font-size:16px; line-height:1.6; color:#f0eeea; font-weight:600;
@@ -88,15 +42,7 @@
     <span class="title" id="title"></span>
     <span class="hint">drag any handle</span>
   </div>
-  <div class="stage" id="stage">
-    <div class="drag-cue" id="drag-cue">
-      <span class="drag-cue-chip">drag</span>
-      <svg class="drag-cue-arrow" viewBox="0 0 16 16" aria-hidden="true">
-        <line x1="14" y1="2" x2="4" y2="12" stroke-dasharray="3 3"/>
-        <path d="M 8 12 L 4 12 L 4 8"/>
-      </svg>
-    </div>
-  </div>
+  <div class="stage" id="stage"></div>
   <div class="formula" id="formula"></div>
   <p class="footer" id="footer"></p>
 </div>
@@ -953,16 +899,6 @@ function redraw() {
   }
 }
 redraw();
-
-// Hide the "drag" cue on first pointer interaction anywhere on the stage,
-// or after a fallback timeout in case the visitor never touches it.
-(function() {
-  var cue = document.getElementById("drag-cue");
-  if (!cue) return;
-  function hideCue() { cue.classList.add("hidden"); }
-  stage.addEventListener("pointerdown", hideCue, { capture: true, once: true });
-  setTimeout(hideCue, 9000);
-})();
 
 // Height reporter
 var lastReported = 0, reportScheduled = false;
