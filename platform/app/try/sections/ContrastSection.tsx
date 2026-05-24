@@ -108,7 +108,7 @@ function TextbookCard() {
               vertex and bulge into the interior of the angle (towards
               the opening), with the numeric label just outside the arc. */}
           <div className="flex-1 mt-1 flex items-center justify-center">
-            <svg viewBox="0 0 220 165" className="w-full max-w-[240px] h-auto opacity-85">
+            <svg viewBox="0 0 220 165" className="w-full max-w-[360px] h-auto opacity-85">
               {/* The circle */}
               <circle cx="110" cy="80" r="60" fill="none" stroke="#5a5e64" strokeWidth="1.2" />
 
