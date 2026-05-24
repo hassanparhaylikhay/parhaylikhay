@@ -56,7 +56,7 @@ export default function ContrastSection() {
 
 function TextbookCard() {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="font-mono text-[10px] tracking-[2.5px] uppercase text-[#3a4a5a] mb-4">
         the old way
       </div>
@@ -108,7 +108,7 @@ function TextbookCard() {
               vertex and bulge into the interior of the angle (towards
               the opening), with the numeric label just outside the arc. */}
           <div className="flex-1 mt-1 flex items-center justify-center">
-            <svg viewBox="0 0 220 165" className="w-full max-w-[460px] h-auto opacity-85">
+            <svg viewBox="0 0 220 165" className="w-full max-w-[240px] h-auto opacity-85">
               {/* The circle */}
               <circle cx="110" cy="80" r="60" fill="none" stroke="#5a5e64" strokeWidth="1.2" />
 
@@ -226,7 +226,7 @@ function ManipulativeCard() {
   }, [interacted])
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col h-full">
       <div className="font-mono text-[10px] tracking-[2.5px] uppercase text-[#00abfa] mb-4">
         the parhaylikhay way
       </div>
@@ -414,6 +414,7 @@ function FadeIn({ children, delay = 0 }: { children: React.ReactNode; delay?: nu
   return (
     <div
       ref={ref}
+      className="h-full"
       style={{
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(18px)",
