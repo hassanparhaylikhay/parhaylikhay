@@ -57,7 +57,7 @@ export default function ContrastSection() {
 function TextbookCard() {
   return (
     <div className="flex flex-col h-full">
-      <div className="font-mono text-[10px] tracking-[2.5px] uppercase text-[#3a4a5a] mb-4">
+      <div className="font-sans text-[12px] tracking-[2.4px] uppercase font-medium text-[#7a7875] mb-4">
         the old way
       </div>
       <div
@@ -227,7 +227,7 @@ function ManipulativeCard() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="font-mono text-[10px] tracking-[2.5px] uppercase text-[#00abfa] mb-4">
+      <div className="font-sans text-[12px] tracking-[2.4px] uppercase font-medium text-[#00abfa] mb-4">
         the parhaylikhay way
       </div>
       <div
