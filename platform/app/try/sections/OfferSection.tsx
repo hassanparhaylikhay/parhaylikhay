@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Section from "../components/Section"
 import styles from "../try.module.css"
+import { capture } from "@/lib/analytics"
 
 /**
  * Section 9 — The Offer.
@@ -24,6 +25,7 @@ export default function OfferSection() {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const startedRef = useRef(false)
 
   useEffect(() => {
     const el = sectionRef.current
@@ -42,27 +44,41 @@ export default function OfferSection() {
     const fd = new FormData(e.currentTarget)
     const payload = Object.fromEntries(fd.entries())
     if (!payload.email || !payload.whatsapp || !payload.role) {
+      capture("try_form_error", { reason: "missing_fields" })
       setError("We need your name, role, email and WhatsApp number to set up your access.")
       return
     }
+    capture("try_form_submit", { role: String(payload.role ?? "") })
     setError(null)
     setSubmitting(true)
     try {
       localStorage.setItem("pl_try_signup", JSON.stringify({ ...payload, at: new Date().toISOString() }))
     } catch { /* ignore */ }
+    let networkOk = true
     try {
-      await fetch("/api/try-signup", {
+      const res = await fetch("/api/try-signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
+      networkOk = res.ok
     } catch {
       // Don't surface errors — show the success state regardless. The
       // localStorage write is a backstop; we'll WhatsApp the visitor
       // when the API is wired.
+      networkOk = false
     }
+    capture(networkOk ? "try_form_success" : "try_form_network_error", {
+      role: String(payload.role ?? ""),
+    })
     setSubmitting(false)
     setSubmitted(true)
+  }
+
+  function onFirstFocus() {
+    if (startedRef.current) return
+    startedRef.current = true
+    capture("try_form_start")
   }
 
   return (
@@ -83,6 +99,7 @@ export default function OfferSection() {
         {!submitted ? (
           <form
             onSubmit={onSubmit}
+            onFocus={onFirstFocus}
             className="flex flex-col gap-4"
           >
             <Field name="name"     label="Your name"        delay={120} visible={visible} required />

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Section from "../components/Section"
 import DragHint from "../components/DragHint"
+import { capture } from "@/lib/analytics"
 
 /**
  * Visual Showcases — five rows that each pair a topic pitch with a
@@ -129,7 +130,7 @@ function ShowcaseRow({ show }: { show: Showcase }) {
             show.bleedPhone ? "-mx-5 sm:mx-0" : "",
           ].join(" ")}
         >
-          <WidgetSlab src={show.widget} height={show.iframeHeight} accent={show.accent} tabs={show.tabs} />
+          <WidgetSlab label={show.topic} src={show.widget} height={show.iframeHeight} accent={show.accent} tabs={show.tabs} />
         </div>
         {/* Copy column. Mark-scheme phrasing card removed — the
             remaining text is scaled up so the copy column keeps the
@@ -154,8 +155,9 @@ function ShowcaseRow({ show }: { show: Showcase }) {
 }
 
 function WidgetSlab({
-  src, height, accent, tabs,
+  label, src, height, accent, tabs,
 }: {
+  label: string
   src: string
   height: number
   accent: string
@@ -165,19 +167,24 @@ function WidgetSlab({
   const [intrinsicH, setIntrinsicH] = useState(height)
   const [currentSrc, setCurrentSrc] = useState(src)
   const ifrRef = useRef<HTMLIFrameElement | null>(null)
+  const msgCountRef = useRef(0)
 
   useEffect(() => {
     function onMsg(e: MessageEvent) {
       const d = e.data
       if (!d || typeof d !== "object") return
       if (ifrRef.current?.contentWindow !== e.source) return
+      msgCountRef.current += 1
+      if (msgCountRef.current === 2) {
+        capture("try_widget_engaged", { section: "visual_showcases", widget: label })
+      }
       if (d.type === "pl-widget-resize" && typeof d.height === "number") {
         setIntrinsicH(Math.max(400, Math.min(900, Math.round(d.height))))
       }
     }
     window.addEventListener("message", onMsg)
     return () => window.removeEventListener("message", onMsg)
-  }, [])
+  }, [label])
 
   return (
     <div className="flex flex-col gap-3">
@@ -188,7 +195,10 @@ function WidgetSlab({
             return (
               <button
                 key={t.label}
-                onClick={() => setCurrentSrc(t.src)}
+                onClick={() => {
+                  capture("try_showcase_tab", { widget: label, tab: t.label })
+                  setCurrentSrc(t.src)
+                }}
                 className="font-mono text-[10.5px] uppercase tracking-[1.5px] px-3 py-1.5 rounded transition-all duration-300"
                 style={{
                   background: isActive ? `${accent}1a` : "transparent",

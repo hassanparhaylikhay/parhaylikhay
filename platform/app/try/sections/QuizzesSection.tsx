@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Section from "../components/Section"
 import { COLOR } from "@/components/lesson-mode/interactions/_shared"
+import { capture } from "@/lib/analytics"
 
 /**
  * Section 4.5 — Quizzes.
@@ -131,7 +132,10 @@ function TabStrip({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
           return (
             <button
               key={t.key}
-              onClick={() => setTab(t.key)}
+              onClick={() => {
+                capture("try_picker_tab", { picker: "quizzes", tab: t.key })
+                setTab(t.key)
+              }}
               className="font-mono text-[11px] sm:text-[12px] uppercase tracking-[1.5px] px-4 py-2.5 rounded-full transition-all duration-300"
               style={{
                 background: active ? "rgba(255,70,112,0.10)" : "transparent",
@@ -155,6 +159,7 @@ function TabStrip({ tab, setTab }: { tab: Tab; setTab: (t: Tab) => void }) {
 function Stage({ tab }: { tab: Tab }) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const [height, setHeight] = useState<number>(620)
+  const msgCountRef = useRef(0)
   const tabConfig = TABS.find(t => t.key === tab)!
 
   useEffect(() => {
@@ -162,13 +167,19 @@ function Stage({ tab }: { tab: Tab }) {
       const d = e.data
       if (!d || typeof d !== "object") return
       if (iframeRef.current?.contentWindow !== e.source) return
+      msgCountRef.current += 1
+      // 1st message is the widget's initial load-time resize. 2nd+ are
+      // post-mount state changes — treat as engagement.
+      if (msgCountRef.current === 2) {
+        capture("try_widget_engaged", { section: "quizzes", widget: tab })
+      }
       if (d.type === "pl-widget-resize" && typeof d.height === "number") {
         setHeight(Math.max(360, Math.min(960, Math.round(d.height))))
       }
     }
     window.addEventListener("message", onMsg)
     return () => window.removeEventListener("message", onMsg)
-  }, [])
+  }, [tab])
 
   return (
     <div className="flex justify-center">

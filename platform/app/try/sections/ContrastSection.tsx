@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Section from "../components/Section"
 import { COLOR } from "@/components/lesson-mode/interactions/_shared"
+import { capture } from "@/lib/analytics"
 
 /**
  * Section 2 — The Contrast.
@@ -211,12 +212,13 @@ function ManipulativeCard() {
       // any node — bulletproof way to dismiss the "drag" cue without
       // depending on event bubbling through the iframe boundary.
       if (d.type === "pl-interaction") {
+        if (!interacted) capture("try_widget_engaged", { section: "contrast", widget: "angle_at_centre" })
         setInteracted(true)
       }
     }
     window.addEventListener("message", onMsg)
     return () => window.removeEventListener("message", onMsg)
-  }, [])
+  }, [interacted])
 
   // Fallback fade after 18 s so the hint never lingers indefinitely.
   useEffect(() => {

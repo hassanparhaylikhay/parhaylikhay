@@ -5,6 +5,7 @@ import Section from "../components/Section"
 import DragHint from "../components/DragHint"
 import styles from "../try.module.css"
 import { COLOR } from "@/components/lesson-mode/interactions/_shared"
+import { capture } from "@/lib/analytics"
 
 /**
  * Section 4 — Lesson Mode Preview.
@@ -122,7 +123,14 @@ export default function LessonModePreviewSection() {
               <SlideOne running={idx === 0 && visible && !paused} />
             </div>
             <div className={`absolute inset-0 ${styles.lmSlide} ${idx === 1 ? styles.lmSlideActive : ""}`}>
-              <SlideTwo active={idx === 1} onSolved={() => setSolvedSlide2(true)} solved={solvedSlide2} />
+              <SlideTwo
+                active={idx === 1}
+                onSolved={() => {
+                  if (!solvedSlide2) capture("try_lesson_mode_solved")
+                  setSolvedSlide2(true)
+                }}
+                solved={solvedSlide2}
+              />
             </div>
             <div className={`absolute inset-0 ${styles.lmSlide} ${idx === 2 ? styles.lmSlideActive : ""}`}>
               <SlideThree key={slide3Epoch} active={idx === 2} solvedSlide2={solvedSlide2} />
@@ -264,6 +272,7 @@ function SlideOne({ running }: { running: boolean }) {
 
 function SlideTwo({ active, onSolved, solved }: { active: boolean; onSolved: () => void; solved: boolean }) {
   const ifrRef = useRef<HTMLIFrameElement | null>(null)
+  const engagedRef = useRef(false)
 
   // Fire onSolved when widget posts pl-lesson-success.
   useEffect(() => {
@@ -271,6 +280,10 @@ function SlideTwo({ active, onSolved, solved }: { active: boolean; onSolved: () 
       const d = e.data
       if (!d || typeof d !== "object") return
       if (ifrRef.current?.contentWindow !== e.source) return
+      if (d.type === "pl-lesson-readout" && !engagedRef.current) {
+        engagedRef.current = true
+        capture("try_widget_engaged", { section: "lesson_mode_preview", widget: "slide_2_translation" })
+      }
       if (d.type === "pl-lesson-success") onSolved()
     }
     window.addEventListener("message", onMsg)

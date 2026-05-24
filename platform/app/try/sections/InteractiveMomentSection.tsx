@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import Section from "../components/Section"
 import DragHint from "../components/DragHint"
 import { COLOR, MixedText } from "@/components/lesson-mode/interactions/_shared"
+import { capture } from "@/lib/analytics"
 
 /**
  * Section 3 — Interactive Moment.
@@ -121,13 +122,14 @@ function ModeStage({ mode }: { mode: Mode }) {
       if (!d || typeof d !== "object") return
       if (iframeRef.current?.contentWindow !== e.source) return
       if (d.type === "pl-lesson-readout") {
+        if (!touched) capture("try_widget_engaged", { section: "interactive_moment", widget: mode })
         setTouched(true)
         setReadout({ label: String(d.label ?? FALLBACK_LABEL[mode]), tex: String(d.tex ?? "") })
       }
     }
     window.addEventListener("message", onMsg)
     return () => window.removeEventListener("message", onMsg)
-  }, [mode, armed])
+  }, [mode, armed, touched])
 
   useEffect(() => {
     function fit() {
@@ -233,7 +235,10 @@ function ModeTabs({ mode, setMode }: { mode: Mode; setMode: (m: Mode) => void })
           return (
             <button
               key={m.key}
-              onClick={() => setMode(m.key)}
+              onClick={() => {
+                capture("try_picker_tab", { picker: "interactive_moment", tab: m.key })
+                setMode(m.key)
+              }}
               className="font-mono text-[11px] sm:text-[12px] uppercase tracking-[1.5px] px-4 py-2.5 rounded-full transition-all duration-300"
               style={{
                 background: active ? "rgba(255,240,103,0.10)" : "transparent",
