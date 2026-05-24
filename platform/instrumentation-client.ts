@@ -4,12 +4,11 @@ const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY
 const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com"
 
 // Only init on the sales demo page — /dashboard and lesson-mode pages stay
-// private. The root rewrites server-side to /try, so the client pathname
-// is "/try" in both cases.
+// private. The root "/" rewrites server-side to /try, so on the client
+// the pathname stays "/" for visitors who land on parhaylikhay.com.
 if (typeof window !== "undefined" && KEY) {
-  const onTry =
-    window.location.pathname === "/try" ||
-    window.location.pathname.startsWith("/try/")
+  const p = window.location.pathname
+  const onTry = p === "/" || p === "/try" || p.startsWith("/try/")
   if (onTry) {
     posthog.init(KEY, {
       api_host: HOST,
