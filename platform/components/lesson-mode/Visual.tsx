@@ -75,23 +75,28 @@ function IframeVisual({
       const availableW = Math.max(280, slideW - ASIDE_RESERVE)
       const availableH = Math.max(280, window.innerHeight - RESERVED)
 
-      // Single width formula whether or not the widget has reported its
-      // natural height yet. Before, the aspect-fit path used availableW
-      // (up to ~852px on wide screens) while the reportedHeight path
-      // capped at 720 — so when the widget's pl-widget-resize arrived
-      // ~200ms after load, the iframe visibly snapped narrower. Free-
-      // explore widgets in lesson mode hid all their chrome, so the
-      // reported height roughly matched the aspect-fit height anyway —
-      // only the width was changing, which read as the "starts bigger,
-      // shrinks abruptly" bug.
       const widthByHeight = SVG_ASPECT * availableH
-      const w = Math.max(320, Math.min(availableW, widthByHeight))
-      // Height: use the widget's report when present (step-explorers
-      // need extra room for their chrome below the SVG); otherwise the
-      // pure aspect-fit height.
-      const h = reportedHeight != null
-        ? Math.min(reportedHeight, availableH)
-        : w / SVG_ASPECT
+      const aspectW = Math.max(320, Math.min(availableW, widthByHeight))
+      const aspectH = aspectW / SVG_ASPECT
+
+      let w: number
+      let h: number
+      if (reportedHeight != null && reportedHeight > aspectH + 60) {
+        // Step-explorer-style: widget renders visible chrome (step controls,
+        // footer text) BELOW the SVG. Cap the width so the SVG doesn't
+        // dominate at wide viewports and crowd the chrome into the
+        // slide-frame bottom edge.
+        w = Math.max(320, Math.min(availableW, 720))
+        h = Math.min(reportedHeight, availableH)
+      } else {
+        // Either pre-postMessage (initial render) OR SVG-only widget
+        // (free-explore in lesson mode, where chrome is hidden). Use the
+        // aspect-fit width — and for free-explore the reported height
+        // matches aspect-fit anyway, so nothing visibly changes when the
+        // widget's pl-widget-resize arrives ~200ms after load.
+        w = aspectW
+        h = reportedHeight != null ? Math.min(reportedHeight, availableH) : aspectH
+      }
       ifr.style.width  = `${Math.round(w)}px`
       ifr.style.height = `${Math.round(h)}px`
     }
