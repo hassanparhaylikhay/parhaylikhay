@@ -139,6 +139,7 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
         y={py0 + 11}
         fontFamily="'Geist Mono', monospace"
         fontSize={12}
+        fontWeight={600}
         fill={COLOR.grey}
         textAnchor="middle"
         dominantBaseline="middle"
@@ -158,6 +159,7 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
         y={py}
         fontFamily="'Geist Mono', monospace"
         fontSize={12}
+        fontWeight={600}
         fill={COLOR.grey}
         textAnchor="middle"
         dominantBaseline="middle"
