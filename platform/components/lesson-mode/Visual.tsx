@@ -75,19 +75,23 @@ function IframeVisual({
       const availableW = Math.max(280, slideW - ASIDE_RESERVE)
       const availableH = Math.max(280, window.innerHeight - RESERVED)
 
-      if (reportedHeight != null) {
-        // Widget reports its natural height (step-explorers, mostly). Width
-        // fills the column; height matches the widget's report.
-        const w = Math.max(320, Math.min(availableW, 720))
-        const h = Math.min(reportedHeight, availableH)
-        ifr.style.width  = `${Math.round(w)}px`
-        ifr.style.height = `${Math.round(h)}px`
-        return
-      }
-      // Fallback: aspect-fit for SVG-only widgets that don't postMessage.
+      // Single width formula whether or not the widget has reported its
+      // natural height yet. Before, the aspect-fit path used availableW
+      // (up to ~852px on wide screens) while the reportedHeight path
+      // capped at 720 — so when the widget's pl-widget-resize arrived
+      // ~200ms after load, the iframe visibly snapped narrower. Free-
+      // explore widgets in lesson mode hid all their chrome, so the
+      // reported height roughly matched the aspect-fit height anyway —
+      // only the width was changing, which read as the "starts bigger,
+      // shrinks abruptly" bug.
       const widthByHeight = SVG_ASPECT * availableH
       const w = Math.max(320, Math.min(availableW, widthByHeight))
-      const h = w / SVG_ASPECT
+      // Height: use the widget's report when present (step-explorers
+      // need extra room for their chrome below the SVG); otherwise the
+      // pure aspect-fit height.
+      const h = reportedHeight != null
+        ? Math.min(reportedHeight, availableH)
+        : w / SVG_ASPECT
       ifr.style.width  = `${Math.round(w)}px`
       ifr.style.height = `${Math.round(h)}px`
     }
