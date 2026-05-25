@@ -170,6 +170,16 @@
       }
     },
     {
+      "id": "06b-section-translation",
+      "kind": "concept",
+      "title": "Translation",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 0 4px'><div style='font-family:Geist Mono,monospace;font-size:11px;letter-spacing:2.8px;text-transform:uppercase;color:#00abfa'>transformation 1 of 4</div><p style='font-size:17px;color:#c8c6be;text-align:center;max-width:36ch;line-height:1.55'>Sliding the shape. Every point moves by the same column vector.</p></div>"
+      }
+    },
+    {
       "id": "07-translation-explore",
       "kind": "concept",
       "title": "Translation: drag the triangle anywhere",
@@ -254,6 +264,29 @@
       }
     },
     {
+      "id": "10b-q-find-vector-scaffold",
+      "kind": "interaction",
+      "title": "See the shift on the grid first",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "clickOnGrid",
+        "hint": "$x$-shift = image $x$ minus object $x$. Apply only that part, leaving $y$ alone.",
+        "config": {
+          "prompt": "$P\\ (2, -1)$ moves to $P'\\ (-3, 4)$. Apply ONLY the $x$-shift to $P$. Tap where it lands.",
+          "xRange": [-7, 9],
+          "yRange": [-5, 5],
+          "scene": {
+            "points": [
+              {"x": 2, "y": -1, "color": "#00abfa", "label": "P", "primed": true},
+              {"x": -3, "y": 4, "color": "#ff4670", "label": "P'"}
+            ]
+          },
+          "target": {"x": -3, "y": -1},
+          "successText": "$x$-shift is $-3 - 2 = -5$. Now do the same for $y$ in your head: $4 - (-1) = 5$. That gives the column vector on the next slide."
+        }
+      }
+    },
+    {
       "id": "11-q-find-vector",
       "kind": "interaction",
       "title": "Going backwards",
@@ -287,6 +320,9 @@
           ],
           "successText": "$(-3 - 2,\\ 4 - (-1)) = (-5, 5)$. Image minus object, always."
         }
+      },
+      "altExplain": {
+        "prompt": "Subtraction trick. The vector is always (image minus object). Top: $-3 - 2 = -5$. Bottom: $4 - (-1) = 5$. Vector: $\\begin{pmatrix} -5 \\\\ 5 \\end{pmatrix}$."
       }
     },
     {
@@ -322,6 +358,23 @@
           "widget": "translation",
           "prompt": "Slide by $\\begin{pmatrix} -2 \\\\ -4 \\end{pmatrix}$. Left by 2, down by 4. No outline.",
           "successText": "You're reading vectors fluently now."
+        }
+      }
+    },
+    {
+      "id": "12c-pp-translation",
+      "kind": "interaction",
+      "title": "Real exam question · Cambridge w25_12 Q11(a)",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Both components are negative: left $5$ and down $4$.",
+        "config": {
+          "src": "/widgets/translation-explorer.html",
+          "target": "-5,-4",
+          "widget": "translation",
+          "prompt": "Cambridge Winter 2025, Paper 12. Shape $A$ maps to shape $B$ by a translation. Slide by $\\begin{pmatrix} -5 \\\\ -4 \\end{pmatrix}$ to match the outline.",
+          "successText": "Mark scheme: B1 for \"Translation\", B1 for $\\begin{pmatrix} -5 \\\\ -4 \\end{pmatrix}$. Full marks $= 2$."
         }
       }
     },
@@ -400,6 +453,16 @@
       "visual": {
         "kind": "html",
         "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;max-width:540px;margin:0 auto'><div style='font-family:Geist Mono,monospace;font-size:10.5px;color:#7a7875;letter-spacing:2px;text-transform:uppercase'>model exam answer</div><div style='padding:18px 28px;border-left:3px solid #00abfa;background:rgba(0,171,250,0.06);border-radius:8px;font-size:20px;color:#f0eeea;line-height:1.4'>Translation by \\(\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}\\)</div><div style='display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:5px 10px;border-radius:4px;background:rgba(0,171,250,0.10);color:#00abfa'>B1 \\(\\cdot\\) word \"translation\"</span><span style='padding:5px 10px;border-radius:4px;background:rgba(0,171,250,0.10);color:#00abfa'>B1 \\(\\cdot\\) correct column vector</span></div></div>"
+      }
+    },
+    {
+      "id": "14c-section-reflection",
+      "kind": "concept",
+      "title": "Reflection",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 0 4px'><div style='font-family:Geist Mono,monospace;font-size:11px;letter-spacing:2.8px;text-transform:uppercase;color:#fff067'>transformation 2 of 4</div><p style='font-size:17px;color:#c8c6be;text-align:center;max-width:36ch;line-height:1.55'>Flipping the shape across a line. Lengths and angles stay the same, but orientation reverses.</p></div>"
       }
     },
     {
@@ -482,6 +545,23 @@
           "widget": "reflection",
           "prompt": "Place the mirror on $y = -x$. The diagonal that drops left to right.",
           "successText": "$y = -x$ swaps the coordinates and flips both signs."
+        }
+      }
+    },
+    {
+      "id": "15f-pp-reflection",
+      "kind": "interaction",
+      "title": "Real exam question · Cambridge w25_11 Q8(a)",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "$x = 1$ is a VERTICAL line. Every point on it has $x$-coordinate $1$.",
+        "config": {
+          "src": "/widgets/reflection-explorer.html",
+          "target": "x=1",
+          "widget": "reflection",
+          "prompt": "Cambridge Winter 2025, Paper 11. Triangle $A$ reflects onto triangle $B$ in the line $x = 1$. Place the mirror.",
+          "successText": "Mark scheme: B1 for \"Reflection\", B1 for $x = 1$. Full marks $= 2$."
         }
       }
     },
@@ -675,6 +755,16 @@
       }
     },
     {
+      "id": "21b-section-rotation",
+      "kind": "concept",
+      "title": "Rotation",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 0 4px'><div style='font-family:Geist Mono,monospace;font-size:11px;letter-spacing:2.8px;text-transform:uppercase;color:#ff822c'>transformation 3 of 4</div><p style='font-size:17px;color:#c8c6be;text-align:center;max-width:36ch;line-height:1.55'>Spinning the shape around a point. Three things to describe: angle, direction, and centre.</p></div>"
+      }
+    },
+    {
       "id": "22-rotation-explore",
       "kind": "concept",
       "title": "Rotation: drag the centre, drag the angle",
@@ -750,10 +840,26 @@
         "config": {
           "src": "/widgets/rotation-explorer.html",
           "target": "1,0,90",
-          "noOutline": true,
           "widget": "rotation",
-          "prompt": "Rotate $90°$ anticlockwise about $(1, 0)$. Two things to set: centre AND angle.",
+          "prompt": "Rotate $90°$ anticlockwise about $(1, 0)$. Two things to set: centre AND angle. Match the pink outline.",
           "successText": "Centre $(1, 0)$, $90°$ ACW. When the centre isn't the origin you must drag BOTH."
+        }
+      }
+    },
+    {
+      "id": "22f-pp-rotation",
+      "kind": "interaction",
+      "title": "Real exam question · Cambridge w24_12 Q16(b)",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Drag the centre to $(4, 1)$ first. Then rotate the angle handle a quarter-turn the OTHER way (clockwise).",
+        "config": {
+          "src": "/widgets/rotation-explorer.html",
+          "target": "4,1,-90",
+          "widget": "rotation",
+          "prompt": "Cambridge Winter 2024, Paper 12. Rotate the shape $90°$ clockwise about $(4, 1)$.",
+          "successText": "Mark scheme: B1 \"Rotation\", B1 \"$90°$ clockwise\", B1 centre $(4, 1)$. Full marks $= 3$."
         }
       }
     },
@@ -885,6 +991,9 @@
           ],
           "successText": "$360° - 90° = 270°$. Cambridge accepts either form."
         }
+      },
+      "altExplain": {
+        "prompt": "A full turn is $360°$. Going clockwise by $90°$ lands at the same image as going anticlockwise the long way round: $360° - 90° = 270°$ anticlockwise. Same image, opposite direction name."
       }
     },
     {
@@ -1016,6 +1125,16 @@
       }
     },
     {
+      "id": "29c-section-enlargement",
+      "kind": "concept",
+      "title": "Enlargement",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 0 4px'><div style='font-family:Geist Mono,monospace;font-size:11px;letter-spacing:2.8px;text-transform:uppercase;color:#ff4670'>transformation 4 of 4</div><p style='font-size:17px;color:#c8c6be;text-align:center;max-width:36ch;line-height:1.55'>Scaling the shape from a fixed centre. The only transformation that changes size.</p></div>"
+      }
+    },
+    {
       "id": "30-enlargement-explore",
       "kind": "concept",
       "title": "Enlargement: centre and scale factor",
@@ -1117,6 +1236,9 @@
           },
           "successText": "$(3 \\cdot 2,\\ 3 \\cdot 1) = (6, 3)$. From the origin, every coordinate scales by $k$."
         }
+      },
+      "altExplain": {
+        "prompt": "When the centre is the origin, the rule is the simplest possible: multiply each coordinate of $P$ by $k$. $P\\ (2, 1)$ with $k = 3$ becomes $(2 \\times 3,\\ 1 \\times 3) = (6, 3)$. Then tap that square on the grid."
       }
     },
     {
@@ -1171,6 +1293,9 @@
           ],
           "successText": "Areas scale by $k^2$. $\\left(\\tfrac{1}{2}\\right)^2 = \\tfrac{1}{4}$. Volume would be $k^3 = \\tfrac{1}{8}$."
         }
+      },
+      "altExplain": {
+        "prompt": "Think of a square. Side length $L$ becomes $kL$. Area was $L \\times L = L^2$, now $kL \\times kL = k^2 L^2$. So area multiplies by $k^2$, not by $k$. For $k = \\tfrac{1}{2}$, area becomes $\\tfrac{1}{4}$ of the original."
       }
     },
     {
@@ -1199,6 +1324,23 @@
           "widget": "enlargement",
           "prompt": "Set $k = -1$. Same size as the object, opposite side of $(0, 0)$.",
           "successText": "$k = -1$ is the same as a $180°$ rotation about the centre. Same size, flipped."
+        }
+      }
+    },
+    {
+      "id": "37b-pp-enlargement",
+      "kind": "interaction",
+      "title": "Real exam question · Cambridge s25_13 Q19",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "widgetCanvas",
+        "hint": "Drag the centre to $(1, 0)$. Then set the scale factor to $-\\tfrac{1}{2}$ (negative, half-size).",
+        "config": {
+          "src": "/widgets/enlargement-explorer.html",
+          "target": "-0.5,1,0",
+          "widget": "enlargement",
+          "prompt": "Cambridge Summer 2025, Paper 13. Shape $A$ maps to shape $B$ by an enlargement, scale factor $-\\tfrac{1}{2}$, centre $(1, 0)$.",
+          "successText": "Mark scheme: B1 \"Enlargement\", B1 centre $(1, 0)$, B1 scale factor $-\\tfrac{1}{2}$. Full marks $= 3$."
         }
       }
     },
@@ -1241,6 +1383,16 @@
       "visual": {
         "kind": "html",
         "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;max-width:540px;margin:0 auto'><div style='font-family:Geist Mono,monospace;font-size:10.5px;color:#7a7875;letter-spacing:2px;text-transform:uppercase'>model exam answer</div><div style='padding:18px 28px;border-left:3px solid #ff4670;background:rgba(255,70,112,0.06);border-radius:8px;font-size:19px;color:#f0eeea;line-height:1.5'>Enlargement, scale factor \\(2\\), centre \\((1,\\ 1)\\)</div><div style='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:5px 10px;border-radius:4px;background:rgba(255,70,112,0.10);color:#ff4670'>B1 \\(\\cdot\\) word \"enlargement\"</span><span style='padding:5px 10px;border-radius:4px;background:rgba(255,70,112,0.10);color:#ff4670'>B1 \\(\\cdot\\) scale factor</span><span style='padding:5px 10px;border-radius:4px;background:rgba(255,70,112,0.10);color:#ff4670'>B1 \\(\\cdot\\) centre</span></div></div>"
+      }
+    },
+    {
+      "id": "38c-section-combining",
+      "kind": "concept",
+      "title": "Combining moves",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 0 4px'><div style='font-family:Geist Mono,monospace;font-size:11px;letter-spacing:2.8px;text-transform:uppercase;color:#fff067'>two moves in a row</div><p style='font-size:17px;color:#c8c6be;text-align:center;max-width:36ch;line-height:1.55'>Two transformations applied one after the other. The result is often a single equivalent transformation.</p></div>"
       }
     },
     {
@@ -1329,6 +1481,17 @@
       }
     },
     {
+      "id": "41b-two-mirrors-set-up",
+      "kind": "concept",
+      "title": "Set up two perpendicular mirrors",
+      "advance": "manual",
+      "prompt": "Use the preset chips to place mirror 1 on $y = 0$ and mirror 2 on $x = 0$. Watch the final image — it's a $180°$ rotation about the origin, made entirely from two reflections.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/two-reflections-explorer.html?lessonMode=1"
+      }
+    },
+    {
       "id": "42-q-intersecting-mirrors",
       "kind": "interaction",
       "title": "Two intersecting mirrors",
@@ -1398,6 +1561,9 @@
           ],
           "successText": "$45°$ between the mirrors. Doubled gives $90°$. Direction is from $y=0$ toward $y=x$: anticlockwise."
         }
+      },
+      "altExplain": {
+        "prompt": "Two intersecting mirrors always give a rotation about the point where they cross. The angle of the rotation is TWICE the angle between the mirrors. $y = 0$ and $y = x$ cross at the origin and make a $45°$ angle, so the rotation is $90°$. Direction sweeps from the first mirror to the second — here that's anticlockwise."
       }
     },
     {
@@ -1434,6 +1600,16 @@
           ],
           "successText": "Gap is $1$ unit, doubled gives $2$. Direction is from $y=0$ up to $y=1$: positive $y$."
         }
+      }
+    },
+    {
+      "id": "44b-section-synthesis",
+      "kind": "concept",
+      "title": "Putting it together",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;padding:6px 0 4px'><div style='font-family:Geist Mono,monospace;font-size:11px;letter-spacing:2.8px;text-transform:uppercase;color:#0fee89'>identify and describe</div><p style='font-size:17px;color:#c8c6be;text-align:center;max-width:36ch;line-height:1.55'>Given an object and an image, decide which transformation it is, then describe it fully.</p></div>"
       }
     },
     {
@@ -1662,6 +1838,17 @@
           ],
           "successText": "“Rotation, $90°$ anticlockwise, about $(0, 0)$.” Three pieces of information, one clean sentence."
         }
+      }
+    },
+    {
+      "id": "51b-section-celebrate",
+      "kind": "concept",
+      "title": "You just earned 11 marks of mark-scheme work",
+      "advance": "manual",
+      "prompt": "Parts (a), (b), (c) plus a properly-worded rotation answer. That's an 11-mark Cambridge transformation question, worked end-to-end.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:18px;padding:6px 0'><div style='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>(a) Reflection · B2</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>(b) Rotation · B3</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>(c) Single transformation · B3</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>Bonus · Rotation answer · B3</span></div></div>"
       }
     },
     {
