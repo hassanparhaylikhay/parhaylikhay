@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Column Vector · Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:14px; flex-wrap:wrap; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+  #stage { display:block; width:100%; height:auto; aspect-ratio: 480 / 320; user-select:none; overflow:visible; touch-action:none; cursor:default; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
+  .controls { display:flex; gap:8px; align-items:center; padding:12px 0 4px; }
+  .ctl { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:6px 14px; border-radius:4px; cursor:pointer; transition: all 0.25s cubic-bezier(0.16,1,0.3,1); text-transform:uppercase; letter-spacing:0.5px; }
+  .ctl:hover:not(:disabled) { color:#f0eeea; border-color:#3a4a5a; }
+  .ctl:disabled { opacity:0.35; cursor:not-allowed; }
+  .ctl.primed { background: rgba(255, 240, 103, 0.10); border-color: rgba(255, 240, 103, 0.55); color: #fff067; animation: ctl-prime-pulse 1.9s ease-in-out infinite; }
+  .ctl.primed:hover { background: rgba(255, 240, 103, 0.16); border-color: #fff067; color: #f0eeea; }
+  @keyframes ctl-prime-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 240, 103, 0.36); } 60% { box-shadow: 0 0 0 6px rgba(255, 240, 103, 0); } }
+  .step-dots { flex:1; display:flex; justify-content:center; gap:8px; }
+  .step-dot { width:6px; height:6px; border-radius:50%; background:#1a2330; transition: background 0.3s cubic-bezier(0.16,1,0.3,1), transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+  .step-dot.active { background:#fff067; transform:scale(1.6); }
+  .step-dot.done { background:#3a4a5a; }
+  .footer { margin-top:10px; padding:10px 12px; font-size:13.5px; line-height:1.5; color:#c8c6be; border-top:1px solid #141e2a; }
+  .footer b { color:#f0eeea; }
+  @keyframes pulse-glow { 0%, 100% { filter: drop-shadow(0 0 2px currentColor); } 50% { filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 11px currentColor) drop-shadow(0 0 16px currentColor); } }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+  .pl-fade-in { animation: pl-fade-in 700ms cubic-bezier(0.16,1,0.3,1) both; }
+  @keyframes pl-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">FINDING THE COLUMN VECTOR</span>
+    <span class="meta" id="meta">step 1 of 5</span>
+  </div>
+  <svg id="stage" viewBox="0 0 480 320" width="480" height="320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="controls">
+    <button class="ctl" id="prev" type="button">← prev</button>
+    <div class="step-dots" id="dots"></div>
+    <button class="ctl primed" id="next" type="button">next →</button>
+  </div>
+  <div class="footer" id="footer"></div>
+</div>
+<script>
+"use strict";
+var W = 480, H = 320;
+var X_MIN = -7, X_MAX = 8, Y_MIN = -5, Y_MAX = 5;
+var pxX = W / (X_MAX - X_MIN), pxY = H / (Y_MAX - Y_MIN);
+function sx(x) { return (x - X_MIN) * pxX; }
+function sy(y) { return H - (y - Y_MIN) * pxY; }
+function fx(px) { return px / pxX + X_MIN; }
+function fy(py) { return Y_MAX - py / pxY; }
+var stage = document.getElementById("stage");
+var NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs) { var n = document.createElementNS(NS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]); return n; }
+
+// Fixed object at A. The IMAGE is a free triangle the student can drag (whole-shape).
+// Vector is computed as (image - object) per vertex (always equal across pairs).
+var OBJECT = [{ x:-4, y:1 }, { x:-2, y:1 }, { x:-3, y:3 }];
+var P = { step: 0, B: [{ x:1, y:-1 }, { x:3, y:-1 }, { x:2, y:1 }] };  // initial image (vector = (5, -2))
+var D = { B: P.B.map(function(p) { return { x:p.x, y:p.y }; }) };
+var SPRING = 0.22, EPS = 0.0015;
+
+function snapInt(v) { return Math.round(v); }
+function vec(obj, img) { return { x: img.x - obj.x, y: img.y - obj.y }; }
+
+function svgLine(p, q, color, width, dash, cls) {
+  var attrs = { x1: sx(p.x), y1: sy(p.y), x2: sx(q.x), y2: sy(q.y), stroke: color, "stroke-width": width, "stroke-linecap": "round" };
+  if (dash) attrs["stroke-dasharray"] = dash;
+  if (cls) attrs["class"] = cls;
+  return el("line", attrs);
+}
+function svgPolygon(pts, fill, stroke, width, cls) {
+  return el("polygon", { points: pts.map(function(p) { return sx(p.x) + "," + sy(p.y); }).join(" "), fill: fill, stroke: stroke, "stroke-width": width, "stroke-linejoin": "round", "class": cls || "" });
+}
+function svgCircle(c, r, fill, stroke, strokeWidth, cls, data) {
+  var attrs = { cx: sx(c.x), cy: sy(c.y), r: r, fill: fill };
+  if (stroke) { attrs.stroke = stroke; attrs["stroke-width"] = strokeWidth || 1; }
+  if (cls) attrs["class"] = cls;
+  if (data) attrs["data-handle"] = data;
+  var node = el("circle", attrs);
+  if (fill && fill[0] === "#") node.style.color = fill;
+  return node;
+}
+function svgLabel(x, y, text, color, size, anchor) {
+  size = size || 13;
+  var t = el("text", { x: sx(x), y: sy(y), fill: color, "font-family": "'Geist Mono', monospace", "font-size": size, "font-weight": 600, "text-anchor": anchor || "middle", "dominant-baseline": "middle" });
+  t.textContent = text;
+  return t;
+}
+function svgArrow(from, to, color, width, cls) {
+  var dx = to.x - from.x, dy = to.y - from.y;
+  var L = Math.sqrt(dx*dx + dy*dy);
+  if (L < 0.001) return null;
+  var ux = dx / L, uy = dy / L;
+  var headBack = { x: to.x - ux * 0.32, y: to.y - uy * 0.32 };
+  var perpX = -uy * 0.18, perpY = ux * 0.18;
+  var g = el("g", cls ? { class: cls } : {});
+  g.appendChild(svgLine(from, headBack, color, width));
+  var head = el("polygon", {
+    points: [sx(to.x) + "," + sy(to.y),
+             sx(headBack.x + perpX) + "," + sy(headBack.y + perpY),
+             sx(headBack.x - perpX) + "," + sy(headBack.y - perpY)].join(" "),
+    fill: color
+  });
+  g.appendChild(head);
+  return g;
+}
+
+var foot = document.getElementById("footer");
+var meta = document.getElementById("meta");
+var dotsHost = document.getElementById("dots");
+
+var STEPS = [
+  { footer: "<b style='color:#00abfa'>A</b> translated to <b style='color:#ff4670'>B</b>. What&apos;s the column vector?" },
+  { footer: "<b>Pick any vertex pair.</b> Count how far the vertex moved RIGHT (or left), then how far UP (or down). The other pairs will give the same answer." },
+  { footer: "Horizontal shift from <b style='color:#00abfa'>A<sub>1</sub></b> to <b style='color:#ff4670'>B<sub>1</sub></b>: count the squares across. <b style='color:#0fee89'>That&apos;s the top of the column vector</b>." },
+  { footer: "Vertical shift from there down (or up) to <b style='color:#ff4670'>B<sub>1</sub></b>. <b style='color:#0fee89'>That&apos;s the bottom of the column vector</b>." },
+  { footer: "Now drag the image. The vector tracks every move. Every vertex shifts by the SAME amount — that&apos;s what makes it a translation." }
+];
+var TOTAL = STEPS.length;
+
+(function() { for (var i = 0; i < TOTAL; i++) { var d = document.createElement("div"); d.className = "step-dot"; dotsHost.appendChild(d); } })();
+
+var lastDrawStep = -1;
+function draw() {
+  var isStepTransition = (P.step !== lastDrawStep);
+  var fadeCls = isStepTransition ? "pl-fade-in" : "";
+  lastDrawStep = P.step;
+  while (stage.firstChild) stage.removeChild(stage.firstChild);
+
+  var g = el("g", { class: "grid" });
+  for (var x = X_MIN; x <= X_MAX; x++) {
+    g.appendChild(el("line", { x1: sx(x), y1: 0, x2: sx(x), y2: H, stroke: x === 0 ? "#243750" : "#141e2a", "stroke-width": x === 0 ? 1 : 0.5 }));
+  }
+  for (var y = Y_MIN; y <= Y_MAX; y++) {
+    g.appendChild(el("line", { x1: 0, y1: sy(y), x2: W, y2: sy(y), stroke: y === 0 ? "#243750" : "#141e2a", "stroke-width": y === 0 ? 1 : 0.5 }));
+  }
+  stage.appendChild(g);
+
+  stage.appendChild(svgPolygon(OBJECT, "rgba(0,171,250,0.12)", "#00abfa", 2));
+  stage.appendChild(svgPolygon(D.B,    "rgba(255,70,112,0.12)", "#ff4670", 2));
+
+  OBJECT.forEach(function(p, i) {
+    var off = vertexLabelOffset(OBJECT, i);
+    stage.appendChild(svgLabel(p.x + off.x, p.y + off.y, "A" + (i+1), "#00abfa", 12));
+  });
+  D.B.forEach(function(p, i) {
+    var off = vertexLabelOffset(D.B, i);
+    stage.appendChild(svgLabel(p.x + off.x, p.y + off.y, "B" + (i+1), "#ff4670", 12));
+  });
+
+  var v = vec(OBJECT[0], D.B[0]);
+
+  // Step 1: highlight A1 and B1
+  if (P.step >= 1) {
+    var a1g = el("circle", { cx: sx(OBJECT[0].x), cy: sy(OBJECT[0].y), r: 12, fill: "rgba(0,171,250,0.18)", class: fadeCls });
+    stage.appendChild(a1g);
+    var b1g = el("circle", { cx: sx(D.B[0].x), cy: sy(D.B[0].y), r: 12, fill: "rgba(255,70,112,0.18)", class: fadeCls });
+    stage.appendChild(b1g);
+  }
+
+  // Step 2: horizontal shift arrow
+  var corner = { x: D.B[0].x, y: OBJECT[0].y };
+  if (P.step >= 2) {
+    if (Math.abs(v.x) > 0.01) {
+      var hArrow = svgArrow(OBJECT[0], corner, "#0fee89", 1.6, fadeCls);
+      if (hArrow) stage.appendChild(hArrow);
+      stage.appendChild(svgLabel((OBJECT[0].x + corner.x)/2, OBJECT[0].y - 0.55, fmt(v.x), "#0fee89", 13));
+    }
+  }
+
+  // Step 3: vertical shift arrow
+  if (P.step >= 3) {
+    if (Math.abs(v.y) > 0.01) {
+      var vArrow = svgArrow(corner, D.B[0], "#0fee89", 1.6, fadeCls);
+      if (vArrow) stage.appendChild(vArrow);
+      stage.appendChild(svgLabel(corner.x + 0.55, (corner.y + D.B[0].y)/2, fmt(v.y), "#0fee89", 13, "start"));
+    }
+  }
+
+  // Step 3: column vector readout at top-right
+  if (P.step >= 3) {
+    var vx = fmt(v.x), vy = fmt(v.y);
+    var readout = el("text", { x: sx(X_MAX - 1.4), y: sy(Y_MAX - 0.7), fill: "#0fee89", "font-family": "'Geist Mono', monospace", "font-size": 14, "font-weight": 700, "text-anchor": "middle" });
+    readout.textContent = "(" + vx + ", " + vy + ")";
+    stage.appendChild(readout);
+  }
+
+  // Step 4: drag handles
+  if (P.step >= 4) {
+    D.B.forEach(function(p, i) {
+      stage.appendChild(svgCircle(p, 6.5, "#ff4670", "#0b1118", 1.5, "handle", "B" + i));
+    });
+  }
+
+  meta.textContent = "step " + (P.step + 1) + " of " + TOTAL;
+  foot.innerHTML = STEPS[P.step].footer;
+  for (var i = 0; i < TOTAL; i++) {
+    var d = dotsHost.children[i];
+    d.classList.toggle("active", i === P.step);
+    d.classList.toggle("done",   i  <  P.step);
+  }
+  document.getElementById("prev").disabled = (P.step === 0);
+  document.getElementById("next").disabled = (P.step === TOTAL - 1);
+  reportHeight();
+}
+
+function fmt(v) { var r = Math.round(v); return (r > 0 ? "+" : "") + r; }
+function vertexLabelOffset(pts, i) {
+  var cx = (pts[0].x + pts[1].x + pts[2].x) / 3;
+  var cy = (pts[0].y + pts[1].y + pts[2].y) / 3;
+  var dx = pts[i].x - cx, dy = pts[i].y - cy;
+  var L = Math.sqrt(dx*dx + dy*dy);
+  if (L < 0.001) return { x: 0, y: 0.4 };
+  return { x: dx/L * 0.45, y: dy/L * 0.45 };
+}
+
+var raf = null;
+function settled() {
+  for (var i = 0; i < 3; i++) { if (Math.abs(P.B[i].x - D.B[i].x) > EPS) return false; if (Math.abs(P.B[i].y - D.B[i].y) > EPS) return false; }
+  return true;
+}
+function tick() {
+  for (var i = 0; i < 3; i++) { D.B[i].x += (P.B[i].x - D.B[i].x) * SPRING; D.B[i].y += (P.B[i].y - D.B[i].y) * SPRING; }
+  draw();
+  if (settled()) { for (var j = 0; j < 3; j++) { D.B[j].x = P.B[j].x; D.B[j].y = P.B[j].y; } raf = null; } else { raf = requestAnimationFrame(tick); }
+}
+function kick() { if (raf == null) raf = requestAnimationFrame(tick); }
+
+var dragging = null;
+function evMath(e) {
+  var rect = stage.getBoundingClientRect();
+  var sxp = (e.clientX - rect.left) * (W / rect.width);
+  var syp = (e.clientY - rect.top)  * (H / rect.height);
+  return { x: fx(sxp), y: fy(syp) };
+}
+function clampPt(p) { return { x: Math.max(X_MIN + 0.4, Math.min(X_MAX - 0.4, p.x)), y: Math.max(Y_MIN + 0.4, Math.min(Y_MAX - 0.4, p.y)) }; }
+
+stage.addEventListener("pointerdown", function(e) {
+  if (P.step < 4) return;
+  var m = evMath(e);
+  for (var i = 0; i < 3; i++) {
+    if (Math.hypot(m.x - P.B[i].x, m.y - P.B[i].y) < 0.55) {
+      dragging = { type: "B" + i, grab: { x: m.x - P.B[i].x, y: m.y - P.B[i].y } };
+      stage.classList.add("grabbing");
+      stage.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      return;
+    }
+  }
+});
+stage.addEventListener("pointermove", function(e) {
+  if (P.step < 4) return;
+  var m = evMath(e);
+  if (dragging) {
+    // Move the WHOLE image B by the same delta (translation preserves shape).
+    var i = parseInt(dragging.type.slice(1), 10);
+    var newPt = clampPt({ x: snapInt(m.x - dragging.grab.x), y: snapInt(m.y - dragging.grab.y) });
+    var dx = newPt.x - P.B[i].x, dy = newPt.y - P.B[i].y;
+    // Ensure all three remain in bounds after shifting.
+    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (var k = 0; k < 3; k++) {
+      var nx = P.B[k].x + dx, ny = P.B[k].y + dy;
+      if (nx < minX) minX = nx; if (nx > maxX) maxX = nx;
+      if (ny < minY) minY = ny; if (ny > maxY) maxY = ny;
+    }
+    if (minX < X_MIN + 0.4) dx += (X_MIN + 0.4 - minX);
+    if (maxX > X_MAX - 0.4) dx += (X_MAX - 0.4 - maxX);
+    if (minY < Y_MIN + 0.4) dy += (Y_MIN + 0.4 - minY);
+    if (maxY > Y_MAX - 0.4) dy += (Y_MAX - 0.4 - maxY);
+    for (var j = 0; j < 3; j++) { P.B[j].x += dx; P.B[j].y += dy; }
+    kick();
+  } else {
+    var over = false;
+    for (var i = 0; i < 3 && !over; i++) { if (Math.hypot(m.x - P.B[i].x, m.y - P.B[i].y) < 0.55) over = true; }
+    stage.classList.toggle("hover-grab", over);
+  }
+});
+function endDrag(e) { if (dragging) { try { stage.releasePointerCapture(e.pointerId); } catch (_) {} dragging = null; stage.classList.remove("grabbing"); } }
+stage.addEventListener("pointerup",     endDrag);
+stage.addEventListener("pointercancel", endDrag);
+
+document.getElementById("prev").addEventListener("click", function() { if (P.step > 0) { P.step--; draw(); } });
+var nextBtn = document.getElementById("next");
+nextBtn.addEventListener("click", function() { nextBtn.classList.remove("primed"); if (P.step < TOTAL - 1) { P.step++; draw(); } });
+
+function syncStageHeight() { var s = document.getElementById("stage"); if (s && s.clientWidth > 0) s.style.height = (s.clientWidth * 320 / 480) + "px"; }
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return; reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false; syncStageHeight();
+    var wrap = document.getElementById("wrap"); if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bp = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bb = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bp + bb);
+    if (Math.abs(h - lastReported) < 3) return; lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+(function() { var qs = new URLSearchParams(location.search); if (qs.get("lessonMode") === "1") { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); } })();
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+syncStageHeight();
+draw();
+</script>
+</body>
+</html>

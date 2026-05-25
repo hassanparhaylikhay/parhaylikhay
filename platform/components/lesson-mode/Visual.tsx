@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import katex from "katex"
 import type { VisualSpec } from "@/lib/lesson-mode/types"
 
@@ -42,20 +42,33 @@ function IframeVisual({
 }) {
   const internalRef = useRef<HTMLIFrameElement | null>(null)
   const wrapRef = useRef<HTMLDivElement | null>(null)
+  // If the embedded widget reports its own height via pl-widget-resize, we
+  // use that instead of the default 480/320 aspect — step-explorer widgets
+  // have visible chrome (controls + footer) that pushes total height past
+  // the SVG aspect, and we need to grow the iframe so nothing clips.
+  const [reportedHeight, setReportedHeight] = useState<number | null>(null)
 
   useEffect(() => {
     function fit() {
       const ifr = internalRef.current
       const wrap = wrapRef.current
       if (!ifr || !wrap) return
-      // In lesson mode the widget's internal strip is hidden, so the iframe
-      // hosts the SVG only. Pure aspect-ratio fit: width = min(containerW,
-      // 1.5 × availableHeight). Height = width / 1.5.
       const SVG_ASPECT = 480 / 320
       // chrome (44 + 44 + 56) + section padding (24) + safety = 180
       const RESERVED = 200
       const availableW = wrap.clientWidth
       const availableH = Math.max(280, window.innerHeight - RESERVED)
+
+      if (reportedHeight != null) {
+        // Widget reports its natural height. Width fills the column; height
+        // matches the widget's report (capped at available height).
+        const w = Math.max(320, Math.min(availableW, 720))
+        const h = Math.min(reportedHeight, availableH)
+        ifr.style.width  = `${Math.round(w)}px`
+        ifr.style.height = `${Math.round(h)}px`
+        return
+      }
+      // Fallback: aspect-fit for SVG-only widgets that don't postMessage.
       const widthByHeight = SVG_ASPECT * availableH
       const w = Math.max(320, Math.min(availableW, widthByHeight))
       const h = w / SVG_ASPECT
@@ -67,6 +80,19 @@ function IframeVisual({
     if (wrapRef.current) ro.observe(wrapRef.current)
     window.addEventListener("resize", fit)
     return () => { ro.disconnect(); window.removeEventListener("resize", fit) }
+  }, [reportedHeight])
+
+  useEffect(() => {
+    function onMsg(e: MessageEvent) {
+      const d = e.data
+      if (!d || typeof d !== "object") return
+      if (internalRef.current?.contentWindow !== e.source) return
+      if (d.type === "pl-widget-resize" && typeof d.height === "number") {
+        setReportedHeight(Math.max(280, Math.min(900, Math.round(d.height))))
+      }
+    }
+    window.addEventListener("message", onMsg)
+    return () => window.removeEventListener("message", onMsg)
   }, [])
 
   function setRefs(el: HTMLIFrameElement | null) {

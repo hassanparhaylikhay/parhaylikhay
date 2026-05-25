@@ -286,6 +286,17 @@
       }
     },
     {
+      "id": "10c-find-vector-explorer",
+      "kind": "concept",
+      "title": "How to find a column vector",
+      "advance": "manual",
+      "prompt": "Walk through the method one step at a time. Then drag the image at the end and watch the vector update.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/translation-vector-finder.html?lessonMode=1"
+      }
+    },
+    {
       "id": "11-q-find-vector",
       "kind": "interaction",
       "title": "Going backwards",
@@ -563,6 +574,17 @@
           "prompt": "Cambridge Winter 2025, Paper 11. Triangle $A$ reflects onto triangle $B$ in the line $x = 1$. Place the mirror.",
           "successText": "Mark scheme: B1 for \"Reflection\", B1 for $x = 1$. Full marks $= 2$."
         }
+      }
+    },
+    {
+      "id": "15g-mirror-finder",
+      "kind": "concept",
+      "title": "How to find the line of reflection",
+      "advance": "manual",
+      "prompt": "Given an object and its image, how do you work out where the mirror is? Step through the construction.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/reflection-line-finder.html?lessonMode=1"
       }
     },
     {
@@ -861,6 +883,28 @@
           "prompt": "Cambridge Winter 2024, Paper 12. Rotate the shape $90°$ clockwise about $(4, 1)$.",
           "successText": "Mark scheme: B1 \"Rotation\", B1 \"$90°$ clockwise\", B1 centre $(4, 1)$. Full marks $= 3$."
         }
+      }
+    },
+    {
+      "id": "22g-centre-90-finder",
+      "kind": "concept",
+      "title": "How to find the centre of a 90° rotation",
+      "advance": "manual",
+      "prompt": "Given an object and its 90° rotated image, find the centre using perpendicular bisectors. Two bisectors meet at the centre.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/rotation-centre-step-explorer.html?lessonMode=1"
+      }
+    },
+    {
+      "id": "22h-centre-180-finder",
+      "kind": "concept",
+      "title": "How to find the centre of a 180° rotation",
+      "advance": "manual",
+      "prompt": "For 180°, the centre is just the midpoint of any vertex-image pair. No bisectors needed.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/rotation-180-centre-finder.html?lessonMode=1"
       }
     },
     {
@@ -1342,6 +1386,17 @@
           "prompt": "Cambridge Summer 2025, Paper 13. Shape $A$ maps to shape $B$ by an enlargement, scale factor $-\\tfrac{1}{2}$, centre $(1, 0)$.",
           "successText": "Mark scheme: B1 \"Enlargement\", B1 centre $(1, 0)$, B1 scale factor $-\\tfrac{1}{2}$. Full marks $= 3$."
         }
+      }
+    },
+    {
+      "id": "37c-centre-finder",
+      "kind": "concept",
+      "title": "How to find the centre of enlargement",
+      "advance": "manual",
+      "prompt": "Each vertex and its image sit on a straight line through the centre. Draw two such lines and find where they cross.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/enlargement-centre-finder.html?lessonMode=1"
       }
     },
     {
