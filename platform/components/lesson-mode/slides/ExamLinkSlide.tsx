@@ -23,8 +23,6 @@ export default function ExamLinkSlide({
   savedData?: Record<string, unknown>
   onShowMeUsed?: () => void
 }) {
-  // Suppress unused — non-interaction examLink doesn't need onAdvance yet.
-  void onAdvance
   return (
     <div className="w-full flex flex-col items-center gap-5">
       {slide.markCode && (
@@ -48,6 +46,7 @@ export default function ExamLinkSlide({
             advance: slide.advance,
           } as InteractionSlideT}
           onComplete={onComplete}
+          onAdvance={onAdvance}
           savedData={savedData}
           onShowMeUsed={onShowMeUsed}
         />
