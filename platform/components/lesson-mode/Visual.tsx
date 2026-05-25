@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import katex from "katex"
 import type { VisualSpec } from "@/lib/lesson-mode/types"
 
@@ -48,20 +48,36 @@ function IframeVisual({
   // the SVG aspect, and we need to grow the iframe so nothing clips.
   const [reportedHeight, setReportedHeight] = useState<number | null>(null)
 
-  useEffect(() => {
+  // useLayoutEffect runs synchronously after DOM commit, BEFORE the browser
+  // paints — so the iframe never flashes at the browser-default 300x150
+  // before our explicit dimensions kick in.
+  //
+  // We size from window.innerWidth (computing the aside reserve ourselves)
+  // instead of reading wrap.clientWidth. Reading clientWidth is race-prone:
+  // on initial layout the wrap can briefly be the full row width before
+  // the aside settles into its 320px slot, then ResizeObserver fires and
+  // the iframe shrinks visibly ~250ms after load.
+  useLayoutEffect(() => {
     function fit() {
       const ifr = internalRef.current
-      const wrap = wrapRef.current
-      if (!ifr || !wrap) return
+      if (!ifr) return
       const SVG_ASPECT = 480 / 320
-      // chrome (44 + 44 + 56) + section padding (24) + safety = 180
+      // App chrome reserves: SlideFrame top (44) + bottom (56) + padding etc.
       const RESERVED = 200
-      const availableW = wrap.clientWidth
+      const vw = window.innerWidth
+      // Dashboard sidebar (256px) appears at md+ on the topic page chrome.
+      const SIDEBAR_W = vw >= 768 ? 256 : 0
+      const SLIDE_PAD = 64                                  // px-8 each side
+      const SLIDE_MAX = 1200
+      const slideW = Math.min(vw - SIDEBAR_W - SLIDE_PAD, SLIDE_MAX)
+      const isWide = vw >= 1280
+      const ASIDE_RESERVE = isWide ? 320 + 28 : 0           // panel + gap
+      const availableW = Math.max(280, slideW - ASIDE_RESERVE)
       const availableH = Math.max(280, window.innerHeight - RESERVED)
 
       if (reportedHeight != null) {
-        // Widget reports its natural height. Width fills the column; height
-        // matches the widget's report (capped at available height).
+        // Widget reports its natural height (step-explorers, mostly). Width
+        // fills the column; height matches the widget's report.
         const w = Math.max(320, Math.min(availableW, 720))
         const h = Math.min(reportedHeight, availableH)
         ifr.style.width  = `${Math.round(w)}px`
@@ -76,10 +92,8 @@ function IframeVisual({
       ifr.style.height = `${Math.round(h)}px`
     }
     fit()
-    const ro = new ResizeObserver(fit)
-    if (wrapRef.current) ro.observe(wrapRef.current)
     window.addEventListener("resize", fit)
-    return () => { ro.disconnect(); window.removeEventListener("resize", fit) }
+    return () => { window.removeEventListener("resize", fit) }
   }, [reportedHeight])
 
   useEffect(() => {
