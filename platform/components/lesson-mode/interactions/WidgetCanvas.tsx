@@ -107,7 +107,7 @@ export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCa
         />
       </div>
 
-      <aside className="w-full xl:w-[320px] shrink-0 flex flex-col gap-4 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
+      <aside className="pl-stagger w-full xl:w-[320px] shrink-0 flex flex-col gap-4 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
         {config.prompt && (
           <MixedText
             text={config.prompt}

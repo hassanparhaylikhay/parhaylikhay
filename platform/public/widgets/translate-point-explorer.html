@@ -245,7 +245,23 @@ function reportHeight() {
   });
 }
 (function() { var qs = new URLSearchParams(location.search); if (qs.get("lessonMode") === "1") { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); } })();
+
+// Post the column vector to the lesson-mode side panel so the student
+// sees a properly stacked vector (not just the small inline label inside
+// the canvas). ReadoutPanel renders the tex via KaTeX.
+function postReadout() {
+  if (window.parent === window) return;
+  var topNum = V.x >= 0 ? V.x : V.x;
+  var botNum = V.y >= 0 ? V.y : V.y;
+  window.parent.postMessage({
+    type: "pl-lesson-readout",
+    label: "column vector",
+    tex: "\\begin{pmatrix} " + topNum + " \\\\ " + botNum + " \\end{pmatrix}"
+  }, "*");
+}
+
 window.addEventListener("load", reportHeight);
+window.addEventListener("load", postReadout);
 window.addEventListener("resize", reportHeight);
 syncStageHeight();
 draw();

@@ -190,12 +190,29 @@ function draw() {
     }
   }
 
-  // Step 3: column vector readout at top-right
+  // Step 3: proper stacked column vector at top-right of the canvas.
+  // Drawn with SVG primitives so it scales with the viewBox and doesn't
+  // hit the iOS foreignObject coordinate bug. Two numbers stacked
+  // vertically with oversized parentheses on either side.
   if (P.step >= 3) {
     var vx = fmt(v.x), vy = fmt(v.y);
-    var readout = el("text", { x: sx(X_MAX - 1.4), y: sy(Y_MAX - 0.7), fill: "#0fee89", "font-family": "'Geist Mono', monospace", "font-size": 14, "font-weight": 700, "text-anchor": "middle" });
-    readout.textContent = "(" + vx + ", " + vy + ")";
-    stage.appendChild(readout);
+    var cvx = sx(X_MAX - 1.3), cvy = sy(Y_MAX - 1.1);
+    // Left bracket
+    var lb = el("text", { x: cvx - 16, y: cvy, fill: "#0fee89", "font-family": "'Geist','Inter',serif", "font-size": 38, "font-weight": 300, "text-anchor": "middle", "dominant-baseline": "central" });
+    lb.textContent = "(";
+    stage.appendChild(lb);
+    // Right bracket
+    var rb = el("text", { x: cvx + 16, y: cvy, fill: "#0fee89", "font-family": "'Geist','Inter',serif", "font-size": 38, "font-weight": 300, "text-anchor": "middle", "dominant-baseline": "central" });
+    rb.textContent = ")";
+    stage.appendChild(rb);
+    // Top number
+    var topT = el("text", { x: cvx, y: cvy - 10, fill: "#0fee89", "font-family": "'Geist Mono', monospace", "font-size": 14, "font-weight": 700, "text-anchor": "middle", "dominant-baseline": "middle" });
+    topT.textContent = vx;
+    stage.appendChild(topT);
+    // Bottom number
+    var botT = el("text", { x: cvx, y: cvy + 10, fill: "#0fee89", "font-family": "'Geist Mono', monospace", "font-size": 14, "font-weight": 700, "text-anchor": "middle", "dominant-baseline": "middle" });
+    botT.textContent = vy;
+    stage.appendChild(botT);
   }
 
   // Step 4: drag handles

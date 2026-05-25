@@ -261,4 +261,24 @@ export const interactionStyles = `
   to   { opacity: 1; transform: translateY(0); }
 }
 .pl-reveal { animation: pl-reveal 520ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* Staggered fade-in for the side-panel children — title, prompt,
+   readout, status, button. Each child appears ~80ms after the previous
+   one, settling in with a small upward translate on Apple's smooth
+   ease curve. Applied to the aside on widgetCanvas, clickOnGrid and
+   the concept-iframe layout. Keyed on slide transitions via the
+   parent's pl-fade-in remount so the stagger replays per slide. */
+@keyframes pl-stagger-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pl-stagger > * {
+  opacity: 0;
+  animation: pl-stagger-in 540ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.pl-stagger > *:nth-child(1) { animation-delay: 140ms; }
+.pl-stagger > *:nth-child(2) { animation-delay: 240ms; }
+.pl-stagger > *:nth-child(3) { animation-delay: 340ms; }
+.pl-stagger > *:nth-child(4) { animation-delay: 440ms; }
+.pl-stagger > *:nth-child(5) { animation-delay: 540ms; }
 `
