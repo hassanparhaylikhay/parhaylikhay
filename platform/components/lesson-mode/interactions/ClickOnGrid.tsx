@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import katex from "katex"
 import { COLOR, MixedText, type InteractionProps } from "./_shared"
 
@@ -36,11 +36,11 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
   const svgRef = useRef<SVGSVGElement | null>(null)
   const colRef = useRef<HTMLDivElement | null>(null)
 
-  // Up-front sizing — match WidgetCanvas. We size against the PARENT minus
-  // the aside reserve to avoid first-paint races that let col.clientWidth
-  // return a too-large value and push the aside off-screen.
   // Same sizing as WidgetCanvas: compute from window.innerWidth, no DOM reads.
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so the SVG is sized before the browser
+  // paints — otherwise it briefly shows the browser-default size and the
+  // grid visibly resizes after first paint.
+  useLayoutEffect(() => {
     function fit() {
       const svg = svgRef.current
       if (!svg) return

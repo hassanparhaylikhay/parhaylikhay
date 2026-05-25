@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { COLOR, MixedText, ReadoutPanel, useWidgetReadout, type InteractionProps } from "./_shared"
 
 export type WidgetCanvasConfig = {
@@ -37,16 +37,15 @@ export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCa
   if (config.noOutline) params.set("noOutline", "1")
   const finalSrc = config.src + (config.src.includes("?") ? "&" : "?") + params.toString()
 
-  // Up-front sizing: width is the SVG aspect (1.5) of usable height, capped
-  // by the column width that's actually available after the aside takes its
-  // 320 px. We read from the PARENT (the outer flex-row div) and subtract
-  // the aside reserve explicitly — relying on col.clientWidth alone was
-  // unreliable on first paint and let the iframe exceed the slide's max
-  // width, pushing the aside off-screen.
   // Compute sizing from window.innerWidth directly. DOM clientWidth reads were
   // unreliable on first paint — sometimes returning a wider value than the flex
   // layout would settle on, letting the iframe push the aside off-screen.
-  useEffect(() => {
+  //
+  // useLayoutEffect (not useEffect) so the explicit dimensions are written
+  // BEFORE the browser paints. With useEffect, the iframe would briefly show
+  // its 300x150 intrinsic size for one frame, then snap to the computed size
+  // — a visible flash the user reported as "becomes smaller abruptly".
+  useLayoutEffect(() => {
     function fit() {
       const ifr = iframeRef.current
       if (!ifr) return
