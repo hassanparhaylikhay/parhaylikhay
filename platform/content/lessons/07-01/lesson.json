@@ -398,7 +398,7 @@
         "kind": "selectFromOptions",
         "hint": "Add component by component. Order doesn't matter for two translations.",
         "config": {
-          "prompt": "Translate by $\\begin{pmatrix} 2 \\\\ 1 \\end{pmatrix}$ then by $\\begin{pmatrix} 3 \\\\ -4 \\end{pmatrix}$. The single equivalent translation is...",
+          "prompt": "Translate by $\\begin{pmatrix} 2 \\\\ 1 \\end{pmatrix}$, then translate by $\\begin{pmatrix} 3 \\\\ -4 \\end{pmatrix}$. What single column vector does the same job?",
           "options": [
             {
               "id": "opt-a",
@@ -939,7 +939,7 @@
               "whyWrong": "Column vectors are for translations. Rotations have a centre, not a vector."
             }
           ],
-          "successText": "Centre + angle + direction. Drop any one and Cambridge takes a mark off."
+          "successText": "Centre + angle + direction. Drop any one of those and you lose a mark."
         }
       }
     },
@@ -1033,7 +1033,7 @@
               "whyWrong": "That's still clockwise. We need an anticlockwise equivalent."
             }
           ],
-          "successText": "$360° - 90° = 270°$. Cambridge accepts either form."
+          "successText": "$360° - 90° = 270°$. Both ways describe the same image and either is accepted."
         }
       },
       "altExplain": {
@@ -1093,6 +1093,7 @@
         "hint": "Direction doesn't matter for $180°$. Both signs flip.",
         "config": {
           "prompt": "A rotation of $180°$ about the origin sends $(x, y)$ to...",
+          "contextHtml": "<svg viewBox='0 0 320 180' style='display:block;width:100%;max-width:380px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='r180g' x='0' y='0' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#141e2a' stroke-width='0.7'/></pattern></defs><rect width='320' height='180' fill='url(#r180g)'/><line x1='0' y1='90' x2='320' y2='90' stroke='#3a4a5a' stroke-width='1.2'/><line x1='160' y1='0' x2='160' y2='180' stroke='#3a4a5a' stroke-width='1.2'/><line x1='70' y1='150' x2='250' y2='30' stroke='#fff067' stroke-width='1.2' stroke-dasharray='4 3'/><circle cx='250' cy='30' r='6' fill='#00abfa'/><text x='264' y='28' fill='#00abfa' font-family='Geist Mono,monospace' font-size='13' font-weight='700'>P</text><circle cx='70' cy='150' r='6' fill='#ff4670'/><text x='44' y='158' fill='#ff4670' font-family='Geist Mono,monospace' font-size='13' font-weight='700'>P&#39;</text><circle cx='160' cy='90' r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/></svg>",
           "options": [
             {
               "id": "opt-b",
@@ -1125,7 +1126,7 @@
       "kind": "concept",
       "title": "Three rotations about the origin",
       "advance": "manual",
-      "prompt": "These three coordinate rules cover almost every Cambridge rotation question. Memorise them.",
+      "prompt": "These three rules cover almost every rotation question on your exam. Memorise them.",
       "visual": {
         "kind": "html",
         "content": "<div style='display:flex;flex-direction:column;gap:14px;max-width:580px;margin:0 auto;font-family:Geist Mono,monospace;line-height:1.55'><div style='padding:18px 24px;border-radius:12px;border:1px solid #00abfa66;background:rgba(0,171,250,0.06)'><div style='color:#00abfa;font-weight:600;font-size:18px;margin-bottom:8px'>\\(90°\\) anticlockwise</div><div style='color:#f0eeea;font-size:22px'>\\((x, y) \\to (-y, x)\\)</div></div><div style='padding:18px 24px;border-radius:12px;border:1px solid #fff06766;background:rgba(255,240,103,0.06)'><div style='color:#fff067;font-weight:600;font-size:18px;margin-bottom:8px'>\\(180°\\) (either way)</div><div style='color:#f0eeea;font-size:22px'>\\((x, y) \\to (-x, -y)\\)</div></div><div style='padding:18px 24px;border-radius:12px;border:1px solid #ff822c66;background:rgba(255,130,44,0.06)'><div style='color:#ff822c;font-weight:600;font-size:18px;margin-bottom:8px'>\\(90°\\) clockwise</div><div style='color:#f0eeea;font-size:22px'>\\((x, y) \\to (y, -x)\\)</div></div></div>"
@@ -1312,6 +1313,7 @@
         "hint": "Lengths scale by $k$. Areas scale by $k^2$ — square the scale factor.",
         "config": {
           "prompt": "After an enlargement with scale factor $\\tfrac{1}{2}$, the image area is...",
+          "contextHtml": "<div style='display:flex;gap:32px;justify-content:center;align-items:flex-end;padding:8px 0'><div style='text-align:center'><svg viewBox='0 0 100 100' style='display:block;width:130px;height:130px;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><rect x='10' y='10' width='80' height='80' fill='rgba(0,171,250,0.16)' stroke='#00abfa' stroke-width='2'/><text x='50' y='52' fill='#00abfa' font-family='Geist Mono,monospace' font-size='15' font-weight='700' text-anchor='middle' dominant-baseline='middle'>area 4</text></svg><div style='color:#00abfa;font-family:Geist Mono,monospace;font-size:11px;margin-top:8px;letter-spacing:0.5px'>side 2</div></div><div style='text-align:center'><svg viewBox='0 0 100 100' style='display:block;width:130px;height:130px;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><rect x='30' y='30' width='40' height='40' fill='rgba(255,70,112,0.16)' stroke='#ff4670' stroke-width='2'/><text x='50' y='52' fill='#ff4670' font-family='Geist Mono,monospace' font-size='13' font-weight='700' text-anchor='middle' dominant-baseline='middle'>area ?</text></svg><div style='color:#ff4670;font-family:Geist Mono,monospace;font-size:11px;margin-top:8px;letter-spacing:0.5px'>side 1 (k = &frac12;)</div></div></div>",
           "options": [
             {
               "id": "opt-b",
@@ -1470,7 +1472,7 @@
         "kind": "selectFromOptions",
         "hint": "Try translate-then-rotate versus rotate-then-translate. Different landing spots.",
         "config": {
-          "prompt": "When two transformations are applied in sequence, the ORDER of the two...",
+          "prompt": "You do one move and then another. Does the ORDER you do them in matter?",
           "options": [
             {
               "id": "opt-b",
@@ -1506,7 +1508,7 @@
         "kind": "selectFromOptions",
         "hint": "Two reflections undo the flip. So no flip remains in the final image.",
         "config": {
-          "prompt": "Reflecting in two PARALLEL mirrors is equivalent to...",
+          "prompt": "Reflect in one mirror, then reflect in a second mirror that is PARALLEL to the first. The single move that does the same thing is...",
           "options": [
             {
               "id": "opt-b",
@@ -1554,7 +1556,7 @@
         "kind": "selectFromOptions",
         "hint": "Where the mirrors cross is special — it's the only point both reflections leave alone.",
         "config": {
-          "prompt": "Reflecting in two INTERSECTING mirrors is equivalent to...",
+          "prompt": "Reflect in one mirror, then reflect in a second mirror that CROSSES the first. The single move that does the same thing is...",
           "options": [
             {
               "id": "opt-a",
@@ -1590,7 +1592,7 @@
         "kind": "selectFromOptions",
         "hint": "$y = 0$ and $y = x$ cross at the origin. Angle between them is $45°$. Double it.",
         "config": {
-          "prompt": "A reflection in $y = 0$ followed by a reflection in $y = x$ is equivalent to...",
+          "prompt": "Reflect in $y = 0$, then reflect in $y = x$. What single move does the same thing?",
           "options": [
             {
               "id": "opt-b",
@@ -1629,7 +1631,7 @@
         "kind": "selectFromOptions",
         "hint": "Vector is twice the perpendicular gap, from the first mirror to the second.",
         "config": {
-          "prompt": "Reflecting in $y = 0$ then in $y = 1$ is equivalent to...",
+          "prompt": "Reflect in $y = 0$, then reflect in $y = 1$. What single move does the same thing?",
           "options": [
             {
               "id": "opt-b",
@@ -1761,6 +1763,7 @@
         "hint": "Reflecting in $y = x$ swaps each coordinate.",
         "config": {
           "prompt": "Triangle $T$ has vertices $A(1, 1), B(4, 1), C(1, 3)$. Reflect $T$ in $y = x$. Which is the image $T_1$?",
+          "contextHtml": "<svg viewBox='0 0 320 220' style='display:block;width:100%;max-width:380px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='c48g' x='0' y='0' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#141e2a' stroke-width='0.7'/></pattern></defs><rect width='320' height='220' fill='url(#c48g)'/><line x1='0' y1='180' x2='320' y2='180' stroke='#3a4a5a' stroke-width='1.2'/><line x1='60' y1='0' x2='60' y2='220' stroke='#3a4a5a' stroke-width='1.2'/><line x1='30' y1='210' x2='240' y2='0' stroke='#fff067' stroke-width='1.3' stroke-dasharray='5 4' opacity='0.85'/><text x='246' y='10' fill='#fff067' font-family='Geist Mono,monospace' font-size='12' font-weight='600'>y = x</text><polygon points='90,150 180,150 90,90' fill='rgba(0,171,250,0.16)' stroke='#00abfa' stroke-width='2'/><text x='110' y='168' fill='#00abfa' font-family='Geist Mono,monospace' font-size='14' font-weight='700'>T</text></svg>",
           "options": [
             {
               "id": "opt-b",
@@ -1797,6 +1800,7 @@
         "hint": "$90°$ clockwise about the origin: $(x, y) \\to (y, -x)$.",
         "config": {
           "prompt": "Rotate $T_1\\ (A_1(1,1), B_1(1,4), C_1(3,1))$ by $90°$ clockwise about the origin. Image $T_2$?",
+          "contextHtml": "<svg viewBox='0 0 320 220' style='display:block;width:100%;max-width:380px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='c49g' x='0' y='0' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#141e2a' stroke-width='0.7'/></pattern></defs><rect width='320' height='220' fill='url(#c49g)'/><line x1='0' y1='180' x2='320' y2='180' stroke='#3a4a5a' stroke-width='1.2'/><line x1='60' y1='0' x2='60' y2='220' stroke='#3a4a5a' stroke-width='1.2'/><polygon points='90,150 90,60 150,150' fill='rgba(0,171,250,0.16)' stroke='#00abfa' stroke-width='2'/><text x='105' y='168' fill='#00abfa' font-family='Geist Mono,monospace' font-size='14' font-weight='700'>T&#x2081;</text><circle cx='60' cy='180' r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><text x='42' y='196' fill='#fff067' font-family='Geist Mono,monospace' font-size='11' font-weight='600'>O</text></svg>",
           "options": [
             {
               "id": "opt-b",
@@ -1833,6 +1837,7 @@
         "hint": "Compare each $T$ vertex to its $T_2$ vertex. $x$ stays, $y$ flips sign.",
         "config": {
           "prompt": "Now describe the SINGLE transformation that maps $T\\ (1,1),(4,1),(1,3)$ onto $T_2\\ (1,-1),(4,-1),(1,-3)$.",
+          "contextHtml": "<svg viewBox='0 0 320 240' style='display:block;width:100%;max-width:380px;height:auto;margin:0 auto;background:#0b1118;border-radius:10px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><defs><pattern id='c50g' x='0' y='0' width='30' height='30' patternUnits='userSpaceOnUse'><path d='M 30 0 L 0 0 0 30' fill='none' stroke='#141e2a' stroke-width='0.7'/></pattern></defs><rect width='320' height='240' fill='url(#c50g)'/><line x1='0' y1='120' x2='320' y2='120' stroke='#3a4a5a' stroke-width='1.2'/><line x1='60' y1='0' x2='60' y2='240' stroke='#3a4a5a' stroke-width='1.2'/><polygon points='90,90 180,90 90,30' fill='rgba(0,171,250,0.16)' stroke='#00abfa' stroke-width='2'/><text x='110' y='108' fill='#00abfa' font-family='Geist Mono,monospace' font-size='14' font-weight='700'>T</text><polygon points='90,150 180,150 90,210' fill='rgba(255,70,112,0.16)' stroke='#ff4670' stroke-width='2'/><text x='108' y='138' fill='#ff4670' font-family='Geist Mono,monospace' font-size='14' font-weight='700'>T&#x2082;</text></svg>",
           "options": [
             {
               "id": "opt-b",
