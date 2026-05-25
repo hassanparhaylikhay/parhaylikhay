@@ -112,13 +112,13 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
       {wrongPick?.whyWrong && (
         <MixedText
           text={wrongPick.whyWrong}
-          className={wide ? "block text-[14px] text-[#ff4670] pl-reveal leading-snug" : "mt-4 block text-[15px] text-[#ff4670] pl-reveal text-center max-w-[560px] leading-relaxed"}
+          className={wide ? "block text-[15px] sm:text-[16px] text-[#ff4670] pl-reveal leading-relaxed" : "mt-4 block text-[15px] text-[#ff4670] pl-reveal text-center max-w-[560px] leading-relaxed"}
         />
       )}
       {isResolved && config.successText && (
         <MixedText
           text={config.successText}
-          className={wide ? "block text-[14.5px] text-[#0fee89] pl-reveal leading-snug" : "mt-6 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"}
+          className={wide ? "block text-[15px] sm:text-[16px] text-[#0fee89] pl-reveal leading-relaxed" : "mt-6 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"}
         />
       )}
     </>
@@ -154,7 +154,7 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
           {config.prompt && (
             <MixedText
               text={config.prompt}
-              className="block text-[16px] sm:text-[17px] text-[#f0eeea] leading-snug mb-1"
+              className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full mb-1"
             />
           )}
           <div className="flex flex-col gap-2.5">{optionButtons}</div>
