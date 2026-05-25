@@ -42,10 +42,15 @@ function IframeVisual({
 }) {
   const internalRef = useRef<HTMLIFrameElement | null>(null)
   const wrapRef = useRef<HTMLDivElement | null>(null)
-  // If the embedded widget reports its own height via pl-widget-resize, we
-  // use that instead of the default 480/320 aspect — step-explorer widgets
-  // have visible chrome (controls + footer) that pushes total height past
-  // the SVG aspect, and we need to grow the iframe so nothing clips.
+  // Widgets whose lesson-mode rendering includes visible chrome below the
+  // SVG (step-explorers — prev/next, footer text) opt in via ?chrome=1 in
+  // the iframe URL. That's a STABLE signal we can read once. The previous
+  // attempt to detect via reportedHeight caused a feedback loop: setting
+  // a smaller width changed the widget's reported height, which re-
+  // triggered the detection, which set yet another size.
+  const hasChrome = /[?&]chrome=1\b/.test(src)
+  // For chrome widgets we also listen for pl-widget-resize and use the
+  // reported total height instead of aspect-fit.
   const [reportedHeight, setReportedHeight] = useState<number | null>(null)
 
   // useLayoutEffect runs synchronously after DOM commit, BEFORE the browser
@@ -81,21 +86,23 @@ function IframeVisual({
 
       let w: number
       let h: number
-      if (reportedHeight != null && reportedHeight > aspectH + 60) {
-        // Step-explorer-style: widget renders visible chrome (step controls,
-        // footer text) BELOW the SVG. Cap the width so the SVG doesn't
-        // dominate at wide viewports and crowd the chrome into the
-        // slide-frame bottom edge.
+      if (hasChrome) {
+        // Step-explorer-style: cap width at 720 so the SVG + chrome below
+        // don't blow past the slide-frame bottom on wide viewports. Use
+        // the widget's reported height when it arrives; until then start
+        // at aspect-fit height plus a small chrome estimate so the
+        // controls don't briefly clip on the first paint.
         w = Math.max(320, Math.min(availableW, 720))
-        h = Math.min(reportedHeight, availableH)
+        const estimatedChrome = 130
+        h = reportedHeight != null
+          ? Math.min(reportedHeight, availableH)
+          : Math.min(w / SVG_ASPECT + estimatedChrome, availableH)
       } else {
-        // Either pre-postMessage (initial render) OR SVG-only widget
-        // (free-explore in lesson mode, where chrome is hidden). Use the
-        // aspect-fit width — and for free-explore the reported height
-        // matches aspect-fit anyway, so nothing visibly changes when the
-        // widget's pl-widget-resize arrives ~200ms after load.
+        // SVG-only widget (free-explore in lesson mode). Reported height
+        // matches aspect-fit, so we just use aspect-fit and ignore the
+        // postMessage entirely — no resize when it arrives.
         w = aspectW
-        h = reportedHeight != null ? Math.min(reportedHeight, availableH) : aspectH
+        h = aspectH
       }
       ifr.style.width  = `${Math.round(w)}px`
       ifr.style.height = `${Math.round(h)}px`
@@ -103,7 +110,7 @@ function IframeVisual({
     fit()
     window.addEventListener("resize", fit)
     return () => { window.removeEventListener("resize", fit) }
-  }, [reportedHeight])
+  }, [reportedHeight, hasChrome])
 
   useEffect(() => {
     function onMsg(e: MessageEvent) {

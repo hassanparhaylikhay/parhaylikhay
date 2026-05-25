@@ -198,7 +198,7 @@
       "prompt": "Top number = shift along x. Bottom number = shift along y. Walk through one, then drag the point yourself.",
       "visual": {
         "kind": "iframe",
-        "src": "/widgets/translate-point-explorer.html?lessonMode=1"
+        "src": "/widgets/translate-point-explorer.html?lessonMode=1&chrome=1"
       }
     },
     {
@@ -304,7 +304,7 @@
       "prompt": "Walk through the method one step at a time. Then drag the image at the end and watch the vector update.",
       "visual": {
         "kind": "iframe",
-        "src": "/widgets/translation-vector-finder.html?lessonMode=1"
+        "src": "/widgets/translation-vector-finder.html?lessonMode=1&chrome=1"
       }
     },
     {
@@ -507,7 +507,7 @@
       "prompt": "Every point is the same perpendicular distance from the mirror as its image, just on the other side. Watch one, then drag your own point.",
       "visual": {
         "kind": "iframe",
-        "src": "/widgets/reflect-point-explorer.html?lessonMode=1"
+        "src": "/widgets/reflect-point-explorer.html?lessonMode=1&chrome=1"
       }
     },
     {
@@ -607,7 +607,7 @@
       "prompt": "Given an object and its image, how do you work out where the mirror is? Step through the construction.",
       "visual": {
         "kind": "iframe",
-        "src": "/widgets/reflection-line-finder.html?lessonMode=1"
+        "src": "/widgets/reflection-line-finder.html?lessonMode=1&chrome=1"
       }
     },
     {
@@ -916,7 +916,7 @@
       "prompt": "Given an object and its 90° rotated image, find the centre using perpendicular bisectors. Two bisectors meet at the centre.",
       "visual": {
         "kind": "iframe",
-        "src": "/widgets/rotation-centre-step-explorer.html?lessonMode=1"
+        "src": "/widgets/rotation-centre-step-explorer.html?lessonMode=1&chrome=1"
       }
     },
     {
@@ -927,7 +927,7 @@
       "prompt": "For 180°, the centre is just the midpoint of any vertex-image pair. No bisectors needed.",
       "visual": {
         "kind": "iframe",
-        "src": "/widgets/rotation-180-centre-finder.html?lessonMode=1"
+        "src": "/widgets/rotation-180-centre-finder.html?lessonMode=1&chrome=1"
       }
     },
     {
@@ -1222,7 +1222,7 @@
       "prompt": "The image sits on the line from the centre through the point, k times as far from the centre. Walk through one, then drag your own point.",
       "visual": {
         "kind": "iframe",
-        "src": "/widgets/enlarge-point-explorer.html?lessonMode=1"
+        "src": "/widgets/enlarge-point-explorer.html?lessonMode=1&chrome=1"
       }
     },
     {
@@ -1433,7 +1433,7 @@
       "prompt": "Each vertex and its image sit on a straight line through the centre. Draw two such lines and find where they cross.",
       "visual": {
         "kind": "iframe",
-        "src": "/widgets/enlargement-centre-finder.html?lessonMode=1"
+        "src": "/widgets/enlargement-centre-finder.html?lessonMode=1&chrome=1"
       }
     },
     {
