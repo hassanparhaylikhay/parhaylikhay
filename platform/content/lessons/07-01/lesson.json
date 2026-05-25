@@ -191,6 +191,17 @@
       }
     },
     {
+      "id": "07b-translate-point-explorer",
+      "kind": "concept",
+      "title": "How to translate a point, step by step",
+      "advance": "manual",
+      "prompt": "Top number = shift along x. Bottom number = shift along y. Walk through one, then drag the point yourself.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/translate-point-explorer.html?lessonMode=1"
+      }
+    },
+    {
       "id": "08-translation-target-1",
       "kind": "interaction",
       "title": "Slide it 3 right and 2 down",
@@ -485,6 +496,17 @@
         "kind": "iframe",
         "src": "/widgets/reflection-explorer.html?lessonMode=1",
         "height": 460
+      }
+    },
+    {
+      "id": "15a-reflect-point-explorer",
+      "kind": "concept",
+      "title": "How to reflect a point, step by step",
+      "advance": "manual",
+      "prompt": "Every point is the same perpendicular distance from the mirror as its image, just on the other side. Watch one, then drag your own point.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/reflect-point-explorer.html?lessonMode=1"
       }
     },
     {
@@ -1188,6 +1210,17 @@
         "kind": "iframe",
         "src": "/widgets/enlargement-explorer.html?lessonMode=1",
         "height": 460
+      }
+    },
+    {
+      "id": "30b-enlarge-point-explorer",
+      "kind": "concept",
+      "title": "How to enlarge a point, step by step",
+      "advance": "manual",
+      "prompt": "The image sits on the line from the centre through the point, k times as far from the centre. Walk through one, then drag your own point.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/enlarge-point-explorer.html?lessonMode=1"
       }
     },
     {

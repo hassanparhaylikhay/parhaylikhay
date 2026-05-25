@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Reflect a Point · Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:14px; flex-wrap:wrap; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+  #stage { display:block; width:100%; height:auto; aspect-ratio: 480 / 320; user-select:none; overflow:visible; touch-action:none; cursor:default; }
+  #stage.grabbing { cursor:grabbing; }
+  #stage.hover-grab { cursor:grab; }
+  .controls { display:flex; gap:8px; align-items:center; padding:12px 0 4px; }
+  .ctl { background:#0b1118; border:1px solid #141e2a; color:#7a7875; font-family:'Geist Mono',monospace; font-size:11px; font-weight:600; padding:6px 14px; border-radius:4px; cursor:pointer; transition: all 0.25s cubic-bezier(0.16,1,0.3,1); text-transform:uppercase; letter-spacing:0.5px; }
+  .ctl:hover:not(:disabled) { color:#f0eeea; border-color:#3a4a5a; }
+  .ctl:disabled { opacity:0.35; cursor:not-allowed; }
+  .ctl.primed { background: rgba(255, 240, 103, 0.10); border-color: rgba(255, 240, 103, 0.55); color: #fff067; animation: ctl-prime-pulse 1.9s ease-in-out infinite; }
+  .ctl.primed:hover { background: rgba(255, 240, 103, 0.16); border-color: #fff067; color: #f0eeea; }
+  @keyframes ctl-prime-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(255, 240, 103, 0.36); } 60% { box-shadow: 0 0 0 6px rgba(255, 240, 103, 0); } }
+  .step-dots { flex:1; display:flex; justify-content:center; gap:8px; }
+  .step-dot { width:6px; height:6px; border-radius:50%; background:#1a2330; transition: background 0.3s cubic-bezier(0.16,1,0.3,1), transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+  .step-dot.active { background:#fff067; transform:scale(1.6); }
+  .step-dot.done { background:#3a4a5a; }
+  .footer { margin-top:10px; padding:10px 12px; font-size:13.5px; line-height:1.5; color:#c8c6be; border-top:1px solid #141e2a; }
+  .footer b { color:#f0eeea; }
+  @keyframes pulse-glow { 0%, 100% { filter: drop-shadow(0 0 2px currentColor); } 50% { filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 11px currentColor) drop-shadow(0 0 16px currentColor); } }
+  .handle { animation: pulse-glow 1.8s ease-in-out infinite; }
+  .pl-fade-in { animation: pl-fade-in 700ms cubic-bezier(0.16,1,0.3,1) both; }
+  @keyframes pl-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">REFLECT A POINT · STEP BY STEP</span>
+    <span class="meta" id="meta">step 1 of 5</span>
+  </div>
+  <svg id="stage" viewBox="0 0 480 320" width="480" height="320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="controls">
+    <button class="ctl" id="prev" type="button">← prev</button>
+    <div class="step-dots" id="dots"></div>
+    <button class="ctl primed" id="next" type="button">next →</button>
+  </div>
+  <div class="footer" id="footer"></div>
+</div>
+<script>
+"use strict";
+var W = 480, H = 320;
+var X_MIN = -7, X_MAX = 8, Y_MIN = -5, Y_MAX = 5;
+var pxX = W / (X_MAX - X_MIN), pxY = H / (Y_MAX - Y_MIN);
+function sx(x) { return (x - X_MIN) * pxX; }
+function sy(y) { return H - (y - Y_MIN) * pxY; }
+function fx(px) { return px / pxX + X_MIN; }
+function fy(py) { return Y_MAX - py / pxY; }
+var stage = document.getElementById("stage");
+var NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs) { var n = document.createElementNS(NS, tag); for (var k in attrs) n.setAttribute(k, attrs[k]); return n; }
+
+// Fixed mirror y = x. Point P is draggable.
+var P = { step: 0, p: { x: 3, y: -1 } };
+var D = { p: { x: P.p.x, y: P.p.y } };
+var SPRING = 0.22, EPS = 0.0015;
+
+// Reflect (x, y) in line y = x: swap coordinates.
+function reflectYeqX(p) { return { x: p.y, y: p.x }; }
+function foot(p) {
+  // Foot of perpendicular from p onto y = x: ((x+y)/2, (x+y)/2)
+  var s = (p.x + p.y) / 2;
+  return { x: s, y: s };
+}
+
+function svgLine(p, q, color, width, dash, cls) {
+  var attrs = { x1: sx(p.x), y1: sy(p.y), x2: sx(q.x), y2: sy(q.y), stroke: color, "stroke-width": width, "stroke-linecap": "round" };
+  if (dash) attrs["stroke-dasharray"] = dash;
+  if (cls) attrs["class"] = cls;
+  return el("line", attrs);
+}
+function svgCircle(c, r, fill, stroke, strokeWidth, cls) {
+  var attrs = { cx: sx(c.x), cy: sy(c.y), r: r, fill: fill };
+  if (stroke) { attrs.stroke = stroke; attrs["stroke-width"] = strokeWidth || 1; }
+  if (cls) attrs["class"] = cls;
+  var node = el("circle", attrs);
+  if (fill && fill[0] === "#") node.style.color = fill;
+  return node;
+}
+function svgLabel(x, y, text, color, size, anchor) {
+  size = size || 13;
+  var t = el("text", { x: sx(x), y: sy(y), fill: color, "font-family": "'Geist Mono', monospace", "font-size": size, "font-weight": 600, "text-anchor": anchor || "middle", "dominant-baseline": "middle" });
+  t.textContent = text;
+  return t;
+}
+
+var foot_ = document.getElementById("footer");
+var meta = document.getElementById("meta");
+var dotsHost = document.getElementById("dots");
+
+var STEPS = [
+  { footer: "Reflect <b style='color:#00abfa'>P</b> in the mirror <b style='color:#fff067'>y = x</b>. Where does it land?" },
+  { footer: "<b>Draw a line from P to the mirror at a right angle.</b> Where it hits the mirror is called the foot." },
+  { footer: "Measure the distance from <b style='color:#00abfa'>P</b> to the foot. The image <b style='color:#ff4670'>P&prime;</b> is the <b>same distance on the other side</b>." },
+  { footer: "For the mirror y = x, that distance always lands you at the point with the two coordinates <b>swapped</b>: (x, y) → (y, x)." },
+  { footer: "Drag <b style='color:#00abfa'>P</b>. The perpendicular swings with it; <b style='color:#ff4670'>P&prime;</b> stays the same distance on the other side." }
+];
+var TOTAL = STEPS.length;
+
+(function() { for (var i = 0; i < TOTAL; i++) { var d = document.createElement("div"); d.className = "step-dot"; dotsHost.appendChild(d); } })();
+
+var lastDrawStep = -1;
+function draw() {
+  var isStepTransition = (P.step !== lastDrawStep);
+  var fadeCls = isStepTransition ? "pl-fade-in" : "";
+  lastDrawStep = P.step;
+  while (stage.firstChild) stage.removeChild(stage.firstChild);
+
+  var g = el("g", { class: "grid" });
+  for (var x = X_MIN; x <= X_MAX; x++) g.appendChild(el("line", { x1: sx(x), y1: 0, x2: sx(x), y2: H, stroke: x === 0 ? "#243750" : "#141e2a", "stroke-width": x === 0 ? 1 : 0.5 }));
+  for (var y = Y_MIN; y <= Y_MAX; y++) g.appendChild(el("line", { x1: 0, y1: sy(y), x2: W, y2: sy(y), stroke: y === 0 ? "#243750" : "#141e2a", "stroke-width": y === 0 ? 1 : 0.5 }));
+  stage.appendChild(g);
+
+  // Mirror line y = x (full canvas-spanning)
+  stage.appendChild(svgLine({ x: X_MIN, y: X_MIN }, { x: X_MAX, y: X_MAX }, "#fff067", 2, "5 4"));
+  stage.appendChild(svgLabel(X_MAX - 0.6, X_MAX - 0.4, "y = x", "#fff067", 13, "end"));
+
+  var f = foot(D.p);
+  var img = reflectYeqX(D.p);
+
+  // Step 1: perpendicular line from P to foot
+  if (P.step >= 1) {
+    stage.appendChild(svgLine(D.p, f, "#0fee89", 1.6, "3 3", fadeCls));
+    // foot marker
+    stage.appendChild(svgCircle(f, 4.5, "#0fee89", "#0b1118", 1.4, fadeCls));
+    stage.appendChild(svgLabel(f.x + 0.55, f.y - 0.55, "foot", "#0fee89", 11, "start"));
+  }
+  // Step 2: distance label P↔foot, and the same distance from foot to image (still as dashed line)
+  if (P.step >= 2) {
+    var dist = Math.hypot(D.p.x - f.x, D.p.y - f.y);
+    var mid1 = { x: (D.p.x + f.x)/2, y: (D.p.y + f.y)/2 };
+    var perp = { x: mid1.x + 0.55, y: mid1.y };  // small offset for label
+    stage.appendChild(svgLabel(perp.x, perp.y, "d", "#0fee89", 12, "start"));
+    // extend to image
+    stage.appendChild(svgLine(f, img, "#ff4670", 1.6, "3 3", fadeCls));
+    var mid2 = { x: (f.x + img.x)/2, y: (f.y + img.y)/2 };
+    stage.appendChild(svgLabel(mid2.x + 0.55, mid2.y, "d", "#ff4670", 12, "start"));
+  }
+  // Step 3: image point appears
+  if (P.step >= 3) {
+    stage.appendChild(svgCircle(img, 6.5, "#ff4670", "#0b1118", 1.5, fadeCls));
+    stage.appendChild(svgLabel(img.x + 0.45, img.y + 0.45, "P′", "#ff4670", 14, "start"));
+    var ix = Math.round(img.x * 10) / 10, iy = Math.round(img.y * 10) / 10;
+    var fmt2 = function(v) { var r = Math.round(v); return Math.abs(v - r) < 0.05 ? String(r) : v.toFixed(1); };
+    stage.appendChild(svgLabel(img.x + 0.5, img.y - 0.7, "(" + fmt2(img.x) + ", " + fmt2(img.y) + ")", "#ff4670", 11, "start"));
+  }
+
+  // Object point (draggable from step 4)
+  var pcls = P.step >= 4 ? "handle" : "";
+  stage.appendChild(svgCircle(D.p, 6.5, "#00abfa", "#0b1118", 1.5, pcls));
+  stage.appendChild(svgLabel(D.p.x - 0.45, D.p.y - 0.45, "P", "#00abfa", 14, "end"));
+  var px = Math.round(D.p.x * 10) / 10, py = Math.round(D.p.y * 10) / 10;
+  var fmt3 = function(v) { var r = Math.round(v); return Math.abs(v - r) < 0.05 ? String(r) : v.toFixed(1); };
+  stage.appendChild(svgLabel(D.p.x - 0.5, D.p.y + 0.7, "(" + fmt3(D.p.x) + ", " + fmt3(D.p.y) + ")", "#00abfa", 11, "end"));
+
+  meta.textContent = "step " + (P.step + 1) + " of " + TOTAL;
+  foot_.innerHTML = STEPS[P.step].footer;
+  for (var i = 0; i < TOTAL; i++) {
+    var d = dotsHost.children[i];
+    d.classList.toggle("active", i === P.step);
+    d.classList.toggle("done",   i  <  P.step);
+  }
+  document.getElementById("prev").disabled = (P.step === 0);
+  document.getElementById("next").disabled = (P.step === TOTAL - 1);
+  reportHeight();
+}
+
+var raf = null;
+function settled() { return Math.abs(P.p.x - D.p.x) <= EPS && Math.abs(P.p.y - D.p.y) <= EPS; }
+function tick() {
+  D.p.x += (P.p.x - D.p.x) * SPRING; D.p.y += (P.p.y - D.p.y) * SPRING;
+  draw();
+  if (settled()) { D.p.x = P.p.x; D.p.y = P.p.y; raf = null; } else { raf = requestAnimationFrame(tick); }
+}
+function kick() { if (raf == null) raf = requestAnimationFrame(tick); }
+
+var dragging = false;
+function evMath(e) {
+  var rect = stage.getBoundingClientRect();
+  var sxp = (e.clientX - rect.left) * (W / rect.width);
+  var syp = (e.clientY - rect.top)  * (H / rect.height);
+  return { x: fx(sxp), y: fy(syp) };
+}
+function clampPt(p) { return { x: Math.max(X_MIN + 0.4, Math.min(X_MAX - 0.4, p.x)), y: Math.max(Y_MIN + 0.4, Math.min(Y_MAX - 0.4, p.y)) }; }
+
+stage.addEventListener("pointerdown", function(e) {
+  if (P.step < 4) return;
+  var m = evMath(e);
+  if (Math.hypot(m.x - P.p.x, m.y - P.p.y) < 0.55) {
+    dragging = true; stage.classList.add("grabbing"); stage.setPointerCapture(e.pointerId); e.preventDefault();
+  }
+});
+stage.addEventListener("pointermove", function(e) {
+  if (P.step < 4) return;
+  var m = evMath(e);
+  if (dragging) {
+    var t = clampPt(m);
+    // Snap to half-integer so values are tidy.
+    P.p.x = Math.round(t.x * 2) / 2; P.p.y = Math.round(t.y * 2) / 2; kick();
+  } else {
+    stage.classList.toggle("hover-grab", Math.hypot(m.x - P.p.x, m.y - P.p.y) < 0.55);
+  }
+});
+function endDrag(e) { if (dragging) { try { stage.releasePointerCapture(e.pointerId); } catch (_) {} dragging = false; stage.classList.remove("grabbing"); } }
+stage.addEventListener("pointerup", endDrag);
+stage.addEventListener("pointercancel", endDrag);
+
+document.getElementById("prev").addEventListener("click", function() { if (P.step > 0) { P.step--; draw(); } });
+var nextBtn = document.getElementById("next");
+nextBtn.addEventListener("click", function() { nextBtn.classList.remove("primed"); if (P.step < TOTAL - 1) { P.step++; draw(); } });
+
+function syncStageHeight() { var s = document.getElementById("stage"); if (s && s.clientWidth > 0) s.style.height = (s.clientWidth * 320 / 480) + "px"; }
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return; reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false; syncStageHeight();
+    var wrap = document.getElementById("wrap"); if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bp = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bb = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bp + bb);
+    if (Math.abs(h - lastReported) < 3) return; lastReported = h;
+    if (window.parent !== window) window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+  });
+}
+(function() { var qs = new URLSearchParams(location.search); if (qs.get("lessonMode") === "1") { document.body.classList.add("lesson-mode"); document.documentElement.classList.add("lesson-mode"); } })();
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+syncStageHeight();
+draw();
+</script>
+</body>
+</html>
