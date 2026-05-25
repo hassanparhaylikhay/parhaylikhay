@@ -127,7 +127,7 @@
               "content": "<svg viewBox='0 0 100 80' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><circle cx='18' cy='62' r='2.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'/><polygon fill='rgba(0,171,250,0.7)' stroke='#00abfa' stroke-width='1.2'><animate attributeName='points' values='35,55 50,55 42,42; 52,48 82,48 66,18; 52,48 82,48 66,18; 35,55 50,55 42,42' keyTimes='0;0.4;0.6;1' calcMode='spline' keySplines='0.16 1 0.3 1; 0 0 1 1; 0.7 0 0.3 1' dur='4s' repeatCount='indefinite'/></polygon></svg>"
             }
           ],
-          "successText": "Enlargement scales the shape. The image is similar, not congruent.",
+          "successText": "Enlargement is the one that makes the shape bigger or smaller. The new shape is the same shape, just a different size.",
           "revealId": "r-enlarge"
         }
       }
@@ -139,7 +139,7 @@
       "advance": "onSuccess",
       "interaction": {
         "kind": "selectFromOptions",
-        "hint": "Three of these always keep length, angle, and orientation the same.",
+        "hint": "Three of these keep the shape exactly the same size. Only one stretches or shrinks it.",
         "config": {
           "prompt": "Which transformation does NOT change the size of the shape?",
           "options": [
@@ -360,7 +360,7 @@
           "noOutline": true,
           "widget": "translation",
           "prompt": "Slide by $\\begin{pmatrix} 5 \\\\ 0 \\end{pmatrix}$. The image stays at the same height.",
-          "successText": "A zero component means no shift in that direction. Same exam logic."
+          "successText": "A zero on top means no left-right move. A zero on the bottom means no up-down move."
         }
       }
     },
@@ -433,7 +433,7 @@
               "whyWrong": "Top should be $2 + 3 = 5$, not $1$."
             }
           ],
-          "successText": "Top: $2 + 3 = 5$. Bottom: $1 + (-4) = -3$. Two translations always collapse into one."
+          "successText": "Top: $2 + 3 = 5$. Bottom: $1 + (-4) = -3$. Two translations always combine into one."
         }
       }
     },
@@ -793,7 +793,7 @@
       "kind": "concept",
       "title": "After a reflection, orientation reverses",
       "advance": "manual",
-      "prompt": "Lengths and angles stay the same (the image is congruent). But the labelling order flips: clockwise becomes anticlockwise.",
+      "prompt": "Lengths and angles stay exactly the same — the new shape and the old one are identical in size (a maths word for this is congruent). But if you read the labels around the shape they now go the other way: clockwise becomes anticlockwise.",
       "visual": {
         "kind": "html",
         "content": "<div style='display:flex;align-items:center;justify-content:center;gap:24px;font-family:Geist Mono,monospace;font-size:12px'><div style='text-align:center'><svg viewBox='0 0 120 100' style='display:block;width:140px;height:auto;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='20,80 90,80 55,20' fill='rgba(0,171,250,0.5)' stroke='#00abfa' stroke-width='1.5'/><text x='10' y='90' fill='#00abfa' font-family='Geist Mono, monospace' font-size='11'>A</text><text x='95' y='90' fill='#00abfa' font-family='Geist Mono, monospace' font-size='11'>B</text><text x='49' y='15' fill='#00abfa' font-family='Geist Mono, monospace' font-size='11'>C</text></svg><div style='color:#00abfa;margin-top:6px'>object · A→B→C clockwise</div></div><div style='font-size:24px;color:#fff067'>→</div><div style='text-align:center'><svg viewBox='0 0 120 100' style='display:block;width:140px;height:auto;background:#070b10;border-radius:8px;border:1px solid #141e2a' xmlns='http://www.w3.org/2000/svg'><polygon points='100,80 30,80 65,20' fill='rgba(255,70,112,0.5)' stroke='#ff4670' stroke-width='1.5'/><text x='105' y='90' fill='#ff4670' font-family='Geist Mono, monospace' font-size='11'>A&apos;</text><text x='14' y='90' fill='#ff4670' font-family='Geist Mono, monospace' font-size='11'>B&apos;</text><text x='59' y='15' fill='#ff4670' font-family='Geist Mono, monospace' font-size='11'>C&apos;</text></svg><div style='color:#ff4670;margin-top:6px'>image · A&apos;→B&apos;→C&apos; anticlockwise</div></div></div>"
@@ -813,7 +813,7 @@
       "kind": "concept",
       "title": "Rotation: drag the centre, drag the angle",
       "advance": "manual",
-      "prompt": "Three things describe any rotation. A point to spin around, an angle to spin through, and a direction.",
+      "prompt": "Three things describe any rotation: a point to spin around, how far to spin, and which way to spin.",
       "visual": {
         "kind": "iframe",
         "src": "/widgets/rotation-explorer.html?lessonMode=1",
@@ -939,7 +939,7 @@
         "kind": "selectFromOptions",
         "hint": "Where to spin around, how far, which way.",
         "config": {
-          "prompt": "A rotation is fully described by THREE things. They are...",
+          "prompt": "What three things do you need to fully describe a rotation?",
           "options": [
             {
               "id": "opt-a",
@@ -1256,7 +1256,7 @@
           "noOutline": true,
           "widget": "enlargement",
           "prompt": "Scale by $k = 1.5$ from the centre at $(0, 0)$. No pink outline this time.",
-          "successText": "$k = 1.5$. Half again as big as the original."
+          "successText": "$k = 1.5$. One and a half times as big as the original."
         }
       }
     },
@@ -1940,7 +1940,7 @@
       "kind": "concept",
       "title": "You just earned 11 marks of mark-scheme work",
       "advance": "manual",
-      "prompt": "Parts (a), (b), (c) plus a properly-worded rotation answer. That's an 11-mark Cambridge transformation question, worked end-to-end.",
+      "prompt": "Parts (a), (b), (c) plus a properly-worded rotation answer. That's an 11-mark transformation question from the past papers, worked end-to-end.",
       "visual": {
         "kind": "html",
         "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:18px;padding:6px 0'><div style='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>(a) Reflection · B2</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>(b) Rotation · B3</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>(c) Single transformation · B3</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>Bonus · Rotation answer · B3</span></div></div>"
