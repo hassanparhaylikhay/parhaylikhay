@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import katex from "katex"
 import { COLOR, MixedText, type InteractionProps } from "./_shared"
 
 type ScenePoint = { x: number; y: number; color?: string; label?: string; primed?: boolean }
@@ -125,28 +124,47 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
     gridLines.push(<line key={`gy${y}`} x1={px1} y1={py} x2={px2} y2={py} stroke="#141e2a" strokeWidth={0.7} />)
   }
 
-  // tick numbers — same offsets as the widgets' svgKaTeXLabel
-  // (centred 11 px below x-axis, centred 11 px left of y-axis)
+  // Tick numbers — plain SVG <text> in Geist Mono, matching the
+  // transformation explorer widgets. Previously rendered via
+  // foreignObject + KaTeX, which (a) drifted on iOS Safari and
+  // (b) didn't match the widget grids' mono style.
   const ticks: React.ReactElement[] = []
   for (let x = Math.ceil(xMin); x <= Math.floor(xMax); x++) {
     if (x === 0) continue
     const [px, py0] = toPx(x, 0)
-    const fy = py0 + 11 - 11
     ticks.push(
-      <foreignObject key={`tx${x}`} x={px - 50} y={fy} width={100} height={22} style={{ overflow: "visible", pointerEvents: "none" }}>
-        <div style={{ height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Geist Mono',monospace", fontSize: 12, color: COLOR.grey }}
-          dangerouslySetInnerHTML={{ __html: tryKatex(String(x)) }} />
-      </foreignObject>
+      <text
+        key={`tx${x}`}
+        x={px}
+        y={py0 + 11}
+        fontFamily="'Geist Mono', monospace"
+        fontSize={12}
+        fill={COLOR.grey}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        pointerEvents="none"
+      >
+        {String(x)}
+      </text>
     )
   }
   for (let y = Math.ceil(yMin); y <= Math.floor(yMax); y++) {
     if (y === 0) continue
     const [px0, py] = toPx(0, y)
     ticks.push(
-      <foreignObject key={`ty${y}`} x={px0 - 11 - 50} y={py - 11} width={100} height={22} style={{ overflow: "visible", pointerEvents: "none" }}>
-        <div style={{ height: 22, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Geist Mono',monospace", fontSize: 12, color: COLOR.grey }}
-          dangerouslySetInnerHTML={{ __html: tryKatex(String(y)) }} />
-      </foreignObject>
+      <text
+        key={`ty${y}`}
+        x={px0 - 12}
+        y={py}
+        fontFamily="'Geist Mono', monospace"
+        fontSize={12}
+        fill={COLOR.grey}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        pointerEvents="none"
+      >
+        {String(y)}
+      </text>
     )
   }
 
@@ -195,10 +213,19 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
               <g key={`sl${i}`}>
                 <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={col} strokeWidth={1.6} strokeDasharray={l.dashed ? "5 4" : undefined} opacity={0.85} />
                 {l.label && (
-                  <foreignObject x={mx - 50} y={my - 30} width={100} height={20} style={{ overflow: "visible", pointerEvents: "none" }}>
-                    <div style={{ height: 20, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Geist Mono',monospace", fontSize: 12, fontWeight: 600, color: col }}
-                      dangerouslySetInnerHTML={{ __html: tryKatex(l.label) }} />
-                  </foreignObject>
+                  <text
+                    x={mx}
+                    y={my - 20}
+                    fontFamily="'Geist Mono', monospace"
+                    fontSize={12}
+                    fontWeight={600}
+                    fill={col}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    pointerEvents="none"
+                  >
+                    {l.label}
+                  </text>
                 )}
               </g>
             )
@@ -214,10 +241,19 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
                   {p.primed && <animate attributeName="r" values="4;6;4" dur="1.8s" repeatCount="indefinite" />}
                 </circle>
                 {p.label && (
-                  <foreignObject x={px - 50 + 14} y={py - 11 - 10} width={100} height={22} style={{ overflow: "visible", pointerEvents: "none" }}>
-                    <div style={{ height: 22, display: "flex", alignItems: "center", justifyContent: "flex-start", fontFamily: "'Geist Mono',monospace", fontSize: 12, fontWeight: 600, color: col }}
-                      dangerouslySetInnerHTML={{ __html: tryKatex(p.label) }} />
-                  </foreignObject>
+                  <text
+                    x={px + 10}
+                    y={py - 10}
+                    fontFamily="'Geist Mono', monospace"
+                    fontSize={12}
+                    fontWeight={600}
+                    fill={col}
+                    textAnchor="start"
+                    dominantBaseline="middle"
+                    pointerEvents="none"
+                  >
+                    {p.label}
+                  </text>
                 )}
               </g>
             )
@@ -297,10 +333,3 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
   )
 }
 
-function tryKatex(tex: string): string {
-  try {
-    return katex.renderToString(tex, { throwOnError: false, displayMode: false, output: "html" })
-  } catch {
-    return tex
-  }
-}
