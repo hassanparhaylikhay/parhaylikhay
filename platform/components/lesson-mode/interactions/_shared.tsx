@@ -172,28 +172,48 @@ export function ReadoutPanel({ readout, solved }: { readout: { label: string; te
       if (ref.current) ref.current.textContent = readout.tex
     }
   }, [readout])
-  if (!readout) return null
+  // ALWAYS render the container with reserved height. Before, this returned
+  // null until the widget posted pl-lesson-readout (~200ms after the iframe
+  // loaded) — and when the panel suddenly mounted, the aside's
+  // justify-center recomputed and the title + prompt above shifted up
+  // visibly. With the container always present at min-height 88, the
+  // layout never moves; the border + content just fade in when the
+  // readout arrives.
+  const hasReadout = !!readout
   return (
     <div
-      className="rounded-lg border px-4 py-3 transition-colors duration-300"
+      className="rounded-lg border px-4 py-3 transition-all duration-300"
       style={{
-        borderColor: solved ? "rgba(15,238,137,0.45)" : COLOR.border,
-        background: solved ? "rgba(15,238,137,0.05)" : "transparent",
+        borderColor: hasReadout ? (solved ? "rgba(15,238,137,0.45)" : COLOR.border) : "transparent",
+        background: hasReadout ? (solved ? "rgba(15,238,137,0.05)" : "transparent") : "transparent",
         overflowWrap: "anywhere",
         wordBreak: "break-word",
+        minHeight: 88,
+        transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
-      <p
-        className="text-[10.5px] font-mono uppercase tracking-[2px] mb-1.5"
-        style={{ color: solved ? COLOR.green : COLOR.yellow }}
-      >
-        {readout.label}
-      </p>
       <div
-        ref={ref}
-        className="text-[15px] sm:text-[16px] leading-relaxed"
-        style={{ color: solved ? COLOR.green : COLOR.white, whiteSpace: "normal" }}
-      />
+        style={{
+          opacity: hasReadout ? 1 : 0,
+          transition: "opacity 360ms cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+      >
+        {hasReadout && (
+          <>
+            <p
+              className="text-[10.5px] font-mono uppercase tracking-[2px] mb-1.5"
+              style={{ color: solved ? COLOR.green : COLOR.yellow }}
+            >
+              {readout.label}
+            </p>
+            <div
+              ref={ref}
+              className="text-[15px] sm:text-[16px] leading-relaxed"
+              style={{ color: solved ? COLOR.green : COLOR.white, whiteSpace: "normal" }}
+            />
+          </>
+        )}
+      </div>
     </div>
   )
 }
