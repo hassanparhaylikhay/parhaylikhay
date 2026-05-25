@@ -143,9 +143,10 @@ export default function SlideFrame({
           {showExplainAgain && onExplainAgain && (
             <button
               onClick={onExplainAgain}
-              className="text-[11px] font-mono text-[#3a4a5a] hover:text-[#7a7875] transition-colors"
+              className="text-[12px] sm:text-[12.5px] font-mono uppercase tracking-[1.5px] text-[#fff067] hover:text-[#f0eeea] hover:bg-[#fff06714] transition-all duration-300 px-3 py-1.5 rounded-md border border-[#fff06744] bg-[#fff06708] pl-fade-in"
+              style={{ transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
             >
-              explain another way
+              explain another way →
             </button>
           )}
         </div>

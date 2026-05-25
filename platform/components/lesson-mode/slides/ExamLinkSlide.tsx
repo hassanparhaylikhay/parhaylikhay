@@ -15,11 +15,13 @@ export default function ExamLinkSlide({
   onComplete,
   onAdvance,
   savedData,
+  onShowMeUsed,
 }: {
   slide: ExamLinkSlideT
   onComplete: (data?: Record<string, unknown>) => void
   onAdvance?: () => void
   savedData?: Record<string, unknown>
+  onShowMeUsed?: () => void
 }) {
   // Suppress unused — non-interaction examLink doesn't need onAdvance yet.
   void onAdvance
@@ -47,6 +49,7 @@ export default function ExamLinkSlide({
           } as InteractionSlideT}
           onComplete={onComplete}
           savedData={savedData}
+          onShowMeUsed={onShowMeUsed}
         />
       ) : (
         <>

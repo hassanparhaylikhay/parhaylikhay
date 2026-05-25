@@ -23,6 +23,11 @@ export default function LessonRunner({ lesson }: Props) {
   const [progress, setProgress] = useState<LessonProgress | null>(null)
   const [hydrated, setHydrated] = useState(false)
   const [showAlt, setShowAlt] = useState(false)
+  // Tracks whether the student has tapped "show me a hint" on the current slide.
+  // The more prominent "explain another way" link only appears once they have —
+  // so it surfaces as the natural next step after a hint, not before the student
+  // has even tried.
+  const [showMeUsed, setShowMeUsed] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -62,6 +67,7 @@ export default function LessonRunner({ lesson }: Props) {
       return
     }
     setShowAlt(false)
+    setShowMeUsed(false)
     const nextIdx = idx + 1
     setIdx(nextIdx)
     if (progress) persist({ ...progress, currentSlideIdx: nextIdx })
@@ -70,10 +76,13 @@ export default function LessonRunner({ lesson }: Props) {
   const goPrev = useCallback(() => {
     if (idx <= 0) return
     setShowAlt(false)
+    setShowMeUsed(false)
     const prevIdx = idx - 1
     setIdx(prevIdx)
     if (progress) persist({ ...progress, currentSlideIdx: prevIdx })
   }, [idx, progress, persist])
+
+  const handleShowMeUsed = useCallback(() => setShowMeUsed(true), [])
 
   const markComplete = useCallback((data?: Record<string, unknown>) => {
     if (!progress || !slide) return
@@ -112,7 +121,7 @@ export default function LessonRunner({ lesson }: Props) {
         title={slide.title ?? lesson.title}
         canAdvance={canAdvance}
         wide={wide}
-        showExplainAgain={Boolean(slide.altExplain) && !showAlt}
+        showExplainAgain={Boolean(slide.altExplain) && showMeUsed && !showAlt}
         hintText={getHint(slide)}
         exitHref={exitHref}
         onPrev={goPrev}
@@ -125,6 +134,7 @@ export default function LessonRunner({ lesson }: Props) {
           onAdvance={goNext}
           canAdvance={canAdvance}
           savedData={slideState?.data}
+          onShowMeUsed={handleShowMeUsed}
         />
       </SlideFrame>
     </>
@@ -153,12 +163,14 @@ function SlideDispatcher({
   onAdvance,
   canAdvance,
   savedData,
+  onShowMeUsed,
 }: {
   slide: Slide
   onComplete: (data?: Record<string, unknown>) => void
   onAdvance: () => void
   canAdvance: boolean
   savedData?: Record<string, unknown>
+  onShowMeUsed?: () => void
 }) {
   switch (slide.kind) {
     case "hook":
@@ -167,11 +179,11 @@ function SlideDispatcher({
       return <ConceptSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} canAdvance={canAdvance} />
     case "interaction":
     case "verify":
-      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} />
+      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} />
     case "recap":
       return <RecapSlide slide={slide} onAdvance={onAdvance} />
     case "examLink":
-      return <ExamLinkSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} />
+      return <ExamLinkSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} />
   }
 }
 

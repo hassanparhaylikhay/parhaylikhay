@@ -29,15 +29,17 @@ export type SelectFromOptionsConfig = {
  * SelectFromOptions — pick one card from N. Cards can show math, prose, or a
  * tiny diagram. Wrong card shakes + shows whyWrong; correct card pulses green.
  */
-export default function SelectFromOptions({ config, onComplete }: InteractionProps<SelectFromOptionsConfig>) {
+export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: InteractionProps<SelectFromOptionsConfig>) {
   const [picked, setPicked] = useState<string | null>(null)
   const [shakeId, setShakeId] = useState<string | null>(null)
+  const [eliminated, setEliminated] = useState<Set<string>>(new Set())
 
   const correct = config.options.find(o => o.isCorrect)
   const isResolved = picked !== null && picked === correct?.id
 
   function pick(id: string) {
     if (isResolved) return
+    if (eliminated.has(id)) return
     const o = config.options.find(x => x.id === id)
     if (!o) return
     setPicked(id)
@@ -45,8 +47,23 @@ export default function SelectFromOptions({ config, onComplete }: InteractionPro
       onComplete({ pickedId: id })
     } else {
       setShakeId(id)
-      setTimeout(() => setShakeId(null), 240)
+      setTimeout(() => setShakeId(null), 400)
     }
+  }
+
+  function showMe() {
+    if (isResolved) return
+    const wrongLeft = config.options.filter(o => !o.isCorrect && !eliminated.has(o.id))
+    if (wrongLeft.length === 0) return
+    const toRemove = wrongLeft[0]
+    setEliminated(prev => {
+      const s = new Set(prev)
+      s.add(toRemove.id)
+      return s
+    })
+    // Clear any "wrong pick" state so the eliminated option isn't double-styled.
+    if (picked === toRemove.id) setPicked(null)
+    onShowMeUsed?.()
   }
 
   const wrongPick = picked && !isResolved ? config.options.find(o => o.id === picked) : null
@@ -68,21 +85,25 @@ export default function SelectFromOptions({ config, onComplete }: InteractionPro
           const isCorrectPick = isThisPicked && o.isCorrect
           const isWrongPick = isThisPicked && !o.isCorrect
           const isShakingThis = shakeId === o.id
+          const isEliminated = eliminated.has(o.id)
           return (
             <button
               key={o.id}
               onClick={() => pick(o.id)}
-              disabled={isResolved && !isCorrectPick}
+              disabled={(isResolved && !isCorrectPick) || isEliminated}
               className={`text-left rounded-xl border transition-all duration-300 px-4 py-3 sm:px-5 sm:py-4 ${isShakingThis ? "pl-shake" : ""} ${isCorrectPick ? "pl-success-pulse" : ""}`}
               style={{
-                borderColor: isCorrectPick ? COLOR.green : isWrongPick ? COLOR.pink : COLOR.border,
+                borderColor: isCorrectPick ? COLOR.green : isWrongPick ? COLOR.pink : isEliminated ? "#2a2a2a" : COLOR.border,
                 background: isCorrectPick
                   ? "rgba(15,238,137,0.06)"
                   : isWrongPick
                   ? "rgba(255,70,112,0.04)"
                   : COLOR.card,
-                cursor: isResolved && !isCorrectPick ? "default" : "pointer",
-                opacity: isResolved && !isCorrectPick ? 0.4 : 1,
+                cursor: (isResolved && !isCorrectPick) || isEliminated ? "default" : "pointer",
+                opacity: isEliminated ? 0.28 : (isResolved && !isCorrectPick ? 0.4 : 1),
+                textDecoration: isEliminated ? "line-through" : undefined,
+                textDecorationColor: isEliminated ? COLOR.faint : undefined,
+                textDecorationThickness: isEliminated ? "1.5px" : undefined,
               }}
             >
               {o.visualHtml && (
@@ -90,7 +111,7 @@ export default function SelectFromOptions({ config, onComplete }: InteractionPro
               )}
               <OptionText
                 text={o.text}
-                color={isCorrectPick ? COLOR.green : isWrongPick ? COLOR.pink : COLOR.text}
+                color={isCorrectPick ? COLOR.green : isWrongPick ? COLOR.pink : isEliminated ? COLOR.faint : COLOR.text}
               />
             </button>
           )
@@ -111,15 +132,16 @@ export default function SelectFromOptions({ config, onComplete }: InteractionPro
       )}
 
       <HelperRow
+        showMeLabel={
+          eliminated.size === 0
+            ? "show me a hint"
+            : eliminated.size < (config.options.length - 1)
+            ? "narrow it down further"
+            : "show me a hint"
+        }
         onShowMe={
-          !isResolved
-            ? () => {
-                const correctId = correct?.id
-                if (correctId) {
-                  setPicked(correctId)
-                  onComplete({ revealed: true, pickedId: correctId })
-                }
-              }
+          !isResolved && eliminated.size < (config.options.length - 1)
+            ? showMe
             : undefined
         }
       />

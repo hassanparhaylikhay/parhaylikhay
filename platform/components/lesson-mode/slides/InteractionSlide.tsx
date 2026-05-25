@@ -28,11 +28,13 @@ export default function InteractionSlide({
   onComplete,
   onAdvance,
   savedData,
+  onShowMeUsed,
 }: {
   slide: InteractionSlideT
   onComplete: (data?: Record<string, unknown>) => void
   onAdvance?: () => void
   savedData?: Record<string, unknown>
+  onShowMeUsed?: () => void
 }) {
   const inj = slide.interaction
   const baseConfig = { ...(inj.config as Record<string, unknown>), prompt: (inj.config as Record<string, unknown>).prompt ?? slide.prompt }
@@ -40,18 +42,18 @@ export default function InteractionSlide({
   return (
     <div className="w-full flex flex-col items-center">
       {(() => {
-        const baseProps = { config: baseConfig, onComplete, savedData }
+        const baseProps = { config: baseConfig, onComplete, savedData, onShowMeUsed }
         const advProps = { ...baseProps, onAdvance }
         switch (inj.kind) {
-          case "clickToIdentify":     return <ClickToIdentify     {...(baseProps as { config: ClickToIdentifyConfig;     onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
-          case "dragToPosition":      return <DragToPosition      {...(baseProps as { config: DragToPositionConfig;      onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
-          case "manipulateAndVerify": return <ManipulateAndVerify {...(baseProps as { config: ManipulateAndVerifyConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
-          case "selectFromOptions":   return <SelectFromOptions   {...(baseProps as { config: SelectFromOptionsConfig;   onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
-          case "placeLabel":          return <PlaceLabel          {...(baseProps as { config: PlaceLabelConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
-          case "orderSteps":          return <OrderSteps          {...(baseProps as { config: OrderStepsConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
-          case "adjustSlider":        return <AdjustSlider        {...(baseProps as { config: AdjustSliderConfig;        onComplete: typeof onComplete; savedData?: Record<string, unknown> })} />
-          case "widgetCanvas":        return <WidgetCanvas        {...(advProps as { config: WidgetCanvasConfig;        onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown> })} />
-          case "clickOnGrid":         return <ClickOnGrid         {...(advProps as { config: ClickOnGridConfig;         onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown> })} />
+          case "clickToIdentify":     return <ClickToIdentify     {...(baseProps as { config: ClickToIdentifyConfig;     onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "dragToPosition":      return <DragToPosition      {...(baseProps as { config: DragToPositionConfig;      onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "manipulateAndVerify": return <ManipulateAndVerify {...(baseProps as { config: ManipulateAndVerifyConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "selectFromOptions":   return <SelectFromOptions   {...(baseProps as { config: SelectFromOptionsConfig;   onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "placeLabel":          return <PlaceLabel          {...(baseProps as { config: PlaceLabelConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "orderSteps":          return <OrderSteps          {...(baseProps as { config: OrderStepsConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "adjustSlider":        return <AdjustSlider        {...(baseProps as { config: AdjustSliderConfig;        onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "widgetCanvas":        return <WidgetCanvas        {...(advProps as { config: WidgetCanvasConfig;        onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "clickOnGrid":         return <ClickOnGrid         {...(advProps as { config: ClickOnGridConfig;         onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
         }
       })()}
     </div>

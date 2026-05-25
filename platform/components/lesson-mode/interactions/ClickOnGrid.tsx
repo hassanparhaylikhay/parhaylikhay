@@ -28,11 +28,11 @@ export type ClickOnGridConfig = {
  */
 type ClickOnGridProps = InteractionProps<ClickOnGridConfig> & { onAdvance?: () => void }
 
-export default function ClickOnGrid({ config, onComplete, onAdvance }: ClickOnGridProps) {
+export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUsed }: ClickOnGridProps) {
   const [pick, setPick] = useState<{ x: number; y: number; correct: boolean } | null>(null)
   const [done, setDone] = useState(false)
   const [wrongFlashId, setWrongFlashId] = useState(0)
-  const [revealed, setRevealed] = useState(false)
+  const [hintShown, setHintShown] = useState(false)
   const svgRef = useRef<SVGSVGElement | null>(null)
   const colRef = useRef<HTMLDivElement | null>(null)
 
@@ -237,13 +237,16 @@ export default function ClickOnGrid({ config, onComplete, onAdvance }: ClickOnGr
             )
           })()}
 
-          {/* show-me reveal */}
-          {revealed && !pick && (() => {
+          {/* show-me hint — a soft yellow ring near the target. Doesn't
+              complete the slide. Student still has to tap the right cell. */}
+          {hintShown && !pick && (() => {
             const [px, py] = toPx(config.target.x, config.target.y)
             return (
-              <circle cx={px} cy={py} r={9} fill="none" stroke={COLOR.green} strokeWidth={1.8} strokeDasharray="4 4">
-                <animate attributeName="r" values="7;11;7" dur="1.5s" repeatCount="indefinite" />
-              </circle>
+              <g>
+                <circle cx={px} cy={py} r={u * 0.85} fill="rgba(255,240,103,0.06)" stroke={COLOR.yellow} strokeWidth={1.4} strokeDasharray="4 4" opacity="0.85">
+                  <animate attributeName="r" values={`${u * 0.75};${u * 0.95};${u * 0.75}`} dur="1.8s" repeatCount="indefinite" />
+                </circle>
+              </g>
             )
           })()}
         </svg>
@@ -276,13 +279,18 @@ export default function ClickOnGrid({ config, onComplete, onAdvance }: ClickOnGr
             style={{ color: done ? COLOR.green : COLOR.text }}
           />
         </div>
-        {!done && (
+        {!done && !hintShown && (
           <button
-            onClick={() => { setRevealed(true); setDone(true); onComplete({ revealed: true }) }}
+            onClick={() => { setHintShown(true); onShowMeUsed?.() }}
             className="self-start text-[11px] font-mono text-[#3a4a5a] hover:text-[#7a7875] transition-colors"
           >
-            show me
+            show me a hint
           </button>
+        )}
+        {!done && hintShown && (
+          <p className="self-start text-[11px] font-mono text-[#7a7875]">
+            ring marks the answer area · tap to confirm
+          </p>
         )}
       </aside>
     </div>

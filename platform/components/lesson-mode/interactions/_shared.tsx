@@ -11,6 +11,12 @@ export type InteractionProps<Config = Record<string, unknown>> = {
   config: Config
   savedData?: Record<string, unknown>
   onComplete: (data?: Record<string, unknown>) => void
+  /**
+   * Signal up to LessonRunner that the student tapped "show me". Used to gate
+   * the more-prominent "explain another way" surface so it only appears once
+   * the student has admitted they're stuck.
+   */
+  onShowMeUsed?: () => void
 }
 
 /** Brand colours, single source of truth across all interactions. */
@@ -200,7 +206,7 @@ export function useShake() {
   const [shaking, setShaking] = useState(false)
   function fire() {
     setShaking(true)
-    setTimeout(() => setShaking(false), 220)
+    setTimeout(() => setShaking(false), 380)
   }
   return [shaking, fire] as const
 }
@@ -237,12 +243,11 @@ export function useSpring(target: number, factor = 0.22, eps = 0.001): number {
 export const interactionStyles = `
 @keyframes pl-shake {
   0%, 100% { transform: translateX(0); }
-  20% { transform: translateX(-4px); }
-  40% { transform: translateX(4px); }
-  60% { transform: translateX(-3px); }
-  80% { transform: translateX(3px); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-1.5px); }
 }
-.pl-shake { animation: pl-shake 220ms ease-in-out; }
+.pl-shake { animation: pl-shake 380ms cubic-bezier(0.16, 1, 0.3, 1); }
 
 @keyframes pl-success-pulse {
   0%   { box-shadow: 0 0 0 0 rgba(15,238,137,0.45); }
