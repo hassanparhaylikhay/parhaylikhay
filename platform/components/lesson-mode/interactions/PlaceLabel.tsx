@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import katex from "katex"
-import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, HelperRow, MixedText, ContextCanvas, type InteractionProps } from "./_shared"
 
 type Slot = {
   id: string
@@ -106,104 +106,131 @@ export default function PlaceLabel({ config, onComplete }: InteractionProps<Plac
     setPlacement(next)
   }
 
+  const wide = !!config.contextHtml
+
+  const slotRow = (
+    <div className={
+      wide
+        ? "flex flex-col gap-2 w-full"
+        : `flex ${config.slotsLayout === "column" ? "flex-col gap-2" : "flex-wrap gap-3 sm:gap-4 justify-center"} mb-7 max-w-[760px]`
+    }>
+      {config.slots.map(s => {
+        const filledId = placement[s.id]
+        const filledLabel = config.labels.find(l => l.id === filledId)
+        const isCorrect = filledId === s.correctLabelId
+        const hasVisual = !!s.visualHtml
+        return (
+          <div
+            key={s.id}
+            ref={el => { slotRefs.current[s.id] = el }}
+            className={`relative rounded-xl border-[1.5px] flex flex-col items-center justify-end px-2 pt-2 pb-1.5 transition-all duration-300 ${isCorrect ? "pl-success-pulse" : ""} ${hasVisual ? "w-[140px] sm:w-[160px]" : wide ? "w-full h-12 justify-center" : "min-w-[120px] sm:min-w-[140px] h-12 sm:h-14 justify-center"}`}
+            style={{
+              borderColor: isCorrect ? COLOR.green : COLOR.border,
+              borderStyle: filledLabel ? "solid" : "dashed",
+              background: isCorrect ? "rgba(15,238,137,0.06)" : COLOR.card,
+            }}
+          >
+            {hasVisual && (
+              <div className="w-full mb-2" dangerouslySetInnerHTML={{ __html: s.visualHtml! }} />
+            )}
+            <div
+              className={`w-full flex items-center justify-center ${hasVisual ? "h-9 rounded border-[1px] border-dashed" : ""}`}
+              style={hasVisual ? { borderColor: isCorrect ? COLOR.green : "#1a3350" } : undefined}
+            >
+              {filledLabel ? (
+                <LabelText text={filledLabel.text} color={isCorrect ? COLOR.green : COLOR.text} />
+              ) : (
+                <span className="text-[11px] font-mono uppercase tracking-wider" style={{ color: COLOR.faint }}>
+                  {s.hint}
+                </span>
+              )}
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+
+  const tray = (
+    <div className={`flex flex-wrap ${wide ? "gap-2 mt-1" : "gap-2 sm:gap-3"} justify-center min-h-[52px]`}>
+      {trayLabels.map(l => {
+        const isDragging = dragLabelId === l.id
+        const isShaking = shakeLabelId === l.id
+        return (
+          <div
+            key={l.id}
+            onPointerDown={e => pickup(e, l.id)}
+            onPointerMove={move}
+            onPointerUp={e => drop(e, l.id)}
+            onPointerCancel={e => drop(e, l.id)}
+            className={`h-11 sm:h-12 px-4 rounded-lg border-[1.5px] flex items-center cursor-grab active:cursor-grabbing select-none touch-none transition-opacity duration-200 ${isShaking ? "pl-shake" : ""}`}
+            style={{
+              borderColor: COLOR.blue,
+              background: "rgba(0,171,250,0.06)",
+              opacity: isDragging ? 0.3 : 1,
+            }}
+          >
+            <LabelText text={l.text} color={COLOR.blue} />
+          </div>
+        )
+      })}
+    </div>
+  )
+
+  const successBlock = done && config.successText && (
+    <MixedText
+      text={config.successText}
+      className={wide
+        ? "block text-[15px] sm:text-[16px] text-[#0fee89] pl-reveal leading-relaxed"
+        : "mt-6 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"}
+    />
+  )
+
+  const ghost = dragLabelId && dragPos && (
+    <div
+      className="fixed pointer-events-none z-50 h-11 sm:h-12 px-4 rounded-lg border-[1.5px] flex items-center"
+      style={{
+        left: dragPos.x - 60,
+        top: dragPos.y - 22,
+        borderColor: COLOR.blue,
+        background: COLOR.card,
+        boxShadow: "0 6px 20px -8px rgba(0,171,250,0.6)",
+      }}
+    >
+      <LabelText text={config.labels.find(l => l.id === dragLabelId)?.text ?? ""} color={COLOR.blue} />
+    </div>
+  )
+
+  if (wide) {
+    return (
+      <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
+        <div className="flex-1 min-w-0 flex items-center justify-center">
+          <ContextCanvas html={config.contextHtml!} asideWidth={360} />
+        </div>
+        <aside className="pl-stagger w-full xl:w-[360px] shrink-0 flex flex-col gap-3 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
+          {config.prompt && (
+            <MixedText
+              text={config.prompt}
+              className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full mb-1"
+            />
+          )}
+          {slotRow}
+          {tray}
+          {successBlock}
+          <HelperRow onShowMe={!done ? showMe : undefined} />
+        </aside>
+        {ghost}
+      </div>
+    )
+  }
+
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
-
-      {config.contextHtml && (
-        <div
-          className="mb-7 w-full max-w-[720px] rounded-xl overflow-hidden"
-          style={{ background: COLOR.card, border: `1px solid ${COLOR.border}` }}
-          dangerouslySetInnerHTML={{ __html: config.contextHtml }}
-        />
-      )}
-
-      {/* Slot row */}
-      <div className={`flex ${config.slotsLayout === "column" ? "flex-col gap-2" : "flex-wrap gap-3 sm:gap-4 justify-center"} mb-7 max-w-[760px]`}>
-        {config.slots.map(s => {
-          const filledId = placement[s.id]
-          const filledLabel = config.labels.find(l => l.id === filledId)
-          const isCorrect = filledId === s.correctLabelId
-          const hasVisual = !!s.visualHtml
-          return (
-            <div
-              key={s.id}
-              ref={el => { slotRefs.current[s.id] = el }}
-              className={`relative rounded-xl border-[1.5px] flex flex-col items-center justify-end px-2 pt-2 pb-1.5 transition-all duration-300 ${isCorrect ? "pl-success-pulse" : ""} ${hasVisual ? "w-[140px] sm:w-[160px]" : "min-w-[120px] sm:min-w-[140px] h-12 sm:h-14 justify-center"}`}
-              style={{
-                borderColor: isCorrect ? COLOR.green : COLOR.border,
-                borderStyle: filledLabel ? "solid" : "dashed",
-                background: isCorrect ? "rgba(15,238,137,0.06)" : COLOR.card,
-              }}
-            >
-              {hasVisual && (
-                <div className="w-full mb-2" dangerouslySetInnerHTML={{ __html: s.visualHtml! }} />
-              )}
-              <div
-                className={`w-full flex items-center justify-center ${hasVisual ? "h-9 rounded border-[1px] border-dashed" : ""}`}
-                style={hasVisual ? { borderColor: isCorrect ? COLOR.green : "#1a3350" } : undefined}
-              >
-                {filledLabel ? (
-                  <LabelText text={filledLabel.text} color={isCorrect ? COLOR.green : COLOR.text} />
-                ) : (
-                  <span className="text-[11px] font-mono uppercase tracking-wider" style={{ color: COLOR.faint }}>
-                    {s.hint}
-                  </span>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Label tray */}
-      <div className="flex flex-wrap gap-2 sm:gap-3 justify-center min-h-[52px]">
-        {trayLabels.map(l => {
-          const isDragging = dragLabelId === l.id
-          const isShaking = shakeLabelId === l.id
-          return (
-            <div
-              key={l.id}
-              onPointerDown={e => pickup(e, l.id)}
-              onPointerMove={move}
-              onPointerUp={e => drop(e, l.id)}
-              onPointerCancel={e => drop(e, l.id)}
-              className={`h-11 sm:h-12 px-4 rounded-lg border-[1.5px] flex items-center cursor-grab active:cursor-grabbing select-none touch-none transition-opacity duration-200 ${isShaking ? "pl-shake" : ""}`}
-              style={{
-                borderColor: COLOR.blue,
-                background: "rgba(0,171,250,0.06)",
-                opacity: isDragging ? 0.3 : 1,
-              }}
-            >
-              <LabelText text={l.text} color={COLOR.blue} />
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Ghost while dragging */}
-      {dragLabelId && dragPos && (
-        <div
-          className="fixed pointer-events-none z-50 h-11 sm:h-12 px-4 rounded-lg border-[1.5px] flex items-center"
-          style={{
-            left: dragPos.x - 60,
-            top: dragPos.y - 22,
-            borderColor: COLOR.blue,
-            background: COLOR.card,
-            boxShadow: "0 6px 20px -8px rgba(0,171,250,0.6)",
-          }}
-        >
-          <LabelText text={config.labels.find(l => l.id === dragLabelId)?.text ?? ""} color={COLOR.blue} />
-        </div>
-      )}
-
-      {done && config.successText && (
-        <MixedText
-          text={config.successText}
-          className="mt-6 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"
-        />
-      )}
-
+      {slotRow}
+      {tray}
+      {ghost}
+      {successBlock}
       <HelperRow onShowMe={!done ? showMe : undefined} />
     </div>
   )

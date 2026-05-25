@@ -147,11 +147,11 @@ function isWideSlide(slide: Slide): boolean {
   if (slide.kind === "interaction" || slide.kind === "verify") {
     const k = slide.interaction?.kind ?? ""
     if (WIDE_INTERACTION_KINDS.has(k)) return true
-    // selectFromOptions slides with a contextHtml render the diagram as
-    // a big manipulative canvas on the left + options column on the
-    // right — same shape as widgetCanvas. Mark them wide so the slide
-    // frame uses the 1200px max-width.
-    if (k === "selectFromOptions") {
+    // selectFromOptions and placeLabel slides with a contextHtml render
+    // the diagram as a big manipulative canvas on the left + controls on
+    // the right — same shape as widgetCanvas. Mark them wide so the slide
+    // frame uses the 1200px max-width and the user never needs to scroll.
+    if (k === "selectFromOptions" || k === "placeLabel") {
       const ctx = (slide.interaction?.config as { contextHtml?: string } | undefined)?.contextHtml
       if (ctx) return true
     }
