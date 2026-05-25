@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import katex from "katex"
-import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, ContextCanvas, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Option = {
   id: string
@@ -68,83 +68,112 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
 
   const wrongPick = picked && !isResolved ? config.options.find(o => o.id === picked) : null
   const isRow = config.layout === "row"
+  const wide = !!config.contextHtml
 
-  return (
-    <div className="w-full flex flex-col items-center">
-      <Prompt>{config.prompt}</Prompt>
-
-      {config.contextHtml && (
-        <div className="mb-6 max-w-[560px]" dangerouslySetInnerHTML={{ __html: config.contextHtml }} />
-      )}
-
-      <div
-        className={isRow ? "flex flex-wrap gap-3 justify-center max-w-[760px]" : "flex flex-col gap-3 w-full max-w-[560px]"}
+  const optionButtons = config.options.map(o => {
+    const isThisPicked = picked === o.id
+    const isCorrectPick = isThisPicked && o.isCorrect
+    const isWrongPick = isThisPicked && !o.isCorrect
+    const isShakingThis = shakeId === o.id
+    const isEliminated = eliminated.has(o.id)
+    return (
+      <button
+        key={o.id}
+        onClick={() => pick(o.id)}
+        disabled={(isResolved && !isCorrectPick) || isEliminated}
+        className={`text-left rounded-xl border transition-all duration-300 px-4 py-3 sm:px-5 sm:py-3.5 ${isShakingThis ? "pl-shake" : ""} ${isCorrectPick ? "pl-success-pulse" : ""}`}
+        style={{
+          borderColor: isCorrectPick ? COLOR.green : isWrongPick ? COLOR.pink : isEliminated ? "#2a2a2a" : COLOR.border,
+          background: isCorrectPick
+            ? "rgba(15,238,137,0.06)"
+            : isWrongPick
+            ? "rgba(255,70,112,0.04)"
+            : COLOR.card,
+          cursor: (isResolved && !isCorrectPick) || isEliminated ? "default" : "pointer",
+          opacity: isEliminated ? 0.28 : (isResolved && !isCorrectPick ? 0.4 : 1),
+          textDecoration: isEliminated ? "line-through" : undefined,
+          textDecorationColor: isEliminated ? COLOR.faint : undefined,
+          textDecorationThickness: isEliminated ? "1.5px" : undefined,
+        }}
       >
-        {config.options.map(o => {
-          const isThisPicked = picked === o.id
-          const isCorrectPick = isThisPicked && o.isCorrect
-          const isWrongPick = isThisPicked && !o.isCorrect
-          const isShakingThis = shakeId === o.id
-          const isEliminated = eliminated.has(o.id)
-          return (
-            <button
-              key={o.id}
-              onClick={() => pick(o.id)}
-              disabled={(isResolved && !isCorrectPick) || isEliminated}
-              className={`text-left rounded-xl border transition-all duration-300 px-4 py-3 sm:px-5 sm:py-4 ${isShakingThis ? "pl-shake" : ""} ${isCorrectPick ? "pl-success-pulse" : ""}`}
-              style={{
-                borderColor: isCorrectPick ? COLOR.green : isWrongPick ? COLOR.pink : isEliminated ? "#2a2a2a" : COLOR.border,
-                background: isCorrectPick
-                  ? "rgba(15,238,137,0.06)"
-                  : isWrongPick
-                  ? "rgba(255,70,112,0.04)"
-                  : COLOR.card,
-                cursor: (isResolved && !isCorrectPick) || isEliminated ? "default" : "pointer",
-                opacity: isEliminated ? 0.28 : (isResolved && !isCorrectPick ? 0.4 : 1),
-                textDecoration: isEliminated ? "line-through" : undefined,
-                textDecorationColor: isEliminated ? COLOR.faint : undefined,
-                textDecorationThickness: isEliminated ? "1.5px" : undefined,
-              }}
-            >
-              {o.visualHtml && (
-                <div className="mb-2" dangerouslySetInnerHTML={{ __html: o.visualHtml }} />
-              )}
-              <OptionText
-                text={o.text}
-                color={isCorrectPick ? COLOR.green : isWrongPick ? COLOR.pink : isEliminated ? COLOR.faint : COLOR.text}
-              />
-            </button>
-          )
-        })}
-      </div>
+        {o.visualHtml && (
+          <div className="mb-2" dangerouslySetInnerHTML={{ __html: o.visualHtml }} />
+        )}
+        <OptionText
+          text={o.text}
+          color={isCorrectPick ? COLOR.green : isWrongPick ? COLOR.pink : isEliminated ? COLOR.faint : COLOR.text}
+        />
+      </button>
+    )
+  })
 
+  const feedback = (
+    <>
       {wrongPick?.whyWrong && (
         <MixedText
           text={wrongPick.whyWrong}
-          className="mt-4 block text-[15px] text-[#ff4670] pl-reveal text-center max-w-[560px] leading-relaxed"
+          className={wide ? "block text-[14px] text-[#ff4670] pl-reveal leading-snug" : "mt-4 block text-[15px] text-[#ff4670] pl-reveal text-center max-w-[560px] leading-relaxed"}
         />
       )}
       {isResolved && config.successText && (
         <MixedText
           text={config.successText}
-          className="mt-6 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"
+          className={wide ? "block text-[14.5px] text-[#0fee89] pl-reveal leading-snug" : "mt-6 block text-[16px] sm:text-[17px] text-[#0fee89] pl-reveal text-center max-w-[600px] leading-relaxed"}
         />
       )}
+    </>
+  )
 
-      <HelperRow
-        showMeLabel={
-          eliminated.size === 0
-            ? "show me a hint"
-            : eliminated.size < (config.options.length - 1)
-            ? "narrow it down further"
-            : "show me a hint"
-        }
-        onShowMe={
-          !isResolved && eliminated.size < (config.options.length - 1)
-            ? showMe
-            : undefined
-        }
-      />
+  const helper = (
+    <HelperRow
+      showMeLabel={
+        eliminated.size === 0
+          ? "show me a hint"
+          : eliminated.size < (config.options.length - 1)
+          ? "narrow it down further"
+          : "show me a hint"
+      }
+      onShowMe={
+        !isResolved && eliminated.size < (config.options.length - 1)
+          ? showMe
+          : undefined
+      }
+    />
+  )
+
+  // Wide layout: big manipulative canvas on the left, options column on
+  // the right. Same shape as widgetCanvas / clickOnGrid slides so the
+  // canvas matches the widget canvases in size, density and style.
+  if (wide) {
+    return (
+      <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
+        <div className="flex-1 min-w-0 flex items-center justify-center">
+          <ContextCanvas html={config.contextHtml!} asideWidth={360} />
+        </div>
+        <aside className="pl-stagger w-full xl:w-[360px] shrink-0 flex flex-col gap-3 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
+          {config.prompt && (
+            <MixedText
+              text={config.prompt}
+              className="block text-[16px] sm:text-[17px] text-[#f0eeea] leading-snug mb-1"
+            />
+          )}
+          <div className="flex flex-col gap-2.5">{optionButtons}</div>
+          {feedback}
+          {helper}
+        </aside>
+      </div>
+    )
+  }
+
+  // Default centered layout (no contextHtml).
+  return (
+    <div className="w-full flex flex-col items-center">
+      <Prompt>{config.prompt}</Prompt>
+      <div className={isRow ? "flex flex-wrap gap-3 justify-center max-w-[760px]" : "flex flex-col gap-3 w-full max-w-[560px]"}>
+        {optionButtons}
+      </div>
+      {feedback}
+      {helper}
     </div>
   )
 }

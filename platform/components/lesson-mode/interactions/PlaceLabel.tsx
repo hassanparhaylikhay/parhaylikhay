@@ -111,7 +111,11 @@ export default function PlaceLabel({ config, onComplete }: InteractionProps<Plac
       <Prompt>{config.prompt}</Prompt>
 
       {config.contextHtml && (
-        <div className="mb-6 max-w-[640px]" dangerouslySetInnerHTML={{ __html: config.contextHtml }} />
+        <div
+          className="mb-7 w-full max-w-[720px] rounded-xl overflow-hidden"
+          style={{ background: COLOR.card, border: `1px solid ${COLOR.border}` }}
+          dangerouslySetInnerHTML={{ __html: config.contextHtml }}
+        />
       )}
 
       {/* Slot row */}

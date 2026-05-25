@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, type RefObject } from "react"
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react"
 import katex from "katex"
 
 /**
@@ -215,6 +215,55 @@ export function ReadoutPanel({ readout, solved }: { readout: { label: string; te
         )}
       </div>
     </div>
+  )
+}
+
+/**
+ * ContextCanvas — wraps a contextHtml SVG inside a sized container that
+ * matches the geometry of the iframe widgets on the left of widget
+ * slides. Same window.innerWidth-based math as WidgetCanvas, same card
+ * styling, same aspect (480/320). MCQ slides that need a big
+ * manipulative diagram embed their SVG here so it sits in the canvas
+ * slot at the identical size, density and look as the real widgets.
+ */
+export function ContextCanvas({ html, asideWidth }: { html: string; asideWidth?: number }) {
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+  const aside = asideWidth ?? 360
+  useLayoutEffect(() => {
+    function fit() {
+      const wrap = wrapRef.current
+      if (!wrap) return
+      const SVG_ASPECT = 480 / 320
+      const RESERVED = 200
+      const vw = window.innerWidth
+      const SIDEBAR_W = vw >= 768 ? 256 : 0
+      const SLIDE_PAD = 64
+      const SLIDE_MAX = 1200
+      const slideW = Math.min(vw - SIDEBAR_W - SLIDE_PAD, SLIDE_MAX)
+      const isWide = vw >= 1280
+      const ASIDE_RESERVE = isWide ? aside + 28 : 0
+      const availableW = Math.max(280, slideW - ASIDE_RESERVE)
+      const availableH = Math.max(300, window.innerHeight - RESERVED)
+      const widthByHeight = SVG_ASPECT * availableH
+      const w = Math.max(320, Math.min(availableW, widthByHeight))
+      const h = w / SVG_ASPECT
+      wrap.style.width = `${Math.round(w)}px`
+      wrap.style.height = `${Math.round(h)}px`
+    }
+    fit()
+    window.addEventListener("resize", fit)
+    return () => window.removeEventListener("resize", fit)
+  }, [aside])
+  return (
+    <div
+      ref={wrapRef}
+      className="block rounded-xl overflow-hidden"
+      style={{
+        background: COLOR.card,
+        border: `1px solid ${COLOR.border}`,
+      }}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   )
 }
 

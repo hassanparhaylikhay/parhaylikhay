@@ -145,7 +145,17 @@ const WIDE_INTERACTION_KINDS = new Set(["widgetCanvas", "clickOnGrid"])
 
 function isWideSlide(slide: Slide): boolean {
   if (slide.kind === "interaction" || slide.kind === "verify") {
-    return WIDE_INTERACTION_KINDS.has(slide.interaction?.kind ?? "")
+    const k = slide.interaction?.kind ?? ""
+    if (WIDE_INTERACTION_KINDS.has(k)) return true
+    // selectFromOptions slides with a contextHtml render the diagram as
+    // a big manipulative canvas on the left + options column on the
+    // right — same shape as widgetCanvas. Mark them wide so the slide
+    // frame uses the 1200px max-width.
+    if (k === "selectFromOptions") {
+      const ctx = (slide.interaction?.config as { contextHtml?: string } | undefined)?.contextHtml
+      if (ctx) return true
+    }
+    return false
   }
   if (slide.kind === "examLink") {
     return WIDE_INTERACTION_KINDS.has(slide.interaction?.kind ?? "")
