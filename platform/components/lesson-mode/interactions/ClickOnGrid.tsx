@@ -34,6 +34,19 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
   const [hintShown, setHintShown] = useState(false)
   const svgRef = useRef<SVGSVGElement | null>(null)
   const colRef = useRef<HTMLDivElement | null>(null)
+  // Capture the auto-advance timer so unmount (slide change) can cancel it.
+  // Otherwise a stale onAdvance closure firing after the student has manually
+  // clicked next bounces them backwards (see InteractionSlide for the long
+  // explanation).
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    return () => {
+      if (advanceTimerRef.current !== null) {
+        clearTimeout(advanceTimerRef.current)
+        advanceTimerRef.current = null
+      }
+    }
+  }, [])
 
   // Same sizing as WidgetCanvas: compute from window.innerWidth, no DOM reads.
   // useLayoutEffect (not useEffect) so the SVG is sized before the browser
@@ -98,7 +111,12 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
       onComplete({ pick: { x: mx, y: my } })
       // Auto-advance after a short pause. The SVG already locks further taps
       // via the `done` check at the top of this handler.
-      if (onAdvance) setTimeout(onAdvance, 2800)
+      if (onAdvance) {
+        advanceTimerRef.current = setTimeout(() => {
+          advanceTimerRef.current = null
+          onAdvance()
+        }, 2800)
+      }
     } else {
       setPick({ x: mx, y: my, correct: false })
       const id = wrongFlashId + 1

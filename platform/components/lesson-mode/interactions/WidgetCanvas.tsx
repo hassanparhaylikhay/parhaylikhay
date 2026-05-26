@@ -72,6 +72,12 @@ export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCa
     return () => { window.removeEventListener("resize", fit) }
   }, [])
 
+  // Capture the auto-advance timer so unmount (slide change) can cancel it.
+  // Without this, the 2800ms timer keeps firing even if the student has
+  // already clicked next — onAdvance is a useCallback closed over the lesson
+  // index from the moment the timer was scheduled, so the late firing
+  // bounces the student backwards.
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     function onMsg(e: MessageEvent) {
       const d = e.data
@@ -84,11 +90,22 @@ export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCa
         // Auto-advance to the next slide after a brief "you got it" pause.
         // The widget locks input on its end (SOLVED check in pointerdown),
         // so the student can savour the success state but can't drag away.
-        if (onAdvance) setTimeout(onAdvance, 2800)
+        if (onAdvance) {
+          advanceTimerRef.current = setTimeout(() => {
+            advanceTimerRef.current = null
+            onAdvance()
+          }, 2800)
+        }
       }
     }
     window.addEventListener("message", onMsg)
-    return () => window.removeEventListener("message", onMsg)
+    return () => {
+      window.removeEventListener("message", onMsg)
+      if (advanceTimerRef.current !== null) {
+        clearTimeout(advanceTimerRef.current)
+        advanceTimerRef.current = null
+      }
+    }
   }, [config.widget, onComplete, onAdvance, solved])
 
   return (

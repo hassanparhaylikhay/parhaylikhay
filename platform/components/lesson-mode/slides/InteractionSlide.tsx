@@ -44,16 +44,30 @@ export default function InteractionSlide({
   // For every other interaction kind, wrap onComplete so the lesson auto-advances
   // 2800ms after the student lands on the correct/done state — same pause as the
   // manipulatives, so the student gets a beat to read the success text and see
-  // the green pulse before the next slide loads. Ref-guarded so repeat onComplete
-  // calls don't queue multiple advances.
+  // the green pulse before the next slide loads.
+  //
+  // The pending timer MUST be cleared when the slide changes. onAdvance is a
+  // useCallback in LessonRunner closing over idx — if the student manually
+  // clicks next before the timer fires, the stale closure runs setIdx(oldIdx+1)
+  // and bounces them backwards to where they already were. The unmount cleanup
+  // on slide.id covers both manual nav and the slide being swapped out.
   const SELF_ADVANCING = new Set(["widgetCanvas", "clickOnGrid"])
-  const advanceScheduled = useRef(false)
-  useEffect(() => { advanceScheduled.current = false }, [slide.id])
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    return () => {
+      if (advanceTimerRef.current !== null) {
+        clearTimeout(advanceTimerRef.current)
+        advanceTimerRef.current = null
+      }
+    }
+  }, [slide.id])
   const wrappedComplete = (data?: Record<string, unknown>) => {
     onComplete(data)
-    if (onAdvance && !SELF_ADVANCING.has(inj.kind) && !advanceScheduled.current) {
-      advanceScheduled.current = true
-      setTimeout(onAdvance, 2800)
+    if (onAdvance && !SELF_ADVANCING.has(inj.kind) && advanceTimerRef.current === null) {
+      advanceTimerRef.current = setTimeout(() => {
+        advanceTimerRef.current = null
+        onAdvance()
+      }, 2800)
     }
   }
 
