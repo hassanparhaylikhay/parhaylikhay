@@ -722,7 +722,8 @@
             {
               "id": "opt-yex",
               "text": "Reflection in $y = x$",
-              "isCorrect": true
+              "isCorrect": true,
+              "revealSvgInside": "<g class='pl-fade-in'><line x1='81' y1='292' x2='346' y2='28' stroke='#fff067' stroke-width='1.8' stroke-dasharray='6 4'/><text x='358' y='32' fill='#fff067' font-family='Geist Mono,monospace' font-size='12' font-weight='700' text-anchor='start' dominant-baseline='middle'>y = x</text></g>"
             }
           ],
           "successText": "$y = x$ is the diagonal through the origin going up-right."

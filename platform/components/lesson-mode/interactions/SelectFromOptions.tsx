@@ -13,6 +13,15 @@ type Option = {
   isCorrect?: boolean
   /** Optional "why this is wrong" text shown when the student picks it. */
   whyWrong?: string
+  /**
+   * Optional SVG snippet appended INSIDE the contextHtml's <svg> element when
+   * THIS option is picked correctly. Lets a "which mirror / which vector / which
+   * transformation" MCQ visually confirm the answer by drawing the answer's
+   * geometry on the diagram. The snippet must be in the same coordinate system
+   * as the contextHtml SVG (typically 480×320 viewBox, sx/sy from the MCQ regen
+   * script).
+   */
+  revealSvgInside?: string
 }
 
 export type SelectFromOptionsConfig = {
@@ -145,10 +154,19 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
   // the right. Same shape as widgetCanvas / clickOnGrid slides so the
   // canvas matches the widget canvases in size, density and style.
   if (wide) {
+    // When the student picks the correct option, splice its revealSvgInside
+    // snippet into the canvas SVG just before </svg> so the answer's geometry
+    // (the mirror line, the vector, the centre of rotation) draws onto the
+    // diagram as visual confirmation. No-op if the correct option has no
+    // revealSvgInside, or if not yet resolved.
+    const correctReveal = correct?.revealSvgInside
+    const effectiveContextHtml = (isResolved && correctReveal)
+      ? config.contextHtml!.replace("</svg>", correctReveal + "</svg>")
+      : config.contextHtml!
     return (
       <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
         <div className="flex-1 min-w-0 flex items-center justify-center">
-          <ContextCanvas html={config.contextHtml!} asideWidth={360} />
+          <ContextCanvas html={effectiveContextHtml} asideWidth={360} />
         </div>
         <aside className="pl-stagger w-full xl:w-[360px] shrink-0 flex flex-col gap-3 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
           {config.prompt && (
