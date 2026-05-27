@@ -450,10 +450,9 @@
       "kind": "concept",
       "title": "How an examiner wants to read a translation",
       "advance": "manual",
-      "prompt": "Word + column vector, that's it. Two marks.",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;max-width:540px;margin:0 auto'><div style='font-family:Geist Mono,monospace;font-size:10.5px;color:#7a7875;letter-spacing:2px;text-transform:uppercase'>model exam answer</div><div style='padding:18px 28px;border-left:3px solid #00abfa;background:rgba(0,171,250,0.06);border-radius:8px;font-size:20px;color:#f0eeea;line-height:1.4'>Translation by \\(\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}\\)</div><div style='display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:5px 10px;border-radius:4px;background:rgba(0,171,250,0.10);color:#00abfa'>B1 \\(\\cdot\\) word \"translation\"</span><span style='padding:5px 10px;border-radius:4px;background:rgba(0,171,250,0.10);color:#00abfa'>B1 \\(\\cdot\\) correct column vector</span></div></div>"
+        "content": "<div style=\"display:flex;flex-direction:column;align-items:center;gap:24px;max-width:680px;margin:0 auto\"><div style=\"padding:28px 40px;border-left:4px solid #00abfa;background:rgba(0,171,250,0.08);border-radius:10px;font-size:28px;color:#f0eeea;line-height:1.45\">Translation by \\(\\begin{pmatrix} 3 \\\\ -2 \\end{pmatrix}\\)</div><div style=\"display:flex;gap:12px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:13px;font-weight:600\"><span style=\"padding:8px 14px;border-radius:6px;background:rgba(0,171,250,0.12);color:#00abfa\">B1 \\(\\cdot\\) word \"translation\"</span><span style=\"padding:8px 14px;border-radius:6px;background:rgba(0,171,250,0.12);color:#00abfa\">B1 \\(\\cdot\\) correct column vector</span></div></div>"
       }
     },
     {
@@ -761,10 +760,9 @@
       "kind": "concept",
       "title": "How an examiner wants to read a reflection",
       "advance": "manual",
-      "prompt": "Word + mirror as an equation. Two marks.",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;max-width:540px;margin:0 auto'><div style='font-family:Geist Mono,monospace;font-size:10.5px;color:#7a7875;letter-spacing:2px;text-transform:uppercase'>model exam answer</div><div style='padding:18px 28px;border-left:3px solid #fff067;background:rgba(255,240,103,0.06);border-radius:8px;font-size:20px;color:#f0eeea;line-height:1.4'>Reflection in the line \\(y = x\\)</div><div style='display:flex;gap:10px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:5px 10px;border-radius:4px;background:rgba(255,240,103,0.10);color:#fff067'>B1 \\(\\cdot\\) word \"reflection\"</span><span style='padding:5px 10px;border-radius:4px;background:rgba(255,240,103,0.10);color:#fff067'>B1 \\(\\cdot\\) mirror as equation</span></div></div>"
+        "content": "<div style=\"display:flex;flex-direction:column;align-items:center;gap:24px;max-width:680px;margin:0 auto\"><div style=\"padding:28px 40px;border-left:4px solid #fff067;background:rgba(255,240,103,0.08);border-radius:10px;font-size:28px;color:#f0eeea;line-height:1.45\">Reflection in the line \\(y = x\\)</div><div style=\"display:flex;gap:12px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:13px;font-weight:600\"><span style=\"padding:8px 14px;border-radius:6px;background:rgba(255,240,103,0.12);color:#fff067\">B1 \\(\\cdot\\) word \"reflection\"</span><span style=\"padding:8px 14px;border-radius:6px;background:rgba(255,240,103,0.12);color:#fff067\">B1 \\(\\cdot\\) mirror as equation</span></div></div>"
       }
     },
     {
@@ -1166,10 +1164,9 @@
       "kind": "concept",
       "title": "How an examiner wants to read a rotation",
       "advance": "manual",
-      "prompt": "Word + angle + direction + centre. All three pieces, all three marks.",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;max-width:540px;margin:0 auto'><div style='font-family:Geist Mono,monospace;font-size:10.5px;color:#7a7875;letter-spacing:2px;text-transform:uppercase'>model exam answer</div><div style='padding:18px 28px;border-left:3px solid #ff822c;background:rgba(255,130,44,0.06);border-radius:8px;font-size:19px;color:#f0eeea;line-height:1.5'>Rotation, \\(90°\\) anticlockwise, centre \\((0,\\ 0)\\)</div><div style='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:5px 10px;border-radius:4px;background:rgba(255,130,44,0.10);color:#ff822c'>B1 \\(\\cdot\\) word \"rotation\"</span><span style='padding:5px 10px;border-radius:4px;background:rgba(255,130,44,0.10);color:#ff822c'>B1 \\(\\cdot\\) angle + direction</span><span style='padding:5px 10px;border-radius:4px;background:rgba(255,130,44,0.10);color:#ff822c'>B1 \\(\\cdot\\) centre</span></div></div>"
+        "content": "<div style=\"display:flex;flex-direction:column;align-items:center;gap:24px;max-width:680px;margin:0 auto\"><div style=\"padding:28px 40px;border-left:4px solid #ff822c;background:rgba(255,130,44,0.08);border-radius:10px;font-size:28px;color:#f0eeea;line-height:1.45\">Rotation, \\(90°\\) anticlockwise, centre \\((0,\\ 0)\\)</div><div style=\"display:flex;gap:12px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:13px;font-weight:600\"><span style=\"padding:8px 14px;border-radius:6px;background:rgba(255,130,44,0.12);color:#ff822c\">B1 \\(\\cdot\\) word \"rotation\"</span><span style=\"padding:8px 14px;border-radius:6px;background:rgba(255,130,44,0.12);color:#ff822c\">B1 \\(\\cdot\\) angle + direction</span><span style=\"padding:8px 14px;border-radius:6px;background:rgba(255,130,44,0.12);color:#ff822c\">B1 \\(\\cdot\\) centre</span></div></div>"
       }
     },
     {
@@ -1450,10 +1447,9 @@
       "kind": "concept",
       "title": "How an examiner wants to read an enlargement",
       "advance": "manual",
-      "prompt": "Word + scale factor + centre. Three pieces, three marks.",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:14px;max-width:540px;margin:0 auto'><div style='font-family:Geist Mono,monospace;font-size:10.5px;color:#7a7875;letter-spacing:2px;text-transform:uppercase'>model exam answer</div><div style='padding:18px 28px;border-left:3px solid #ff4670;background:rgba(255,70,112,0.06);border-radius:8px;font-size:19px;color:#f0eeea;line-height:1.5'>Enlargement, scale factor \\(2\\), centre \\((1,\\ 1)\\)</div><div style='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:5px 10px;border-radius:4px;background:rgba(255,70,112,0.10);color:#ff4670'>B1 \\(\\cdot\\) word \"enlargement\"</span><span style='padding:5px 10px;border-radius:4px;background:rgba(255,70,112,0.10);color:#ff4670'>B1 \\(\\cdot\\) scale factor</span><span style='padding:5px 10px;border-radius:4px;background:rgba(255,70,112,0.10);color:#ff4670'>B1 \\(\\cdot\\) centre</span></div></div>"
+        "content": "<div style=\"display:flex;flex-direction:column;align-items:center;gap:24px;max-width:680px;margin:0 auto\"><div style=\"padding:28px 40px;border-left:4px solid #ff4670;background:rgba(255,70,112,0.08);border-radius:10px;font-size:28px;color:#f0eeea;line-height:1.45\">Enlargement, scale factor \\(2\\), centre \\((1,\\ 1)\\)</div><div style=\"display:flex;gap:12px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:13px;font-weight:600\"><span style=\"padding:8px 14px;border-radius:6px;background:rgba(255,70,112,0.12);color:#ff4670\">B1 \\(\\cdot\\) word \"enlargement\"</span><span style=\"padding:8px 14px;border-radius:6px;background:rgba(255,70,112,0.12);color:#ff4670\">B1 \\(\\cdot\\) scale factor</span><span style=\"padding:8px 14px;border-radius:6px;background:rgba(255,70,112,0.12);color:#ff4670\">B1 \\(\\cdot\\) centre</span></div></div>"
       }
     },
     {
