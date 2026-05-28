@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Two Intersecting Mirrors · Step Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<style>
+  *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+  html,body { background:#0b1118; color:#c8c6be; font-family:'Geist','Inter',system-ui,sans-serif; -webkit-font-smoothing:antialiased; overflow:hidden; }
+  body { padding:14px 18px 16px; }
+  .wrap { max-width:696px; margin:0 auto; border:1px solid #141e2a; border-radius:10px; background:#0b1118; padding:14px 16px 16px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; gap:14px; flex-wrap:wrap; }
+  .step-title { font-family:'Geist Mono',monospace; font-size:11px; color:#fff067; font-weight:600; letter-spacing:0.6px; text-transform:uppercase; }
+  .meta { font-family:'Geist Mono',monospace; font-size:10px; color:#3a4a5a; letter-spacing:0.4px; }
+  #stage { display:block; width:100%; height:auto; aspect-ratio: 480 / 320; user-select:none; overflow:hidden; }
+  .controls { display:flex; gap:8px; align-items:center; padding:12px 0 4px; }
+  .ctl {
+    background:#0b1118; border:1px solid #141e2a; color:#7a7875;
+    font-family:'Geist Mono',monospace; font-size:11px; font-weight:600;
+    padding:6px 14px; border-radius:4px; cursor:pointer;
+    transition: all 0.25s cubic-bezier(0.16,1,0.3,1);
+    text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .ctl:hover:not(:disabled) { color:#f0eeea; border-color:#3a4a5a; }
+  .ctl:disabled { opacity:0.35; cursor:not-allowed; }
+  .ctl.primed {
+    background: rgba(255, 240, 103, 0.10);
+    border-color: rgba(255, 240, 103, 0.55);
+    color: #fff067;
+    animation: ctl-prime-pulse 1.9s ease-in-out infinite;
+  }
+  .ctl.primed:hover { background: rgba(255, 240, 103, 0.16); border-color: #fff067; color: #f0eeea; }
+  @keyframes ctl-prime-pulse {
+    0%, 100% { box-shadow: 0 0 0 0   rgba(255, 240, 103, 0.36); }
+    60%      { box-shadow: 0 0 0 6px rgba(255, 240, 103, 0);    }
+  }
+  .step-dots { flex:1; display:flex; justify-content:center; gap:8px; }
+  .step-dot {
+    width:6px; height:6px; border-radius:50%; background:#1a2330;
+    transition: background 0.3s cubic-bezier(0.16,1,0.3,1), transform 0.3s cubic-bezier(0.16,1,0.3,1);
+  }
+  .step-dot.active { background:#fff067; transform:scale(1.6); }
+  .step-dot.done { background:#3a4a5a; }
+  .footer {
+    margin-top:10px; padding:10px 12px;
+    font-size:13.5px; line-height:1.5; color:#c8c6be;
+    border-top:1px solid #141e2a;
+  }
+  .footer b { color:#f0eeea; }
+  .pl-fade-in { animation: pl-fade-in 700ms cubic-bezier(0.16,1,0.3,1) both; }
+  @keyframes pl-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="head">
+    <span class="step-title">TWO INTERSECTING MIRRORS → ROTATION</span>
+    <span class="meta" id="meta">step 1 of 6</span>
+  </div>
+
+  <svg id="stage" viewBox="0 0 480 320" width="480" height="320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  <div class="controls">
+    <button class="ctl" id="prev" type="button">← prev</button>
+    <div class="step-dots" id="dots"></div>
+    <button class="ctl primed" id="next" type="button">next →</button>
+  </div>
+
+  <div class="footer" id="footer"></div>
+</div>
+
+<script>
+"use strict";
+
+var W = 480, H = 320;
+var X_MIN = -4, X_MAX = 5;
+var Y_MIN = -3, Y_MAX = 5;
+var pxX = W / (X_MAX - X_MIN);
+var pxY = H / (Y_MAX - Y_MIN);
+function sx(x) { return (x - X_MIN) * pxX; }
+function sy(y) { return H - (y - Y_MIN) * pxY; }
+
+var stage = document.getElementById("stage");
+var NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs) {
+  var n = document.createElementNS(NS, tag);
+  for (var k in attrs) n.setAttribute(k, attrs[k]);
+  return n;
+}
+
+// Object: P(2,1), Q(4,1), R(2,2). Reflect in y=0 (x-axis) → intermediate.
+// Reflect intermediate in y=x → final image.
+var OBJ = [{ x:2, y:1 }, { x:4, y:1 }, { x:2, y:2 }];
+var INT = [{ x:2, y:-1 }, { x:4, y:-1 }, { x:2, y:-2 }];
+var IMG = [{ x:-1, y:2 }, { x:-1, y:4 }, { x:-2, y:2 }];
+
+var P = { step: 0 };
+
+function svgLine(p, q, color, width, dash, cls) {
+  var attrs = {
+    x1: sx(p.x), y1: sy(p.y), x2: sx(q.x), y2: sy(q.y),
+    stroke: color, "stroke-width": width, "stroke-linecap": "round"
+  };
+  if (dash) attrs["stroke-dasharray"] = dash;
+  if (cls) attrs["class"] = cls;
+  return el("line", attrs);
+}
+function svgPolygon(pts, fill, stroke, width, cls) {
+  return el("polygon", {
+    points: pts.map(function(p) { return sx(p.x) + "," + sy(p.y); }).join(" "),
+    fill: fill, stroke: stroke, "stroke-width": width,
+    "stroke-linejoin": "round",
+    "class": cls || ""
+  });
+}
+function svgArcPath(centre, r, startAngleRad, endAngleRad, color, width, dash, cls) {
+  // Start/end angles in math convention (CCW from +x). SVG y is down.
+  var x1 = sx(centre.x + r * Math.cos(startAngleRad));
+  var y1 = sy(centre.y + r * Math.sin(startAngleRad));
+  var x2 = sx(centre.x + r * Math.cos(endAngleRad));
+  var y2 = sy(centre.y + r * Math.sin(endAngleRad));
+  var rPx = r * Math.min(pxX, pxY);
+  // 90° anticlockwise in math is sweep-flag = 0 in SVG (y-down inverts).
+  var d = "M " + x1 + " " + y1 +
+          " A " + rPx + " " + rPx + " 0 0 0 " + x2 + " " + y2;
+  var attrs = {
+    d: d, fill: "none", stroke: color,
+    "stroke-width": width, "stroke-linecap": "round"
+  };
+  if (dash) attrs["stroke-dasharray"] = dash;
+  if (cls) attrs["class"] = cls;
+  return el("path", attrs);
+}
+
+var foot = document.getElementById("footer");
+var meta = document.getElementById("meta");
+var dotsHost = document.getElementById("dots");
+
+var STEPS = [
+  { footer: "Start with the <b style='color:#00abfa'>blue triangle</b>. We will reflect it in <b style='color:#fff067'>mirror 1</b> (the line $y = 0$), then reflect again in <b style='color:#fff067'>mirror 2</b> (the line $y = x$)." },
+  { footer: "<b>First reflection</b> in $y = 0$. Each $y$ flips sign. The <b style='color:#ff822c'>orange triangle</b> is what we get." },
+  { footer: "<b>Second reflection</b> in $y = x$. Swap $x$ and $y$ of every vertex. We end up at the <b style='color:#ff4670'>pink triangle</b>." },
+  { footer: "Look at the blue and the pink. The pink is the blue <b>spun around a single point</b>. That is what a <b>rotation</b> looks like." },
+  { footer: "The centre of the rotation is where the two mirrors cross: <b style='color:#fff067'>(0, 0)</b>. The angle is <b>twice the angle between the mirrors</b>. The mirrors meet at $45°$, so the rotation is $2 \\times 45° = 90°$." },
+  { footer: "Final answer: <b style='color:#0fee89'>Rotation, $90°$ anticlockwise, centre $(0, 0)$</b>. Two intersecting mirrors always combine into one rotation." }
+];
+var TOTAL = STEPS.length;
+
+(function() {
+  for (var i = 0; i < TOTAL; i++) {
+    var d = document.createElement("div");
+    d.className = "step-dot";
+    dotsHost.appendChild(d);
+  }
+})();
+
+// Mirror 1 endpoints clipped to visible plot (y = 0 from x=X_MIN to x=X_MAX).
+var M1_A = { x: X_MIN, y: 0 };
+var M1_B = { x: X_MAX, y: 0 };
+// Mirror 2 (y = x) clipped to visible diagonal: from (-3,-3) to (5,5).
+var M2_A = { x: -3, y: -3 };
+var M2_B = { x: 5, y: 5 };
+
+var lastDrawStep = -1;
+function draw() {
+  var isStepTransition = (P.step !== lastDrawStep);
+  var fadeCls = isStepTransition ? "pl-fade-in" : "";
+  lastDrawStep = P.step;
+
+  while (stage.firstChild) stage.removeChild(stage.firstChild);
+
+  // Grid + axes
+  var g = el("g", {});
+  for (var x = X_MIN; x <= X_MAX; x++) {
+    g.appendChild(el("line", {
+      x1: sx(x), y1: 0, x2: sx(x), y2: H,
+      stroke: x === 0 ? "#243750" : "#141e2a",
+      "stroke-width": x === 0 ? 1 : 0.5
+    }));
+  }
+  for (var y = Y_MIN; y <= Y_MAX; y++) {
+    g.appendChild(el("line", {
+      x1: 0, y1: sy(y), x2: W, y2: sy(y),
+      stroke: y === 0 ? "#243750" : "#141e2a",
+      "stroke-width": y === 0 ? 1 : 0.5
+    }));
+  }
+  stage.appendChild(g);
+
+  // Mirrors — always visible, both span only the visible plot.
+  stage.appendChild(svgLine(M1_A, M1_B, "#fff067", 1.5, "5 4"));
+  stage.appendChild(svgLine(M2_A, M2_B, "#fff067", 1.5, "5 4"));
+  // Mirror labels (inside the plot, low-key)
+  var l1 = el("text", {
+    x: sx(X_MAX) - 6, y: sy(0) - 5,
+    fill: "#fff067", "font-family": "'Geist Mono',monospace",
+    "font-size": 11, "font-weight": 600, "text-anchor": "end"
+  });
+  l1.textContent = "y = 0";
+  stage.appendChild(l1);
+  var l2 = el("text", {
+    x: sx(4.5), y: sy(4.5) - 6,
+    fill: "#fff067", "font-family": "'Geist Mono',monospace",
+    "font-size": 11, "font-weight": 600, "text-anchor": "middle"
+  });
+  l2.textContent = "y = x";
+  stage.appendChild(l2);
+
+  // Object always visible
+  stage.appendChild(svgPolygon(OBJ, "rgba(0,171,250,0.14)", "#00abfa", 2));
+
+  // Step 2+: intermediate (after first reflection in y=0)
+  if (P.step >= 1) {
+    stage.appendChild(svgPolygon(INT, "rgba(255,130,44,0.14)", "#ff822c", 2, fadeCls));
+  }
+
+  // Step 3+: final image (after second reflection in y=x)
+  if (P.step >= 2) {
+    stage.appendChild(svgPolygon(IMG, "rgba(255,70,112,0.14)", "#ff4670", 2, fadeCls));
+  }
+
+  // Step 4+: rotation arcs from each object vertex to its final image vertex
+  // around the origin, 90° anticlockwise. Plus centre dot.
+  if (P.step >= 3) {
+    for (var i = 0; i < 3; i++) {
+      var o = OBJ[i];
+      var rad = Math.sqrt(o.x*o.x + o.y*o.y);
+      var startA = Math.atan2(o.y, o.x);
+      var endA   = startA + Math.PI / 2;
+      stage.appendChild(svgArcPath(
+        { x: 0, y: 0 }, rad,
+        startA, endA,
+        "#fff067", 1.6, "4 3", fadeCls
+      ));
+    }
+  }
+
+  // Step 5+: centre dot at origin (where mirrors cross)
+  if (P.step >= 4) {
+    var dot = el("circle", {
+      cx: sx(0), cy: sy(0), r: 6,
+      fill: "#fff067", stroke: "#0b1118", "stroke-width": 1.8,
+      "class": fadeCls
+    });
+    stage.appendChild(dot);
+  }
+
+  meta.textContent = "step " + (P.step + 1) + " of " + TOTAL;
+  foot.innerHTML = STEPS[P.step].footer;
+  if (typeof katex !== "undefined") {
+    foot.innerHTML = foot.innerHTML.replace(/\$([^$]+)\$/g, function(_, tex) {
+      try { return katex.renderToString(tex, { throwOnError:false, displayMode:false, output:"html" }); }
+      catch (_) { return tex; }
+    });
+  }
+  for (var i = 0; i < TOTAL; i++) {
+    var d = dotsHost.children[i];
+    d.classList.toggle("active", i === P.step);
+    d.classList.toggle("done",   i  <  P.step);
+  }
+  document.getElementById("prev").disabled = (P.step === 0);
+  document.getElementById("next").disabled = (P.step === TOTAL - 1);
+
+  reportHeight();
+}
+
+document.getElementById("prev").addEventListener("click", function() {
+  if (P.step > 0) { P.step--; draw(); }
+});
+var nextBtn = document.getElementById("next");
+nextBtn.addEventListener("click", function() {
+  nextBtn.classList.remove("primed");
+  if (P.step < TOTAL - 1) { P.step++; draw(); }
+});
+
+function syncStageHeight() {
+  var s = document.getElementById("stage");
+  if (s && s.clientWidth > 0) {
+    s.style.height = (s.clientWidth * H / W) + "px";
+  }
+}
+var lastReported = 0, reportScheduled = false;
+function reportHeight() {
+  if (reportScheduled) return;
+  reportScheduled = true;
+  requestAnimationFrame(function() {
+    reportScheduled = false;
+    syncStageHeight();
+    var wrap = document.getElementById("wrap");
+    if (!wrap) return;
+    var rect = wrap.getBoundingClientRect();
+    var bp = parseFloat(getComputedStyle(document.body).paddingTop) || 0;
+    var bb = parseFloat(getComputedStyle(document.body).paddingBottom) || 0;
+    var h = Math.ceil(rect.height + bp + bb);
+    if (Math.abs(h - lastReported) < 3) return;
+    lastReported = h;
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: "pl-widget-resize", height: h }, "*");
+    }
+  });
+}
+
+(function() {
+  var qs = new URLSearchParams(location.search);
+  if (qs.get("lessonMode") === "1") {
+    document.body.classList.add("lesson-mode");
+    document.documentElement.classList.add("lesson-mode");
+  }
+})();
+
+window.addEventListener("load", reportHeight);
+window.addEventListener("resize", reportHeight);
+
+syncStageHeight();
+draw();
+</script>
+</body>
+</html>

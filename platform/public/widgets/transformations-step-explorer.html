@@ -40,33 +40,9 @@
     50%      { filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 10px currentColor); }
   }
   .glow { animation: pulse-glow 1.6s ease-in-out infinite; }
-
-  /* Lesson Mode: the parent iframe already wears the rounded card frame,
-     so the widget's own wrap border + body padding doubles up. Strip them
-     and cap the SVG height so the panel + prev/next nav always fit in the
-     viewport budget IframeVisual gives us. Without this the bottom nav
-     gets clipped on standard laptop viewports. */
-  body.lesson-mode { padding: 0; }
-  body.lesson-mode .wrap { border: 0; background: transparent; padding: 4px 8px 8px; max-width: none; }
-  body.lesson-mode .head { margin-bottom: 6px; }
-  body.lesson-mode svg { max-height: 280px; width: auto; max-width: 100%; margin: 0 auto; }
-  body.lesson-mode .panel { min-height: 90px; padding: 10px 4px 4px; margin-top: 6px; }
-  body.lesson-mode .nav { margin-top: 6px; padding-top: 8px; }
 </style>
 </head>
 <body>
-<script>
-  // Apply lesson-mode class BEFORE any layout/paint so the compact-chrome CSS
-  // wins on first frame (avoids the ~100ms flash of fat chrome that gets
-  // clipped). Same pattern as the 8 step-explorer widgets in lesson 7.1.
-  (function(){
-    var qs = new URLSearchParams(location.search);
-    if (qs.get("lessonMode") === "1") {
-      document.body.classList.add("lesson-mode");
-      document.documentElement.classList.add("lesson-mode");
-    }
-  })();
-</script>
 <div class="wrap" id="wrap">
   <div class="head">
     <span class="step-title" id="title">WORKED EXAMPLE</span>

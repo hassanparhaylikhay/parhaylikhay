@@ -1397,10 +1397,10 @@
       "kind": "concept",
       "title": "Two parallel mirrors give a translation",
       "advance": "manual",
-      "prompt": "Walk through both reflections. The combined effect is a single translation: distance equals twice the gap between the mirrors, direction is perpendicular to them.",
+      "prompt": "Walk through the two reflections in order. The two parallel mirrors combine into one translation.",
       "visual": {
         "kind": "iframe",
-        "src": "/widgets/transformations-step-explorer.html?preset=p6-parallel-mirrors-translation&lessonMode=1&chrome=1"
+        "src": "/widgets/two-parallel-mirrors-step-explorer.html?lessonMode=1&chrome=1"
       }
     },
     {
@@ -1408,10 +1408,10 @@
       "kind": "concept",
       "title": "Two intersecting mirrors give a rotation",
       "advance": "manual",
-      "prompt": "Walk through both reflections. The combined effect is a single rotation: centre is where the mirrors cross, angle is twice the angle between them.",
+      "prompt": "Walk through the two reflections in order. The two intersecting mirrors combine into one rotation.",
       "visual": {
         "kind": "iframe",
-        "src": "/widgets/transformations-step-explorer.html?preset=p6-two-reflections&lessonMode=1&chrome=1"
+        "src": "/widgets/two-intersecting-mirrors-step-explorer.html?lessonMode=1&chrome=1"
       }
     },
     {
