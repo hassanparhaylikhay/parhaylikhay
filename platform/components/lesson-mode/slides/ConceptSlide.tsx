@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Visual from "../Visual"
 import UnderstoodButton from "./_UnderstoodButton"
-import { MixedText, ReadoutPanel, useWidgetReadout } from "../interactions/_shared"
+import { MixedText, ReadoutPanel, useWidgetReadout, ContextCanvas } from "../interactions/_shared"
 import type { ConceptSlide as ConceptSlideT } from "@/lib/lesson-mode/types"
 
 /**
@@ -42,9 +42,14 @@ export default function ConceptSlide({
   }, [hasReveals, allRevealed, slide.advance])
 
   const isIframe = slide.visual?.kind === "iframe"
+  const isWideHtml = slide.visual?.kind === "html" && (slide.visual as { wide?: boolean }).wide === true
 
   if (isIframe) {
     return <ConceptIframeLayout slide={slide} onAdvance={onAdvance} canAdvance={canAdvance} />
+  }
+
+  if (isWideHtml) {
+    return <ConceptWideHtmlLayout slide={slide} onAdvance={onAdvance} canAdvance={canAdvance} />
   }
 
   // Centered stack for non-iframe visuals (small inline diagrams, recaps, etc.)
@@ -87,6 +92,50 @@ export default function ConceptSlide({
       {slide.advance === "manual" && canAdvance && !hasReveals && (
         <UnderstoodButton onClick={onAdvance} />
       )}
+    </div>
+  )
+}
+
+/**
+ * Side-by-side layout for concept slides whose visual is a wide HTML canvas
+ * (a 480×320 viewBox SVG sized via the same ContextCanvas wrapper the wide
+ * MCQ slides use). Canvas claims the main column; title + plenty-of-words
+ * prompt + "I understood" sit in a 320 px aside on the right. Long
+ * explanatory prose has vertical room without the slide ever scrolling.
+ */
+function ConceptWideHtmlLayout({
+  slide,
+  onAdvance,
+  canAdvance,
+}: {
+  slide: ConceptSlideT
+  onAdvance?: () => void
+  canAdvance?: boolean
+}) {
+  const html = (slide.visual as { content?: string }).content ?? ""
+  return (
+    <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-8 items-center xl:items-stretch">
+      <div className="flex-1 min-w-0 flex items-center justify-center">
+        <ContextCanvas html={html} asideWidth={320} />
+      </div>
+      <aside className="pl-stagger w-full xl:w-[320px] shrink-0 flex flex-col gap-4 xl:gap-5 justify-center xl:py-4" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
+        {slide.title && (
+          <h2 className="text-[22px] sm:text-[26px] font-semibold text-[#f0eeea] tracking-tight leading-tight">
+            <MixedText text={slide.title} />
+          </h2>
+        )}
+        {slide.prompt && (
+          <MixedText
+            text={slide.prompt}
+            className="block text-[16px] sm:text-[18px] text-[#c8c6be] leading-relaxed"
+          />
+        )}
+        {slide.advance === "manual" && canAdvance && (
+          <div className="xl:mt-2">
+            <UnderstoodButton onClick={onAdvance} />
+          </div>
+        )}
+      </aside>
     </div>
   )
 }

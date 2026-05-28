@@ -40,7 +40,7 @@ export interface InteractionSpec {
 
 export type VisualSpec =
   | { kind: "iframe"; src: string; height?: number }
-  | { kind: "html"; content: string }                       // raw HTML/CSS diagram
+  | { kind: "html"; content: string; wide?: boolean }       // raw HTML/CSS diagram; wide=true routes the concept slide to canvas-left + aside-right layout
   | { kind: "katex"; tex: string; display?: boolean }       // a single equation
   | { kind: "shape"; svg: string }                          // small inline SVG snippet
   | { kind: "stack"; children: VisualSpec[]; gap?: number } // vertical composition

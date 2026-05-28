@@ -161,8 +161,11 @@ function isWideSlide(slide: Slide): boolean {
     return WIDE_INTERACTION_KINDS.has(slide.interaction?.kind ?? "")
   }
   if (slide.kind === "concept" || slide.kind === "hook" || slide.kind === "recap") {
-    const v = (slide as { visual?: { kind?: string } }).visual
+    const v = (slide as { visual?: { kind?: string; wide?: boolean } }).visual
     if (v?.kind === "iframe") return true
+    // html visuals opted in via wide=true also get the 1200px max-width so the
+    // canvas-left + 320px-aside-right layout has room to breathe.
+    if (v?.kind === "html" && v.wide) return true
   }
   return false
 }
