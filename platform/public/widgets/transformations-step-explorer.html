@@ -40,9 +40,33 @@
     50%      { filter: drop-shadow(0 0 6px currentColor) drop-shadow(0 0 10px currentColor); }
   }
   .glow { animation: pulse-glow 1.6s ease-in-out infinite; }
+
+  /* Lesson Mode: the parent iframe already wears the rounded card frame,
+     so the widget's own wrap border + body padding doubles up. Strip them
+     and cap the SVG height so the panel + prev/next nav always fit in the
+     viewport budget IframeVisual gives us. Without this the bottom nav
+     gets clipped on standard laptop viewports. */
+  body.lesson-mode { padding: 0; }
+  body.lesson-mode .wrap { border: 0; background: transparent; padding: 4px 8px 8px; max-width: none; }
+  body.lesson-mode .head { margin-bottom: 6px; }
+  body.lesson-mode svg { max-height: 280px; width: auto; max-width: 100%; margin: 0 auto; }
+  body.lesson-mode .panel { min-height: 90px; padding: 10px 4px 4px; margin-top: 6px; }
+  body.lesson-mode .nav { margin-top: 6px; padding-top: 8px; }
 </style>
 </head>
 <body>
+<script>
+  // Apply lesson-mode class BEFORE any layout/paint so the compact-chrome CSS
+  // wins on first frame (avoids the ~100ms flash of fat chrome that gets
+  // clipped). Same pattern as the 8 step-explorer widgets in lesson 7.1.
+  (function(){
+    var qs = new URLSearchParams(location.search);
+    if (qs.get("lessonMode") === "1") {
+      document.body.classList.add("lesson-mode");
+      document.documentElement.classList.add("lesson-mode");
+    }
+  })();
+</script>
 <div class="wrap" id="wrap">
   <div class="head">
     <span class="step-title" id="title">WORKED EXAMPLE</span>
@@ -547,12 +571,33 @@ var PRESETS = {
         ]
       },
       {
-        tag: "STEP 4 · TWO REFLECTIONS = ONE ROTATION",
+        tag: "STEP 4 · LOOK AT WHAT HAPPENED",
         lines: [
-          "Two mirrors that cross each other always combine to give a rotation.",
-          "Centre $=$ where the mirrors cross $= (0, 0)$.",
-          "Angle $= 2 \\times$ (angle between the mirrors) $= 2 \\times 45° = 90°$.",
-          "Direction $=$ from the first mirror toward the second, which is anticlockwise here."
+          "Every vertex of the blue triangle ended up on the pink one after the same turn around a single point.",
+          "Two reflections in intersecting mirrors always combine into a single rotation."
+        ],
+        overlays: [
+          { type: "doubleMirror", first: {p1:{x:-5,y:0}, p2:{x:5,y:0}}, second: {p1:{x:-4,y:-4}, p2:{x:4,y:4}} },
+          { type: "centre", pos: {x:0, y:0} }
+        ]
+      },
+      {
+        tag: "STEP 5 · THE CENTRE",
+        lines: [
+          "The centre of the rotation is the point where the two mirrors cross.",
+          "Here the mirrors $y = 0$ and $y = x$ both pass through the origin, so the centre is $(0, 0)$."
+        ],
+        overlays: [
+          { type: "doubleMirror", first: {p1:{x:-5,y:0}, p2:{x:5,y:0}}, second: {p1:{x:-4,y:-4}, p2:{x:4,y:4}} },
+          { type: "centre", pos: {x:0, y:0} }
+        ]
+      },
+      {
+        tag: "STEP 6 · THE ANGLE AND DIRECTION",
+        lines: [
+          "The rotation angle is twice the angle between the mirrors.",
+          "The angle between $y = 0$ and $y = x$ is $45°$, so the rotation is $2 \\times 45° = 90°$.",
+          "The direction is from the first mirror toward the second, which is anticlockwise here."
         ],
         overlays: [
           { type: "doubleMirror", first: {p1:{x:-5,y:0}, p2:{x:5,y:0}}, second: {p1:{x:-4,y:-4}, p2:{x:4,y:4}} },
@@ -623,14 +668,37 @@ var PRESETS = {
         ]
       },
       {
-        tag: "STEP 4 · TWO PARALLEL MIRRORS = ONE TRANSLATION",
+        tag: "STEP 4 · LOOK AT WHAT HAPPENED",
         lines: [
-          "Two mirrors that are parallel always combine to give a translation.",
-          "Distance $=$ $2 \\times$ (gap between the mirrors) $= 2 \\times 3 = 6$.",
-          "Direction $=$ perpendicular to the mirrors, from the first mirror toward the second."
+          "Every vertex of the blue triangle ended up on the pink one after the same shift to the right.",
+          "Two reflections in parallel mirrors always combine into a single translation."
         ],
         overlays: [
           { type: "doubleMirror", first: {p1:{x:0,y:-5}, p2:{x:0,y:5}}, second: {p1:{x:3,y:-5}, p2:{x:3,y:5}} },
+          { type: "vectorArrow", from: {x:-4,y:1}, to: {x:2,y:1}, color: "yellow" },
+          { type: "vectorArrow", from: {x:-4,y:3}, to: {x:2,y:3}, color: "yellow" },
+          { type: "vectorArrow", from: {x:-2,y:2}, to: {x:4,y:2}, color: "yellow" }
+        ]
+      },
+      {
+        tag: "STEP 5 · THE DISTANCE",
+        lines: [
+          "The translation distance is twice the gap between the mirrors.",
+          "Gap $= 3$, so distance $= 2 \\times 3 = 6$."
+        ],
+        overlays: [
+          { type: "doubleMirror", first: {p1:{x:0,y:-5}, p2:{x:0,y:5}}, second: {p1:{x:3,y:-5}, p2:{x:3,y:5}} },
+          { type: "vectorArrow", from: {x:-4,y:1}, to: {x:2,y:1}, color: "yellow", label: "+6" }
+        ]
+      },
+      {
+        tag: "STEP 6 · THE DIRECTION",
+        lines: [
+          "The translation is perpendicular to the mirrors, going from the first mirror toward the second.",
+          "Here both mirrors are vertical, so the translation is horizontal. From $x = 0$ toward $x = 3$ means $+x$.",
+          "Column vector $= \\begin{pmatrix} 6 \\\\ 0 \\end{pmatrix}$."
+        ],
+        overlays: [
           { type: "vectorArrow", from: {x:-4,y:1}, to: {x:2,y:1}, color: "yellow", label: "+6" },
           { type: "vectorArrow", from: {x:-4,y:3}, to: {x:2,y:3}, color: "yellow" },
           { type: "vectorArrow", from: {x:-2,y:2}, to: {x:4,y:2}, color: "yellow" }
