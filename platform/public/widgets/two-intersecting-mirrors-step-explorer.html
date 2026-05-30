@@ -123,10 +123,17 @@ function svgArcPath(centre, r, startAngleRad, endAngleRad, color, width, dash, c
   var y1 = sy(centre.y + r * Math.sin(startAngleRad));
   var x2 = sx(centre.x + r * Math.cos(endAngleRad));
   var y2 = sy(centre.y + r * Math.sin(endAngleRad));
-  var rPx = r * Math.min(pxX, pxY);
-  // 90° anticlockwise in math is sweep-flag = 0 in SVG (y-down inverts).
+  // The plot has non-square pixels (pxX != pxY). A circular math arc is an
+  // ELLIPTICAL arc in SVG space — using a single circular radius would put
+  // the arc through wrong points (the SVG-computed centre would not coincide
+  // with the math centre we want). Use rx = r·pxX and ry = r·pxY so the SVG
+  // ellipse traces a true circle in math coords.
+  var rxPx = r * pxX;
+  var ryPx = r * pxY;
+  // sweep-flag = 0: counterclockwise on screen. Math CCW + y-axis flip
+  // happens to come out as CCW on screen here, so flag 0 is right.
   var d = "M " + x1 + " " + y1 +
-          " A " + rPx + " " + rPx + " 0 0 0 " + x2 + " " + y2;
+          " A " + rxPx + " " + ryPx + " 0 0 0 " + x2 + " " + y2;
   var attrs = {
     d: d, fill: "none", stroke: color,
     "stroke-width": width, "stroke-linecap": "round"
