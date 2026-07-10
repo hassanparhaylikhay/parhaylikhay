@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { COLOR, ContextCanvas, MixedText, Prompt, type InteractionProps } from "./_shared"
 
 type BuilderOption = {
@@ -58,6 +58,13 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
   const done = locked >= parts.length
   const current = done ? null : parts[locked]
   const wrongOption = current && wrongId ? current.options.find(o => o.id === wrongId) : null
+
+  // A misauthored slide with zero parts would otherwise sit "done" without
+  // ever firing onComplete, hard-blocking an onSuccess advance.
+  useEffect(() => {
+    if (parts.length === 0) onComplete({ attempts: 0 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   function pick(o: BuilderOption) {
     if (done || !current) return

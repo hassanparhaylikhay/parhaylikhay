@@ -11,7 +11,43 @@ export type WidgetCanvasConfig = {
   noOutline?: boolean
   prompt?: string
   successText?: string
+  /** Overrides the "your turn" card's instruction line. Rarely needed: the
+   *  default is derived from the widget type and whether an outline shows. */
+  taskText?: string
   widget?: string
+}
+
+/**
+ * Instruction line for the "your turn" card, derived from which widget is
+ * embedded and whether the pink target outline is visible. A single
+ * hardcoded line ("drag until it matches the pink outline") was wrong on
+ * every blind puzzle and on every widget where the student drags a mirror
+ * or a centre rather than the shape itself.
+ */
+function taskLine(src: string, hasOutline: boolean): string {
+  if (src.includes("reflection-explorer")) {
+    return hasOutline
+      ? "Drag the yellow mirror handles until the reflection lands on the pink outline."
+      : "Drag the yellow mirror handles to set the mirror the prompt asks for."
+  }
+  if (src.includes("rotation-explorer")) {
+    return hasOutline
+      ? "Drag the centre and the angle handle until the image lands on the pink outline."
+      : "Drag the centre and the angle handle to set up the rotation the prompt asks for."
+  }
+  if (src.includes("enlargement-explorer")) {
+    return hasOutline
+      ? "Drag the yellow handles until the image lands exactly on the pink outline."
+      : "Drag the yellow handles to set up the enlargement the prompt asks for."
+  }
+  if (src.includes("translation-explorer")) {
+    return hasOutline
+      ? "Drag the triangle until it lands exactly on the pink outline."
+      : "Work out where the image belongs and drag the triangle there."
+  }
+  return hasOutline
+    ? "Match the pink outline exactly."
+    : "Set up the move the prompt asks for."
 }
 
 /**
@@ -146,7 +182,11 @@ export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCa
             {solved ? "solved" : "your turn"}
           </p>
           <MixedText
-            text={solved ? config.successText ?? "Nicely done." : "Drag the yellow handles until the shape matches the pink outline."}
+            text={
+              solved
+                ? config.successText ?? "Nicely done."
+                : config.taskText ?? taskLine(config.src, Boolean(config.target) && !config.noOutline)
+            }
             className="block text-[15px] sm:text-[16px] leading-relaxed"
             style={{ color: solved ? COLOR.green : COLOR.text }}
           />

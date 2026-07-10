@@ -277,13 +277,13 @@
       "advance": "onSuccess",
       "interaction": {
         "kind": "widgetCanvas",
-        "hint": "Negative x means LEFT. Positive y means UP. No pink outline this time. Work it out.",
+        "hint": "A negative top number means left and a positive bottom number means up. Work out where the triangle lands.",
         "config": {
           "src": "/widgets/translation-explorer.html",
           "target": "-5,1",
           "noOutline": true,
           "widget": "translation",
-          "prompt": "$\\begin{pmatrix} -5 \\\\ 1 \\end{pmatrix}$. Left $5$, up $1$. No outline this time.",
+          "prompt": "Slide the triangle by $\\begin{pmatrix} -5 \\\\ 1 \\end{pmatrix}$, which means $5$ to the left and $1$ up.",
           "successText": "You found it without the outline. The column vector reads exactly what you slid."
         }
       },
@@ -380,7 +380,7 @@
           "target": "-2,-4",
           "noOutline": true,
           "widget": "translation",
-          "prompt": "Slide by $\\begin{pmatrix} -2 \\\\ -4 \\end{pmatrix}$. Left by 2, down by 4. No outline.",
+          "prompt": "Slide the triangle by $\\begin{pmatrix} -2 \\\\ -4 \\end{pmatrix}$, which means $2$ to the left and $4$ down.",
           "successText": "You're reading vectors fluently now."
         }
       },
@@ -664,7 +664,7 @@
           "target": "y=x",
           "noOutline": true,
           "widget": "reflection",
-          "prompt": "Place the mirror on $y = x$. No outline this time.",
+          "prompt": "Place the mirror on the line $y = x$.",
           "successText": "$y = x$ swaps the two coordinates: $(x, y) \\to (y, x)$."
         }
       },
@@ -1218,8 +1218,8 @@
           "src": "/widgets/rotation-explorer.html",
           "target": "1,0,90",
           "widget": "rotation",
-          "prompt": "Rotate $90°$ anticlockwise about $(1, 0)$. Two things to set: centre AND angle. Match the pink outline.",
-          "successText": "Centre $(1, 0)$, $90°$ ACW. When the centre isn't the origin you must drag BOTH."
+          "prompt": "Rotate $90°$ anticlockwise about $(1, 0)$. This time you set both the centre and the angle, then match the pink outline.",
+          "successText": "Centre $(1, 0)$ with a $90°$ anticlockwise turn. When the centre is not the origin, you have to place it yourself before the angle means anything."
         }
       },
       "altExplain": {
@@ -1752,13 +1752,13 @@
       "advance": "onSuccess",
       "interaction": {
         "kind": "widgetCanvas",
-        "hint": "One-and-a-half times the distance. No outline this time.",
+        "hint": "Every corner moves to one-and-a-half times its distance from the centre.",
         "config": {
           "src": "/widgets/enlargement-explorer.html",
           "target": "1.5,0,0",
           "noOutline": true,
           "widget": "enlargement",
-          "prompt": "Scale by $k = 1.5$ from the centre at $(0, 0)$. No pink outline this time.",
+          "prompt": "Scale by $k = 1.5$ from the centre at $(0, 0)$.",
           "successText": "$k = 1.5$. One and a half times as big as the original."
         }
       },

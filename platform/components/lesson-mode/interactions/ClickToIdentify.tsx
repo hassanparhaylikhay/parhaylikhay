@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { COLOR, Prompt, HelperRow, MixedText, useShake, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Region = {
   id: string
@@ -36,6 +36,11 @@ export default function ClickToIdentify({ config, onComplete, onShowMeUsed }: In
 
   const pickedRegion = picked !== null ? config.regions.find(r => r.id === picked) : null
   const isLocked = !!pickedRegion?.isCorrect
+  // "Show me" highlights the correct region even when the author didn't set
+  // an explicit revealId (previously the reveal showed the success text but
+  // left every card unhighlighted).
+  const correctRegion = config.regions.find(r => r.isCorrect)
+  const revealId = config.revealId ?? correctRegion?.id
 
   function pick(id: string) {
     if (isLocked) return
@@ -64,7 +69,7 @@ export default function ClickToIdentify({ config, onComplete, onShowMeUsed }: In
           const isShakingThis = shakeId === r.id
           const isCorrectPick = picked === r.id && r.isCorrect
           const isWrongPick = picked === r.id && !r.isCorrect
-          const isRevealedHit = revealed && r.id === config.revealId
+          const isRevealedHit = revealed && r.id === revealId
           return (
             <button
               key={r.id}
@@ -140,6 +145,3 @@ function useShakeOn() {
   }
   return [shakeId, fire] as const
 }
-
-// suppress unused
-void useShake
