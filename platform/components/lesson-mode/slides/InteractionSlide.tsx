@@ -11,6 +11,7 @@ import OrderSteps, { type OrderStepsConfig } from "../interactions/OrderSteps"
 import AdjustSlider, { type AdjustSliderConfig } from "../interactions/AdjustSlider"
 import WidgetCanvas, { type WidgetCanvasConfig } from "../interactions/WidgetCanvas"
 import ClickOnGrid, { type ClickOnGridConfig } from "../interactions/ClickOnGrid"
+import AnswerBuilder, { type AnswerBuilderConfig } from "../interactions/AnswerBuilder"
 
 /**
  * InteractionSlide — routes a slide of kind="interaction" (or "verify") to the
@@ -38,7 +39,14 @@ export default function InteractionSlide({
   onShowMeUsed?: () => void
 }) {
   const inj = slide.interaction
-  const baseConfig = { ...(inj.config as Record<string, unknown>), prompt: (inj.config as Record<string, unknown>).prompt ?? slide.prompt }
+  const baseConfig = {
+    ...(inj.config as Record<string, unknown>),
+    prompt: (inj.config as Record<string, unknown>).prompt ?? slide.prompt,
+    // Verify slides run under exam conditions: interactions hide their
+    // show-me / eliminate / reveal affordances. (LessonRunner already
+    // suppresses the 20s hint banner for verify slides.)
+    ...(slide.kind === "verify" ? { noHelp: true } : null),
+  }
 
   // widgetCanvas / clickOnGrid handle their own post-success pause + auto-advance.
   // For every other interaction kind, wrap onComplete so the lesson auto-advances
@@ -86,6 +94,7 @@ export default function InteractionSlide({
           case "adjustSlider":        return <AdjustSlider        {...(baseProps as { config: AdjustSliderConfig;        onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
           case "widgetCanvas":        return <WidgetCanvas        {...(advProps as { config: WidgetCanvasConfig;        onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
           case "clickOnGrid":         return <ClickOnGrid         {...(advProps as { config: ClickOnGridConfig;         onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "answerBuilder":       return <AnswerBuilder       {...(baseProps as { config: AnswerBuilderConfig;       onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
         }
       })()}
     </div>

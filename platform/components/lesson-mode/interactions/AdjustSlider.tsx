@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import katex from "katex"
 import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
@@ -25,6 +25,8 @@ export type AdjustSliderConfig = {
   successText?: string
   /** If true, advance the lesson on any movement (exploration mode, no target). */
   advanceOnExplore?: boolean
+  /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
+  noHelp?: boolean
 }
 
 /**
@@ -36,20 +38,21 @@ export type AdjustSliderConfig = {
  * value and returns an SVG string. Keeps the JSON declarative; the function
  * body is only ever as trusted as the lesson.json itself.
  */
-export default function AdjustSlider({ config, onComplete }: InteractionProps<AdjustSliderConfig>) {
+export default function AdjustSlider({ config, onComplete, onShowMeUsed }: InteractionProps<AdjustSliderConfig>) {
   const tol = config.tolerance ?? config.step / 2
   const [value, setValue] = useState(config.initial)
   const [done, setDone] = useState(false)
   const [exploreFired, setExploreFired] = useState(false)
-  const renderRef = useRef<(v: number) => string>(() => "")
 
-  // Compile the renderer once
-  useEffect(() => {
+  // Compile the renderer during render (memoised). The previous version
+  // compiled inside useEffect, which runs after the first paint, so the
+  // visual was blank for one frame on every mount.
+  const renderFn = useMemo<(v: number) => string>(() => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
-      renderRef.current = new Function("v", "color", `return (${config.renderSvg})(v, color)`) as (v: number) => string
+      return new Function("v", "color", `return (${config.renderSvg})(v, color)`) as (v: number) => string
     } catch (e) {
-      renderRef.current = () => `<text x='10' y='20' fill='#ff4670'>renderSvg failed: ${(e as Error).message}</text>`
+      return () => `<text x='10' y='20' fill='#ff4670'>renderSvg failed: ${(e as Error).message}</text>`
     }
   }, [config.renderSvg])
 
@@ -68,7 +71,7 @@ export default function AdjustSlider({ config, onComplete }: InteractionProps<Ad
   }, [value, config.target, tol, done, config.advanceOnExplore, config.initial, exploreFired, onComplete])
 
   // Live SVG
-  const svgString = renderRef.current(value)
+  const svgString = renderFn(value)
 
   // KaTeX for the readout
   const readoutTex = katex.renderToString(`${config.varName} = ${formatNum(value)}`, {
@@ -126,13 +129,15 @@ export default function AdjustSlider({ config, onComplete }: InteractionProps<Ad
         />
       )}
 
-      <HelperRow
-        onShowMe={
-          config.target !== undefined && !done
-            ? () => { setValue(config.target!); setDone(true); onComplete({ value: config.target, revealed: true }) }
-            : undefined
-        }
-      />
+      {!config.noHelp && (
+        <HelperRow
+          onShowMe={
+            config.target !== undefined && !done
+              ? () => { onShowMeUsed?.(); setValue(config.target!); setDone(true); onComplete({ value: config.target, revealed: true }) }
+              : undefined
+          }
+        />
+      )}
     </div>
   )
 }

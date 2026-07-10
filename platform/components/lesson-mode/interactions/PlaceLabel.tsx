@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import katex from "katex"
 import { COLOR, Prompt, HelperRow, MixedText, ContextCanvas, type InteractionProps } from "./_shared"
 
 type Slot = {
@@ -29,6 +28,8 @@ export type PlaceLabelConfig = {
   successText?: string
   /** Layout direction for slots; defaults to row. */
   slotsLayout?: "row" | "column"
+  /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
+  noHelp?: boolean
 }
 
 /**
@@ -40,7 +41,7 @@ export type PlaceLabelConfig = {
  * slot row; when picked up, a ghost follows the pointer. Drops onto slots
  * are detected by hit-testing the dragged element against the slot rects.
  */
-export default function PlaceLabel({ config, onComplete }: InteractionProps<PlaceLabelConfig>) {
+export default function PlaceLabel({ config, onComplete, onShowMeUsed }: InteractionProps<PlaceLabelConfig>) {
   // Map of slotId -> assigned labelId (or null)
   const [placement, setPlacement] = useState<Record<string, string | null>>(
     Object.fromEntries(config.slots.map(s => [s.id, null]))
@@ -101,6 +102,7 @@ export default function PlaceLabel({ config, onComplete }: InteractionProps<Plac
   }
 
   function showMe() {
+    onShowMeUsed?.()
     const next: Record<string, string | null> = {}
     for (const s of config.slots) next[s.id] = s.correctLabelId
     setPlacement(next)
@@ -138,7 +140,7 @@ export default function PlaceLabel({ config, onComplete }: InteractionProps<Plac
               style={hasVisual ? { borderColor: isCorrect ? COLOR.green : "#1a3350" } : undefined}
             >
               {filledLabel ? (
-                <LabelText text={filledLabel.text} color={isCorrect ? COLOR.green : COLOR.text} />
+                <MixedText text={filledLabel.text} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: isCorrect ? COLOR.green : COLOR.text }} />
               ) : (
                 <span className="text-[11px] font-mono uppercase tracking-wider" style={{ color: COLOR.faint }}>
                   {s.hint}
@@ -170,7 +172,7 @@ export default function PlaceLabel({ config, onComplete }: InteractionProps<Plac
               opacity: isDragging ? 0.3 : 1,
             }}
           >
-            <LabelText text={l.text} color={COLOR.blue} />
+            <MixedText text={l.text} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: COLOR.blue }} />
           </div>
         )
       })}
@@ -197,7 +199,7 @@ export default function PlaceLabel({ config, onComplete }: InteractionProps<Plac
         boxShadow: "0 6px 20px -8px rgba(0,171,250,0.6)",
       }}
     >
-      <LabelText text={config.labels.find(l => l.id === dragLabelId)?.text ?? ""} color={COLOR.blue} />
+      <MixedText text={config.labels.find(l => l.id === dragLabelId)?.text ?? ""} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: COLOR.blue }} />
     </div>
   )
 
@@ -217,7 +219,7 @@ export default function PlaceLabel({ config, onComplete }: InteractionProps<Plac
           {slotRow}
           {tray}
           {successBlock}
-          <HelperRow onShowMe={!done ? showMe : undefined} />
+          {!config.noHelp && <HelperRow onShowMe={!done ? showMe : undefined} />}
         </aside>
         {ghost}
       </div>
@@ -231,22 +233,8 @@ export default function PlaceLabel({ config, onComplete }: InteractionProps<Plac
       {tray}
       {ghost}
       {successBlock}
-      <HelperRow onShowMe={!done ? showMe : undefined} />
+      {!config.noHelp && <HelperRow onShowMe={!done ? showMe : undefined} />}
     </div>
   )
 }
 
-function LabelText({ text, color }: { text: string; color: string }) {
-  const parts = text.split(/(\$[^$]+\$)/g)
-  return (
-    <span className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color }}>
-      {parts.map((p, i) => {
-        if (p.startsWith("$") && p.endsWith("$") && p.length > 2) {
-          const html = katex.renderToString(p.slice(1, -1), { throwOnError: false, displayMode: false, output: "html" })
-          return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />
-        }
-        return <span key={i}>{p}</span>
-      })}
-    </span>
-  )
-}

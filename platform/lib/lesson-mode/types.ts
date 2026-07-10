@@ -25,6 +25,7 @@ export type InteractionKind =
   | "adjustSlider"         // change a parameter, watch the geometry, settle on a value
   | "widgetCanvas"         // embed a polished HTML widget; listens for pl-lesson-success
   | "clickOnGrid"          // tap a grid coordinate; verifies against a target point
+  | "answerBuilder"        // assemble the full examiner sentence part by part; each part earns its mark pill
 
 export interface InteractionSpec {
   kind: InteractionKind
@@ -63,6 +64,14 @@ interface BaseSlide {
   advance: AdvanceCondition
   /** Re-explanation when the student taps "explain another way". */
   altExplain?: { prompt?: string; visual?: VisualSpec; interaction?: InteractionSpec }
+  /** Chapter this slide belongs to. Must match an id in Lesson.chapters. */
+  chapter?: string
+  /**
+   * Exam marks banked when this slide is completed. Only set on slides that
+   * rehearse real mark-scheme work (past-paper puzzles, answer builders,
+   * verify questions). The chrome ledger sums these.
+   */
+  marks?: number
 }
 
 export interface HookSlide extends BaseSlide {
@@ -115,6 +124,12 @@ export interface Lesson {
   title: string
   /** Rough length for the entry card. */
   estimatedMinutes?: number
+  /**
+   * Ordered chapters. Each slide's `chapter` field points at one of these ids.
+   * Drives the segmented progress bar in the chrome (75 dots was unreadable
+   * and overflowed the header; chapters read as a journey).
+   */
+  chapters?: Array<{ id: string; title: string }>
   slides: Slide[]
 }
 

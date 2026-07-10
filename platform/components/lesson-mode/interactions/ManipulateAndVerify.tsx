@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import katex from "katex"
 import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
@@ -54,33 +54,36 @@ export default function ManipulateAndVerify({ config, onComplete }: InteractionP
   const wrapRef = useRef<SVGSVGElement | null>(null)
   const dragRef = useRef<{ handleId: string; startMouse: [number, number]; startMath: [number, number] } | null>(null)
 
-  const sceneFn = useRef<(h: Record<string, { x: number; y: number }>, c: typeof COLOR) => string>(() => "")
-  const successFn = useRef<(h: Record<string, { x: number; y: number }>) => boolean>(() => false)
-  const readoutFn = useRef<(h: Record<string, { x: number; y: number }>) => string>(() => "")
-
-  useEffect(() => {
+  // Compile the config functions during render (memoised). Compiling in a
+  // useEffect ran after the first paint, so the scene was empty for one frame.
+  type Handles = Record<string, { x: number; y: number }>
+  const { sceneFn, successFn, readoutFn } = useMemo(() => {
+    let scene: (h: Handles, c: typeof COLOR) => string = () => ""
+    let success: (h: Handles) => boolean = () => false
+    let readout: (h: Handles) => string = () => ""
     try {
       // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
-      sceneFn.current = new Function("h", "color", `return (${config.renderScene})(h, color)`) as (h: Record<string, { x: number; y: number }>, c: typeof COLOR) => string
+      scene = new Function("h", "color", `return (${config.renderScene})(h, color)`) as typeof scene
       // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
-      successFn.current = new Function("h", `return (${config.successTest})(h)`) as (h: Record<string, { x: number; y: number }>) => boolean
+      success = new Function("h", `return (${config.successTest})(h)`) as typeof success
       if (config.readoutHtml) {
         // eslint-disable-next-line @typescript-eslint/no-implied-eval, no-new-func
-        readoutFn.current = new Function("h", `return (${config.readoutHtml})(h)`) as (h: Record<string, { x: number; y: number }>) => string
+        readout = new Function("h", `return (${config.readoutHtml})(h)`) as typeof readout
       }
     } catch (e) { void e }
+    return { sceneFn: scene, successFn: success, readoutFn: readout }
   }, [config.renderScene, config.successTest, config.readoutHtml])
 
   // Check success on every handle change
   useEffect(() => {
     if (done) return
     try {
-      if (successFn.current(handles)) {
+      if (successFn(handles)) {
         setDone(true)
         onComplete({ handles })
       }
     } catch { /* ignore */ }
-  }, [handles, done, onComplete])
+  }, [handles, done, onComplete, successFn])
 
   const [xMin, xMax] = config.xRange
   const [yMin, yMax] = config.yRange
@@ -146,11 +149,11 @@ export default function ManipulateAndVerify({ config, onComplete }: InteractionP
   }
 
   const scene = (() => {
-    try { return sceneFn.current(handles, COLOR) } catch { return "" }
+    try { return sceneFn(handles, COLOR) } catch { return "" }
   })()
   const readout = (() => {
     if (!config.readoutHtml) return ""
-    try { return readoutFn.current(handles) } catch { return "" }
+    try { return readoutFn(handles) } catch { return "" }
   })()
 
   // Render KaTeX on the readout string (it may contain $...$)

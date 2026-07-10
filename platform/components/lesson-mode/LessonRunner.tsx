@@ -1,10 +1,10 @@
 "use client"
 
 import "katex/dist/katex.min.css"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { Lesson, Slide, LessonProgress } from "@/lib/lesson-mode/types"
 import { loadProgress, saveProgress, updateSlideState } from "@/lib/lesson-mode/storage"
-import SlideFrame from "./SlideFrame"
+import SlideFrame, { type ChapterInfo } from "./SlideFrame"
 import HookSlide from "./slides/HookSlide"
 import ConceptSlide from "./slides/ConceptSlide"
 import InteractionSlide from "./slides/InteractionSlide"
@@ -28,17 +28,62 @@ export default function LessonRunner({ lesson }: Props) {
   // so it surfaces as the natural next step after a hint, not before the student
   // has even tried.
   const [showMeUsed, setShowMeUsed] = useState(false)
+  // Small "welcome back" toast shown when a returning student resumes mid-lesson.
+  const [welcomeBack, setWelcomeBack] = useState<string | null>(null)
+  const welcomeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Chapter ranges, derived once from the slides' chapter tags.
+  const chapters: ChapterInfo[] | null = useMemo(() => {
+    if (!lesson.chapters?.length) return null
+    const out: ChapterInfo[] = []
+    for (const c of lesson.chapters) {
+      let start = -1
+      let end = -1
+      lesson.slides.forEach((s, i) => {
+        if (s.chapter !== c.id) return
+        if (start < 0) start = i
+        end = i
+      })
+      if (start >= 0) out.push({ id: c.id, title: c.title, start, end })
+    }
+    return out.length > 0 ? out : null
+  }, [lesson])
+
+  const totalMarks = useMemo(
+    () => lesson.slides.reduce((sum, s) => sum + (s.marks ?? 0), 0),
+    [lesson]
+  )
+  const bankedMarks = useMemo(() => {
+    if (!progress) return 0
+    return lesson.slides.reduce(
+      (sum, s) => sum + ((s.marks && progress.slideStates[s.id]?.completed) ? s.marks : 0),
+      0
+    )
+  }, [lesson, progress])
 
   useEffect(() => {
     let alive = true
     loadProgress(lesson.lessonId).then(p => {
       if (!alive) return
       setProgress(p)
-      setIdx(Math.min(p.currentSlideIdx, total - 1))
+      const resumeIdx = Math.min(p.currentSlideIdx, total - 1)
+      setIdx(resumeIdx)
       setHydrated(true)
+      // A returning student gets one quiet orientation beat instead of being
+      // dropped silently onto slide 34.
+      if (resumeIdx >= 3 && resumeIdx < total - 1) {
+        const ch = lesson.chapters?.length
+          ? lesson.chapters.find(c => lesson.slides[resumeIdx]?.chapter === c.id)
+          : null
+        setWelcomeBack(ch ? `Welcome back. You are in ${ch.title}.` : "Welcome back. Carrying on where you left off.")
+        welcomeTimer.current = setTimeout(() => setWelcomeBack(null), 4500)
+      }
     })
-    return () => { alive = false }
-  }, [lesson.lessonId, total])
+    return () => {
+      alive = false
+      if (welcomeTimer.current) clearTimeout(welcomeTimer.current)
+    }
+  }, [lesson, total])
 
   const slide = lesson.slides[idx]
   const slideState = progress?.slideStates[slide?.id ?? ""]
@@ -121,7 +166,10 @@ export default function LessonRunner({ lesson }: Props) {
         title={slide.title ?? lesson.title}
         canAdvance={canAdvance}
         wide={wide}
-        showExplainAgain={Boolean(slide.altExplain) && showMeUsed && !showAlt}
+        chapters={chapters}
+        marks={totalMarks > 0 ? { banked: bankedMarks, total: totalMarks } : null}
+        altAvailable={Boolean(slide.altExplain) && !showAlt}
+        showMeUsed={showMeUsed}
         hintText={getHint(slide)}
         exitHref={exitHref}
         onPrev={goPrev}
@@ -137,28 +185,38 @@ export default function LessonRunner({ lesson }: Props) {
           onShowMeUsed={handleShowMeUsed}
         />
       </SlideFrame>
+      {welcomeBack && (
+        <div
+          className="pl-fade-in fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg border border-[#1a3350] bg-[#0b1118] text-[12px] font-mono text-[#7a7875] shadow-lg pointer-events-none"
+        >
+          {welcomeBack}
+        </div>
+      )}
     </>
   )
 }
 
 const WIDE_INTERACTION_KINDS = new Set(["widgetCanvas", "clickOnGrid"])
+// Interactions that go wide only when they carry a contextHtml diagram
+// (canvas on the left, controls in the right aside).
+const CONTEXT_WIDE_KINDS = new Set(["selectFromOptions", "placeLabel", "answerBuilder"])
+
+function interactionIsWide(interaction: { kind?: string; config?: Record<string, unknown> } | undefined): boolean {
+  const k = interaction?.kind ?? ""
+  if (WIDE_INTERACTION_KINDS.has(k)) return true
+  if (CONTEXT_WIDE_KINDS.has(k)) {
+    const ctx = (interaction?.config as { contextHtml?: string } | undefined)?.contextHtml
+    if (ctx) return true
+  }
+  return false
+}
 
 function isWideSlide(slide: Slide): boolean {
   if (slide.kind === "interaction" || slide.kind === "verify") {
-    const k = slide.interaction?.kind ?? ""
-    if (WIDE_INTERACTION_KINDS.has(k)) return true
-    // selectFromOptions and placeLabel slides with a contextHtml render
-    // the diagram as a big manipulative canvas on the left + controls on
-    // the right — same shape as widgetCanvas. Mark them wide so the slide
-    // frame uses the 1200px max-width and the user never needs to scroll.
-    if (k === "selectFromOptions" || k === "placeLabel") {
-      const ctx = (slide.interaction?.config as { contextHtml?: string } | undefined)?.contextHtml
-      if (ctx) return true
-    }
-    return false
+    return interactionIsWide(slide.interaction)
   }
   if (slide.kind === "examLink") {
-    return WIDE_INTERACTION_KINDS.has(slide.interaction?.kind ?? "")
+    return interactionIsWide(slide.interaction)
   }
   if (slide.kind === "concept" || slide.kind === "hook" || slide.kind === "recap") {
     const v = (slide as { visual?: { kind?: string; wide?: boolean } }).visual
@@ -201,7 +259,11 @@ function SlideDispatcher({
 }
 
 function getHint(slide: Slide): string | undefined {
-  if (slide.kind === "interaction" || slide.kind === "verify") {
+  // Verify slides are exam conditions: no hints, no show-me. The whyWrong
+  // feedback after a wrong attempt still teaches, but there is no help
+  // BEFORE the attempt, which is what makes the check honest.
+  if (slide.kind === "verify") return undefined
+  if (slide.kind === "interaction") {
     return slide.interaction?.hint
   }
   if (slide.kind === "examLink") {
@@ -220,11 +282,23 @@ function applyAltExplain(slide: Slide): Slide {
   if (!alt) return slide
   // shallow merge; interaction wins over visual if provided
   const next: Slide = { ...slide }
-  if (alt.prompt !== undefined) next.prompt = alt.prompt
+  if (alt.prompt !== undefined) {
+    next.prompt = alt.prompt
+    // Interactions read their prompt from interaction.config.prompt first
+    // (InteractionSlide falls back to slide.prompt only when the config has
+    // none). Thread the alt prompt into the config too, otherwise "explain
+    // another way" silently shows the original text on most puzzles.
+    if ((next.kind === "interaction" || next.kind === "verify" || next.kind === "examLink") && next.interaction) {
+      next.interaction = {
+        ...next.interaction,
+        config: { ...next.interaction.config, prompt: alt.prompt },
+      }
+    }
+  }
   if (alt.visual !== undefined && "visual" in next) {
     (next as { visual?: unknown }).visual = alt.visual
   }
-  if (alt.interaction !== undefined && (next.kind === "interaction" || next.kind === "verify")) {
+  if (alt.interaction !== undefined && (next.kind === "interaction" || next.kind === "verify" || next.kind === "examLink")) {
     next.interaction = alt.interaction
   }
   return next

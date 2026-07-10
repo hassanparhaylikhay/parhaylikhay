@@ -24,13 +24,15 @@ export type DragToPositionConfig = {
   successText?: string
   /** When true, also show the target shape as a faint outline. */
   showTarget?: boolean
+  /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
+  noHelp?: boolean
 }
 
 /**
  * DragToPosition — student drags the blue shape until it lands on the pink target.
  * Freeform, but snaps to integer grid for clean feel. Pointer-events; works on touch.
  */
-export default function DragToPosition({ config, onComplete }: InteractionProps<DragToPositionConfig>) {
+export default function DragToPosition({ config, onComplete, onShowMeUsed }: InteractionProps<DragToPositionConfig>) {
   const snap = config.snap ?? 1
   const tol = config.tolerance ?? 0
   const showTarget = config.showTarget !== false
@@ -163,6 +165,7 @@ export default function DragToPosition({ config, onComplete }: InteractionProps<
   }
 
   function revealAnswer() {
+    onShowMeUsed?.()
     setOffset(config.targetOffset)
     setRevealed(true)
     if (!done) {
@@ -223,7 +226,7 @@ export default function DragToPosition({ config, onComplete }: InteractionProps<
         />
       )}
 
-      <HelperRow onShowMe={!done && !revealed ? revealAnswer : undefined} />
+      {!config.noHelp && <HelperRow onShowMe={!done && !revealed ? revealAnswer : undefined} />}
     </div>
   )
 }

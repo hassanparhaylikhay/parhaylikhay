@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import katex from "katex"
 import { COLOR, ContextCanvas, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Option = {
@@ -32,6 +31,8 @@ export type SelectFromOptionsConfig = {
   layout?: "stack" | "row"
   /** Tap-after-correct success text. */
   successText?: string
+  /** Verify slides: no elimination hint. Injected by InteractionSlide. */
+  noHelp?: boolean
 }
 
 /**
@@ -42,9 +43,14 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
   const [picked, setPicked] = useState<string | null>(null)
   const [shakeId, setShakeId] = useState<string | null>(null)
   const [eliminated, setEliminated] = useState<Set<string>>(new Set())
+  const [attempts, setAttempts] = useState(0)
 
-  const correct = config.options.find(o => o.isCorrect)
-  const isResolved = picked !== null && picked === correct?.id
+  // Resolve against the PICKED option's own isCorrect flag, not against the
+  // first correct option in the list. With more than one correct option the
+  // old comparison treated every correct pick after the first as wrong.
+  const pickedOption = picked !== null ? config.options.find(o => o.id === picked) : null
+  const isResolved = !!pickedOption?.isCorrect
+  const correct = pickedOption?.isCorrect ? pickedOption : config.options.find(o => o.isCorrect)
 
   function pick(id: string) {
     if (isResolved) return
@@ -53,8 +59,9 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
     if (!o) return
     setPicked(id)
     if (o.isCorrect) {
-      onComplete({ pickedId: id })
+      onComplete({ pickedId: id, attempts })
     } else {
+      setAttempts(a => a + 1)
       setShakeId(id)
       setTimeout(() => setShakeId(null), 400)
     }
@@ -108,9 +115,10 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
         {o.visualHtml && (
           <div className="mb-2" dangerouslySetInnerHTML={{ __html: o.visualHtml }} />
         )}
-        <OptionText
+        <MixedText
           text={o.text}
-          color={isCorrectPick ? COLOR.green : isWrongPick ? COLOR.pink : isEliminated ? COLOR.faint : COLOR.text}
+          className="text-[15.5px] sm:text-[16.5px] leading-relaxed transition-colors duration-300"
+          style={{ color: isCorrectPick ? COLOR.green : isWrongPick ? COLOR.pink : isEliminated ? COLOR.faint : COLOR.text }}
         />
       </button>
     )
@@ -133,7 +141,7 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
     </>
   )
 
-  const helper = (
+  const helper = config.noHelp ? null : (
     <HelperRow
       showMeLabel={
         eliminated.size === 0
@@ -196,23 +204,3 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
   )
 }
 
-function OptionText({ text, color }: { text: string; color: string }) {
-  // Split on $...$ and render odd indices as KaTeX
-  const parts = text.split(/(\$[^$]+\$)/g)
-  return (
-    <span className="text-[15.5px] sm:text-[16.5px] leading-relaxed transition-colors duration-300" style={{ color }}>
-      {parts.map((p, i) => {
-        if (p.startsWith("$") && p.endsWith("$") && p.length > 2) {
-          const tex = p.slice(1, -1)
-          try {
-            const html = katex.renderToString(tex, { throwOnError: false, displayMode: false, output: "html" })
-            return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />
-          } catch {
-            return <span key={i}>{tex}</span>
-          }
-        }
-        return <span key={i}>{p}</span>
-      })}
-    </span>
-  )
-}

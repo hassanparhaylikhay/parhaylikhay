@@ -20,19 +20,22 @@ export type ClickToIdentifyConfig = {
   revealId?: string
   /** Number of columns in the grid; defaults to regions.length. */
   cols?: number
+  /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
+  noHelp?: boolean
 }
 
 /**
  * ClickToIdentify — student taps the correct region from a small grid.
  * Wrong taps shake. Correct tap green-pulses + fires onComplete.
  */
-export default function ClickToIdentify({ config, onComplete }: InteractionProps<ClickToIdentifyConfig>) {
+export default function ClickToIdentify({ config, onComplete, onShowMeUsed }: InteractionProps<ClickToIdentifyConfig>) {
   const [picked, setPicked] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
+  const [attempts, setAttempts] = useState(0)
   const [shakeId, fireShake] = useShakeOn()
 
-  const correctRegion = config.regions.find(r => r.isCorrect)
-  const isLocked = picked !== null && picked === correctRegion?.id
+  const pickedRegion = picked !== null ? config.regions.find(r => r.id === picked) : null
+  const isLocked = !!pickedRegion?.isCorrect
 
   function pick(id: string) {
     if (isLocked) return
@@ -40,8 +43,9 @@ export default function ClickToIdentify({ config, onComplete }: InteractionProps
     if (!r) return
     setPicked(id)
     if (r.isCorrect) {
-      onComplete({ pickedId: id })
+      onComplete({ pickedId: id, attempts })
     } else {
+      setAttempts(a => a + 1)
       fireShake(id)
     }
   }
@@ -111,16 +115,19 @@ export default function ClickToIdentify({ config, onComplete }: InteractionProps
         />
       )}
 
-      <HelperRow
-        onShowMe={
-          !isLocked && !revealed
-            ? () => {
-                setRevealed(true)
-                onComplete({ revealed: true })
-              }
-            : undefined
-        }
-      />
+      {!config.noHelp && (
+        <HelperRow
+          onShowMe={
+            !isLocked && !revealed
+              ? () => {
+                  setRevealed(true)
+                  onShowMeUsed?.()
+                  onComplete({ revealed: true })
+                }
+              : undefined
+          }
+        />
+      )}
     </div>
   )
 }

@@ -14,6 +14,8 @@ export type ClickOnGridConfig = {
   target: { x: number; y: number }
   tolerance?: number
   successText?: string
+  /** Verify slides: no show-me ring. Injected by InteractionSlide. */
+  noHelp?: boolean
 }
 
 /**
@@ -32,18 +34,25 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
   const [done, setDone] = useState(false)
   const [wrongFlashId, setWrongFlashId] = useState(0)
   const [hintShown, setHintShown] = useState(false)
+  const [attempts, setAttempts] = useState(0)
   const svgRef = useRef<SVGSVGElement | null>(null)
   const colRef = useRef<HTMLDivElement | null>(null)
   // Capture the auto-advance timer so unmount (slide change) can cancel it.
   // Otherwise a stale onAdvance closure firing after the student has manually
   // clicked next bounces them backwards (see InteractionSlide for the long
-  // explanation).
+  // explanation). The wrong-flash timer gets the same treatment so a fast
+  // slide change can't fire setState on an unmounted component.
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wrongFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     return () => {
       if (advanceTimerRef.current !== null) {
         clearTimeout(advanceTimerRef.current)
         advanceTimerRef.current = null
+      }
+      if (wrongFlashTimerRef.current !== null) {
+        clearTimeout(wrongFlashTimerRef.current)
+        wrongFlashTimerRef.current = null
       }
     }
   }, [])
@@ -108,7 +117,7 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
     if (correct) {
       setPick({ x: mx, y: my, correct: true })
       setDone(true)
-      onComplete({ pick: { x: mx, y: my } })
+      onComplete({ pick: { x: mx, y: my }, attempts })
       // Auto-advance after a short pause. The SVG already locks further taps
       // via the `done` check at the top of this handler.
       if (onAdvance) {
@@ -118,10 +127,12 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
         }, 2800)
       }
     } else {
+      setAttempts(a => a + 1)
       setPick({ x: mx, y: my, correct: false })
       const id = wrongFlashId + 1
       setWrongFlashId(id)
-      setTimeout(() => {
+      wrongFlashTimerRef.current = setTimeout(() => {
+        wrongFlashTimerRef.current = null
         setPick(curr => (curr && !curr.correct ? null : curr))
       }, 900)
     }
@@ -335,7 +346,7 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
             style={{ color: done ? COLOR.green : COLOR.text }}
           />
         </div>
-        {!done && !hintShown && (
+        {!done && !hintShown && !config.noHelp && (
           <button
             onClick={() => { setHintShown(true); onShowMeUsed?.() }}
             className="self-start text-[11px] font-mono text-[#3a4a5a] hover:text-[#7a7875] transition-colors"

@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import katex from "katex"
 import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Step = {
@@ -19,6 +18,35 @@ export type OrderStepsConfig = {
   /** Optional ordering direction. */
   direction?: "horizontal" | "vertical"
   successText?: string
+  /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
+  noHelp?: boolean
+}
+
+/**
+ * Deterministic tray order that is guaranteed to differ from both the
+ * correct order and its exact reverse. The previous approach (sort by id,
+ * then reverse) put the tray in the exact reverse of the correct order
+ * every time, which students learn to exploit after two slides.
+ */
+function trayOrder(steps: Step[]): Step[] {
+  const n = steps.length
+  if (n < 3) return [...steps].reverse()
+  // Interleave from the middle outwards: for [a,b,c,d] gives [c,b,d,a].
+  const out: Step[] = []
+  let lo = Math.floor((n - 1) / 2)
+  let hi = lo + 1
+  let takeLow = true
+  while (out.length < n) {
+    if (takeLow && lo >= 0) out.push(steps[lo--])
+    else if (hi < n) out.push(steps[hi++])
+    else if (lo >= 0) out.push(steps[lo--])
+    takeLow = !takeLow
+  }
+  const same = (a: Step[], b: Step[]) => a.every((s, i) => s.id === b[i].id)
+  if (same(out, steps) || same(out, [...steps].reverse())) {
+    out.push(out.shift()!)
+  }
+  return out
 }
 
 /**
@@ -29,12 +57,13 @@ export type OrderStepsConfig = {
  * slot to assign it. Tiles automatically rearrange so each slot holds one
  * tile at a time.
  */
-export default function OrderSteps({ config, onComplete }: InteractionProps<OrderStepsConfig>) {
+export default function OrderSteps({ config, onComplete, onShowMeUsed }: InteractionProps<OrderStepsConfig>) {
   const N = config.steps.length
-  // shuffle steps once for the tray; use a deterministic order based on ids
+  // Tray order computed once; deterministic but never the correct order
+  // and never its exact reverse.
   const shuffled = useRef<Step[]>([])
   if (shuffled.current.length !== N) {
-    shuffled.current = [...config.steps].sort((a, b) => a.id.localeCompare(b.id)).reverse()
+    shuffled.current = trayOrder(config.steps)
   }
 
   // slot[i] holds the id of the tile placed there, or null
@@ -95,6 +124,7 @@ export default function OrderSteps({ config, onComplete }: InteractionProps<Orde
   }
 
   function showMe() {
+    onShowMeUsed?.()
     setSlots(config.steps.map(s => s.id))
   }
 
@@ -146,7 +176,7 @@ export default function OrderSteps({ config, onComplete }: InteractionProps<Orde
                   onPointerCancel={drop}
                   className="flex-1 text-left cursor-grab active:cursor-grabbing select-none touch-none"
                 >
-                  <TileText text={filledTile.text} color={isCorrect ? COLOR.green : COLOR.text} />
+                  <MixedText text={filledTile.text} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: isCorrect ? COLOR.green : COLOR.text }} />
                 </button>
               ) : (
                 <span className="text-[11px] uppercase tracking-wider opacity-50" style={{ color: COLOR.faint }}>
@@ -176,7 +206,7 @@ export default function OrderSteps({ config, onComplete }: InteractionProps<Orde
                 opacity: isDragging ? 0.3 : 1,
               }}
             >
-              <TileText text={t.text} color={COLOR.blue} />
+              <MixedText text={t.text} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: COLOR.blue }} />
             </div>
           )
         })}
@@ -193,7 +223,7 @@ export default function OrderSteps({ config, onComplete }: InteractionProps<Orde
             boxShadow: "0 6px 20px -8px rgba(0,171,250,0.6)",
           }}
         >
-          <TileText text={config.steps.find(s => s.id === dragId)?.text ?? ""} color={COLOR.blue} />
+          <MixedText text={config.steps.find(s => s.id === dragId)?.text ?? ""} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: COLOR.blue }} />
         </div>
       )}
 
@@ -204,22 +234,8 @@ export default function OrderSteps({ config, onComplete }: InteractionProps<Orde
         />
       )}
 
-      <HelperRow onShowMe={!done ? showMe : undefined} />
+      {!config.noHelp && <HelperRow onShowMe={!done ? showMe : undefined} />}
     </div>
   )
 }
 
-function TileText({ text, color }: { text: string; color: string }) {
-  const parts = text.split(/(\$[^$]+\$)/g)
-  return (
-    <span className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color }}>
-      {parts.map((p, i) => {
-        if (p.startsWith("$") && p.endsWith("$") && p.length > 2) {
-          const html = katex.renderToString(p.slice(1, -1), { throwOnError: false, displayMode: false, output: "html" })
-          return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />
-        }
-        return <span key={i}>{p}</span>
-      })}
-    </span>
-  )
-}
