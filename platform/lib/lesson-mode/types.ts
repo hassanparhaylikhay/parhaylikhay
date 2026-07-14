@@ -26,6 +26,7 @@ export type InteractionKind =
   | "widgetCanvas"         // embed a polished HTML widget; listens for pl-lesson-success
   | "clickOnGrid"          // tap a grid coordinate; verifies against a target point
   | "answerBuilder"        // assemble the full examiner sentence part by part; each part earns its mark pill
+  | "stepThrough"          // step-explorer widget whose stepper lives in the LESSON chrome, not inside the iframe
 
 export interface InteractionSpec {
   kind: InteractionKind

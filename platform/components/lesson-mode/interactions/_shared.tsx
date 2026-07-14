@@ -331,6 +331,14 @@ export const interactionStyles = `
 }
 .pl-reveal { animation: pl-reveal 520ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
+/* Soft repeating glow that marks THE primary affordance on a slide until
+   the student uses it once (step-through's next-step button). */
+@keyframes pl-primed {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0,171,250,0); }
+  50%      { box-shadow: 0 0 18px -4px rgba(0,171,250,0.55); }
+}
+.pl-primed { animation: pl-primed 2s ease-in-out infinite; }
+
 /* Staggered fade-in for the side-panel children — title, prompt,
    readout, status, button. Each child appears ~80ms after the previous
    one, settling in with a small upward translate on Apple's smooth

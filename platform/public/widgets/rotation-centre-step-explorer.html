@@ -87,9 +87,13 @@
   }
 
   body.lesson-mode .wrap { border: 0; background: transparent; padding: 0; max-width: none; }
+
+/* external-chrome mode: the lesson chrome owns the stepper; hide ours */
+.ext-chrome .head, .ext-chrome .controls, .ext-chrome .footer { display: none !important; }
 </style>
 </head>
 <body>
+<script>(function(){try{if(new URLSearchParams(location.search).get("extChrome")==="1"){document.documentElement.classList.add("ext-chrome");document.body.classList.add("ext-chrome");}}catch(e){}})();</script>
 <div class="wrap" id="wrap">
   <div class="head">
     <span class="step-title">FINDING THE CENTRE OF ROTATION</span>
@@ -512,6 +516,32 @@ window.addEventListener("resize", reportHeight);
 // Initial render
 syncStageHeight();
 draw();
+
+
+// ── external chrome: the lesson owns the stepper (?extChrome=1) ─────────
+(function() {
+  var qs = new URLSearchParams(location.search);
+  if (qs.get("extChrome") !== "1") return;
+  function postStepState() {
+    if (window.parent === window) return;
+    window.parent.postMessage({
+      type: "pl-step-state",
+      step: P.step,
+      total: TOTAL,
+      caption: STEPS[P.step].footer
+    }, "*");
+  }
+  window.addEventListener("message", function(e) {
+    var d = e.data;
+    if (!d || d.type !== "pl-step-go") return;
+    var n = Math.max(0, Math.min(TOTAL - 1, Number(d.step) || 0));
+    if (n !== P.step) { P.step = n; draw(); }
+    postStepState();
+  });
+  var _drawBase = draw;
+  draw = function() { _drawBase(); postStepState(); };
+  postStepState();
+})();
 </script>
 </body>
 </html>

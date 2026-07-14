@@ -12,6 +12,7 @@ import AdjustSlider, { type AdjustSliderConfig } from "../interactions/AdjustSli
 import WidgetCanvas, { type WidgetCanvasConfig } from "../interactions/WidgetCanvas"
 import ClickOnGrid, { type ClickOnGridConfig } from "../interactions/ClickOnGrid"
 import AnswerBuilder, { type AnswerBuilderConfig } from "../interactions/AnswerBuilder"
+import StepThrough, { type StepThroughConfig, type StepNav } from "../interactions/StepThrough"
 
 /**
  * InteractionSlide — routes a slide of kind="interaction" (or "verify") to the
@@ -31,12 +32,14 @@ export default function InteractionSlide({
   onAdvance,
   savedData,
   onShowMeUsed,
+  onRegisterStepNav,
 }: {
   slide: InteractionSlideT
   onComplete: (data?: Record<string, unknown>) => void
   onAdvance?: () => void
   savedData?: Record<string, unknown>
   onShowMeUsed?: () => void
+  onRegisterStepNav?: (nav: StepNav | null) => void
 }) {
   const inj = slide.interaction
   const baseConfig = {
@@ -59,7 +62,10 @@ export default function InteractionSlide({
   // clicks next before the timer fires, the stale closure runs setIdx(oldIdx+1)
   // and bounces them backwards to where they already were. The unmount cleanup
   // on slide.id covers both manual nav and the slide being swapped out.
-  const SELF_ADVANCING = new Set(["widgetCanvas", "clickOnGrid"])
+  // stepThrough manages its own flow: completion happens on reaching the
+  // final step, and the student leaves via the explicit "continue" button
+  // (or the bottom-bar next), never a timer.
+  const SELF_ADVANCING = new Set(["widgetCanvas", "clickOnGrid", "stepThrough"])
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
     return () => {
@@ -95,6 +101,7 @@ export default function InteractionSlide({
           case "widgetCanvas":        return <WidgetCanvas        {...(advProps as { config: WidgetCanvasConfig;        onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
           case "clickOnGrid":         return <ClickOnGrid         {...(advProps as { config: ClickOnGridConfig;         onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
           case "answerBuilder":       return <AnswerBuilder       {...(baseProps as { config: AnswerBuilderConfig;       onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "stepThrough":         return <StepThrough         {...(advProps as unknown as { config: StepThroughConfig; onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown> })} onRegisterNav={onRegisterStepNav} />
         }
       })()}
     </div>

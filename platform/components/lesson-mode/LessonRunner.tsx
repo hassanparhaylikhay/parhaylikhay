@@ -11,6 +11,7 @@ import InteractionSlide from "./slides/InteractionSlide"
 import RecapSlide from "./slides/RecapSlide"
 import ExamLinkSlide from "./slides/ExamLinkSlide"
 import { interactionStyles } from "./interactions/_shared"
+import type { StepNav } from "./interactions/StepThrough"
 
 /**
  * LessonRunner — orchestrates slides, navigation, progress, persistence.
@@ -31,6 +32,10 @@ export default function LessonRunner({ lesson }: Props) {
   // Small "welcome back" toast shown when a returning student resumes mid-lesson.
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null)
   const welcomeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Step-through slides register a nav delegate so the lesson's own prev/next
+  // buttons (and arrow keys) walk the steps before they move between slides.
+  const [stepNav, setStepNav] = useState<StepNav | null>(null)
+  const registerStepNav = useCallback((nav: StepNav | null) => setStepNav(nav), [])
 
   // Chapter ranges, derived once from the slides' chapter tags.
   const chapters: ChapterInfo[] | null = useMemo(() => {
@@ -129,6 +134,19 @@ export default function LessonRunner({ lesson }: Props) {
 
   const handleShowMeUsed = useCallback(() => setShowMeUsed(true), [])
 
+  // On step-through slides the bottom-bar buttons drive the steps first and
+  // only cross slides once the walkthrough is exhausted in that direction.
+  // A slide the student has ALREADY completed doesn't capture next: revisits
+  // move on immediately (the aside's step button still replays the steps).
+  const handleNext = useCallback(() => {
+    if (!canAdvance && stepNav?.hasNext) { stepNav.next(); return }
+    goNext()
+  }, [canAdvance, stepNav, goNext])
+  const handlePrev = useCallback(() => {
+    if (stepNav?.hasPrev) { stepNav.prev(); return }
+    goPrev()
+  }, [stepNav, goPrev])
+
   const markComplete = useCallback((data?: Record<string, unknown>) => {
     if (!progress || !slide) return
     const next = updateSlideState(progress, slide.id, { completed: true, data })
@@ -164,7 +182,7 @@ export default function LessonRunner({ lesson }: Props) {
         slideIdx={idx}
         totalSlides={total}
         title={slide.title ?? lesson.title}
-        canAdvance={canAdvance}
+        canAdvance={canAdvance || Boolean(stepNav?.hasNext)}
         wide={wide}
         chapters={chapters}
         marks={totalMarks > 0 ? { banked: bankedMarks, total: totalMarks } : null}
@@ -172,8 +190,8 @@ export default function LessonRunner({ lesson }: Props) {
         showMeUsed={showMeUsed}
         hintText={getHint(slide)}
         exitHref={exitHref}
-        onPrev={goPrev}
-        onNext={goNext}
+        onPrev={handlePrev}
+        onNext={handleNext}
         onExplainAgain={() => setShowAlt(true)}
       >
         <SlideDispatcher
@@ -183,6 +201,7 @@ export default function LessonRunner({ lesson }: Props) {
           canAdvance={canAdvance}
           savedData={slideState?.data}
           onShowMeUsed={handleShowMeUsed}
+          onRegisterStepNav={registerStepNav}
         />
       </SlideFrame>
       {welcomeBack && (
@@ -196,7 +215,7 @@ export default function LessonRunner({ lesson }: Props) {
   )
 }
 
-const WIDE_INTERACTION_KINDS = new Set(["widgetCanvas", "clickOnGrid"])
+const WIDE_INTERACTION_KINDS = new Set(["widgetCanvas", "clickOnGrid", "stepThrough"])
 // Interactions that go wide only when they carry a contextHtml diagram
 // (canvas on the left, controls in the right aside).
 const CONTEXT_WIDE_KINDS = new Set(["selectFromOptions", "placeLabel", "answerBuilder"])
@@ -235,6 +254,7 @@ function SlideDispatcher({
   canAdvance,
   savedData,
   onShowMeUsed,
+  onRegisterStepNav,
 }: {
   slide: Slide
   onComplete: (data?: Record<string, unknown>) => void
@@ -242,6 +262,7 @@ function SlideDispatcher({
   canAdvance: boolean
   savedData?: Record<string, unknown>
   onShowMeUsed?: () => void
+  onRegisterStepNav?: (nav: StepNav | null) => void
 }) {
   switch (slide.kind) {
     case "hook":
@@ -250,7 +271,7 @@ function SlideDispatcher({
       return <ConceptSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} canAdvance={canAdvance} />
     case "interaction":
     case "verify":
-      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} />
+      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} onRegisterStepNav={onRegisterStepNav} />
     case "recap":
       return <RecapSlide slide={slide} onAdvance={onAdvance} />
     case "examLink":

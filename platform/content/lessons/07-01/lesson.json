@@ -198,15 +198,18 @@
     },
     {
       "id": "07b-translate-point-explorer",
-      "kind": "concept",
+      "kind": "interaction",
       "title": "How to translate a point, step by step",
-      "advance": "manual",
-      "prompt": "Top number = shift along x. Bottom number = shift along y. Walk through one, then drag the point yourself.",
-      "visual": {
-        "kind": "iframe",
-        "src": "/widgets/translate-point-explorer.html?lessonMode=1&chrome=1"
-      },
-      "chapter": "translation"
+      "advance": "onSuccess",
+      "chapter": "translation",
+      "interaction": {
+        "kind": "stepThrough",
+        "config": {
+          "src": "/widgets/translate-point-explorer.html?lessonMode=1&extChrome=1",
+          "title": "How to translate a point, step by step",
+          "prompt": "Top number = shift along x. Bottom number = shift along y. Walk through one, then drag the point yourself."
+        }
+      }
     },
     {
       "id": "08-translation-target-1",
@@ -294,15 +297,18 @@
     },
     {
       "id": "10c-find-vector-explorer",
-      "kind": "concept",
+      "kind": "interaction",
       "title": "How to find a column vector",
-      "advance": "manual",
-      "prompt": "Walk through the method one step at a time. Then drag the image at the end and watch the vector update.",
-      "visual": {
-        "kind": "iframe",
-        "src": "/widgets/translation-vector-finder.html?lessonMode=1&chrome=1"
-      },
-      "chapter": "translation"
+      "advance": "onSuccess",
+      "chapter": "translation",
+      "interaction": {
+        "kind": "stepThrough",
+        "config": {
+          "src": "/widgets/translation-vector-finder.html?lessonMode=1&extChrome=1",
+          "title": "How to find a column vector",
+          "prompt": "Walk through the method one step at a time. Then drag the image at the end and watch the vector update."
+        }
+      }
     },
     {
       "id": "11-q-find-vector",
@@ -620,15 +626,18 @@
     },
     {
       "id": "15a-reflect-point-explorer",
-      "kind": "concept",
+      "kind": "interaction",
       "title": "How to reflect a point, step by step",
-      "advance": "manual",
-      "prompt": "Every point is the same perpendicular distance from the mirror as its image, just on the other side. Watch one, then drag your own point.",
-      "visual": {
-        "kind": "iframe",
-        "src": "/widgets/reflect-point-explorer.html?lessonMode=1&chrome=1"
-      },
-      "chapter": "reflection"
+      "advance": "onSuccess",
+      "chapter": "reflection",
+      "interaction": {
+        "kind": "stepThrough",
+        "config": {
+          "src": "/widgets/reflect-point-explorer.html?lessonMode=1&extChrome=1",
+          "title": "How to reflect a point, step by step",
+          "prompt": "Every point is the same perpendicular distance from the mirror as its image, just on the other side. Watch one, then drag your own point."
+        }
+      }
     },
     {
       "id": "15b-reflect-y0",
@@ -742,15 +751,18 @@
     },
     {
       "id": "15g-mirror-finder",
-      "kind": "concept",
+      "kind": "interaction",
       "title": "How to find the line of reflection",
-      "advance": "manual",
-      "prompt": "Given an object and its image, how do you work out where the mirror is? Step through the construction.",
-      "visual": {
-        "kind": "iframe",
-        "src": "/widgets/reflection-line-finder.html?lessonMode=1&chrome=1"
-      },
-      "chapter": "reflection"
+      "advance": "onSuccess",
+      "chapter": "reflection",
+      "interaction": {
+        "kind": "stepThrough",
+        "config": {
+          "src": "/widgets/reflection-line-finder.html?lessonMode=1&extChrome=1",
+          "title": "How to find the line of reflection",
+          "prompt": "Given an object and its image, how do you work out where the mirror is? Step through the construction."
+        }
+      }
     },
     {
       "id": "16-q-reflect-y-x",
@@ -1252,27 +1264,33 @@
     },
     {
       "id": "22g-centre-90-finder",
-      "kind": "concept",
+      "kind": "interaction",
       "title": "How to find the centre of a 90° rotation",
-      "advance": "manual",
-      "prompt": "Given an object and its 90° rotated image, find the centre using perpendicular bisectors. Two bisectors meet at the centre.",
-      "visual": {
-        "kind": "iframe",
-        "src": "/widgets/rotation-centre-step-explorer.html?lessonMode=1&chrome=1"
-      },
-      "chapter": "rotation"
+      "advance": "onSuccess",
+      "chapter": "rotation",
+      "interaction": {
+        "kind": "stepThrough",
+        "config": {
+          "src": "/widgets/rotation-centre-step-explorer.html?lessonMode=1&extChrome=1",
+          "title": "How to find the centre of a 90° rotation",
+          "prompt": "Given an object and its 90° rotated image, find the centre using perpendicular bisectors. Two bisectors meet at the centre."
+        }
+      }
     },
     {
       "id": "22h-centre-180-finder",
-      "kind": "concept",
+      "kind": "interaction",
       "title": "How to find the centre of a 180° rotation",
-      "advance": "manual",
-      "prompt": "For 180°, the centre is just the midpoint of any vertex-image pair. No bisectors needed.",
-      "visual": {
-        "kind": "iframe",
-        "src": "/widgets/rotation-180-centre-finder.html?lessonMode=1&chrome=1"
-      },
-      "chapter": "rotation"
+      "advance": "onSuccess",
+      "chapter": "rotation",
+      "interaction": {
+        "kind": "stepThrough",
+        "config": {
+          "src": "/widgets/rotation-180-centre-finder.html?lessonMode=1&extChrome=1",
+          "title": "How to find the centre of a 180° rotation",
+          "prompt": "For 180°, the centre is just the midpoint of any vertex-image pair. No bisectors needed."
+        }
+      }
     },
     {
       "id": "23-q-three-things",
@@ -1929,15 +1947,18 @@
     },
     {
       "id": "37c-centre-finder",
-      "kind": "concept",
+      "kind": "interaction",
       "title": "How to find the centre of enlargement",
-      "advance": "manual",
-      "prompt": "Each vertex and its image sit on a straight line through the centre. Draw two such lines and find where they cross.",
-      "visual": {
-        "kind": "iframe",
-        "src": "/widgets/enlargement-centre-finder.html?lessonMode=1&chrome=1"
-      },
-      "chapter": "enlargement"
+      "advance": "onSuccess",
+      "chapter": "enlargement",
+      "interaction": {
+        "kind": "stepThrough",
+        "config": {
+          "src": "/widgets/enlargement-centre-finder.html?lessonMode=1&extChrome=1",
+          "title": "How to find the centre of enlargement",
+          "prompt": "Each vertex and its image sit on a straight line through the centre. Draw two such lines and find where they cross."
+        }
+      }
     },
     {
       "id": "38b-enlargement-mark-scheme",
@@ -2052,27 +2073,33 @@
     },
     {
       "id": "40-combining-parallel-mirrors",
-      "kind": "concept",
+      "kind": "interaction",
       "title": "Two parallel mirrors give a translation",
-      "advance": "manual",
-      "prompt": "Walk through the two reflections in order. The two parallel mirrors combine into one translation.",
-      "visual": {
-        "kind": "iframe",
-        "src": "/widgets/two-parallel-mirrors-step-explorer.html?lessonMode=1&chrome=1"
-      },
-      "chapter": "combining"
+      "advance": "onSuccess",
+      "chapter": "combining",
+      "interaction": {
+        "kind": "stepThrough",
+        "config": {
+          "src": "/widgets/two-parallel-mirrors-step-explorer.html?lessonMode=1&extChrome=1",
+          "title": "Two parallel mirrors give a translation",
+          "prompt": "Walk through the two reflections in order. The two parallel mirrors combine into one translation."
+        }
+      }
     },
     {
       "id": "41-combining-intersecting-mirrors",
-      "kind": "concept",
+      "kind": "interaction",
       "title": "Two intersecting mirrors give a rotation",
-      "advance": "manual",
-      "prompt": "Walk through the two reflections in order. The two intersecting mirrors combine into one rotation.",
-      "visual": {
-        "kind": "iframe",
-        "src": "/widgets/two-intersecting-mirrors-step-explorer.html?lessonMode=1&chrome=1"
-      },
-      "chapter": "combining"
+      "advance": "onSuccess",
+      "chapter": "combining",
+      "interaction": {
+        "kind": "stepThrough",
+        "config": {
+          "src": "/widgets/two-intersecting-mirrors-step-explorer.html?lessonMode=1&extChrome=1",
+          "title": "Two intersecting mirrors give a rotation",
+          "prompt": "Walk through the two reflections in order. The two intersecting mirrors combine into one rotation."
+        }
+      }
     },
     {
       "id": "42-q-combining",
