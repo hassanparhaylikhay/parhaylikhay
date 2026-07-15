@@ -52,9 +52,6 @@ export type StepSolveConfig = {
   noHelp?: boolean
 }
 
-const DEFAULT_INTRO =
-  "Build the working line by line, exactly as it would go on paper. Pick or type each line; the mark codes show what each line earns."
-
 /**
  * StepSolve — the exam script builds line by line, exactly as it would be
  * written on paper. This is the calculation-topic counterpart of
@@ -144,7 +141,7 @@ export default function StepSolve({ config, onComplete }: InteractionProps<StepS
             ) : (
               <MixedText
                 text={line.label}
-                className="text-[13px] sm:text-[13.5px] font-mono tracking-wide"
+                className="text-[13.5px] sm:text-[14px] font-medium"
                 style={{ color: isActive ? COLOR.yellow : COLOR.faint }}
               />
             )}
@@ -231,7 +228,7 @@ export default function StepSolve({ config, onComplete }: InteractionProps<StepS
         />
       )}
       {current?.kind === "numeric" && numWrong > 0 && !showNudge && (
-        <p className="text-[14px] font-mono pl-reveal" style={{ color: COLOR.pink }}>
+        <p className="text-[14.5px] pl-reveal" style={{ color: COLOR.pink }}>
           Not it. Check the working and try again.
         </p>
       )}
@@ -250,14 +247,6 @@ export default function StepSolve({ config, onComplete }: InteractionProps<StepS
     </>
   )
 
-  const stepLabel = !done && current && (
-    <MixedText
-      text={`line ${idx + 1} of ${lines.length} · ${current.kind === "pick" ? "pick" : "work out"} ${current.label}`}
-      className="block text-[12px] font-mono tracking-[1.5px]"
-      style={{ color: COLOR.faint }}
-    />
-  )
-
   const working = (
     <>
       {config.prompt && (
@@ -266,13 +255,14 @@ export default function StepSolve({ config, onComplete }: InteractionProps<StepS
           className="block text-[20px] sm:text-[23px] text-[#f0eeea] leading-snug"
         />
       )}
-      <MixedText
-        text={config.intro ?? DEFAULT_INTRO}
-        className="block text-[13.5px] sm:text-[14px] leading-relaxed"
-        style={{ color: COLOR.grey }}
-      />
+      {config.intro && (
+        <MixedText
+          text={config.intro}
+          className="block text-[13.5px] sm:text-[14px] leading-relaxed"
+          style={{ color: COLOR.grey }}
+        />
+      )}
       {script}
-      {stepLabel}
       {entry}
       {feedback}
     </>

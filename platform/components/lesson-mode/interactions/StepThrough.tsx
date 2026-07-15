@@ -168,9 +168,6 @@ export default function StepThrough({ config, onComplete, onAdvance, onRegisterN
               />
             ))}
           </div>
-          <span className="text-[10.5px] font-mono uppercase tracking-[2px]" style={{ color: COLOR.faint }}>
-            {total > 0 ? `step ${step + 1} of ${total}` : "loading"}
-          </span>
         </div>
 
         {/* caption card: the words for the current step, at reading size */}

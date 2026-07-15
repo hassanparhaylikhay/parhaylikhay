@@ -170,7 +170,7 @@ export default function SlideFrame({
           {showHint && hintText && (
             <MixedText
               text={hintText}
-              className="text-[11px] sm:text-[12px] font-mono text-[#fff067] opacity-80 pl-fade-in"
+              className="text-[12.5px] sm:text-[13.5px] text-[#fff067] opacity-90 pl-fade-in"
             />
           )}
           {showExplainAgain && onExplainAgain && (

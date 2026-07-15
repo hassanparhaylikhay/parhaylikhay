@@ -355,8 +355,8 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
           </button>
         )}
         {!done && hintShown && (
-          <p className="self-start text-[11px] font-mono text-[#7a7875]">
-            ring marks the answer area · tap to confirm
+          <p className="self-start text-[13px] text-[#7a7875]">
+            The ring marks the answer area. Tap inside it to confirm.
           </p>
         )}
       </aside>

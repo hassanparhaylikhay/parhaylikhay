@@ -203,7 +203,7 @@
         "kind": "stepSolve",
         "hint": "Square the two legs, add the results, then square-root the total.",
         "config": {
-          "prompt": "Find $c$. Build the working exactly as you would write it on paper.",
+          "prompt": "Find $c$.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>8 cm</text><text x='80' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>6 cm</text><text x='253.2' y='142.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
           "lines": [
             {
@@ -252,7 +252,8 @@
               "nudge": "$c^2$ is $100$, so $c$ is the square root of $100$."
             }
           ],
-          "successText": "$c = 10$ cm, comfortably between $8$ and $14$. The equation line earned the method mark and the value earned the accuracy mark."
+          "successText": "$c = 10$ cm, comfortably between $8$ and $14$. The equation line earned the method mark and the value earned the accuracy mark.",
+          "intro": "Build the working line by line, exactly as it would go on paper. Pick or type each line; the mark codes on the right show what each line earns."
         }
       }
     },

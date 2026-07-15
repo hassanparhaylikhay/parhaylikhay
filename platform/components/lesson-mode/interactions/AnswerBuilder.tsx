@@ -119,7 +119,7 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
               ) : (
                 <MixedText
                   text={p.label}
-                  className="text-[11.5px] font-mono tracking-wide px-1"
+                  className="text-[12.5px] font-medium px-1"
                   style={{ color: isActive ? COLOR.yellow : COLOR.faint }}
                 />
               )}
@@ -182,14 +182,6 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
     </>
   )
 
-  const stepLabel = !done && current && (
-    <MixedText
-      text={`part ${locked + 1} of ${parts.length} · pick ${current.label}`}
-      className="block text-[11.5px] font-mono tracking-[1.5px]"
-      style={{ color: COLOR.faint }}
-    />
-  )
-
   // Wide layout when a diagram is present: canvas left, builder right.
   if (config.contextHtml) {
     const effectiveHtml = done && config.revealSvgInside
@@ -208,7 +200,6 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
             />
           )}
           {sentence}
-          {stepLabel}
           {tray}
           {feedback}
         </aside>
@@ -222,7 +213,6 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
       <Prompt>{config.prompt}</Prompt>
       <div className="w-full max-w-[640px] flex flex-col gap-4 items-center">
         {sentence}
-        {stepLabel}
         {tray}
         <div className="text-center max-w-[560px]">{feedback}</div>
       </div>
