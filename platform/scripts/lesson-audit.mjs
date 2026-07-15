@@ -36,7 +36,7 @@ const SLIDE_KINDS = new Set(["hook", "concept", "interaction", "verify", "recap"
 const INTERACTION_KINDS = new Set([
   "clickToIdentify", "dragToPosition", "manipulateAndVerify", "selectFromOptions",
   "placeLabel", "orderSteps", "adjustSlider", "widgetCanvas", "clickOnGrid",
-  "answerBuilder", "stepThrough",
+  "answerBuilder", "stepThrough", "stepSolve",
 ])
 // Interactions whose hint requirement is waived (see header).
 const NO_HINT_REQUIRED = new Set(["stepThrough"])
@@ -152,6 +152,25 @@ for (const lessonId of targets) {
         if (!p.label) err(`${s.id}/${p.id}: part missing label`)
       }
       if (c.revealSvgInside && !c.contextHtml) err(`${s.id}: revealSvgInside without contextHtml`)
+    }
+
+    if (i.kind === "stepSolve") {
+      const lines = c.lines ?? []
+      if (lines.length === 0) err(`${s.id}: stepSolve has no lines`)
+      for (const ln of lines) {
+        if (!ln.label) err(`${s.id}/${ln.id}: line missing label`)
+        if (ln.kind === "pick") {
+          const correct = (ln.options ?? []).filter(o => o.isCorrect)
+          if (correct.length !== 1) err(`${s.id}/${ln.id}: ${correct.length} correct options (needs exactly 1)`)
+          for (const o of ln.options ?? []) if (!o.isCorrect && !o.whyWrong) err(`${s.id}/${ln.id}: option "${o.id}" missing whyWrong`)
+        } else if (ln.kind === "numeric") {
+          if (typeof ln.answer !== "number" || !Number.isFinite(ln.answer)) err(`${s.id}/${ln.id}: numeric line missing answer`)
+          if (typeof ln.display !== "string" || !ln.display.includes("{v}")) err(`${s.id}/${ln.id}: numeric display must contain {v}`)
+          if (s.kind !== "verify" && !ln.nudge) warn(`${s.id}/${ln.id}: numeric line has no nudge (student stuck after 2 wrong tries gets nothing)`)
+        } else {
+          err(`${s.id}/${ln.id}: unknown line kind "${ln.kind}"`)
+        }
+      }
     }
 
     if (i.kind === "clickOnGrid") {
@@ -284,6 +303,14 @@ function* studentStrings(s) {
     }
   }
   for (const st of c.steps ?? []) if (st.text) yield [`step ${st.id}`, st.text]
+  for (const ln of c.lines ?? []) {
+    if (ln.label) yield [`line ${ln.id}`, ln.label]
+    if (ln.nudge) yield [`nudge ${ln.id}`, ln.nudge]
+    for (const o of ln.options ?? []) {
+      if (o.text) yield [`option ${ln.id}/${o.id}`, o.text]
+      if (o.whyWrong) yield [`whyWrong ${ln.id}/${o.id}`, o.whyWrong]
+    }
+  }
   for (const sl of c.slots ?? []) if (sl.hint) yield [`slot ${sl.id}`, sl.hint]
   for (const lb of c.labels ?? []) if (lb.text) yield [`label ${lb.id}`, lb.text]
 }

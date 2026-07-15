@@ -13,6 +13,7 @@ import WidgetCanvas, { type WidgetCanvasConfig } from "../interactions/WidgetCan
 import ClickOnGrid, { type ClickOnGridConfig } from "../interactions/ClickOnGrid"
 import AnswerBuilder, { type AnswerBuilderConfig } from "../interactions/AnswerBuilder"
 import StepThrough, { type StepThroughConfig, type StepNav } from "../interactions/StepThrough"
+import StepSolve, { type StepSolveConfig } from "../interactions/StepSolve"
 
 /**
  * InteractionSlide — routes a slide of kind="interaction" (or "verify") to the
@@ -102,6 +103,7 @@ export default function InteractionSlide({
           case "clickOnGrid":         return <ClickOnGrid         {...(advProps as { config: ClickOnGridConfig;         onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
           case "answerBuilder":       return <AnswerBuilder       {...(baseProps as { config: AnswerBuilderConfig;       onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
           case "stepThrough":         return <StepThrough         {...(advProps as unknown as { config: StepThroughConfig; onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown> })} onRegisterNav={onRegisterStepNav} />
+          case "stepSolve":           return <StepSolve           {...(baseProps as unknown as { config: StepSolveConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
         }
       })()}
     </div>

@@ -1,0 +1,1014 @@
+{
+  "lessonId": "06-01",
+  "source": {
+    "unit": "06",
+    "topic": "01"
+  },
+  "title": "Pythagoras: the whole topic",
+  "estimatedMinutes": 16,
+  "chapters": [
+    {
+      "id": "rule",
+      "title": "The rule"
+    },
+    {
+      "id": "hypotenuse",
+      "title": "The longest side"
+    },
+    {
+      "id": "leg",
+      "title": "A shorter side"
+    },
+    {
+      "id": "hidden",
+      "title": "Hidden triangles"
+    },
+    {
+      "id": "exam",
+      "title": "The exam"
+    }
+  ],
+  "slides": [
+    {
+      "id": "01-hook",
+      "kind": "hook",
+      "chapter": "rule",
+      "title": "One rule pays out on almost every paper",
+      "advance": "manual",
+      "prompt": "Ladders against walls, diagonals across rectangles, and the height of a roof truss all obey one rule about right-angled triangles. By the end of this lesson you will have banked 18 marks of real exam working, including a question from an actual past paper.",
+      "visual": {
+        "kind": "html",
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><rect x='205' y='200' width='88' height='88' fill='rgba(0,171,250,0.14)' stroke='#00abfa' stroke-width='1.8'/><rect x='139' y='134' width='66' height='66' fill='rgba(255,130,44,0.14)' stroke='#ff822c' stroke-width='1.8'/><polygon points='205,134 293,200 359,112 271,46' fill='rgba(255,70,112,0.14)' stroke='#ff4670' stroke-width='1.8'/><polygon points='205,200 293,200 205,134' fill='rgba(255,240,103,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 218 200 L 218 187 L 205 187' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='249' y='244' font-family='Geist Mono,monospace' font-size='17' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>16</text><text x='172' y='167' font-family='Geist Mono,monospace' font-size='17' font-weight='600' fill='#ff822c' text-anchor='middle' dominant-baseline='middle'>9</text><text x='282' y='123' font-family='Geist Mono,monospace' font-size='17' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>25</text><text x='249' y='189' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>4</text><text x='216' y='167' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>3</text><text x='235' y='155' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>5</text></svg>",
+        "wide": true
+      }
+    },
+    {
+      "id": "02-the-rule",
+      "kind": "concept",
+      "chapter": "rule",
+      "title": "The square on the longest side equals the other two added",
+      "advance": "manual",
+      "prompt": "Count the areas. The blue square is $16$, the orange square is $9$, and the pink square on the longest side is exactly $25$. That is the whole theorem: in a right-angled triangle, $a^2 + b^2 = c^2$, where $c$ is the side opposite the right angle.",
+      "visual": {
+        "kind": "html",
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><rect x='205' y='200' width='88' height='88' fill='rgba(0,171,250,0.14)' stroke='#00abfa' stroke-width='1.8'/><rect x='139' y='134' width='66' height='66' fill='rgba(255,130,44,0.14)' stroke='#ff822c' stroke-width='1.8'/><polygon points='205,134 293,200 359,112 271,46' fill='rgba(255,70,112,0.14)' stroke='#ff4670' stroke-width='1.8'/><polygon points='205,200 293,200 205,134' fill='rgba(255,240,103,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 218 200 L 218 187 L 205 187' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='249' y='244' font-family='Geist Mono,monospace' font-size='17' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>16</text><text x='172' y='167' font-family='Geist Mono,monospace' font-size='17' font-weight='600' fill='#ff822c' text-anchor='middle' dominant-baseline='middle'>9</text><text x='282' y='123' font-family='Geist Mono,monospace' font-size='17' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>25</text><text x='249' y='189' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>4</text><text x='216' y='167' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>3</text><text x='235' y='155' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>5</text></svg>",
+        "wide": true
+      }
+    },
+    {
+      "id": "03-spot-hypotenuse",
+      "kind": "interaction",
+      "chapter": "rule",
+      "title": "Find the hypotenuse",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "clickToIdentify",
+        "hint": "The hypotenuse never touches the right angle. It sits directly opposite it.",
+        "config": {
+          "prompt": "The hypotenuse is the side opposite the right angle. Tap the triangle where the highlighted side is the hypotenuse.",
+          "cols": 3,
+          "regions": [
+            {
+              "id": "r-slanted-leg",
+              "label": "A",
+              "content": "<svg viewBox='0 0 140 110' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='70,18 126,60 22,66' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='1.8' stroke-linejoin='round'/><path d='M 77.2 23.4 L 70.8 29.8 L 63.6 24.4' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><line x1='70' y1='18' x2='126' y2='60' stroke='#fff067' stroke-width='4' stroke-linecap='round'/></svg>",
+              "whyWrong": "Slanted does not mean hypotenuse. That side runs into the right angle, so it is a leg."
+            },
+            {
+              "id": "r-hyp",
+              "label": "B",
+              "isCorrect": true,
+              "content": "<svg viewBox='0 0 140 110' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='22,18 22,92 124,92' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='1.8' stroke-linejoin='round'/><path d='M 22 83 L 31 83 L 31 92' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><line x1='22' y1='18' x2='124' y2='92' stroke='#fff067' stroke-width='4' stroke-linecap='round'/></svg>"
+            },
+            {
+              "id": "r-vert-leg",
+              "label": "C",
+              "content": "<svg viewBox='0 0 140 110' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='24,20 24,94 126,20' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='1.8' stroke-linejoin='round'/><path d='M 24 29 L 33 29 L 33 20' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><line x1='24' y1='20' x2='24' y2='94' stroke='#fff067' stroke-width='4' stroke-linecap='round'/></svg>"
+            }
+          ],
+          "successText": "The highlighted side in B is the only one that never touches the right angle. That side is the hypotenuse, and it is always the longest of the three."
+        }
+      }
+    },
+    {
+      "id": "04-explore-squares",
+      "kind": "concept",
+      "chapter": "rule",
+      "title": "Watch the squares balance",
+      "advance": "manual",
+      "prompt": "Drag the corner of the triangle, or use the sliders. However the two short sides change, their squares always add up to the square on the hypotenuse.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/pythagoras-three-squares.html?lessonMode=1&chrome=1",
+        "height": 560
+      }
+    },
+    {
+      "id": "05-q-which-equation",
+      "kind": "interaction",
+      "chapter": "rule",
+      "title": "Write the rule for this triangle",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "First decide which side is the hypotenuse, then put its square alone on one side of the equation.",
+        "config": {
+          "prompt": "The sides are labelled $p$, $q$ and $r$. Which equation does Pythagoras give for this triangle?",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,260 400,260 80,60' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 260 L 93 247 L 80 247' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='282' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>p</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>q</text><text x='251.7' y='141.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>r</text></svg>",
+          "options": [
+            {
+              "id": "opt-correct",
+              "text": "$r^2 = p^2 + q^2$",
+              "isCorrect": true
+            },
+            {
+              "id": "opt-sum",
+              "text": "$r = p + q$",
+              "whyWrong": "The rule is about the squares of the sides, never the sides themselves."
+            },
+            {
+              "id": "opt-wrongside",
+              "text": "$p^2 = q^2 + r^2$",
+              "whyWrong": "That treats $p$ as the hypotenuse, but $p$ touches the right angle, so it is a leg."
+            },
+            {
+              "id": "opt-minus",
+              "text": "$r^2 = p^2 - q^2$",
+              "whyWrong": "The hypotenuse square is the two leg squares added together, never subtracted."
+            }
+          ],
+          "successText": "$r$ sits opposite the right angle, so $r^2 = p^2 + q^2$. Every Pythagoras question starts by spotting which side plays the part of $r$."
+        }
+      }
+    },
+    {
+      "id": "05b-section-hypotenuse",
+      "kind": "concept",
+      "chapter": "hypotenuse",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#ff4670;opacity:0.92'>chapter 2 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>The longest side</div><div style='width:64px;height:2px;background:#ff4670;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>Both short sides are known. Square them, add, and square-root to find the hypotenuse.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>Worth 2 marks when calculated: one for writing the equation with the numbers in, one for the value. Write the equation line down even when the calculator does the rest.</p></div>"
+      }
+    },
+    {
+      "id": "06-predict-length",
+      "kind": "interaction",
+      "chapter": "hypotenuse",
+      "title": "First, a prediction",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "The hypotenuse is the longest side, but a straight path is always shorter than walking the two legs.",
+        "config": {
+          "prompt": "The legs are $6$ and $8$. Before any working, how long must the hypotenuse be?",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>8 cm</text><text x='80' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>6 cm</text><text x='253.2' y='142.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "options": [
+            {
+              "id": "opt-14",
+              "text": "Exactly $14$, because $6 + 8 = 14$",
+              "whyWrong": "Going straight is shorter than walking one leg and then the other. The answer must be under $14$."
+            },
+            {
+              "id": "opt-between",
+              "text": "Longer than $8$ but shorter than $14$",
+              "isCorrect": true
+            },
+            {
+              "id": "opt-under6",
+              "text": "Shorter than $6$",
+              "whyWrong": "The hypotenuse is always the longest side of the triangle, so it must beat both legs."
+            },
+            {
+              "id": "opt-8",
+              "text": "Exactly $8$",
+              "whyWrong": "It has to be longer than either leg. If it matched a leg, the triangle would be flat."
+            }
+          ],
+          "successText": "It must beat the longest leg and undercut $6 + 8$. Pythagoras is what pins down the exact value, and that is next."
+        }
+      }
+    },
+    {
+      "id": "07-solve-hyp-1",
+      "kind": "interaction",
+      "chapter": "hypotenuse",
+      "title": "Your first full solution",
+      "advance": "onSuccess",
+      "marks": 2,
+      "altExplain": {
+        "prompt": "Square each leg first: $6^2 = 36$ and $8^2 = 64$. Add them to get $c^2$, then square-root that total to get $c$ itself."
+      },
+      "interaction": {
+        "kind": "stepSolve",
+        "hint": "Square the two legs, add the results, then square-root the total.",
+        "config": {
+          "prompt": "Find $c$. Build the working exactly as you would write it on paper.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>8 cm</text><text x='80' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>6 cm</text><text x='253.2' y='142.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "lines": [
+            {
+              "id": "l-eq",
+              "kind": "pick",
+              "label": "the equation",
+              "markCode": "M1",
+              "options": [
+                {
+                  "id": "e-sum",
+                  "text": "$c = 6 + 8$",
+                  "whyWrong": "Adding the sides ignores the squares. Your prediction already ruled out $14$."
+                },
+                {
+                  "id": "e-correct",
+                  "text": "$c^2 = 6^2 + 8^2$",
+                  "isCorrect": true
+                },
+                {
+                  "id": "e-minus",
+                  "text": "$c^2 = 8^2 - 6^2$",
+                  "whyWrong": "Subtracting finds a shorter side when the hypotenuse is already known. Here both legs are known instead."
+                }
+              ]
+            },
+            {
+              "id": "l-sq",
+              "kind": "numeric",
+              "label": "the value of $c^2$",
+              "answer": 100,
+              "tolerance": 0,
+              "display": "c^2 = 36 + 64 = {v}",
+              "inputPrefix": "c^2 = 36 + 64 =",
+              "nudge": "Work out $6^2 = 36$ and $8^2 = 64$, then add them together."
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the hypotenuse",
+              "markCode": "A1",
+              "answer": 10,
+              "tolerance": 0,
+              "display": "c = \\sqrt{100} = {v}\\ \\text{cm}",
+              "inputPrefix": "c = \\sqrt{100} =",
+              "inputSuffix": "cm",
+              "nudge": "$c^2$ is $100$, so $c$ is the square root of $100$."
+            }
+          ],
+          "successText": "$c = 10$ cm, comfortably between $8$ and $14$. The equation line earned the method mark and the value earned the accuracy mark."
+        }
+      }
+    },
+    {
+      "id": "08-solve-hyp-2",
+      "kind": "interaction",
+      "chapter": "hypotenuse",
+      "title": "Now with an untidy answer",
+      "advance": "onSuccess",
+      "marks": 2,
+      "altExplain": {
+        "prompt": "The method never changes: $9^2 = 81$ and $5^2 = 25$ add to $106$. The square root of $106$ is not a whole number, so round it to one decimal place at the very end."
+      },
+      "interaction": {
+        "kind": "stepSolve",
+        "hint": "Most answers are not whole numbers. Keep every digit until the final line, then round.",
+        "config": {
+          "prompt": "Find $c$ to $1$ decimal place.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,248.9 400,248.9 80,71.1' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 248.9 L 93 235.9 L 80 235.9' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='270.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>9 cm</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>5 cm</text><text x='250.7' y='140.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "lines": [
+            {
+              "id": "l-eq",
+              "kind": "pick",
+              "label": "the equation",
+              "markCode": "M1",
+              "options": [
+                {
+                  "id": "e-correct",
+                  "text": "$c^2 = 9^2 + 5^2$",
+                  "isCorrect": true
+                },
+                {
+                  "id": "e-minus",
+                  "text": "$c^2 = 9^2 - 5^2$",
+                  "whyWrong": "Both known sides are legs, so their squares get added. Subtraction is for when the hypotenuse is known."
+                },
+                {
+                  "id": "e-sum",
+                  "text": "$c = 9 + 5$",
+                  "whyWrong": "The rule works on the squares of the sides, never the sides themselves."
+                }
+              ]
+            },
+            {
+              "id": "l-sq",
+              "kind": "numeric",
+              "label": "the value of $c^2$",
+              "answer": 106,
+              "tolerance": 0,
+              "display": "c^2 = 81 + 25 = {v}",
+              "inputPrefix": "c^2 = 81 + 25 =",
+              "nudge": "$9^2 = 81$ and $5^2 = 25$. Add them."
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the hypotenuse",
+              "markCode": "A1",
+              "answer": 10.3,
+              "tolerance": 0.05,
+              "display": "c = \\sqrt{106} = {v}\\ \\text{cm}",
+              "inputPrefix": "c = \\sqrt{106} =",
+              "inputSuffix": "cm (1 dp)",
+              "nudge": "The square root of $106$ is $10.295...$, and to one decimal place that rounds to $10.3$."
+            }
+          ],
+          "successText": "$c = 10.3$ cm. Keep the full calculator value until the last line, then round once."
+        }
+      }
+    },
+    {
+      "id": "09-trap-rounding",
+      "kind": "examLink",
+      "chapter": "hypotenuse",
+      "title": "Where did the mark go?",
+      "markCode": "A1",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Read the last line of the working slowly and check the rounding.",
+        "config": {
+          "prompt": "A student writes: $c^2 = 106$, so $c = 10.295...$, answer $10.2$ cm. The method mark is safe, but the answer mark is lost. Why?",
+          "options": [
+            {
+              "id": "opt-eq",
+              "text": "The equation was wrong from the start",
+              "whyWrong": "The equation was fine, which is exactly why the method mark survived."
+            },
+            {
+              "id": "opt-units",
+              "text": "The units are missing",
+              "whyWrong": "The student wrote cm. The problem is in the digits."
+            },
+            {
+              "id": "opt-round",
+              "text": "$10.295...$ rounds up to $10.3$, and chopping digits off is not rounding",
+              "isCorrect": true
+            }
+          ],
+          "successText": "The digit after the cut is $9$, so the answer rounds up to $10.3$. Truncating to $10.2$ costs the accuracy mark even though every step before it was right."
+        }
+      }
+    },
+    {
+      "id": "09b-section-leg",
+      "kind": "concept",
+      "chapter": "leg",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#ff822c;opacity:0.92'>chapter 3 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>A shorter side</div><div style='width:64px;height:2px;background:#ff822c;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>This time the hypotenuse is known and a leg is missing. The squares get subtracted.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>Also 2 marks, and home of the most common Pythagoras mistake on the paper: adding the squares when the hypotenuse is already known.</p></div>"
+      }
+    },
+    {
+      "id": "11-q-spot-roles",
+      "kind": "interaction",
+      "chapter": "leg",
+      "title": "Read the triangle first",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "The hypotenuse is opposite the right angle, whatever the letters say.",
+        "config": {
+          "prompt": "In this triangle, which side is the hypotenuse?",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='179' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260.3' y='151.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text></svg>",
+          "options": [
+            {
+              "id": "opt-13",
+              "text": "The $13$ cm side",
+              "isCorrect": true
+            },
+            {
+              "id": "opt-x",
+              "text": "The side marked $x$",
+              "whyWrong": "That side touches the right angle, so it is a leg. It is also the one being found."
+            },
+            {
+              "id": "opt-5",
+              "text": "The $5$ cm side",
+              "whyWrong": "That side touches the right angle too, so it is the other leg."
+            }
+          ],
+          "successText": "The $13$ cm side sits opposite the right angle, so its square stands alone in the equation. That decides whether you add or subtract."
+        }
+      }
+    },
+    {
+      "id": "12-solve-leg-1",
+      "kind": "interaction",
+      "chapter": "leg",
+      "title": "Find the missing leg",
+      "advance": "onSuccess",
+      "marks": 2,
+      "altExplain": {
+        "prompt": "The full rule says $x^2 + 5^2 = 13^2$. Moving the $5^2$ across turns it into $x^2 = 13^2 - 5^2$, which is why the squares get subtracted here."
+      },
+      "interaction": {
+        "kind": "stepSolve",
+        "hint": "The hypotenuse square stands alone. The unknown leg square is what is left after subtracting.",
+        "config": {
+          "prompt": "Find $x$. The hypotenuse is $13$, so watch the signs.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='179' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260.3' y='151.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text></svg>",
+          "lines": [
+            {
+              "id": "l-eq",
+              "kind": "pick",
+              "label": "the equation",
+              "markCode": "M1",
+              "options": [
+                {
+                  "id": "e-plus",
+                  "text": "$x^2 = 13^2 + 5^2$",
+                  "whyWrong": "That would make $x$ longer than the hypotenuse, and nothing in the triangle beats the hypotenuse."
+                },
+                {
+                  "id": "e-minus",
+                  "text": "$x^2 = 13^2 - 5^2$",
+                  "isCorrect": true
+                },
+                {
+                  "id": "e-lin",
+                  "text": "$x = 13 - 5$",
+                  "whyWrong": "The rule subtracts the squares of the sides, never the sides themselves."
+                }
+              ]
+            },
+            {
+              "id": "l-sq",
+              "kind": "numeric",
+              "label": "the value of $x^2$",
+              "answer": 144,
+              "tolerance": 0,
+              "display": "x^2 = 169 - 25 = {v}",
+              "inputPrefix": "x^2 = 169 - 25 =",
+              "nudge": "$13^2 = 169$ and $5^2 = 25$. Subtract them."
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the missing leg",
+              "markCode": "A1",
+              "answer": 12,
+              "tolerance": 0,
+              "display": "x = \\sqrt{144} = {v}\\ \\text{cm}",
+              "inputPrefix": "x = \\sqrt{144} =",
+              "inputSuffix": "cm",
+              "nudge": "$x^2$ is $144$, and the square root of $144$ is a whole number."
+            }
+          ],
+          "successText": "$x = 12$ cm, shorter than the hypotenuse as it must be. A quick size check like that catches sign mistakes before the examiner does."
+        }
+      }
+    },
+    {
+      "id": "13-solve-leg-2",
+      "kind": "interaction",
+      "chapter": "leg",
+      "title": "Once more, with decimals",
+      "advance": "onSuccess",
+      "marks": 2,
+      "altExplain": {
+        "prompt": "Nothing changes with decimals: square $9.5$ to get $90.25$, square $4$ to get $16$, subtract to get $74.25$, and square-root at the end."
+      },
+      "interaction": {
+        "kind": "stepSolve",
+        "hint": "Same routine: hypotenuse square minus the known leg square, then the square root at the end.",
+        "config": {
+          "prompt": "Find $x$ to $1$ decimal place.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='189.9,268 290.1,268 189.9,52' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 202.9 268 L 202.9 255 L 189.9 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>4 m</text><text x='173.9' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260' y='150.7' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>9.5 m</text></svg>",
+          "lines": [
+            {
+              "id": "l-eq",
+              "kind": "pick",
+              "label": "the equation",
+              "markCode": "M1",
+              "options": [
+                {
+                  "id": "e-minus",
+                  "text": "$x^2 = 9.5^2 - 4^2$",
+                  "isCorrect": true
+                },
+                {
+                  "id": "e-plus",
+                  "text": "$x^2 = 9.5^2 + 4^2$",
+                  "whyWrong": "The $9.5$ m side is the hypotenuse, so its square stands alone and the leg square comes off it."
+                }
+              ]
+            },
+            {
+              "id": "l-sq",
+              "kind": "numeric",
+              "label": "the value of $x^2$",
+              "answer": 74.25,
+              "tolerance": 0.001,
+              "display": "x^2 = 90.25 - 16 = {v}",
+              "inputPrefix": "x^2 = 90.25 - 16 =",
+              "nudge": "$9.5^2 = 90.25$ and $4^2 = 16$. Subtract them."
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the missing leg",
+              "markCode": "A1",
+              "answer": 8.6,
+              "tolerance": 0.05,
+              "display": "x = \\sqrt{74.25} = {v}\\ \\text{m}",
+              "inputPrefix": "x = \\sqrt{74.25} =",
+              "inputSuffix": "m (1 dp)",
+              "nudge": "The square root of $74.25$ is $8.616...$, which rounds to $8.6$."
+            }
+          ],
+          "successText": "$x = 8.6$ m. Decimals change nothing about the method, only the arithmetic."
+        }
+      }
+    },
+    {
+      "id": "14-flashback-hyp",
+      "kind": "interaction",
+      "chapter": "leg",
+      "title": "A quick look back",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "hint": "Both known sides touch the right angle here, so what part does the unknown play?",
+        "config": {
+          "prompt": "One from the last chapter. Which equation finds this hypotenuse?",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,206.7 400,206.7 80,113.3' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 206.7 L 93 193.7 L 80 193.7' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='228.7' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>24 cm</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>7 cm</text><text x='246.2' y='138.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>x</text></svg>",
+          "options": [
+            {
+              "id": "opt-minus",
+              "text": "$x^2 = 24^2 - 7^2$",
+              "whyWrong": "Both known sides are legs. Subtraction is for when the hypotenuse is one of the given sides."
+            },
+            {
+              "id": "opt-plus",
+              "text": "$x^2 = 24^2 + 7^2$",
+              "isCorrect": true
+            },
+            {
+              "id": "opt-lin",
+              "text": "$x = 24 + 7$",
+              "whyWrong": "The squares get added, never the plain sides."
+            }
+          ],
+          "successText": "The unknown sits opposite the right angle, so the squares are added. For the record, $x$ comes out to exactly $25$."
+        }
+      }
+    },
+    {
+      "id": "14b-section-hidden",
+      "kind": "concept",
+      "chapter": "hidden",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#fff067;opacity:0.92'>chapter 4 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Hidden triangles</div><div style='width:64px;height:2px;background:#fff067;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>The exam rarely hands you a labelled right-angled triangle. It hides one inside a rectangle, a ladder, or an isosceles triangle.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>The first thing the examiner looks for is whether you found the right triangle at all. Sketch it separately if it helps; that is never penalised.</p></div>"
+      }
+    },
+    {
+      "id": "15-rectangle-concept",
+      "kind": "concept",
+      "chapter": "hidden",
+      "title": "A diagonal makes two right-angled triangles",
+      "advance": "manual",
+      "prompt": "Every rectangle hides two right-angled triangles: the diagonal cuts it corner to corner. The length and the width are the legs, and the diagonal is always the hypotenuse, because the corner of a rectangle is a right angle.",
+      "visual": {
+        "kind": "html",
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><rect x='75' y='91.3' width='330' height='137.5' fill='rgba(0,171,250,0.08)' stroke='#c8c6be' stroke-width='2'/><line x1='75' y1='228.8' x2='405' y2='91.3' stroke='#ff4670' stroke-width='2.2'/><path d='M 392 228.8 L 392 215.8 L 405 215.8' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='248.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>12 cm</text><text x='421' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>5 cm</text><text x='220' y='144' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>d</text></svg>",
+        "wide": true
+      }
+    },
+    {
+      "id": "16-solve-rectangle",
+      "kind": "interaction",
+      "chapter": "hidden",
+      "title": "Find the diagonal",
+      "advance": "onSuccess",
+      "marks": 2,
+      "altExplain": {
+        "prompt": "Treat the bottom edge and the right edge as the two legs of a triangle whose hypotenuse is the diagonal. Then it is the add-the-squares routine from chapter two."
+      },
+      "interaction": {
+        "kind": "stepSolve",
+        "hint": "The diagonal is a hypotenuse, so this is the adding case.",
+        "config": {
+          "prompt": "Find the diagonal $d$ of the rectangle.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><rect x='75' y='91.3' width='330' height='137.5' fill='rgba(0,171,250,0.08)' stroke='#c8c6be' stroke-width='2'/><line x1='75' y1='228.8' x2='405' y2='91.3' stroke='#ff4670' stroke-width='2.2'/><path d='M 392 228.8 L 392 215.8 L 405 215.8' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='248.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>12 cm</text><text x='421' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>5 cm</text><text x='220' y='144' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>d</text></svg>",
+          "lines": [
+            {
+              "id": "l-eq",
+              "kind": "pick",
+              "label": "the equation",
+              "markCode": "M1",
+              "options": [
+                {
+                  "id": "e-minus",
+                  "text": "$d^2 = 12^2 - 5^2$",
+                  "whyWrong": "The diagonal is the hypotenuse of the hidden triangle, so the squares get added."
+                },
+                {
+                  "id": "e-correct",
+                  "text": "$d^2 = 12^2 + 5^2$",
+                  "isCorrect": true
+                },
+                {
+                  "id": "e-area",
+                  "text": "$d = 12 \\times 5$",
+                  "whyWrong": "That is the area of the rectangle. The diagonal comes from Pythagoras on the hidden triangle."
+                }
+              ]
+            },
+            {
+              "id": "l-sq",
+              "kind": "numeric",
+              "label": "the value of $d^2$",
+              "answer": 169,
+              "tolerance": 0,
+              "display": "d^2 = 144 + 25 = {v}",
+              "inputPrefix": "d^2 = 144 + 25 =",
+              "nudge": "$12^2 = 144$ and $5^2 = 25$. Add them."
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the diagonal",
+              "markCode": "A1",
+              "answer": 13,
+              "tolerance": 0,
+              "display": "d = \\sqrt{169} = {v}\\ \\text{cm}",
+              "inputPrefix": "d = \\sqrt{169} =",
+              "inputSuffix": "cm",
+              "nudge": "The square root of $169$ is a whole number, and it is bigger than $12$."
+            }
+          ],
+          "successText": "$d = 13$ cm. Any time a question mentions the diagonal of a rectangle, Pythagoras is the whole method."
+        }
+      }
+    },
+    {
+      "id": "17-solve-ladder",
+      "kind": "interaction",
+      "chapter": "hidden",
+      "title": "The ladder question",
+      "advance": "onSuccess",
+      "marks": 2,
+      "altExplain": {
+        "prompt": "The ladder leans, so it is the slanted hypotenuse. The wall and the ground meet at a right angle, which makes the wall height a leg. Known hypotenuse means the squares get subtracted."
+      },
+      "interaction": {
+        "kind": "stepSolve",
+        "hint": "Decide which of the three lengths is the hypotenuse before touching the numbers.",
+        "config": {
+          "prompt": "A $6.5$ m ladder leans against a wall, with its foot $2.5$ m out from the base. How high up the wall does it reach?",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='120' y1='280' x2='400' y2='280' stroke='#7a7875' stroke-width='2'/><line x1='300' y1='280' x2='300' y2='70' stroke='#7a7875' stroke-width='2'/><line x1='220' y1='280' x2='300' y2='88' stroke='#ff4670' stroke-width='2.6'/><path d='M 287 280 L 287 267 L 300 267' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='260' y='300' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>2.5 m</text><text x='236' y='174' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>6.5 m</text><text x='316' y='184' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>h</text></svg>",
+          "lines": [
+            {
+              "id": "l-eq",
+              "kind": "pick",
+              "label": "the equation",
+              "markCode": "M1",
+              "options": [
+                {
+                  "id": "e-plus",
+                  "text": "$h^2 = 6.5^2 + 2.5^2$",
+                  "whyWrong": "The ladder itself is the hypotenuse, so the wall height must come out shorter than $6.5$. Adding would make it longer."
+                },
+                {
+                  "id": "e-minus",
+                  "text": "$h^2 = 6.5^2 - 2.5^2$",
+                  "isCorrect": true
+                },
+                {
+                  "id": "e-lin",
+                  "text": "$h = 6.5 - 2.5$",
+                  "whyWrong": "The squares get subtracted, never the plain lengths."
+                }
+              ]
+            },
+            {
+              "id": "l-sq",
+              "kind": "numeric",
+              "label": "the value of $h^2$",
+              "answer": 36,
+              "tolerance": 0,
+              "display": "h^2 = 42.25 - 6.25 = {v}",
+              "inputPrefix": "h^2 = 42.25 - 6.25 =",
+              "nudge": "$6.5^2 = 42.25$ and $2.5^2 = 6.25$. Subtract them."
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the height",
+              "markCode": "A1",
+              "answer": 6,
+              "tolerance": 0,
+              "display": "h = \\sqrt{36} = {v}\\ \\text{m}",
+              "inputPrefix": "h = \\sqrt{36} =",
+              "inputSuffix": "m",
+              "nudge": "The square root of $36$ is a whole number."
+            }
+          ],
+          "successText": "The ladder reaches $6$ m up the wall. In word problems the slanted thing, a ladder, a ramp, a wire, is nearly always the hypotenuse."
+        }
+      }
+    },
+    {
+      "id": "18-isosceles-concept",
+      "kind": "concept",
+      "chapter": "hidden",
+      "title": "The isosceles trick: halve the base",
+      "advance": "manual",
+      "prompt": "Drop a line from the top of an isosceles triangle straight down to the base. It lands exactly halfway along, splitting the triangle into two matching right-angled ones. The half-base is $5$ here, and forgetting to halve the $10$ is the classic lost mark.",
+      "visual": {
+        "kind": "html",
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='165,266 315,266 240,86' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><line x1='240' y1='86' x2='240' y2='266' stroke='#fff067' stroke-width='1.8' stroke-dasharray='6 5'/><path d='M 253 266 L 253 253 L 240 253' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='178.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><text x='301.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><text x='202.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='277.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='254' y='176' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>h</text></svg>",
+        "wide": true
+      }
+    },
+    {
+      "id": "19-pp-isosceles",
+      "kind": "interaction",
+      "chapter": "hidden",
+      "title": "Real exam question · Cambridge w25_11 Q17(a)",
+      "advance": "onSuccess",
+      "marks": 2,
+      "altExplain": {
+        "prompt": "Work inside one half of the triangle only: the height, the half-base of $5$, and one slanted side of $13$. The $13$ is the hypotenuse of that half."
+      },
+      "interaction": {
+        "kind": "stepSolve",
+        "hint": "Use one of the two halves. Its sides are $h$, the half-base, and one $13$ cm side.",
+        "config": {
+          "prompt": "Find the height $h$ of the isosceles triangle with sides $13$ cm and base $10$ cm.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='165,266 315,266 240,86' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><line x1='240' y1='86' x2='240' y2='266' stroke='#fff067' stroke-width='1.8' stroke-dasharray='6 5'/><path d='M 253 266 L 253 253 L 240 253' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='178.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><text x='301.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><text x='202.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='277.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='254' y='176' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>h</text></svg>",
+          "lines": [
+            {
+              "id": "l-eq",
+              "kind": "pick",
+              "label": "the equation",
+              "markCode": "M1",
+              "options": [
+                {
+                  "id": "e-full",
+                  "text": "$h^2 + 10^2 = 13^2$",
+                  "whyWrong": "The height splits the base in half, so the leg of the hidden triangle is $5$, never the full $10$."
+                },
+                {
+                  "id": "e-plus",
+                  "text": "$h^2 = 13^2 + 5^2$",
+                  "whyWrong": "The $13$ cm side is the hypotenuse of the half-triangle, so its square stands alone."
+                },
+                {
+                  "id": "e-correct",
+                  "text": "$h^2 + 5^2 = 13^2$",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "id": "l-sq",
+              "kind": "numeric",
+              "label": "the value of $h^2$",
+              "answer": 144,
+              "tolerance": 0,
+              "display": "h^2 = 169 - 25 = {v}",
+              "inputPrefix": "h^2 = 169 - 25 =",
+              "nudge": "Rearrange first: $h^2 = 13^2 - 5^2$, which is $169 - 25$."
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the height",
+              "markCode": "A1",
+              "answer": 12,
+              "tolerance": 0,
+              "display": "h = \\sqrt{144} = {v}\\ \\text{cm}",
+              "inputPrefix": "h = \\sqrt{144} =",
+              "inputSuffix": "cm",
+              "nudge": "The square root of $144$ is a whole number."
+            }
+          ],
+          "successText": "$h = 12$ cm, exactly as the mark scheme wants it. The whole question turns on using $5$ instead of $10$."
+        }
+      }
+    },
+    {
+      "id": "19b-section-exam",
+      "kind": "concept",
+      "chapter": "exam",
+      "advance": "manual",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#0fee89;opacity:0.92'>chapter 5 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>The exam</div><div style='width:64px;height:2px;background:#0fee89;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>Two decisions, then arithmetic: find the right triangle, and decide whether the unknown is the hypotenuse.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>No hints from here. Decide add or subtract first, write the equation line for the method mark, then compute for the accuracy mark.</p></div>"
+      }
+    },
+    {
+      "id": "20-verify-decide-1",
+      "kind": "verify",
+      "chapter": "exam",
+      "title": "Add or subtract?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "config": {
+          "prompt": "Which equation earns the method mark here?",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,251.4 400,251.4 80,68.6' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 251.4 L 93 238.4 L 80 238.4' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='273.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>7 m</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>4 m</text><text x='250.9' y='140.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>y</text></svg>",
+          "options": [
+            {
+              "id": "opt-plus",
+              "text": "$y^2 = 7^2 + 4^2$",
+              "isCorrect": true
+            },
+            {
+              "id": "opt-minus",
+              "text": "$y^2 = 7^2 - 4^2$",
+              "whyWrong": "The unknown is opposite the right angle, so it is the hypotenuse and the squares get added."
+            },
+            {
+              "id": "opt-lin",
+              "text": "$y = 7 + 4$",
+              "whyWrong": "The plain sides never add. Their squares do."
+            }
+          ],
+          "successText": "The unknown is the hypotenuse, so the squares are added."
+        }
+      }
+    },
+    {
+      "id": "21-verify-decide-2",
+      "kind": "verify",
+      "chapter": "exam",
+      "title": "And this one?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "selectFromOptions",
+        "config": {
+          "prompt": "Which equation earns the method mark here?",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='153.6,268 326.4,268 153.6,52' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 166.6 268 L 166.6 255 L 153.6 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>6 m</text><text x='137.6' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>y</text><text x='257.2' y='146.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>9.6 m</text></svg>",
+          "options": [
+            {
+              "id": "opt-plus",
+              "text": "$y^2 = 9.6^2 + 6^2$",
+              "whyWrong": "The $9.6$ m side is opposite the right angle, so it is the hypotenuse and its square stands alone."
+            },
+            {
+              "id": "opt-lin",
+              "text": "$y = 9.6 - 6$",
+              "whyWrong": "The plain sides never subtract. Their squares do."
+            },
+            {
+              "id": "opt-minus",
+              "text": "$y^2 = 9.6^2 - 6^2$",
+              "isCorrect": true
+            }
+          ],
+          "successText": "The hypotenuse is known this time, so the leg square comes off it."
+        }
+      }
+    },
+    {
+      "id": "22-verify-solve-hyp",
+      "kind": "verify",
+      "chapter": "exam",
+      "title": "Full solve, no help",
+      "advance": "onSuccess",
+      "marks": 2,
+      "interaction": {
+        "kind": "stepSolve",
+        "config": {
+          "prompt": "Find $c$.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>12 cm</text><text x='80' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>9 cm</text><text x='253.2' y='142.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "lines": [
+            {
+              "id": "l-eq",
+              "kind": "pick",
+              "label": "the equation",
+              "markCode": "M1",
+              "options": [
+                {
+                  "id": "e-minus",
+                  "text": "$c^2 = 12^2 - 9^2$",
+                  "whyWrong": "Both known sides touch the right angle, so they are legs and their squares add."
+                },
+                {
+                  "id": "e-correct",
+                  "text": "$c^2 = 12^2 + 9^2$",
+                  "isCorrect": true
+                }
+              ]
+            },
+            {
+              "id": "l-sq",
+              "kind": "numeric",
+              "label": "the value of $c^2$",
+              "answer": 225,
+              "tolerance": 0,
+              "display": "c^2 = 144 + 81 = {v}",
+              "inputPrefix": "c^2 = 144 + 81 ="
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the hypotenuse",
+              "markCode": "A1",
+              "answer": 15,
+              "tolerance": 0,
+              "display": "c = \\sqrt{225} = {v}\\ \\text{cm}",
+              "inputPrefix": "c = \\sqrt{225} =",
+              "inputSuffix": "cm"
+            }
+          ],
+          "successText": "$c = 15$ cm. Both marks banked under exam conditions."
+        }
+      }
+    },
+    {
+      "id": "23-verify-solve-leg",
+      "kind": "verify",
+      "chapter": "exam",
+      "title": "Last one",
+      "advance": "onSuccess",
+      "marks": 2,
+      "interaction": {
+        "kind": "stepSolve",
+        "config": {
+          "prompt": "Find $x$.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='182.4,268 297.6,268 182.4,52' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 195.4 268 L 195.4 255 L 182.4 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>8 cm</text><text x='166.4' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='259.4' y='149.6' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>17 cm</text></svg>",
+          "lines": [
+            {
+              "id": "l-eq",
+              "kind": "pick",
+              "label": "the equation",
+              "markCode": "M1",
+              "options": [
+                {
+                  "id": "e-correct",
+                  "text": "$x^2 = 17^2 - 8^2$",
+                  "isCorrect": true
+                },
+                {
+                  "id": "e-plus",
+                  "text": "$x^2 = 17^2 + 8^2$",
+                  "whyWrong": "The $17$ cm side is the hypotenuse, so its square stands alone and the leg square is subtracted."
+                }
+              ]
+            },
+            {
+              "id": "l-sq",
+              "kind": "numeric",
+              "label": "the value of $x^2$",
+              "answer": 225,
+              "tolerance": 0,
+              "display": "x^2 = 289 - 64 = {v}",
+              "inputPrefix": "x^2 = 289 - 64 ="
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the missing leg",
+              "markCode": "A1",
+              "answer": 15,
+              "tolerance": 0,
+              "display": "x = \\sqrt{225} = {v}\\ \\text{cm}",
+              "inputPrefix": "x = \\sqrt{225} =",
+              "inputSuffix": "cm"
+            }
+          ],
+          "successText": "$x = 15$ cm. Add for a hypotenuse, subtract for a leg, and always check the answer is shorter than the hypotenuse."
+        }
+      }
+    },
+    {
+      "id": "24-celebrate",
+      "kind": "concept",
+      "chapter": "exam",
+      "title": "You banked 18 marks of examiner working",
+      "advance": "manual",
+      "prompt": "Every mark came from the same two-line pattern the examiner rewards: the equation with the numbers in, then the value. You used it on plain triangles, a rectangle, a ladder, and a real past-paper isosceles question.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:18px;padding:6px 0'><div style='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>The longest side · 4 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>A shorter side · 4 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>Hidden triangles · 6 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>The exam · 4 marks</span></div></div>"
+      }
+    },
+    {
+      "id": "25-recap",
+      "kind": "recap",
+      "chapter": "exam",
+      "title": "You can now use Pythagoras anywhere it hides",
+      "advance": "manual",
+      "prompt": "One rule, two cases, and a habit of writing the equation line before the calculator comes out.",
+      "bullets": [
+        "The hypotenuse is the side opposite the right angle, and always the longest.",
+        "Add the squares to find the hypotenuse; subtract them to find a leg.",
+        "Write the equation line first, because it earns the method mark on its own.",
+        "Diagonals, ladders and isosceles heights are hidden right-angled triangles, and the isosceles case uses half the base, never the whole thing."
+      ]
+    }
+  ]
+}

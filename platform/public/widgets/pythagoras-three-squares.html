@@ -59,9 +59,15 @@
   }
   .vertex-handle:active { cursor:grabbing; }
   .vertex-handle:hover { r:9; }
+
+/* lesson mode: chrome-free canvas; the lesson aside hosts the words */
+html.lesson-mode, body.lesson-mode { background: transparent; }
+.lesson-mode .head { display: none; }
+.lesson-mode .eq-bar { display: none; }
 </style>
 </head>
 <body>
+<script>(function(){try{if(new URLSearchParams(location.search).get("lessonMode")==="1"){document.documentElement.classList.add("lesson-mode");document.body.classList.add("lesson-mode");}}catch(e){}})();</script>
 <div class="wrap" id="wrap">
   <div class="head">
     <span class="step-title">PYTHAGORAS · THREE-SQUARES PROOF</span>
@@ -522,6 +528,26 @@ function reportHeight() {
 window.addEventListener("load", reportHeight);
 window.addEventListener("resize", reportHeight);
 if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.getElementById("wrap"));
+
+
+// ── lesson mode: post the live check to the lesson aside ────────────────
+(function() {
+  var qs = new URLSearchParams(location.search);
+  if (qs.get("lessonMode") !== "1") return;
+  var lastTex = "";
+  function postReadout() {
+    if (window.parent === window) return;
+    var a = params.a, b = params.b;
+    var c2 = a*a + b*b;
+    var tex = "{\\color{" + COL.blue + "}" + fmtNum(a*a, 2) + "} + {\\color{" + COL.orange + "}" + fmtNum(b*b, 2) + "} = {\\color{" + COL.pink + "}" + fmtNum(c2, 2) + "}";
+    if (tex === lastTex) return;
+    lastTex = tex;
+    window.parent.postMessage({ type: "pl-lesson-readout", label: "live check", tex: tex }, "*");
+  }
+  var _rebBase = renderEquationBar;
+  renderEquationBar = function() { _rebBase(); postReadout(); };
+  postReadout();
+})();
 </script>
 </body>
 </html>
