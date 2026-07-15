@@ -113,16 +113,15 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
               {chosen ? (
                 <MixedText
                   text={chosen.text}
-                  className="text-[15px] sm:text-[16px] font-medium"
+                  className="text-[16px] sm:text-[17px] font-medium"
                   style={{ color: COLOR.white }}
                 />
               ) : (
-                <span
-                  className="text-[10.5px] font-mono uppercase tracking-wider px-1"
+                <MixedText
+                  text={p.label}
+                  className="text-[11.5px] font-mono tracking-wide px-1"
                   style={{ color: isActive ? COLOR.yellow : COLOR.faint }}
-                >
-                  {p.label}
-                </span>
+                />
               )}
             </div>
             {p.markCode && (
@@ -156,7 +155,7 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
           >
             <MixedText
               text={o.text}
-              className="text-[14.5px] sm:text-[16px] font-medium"
+              className="text-[15.5px] sm:text-[17px] font-medium"
               style={{ color: isWrongPick ? COLOR.pink : COLOR.blue }}
             />
           </button>
@@ -184,9 +183,11 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
   )
 
   const stepLabel = !done && current && (
-    <p className="text-[10.5px] font-mono uppercase tracking-[2px]" style={{ color: COLOR.faint }}>
-      part {locked + 1} of {parts.length} · pick {current.label}
-    </p>
+    <MixedText
+      text={`part ${locked + 1} of ${parts.length} · pick ${current.label}`}
+      className="block text-[11.5px] font-mono tracking-[1.5px]"
+      style={{ color: COLOR.faint }}
+    />
   )
 
   // Wide layout when a diagram is present: canvas left, builder right.
