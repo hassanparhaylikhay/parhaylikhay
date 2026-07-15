@@ -187,7 +187,7 @@ export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCa
                 ? config.successText ?? "Nicely done."
                 : config.taskText ?? taskLine(config.src, Boolean(config.target) && !config.noOutline)
             }
-            className="block text-[15px] sm:text-[16px] leading-relaxed"
+            className="block text-[16px] sm:text-[17px] leading-relaxed"
             style={{ color: solved ? COLOR.green : COLOR.text }}
           />
         </div>

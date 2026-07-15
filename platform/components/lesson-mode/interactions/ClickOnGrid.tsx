@@ -342,7 +342,7 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
           </p>
           <MixedText
             text={done ? config.successText ?? "Nicely done." : "Tap the grid square where the image should land."}
-            className="block text-[15px] sm:text-[16px] leading-relaxed"
+            className="block text-[16px] sm:text-[17px] leading-relaxed"
             style={{ color: done ? COLOR.green : COLOR.text }}
           />
         </div>
@@ -355,7 +355,7 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
           </button>
         )}
         {!done && hintShown && (
-          <p className="self-start text-[13px] text-[#7a7875]">
+          <p className="self-start text-[14px] text-[#7a7875]">
             The ring marks the answer area. Tap inside it to confirm.
           </p>
         )}

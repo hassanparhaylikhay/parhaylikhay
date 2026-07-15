@@ -149,7 +149,7 @@ export default function StepThrough({ config, onComplete, onAdvance, onRegisterN
         {config.prompt && (
           <MixedText
             text={config.prompt}
-            className="block text-[14px] sm:text-[15px] text-[#7a7875] leading-relaxed"
+            className="block text-[15.5px] sm:text-[16.5px] text-[#7a7875] leading-relaxed"
           />
         )}
 

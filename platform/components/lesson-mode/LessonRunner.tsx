@@ -218,7 +218,7 @@ export default function LessonRunner({ lesson }: Props) {
 const WIDE_INTERACTION_KINDS = new Set(["widgetCanvas", "clickOnGrid", "stepThrough"])
 // Interactions that go wide only when they carry a contextHtml diagram
 // (canvas on the left, controls in the right aside).
-const CONTEXT_WIDE_KINDS = new Set(["selectFromOptions", "placeLabel", "answerBuilder", "stepSolve"])
+const CONTEXT_WIDE_KINDS = new Set(["selectFromOptions", "placeLabel", "answerBuilder", "stepSolve", "markScript"])
 
 function interactionIsWide(interaction: { kind?: string; config?: Record<string, unknown> } | undefined): boolean {
   const k = interaction?.kind ?? ""

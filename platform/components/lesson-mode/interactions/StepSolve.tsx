@@ -258,7 +258,7 @@ export default function StepSolve({ config, onComplete }: InteractionProps<StepS
       {config.intro && (
         <MixedText
           text={config.intro}
-          className="block text-[13.5px] sm:text-[14px] leading-relaxed"
+          className="block text-[15.5px] sm:text-[16.5px] leading-relaxed"
           style={{ color: COLOR.grey }}
         />
       )}

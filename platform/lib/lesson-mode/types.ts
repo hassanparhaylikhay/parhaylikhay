@@ -28,6 +28,7 @@ export type InteractionKind =
   | "answerBuilder"        // assemble the full examiner sentence part by part; each part earns its mark pill
   | "stepThrough"          // step-explorer widget whose stepper lives in the LESSON chrome, not inside the iframe
   | "stepSolve"            // build the exam script line by line: pick method lines (M1), type values (A1)
+  | "markScript"           // play examiner: award/withhold each mark on a candidate script, then tap the fault line
 
 export interface InteractionSpec {
   kind: InteractionKind

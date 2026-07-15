@@ -36,7 +36,7 @@ const SLIDE_KINDS = new Set(["hook", "concept", "interaction", "verify", "recap"
 const INTERACTION_KINDS = new Set([
   "clickToIdentify", "dragToPosition", "manipulateAndVerify", "selectFromOptions",
   "placeLabel", "orderSteps", "adjustSlider", "widgetCanvas", "clickOnGrid",
-  "answerBuilder", "stepThrough", "stepSolve",
+  "answerBuilder", "stepThrough", "stepSolve", "markScript",
 ])
 // Interactions whose hint requirement is waived (see header).
 const NO_HINT_REQUIRED = new Set(["stepThrough"])
@@ -173,6 +173,27 @@ for (const lessonId of targets) {
       }
     }
 
+    if (i.kind === "markScript") {
+      const script = c.script ?? []
+      const judgments = c.judgments ?? []
+      if (script.length < 2) err(`${s.id}: markScript needs at least 2 script lines`)
+      if (judgments.length === 0) err(`${s.id}: markScript has no judgments`)
+      for (const j of judgments) {
+        for (const k of ["code", "label", "explain", "whyWrong"]) {
+          if (!j[k]) err(`${s.id}/${j.id}: judgment missing ${k}`)
+        }
+        if (typeof j.award !== "boolean") err(`${s.id}/${j.id}: judgment missing award verdict`)
+      }
+      const anyWithheld = judgments.some(j => j.award === false)
+      if (anyWithheld) {
+        if (!c.faultLineId) err(`${s.id}: a mark is withheld but no faultLineId is set`)
+        else if (!script.some(l => l.id === c.faultLineId)) err(`${s.id}: faultLineId "${c.faultLineId}" not in script`)
+        if (!c.faultExplain) warn(`${s.id}: withheld mark has no faultExplain`)
+      } else if (c.faultLineId) {
+        err(`${s.id}: faultLineId set but every mark is awarded`)
+      }
+    }
+
     if (i.kind === "clickOnGrid") {
       const [xMin, xMax] = c.xRange ?? [NaN, NaN]
       const [yMin, yMax] = c.yRange ?? [NaN, NaN]
@@ -303,6 +324,13 @@ function* studentStrings(s) {
     }
   }
   for (const st of c.steps ?? []) if (st.text) yield [`step ${st.id}`, st.text]
+  if (c.question) yield ["question", c.question]
+  if (c.faultExplain) yield ["faultExplain", c.faultExplain]
+  for (const j of c.judgments ?? []) {
+    if (j.label) yield [`judgment ${j.id}`, j.label]
+    if (j.explain) yield [`explain ${j.id}`, j.explain]
+    if (j.whyWrong) yield [`whyWrong ${j.id}`, j.whyWrong]
+  }
   for (const ln of c.lines ?? []) {
     if (ln.label) yield [`line ${ln.id}`, ln.label]
     if (ln.nudge) yield [`nudge ${ln.id}`, ln.nudge]

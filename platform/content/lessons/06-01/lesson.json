@@ -326,34 +326,52 @@
     },
     {
       "id": "09-trap-rounding",
-      "kind": "examLink",
+      "kind": "interaction",
       "chapter": "hypotenuse",
-      "title": "Where did the mark go?",
-      "markCode": "A1",
+      "title": "You be the examiner",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "selectFromOptions",
-        "hint": "Read the last line of the working slowly and check the rounding.",
+        "kind": "markScript",
+        "hint": "The method mark and the answer mark are judged separately. A wrong final digit cannot touch the method mark.",
         "config": {
-          "prompt": "A student writes: $c^2 = 106$, so $c = 10.295...$, answer $10.2$ cm. The method mark is safe, but the answer mark is lost. Why?",
-          "options": [
+          "prompt": "You be the examiner. Read the script, then rule on each mark.",
+          "question": "Find $c$ to $1$ decimal place. The legs are $9$ cm and $5$ cm.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,248.9 400,248.9 80,71.1' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 248.9 L 93 235.9 L 80 235.9' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='270.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>9 cm</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>5 cm</text><text x='250.7' y='140.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "script": [
             {
-              "id": "opt-eq",
-              "text": "The equation was wrong from the start",
-              "whyWrong": "The equation was fine, which is exactly why the method mark survived."
+              "id": "l1",
+              "text": "$c^2 = 9^2 + 5^2$"
             },
             {
-              "id": "opt-units",
-              "text": "The units are missing",
-              "whyWrong": "The student wrote cm. The problem is in the digits."
+              "id": "l2",
+              "text": "$c^2 = 106$"
             },
             {
-              "id": "opt-round",
-              "text": "$10.295...$ rounds up to $10.3$, and chopping digits off is not rounding",
-              "isCorrect": true
+              "id": "l3",
+              "text": "$c = 10.2\\ \\text{cm}$"
             }
           ],
-          "successText": "The digit after the cut is $9$, so the answer rounds up to $10.3$. Truncating to $10.2$ costs the accuracy mark even though every step before it was right."
+          "judgments": [
+            {
+              "id": "j-m1",
+              "code": "M1",
+              "label": "the equation line",
+              "award": true,
+              "explain": "The equation is right with the numbers in place, so the method mark is safe whatever happens later.",
+              "whyWrong": "Look at line 1 again: it squares both legs and adds them, which is exactly what the method mark asks for."
+            },
+            {
+              "id": "j-a1",
+              "code": "A1",
+              "label": "the final answer",
+              "award": false,
+              "explain": "$\\sqrt{106} = 10.295...$, which rounds up to $10.3$. Writing $10.2$ chops the digits off instead of rounding, so the answer mark goes.",
+              "whyWrong": "Check it on a calculator: $\\sqrt{106} = 10.295...$. Is $10.2$ that value correctly rounded?"
+            }
+          ],
+          "faultLineId": "l3",
+          "faultExplain": "The digit after the cut is a $9$, which rounds the answer up to $10.3$. Truncating to $10.2$ is the single most common way this accuracy mark is lost.",
+          "successText": "One mark out of two: method earned, answer lost. Now you know exactly what the examiner looks for on your own script."
         }
       }
     },
@@ -526,6 +544,57 @@
             }
           ],
           "successText": "$x = 8.6$ m. Decimals change nothing about the method, only the arithmetic."
+        }
+      }
+    },
+    {
+      "id": "13b-mark-the-script",
+      "kind": "interaction",
+      "chapter": "leg",
+      "title": "Now mark a harder one",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "markScript",
+        "hint": "Start by deciding which side is the hypotenuse, then check line 1 against that.",
+        "config": {
+          "prompt": "Another candidate, another script. Rule on each mark.",
+          "question": "The hypotenuse is $13$ cm and one leg is $5$ cm. Find the other leg $x$.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(0,171,250,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='179' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260.3' y='151.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text></svg>",
+          "script": [
+            {
+              "id": "l1",
+              "text": "$x^2 = 13^2 + 5^2$"
+            },
+            {
+              "id": "l2",
+              "text": "$x^2 = 194$"
+            },
+            {
+              "id": "l3",
+              "text": "$x = 13.9\\ \\text{cm}$"
+            }
+          ],
+          "judgments": [
+            {
+              "id": "j-m1",
+              "code": "M1",
+              "label": "the equation line",
+              "award": false,
+              "explain": "The hypotenuse is already known, so its square stands alone: the correct line is $x^2 = 13^2 - 5^2$. Adding loses the method mark.",
+              "whyWrong": "Careful: $13$ is the hypotenuse here. Should its square be added to the leg square, or stand alone?"
+            },
+            {
+              "id": "j-a1",
+              "code": "A1",
+              "label": "the final answer",
+              "award": false,
+              "explain": "The arithmetic after line 1 is tidy, but an accuracy mark can only follow a correct method. With the wrong equation, $13.9$ earns nothing.",
+              "whyWrong": "The working after line 1 is consistent, but ask first: can an accuracy mark survive when the method mark is gone?"
+            }
+          ],
+          "faultLineId": "l1",
+          "faultExplain": "Line 1 is where both marks died: one wrong sign, two marks gone. A size check would have caught it too, because $13.9$ is longer than the hypotenuse, which is impossible.",
+          "successText": "Zero out of two from a single sign. This is the exact mistake this chapter exists to prevent."
         }
       }
     },
