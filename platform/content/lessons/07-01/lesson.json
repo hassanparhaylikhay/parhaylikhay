@@ -2599,31 +2599,38 @@
   "chapters": [
     {
       "id": "intro",
-      "title": "The four moves"
+      "title": "The four moves",
+      "color": "#7a7875"
     },
     {
       "id": "translation",
-      "title": "Translation"
+      "title": "Translation",
+      "color": "#00abfa"
     },
     {
       "id": "reflection",
-      "title": "Reflection"
+      "title": "Reflection",
+      "color": "#fff067"
     },
     {
       "id": "rotation",
-      "title": "Rotation"
+      "title": "Rotation",
+      "color": "#ff822c"
     },
     {
       "id": "enlargement",
-      "title": "Enlargement"
+      "title": "Enlargement",
+      "color": "#ff4670"
     },
     {
       "id": "combining",
-      "title": "Combining"
+      "title": "Combining",
+      "color": "#fff067"
     },
     {
       "id": "exam",
-      "title": "The exam"
+      "title": "The exam",
+      "color": "#0fee89"
     }
   ]
 }

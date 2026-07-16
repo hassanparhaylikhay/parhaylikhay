@@ -170,17 +170,17 @@ export default function StepSolve({ config, onComplete }: InteractionProps<StepS
             <button
               key={o.id + (isWrongPick ? shakeKey : "")}
               onClick={() => pickOption(current, o)}
-              className={`rounded-lg border-[1.5px] px-5 py-3 transition-all duration-200 pl-reveal ${isWrongPick ? "pl-shake" : ""}`}
+              className={`rounded-lg border-[1.5px] px-5 py-3 transition-all duration-200 pl-reveal hover:border-[#46608a] ${isWrongPick ? "pl-shake" : ""}`}
               style={{
-                borderColor: isWrongPick ? COLOR.pink : COLOR.blue,
-                background: isWrongPick ? "rgba(255,70,112,0.05)" : "rgba(0,171,250,0.06)",
+                borderColor: isWrongPick ? COLOR.pink : "#2e3f58",
+                background: isWrongPick ? "rgba(255,70,112,0.05)" : "#0f161f",
                 cursor: "pointer",
               }}
             >
               <MixedText
                 text={o.text}
                 className="text-[17px] sm:text-[18px] font-medium"
-                style={{ color: isWrongPick ? COLOR.pink : COLOR.blue }}
+                style={{ color: isWrongPick ? COLOR.pink : COLOR.white }}
               />
             </button>
           )

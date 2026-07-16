@@ -146,17 +146,17 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
           <button
             key={o.id}
             onClick={() => pick(o)}
-            className={`rounded-lg border-[1.5px] px-4 py-2.5 transition-all duration-200 pl-reveal ${shakeId === o.id ? "pl-shake" : ""}`}
+            className={`rounded-lg border-[1.5px] px-4 py-2.5 transition-all duration-200 pl-reveal hover:border-[#46608a] ${shakeId === o.id ? "pl-shake" : ""}`}
             style={{
-              borderColor: isWrongPick ? COLOR.pink : COLOR.blue,
-              background: isWrongPick ? "rgba(255,70,112,0.05)" : "rgba(0,171,250,0.06)",
+              borderColor: isWrongPick ? COLOR.pink : "#2e3f58",
+              background: isWrongPick ? "rgba(255,70,112,0.05)" : "#0f161f",
               cursor: "pointer",
             }}
           >
             <MixedText
               text={o.text}
               className="text-[15.5px] sm:text-[17px] font-medium"
-              style={{ color: isWrongPick ? COLOR.pink : COLOR.blue }}
+              style={{ color: isWrongPick ? COLOR.pink : COLOR.white }}
             />
           </button>
         )

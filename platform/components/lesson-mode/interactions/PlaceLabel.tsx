@@ -167,12 +167,12 @@ export default function PlaceLabel({ config, onComplete, onShowMeUsed }: Interac
             onPointerCancel={e => drop(e, l.id)}
             className={`h-11 sm:h-12 px-4 rounded-lg border-[1.5px] flex items-center cursor-grab active:cursor-grabbing select-none touch-none transition-opacity duration-200 ${isShaking ? "pl-shake" : ""}`}
             style={{
-              borderColor: COLOR.blue,
-              background: "rgba(0,171,250,0.06)",
+              borderColor: "#2e3f58",
+              background: "#0f161f",
               opacity: isDragging ? 0.3 : 1,
             }}
           >
-            <MixedText text={l.text} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: COLOR.blue }} />
+            <MixedText text={l.text} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: COLOR.white }} />
           </div>
         )
       })}
@@ -194,12 +194,12 @@ export default function PlaceLabel({ config, onComplete, onShowMeUsed }: Interac
       style={{
         left: dragPos.x - 60,
         top: dragPos.y - 22,
-        borderColor: COLOR.blue,
+        borderColor: "#46608a",
         background: COLOR.card,
-        boxShadow: "0 6px 20px -8px rgba(0,171,250,0.6)",
+        boxShadow: "0 8px 24px -8px rgba(0,0,0,0.85)",
       }}
     >
-      <MixedText text={config.labels.find(l => l.id === dragLabelId)?.text ?? ""} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: COLOR.blue }} />
+      <MixedText text={config.labels.find(l => l.id === dragLabelId)?.text ?? ""} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: COLOR.white }} />
     </div>
   )
 

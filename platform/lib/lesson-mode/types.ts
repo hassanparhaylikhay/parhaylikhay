@@ -132,7 +132,7 @@ export interface Lesson {
    * Drives the segmented progress bar in the chrome (75 dots was unreadable
    * and overflowed the header; chapters read as a journey).
    */
-  chapters?: Array<{ id: string; title: string }>
+  chapters?: Array<{ id: string; title: string; color?: string }>
   slides: Slide[]
 }
 

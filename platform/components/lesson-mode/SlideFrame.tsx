@@ -31,6 +31,8 @@ import { MixedText } from "./interactions/_shared"
 export type ChapterInfo = {
   id: string
   title: string
+  /** Accent for this chapter's progress segment (defaults to blue). */
+  color?: string
   /** First and last slide index of this chapter. */
   start: number
   end: number
@@ -228,6 +230,7 @@ function ChapterBar({ chapters, slideIdx }: { chapters: ChapterInfo[]; slideIdx:
           const doneChapter = slideIdx > c.end
           const isCurrent = slideIdx >= c.start && slideIdx <= c.end
           const fill = doneChapter ? 1 : isCurrent ? (slideIdx - c.start + 1) / (c.end - c.start + 1) : 0
+          const accent = c.color ?? "#00abfa"
           return (
             <div
               key={c.id}
@@ -239,7 +242,8 @@ function ChapterBar({ chapters, slideIdx }: { chapters: ChapterInfo[]; slideIdx:
                 className="absolute inset-y-0 left-0 rounded-full transition-all duration-500"
                 style={{
                   width: `${fill * 100}%`,
-                  background: doneChapter ? "#1a3350" : "#00abfa",
+                  background: accent,
+                  opacity: doneChapter ? 0.32 : 1,
                   transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               />

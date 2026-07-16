@@ -49,7 +49,7 @@ export default function LessonRunner({ lesson }: Props) {
         if (start < 0) start = i
         end = i
       })
-      if (start >= 0) out.push({ id: c.id, title: c.title, start, end })
+      if (start >= 0) out.push({ id: c.id, title: c.title, color: c.color, start, end })
     }
     return out.length > 0 ? out : null
   }, [lesson])
