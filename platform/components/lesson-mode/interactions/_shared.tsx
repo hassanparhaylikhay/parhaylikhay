@@ -339,6 +339,13 @@ export const interactionStyles = `
 }
 .pl-primed { animation: pl-primed 2s ease-in-out infinite; }
 
+/* Linear fill used as the auto-play pacing indicator on walkthroughs. */
+@keyframes pl-autofill {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+.pl-autofill { animation-name: pl-autofill; animation-timing-function: linear; animation-fill-mode: forwards; }
+
 /* Staggered fade-in for the side-panel children — title, prompt,
    readout, status, button. Each child appears ~80ms after the previous
    one, settling in with a small upward translate on Apple's smooth

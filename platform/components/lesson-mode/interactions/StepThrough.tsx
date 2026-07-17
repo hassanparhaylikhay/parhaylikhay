@@ -12,6 +12,9 @@ export type StepThroughConfig = {
   title?: string
   /** One quiet context line under the title. */
   prompt?: string
+  /** Auto-play the steps like a video until the student takes over.
+   *  Defaults to true; revisits of a completed slide never auto-play. */
+  autoPlay?: boolean
   widget?: string
   noHelp?: boolean
 }
@@ -47,12 +50,16 @@ type StepThroughProps = InteractionProps<StepThroughConfig> & {
  *   - the slide completes only when the final step has been seen, so the
  *     walkthrough cannot be skipped
  */
-export default function StepThrough({ config, onComplete, onAdvance, onRegisterNav }: StepThroughProps) {
+export default function StepThrough({ config, savedData, onComplete, onAdvance, onRegisterNav }: StepThroughProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const [step, setStep] = useState(0)
   const [total, setTotal] = useState(0)
   const [caption, setCaption] = useState<string>("")
   const [interacted, setInteracted] = useState(false)
+  // Auto-play: the walkthrough advances itself on a reading-paced timer,
+  // like a video, until the student touches any control. A slide the
+  // student already completed replays only under manual control.
+  const [auto, setAuto] = useState(() => config.autoPlay !== false && savedData == null)
   const completedRef = useRef(false)
 
   // ── listen for step state from the widget ─────────────────────────────
@@ -77,12 +84,26 @@ export default function StepThrough({ config, onComplete, onAdvance, onRegisterN
 
   const goStep = (n: number) => {
     setInteracted(true)
+    setAuto(false)
     iframeRef.current?.contentWindow?.postMessage({ type: "pl-step-go", step: n }, "*")
   }
 
   const hasNext = total > 0 && step < total - 1
   const hasPrev = step > 0
   const done = total > 0 && step >= total - 1
+
+  // Reading-paced duration for the current step's caption; the first step
+  // gets a little extra so the student can take the diagram in.
+  const captionLen = caption.replace(/<[^>]*>/g, "").length
+  const autoDur = Math.min(7000, Math.max(3200, 2400 + captionLen * 38)) + (step === 0 ? 800 : 0)
+
+  useEffect(() => {
+    if (!auto || done || total === 0) return
+    const t = setTimeout(() => {
+      iframeRef.current?.contentWindow?.postMessage({ type: "pl-step-go", step: step + 1 }, "*")
+    }, autoDur)
+    return () => clearTimeout(t)
+  }, [auto, step, total, done, autoDur])
 
   // ── register the nav delegate so the lesson chrome drives steps ───────
   useEffect(() => {
@@ -179,6 +200,13 @@ export default function StepThrough({ config, onComplete, onAdvance, onRegisterN
             minHeight: 96,
           }}
         >
+          {auto && !done && total > 0 && (
+            <div
+              key={`fill-${step}`}
+              className="pl-autofill"
+              style={{ height: 2, background: COLOR.yellow, opacity: 0.5, borderRadius: 1, marginBottom: 10, animationDuration: `${autoDur}ms` }}
+            />
+          )}
           <CaptionHtml key={`${step}-${total}`} html={caption} />
         </div>
 
