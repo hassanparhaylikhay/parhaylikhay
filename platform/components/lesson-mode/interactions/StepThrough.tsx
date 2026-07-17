@@ -50,16 +50,17 @@ type StepThroughProps = InteractionProps<StepThroughConfig> & {
  *   - the slide completes only when the final step has been seen, so the
  *     walkthrough cannot be skipped
  */
-export default function StepThrough({ config, savedData, onComplete, onAdvance, onRegisterNav }: StepThroughProps) {
+export default function StepThrough({ config, onComplete, onAdvance, onRegisterNav }: StepThroughProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const [step, setStep] = useState(0)
   const [total, setTotal] = useState(0)
   const [caption, setCaption] = useState<string>("")
   const [interacted, setInteracted] = useState(false)
   // Auto-play: the walkthrough advances itself on a reading-paced timer,
-  // like a video, until the student touches any control. A slide the
-  // student already completed replays only under manual control.
-  const [auto, setAuto] = useState(() => config.autoPlay !== false && savedData == null)
+  // like a video, until the student touches any control. Revisits replay
+  // too: they cost nothing, since a completed slide never blocks the
+  // bottom-bar next.
+  const [auto, setAuto] = useState(() => config.autoPlay !== false)
   const completedRef = useRef(false)
 
   // ── listen for step state from the widget ─────────────────────────────
