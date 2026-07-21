@@ -26,6 +26,8 @@ const SLIDE_MS = 4400
 // Brief success pause AFTER slide 2 is solved before moving to slide 3,
 // so the visitor sees the green confirmation state.
 const SLIDE_2_POST_SOLVE_MS = 2400
+// Mirrors the real chapter bar: one accent per chapter of the journey.
+const SEGMENT_COLORS = ["#00abfa", "#fff067", "#0fee89"]
 
 export default function LessonModePreviewSection() {
   const [idx, setIdx] = useState(0)
@@ -105,14 +107,32 @@ export default function LessonModePreviewSection() {
             minHeight: "min(680px, 84svh)",
           }}
         >
-          {/* Slim mock chrome — mimics SlideFrame top strip */}
-          <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#141e2a]">
-            <span className="font-mono text-[10.5px] tracking-[1.5px] uppercase text-[#3a4a5a]">
+          {/* Slim mock chrome — mimics the real SlideFrame top strip:
+              per-chapter progress segments + the exam-marks ledger. The
+              ledger banks for real when the visitor solves slide 2. */}
+          <div className="flex items-center justify-between gap-4 px-5 py-3.5 border-b border-[#141e2a]">
+            <span className="font-mono text-[10.5px] tracking-[1.5px] uppercase text-[#3a4a5a] truncate">
               Lesson Mode · 7.1 Transformations
             </span>
-            <span className="font-mono text-[10.5px] tracking-[1.5px] text-[#3a4a5a]">
-              {String(idx + 1).padStart(2, "0")} / 03
-            </span>
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="flex items-center gap-1">
+                {SEGMENT_COLORS.map((c, i) => (
+                  <span key={i} className="block h-1 w-6 rounded-full overflow-hidden" style={{ background: "#0f161f" }}>
+                    <span
+                      className="block h-full rounded-full transition-all duration-500"
+                      style={{ width: idx >= i ? "100%" : "0%", background: c, opacity: idx > i ? 0.35 : 1 }}
+                    />
+                  </span>
+                ))}
+              </div>
+              <span
+                key={solvedSlide2 ? "banked" : "empty"}
+                className={`font-mono text-[10.5px] tracking-[1px] px-1.5 py-0.5 ${solvedSlide2 ? styles.lmBank : ""}`}
+              >
+                <span style={{ color: solvedSlide2 ? "#0fee89" : "#3a4a5a", fontWeight: 600 }}>{solvedSlide2 ? 2 : 0}</span>
+                <span className="text-[#3a4a5a]"> / 2 marks</span>
+              </span>
+            </div>
           </div>
 
           {/* Slide stack — only one is active. Min-height matches the
@@ -178,9 +198,9 @@ export default function LessonModePreviewSection() {
         </div>
 
         <p className="text-center text-[16px] sm:text-[18px] leading-[1.55] text-[#c8c6be] mt-14 max-w-[36ch] mx-auto">
-          Each lesson is <span className="text-[#f0eeea]">20–30 frames</span> of pure interactivity.{" "}
-          <span className="text-[#7a7875]">No passive videos. No walls of text.</span>{" "}
-          Just discovery, step by step.
+          Each lesson is a chapter journey of <span className="text-[#f0eeea]">30–80 interactive frames</span>, banking{" "}
+          <span className="text-[#0fee89]">real exam marks</span> as you go.{" "}
+          <span className="text-[#7a7875]">No passive videos. No walls of text.</span>
         </p>
       </div>
     </Section>
