@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { COLOR, MixedText, type InteractionProps } from "./_shared"
 
 /**
@@ -16,6 +16,10 @@ type PickLine = {
   /** What this line is, shown while active (e.g. "the equation"). May contain $...$. */
   label: string
   markCode?: string
+  /** Stage-specific hint surfaced by the chrome's 20s stuck-timer while THIS line is active. */
+  hint?: string
+  /** Stage-specific "explain another way" text for this line. */
+  alt?: string
   options: Array<{ id: string; text: string; isCorrect?: boolean; whyWrong?: string }>
 }
 
@@ -37,6 +41,10 @@ type NumericLine = {
   placeholder?: string
   /** Teaching line shown after two wrong attempts on this line. */
   nudge?: string
+  /** Stage-specific hint for the chrome; defaults to the nudge. */
+  hint?: string
+  /** Stage-specific "explain another way" text for this line. */
+  alt?: string
 }
 
 export type StepSolveLine = PickLine | NumericLine
@@ -64,7 +72,17 @@ export type StepSolveConfig = {
  * the side column (and stacks on top on narrow screens, like an exam
  * paper: figure first, working underneath).
  */
-export default function StepSolve({ config, onComplete }: InteractionProps<StepSolveConfig>) {
+export type StageInfo = { hint?: string; alt?: string }
+
+type StepSolveProps = InteractionProps<StepSolveConfig> & {
+  /** Reports the ACTIVE line's help to the lesson chrome, so the 20s hint
+   *  and "explain another way" always match the stage the student is on
+   *  (slide-level help kept explaining line 1 after the student had moved
+   *  to line 2). */
+  onRegisterStageInfo?: (info: StageInfo | null) => void
+}
+
+export default function StepSolve({ config, onComplete, onRegisterStageInfo }: StepSolveProps) {
   const [locked, setLocked] = useState<string[]>([])   // display text per locked line
   const [wrongId, setWrongId] = useState<string | null>(null)
   const [shakeKey, setShakeKey] = useState(0)
@@ -112,6 +130,19 @@ export default function StepSolve({ config, onComplete }: InteractionProps<StepS
       setShakeKey(k => k + 1)
     }
   }
+
+  // Report the active stage's help upward; clear when solved or unmounted.
+  const stageHint = current ? (current.hint ?? (current.kind === "numeric" ? current.nudge : undefined)) : undefined
+  const stageAlt = current?.alt
+  useEffect(() => {
+    if (!onRegisterStageInfo) return
+    onRegisterStageInfo(done ? null : { hint: stageHint, alt: stageAlt })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx, done, stageHint, stageAlt])
+  useEffect(() => {
+    return () => { onRegisterStageInfo?.(null) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const wrongOption = current?.kind === "pick" && wrongId
     ? current.options.find(o => o.id === wrongId)
@@ -277,7 +308,7 @@ export default function StepSolve({ config, onComplete }: InteractionProps<StepS
         <div className="pl-stagger w-full xl:flex-1 min-w-0 max-w-[680px] flex flex-col gap-4" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
           {working}
         </div>
-        <aside className="w-full max-w-[480px] xl:w-[380px] shrink-0 xl:pt-1">
+        <aside className="w-full max-w-[540px] xl:w-[460px] shrink-0 xl:pt-1">
           <div
             className="w-full rounded-xl overflow-hidden"
             style={{ background: COLOR.card, border: `1px solid ${COLOR.border}`, aspectRatio: "480 / 320" }}

@@ -263,7 +263,7 @@ export default function MarkScript({ config, onComplete }: InteractionProps<Mark
         <div className="pl-stagger w-full xl:flex-1 min-w-0 max-w-[680px] flex flex-col gap-4" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
           {body}
         </div>
-        <aside className="w-full max-w-[480px] xl:w-[380px] shrink-0 xl:pt-1">
+        <aside className="w-full max-w-[540px] xl:w-[460px] shrink-0 xl:pt-1">
           <div
             className="w-full rounded-xl overflow-hidden"
             style={{ background: COLOR.card, border: `1px solid ${COLOR.border}`, aspectRatio: "480 / 320" }}

@@ -201,12 +201,8 @@
       "title": "Your first full solution",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "Square each leg first: $6^2 = 36$ and $8^2 = 64$. Add them to get $c^2$, then square-root that total to get $c$ itself."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "Square the two legs, add the results, then square-root the total.",
         "config": {
           "prompt": "Find $c$.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>8 cm</text><text x='80' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>6 cm</text><text x='253.2' y='142.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
@@ -232,7 +228,9 @@
                   "text": "$c^2 = 8^2 - 6^2$",
                   "whyWrong": "Subtracting finds a shorter side when the hypotenuse is already known. Here both legs are known instead."
                 }
-              ]
+              ],
+              "hint": "Square the two legs, add the results, then square-root the total.",
+              "alt": "Square each leg first: $6^2 = 36$ and $8^2 = 64$. Add them to get $c^2$, then square-root that total to get $c$ itself."
             },
             {
               "id": "l-sq",
@@ -269,12 +267,8 @@
       "title": "Now with an untidy answer",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "The method never changes: $9^2 = 81$ and $5^2 = 25$ add to $106$. The square root of $106$ is not a whole number, so round it to one decimal place at the very end."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "Most answers are not whole numbers. Keep every digit until the final line, then round.",
         "config": {
           "prompt": "Find $c$ to $1$ decimal place.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,248.9 400,248.9 80,71.1' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 248.9 L 93 235.9 L 80 235.9' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='270.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>9 cm</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>5 cm</text><text x='250.7' y='140.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
@@ -300,7 +294,9 @@
                   "text": "$c = 9 + 5$",
                   "whyWrong": "The rule works on the squares of the sides, never the sides themselves."
                 }
-              ]
+              ],
+              "hint": "Most answers are not whole numbers. Keep every digit until the final line, then round.",
+              "alt": "The method never changes: $9^2 = 81$ and $5^2 = 25$ add to $106$. The square root of $106$ is not a whole number, so round it to one decimal place at the very end."
             },
             {
               "id": "l-sq",
@@ -430,12 +426,8 @@
       "title": "Find the missing leg",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "The full rule says $x^2 + 5^2 = 13^2$. Moving the $5^2$ across turns it into $x^2 = 13^2 - 5^2$, which is why the squares get subtracted here."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "The hypotenuse square stands alone. The unknown leg square is what is left after subtracting.",
         "config": {
           "prompt": "Find $x$. The hypotenuse is $13$, so watch the signs.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='179' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260.3' y='151.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text></svg>",
@@ -461,7 +453,9 @@
                   "text": "$x = 13 - 5$",
                   "whyWrong": "The rule subtracts the squares of the sides, never the sides themselves."
                 }
-              ]
+              ],
+              "hint": "The hypotenuse square stands alone. The unknown leg square is what is left after subtracting.",
+              "alt": "The full rule says $x^2 + 5^2 = 13^2$. Moving the $5^2$ across turns it into $x^2 = 13^2 - 5^2$, which is why the squares get subtracted here."
             },
             {
               "id": "l-sq",
@@ -497,12 +491,8 @@
       "title": "Once more, with decimals",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "Nothing changes with decimals: square $9.5$ to get $90.25$, square $4$ to get $16$, subtract to get $74.25$, and square-root at the end."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "Same routine: hypotenuse square minus the known leg square, then the square root at the end.",
         "config": {
           "prompt": "Find $x$ to $1$ decimal place.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='189.9,268 290.1,268 189.9,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 202.9 268 L 202.9 255 L 189.9 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>4 m</text><text x='173.9' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260' y='150.7' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>9.5 m</text></svg>",
@@ -523,7 +513,9 @@
                   "text": "$x^2 = 9.5^2 + 4^2$",
                   "whyWrong": "The $9.5$ m side is the hypotenuse, so its square stands alone and the leg square comes off it."
                 }
-              ]
+              ],
+              "hint": "Same routine: hypotenuse square minus the known leg square, then the square root at the end.",
+              "alt": "Nothing changes with decimals: square $9.5$ to get $90.25$, square $4$ to get $16$, subtract to get $74.25$, and square-root at the end."
             },
             {
               "id": "l-sq",
@@ -666,12 +658,8 @@
       "title": "Find the diagonal",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "Treat the bottom edge and the right edge as the two legs of a triangle whose hypotenuse is the diagonal. Then it is the add-the-squares routine from chapter two."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "The diagonal is a hypotenuse, so this is the adding case.",
         "config": {
           "prompt": "Find the diagonal $d$ of the rectangle.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><rect x='75' y='91.3' width='330' height='137.5' fill='rgba(240,238,234,0.04)' stroke='#c8c6be' stroke-width='2'/><line x1='75' y1='228.8' x2='405' y2='91.3' stroke='#ff4670' stroke-width='2.2'/><path d='M 392 228.8 L 392 215.8 L 405 215.8' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='248.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>12 cm</text><text x='421' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>5 cm</text><text x='220' y='144' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>d</text></svg>",
@@ -697,7 +685,9 @@
                   "text": "$d = 12 \\times 5$",
                   "whyWrong": "That is the area of the rectangle. The diagonal comes from Pythagoras on the hidden triangle."
                 }
-              ]
+              ],
+              "hint": "The diagonal is a hypotenuse, so this is the adding case.",
+              "alt": "Treat the bottom edge and the right edge as the two legs of a triangle whose hypotenuse is the diagonal. Then it is the add-the-squares routine from chapter two."
             },
             {
               "id": "l-sq",
@@ -733,12 +723,8 @@
       "title": "The ladder question",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "The ladder leans, so it is the slanted hypotenuse. The wall and the ground meet at a right angle, which makes the wall height a leg. Known hypotenuse means the squares get subtracted."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "Decide which of the three lengths is the hypotenuse before touching the numbers.",
         "config": {
           "prompt": "A $6.5$ m ladder leans against a wall, with its foot $2.5$ m out from the base. How high up the wall does it reach?",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='120' y1='280' x2='400' y2='280' stroke='#7a7875' stroke-width='2'/><line x1='300' y1='280' x2='300' y2='70' stroke='#7a7875' stroke-width='2'/><line x1='220' y1='280' x2='300' y2='88' stroke='#ff4670' stroke-width='2.6'/><path d='M 287 280 L 287 267 L 300 267' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='260' y='300' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>2.5 m</text><text x='236' y='174' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>6.5 m</text><text x='316' y='184' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>h</text></svg>",
@@ -764,7 +750,9 @@
                   "text": "$h = 6.5 - 2.5$",
                   "whyWrong": "The squares get subtracted, never the plain lengths."
                 }
-              ]
+              ],
+              "hint": "Decide which of the three lengths is the hypotenuse before touching the numbers.",
+              "alt": "The ladder leans, so it is the slanted hypotenuse. The wall and the ground meet at a right angle, which makes the wall height a leg. Known hypotenuse means the squares get subtracted."
             },
             {
               "id": "l-sq",
@@ -813,12 +801,8 @@
       "title": "Real exam question · Cambridge w25_11 Q17(a)",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "Work inside one half of the triangle only: the height, the half-base of $5$, and one slanted side of $13$. The $13$ is the hypotenuse of that half."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "Use one of the two halves. Its sides are $h$, the half-base, and one $13$ cm side.",
         "config": {
           "prompt": "Find the height $h$ of the isosceles triangle with sides $13$ cm and base $10$ cm.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='165,266 315,266 240,86' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><line x1='240' y1='86' x2='240' y2='266' stroke='#fff067' stroke-width='1.8' stroke-dasharray='6 5'/><path d='M 253 266 L 253 253 L 240 253' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='178.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><text x='301.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><text x='202.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='277.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='254' y='176' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>h</text></svg>",
@@ -844,7 +828,9 @@
                   "text": "$h^2 + 5^2 = 13^2$",
                   "isCorrect": true
                 }
-              ]
+              ],
+              "hint": "Use one of the two halves. Its sides are $h$, the half-base, and one $13$ cm side.",
+              "alt": "Work inside one half of the triangle only: the height, the half-base of $5$, and one slanted side of $13$. The $13$ is the hypotenuse of that half."
             },
             {
               "id": "l-sq",

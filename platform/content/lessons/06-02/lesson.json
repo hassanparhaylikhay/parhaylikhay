@@ -164,13 +164,13 @@
       "id": "05-ratio-explore",
       "kind": "concept",
       "chapter": "ratios",
-      "title": "The ratios belong to the angle",
+      "title": "One angle fixes the ratio",
       "advance": "manual",
-      "prompt": "Drag the angle and watch all three ratios change. Then resize the triangle without touching the angle: the sides grow, but every ratio holds still. That is why one angle is enough to fix the shape of a right-angled triangle.",
+      "prompt": "Watch the triangle grow while its $30°$ angle never changes. The opposite side and the hypotenuse both grow with it, but their ratio is stuck at $0.5$ the whole time. That number belongs to the angle itself, and it is called $\\sin 30°$. Cos and tan work the same way with the other pairs of sides.",
       "visual": {
-        "kind": "iframe",
-        "src": "/widgets/trig-ratio-explorer.html?lessonMode=1&chrome=1",
-        "height": 620
+        "kind": "html",
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><text x=\"240\" y=\"34\" font-family=\"Geist Mono,monospace\" font-size=\"15\" font-weight=\"600\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">sin 30° = opposite ÷ hypotenuse</text><polygon points=\"120,250 275.9,250 275.9,160\" fill=\"rgba(240,238,234,0.05)\" stroke=\"#c8c6be\" stroke-width=\"2.2\" stroke-linejoin=\"round\"><animate attributeName=\"points\" values=\"120,250 275.9,250 275.9,160; 120,250 275.9,250 275.9,160; 120,250 353.8,250 353.8,115; 120,250 353.8,250 353.8,115; 120,250 431.8,250 431.8,70; 120,250 431.8,250 431.8,70; 120,250 275.9,250 275.9,160\" keyTimes=\"0;0.24;0.33;0.57;0.66;0.90;1\" calcMode=\"spline\" keySplines=\"0 0 1 1; 0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"10s\" repeatCount=\"indefinite\"/></polygon><path d=\"M 120 250 L 150 250 L 150 248.7 L 149.9 247.4 L 149.7 246.1 L 149.5 244.8 L 149.3 243.5 L 149 242.2 L 148.6 241 L 148.2 239.7 L 147.7 238.5 L 147.2 237.3 L 146.6 236.1 L 146 235 Z\" fill=\"rgba(255,240,103,0.18)\" stroke=\"#fff067\" stroke-width=\"1.2\"/><text x=\"164\" y=\"238\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#fff067\" text-anchor=\"start\" dominant-baseline=\"middle\">30°</text><g opacity=\"0\"><animate attributeName=\"opacity\" values=\"0;1;1;0;0\" keyTimes=\"0;0.06;0.24;0.3;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"10s\" repeatCount=\"indefinite\"/><text x=\"291.9\" y=\"205\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff822c\" text-anchor=\"start\" dominant-baseline=\"middle\">3</text><text x=\"177.95\" y=\"191\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff4670\" text-anchor=\"middle\" dominant-baseline=\"middle\">6</text><text x=\"240\" y=\"302\" font-family=\"Geist Mono,monospace\" font-size=\"15\" font-weight=\"600\" fill=\"#c8c6be\" text-anchor=\"middle\" dominant-baseline=\"middle\">3 ÷ 6 = 0.5</text></g><g opacity=\"0\"><animate attributeName=\"opacity\" values=\"0;1;1;0;0\" keyTimes=\"0;0.39;0.57;0.63;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"10s\" repeatCount=\"indefinite\"/><text x=\"369.8\" y=\"182.5\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff822c\" text-anchor=\"start\" dominant-baseline=\"middle\">4.5</text><text x=\"216.9\" y=\"168.5\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff4670\" text-anchor=\"middle\" dominant-baseline=\"middle\">9</text><text x=\"240\" y=\"302\" font-family=\"Geist Mono,monospace\" font-size=\"15\" font-weight=\"600\" fill=\"#c8c6be\" text-anchor=\"middle\" dominant-baseline=\"middle\">4.5 ÷ 9 = 0.5</text></g><g opacity=\"0\"><animate attributeName=\"opacity\" values=\"0;1;1;0;0\" keyTimes=\"0;0.72;0.90;0.96;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"10s\" repeatCount=\"indefinite\"/><text x=\"447.8\" y=\"160\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff822c\" text-anchor=\"start\" dominant-baseline=\"middle\">6</text><text x=\"255.89999999999998\" y=\"146\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff4670\" text-anchor=\"middle\" dominant-baseline=\"middle\">12</text><text x=\"240\" y=\"302\" font-family=\"Geist Mono,monospace\" font-size=\"15\" font-weight=\"600\" fill=\"#c8c6be\" text-anchor=\"middle\" dominant-baseline=\"middle\">6 ÷ 12 = 0.5</text></g></svg>",
+        "wide": true
       }
     },
     {
@@ -288,12 +288,8 @@
       "title": "Your first trig solution",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "Name the sides first: $x$ is across from $35°$, so it is the opposite, and $12$ is the hypotenuse. Opposite and hypotenuse is sin, and multiplying both sides by $12$ frees $x$."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "Name the two sides in play, pick the ratio that pairs them, then rearrange.",
         "config": {
           "prompt": "Find $x$ to $2$ decimal places.",
           "intro": "Same frame as Pythagoras: build the working line by line, and the mark codes show what each line earns.",
@@ -320,7 +316,9 @@
                   "text": "$\\sin 35° = \\dfrac{12}{x}$",
                   "whyWrong": "The hypotenuse goes on the bottom of the sin ratio, and $12$ is the hypotenuse here."
                 }
-              ]
+              ],
+              "hint": "Name the two sides in play, pick the ratio that pairs them, then rearrange.",
+              "alt": "Name the sides first: $x$ is across from $35°$, so it is the opposite, and $12$ is the hypotenuse. Opposite and hypotenuse is sin, and multiplying both sides by $12$ frees $x$."
             },
             {
               "id": "l-ans",
@@ -346,12 +344,8 @@
       "title": "When the unknown is on the bottom",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "The known side touches $52°$, so it is the adjacent, and the unknown is the hypotenuse: that is cos. When the unknown sits on the bottom of the fraction, the rearrangement is a division: $h = 9.5 \\div \\cos 52°$."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "The unknown is the hypotenuse this time, so it lands on the bottom of the ratio, and the rearrangement becomes a division.",
         "config": {
           "prompt": "Find the hypotenuse $h$ to $1$ decimal place.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='158,259 322,259 158,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 171 259 L 171 246 L 158 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 322 259 L 298 259 L 298.1 257.2 L 298.3 255.4 L 298.6 253.6 L 299.1 251.8 L 299.7 250.1 L 300.5 248.5 L 301.3 246.9 L 302.3 245.3 L 303.4 243.9 L 304.6 242.5 L 305.9 241.3 L 307.3 240.1 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='288' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>52°</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>9.5 m</text><text x='258.9' y='139.2' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>h</text></svg>",
@@ -377,7 +371,9 @@
                   "text": "$\\sin 52° = \\dfrac{9.5}{h}$",
                   "whyWrong": "Sin pairs the opposite with the hypotenuse, but $9.5$ m touches the angle, so it is the adjacent."
                 }
-              ]
+              ],
+              "hint": "The unknown is the hypotenuse this time, so it lands on the bottom of the ratio, and the rearrangement becomes a division.",
+              "alt": "The known side touches $52°$, so it is the adjacent, and the unknown is the hypotenuse: that is cos. When the unknown sits on the bottom of the fraction, the rearrangement is a division: $h = 9.5 \\div \\cos 52°$."
             },
             {
               "id": "l-ans",
@@ -496,12 +492,8 @@
       "title": "Find the angle",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "The two known sides are the opposite ($7$) and the hypotenuse ($12$), which is sin. Write $\\sin\\theta = 7/12$ first, then apply $\\sin^{-1}$ to the fraction."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "Name the two known sides, write the ratio, then apply the matching inverse button.",
         "config": {
           "prompt": "Find $\\theta$ to $1$ decimal place.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='93.8,259 386.3,259 93.8,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 106.8 259 L 106.8 246 L 93.8 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 386.3 259 L 362.3 259 L 362.3 257.8 L 362.4 256.5 L 362.5 255.3 L 362.8 254.1 L 363.1 252.8 L 363.4 251.6 L 363.8 250.5 L 364.3 249.3 L 364.8 248.2 L 365.4 247.1 L 366.1 246 L 366.8 245 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='352.3' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='77.8' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>7 cm</text><text x='254' y='134.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>12 cm</text></svg>",
@@ -522,7 +514,9 @@
                   "text": "$\\sin\\theta = \\dfrac{7}{12}$",
                   "isCorrect": true
                 }
-              ]
+              ],
+              "hint": "Name the two known sides, write the ratio, then apply the matching inverse button.",
+              "alt": "The two known sides are the opposite ($7$) and the hypotenuse ($12$), which is sin. Write $\\sin\\theta = 7/12$ first, then apply $\\sin^{-1}$ to the fraction."
             },
             {
               "id": "l-ans",
@@ -548,12 +542,8 @@
       "title": "Now with the two shorter sides",
       "advance": "onSuccess",
       "marks": 2,
-      "altExplain": {
-        "prompt": "Neither known side is the hypotenuse: $8$ is across from $\\theta$ and $5$ touches it. Opposite over adjacent is tan, so $\\theta = \\tan^{-1}(8/5)$."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "Check whether the hypotenuse is even involved before choosing the ratio.",
         "config": {
           "prompt": "Find $\\theta$ to $1$ decimal place.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='174.4,259 305.6,259 174.4,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 187.4 259 L 187.4 246 L 174.4 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 305.6 259 L 281.6 259 L 281.7 257 L 282 255 L 282.4 253 L 283 251.1 L 283.7 249.2 L 284.6 247.4 L 285.7 245.6 L 286.9 244 L 288.2 242.5 L 289.7 241.1 L 291.2 239.8 L 292.9 238.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='271.6' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 m</text><text x='158.4' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>8 m</text></svg>",
@@ -579,7 +569,9 @@
                   "text": "$\\tan\\theta = \\dfrac{5}{8}$",
                   "whyWrong": "That is the tan of the OTHER angle. The opposite of $\\theta$ is $8$, and it goes on top."
                 }
-              ]
+              ],
+              "hint": "Check whether the hypotenuse is even involved before choosing the ratio.",
+              "alt": "Neither known side is the hypotenuse: $8$ is across from $\\theta$ and $5$ touches it. Opposite over adjacent is tan, so $\\theta = \\tan^{-1}(8/5)$."
             },
             {
               "id": "l-ans",
@@ -648,12 +640,8 @@
       "title": "Real exam question · Cambridge s24_21 Q7(b)(i)",
       "advance": "onSuccess",
       "marks": 3,
-      "altExplain": {
-        "prompt": "Two marked distances along the ground differ: the horizontal gap is $21 - 16 = 5$ m, and that first subtraction earns its own mark. Then the height $8$ is opposite the angle and the $5$ is adjacent, which is tan."
-      },
       "interaction": {
         "kind": "stepSolve",
-        "hint": "The first mark is for finding the horizontal distance hiding in the two ground measurements.",
         "config": {
           "prompt": "A face of a prism is $8$ m tall. A point on the ground is $21$ m from a wall that stands $16$ m before it. Find the angle of elevation of the top from that point.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='40' y1='276' x2='440' y2='276' stroke='#7a7875' stroke-width='2'/><line x1='356' y1='276' x2='356' y2='102' stroke='#7a7875' stroke-width='2'/><line x1='96' y1='276' x2='376' y2='276' stroke='transparent' stroke-width='1'/><line x1='96' y1='276' x2='356' y2='116' stroke='#ff4670' stroke-width='2.2'/><path d='M 96 276 L 130 276 L 130 274.4 L 129.9 272.9 L 129.7 271.3 L 129.4 269.8 L 129.1 268.3 L 128.7 266.7 L 128.3 265.2 L 127.7 263.8 L 127.1 262.3 L 126.5 260.9 L 125.7 259.5 L 125 258.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><circle cx='96' cy='276' r='4.5' fill='#00abfa'/><path d='M 343 276 L 343 263 L 356 263' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='148' y='264' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='226' y='296' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>21 − 16 = 5 m</text><text x='372' y='196' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>8 m</text></svg>",
@@ -668,7 +656,9 @@
               "display": "d = 21 - 16 = {v}\\ \\text{m}",
               "inputPrefix": "d = 21 - 16 =",
               "inputSuffix": "m",
-              "nudge": "The point is $21$ m out and the base sits $16$ m along, so the gap between them is the difference."
+              "nudge": "The point is $21$ m out and the base sits $16$ m along, so the gap between them is the difference.",
+              "hint": "The first mark is for finding the horizontal distance hiding in the two ground measurements.",
+              "alt": "Two marked distances along the ground differ: the horizontal gap is $21 - 16 = 5$ m, and that first subtraction earns its own mark. Then the height $8$ is opposite the angle and the $5$ is adjacent, which is tan."
             },
             {
               "id": "l-ratio",
@@ -691,7 +681,9 @@
                   "text": "$\\tan\\theta = \\dfrac{5}{8}$",
                   "whyWrong": "The height $8$ is across from the angle of elevation, so it goes on top."
                 }
-              ]
+              ],
+              "hint": "The height $8$ is across from the angle and the $5$ m gap touches it. The slanted line of sight is unknown, so the hypotenuse ratios are out.",
+              "alt": "Only two lengths are actually known: the height and the horizontal gap. One is opposite the angle, one is adjacent, and opposite with adjacent is tan."
             },
             {
               "id": "l-ans",

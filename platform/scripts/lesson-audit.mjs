@@ -39,7 +39,7 @@ const INTERACTION_KINDS = new Set([
   "answerBuilder", "stepThrough", "stepSolve", "markScript",
 ])
 // Interactions whose hint requirement is waived (see header).
-const NO_HINT_REQUIRED = new Set(["stepThrough"])
+const NO_HINT_REQUIRED = new Set(["stepThrough", "stepSolve"])
 // Whole-word caps that read as shouting in student-facing prose.
 const CAPS_RE = /\b(LEFT|RIGHT|UP|DOWN|AND|NOT|BOTH|SAME|MUST|NEVER|ALWAYS)\b/
 // Plot bounds of the standard 480x320 manipulative canvas (28px/unit).
@@ -128,6 +128,8 @@ for (const lessonId of targets) {
 
     // help rules
     if (s.kind === "verify" && i.hint) err(`${s.id}: verify slides run exam conditions; remove the hint`)
+    if (i.kind === "stepSolve" && i.hint) err(`${s.id}: stepSolve help lives on lines (hint per line), not the interaction`)
+    if (i.kind === "stepSolve" && s.altExplain) err(`${s.id}: stepSolve alt lives on lines (alt per line), not the slide`)
     if (s.kind !== "verify" && !NO_HINT_REQUIRED.has(i.kind) && !i.hint) err(`${s.id}: interaction missing hint`)
 
     const c = i.config ?? {}
@@ -163,6 +165,9 @@ for (const lessonId of targets) {
           const correct = (ln.options ?? []).filter(o => o.isCorrect)
           if (correct.length !== 1) err(`${s.id}/${ln.id}: ${correct.length} correct options (needs exactly 1)`)
           for (const o of ln.options ?? []) if (!o.isCorrect && !o.whyWrong) err(`${s.id}/${ln.id}: option "${o.id}" missing whyWrong`)
+          // Help is stage-level in stepSolve: every pick line on a teaching
+          // slide needs its own hint (numeric lines fall back to their nudge).
+          if (s.kind !== "verify" && !ln.hint) err(`${s.id}/${ln.id}: pick line missing stage hint`)
         } else if (ln.kind === "numeric") {
           if (typeof ln.answer !== "number" || !Number.isFinite(ln.answer)) err(`${s.id}/${ln.id}: numeric line missing answer`)
           if (typeof ln.display !== "string" || !ln.display.includes("{v}")) err(`${s.id}/${ln.id}: numeric display must contain {v}`)
@@ -334,6 +339,8 @@ function* studentStrings(s) {
   for (const ln of c.lines ?? []) {
     if (ln.label) yield [`line ${ln.id}`, ln.label]
     if (ln.nudge) yield [`nudge ${ln.id}`, ln.nudge]
+    if (ln.hint) yield [`hint ${ln.id}`, ln.hint]
+    if (ln.alt) yield [`alt ${ln.id}`, ln.alt]
     for (const o of ln.options ?? []) {
       if (o.text) yield [`option ${ln.id}/${o.id}`, o.text]
       if (o.whyWrong) yield [`whyWrong ${ln.id}/${o.id}`, o.whyWrong]

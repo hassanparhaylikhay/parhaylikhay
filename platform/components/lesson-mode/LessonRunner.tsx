@@ -12,6 +12,7 @@ import RecapSlide from "./slides/RecapSlide"
 import ExamLinkSlide from "./slides/ExamLinkSlide"
 import { interactionStyles } from "./interactions/_shared"
 import type { StepNav } from "./interactions/StepThrough"
+import type { StageInfo } from "./interactions/StepSolve"
 
 /**
  * LessonRunner — orchestrates slides, navigation, progress, persistence.
@@ -36,6 +37,15 @@ export default function LessonRunner({ lesson }: Props) {
   // buttons (and arrow keys) walk the steps before they move between slides.
   const [stepNav, setStepNav] = useState<StepNav | null>(null)
   const registerStepNav = useCallback((nav: StepNav | null) => setStepNav(nav), [])
+  // Multi-stage interactions (stepSolve) report the ACTIVE stage's help so
+  // the 20s hint and "explain another way" never serve a stage the student
+  // has already finished. Stage change also dismisses any open alt view.
+  const [stageInfo, setStageInfo] = useState<StageInfo | null>(null)
+  const registerStageInfo = useCallback((info: StageInfo | null) => {
+    setStageInfo(info)
+    setShowAlt(false)
+    setShowMeUsed(false)
+  }, [])
 
   // Chapter ranges, derived once from the slides' chapter tags.
   const chapters: ChapterInfo[] | null = useMemo(() => {
@@ -186,22 +196,29 @@ export default function LessonRunner({ lesson }: Props) {
         wide={wide}
         chapters={chapters}
         marks={totalMarks > 0 ? { banked: bankedMarks, total: totalMarks } : null}
-        altAvailable={Boolean(slide.altExplain) && !showAlt}
+        altAvailable={Boolean(stageInfo ? stageInfo.alt : slide.altExplain) && !showAlt}
         showMeUsed={showMeUsed}
-        hintText={getHint(slide)}
+        hintText={stageInfo ? stageInfo.hint : getHint(slide)}
         exitHref={exitHref}
         onPrev={handlePrev}
         onNext={handleNext}
         onExplainAgain={() => setShowAlt(true)}
       >
         <SlideDispatcher
-          slide={showAlt && slide.altExplain ? applyAltExplain(slide) : slide}
+          slide={
+            showAlt && stageInfo?.alt
+              ? applyAltExplain({ ...slide, altExplain: { prompt: stageInfo.alt } } as Slide)
+              : showAlt && slide.altExplain
+              ? applyAltExplain(slide)
+              : slide
+          }
           onComplete={markComplete}
           onAdvance={goNext}
           canAdvance={canAdvance}
           savedData={slideState?.data}
           onShowMeUsed={handleShowMeUsed}
           onRegisterStepNav={registerStepNav}
+          onRegisterStageInfo={registerStageInfo}
         />
       </SlideFrame>
       {welcomeBack && (
@@ -255,6 +272,7 @@ function SlideDispatcher({
   savedData,
   onShowMeUsed,
   onRegisterStepNav,
+  onRegisterStageInfo,
 }: {
   slide: Slide
   onComplete: (data?: Record<string, unknown>) => void
@@ -263,6 +281,7 @@ function SlideDispatcher({
   savedData?: Record<string, unknown>
   onShowMeUsed?: () => void
   onRegisterStepNav?: (nav: StepNav | null) => void
+  onRegisterStageInfo?: (info: StageInfo | null) => void
 }) {
   switch (slide.kind) {
     case "hook":
@@ -271,7 +290,7 @@ function SlideDispatcher({
       return <ConceptSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} canAdvance={canAdvance} />
     case "interaction":
     case "verify":
-      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} onRegisterStepNav={onRegisterStepNav} />
+      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} onRegisterStepNav={onRegisterStepNav} onRegisterStageInfo={onRegisterStageInfo} />
     case "recap":
       return <RecapSlide slide={slide} onAdvance={onAdvance} />
     case "examLink":
