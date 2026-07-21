@@ -166,11 +166,37 @@
       "chapter": "ratios",
       "title": "One angle fixes the ratio",
       "advance": "manual",
-      "prompt": "Watch the triangle grow while its $30°$ angle never changes. The opposite side and the hypotenuse both grow with it, but their ratio is stuck at $0.5$ the whole time. That number belongs to the angle itself, and it is called $\\sin 30°$. Cos and tan work the same way with the other pairs of sides.",
+      "prompt": "The triangle grows and shrinks on its own, and every number moves with it, except one: opposite divided by hypotenuse is stuck at $0.50$. That frozen number belongs to the $30°$ angle and is called $\\sin 30°$. Grab the corner and try to shake it loose.",
       "visual": {
-        "kind": "html",
-        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><text x=\"240\" y=\"34\" font-family=\"Geist Mono,monospace\" font-size=\"15\" font-weight=\"600\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">sin 30° = opposite ÷ hypotenuse</text><polygon points=\"120,250 275.88,250 275.88,160\" fill=\"rgba(240,238,234,0.05)\" stroke=\"#c8c6be\" stroke-width=\"2.2\" stroke-linejoin=\"round\"><animate attributeName=\"points\" values=\"120,250 275.88,250 275.88,160; 120,250 275.88,250 275.88,160; 120,250 353.83,250 353.83,115; 120,250 353.83,250 353.83,115; 120,250 431.77,250 431.77,70; 120,250 431.77,250 431.77,70; 120,250 275.88,250 275.88,160\" keyTimes=\"0;0.24;0.33;0.57;0.66;0.90;1\" calcMode=\"spline\" keySplines=\"0 0 1 1; 0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"10s\" repeatCount=\"indefinite\"/></polygon><path d=\"M 120 250 L 150 250 L 149.97 248.69 L 149.89 247.39 L 149.74 246.08 L 149.54 244.79 L 149.29 243.51 L 148.98 242.24 L 148.61 240.98 L 148.19 239.74 L 147.72 238.52 L 147.19 237.32 L 146.61 236.15 L 145.98 235 Z\" fill=\"rgba(255,240,103,0.18)\" stroke=\"#fff067\" stroke-width=\"1.2\"/><text x=\"164\" y=\"238\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#fff067\" text-anchor=\"start\" dominant-baseline=\"middle\">30°</text><g opacity=\"0\"><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.02;0.06;0.22;0.27;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"10s\" repeatCount=\"indefinite\"/><text x=\"291.88\" y=\"205\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff822c\" text-anchor=\"start\" dominant-baseline=\"middle\">3</text><text x=\"177.94\" y=\"191\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff4670\" text-anchor=\"middle\" dominant-baseline=\"middle\">6</text><text x=\"240\" y=\"302\" font-family=\"Geist Mono,monospace\" font-size=\"15\" font-weight=\"600\" fill=\"#c8c6be\" text-anchor=\"middle\" dominant-baseline=\"middle\">3 ÷ 6 = 0.5</text></g><g opacity=\"0\"><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.35;0.39;0.55;0.6;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"10s\" repeatCount=\"indefinite\"/><text x=\"369.83\" y=\"182.5\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff822c\" text-anchor=\"start\" dominant-baseline=\"middle\">4.5</text><text x=\"216.915\" y=\"168.5\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff4670\" text-anchor=\"middle\" dominant-baseline=\"middle\">9</text><text x=\"240\" y=\"302\" font-family=\"Geist Mono,monospace\" font-size=\"15\" font-weight=\"600\" fill=\"#c8c6be\" text-anchor=\"middle\" dominant-baseline=\"middle\">4.5 ÷ 9 = 0.5</text></g><g opacity=\"0\"><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.68;0.72;0.88;0.93;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"10s\" repeatCount=\"indefinite\"/><text x=\"447.77\" y=\"160\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff822c\" text-anchor=\"start\" dominant-baseline=\"middle\">6</text><text x=\"255.885\" y=\"146\" font-family=\"Geist Mono,monospace\" font-size=\"14\" font-weight=\"600\" fill=\"#ff4670\" text-anchor=\"middle\" dominant-baseline=\"middle\">12</text><text x=\"240\" y=\"302\" font-family=\"Geist Mono,monospace\" font-size=\"15\" font-weight=\"600\" fill=\"#c8c6be\" text-anchor=\"middle\" dominant-baseline=\"middle\">6 ÷ 12 = 0.5</text></g></svg>",
-        "wide": true
+        "kind": "iframe",
+        "src": "/widgets/ratio-invariance-anim.html?lessonMode=1&ratio=sin",
+        "height": 460
+      }
+    },
+    {
+      "id": "05b-cos-anim",
+      "kind": "concept",
+      "chapter": "ratios",
+      "title": "Cos does the same with the adjacent",
+      "advance": "manual",
+      "prompt": "Same triangle, different pair: now the adjacent and the hypotenuse are highlighted. Their quotient freezes at $0.87$, and that number is $\\cos 30°$.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/ratio-invariance-anim.html?lessonMode=1&ratio=cos",
+        "height": 460
+      }
+    },
+    {
+      "id": "05c-tan-anim",
+      "kind": "concept",
+      "chapter": "ratios",
+      "title": "Tan pairs the two shorter sides",
+      "advance": "manual",
+      "prompt": "The last pair leaves the hypotenuse out entirely: opposite divided by adjacent freezes at $0.58$, which is $\\tan 30°$. Three pairs of sides, three ratios, and one angle in charge of all of them.",
+      "visual": {
+        "kind": "iframe",
+        "src": "/widgets/ratio-invariance-anim.html?lessonMode=1&ratio=tan",
+        "height": 460
       }
     },
     {

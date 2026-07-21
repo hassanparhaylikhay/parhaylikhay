@@ -352,7 +352,10 @@ function* studentStrings(s) {
 
 function report(lessonId, errors, warnings, L) {
   const marks = L ? L.slides.reduce((a, s) => a + (s.marks ?? 0), 0) : 0
-  const doing = L ? L.slides.filter(s => s.interaction).length : 0
+  // Manipulative frames count as doing: an iframe concept slide (a live
+  // widget the student drags) is interactive in substance even though it
+  // has no interaction config.
+  const doing = L ? L.slides.filter(s => s.interaction || s.visual?.kind === "iframe").length : 0
   const pct = L ? Math.round((100 * doing) / L.slides.length) : 0
   console.log(`\n■ ${lessonId}: ${L ? L.slides.length : "?"} slides · ${marks} marks · ${pct}% interactive`)
   if (L && pct < 60) warnings.push(`interactive ratio ${pct}% is below the 60% bar`)
