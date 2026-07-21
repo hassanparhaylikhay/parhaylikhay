@@ -40,7 +40,7 @@
       "chapter": "sides",
       "title": "When Pythagoras is not enough",
       "advance": "manual",
-      "prompt": "Pythagoras needs two known sides and only ever finds a third side. The moment an angle enters the question, sin, cos and tan take over. By the end of this lesson you will have banked 15 marks of real exam working, including a question from an actual past paper.",
+      "prompt": "Pythagoras needs two known sides and only ever finds a third side. The moment an angle enters the question, sin, cos and tan take over. By the end of this lesson you will have banked 20 marks of real exam working, three of them from actual past papers.",
       "visual": {
         "kind": "html",
         "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>35°</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>adjacent</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>opposite</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>hypotenuse</text></svg>",
@@ -419,6 +419,61 @@
       }
     },
     {
+      "id": "09b-pp-cos",
+      "kind": "interaction",
+      "chapter": "side",
+      "title": "Real exam question · Cambridge s23_22 Q9(c)(i)",
+      "advance": "onSuccess",
+      "marks": 2,
+      "interaction": {
+        "kind": "stepSolve",
+        "config": {
+          "prompt": "From a bearings question: in triangle $ACD$ the angle at $A$ is $25°$, $AC = 95$ m, and the angle at $D$ is a right angle. Show that $AD = 86.1$ m.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='191.1,259 288.9,259 191.1,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 203.1 259 L 203.1 247 L 191.1 247' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 191.1 49 L 191.1 75 L 192 75 L 193 74.9 L 193.9 74.8 L 194.9 74.7 L 195.8 74.6 L 196.7 74.4 L 197.6 74.2 L 198.5 73.9 L 199.4 73.6 L 200.3 73.3 L 201.2 73 L 202.1 72.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='205.1' y='89' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>25°</text><text x='173.1' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>AD</text><text x='268' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>95 m</text><text x='183.1' y='275' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>D</text><text x='296.9' y='275' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>C</text><text x='183.1' y='37' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>A</text></svg>",
+          "lines": [
+            {
+              "id": "l-ratio",
+              "kind": "pick",
+              "label": "the ratio",
+              "markCode": "M1",
+              "hint": "$AD$ runs into the $25°$ angle, and $95$ m faces the right angle.",
+              "alt": "Name the sides against the $25°$ angle: $AD$ touches it, so it is the adjacent, and $AC = 95$ faces the right angle, so it is the hypotenuse. Adjacent with hypotenuse is cos.",
+              "options": [
+                {
+                  "id": "r-sin",
+                  "text": "$\\sin 25° = \\dfrac{AD}{95}$",
+                  "whyWrong": "$AD$ touches the $25°$ angle, so it is the adjacent, and adjacent with hypotenuse is cos."
+                },
+                {
+                  "id": "r-cos",
+                  "text": "$\\cos 25° = \\dfrac{AD}{95}$",
+                  "isCorrect": true
+                },
+                {
+                  "id": "r-tan",
+                  "text": "$\\tan 25° = \\dfrac{AD}{95}$",
+                  "whyWrong": "The $95$ m side faces the right angle, so it is the hypotenuse, and tan never uses the hypotenuse."
+                }
+              ]
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the length AD",
+              "markCode": "A1",
+              "answer": 86.1,
+              "tolerance": 0.05,
+              "display": "AD = 95\\cos 25° = {v}\\ \\text{m}",
+              "inputPrefix": "AD = 95\\cos 25° =",
+              "inputSuffix": "m (1 dp)",
+              "nudge": "$95 \\times \\cos(25)$ gives $86.09...$, which rounds to $86.1$, exactly what the question asks you to show."
+            }
+          ],
+          "successText": "Shown: $AD = 86.1$ m. On a show-that question the marks live entirely in the working, which is why the ratio line matters more than the final number."
+        }
+      }
+    },
+    {
       "id": "10-mark-the-script",
       "kind": "interaction",
       "chapter": "side",
@@ -728,6 +783,107 @@
       }
     },
     {
+      "id": "15b-pp-trapezoid",
+      "kind": "interaction",
+      "chapter": "exam",
+      "title": "Real exam question · Cambridge s23_21 Q11(a)",
+      "advance": "onSuccess",
+      "marks": 3,
+      "interaction": {
+        "kind": "stepSolve",
+        "config": {
+          "prompt": "The cross-section of a container: top edge $AB = 28$ cm, base $DC = 24$ cm, left side $AD = 16$ cm, with right angles at $A$ and $D$. Calculate angle $DCB$.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='90,270 90,110 370,110 330,270' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 102 110 L 102 122 L 90 122' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 102 270 L 102 258 L 90 258' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><line x1='370' y1='110' x2='370' y2='270' stroke='#fff067' stroke-width='1.6' stroke-dasharray='6 5'/><line x1='330' y1='270' x2='370' y2='270' stroke='#fff067' stroke-width='1.6' stroke-dasharray='6 5'/><path d='M 330 270 L 306 270 L 306.3 266.4 L 307.1 262.8 L 308.4 259.5 L 310.3 256.3 L 312.5 253.5 L 315.2 251.1 L 318.3 249.1 L 321.5 247.5 L 325 246.5 L 328.6 246 L 332.2 246.1 L 335.8 246.7 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='230' y='96' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>28 cm</text><text x='190' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='middle' dominant-baseline='middle'>24 cm</text><text x='74' y='190' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#c8c6be' text-anchor='end' dominant-baseline='middle'>16 cm</text><text x='350' y='290' font-family='Geist Mono,monospace' font-size='13' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>4</text><text x='382' y='190' font-family='Geist Mono,monospace' font-size='13' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>16</text><text x='300' y='236' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>?</text><text x='82' y='286' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>D</text><text x='80' y='100' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>A</text><text x='380' y='100' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>B</text><text x='326' y='286' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>C</text></svg>",
+          "lines": [
+            {
+              "id": "l-over",
+              "kind": "numeric",
+              "label": "the overhang",
+              "answer": 4,
+              "tolerance": 0,
+              "display": "28 - 24 = {v}\\ \\text{cm}",
+              "inputPrefix": "28 - 24 =",
+              "inputSuffix": "cm",
+              "nudge": "The top edge sticks out past the base by the difference of the two lengths."
+            },
+            {
+              "id": "l-ratio",
+              "kind": "pick",
+              "label": "the tilt of CB",
+              "markCode": "M1",
+              "hint": "In the small dashed triangle, the $4$ cm overhang sits across from the tilt angle and the $16$ cm height sits next to it.",
+              "alt": "Look only at the dashed triangle beside $C$: its legs are the overhang of $4$ and the height of $16$. The angle $CB$ makes with the vertical has the $4$ opposite it and the $16$ adjacent, which is tan.",
+              "options": [
+                {
+                  "id": "r-correct",
+                  "text": "$\\tan x = \\dfrac{4}{16}$",
+                  "isCorrect": true
+                },
+                {
+                  "id": "r-flip",
+                  "text": "$\\tan x = \\dfrac{16}{4}$",
+                  "whyWrong": "That measures the tilt from the horizontal instead. The angle against the vertical has the $4$ cm overhang opposite it."
+                },
+                {
+                  "id": "r-sin",
+                  "text": "$\\sin x = \\dfrac{4}{16}$",
+                  "whyWrong": "The $16$ cm side is a leg of the dashed triangle, not its hypotenuse, so sin does not apply."
+                }
+              ]
+            },
+            {
+              "id": "l-tilt",
+              "kind": "numeric",
+              "label": "the tilt angle",
+              "answer": 14,
+              "tolerance": 0.05,
+              "display": "x = \\tan^{-1}\\!\\left(\\tfrac{4}{16}\\right) = {v}°",
+              "inputPrefix": "x = \\tan^{-1}(4/16) =",
+              "inputSuffix": "° (1 dp)",
+              "nudge": "$\\tan^{-1}(4 \\div 16)$ gives $14.03...$, which rounds to $14.0$."
+            },
+            {
+              "id": "l-assemble",
+              "kind": "pick",
+              "label": "assembling angle DCB",
+              "markCode": "M2",
+              "hint": "Starting from the base edge $CD$, turning to straight up is already $90°$, and $CB$ carries on past the vertical.",
+              "alt": "Angle $DCB$ opens from the base edge all the way round to $CB$. The first $90°$ takes you from the base to the vertical, and the tilt of $14°$ takes you the rest of the way.",
+              "options": [
+                {
+                  "id": "a-minus",
+                  "text": "$DCB = 90° - 14.0°$",
+                  "whyWrong": "That would lean $CB$ back over the base, but the diagram shows it leaning out past the vertical."
+                },
+                {
+                  "id": "a-plus",
+                  "text": "$DCB = 90° + 14.0°$",
+                  "isCorrect": true
+                },
+                {
+                  "id": "a-only",
+                  "text": "$DCB = 14.0°$",
+                  "whyWrong": "That is only the tilt from the vertical. Angle $DCB$ starts all the way back at the base edge $CD$."
+                }
+              ]
+            },
+            {
+              "id": "l-ans",
+              "kind": "numeric",
+              "label": "the angle",
+              "answer": 104,
+              "tolerance": 0.1,
+              "display": "DCB = 90° + 14.0° = {v}°",
+              "inputPrefix": "DCB = 90° + 14.0° =",
+              "inputSuffix": "°",
+              "nudge": "Add the right angle and the tilt together."
+            }
+          ],
+          "successText": "$DCB = 104.0°$. An obtuse answer from right-angled trig: the small dashed triangle did the work, and the $90°$ did the rest."
+        }
+      }
+    },
+    {
       "id": "16-verify-side",
       "kind": "verify",
       "chapter": "exam",
@@ -830,12 +986,12 @@
       "id": "18-celebrate",
       "kind": "concept",
       "chapter": "exam",
-      "title": "You banked 15 marks of examiner working",
+      "title": "You banked 20 marks of examiner working",
       "advance": "manual",
-      "prompt": "Every mark used the same opening move: name the sides against the marked angle, then write the ratio. That line alone earns the method mark on plain triangles, on hypotenuse rearrangements, and inside a real prism question.",
+      "prompt": "Every mark used the same opening move: name the sides against the marked angle, then write the ratio. That line alone earns the method mark on plain triangles, inside a bearings question, on a prism face, and even when the answer turns out obtuse.",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:18px;padding:6px 0'><div style='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>Finding a side · 4 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>Finding an angle · 4 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>The exam · 7 marks</span></div></div>"
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:18px;padding:6px 0'><div style='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>Finding a side · 6 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>Finding an angle · 4 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>The exam · 10 marks</span></div></div>"
       }
     },
     {
