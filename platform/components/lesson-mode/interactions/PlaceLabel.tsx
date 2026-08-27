@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { AltPanel, AltPanelCentered, COLOR, Prompt, HelperRow, MixedText, ContextCanvas, type InteractionProps } from "./_shared"
+import { AltDemoCard, AltDemoOverlay, COLOR, Prompt, HelperRow, MixedText, ContextCanvas, type InteractionProps } from "./_shared"
 
 type Slot = {
   id: string
@@ -30,9 +30,10 @@ export type PlaceLabelConfig = {
   slotsLayout?: "row" | "column"
   /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
@@ -44,7 +45,7 @@ export type PlaceLabelConfig = {
  * slot row; when picked up, a ghost follows the pointer. Drops onto slots
  * are detected by hit-testing the dragged element against the slot rects.
  */
-export default function PlaceLabel({ config, onComplete, onShowMeUsed }: InteractionProps<PlaceLabelConfig>) {
+export default function PlaceLabel({ config, onComplete, onDismissAlt, onShowMeUsed }: InteractionProps<PlaceLabelConfig>) {
   // Map of slotId -> assigned labelId (or null)
   const [placement, setPlacement] = useState<Record<string, string | null>>(
     Object.fromEntries(config.slots.map(s => [s.id, null]))
@@ -219,7 +220,6 @@ export default function PlaceLabel({ config, onComplete, onShowMeUsed }: Interac
               className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full mb-1"
             />
           )}
-          <AltPanel text={config.altText} />
           {slotRow}
           {tray}
           {successBlock}
@@ -233,7 +233,7 @@ export default function PlaceLabel({ config, onComplete, onShowMeUsed }: Interac
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
-      <AltPanelCentered text={config.altText} />
+      <AltDemoCard svg={config.altDemo} onDismiss={onDismissAlt} />
       {slotRow}
       {tray}
       {ghost}

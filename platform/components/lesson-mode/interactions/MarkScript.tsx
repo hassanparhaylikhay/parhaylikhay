@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AltPanel, COLOR, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoOverlay, COLOR, MixedText, type InteractionProps } from "./_shared"
 
 /** One judgment the examiner must make, in mark-scheme order. */
 type Judgment = {
@@ -34,9 +34,10 @@ export type MarkScriptConfig = {
   successText?: string
   /** Verify slides: injected by InteractionSlide. No extra affordances here anyway. */
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
@@ -48,7 +49,7 @@ export type MarkScriptConfig = {
  * rehearsal of mark-scheme awareness the platform can offer, because the
  * student has to apply the criteria rather than just satisfy them.
  */
-export default function MarkScript({ config, onComplete }: InteractionProps<MarkScriptConfig>) {
+export default function MarkScript({ config, onComplete, onDismissAlt }: InteractionProps<MarkScriptConfig>) {
   const [judged, setJudged] = useState(0)              // judgments locked so far
   const [verdicts, setVerdicts] = useState<boolean[]>([]) // the (correct) verdict per locked judgment
   const [wrongPick, setWrongPick] = useState<"award" | "withhold" | null>(null)
@@ -254,7 +255,6 @@ export default function MarkScript({ config, onComplete }: InteractionProps<Mark
           className="block text-[20px] sm:text-[23px] text-[#f0eeea] leading-snug"
         />
       )}
-      <AltPanel text={config.altText} />
       {scriptCard}
       {controls}
       {feedback}
@@ -269,10 +269,12 @@ export default function MarkScript({ config, onComplete }: InteractionProps<Mark
         </div>
         <aside className="w-full max-w-[540px] xl:w-[460px] shrink-0 xl:pt-1">
           <div
-            className="w-full rounded-xl overflow-hidden"
+            className="relative w-full rounded-xl overflow-hidden"
             style={{ background: COLOR.card, border: `1px solid ${COLOR.border}`, aspectRatio: "480 / 320" }}
-            dangerouslySetInnerHTML={{ __html: config.contextHtml }}
-          />
+          >
+            <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: config.contextHtml }} />
+            <AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />
+          </div>
         </aside>
       </div>
     )

@@ -128,8 +128,9 @@ for (const lessonId of targets) {
 
     // help rules
     if (s.kind === "verify" && i.hint) err(`${s.id}: verify slides run exam conditions; remove the hint`)
+    if (s.altExplain?.prompt) err(`${s.id}: altExplain must be a demonstration (demoSvg), not re-worded prose`)
     if (i.kind === "stepSolve" && i.hint) err(`${s.id}: stepSolve help lives on lines (hint per line), not the interaction`)
-    if (i.kind === "stepSolve" && s.altExplain) err(`${s.id}: stepSolve alt lives on lines (alt per line), not the slide`)
+    if (i.kind === "stepSolve" && s.altExplain) err(`${s.id}: stepSolve alt lives on lines (altDemo per line), not the slide`)
     if (s.kind !== "verify" && !NO_HINT_REQUIRED.has(i.kind) && !i.hint) err(`${s.id}: interaction missing hint`)
 
     const c = i.config ?? {}
@@ -261,6 +262,29 @@ for (const lessonId of targets) {
     if (total >= 4 && max / total > 0.5) warn(`MCQ correct answers cluster on one position (${max}/${total}); run the shuffle`)
   }
 
+  // ── demonstrations: well-formed, animated, no parse artefacts ──────────
+  {
+    const demos = []
+    for (const s of L.slides) {
+      if (s.altExplain?.demoSvg) demos.push([s.id, s.altExplain.demoSvg])
+      for (const ln of s.interaction?.config?.lines ?? []) {
+        if (ln.altDemo) demos.push([`${s.id}/${ln.id}`, ln.altDemo])
+        if (ln.alt) err(`${s.id}/${ln.id}: line alt must be a demonstration (altDemo), not re-worded prose`)
+      }
+    }
+    for (const [where, svg] of demos) {
+      if (!svg.startsWith("<svg") || !svg.endsWith("</svg>")) err(`${where}: demo is not a complete <svg> document`)
+      if ((svg.match(/<svg/g) ?? []).length !== 1) err(`${where}: demo must contain exactly one <svg>`)
+      if (/NaN|undefined|Infinity/.test(svg)) err(`${where}: demo contains a bad coordinate (NaN/undefined)`)
+      if (!/<animate|<animateMotion/.test(svg)) err(`${where}: demo has no animation; a demonstration must move`)
+      // every windowed opacity must hold at zero before its window (learned bug)
+      for (const m of svg.matchAll(/<animate attributeName="opacity" values="([^"]+)"/g)) {
+        const v = m[1].split(";")
+        if (v[0] !== "0" || v[1] !== "0") err(`${where}: opacity window ramps from t=0 instead of holding at 0`)
+      }
+    }
+  }
+
   // ── language sweep over every student-visible string ───────────────────
   for (const s of L.slides) {
     for (const [label, v] of studentStrings(s)) {
@@ -308,7 +332,6 @@ function checkWidgetFile(slideId, src, err) {
 function* studentStrings(s) {
   if (s.title) yield ["title", s.title]
   if (s.prompt) yield ["prompt", s.prompt]
-  if (s.altExplain?.prompt) yield ["altExplain", s.altExplain.prompt]
   for (const b of s.bullets ?? []) yield ["bullet", b]
   const i = s.interaction
   if (!i) return
@@ -340,7 +363,6 @@ function* studentStrings(s) {
     if (ln.label) yield [`line ${ln.id}`, ln.label]
     if (ln.nudge) yield [`nudge ${ln.id}`, ln.nudge]
     if (ln.hint) yield [`hint ${ln.id}`, ln.hint]
-    if (ln.alt) yield [`alt ${ln.id}`, ln.alt]
     for (const o of ln.options ?? []) {
       if (o.text) yield [`option ${ln.id}/${o.id}`, o.text]
       if (o.whyWrong) yield [`whyWrong ${ln.id}/${o.id}`, o.whyWrong]

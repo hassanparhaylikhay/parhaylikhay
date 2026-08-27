@@ -17,6 +17,8 @@ export type InteractionProps<Config = Record<string, unknown>> = {
    * the student has admitted they're stuck.
    */
   onShowMeUsed?: () => void
+  /** Closes the "explain another way" demonstration. */
+  onDismissAlt?: () => void
 }
 
 /** Brand colours, single source of truth across all interactions. */
@@ -94,44 +96,63 @@ export function Prompt({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * AltPanel — the "explain another way" re-explanation, rendered BESIDE the
- * question rather than in place of it.
+ * AltDemoOverlay — "explain another way" as a VISUAL DEMONSTRATION.
  *
- * This used to replace the prompt outright, which left a stuck student
- * reading an explanation with no idea what task it belonged to. The
- * question always stays on screen; the alternative explanation is an
- * additional card underneath it.
+ * The alternative explanation is never a re-wording of the prompt: it is a
+ * short animated demonstration of the method, drawn on the same grid the
+ * student is working on, with the notation highlighted in time with the
+ * movement it describes. It sits ON the canvas (the question stays in the
+ * aside) and steps aside when the student is ready to try.
  */
-export function AltPanel({ text, className }: { text?: string; className?: string }) {
-  if (!text) return null
+export function AltDemoOverlay({ svg, onDismiss }: { svg?: string; onDismiss?: () => void }) {
+  if (!svg) return null
   return (
     <div
-      className={`pl-reveal rounded-lg border px-4 py-3 ${className ?? ""}`}
-      style={{
-        borderColor: "rgba(255,240,103,0.35)",
-        background: "rgba(255,240,103,0.05)",
-        overflowWrap: "anywhere",
-        wordBreak: "break-word",
-      }}
+      className="absolute inset-0 z-20 rounded-xl overflow-hidden pl-fade-in"
+      style={{ background: COLOR.card, boxShadow: "inset 0 0 0 1.5px rgba(255,240,103,0.45)" }}
     >
-      <p className="text-[10.5px] font-mono uppercase tracking-[2px] mb-1.5" style={{ color: COLOR.yellow }}>
-        another way
-      </p>
-      <MixedText
-        text={text}
-        className="block text-[15px] sm:text-[16.5px] leading-relaxed"
-        style={{ color: COLOR.text }}
-      />
+      <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: svg }} />
+      {onDismiss && (
+        <button
+          onClick={onDismiss}
+          className="absolute bottom-2.5 right-3 rounded-md border px-3 py-1.5 text-[11px] font-mono uppercase tracking-[1.5px] transition-colors"
+          style={{
+            borderColor: "rgba(255,240,103,0.45)",
+            background: "rgba(11,17,24,0.85)",
+            color: COLOR.yellow,
+            cursor: "pointer",
+          }}
+        >
+          my turn
+        </button>
+      )}
     </div>
   )
 }
 
-/** Centered-layout variant: constrained width so it matches the Prompt column. */
-export function AltPanelCentered({ text }: { text?: string }) {
-  if (!text) return null
+/** Centered-layout variant: the demonstration as a card under the prompt. */
+export function AltDemoCard({ svg, onDismiss }: { svg?: string; onDismiss?: () => void }) {
+  if (!svg) return null
   return (
-    <div className="w-full max-w-[560px] mx-auto mb-6 -mt-2">
-      <AltPanel text={text} />
+    <div
+      className="relative w-full max-w-[560px] mx-auto mb-6 rounded-xl overflow-hidden pl-fade-in"
+      style={{ background: COLOR.card, boxShadow: "inset 0 0 0 1.5px rgba(255,240,103,0.45)" }}
+    >
+      <div dangerouslySetInnerHTML={{ __html: svg }} />
+      {onDismiss && (
+        <button
+          onClick={onDismiss}
+          className="absolute bottom-2.5 right-3 rounded-md border px-3 py-1.5 text-[11px] font-mono uppercase tracking-[1.5px] transition-colors"
+          style={{
+            borderColor: "rgba(255,240,103,0.45)",
+            background: "rgba(11,17,24,0.85)",
+            color: COLOR.yellow,
+            cursor: "pointer",
+          }}
+        >
+          my turn
+        </button>
+      )}
     </div>
   )
 }
@@ -269,7 +290,7 @@ export function ReadoutPanel({ readout, solved }: { readout: { label: string; te
  * manipulative diagram embed their SVG here so it sits in the canvas
  * slot at the identical size, density and look as the real widgets.
  */
-export function ContextCanvas({ html, asideWidth }: { html: string; asideWidth?: number }) {
+export function ContextCanvas({ html, asideWidth, overlay }: { html: string; asideWidth?: number; overlay?: React.ReactNode }) {
   const wrapRef = useRef<HTMLDivElement | null>(null)
   const aside = asideWidth ?? 360
   useLayoutEffect(() => {
@@ -300,13 +321,15 @@ export function ContextCanvas({ html, asideWidth }: { html: string; asideWidth?:
   return (
     <div
       ref={wrapRef}
-      className="block rounded-xl overflow-hidden"
+      className="relative block rounded-xl overflow-hidden"
       style={{
         background: COLOR.card,
         border: `1px solid ${COLOR.border}`,
       }}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    >
+      <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: html }} />
+      {overlay}
+    </div>
   )
 }
 

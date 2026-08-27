@@ -143,6 +143,7 @@ export default function LessonRunner({ lesson }: Props) {
   }, [idx, progress, persist])
 
   const handleShowMeUsed = useCallback(() => setShowMeUsed(true), [])
+  const dismissAlt = useCallback(() => setShowAlt(false), [])
 
   // On step-through slides the bottom-bar buttons drive the steps first and
   // only cross slides once the walkthrough is exhausted in that direction.
@@ -196,7 +197,7 @@ export default function LessonRunner({ lesson }: Props) {
         wide={wide}
         chapters={chapters}
         marks={totalMarks > 0 ? { banked: bankedMarks, total: totalMarks } : null}
-        altAvailable={Boolean(stageInfo ? stageInfo.alt : slide.altExplain) && !showAlt}
+        altAvailable={Boolean(stageInfo ? stageInfo.demo : slide.altExplain?.demoSvg) && !showAlt}
         showMeUsed={showMeUsed}
         hintText={stageInfo ? stageInfo.hint : getHint(slide)}
         exitHref={exitHref}
@@ -206,7 +207,8 @@ export default function LessonRunner({ lesson }: Props) {
       >
         <SlideDispatcher
           slide={showAlt && slide.altExplain ? applyAltExplain(slide) : slide}
-          altText={showAlt ? (stageInfo?.alt ?? slide.altExplain?.prompt) : undefined}
+          altDemo={showAlt ? (stageInfo?.demo ?? slide.altExplain?.demoSvg) : undefined}
+          onDismissAlt={dismissAlt}
           onComplete={markComplete}
           onAdvance={goNext}
           canAdvance={canAdvance}
@@ -261,7 +263,8 @@ function isWideSlide(slide: Slide): boolean {
 
 function SlideDispatcher({
   slide,
-  altText,
+  altDemo,
+  onDismissAlt,
   onComplete,
   onAdvance,
   canAdvance,
@@ -271,7 +274,8 @@ function SlideDispatcher({
   onRegisterStageInfo,
 }: {
   slide: Slide
-  altText?: string
+  altDemo?: string
+  onDismissAlt?: () => void
   onComplete: (data?: Record<string, unknown>) => void
   onAdvance: () => void
   canAdvance: boolean
@@ -282,16 +286,16 @@ function SlideDispatcher({
 }) {
   switch (slide.kind) {
     case "hook":
-      return <HookSlide slide={slide} onAdvance={onAdvance} altText={altText} />
+      return <HookSlide slide={slide} onAdvance={onAdvance} altDemo={altDemo} />
     case "concept":
-      return <ConceptSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} canAdvance={canAdvance} altText={altText} />
+      return <ConceptSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} canAdvance={canAdvance} altDemo={altDemo} />
     case "interaction":
     case "verify":
-      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} onRegisterStepNav={onRegisterStepNav} onRegisterStageInfo={onRegisterStageInfo} altText={altText} />
+      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} onRegisterStepNav={onRegisterStepNav} onRegisterStageInfo={onRegisterStageInfo} altDemo={altDemo} onDismissAlt={onDismissAlt} />
     case "recap":
-      return <RecapSlide slide={slide} onAdvance={onAdvance} altText={altText} />
+      return <RecapSlide slide={slide} onAdvance={onAdvance} altDemo={altDemo} />
     case "examLink":
-      return <ExamLinkSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} altText={altText} />
+      return <ExamLinkSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} altDemo={altDemo} />
   }
 }
 
@@ -317,13 +321,11 @@ function getHint(slide: Slide): string | undefined {
 function applyAltExplain(slide: Slide): Slide {
   const alt = slide.altExplain
   if (!alt) return slide
-  // NOTE: the alt PROMPT is deliberately not applied here. It used to
-  // overwrite slide.prompt and interaction.config.prompt, which erased the
-  // question the moment a stuck student asked for another explanation,
-  // leaving them reading an explanation with no task attached. The alt text
-  // now travels separately as `altText` and renders in an AltPanel beside
-  // the prompt. Only a genuinely different VISUAL or INTERACTION replaces
-  // its counterpart here.
+  // NOTE: the alt PROMPT is deliberately not applied here, and authored alts
+  // no longer carry prose at all: "explain another way" is a visual
+  // DEMONSTRATION (altExplain.demoSvg) drawn on the canvas while the question
+  // stays put in the aside. Only a genuinely different VISUAL or INTERACTION
+  // replaces its counterpart here.
   const next: Slide = { ...slide }
   if (alt.visual !== undefined && "visual" in next) {
     (next as { visual?: unknown }).visual = alt.visual

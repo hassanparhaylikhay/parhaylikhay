@@ -65,8 +65,12 @@ interface BaseSlide {
   caption?: string
   /** How the slide advances to the next one. */
   advance: AdvanceCondition
-  /** Re-explanation when the student taps "explain another way". */
-  altExplain?: { prompt?: string; visual?: VisualSpec; interaction?: InteractionSpec }
+  /**
+   * "Explain another way": an animated DEMONSTRATION of the method, drawn on
+   * the canvas the student is working on (never a re-wording of the prompt,
+   * which stays visible). `demoSvg` is a self-contained animated SVG.
+   */
+  altExplain?: { demoSvg?: string; visual?: VisualSpec; interaction?: InteractionSpec }
   /** Chapter this slide belongs to. Must match an id in Lesson.chapters. */
   chapter?: string
   /**

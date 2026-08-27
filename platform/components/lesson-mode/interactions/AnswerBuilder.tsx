@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AltPanel, AltPanelCentered, COLOR, ContextCanvas, MixedText, Prompt, type InteractionProps } from "./_shared"
+import { AltDemoCard, AltDemoOverlay, COLOR, ContextCanvas, MixedText, Prompt, type InteractionProps } from "./_shared"
 
 type BuilderOption = {
   id: string
@@ -36,9 +36,10 @@ export type AnswerBuilderConfig = {
   revealSvgInside?: string
   /** Set by the slide wrapper on verify slides: no help affordances. */
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
@@ -51,7 +52,7 @@ export type AnswerBuilderConfig = {
  * Parts unlock strictly in order. One tray of chips is shown at a time (the
  * current part), which keeps the slide to a single decision at each moment.
  */
-export default function AnswerBuilder({ config, onComplete }: InteractionProps<AnswerBuilderConfig>) {
+export default function AnswerBuilder({ config, onComplete, onDismissAlt }: InteractionProps<AnswerBuilderConfig>) {
   const [locked, setLocked] = useState(0)
   const [wrongId, setWrongId] = useState<string | null>(null)
   const [shakeId, setShakeId] = useState<string | null>(null)
@@ -193,7 +194,7 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
     return (
       <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
         <div className="flex-1 min-w-0 flex items-center justify-center">
-          <ContextCanvas html={effectiveHtml} asideWidth={360} />
+          <ContextCanvas html={effectiveHtml} asideWidth={360} overlay={<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />} />
         </div>
         <aside className="pl-stagger w-full xl:w-[360px] shrink-0 flex flex-col gap-3.5 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
           {config.prompt && (
@@ -202,7 +203,6 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
               className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full"
             />
           )}
-          <AltPanel text={config.altText} />
           {sentence}
           {tray}
           {feedback}
@@ -215,7 +215,7 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
   return (
     <div className="w-full flex flex-col items-center gap-4">
       <Prompt>{config.prompt}</Prompt>
-      <AltPanelCentered text={config.altText} />
+      <AltDemoCard svg={config.altDemo} onDismiss={onDismissAlt} />
       <div className="w-full max-w-[640px] flex flex-col gap-4 items-center">
         {sentence}
         {tray}

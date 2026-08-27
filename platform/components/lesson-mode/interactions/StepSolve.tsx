@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { AltPanel, COLOR, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoOverlay, COLOR, MixedText, type InteractionProps } from "./_shared"
 
 /**
  * One line of working. Two kinds:
@@ -18,8 +18,8 @@ type PickLine = {
   markCode?: string
   /** Stage-specific hint surfaced by the chrome's 20s stuck-timer while THIS line is active. */
   hint?: string
-  /** Stage-specific "explain another way" text for this line. */
-  alt?: string
+  /** Stage-specific demonstration SVG for this line. */
+  altDemo?: string
   options: Array<{ id: string; text: string; isCorrect?: boolean; whyWrong?: string }>
 }
 
@@ -43,8 +43,8 @@ type NumericLine = {
   nudge?: string
   /** Stage-specific hint for the chrome; defaults to the nudge. */
   hint?: string
-  /** Stage-specific "explain another way" text for this line. */
-  alt?: string
+  /** Stage-specific demonstration SVG for this line. */
+  altDemo?: string
 }
 
 export type StepSolveLine = PickLine | NumericLine
@@ -58,9 +58,10 @@ export type StepSolveConfig = {
   successText?: string
   /** Verify slides: hides nudges. Injected by InteractionSlide. */
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
@@ -75,7 +76,7 @@ export type StepSolveConfig = {
  * the side column (and stacks on top on narrow screens, like an exam
  * paper: figure first, working underneath).
  */
-export type StageInfo = { hint?: string; alt?: string }
+export type StageInfo = { hint?: string; demo?: string }
 
 type StepSolveProps = InteractionProps<StepSolveConfig> & {
   /** Reports the ACTIVE line's help to the lesson chrome, so the 20s hint
@@ -85,7 +86,7 @@ type StepSolveProps = InteractionProps<StepSolveConfig> & {
   onRegisterStageInfo?: (info: StageInfo | null) => void
 }
 
-export default function StepSolve({ config, onComplete, onRegisterStageInfo }: StepSolveProps) {
+export default function StepSolve({ config, onComplete, onDismissAlt, onRegisterStageInfo }: StepSolveProps) {
   const [locked, setLocked] = useState<string[]>([])   // display text per locked line
   const [wrongId, setWrongId] = useState<string | null>(null)
   const [shakeKey, setShakeKey] = useState(0)
@@ -136,10 +137,10 @@ export default function StepSolve({ config, onComplete, onRegisterStageInfo }: S
 
   // Report the active stage's help upward; clear when solved or unmounted.
   const stageHint = current ? (current.hint ?? (current.kind === "numeric" ? current.nudge : undefined)) : undefined
-  const stageAlt = current?.alt
+  const stageAlt = current?.altDemo
   useEffect(() => {
     if (!onRegisterStageInfo) return
-    onRegisterStageInfo(done ? null : { hint: stageHint, alt: stageAlt })
+    onRegisterStageInfo(done ? null : { hint: stageHint, demo: stageAlt })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, done, stageHint, stageAlt])
   useEffect(() => {
@@ -296,7 +297,6 @@ export default function StepSolve({ config, onComplete, onRegisterStageInfo }: S
           style={{ color: COLOR.grey }}
         />
       )}
-      <AltPanel text={config.altText} />
       {script}
       {entry}
       {feedback}
@@ -314,10 +314,12 @@ export default function StepSolve({ config, onComplete, onRegisterStageInfo }: S
         </div>
         <aside className="w-full max-w-[540px] xl:w-[460px] shrink-0 xl:pt-1">
           <div
-            className="w-full rounded-xl overflow-hidden"
+            className="relative w-full rounded-xl overflow-hidden"
             style={{ background: COLOR.card, border: `1px solid ${COLOR.border}`, aspectRatio: "480 / 320" }}
-            dangerouslySetInnerHTML={{ __html: config.contextHtml }}
-          />
+          >
+            <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: config.contextHtml }} />
+            <AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />
+          </div>
         </aside>
       </div>
     )

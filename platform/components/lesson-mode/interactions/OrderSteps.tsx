@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { COLOR, Prompt, AltPanelCentered, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, AltDemoCard, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Step = {
   id: string
@@ -20,9 +20,10 @@ export type OrderStepsConfig = {
   successText?: string
   /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
@@ -60,7 +61,7 @@ function trayOrder(steps: Step[]): Step[] {
  * slot to assign it. Tiles automatically rearrange so each slot holds one
  * tile at a time.
  */
-export default function OrderSteps({ config, onComplete, onShowMeUsed }: InteractionProps<OrderStepsConfig>) {
+export default function OrderSteps({ config, onComplete, onDismissAlt, onShowMeUsed }: InteractionProps<OrderStepsConfig>) {
   const N = config.steps.length
   // Tray order computed once; deterministic but never the correct order
   // and never its exact reverse.
@@ -136,7 +137,7 @@ export default function OrderSteps({ config, onComplete, onShowMeUsed }: Interac
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
-      <AltPanelCentered text={config.altText} />
+      <AltDemoCard svg={config.altDemo} onDismiss={onDismissAlt} />
 
       {config.goalLabel && (
         <p className="text-[11px] font-mono uppercase tracking-[2px] mb-3" style={{ color: COLOR.faint }}>

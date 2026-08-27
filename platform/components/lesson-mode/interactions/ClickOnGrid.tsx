@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { AltPanel, COLOR, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoOverlay, COLOR, MixedText, type InteractionProps } from "./_shared"
 
 type ScenePoint = { x: number; y: number; color?: string; label?: string; primed?: boolean }
 type SceneLine  = { from: [number, number]; to: [number, number]; color?: string; dashed?: boolean; label?: string }
@@ -16,9 +16,10 @@ export type ClickOnGridConfig = {
   successText?: string
   /** Verify slides: no show-me ring. Injected by InteractionSlide. */
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
@@ -32,7 +33,7 @@ export type ClickOnGridConfig = {
  */
 type ClickOnGridProps = InteractionProps<ClickOnGridConfig> & { onAdvance?: () => void }
 
-export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUsed }: ClickOnGridProps) {
+export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUsed, onDismissAlt }: ClickOnGridProps) {
   const [pick, setPick] = useState<{ x: number; y: number; correct: boolean } | null>(null)
   const [done, setDone] = useState(false)
   const [wrongFlashId, setWrongFlashId] = useState(0)
@@ -206,6 +207,7 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
     <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
       {/* grid canvas — claims the canvas */}
       <div ref={colRef} className="flex-1 min-w-0 flex items-center justify-center">
+        <div className="relative">
         <svg
           ref={svgRef}
           viewBox={`0 0 ${SVG_W} ${SVG_H}`}
@@ -320,6 +322,8 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
             )
           })()}
         </svg>
+          <AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />
+        </div>
       </div>
 
       {/* side panel — same shape as WidgetCanvas */}
@@ -330,7 +334,6 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
             className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full"
           />
         )}
-        <AltPanel text={config.altText} />
         <div
           className="rounded-lg border px-4 py-3.5 transition-colors duration-300"
           style={{

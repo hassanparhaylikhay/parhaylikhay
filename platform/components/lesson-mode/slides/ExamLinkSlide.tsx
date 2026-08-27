@@ -2,7 +2,7 @@
 
 import Visual from "../Visual"
 import InteractionSlide from "./InteractionSlide"
-import { AltPanel, MixedText } from "../interactions/_shared"
+import { AltDemoCard, MixedText } from "../interactions/_shared"
 import type { ExamLinkSlide as ExamLinkSlideT, InteractionSlide as InteractionSlideT } from "@/lib/lesson-mode/types"
 
 /**
@@ -16,14 +16,14 @@ export default function ExamLinkSlide({
   onAdvance,
   savedData,
   onShowMeUsed,
-  altText,
+  altDemo,
 }: {
   slide: ExamLinkSlideT
   onComplete: (data?: Record<string, unknown>) => void
   onAdvance?: () => void
   savedData?: Record<string, unknown>
   onShowMeUsed?: () => void
-  altText?: string
+  altDemo?: string
 }) {
   return (
     <div className="w-full flex flex-col items-center gap-5">
@@ -51,7 +51,7 @@ export default function ExamLinkSlide({
           onAdvance={onAdvance}
           savedData={savedData}
           onShowMeUsed={onShowMeUsed}
-          altText={altText}
+          altDemo={altDemo}
         />
       ) : (
         <>
@@ -62,7 +62,7 @@ export default function ExamLinkSlide({
               className="block text-[17px] sm:text-[19px] text-[#c8c6be] text-center max-w-[680px] leading-relaxed"
             />
           )}
-          <AltPanel text={altText} className="max-w-[600px] w-full" />
+          <AltDemoCard svg={altDemo} />
         </>
       )}
     </div>

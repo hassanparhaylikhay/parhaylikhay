@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Visual from "../Visual"
 import UnderstoodButton from "./_UnderstoodButton"
-import { AltPanel, MixedText, ReadoutPanel, useWidgetReadout, ContextCanvas } from "../interactions/_shared"
+import { AltDemoCard, AltDemoOverlay, MixedText, ReadoutPanel, useWidgetReadout, ContextCanvas } from "../interactions/_shared"
 import type { ConceptSlide as ConceptSlideT } from "@/lib/lesson-mode/types"
 
 /**
@@ -23,13 +23,13 @@ export default function ConceptSlide({
   onComplete,
   onAdvance,
   canAdvance,
-  altText,
+  altDemo,
 }: {
   slide: ConceptSlideT
   onComplete: (data?: Record<string, unknown>) => void
   onAdvance?: () => void
   canAdvance?: boolean
-  altText?: string
+  altDemo?: string
 }) {
   const reveals = slide.reveals ?? []
   const [revealed, setRevealed] = useState(0)
@@ -47,11 +47,11 @@ export default function ConceptSlide({
   const isWideHtml = slide.visual?.kind === "html" && (slide.visual as { wide?: boolean }).wide === true
 
   if (isIframe) {
-    return <ConceptIframeLayout slide={slide} onAdvance={onAdvance} canAdvance={canAdvance} altText={altText} />
+    return <ConceptIframeLayout slide={slide} onAdvance={onAdvance} canAdvance={canAdvance} altDemo={altDemo} />
   }
 
   if (isWideHtml) {
-    return <ConceptWideHtmlLayout slide={slide} onAdvance={onAdvance} canAdvance={canAdvance} altText={altText} />
+    return <ConceptWideHtmlLayout slide={slide} onAdvance={onAdvance} canAdvance={canAdvance} altDemo={altDemo} />
   }
 
   // Centered stack for non-iframe visuals (small inline diagrams, recaps, etc.)
@@ -72,7 +72,7 @@ export default function ConceptSlide({
         />
       )}
 
-      <AltPanel text={altText} className="max-w-[600px] w-full" />
+      <AltDemoCard svg={altDemo} />
 
       {hasReveals && (
         <div className="w-full flex flex-col items-center gap-3 mt-2">
@@ -111,18 +111,18 @@ function ConceptWideHtmlLayout({
   slide,
   onAdvance,
   canAdvance,
-  altText,
+  altDemo,
 }: {
   slide: ConceptSlideT
   onAdvance?: () => void
   canAdvance?: boolean
-  altText?: string
+  altDemo?: string
 }) {
   const html = (slide.visual as { content?: string }).content ?? ""
   return (
     <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-8 items-center xl:items-stretch">
       <div className="flex-1 min-w-0 flex items-center justify-center">
-        <ContextCanvas html={html} asideWidth={320} />
+        <ContextCanvas html={html} asideWidth={320} overlay={<AltDemoOverlay svg={altDemo} />} />
       </div>
       <aside className="pl-stagger w-full xl:w-[320px] shrink-0 flex flex-col gap-4 xl:gap-5 justify-center xl:py-4" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
         {slide.title && (
@@ -136,7 +136,6 @@ function ConceptWideHtmlLayout({
             className="block text-[16px] sm:text-[18px] text-[#c8c6be] leading-relaxed"
           />
         )}
-        <AltPanel text={altText} />
         {slide.advance === "manual" && canAdvance && (
           <div className="xl:mt-2">
             <UnderstoodButton onClick={onAdvance} />
@@ -159,12 +158,12 @@ function ConceptIframeLayout({
   slide,
   onAdvance,
   canAdvance,
-  altText,
+  altDemo,
 }: {
   slide: ConceptSlideT
   onAdvance?: () => void
   canAdvance?: boolean
-  altText?: string
+  altDemo?: string
 }) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const readout = useWidgetReadout(iframeRef)
@@ -172,7 +171,10 @@ function ConceptIframeLayout({
   return (
     <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-8 items-center xl:items-stretch">
       <div className="flex-1 min-w-0 flex items-center justify-center">
-        {slide.visual && <Visual spec={slide.visual} iframeRef={iframeRef} />}
+        <div className="relative">
+          {slide.visual && <Visual spec={slide.visual} iframeRef={iframeRef} />}
+          <AltDemoOverlay svg={altDemo} />
+        </div>
       </div>
       <aside className="pl-stagger w-full xl:w-[320px] shrink-0 flex flex-col gap-4 xl:gap-5 justify-center xl:py-4">
         {slide.title && (
@@ -186,7 +188,6 @@ function ConceptIframeLayout({
             className="block text-[16px] sm:text-[18px] text-[#c8c6be] leading-relaxed"
           />
         )}
-        <AltPanel text={altText} />
         <ReadoutPanel readout={readout} />
         {slide.advance === "manual" && canAdvance && (
           <div className="xl:mt-2">

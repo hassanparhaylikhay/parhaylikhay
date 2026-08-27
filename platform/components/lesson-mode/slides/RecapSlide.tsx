@@ -2,7 +2,7 @@
 
 import Visual from "../Visual"
 import UnderstoodButton from "./_UnderstoodButton"
-import { AltPanel, MixedText } from "../interactions/_shared"
+import { AltDemoCard, MixedText } from "../interactions/_shared"
 import type { RecapSlide as RecapSlideT } from "@/lib/lesson-mode/types"
 
 /**
@@ -11,11 +11,11 @@ import type { RecapSlide as RecapSlideT } from "@/lib/lesson-mode/types"
 export default function RecapSlide({
   slide,
   onAdvance,
-  altText,
+  altDemo,
 }: {
   slide: RecapSlideT
   onAdvance?: () => void
-  altText?: string
+  altDemo?: string
 }) {
   return (
     <div className="w-full flex flex-col items-center gap-4 sm:gap-5">
@@ -49,7 +49,7 @@ export default function RecapSlide({
         </ul>
       )}
 
-      <AltPanel text={altText} className="max-w-[600px] w-full" />
+      <AltDemoCard svg={altDemo} />
       <UnderstoodButton onClick={onAdvance} label="got it" />
     </div>
   )

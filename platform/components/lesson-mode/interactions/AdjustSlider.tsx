@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import katex from "katex"
-import { COLOR, Prompt, AltPanelCentered, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, AltDemoCard, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 export type AdjustSliderConfig = {
   prompt?: string
@@ -27,9 +27,10 @@ export type AdjustSliderConfig = {
   advanceOnExplore?: boolean
   /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
@@ -41,7 +42,7 @@ export type AdjustSliderConfig = {
  * value and returns an SVG string. Keeps the JSON declarative; the function
  * body is only ever as trusted as the lesson.json itself.
  */
-export default function AdjustSlider({ config, onComplete, onShowMeUsed }: InteractionProps<AdjustSliderConfig>) {
+export default function AdjustSlider({ config, onComplete, onDismissAlt, onShowMeUsed }: InteractionProps<AdjustSliderConfig>) {
   const tol = config.tolerance ?? config.step / 2
   const [value, setValue] = useState(config.initial)
   const [done, setDone] = useState(false)
@@ -86,7 +87,7 @@ export default function AdjustSlider({ config, onComplete, onShowMeUsed }: Inter
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
-      <AltPanelCentered text={config.altText} />
+      <AltDemoCard svg={config.altDemo} onDismiss={onDismissAlt} />
 
       <div
         className={`relative w-full max-w-[520px] rounded-xl border transition-colors duration-300 ${done ? "pl-success-pulse" : ""}`}

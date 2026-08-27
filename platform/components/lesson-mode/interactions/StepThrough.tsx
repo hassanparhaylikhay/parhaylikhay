@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import katex from "katex"
-import { AltPanel, COLOR, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoOverlay, COLOR, MixedText, type InteractionProps } from "./_shared"
 
 export type StepThroughConfig = {
   /** Widget URL. Must carry lessonMode=1 and extChrome=1 so the widget hides
@@ -17,9 +17,10 @@ export type StepThroughConfig = {
   autoPlay?: boolean
   widget?: string
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /** Navigation delegate registered with LessonRunner so the lesson's own
@@ -53,7 +54,7 @@ type StepThroughProps = InteractionProps<StepThroughConfig> & {
  *   - the slide completes only when the final step has been seen, so the
  *     walkthrough cannot be skipped
  */
-export default function StepThrough({ config, onComplete, onAdvance, onRegisterNav }: StepThroughProps) {
+export default function StepThrough({ config, onComplete, onAdvance, onRegisterNav, onDismissAlt }: StepThroughProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const [step, setStep] = useState(0)
   const [total, setTotal] = useState(0)
@@ -152,6 +153,7 @@ export default function StepThrough({ config, onComplete, onAdvance, onRegisterN
   return (
     <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
       <div className="flex-1 min-w-0 flex items-center justify-center">
+        <div className="relative">
         <iframe
           ref={iframeRef}
           src={config.src}
@@ -163,6 +165,8 @@ export default function StepThrough({ config, onComplete, onAdvance, onRegisterN
             transition: "border-color 300ms",
           }}
         />
+          <AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />
+        </div>
       </div>
 
       <aside className="pl-stagger w-full xl:w-[320px] shrink-0 flex flex-col gap-4 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
@@ -177,8 +181,6 @@ export default function StepThrough({ config, onComplete, onAdvance, onRegisterN
             className="block text-[15.5px] sm:text-[16.5px] text-[#7a7875] leading-relaxed"
           />
         )}
-
-        <AltPanel text={config.altText} />
 
         {/* step dots + counter */}
         <div className="flex items-center gap-2.5">

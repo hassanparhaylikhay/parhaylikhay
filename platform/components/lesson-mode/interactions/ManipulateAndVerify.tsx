@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import katex from "katex"
-import { COLOR, Prompt, AltPanelCentered, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, AltDemoCard, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Handle = {
   id: string
@@ -36,9 +36,10 @@ export type ManipulateAndVerifyConfig = {
   /** Live readouts to show (e.g. "mirror: x = " + h.M.x). Form: (handles) => string[] */
   readoutHtml?: string
   successText?: string
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
@@ -49,7 +50,7 @@ export type ManipulateAndVerifyConfig = {
  * The lesson author provides three small functions in JSON (renderScene,
  * successTest, readoutHtml). Each is `new Function`-compiled at mount.
  */
-export default function ManipulateAndVerify({ config, onComplete }: InteractionProps<ManipulateAndVerifyConfig>) {
+export default function ManipulateAndVerify({ config, onComplete, onDismissAlt }: InteractionProps<ManipulateAndVerifyConfig>) {
   const [handles, setHandles] = useState<Record<string, { x: number; y: number }>>(
     Object.fromEntries(config.handles.map(h => [h.id, { x: h.x, y: h.y }]))
   )
@@ -167,7 +168,7 @@ export default function ManipulateAndVerify({ config, onComplete }: InteractionP
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
-      <AltPanelCentered text={config.altText} />
+      <AltDemoCard svg={config.altDemo} onDismiss={onDismissAlt} />
 
       <div className="relative w-full max-w-[520px]">
         <svg

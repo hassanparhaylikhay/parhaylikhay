@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { COLOR, Prompt, AltPanelCentered, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, AltDemoCard, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Region = {
   id: string
@@ -22,16 +22,17 @@ export type ClickToIdentifyConfig = {
   cols?: number
   /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
  * ClickToIdentify — student taps the correct region from a small grid.
  * Wrong taps shake. Correct tap green-pulses + fires onComplete.
  */
-export default function ClickToIdentify({ config, onComplete, onShowMeUsed }: InteractionProps<ClickToIdentifyConfig>) {
+export default function ClickToIdentify({ config, onComplete, onDismissAlt, onShowMeUsed }: InteractionProps<ClickToIdentifyConfig>) {
   const [picked, setPicked] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [attempts, setAttempts] = useState(0)
@@ -63,7 +64,7 @@ export default function ClickToIdentify({ config, onComplete, onShowMeUsed }: In
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
-      <AltPanelCentered text={config.altText} />
+      <AltDemoCard svg={config.altDemo} onDismiss={onDismissAlt} />
 
       <div
         className="grid gap-3 sm:gap-4 w-full max-w-[720px]"

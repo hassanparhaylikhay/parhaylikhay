@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AltPanel, AltPanelCentered, COLOR, ContextCanvas, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoCard, AltDemoOverlay, COLOR, ContextCanvas, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Option = {
   id: string
@@ -33,16 +33,17 @@ export type SelectFromOptionsConfig = {
   successText?: string
   /** Verify slides: no elimination hint. Injected by InteractionSlide. */
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
  * SelectFromOptions — pick one card from N. Cards can show math, prose, or a
  * tiny diagram. Wrong card shakes + shows whyWrong; correct card pulses green.
  */
-export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: InteractionProps<SelectFromOptionsConfig>) {
+export default function SelectFromOptions({ config, onComplete, onDismissAlt, onShowMeUsed }: InteractionProps<SelectFromOptionsConfig>) {
   const [picked, setPicked] = useState<string | null>(null)
   const [shakeId, setShakeId] = useState<string | null>(null)
   const [eliminated, setEliminated] = useState<Set<string>>(new Set())
@@ -177,7 +178,7 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
     return (
       <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
         <div className="flex-1 min-w-0 flex items-center justify-center">
-          <ContextCanvas html={effectiveContextHtml} asideWidth={360} />
+          <ContextCanvas html={effectiveContextHtml} asideWidth={360} overlay={<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />} />
         </div>
         <aside className="pl-stagger w-full xl:w-[360px] shrink-0 flex flex-col gap-3 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
           {config.prompt && (
@@ -186,7 +187,6 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
               className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full mb-1"
             />
           )}
-          <AltPanel text={config.altText} />
           <div className="flex flex-col gap-2.5">{optionButtons}</div>
           {feedback}
           {helper}
@@ -199,7 +199,7 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
-      <AltPanelCentered text={config.altText} />
+      <AltDemoCard svg={config.altDemo} onDismiss={onDismissAlt} />
       <div className={isRow ? "flex flex-wrap gap-3 justify-center max-w-[760px]" : "flex flex-col gap-3 w-full max-w-[560px]"}>
         {optionButtons}
       </div>

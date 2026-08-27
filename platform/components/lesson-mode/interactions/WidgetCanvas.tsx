@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { AltPanel, COLOR, MixedText, ReadoutPanel, useWidgetReadout, type InteractionProps } from "./_shared"
+import { AltDemoOverlay, COLOR, MixedText, ReadoutPanel, useWidgetReadout, type InteractionProps } from "./_shared"
 
 export type WidgetCanvasConfig = {
   src: string
@@ -15,9 +15,10 @@ export type WidgetCanvasConfig = {
    *  default is derived from the widget type and whether an outline shows. */
   taskText?: string
   widget?: string
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
@@ -64,7 +65,7 @@ function taskLine(src: string, hasOutline: boolean): string {
  */
 type WidgetCanvasProps = InteractionProps<WidgetCanvasConfig> & { onAdvance?: () => void }
 
-export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCanvasProps) {
+export default function WidgetCanvas({ config, onComplete, onAdvance, onDismissAlt }: WidgetCanvasProps) {
   const [solved, setSolved] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const colRef = useRef<HTMLDivElement | null>(null)
@@ -150,17 +151,20 @@ export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCa
   return (
     <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
       <div ref={colRef} className="flex-1 min-w-0 flex items-center justify-center">
-        <iframe
-          ref={iframeRef}
-          src={finalSrc}
-          loading="lazy"
-          className={`block rounded-xl ${solved ? "pl-success-pulse" : ""}`}
-          style={{
-            background: COLOR.card,
-            border: `1px solid ${solved ? COLOR.green : COLOR.border}`,
-            transition: "border-color 300ms",
-          }}
-        />
+        <div className="relative">
+          <iframe
+            ref={iframeRef}
+            src={finalSrc}
+            loading="lazy"
+            className={`block rounded-xl ${solved ? "pl-success-pulse" : ""}`}
+            style={{
+              background: COLOR.card,
+              border: `1px solid ${solved ? COLOR.green : COLOR.border}`,
+              transition: "border-color 300ms",
+            }}
+          />
+          <AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />
+        </div>
       </div>
 
       <aside className="pl-stagger w-full xl:w-[320px] shrink-0 flex flex-col gap-4 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
@@ -170,7 +174,6 @@ export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCa
             className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full"
           />
         )}
-        <AltPanel text={config.altText} />
         <ReadoutPanel readout={readout} solved={solved} />
         <div
           className="rounded-lg border px-4 py-3.5 transition-colors duration-300"

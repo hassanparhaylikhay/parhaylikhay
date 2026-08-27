@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { COLOR, Prompt, AltPanelCentered, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, AltDemoCard, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Vertex = [number, number]
 
@@ -26,16 +26,17 @@ export type DragToPositionConfig = {
   showTarget?: boolean
   /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
   noHelp?: boolean
-  /** Alternative explanation, injected by LessonRunner when the student
-   *  taps "explain another way". Shown ALONGSIDE the prompt. */
-  altText?: string
+  /** Animated demonstration of the method, injected by LessonRunner when the
+   *  student taps "explain another way". Shown ON the canvas, never in place
+   *  of the question. */
+  altDemo?: string
 }
 
 /**
  * DragToPosition — student drags the blue shape until it lands on the pink target.
  * Freeform, but snaps to integer grid for clean feel. Pointer-events; works on touch.
  */
-export default function DragToPosition({ config, onComplete, onShowMeUsed }: InteractionProps<DragToPositionConfig>) {
+export default function DragToPosition({ config, onComplete, onDismissAlt, onShowMeUsed }: InteractionProps<DragToPositionConfig>) {
   const snap = config.snap ?? 1
   const tol = config.tolerance ?? 0
   const showTarget = config.showTarget !== false
@@ -180,7 +181,7 @@ export default function DragToPosition({ config, onComplete, onShowMeUsed }: Int
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
-      <AltPanelCentered text={config.altText} />
+      <AltDemoCard svg={config.altDemo} onDismiss={onDismissAlt} />
 
       <div className="relative w-full max-w-[520px]">
         <svg

@@ -36,7 +36,8 @@ export default function InteractionSlide({
   onShowMeUsed,
   onRegisterStepNav,
   onRegisterStageInfo,
-  altText,
+  altDemo,
+  onDismissAlt,
 }: {
   slide: InteractionSlideT
   onComplete: (data?: Record<string, unknown>) => void
@@ -45,7 +46,8 @@ export default function InteractionSlide({
   onShowMeUsed?: () => void
   onRegisterStepNav?: (nav: StepNav | null) => void
   onRegisterStageInfo?: (info: StageInfo | null) => void
-  altText?: string
+  altDemo?: string
+  onDismissAlt?: () => void
 }) {
   const inj = slide.interaction
   const baseConfig = {
@@ -55,9 +57,9 @@ export default function InteractionSlide({
     // show-me / eliminate / reveal affordances. (LessonRunner already
     // suppresses the 20s hint banner for verify slides.)
     ...(slide.kind === "verify" ? { noHelp: true } : null),
-    // The "explain another way" text rides ALONGSIDE the prompt (every
-    // interaction renders it in an AltPanel); it never replaces the question.
-    ...(altText ? { altText } : null),
+    // "Explain another way" is a visual demonstration drawn on the canvas,
+    // never a re-wording of the question (which stays put in the aside).
+    ...(altDemo ? { altDemo } : null),
   }
 
   // widgetCanvas / clickOnGrid handle their own post-success pause + auto-advance.
@@ -97,22 +99,22 @@ export default function InteractionSlide({
   return (
     <div className="w-full flex flex-col items-center">
       {(() => {
-        const baseProps = { config: baseConfig, onComplete: wrappedComplete, savedData, onShowMeUsed }
-        const advProps = { config: baseConfig, onComplete, savedData, onShowMeUsed, onAdvance }
+        const baseProps = { config: baseConfig, onComplete: wrappedComplete, savedData, onShowMeUsed, onDismissAlt }
+        const advProps = { config: baseConfig, onComplete, savedData, onShowMeUsed, onAdvance, onDismissAlt }
         switch (inj.kind) {
-          case "clickToIdentify":     return <ClickToIdentify     {...(baseProps as { config: ClickToIdentifyConfig;     onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
-          case "dragToPosition":      return <DragToPosition      {...(baseProps as { config: DragToPositionConfig;      onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
-          case "manipulateAndVerify": return <ManipulateAndVerify {...(baseProps as { config: ManipulateAndVerifyConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
-          case "selectFromOptions":   return <SelectFromOptions   {...(baseProps as { config: SelectFromOptionsConfig;   onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
-          case "placeLabel":          return <PlaceLabel          {...(baseProps as { config: PlaceLabelConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
-          case "orderSteps":          return <OrderSteps          {...(baseProps as { config: OrderStepsConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
-          case "adjustSlider":        return <AdjustSlider        {...(baseProps as { config: AdjustSliderConfig;        onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
-          case "widgetCanvas":        return <WidgetCanvas        {...(advProps as { config: WidgetCanvasConfig;        onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
-          case "clickOnGrid":         return <ClickOnGrid         {...(advProps as { config: ClickOnGridConfig;         onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
-          case "answerBuilder":       return <AnswerBuilder       {...(baseProps as { config: AnswerBuilderConfig;       onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
-          case "stepThrough":         return <StepThrough         {...(advProps as unknown as { config: StepThroughConfig; onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown> })} onRegisterNav={onRegisterStepNav} />
-          case "stepSolve":           return <StepSolve           {...(baseProps as unknown as { config: StepSolveConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} onRegisterStageInfo={slide.kind === "verify" ? undefined : onRegisterStageInfo} />
-          case "markScript":          return <MarkScript          {...(baseProps as unknown as { config: MarkScriptConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void })} />
+          case "clickToIdentify":     return <ClickToIdentify     {...(baseProps as { config: ClickToIdentifyConfig;     onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "dragToPosition":      return <DragToPosition      {...(baseProps as { config: DragToPositionConfig;      onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "manipulateAndVerify": return <ManipulateAndVerify {...(baseProps as { config: ManipulateAndVerifyConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "selectFromOptions":   return <SelectFromOptions   {...(baseProps as { config: SelectFromOptionsConfig;   onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "placeLabel":          return <PlaceLabel          {...(baseProps as { config: PlaceLabelConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "orderSteps":          return <OrderSteps          {...(baseProps as { config: OrderStepsConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "adjustSlider":        return <AdjustSlider        {...(baseProps as { config: AdjustSliderConfig;        onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "widgetCanvas":        return <WidgetCanvas        {...(advProps as { config: WidgetCanvasConfig;        onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "clickOnGrid":         return <ClickOnGrid         {...(advProps as { config: ClickOnGridConfig;         onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "answerBuilder":       return <AnswerBuilder       {...(baseProps as { config: AnswerBuilderConfig;       onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "stepThrough":         return <StepThrough         {...(advProps as unknown as { config: StepThroughConfig; onComplete: typeof onComplete; onAdvance?: () => void; savedData?: Record<string, unknown>; onDismissAlt?: () => void })} onRegisterNav={onRegisterStepNav} />
+          case "stepSolve":           return <StepSolve           {...(baseProps as unknown as { config: StepSolveConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} onRegisterStageInfo={slide.kind === "verify" ? undefined : onRegisterStageInfo} />
+          case "markScript":          return <MarkScript          {...(baseProps as unknown as { config: MarkScriptConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
         }
       })()}
     </div>
