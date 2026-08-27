@@ -14,7 +14,7 @@ import { MixedText } from "./interactions/_shared"
  *   │                  │   slide content  │                      │ ← center (children)
  *   │                  ╰──────────────────╯                      │
  *   │                                                            │
- *   │  ←  prev          hint · explain again          next →     │ ← bottom bar
+ *   │  ←  prev          hint · show me how           next →     │ ← bottom bar
  *   └────────────────────────────────────────────────────────────┘
  *
  * Behaviour:
@@ -24,7 +24,7 @@ import { MixedText } from "./interactions/_shared"
  *     fall back to a single thin progress bar.
  *   - The marks ledger counts exam marks banked so far and pulses when it grows.
  *   - Next is enabled only when canAdvance is true. Disabled state is faint.
- *   - Hint shows after the student has been on this slide for 20 s without advancing.
+ *   - Hint appears after 20 s stuck; the demonstration is always one tap away.
  *   - Keyboard: ←/→ navigate.
  */
 
@@ -50,10 +50,8 @@ type Props = {
   chapters?: ChapterInfo[] | null
   /** Exam-marks ledger. Null hides the ledger entirely. */
   marks?: { banked: number; total: number } | null
-  /** The slide has an altExplain and it is not currently showing. */
+  /** The slide has a demonstration available and it is not currently showing. */
   altAvailable?: boolean
-  /** The student tapped a show-me affordance on this slide. */
-  showMeUsed?: boolean
   hintText?: string
   exitHref: string
   onPrev: () => void
@@ -72,7 +70,6 @@ export default function SlideFrame({
   chapters,
   marks,
   altAvailable,
-  showMeUsed,
   hintText,
   exitHref,
   onPrev,
@@ -84,11 +81,13 @@ export default function SlideFrame({
   const slideKey = `${slideIdx}-${title ?? ""}`
   const hintTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // "Explain another way" escalates from either signal of being stuck: the
-  // student tapped a show-me affordance, or the 20s hint timer fired. Many
-  // interactions (widget puzzles, answer builders) have no show-me button,
-  // so gating on show-me alone made their altExplain unreachable.
-  const showExplainAgain = Boolean(altAvailable && onExplainAgain && (showMeUsed || showHint))
+  // The demonstration is available ON DEMAND, always. It used to be gated
+  // behind "stuck for 20 seconds or tapped show-me", but the 20s timer never
+  // starts on a slide the student has already completed (canAdvance is true
+  // from the first frame), and widget puzzles have no show-me button — so on
+  // any revisit the help was unreachable. Asking to be shown how is not a
+  // failure state; it is one tap, whenever the student wants it.
+  const showExplainAgain = Boolean(altAvailable && onExplainAgain)
 
   // 20-second stuck-timer per slide
   useEffect(() => {
@@ -181,7 +180,7 @@ export default function SlideFrame({
               className="text-[12px] sm:text-[12.5px] font-mono uppercase tracking-[1.5px] text-[#fff067] hover:text-[#f0eeea] hover:bg-[#fff06714] transition-all duration-300 px-3 py-1.5 rounded-md border border-[#fff06744] bg-[#fff06708] pl-fade-in"
               style={{ transitionTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" }}
             >
-              explain another way →
+              show me how →
             </button>
           )}
         </div>

@@ -25,11 +25,6 @@ export default function LessonRunner({ lesson }: Props) {
   const [progress, setProgress] = useState<LessonProgress | null>(null)
   const [hydrated, setHydrated] = useState(false)
   const [showAlt, setShowAlt] = useState(false)
-  // Tracks whether the student has tapped "show me a hint" on the current slide.
-  // The more prominent "explain another way" link only appears once they have —
-  // so it surfaces as the natural next step after a hint, not before the student
-  // has even tried.
-  const [showMeUsed, setShowMeUsed] = useState(false)
   // Small "welcome back" toast shown when a returning student resumes mid-lesson.
   const [welcomeBack, setWelcomeBack] = useState<string | null>(null)
   const welcomeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -44,7 +39,6 @@ export default function LessonRunner({ lesson }: Props) {
   const registerStageInfo = useCallback((info: StageInfo | null) => {
     setStageInfo(info)
     setShowAlt(false)
-    setShowMeUsed(false)
   }, [])
 
   // Chapter ranges, derived once from the slides' chapter tags.
@@ -127,7 +121,6 @@ export default function LessonRunner({ lesson }: Props) {
       return
     }
     setShowAlt(false)
-    setShowMeUsed(false)
     const nextIdx = idx + 1
     setIdx(nextIdx)
     if (progress) persist({ ...progress, currentSlideIdx: nextIdx })
@@ -136,13 +129,11 @@ export default function LessonRunner({ lesson }: Props) {
   const goPrev = useCallback(() => {
     if (idx <= 0) return
     setShowAlt(false)
-    setShowMeUsed(false)
     const prevIdx = idx - 1
     setIdx(prevIdx)
     if (progress) persist({ ...progress, currentSlideIdx: prevIdx })
   }, [idx, progress, persist])
 
-  const handleShowMeUsed = useCallback(() => setShowMeUsed(true), [])
   const dismissAlt = useCallback(() => setShowAlt(false), [])
 
   // On step-through slides the bottom-bar buttons drive the steps first and
@@ -198,7 +189,6 @@ export default function LessonRunner({ lesson }: Props) {
         chapters={chapters}
         marks={totalMarks > 0 ? { banked: bankedMarks, total: totalMarks } : null}
         altAvailable={Boolean(stageInfo ? stageInfo.demo : slide.altExplain?.demoSvg) && !showAlt}
-        showMeUsed={showMeUsed}
         hintText={stageInfo ? stageInfo.hint : getHint(slide)}
         exitHref={exitHref}
         onPrev={handlePrev}
@@ -213,7 +203,6 @@ export default function LessonRunner({ lesson }: Props) {
           onAdvance={goNext}
           canAdvance={canAdvance}
           savedData={slideState?.data}
-          onShowMeUsed={handleShowMeUsed}
           onRegisterStepNav={registerStepNav}
           onRegisterStageInfo={registerStageInfo}
         />
@@ -269,7 +258,6 @@ function SlideDispatcher({
   onAdvance,
   canAdvance,
   savedData,
-  onShowMeUsed,
   onRegisterStepNav,
   onRegisterStageInfo,
 }: {
@@ -280,7 +268,6 @@ function SlideDispatcher({
   onAdvance: () => void
   canAdvance: boolean
   savedData?: Record<string, unknown>
-  onShowMeUsed?: () => void
   onRegisterStepNav?: (nav: StepNav | null) => void
   onRegisterStageInfo?: (info: StageInfo | null) => void
 }) {
@@ -291,11 +278,11 @@ function SlideDispatcher({
       return <ConceptSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} canAdvance={canAdvance} altDemo={altDemo} />
     case "interaction":
     case "verify":
-      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} onRegisterStepNav={onRegisterStepNav} onRegisterStageInfo={onRegisterStageInfo} altDemo={altDemo} onDismissAlt={onDismissAlt} />
+      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onRegisterStepNav={onRegisterStepNav} onRegisterStageInfo={onRegisterStageInfo} altDemo={altDemo} onDismissAlt={onDismissAlt} />
     case "recap":
       return <RecapSlide slide={slide} onAdvance={onAdvance} altDemo={altDemo} />
     case "examLink":
-      return <ExamLinkSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} altDemo={altDemo} />
+      return <ExamLinkSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} altDemo={altDemo} />
   }
 }
 
