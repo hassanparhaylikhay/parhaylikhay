@@ -109,9 +109,12 @@ export function AltDemoOverlay({ svg, onDismiss }: { svg?: string; onDismiss?: (
   return (
     <div
       className="absolute inset-0 z-20 rounded-xl overflow-hidden pl-fade-in"
-      style={{ background: COLOR.card, boxShadow: "inset 0 0 0 1.5px rgba(255,240,103,0.45)" }}
+      style={{ background: COLOR.card }}
     >
       <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: svg }} />
+      {/* ring painted AFTER the svg: an inset shadow on the wrapper sits under
+          its own content, so the demo's headline bar covered the top edge */}
+      <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ boxShadow: "inset 0 0 0 1.5px rgba(255,240,103,0.45)" }} />
       {onDismiss && (
         <button
           onClick={onDismiss}
@@ -136,9 +139,10 @@ export function AltDemoCard({ svg, onDismiss }: { svg?: string; onDismiss?: () =
   return (
     <div
       className="relative w-full max-w-[560px] mx-auto mb-6 rounded-xl overflow-hidden pl-fade-in"
-      style={{ background: COLOR.card, boxShadow: "inset 0 0 0 1.5px rgba(255,240,103,0.45)" }}
+      style={{ background: COLOR.card }}
     >
       <div dangerouslySetInnerHTML={{ __html: svg }} />
+      <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ boxShadow: "inset 0 0 0 1.5px rgba(255,240,103,0.45)" }} />
       {onDismiss && (
         <button
           onClick={onDismiss}

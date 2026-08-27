@@ -40,7 +40,7 @@ function demoRoles({ html, segments, steps, headline }) {
     s += G.caption(st.text, st.color || C.white, t0, 0.94);
   });
   return `<svg viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:100%" xmlns="http://www.w3.org/2000/svg">` +
-    `<rect x="0" y="0" width="480" height="26" fill="rgba(11,17,24,0.85)"/>` + txt(240, 13, headline, C.yellow, 12) +
+    `<rect x="0" y="0" width="480" height="26" fill="rgba(11,17,24,0.9)"/>` + txt(240, 13, headline, C.yellow, 12) +
     s + `</svg>`;
 }
 

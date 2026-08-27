@@ -10,8 +10,23 @@ const DUR = "9s";
 const EASE = "0.7 0 0.3 1", HOLD = "0 0 1 1";
 const C = { blue:"#00abfa", pink:"#ff4670", yellow:"#fff067", green:"#0fee89", orange:"#ff822c", grey:"#7a7875", faint:"#3a4a5a", off:"#c8c6be", white:"#f0eeea", grid:"#141e2a" };
 
-const SX = (x) => Math.round((212 + 28 * x) * 10) / 10;
-const SY = (y) => Math.round((160 - 28 * y) * 10) / 10;
+/**
+ * The demo must sit EXACTLY on top of the surface it explains, or the graph
+ * appears to jump when it opens. Two surfaces exist:
+ *   widget  — transformation widgets and ClickOnGrid: PAD 28 inside a 480x320
+ *             viewBox, so UNIT = min(424/16, 264/10) = 26.4, origin (213.6,160)
+ *   card    — contextHtml reference canvases: 28 px/unit, origin (212,160)
+ */
+const GEOM = {
+  widget: { u: 26.4, ox: 213.6, oy: 160 },
+  card:   { u: 28,   ox: 212,   oy: 160 },
+};
+let GEO = GEOM.widget;
+function useGeometry(kind) { GEO = GEOM[kind] || GEOM.widget; }
+
+const X_MIN = -7, X_MAX = 9, Y_MIN = -5, Y_MAX = 5;
+const SX = (x) => Math.round((GEO.ox + GEO.u * x) * 10) / 10;
+const SY = (y) => Math.round((GEO.oy - GEO.u * y) * 10) / 10;
 const r1 = (n) => Math.round(n * 10) / 10;
 
 let uid = 0;
@@ -29,8 +44,13 @@ function appear(t0, t1) {
   const a = r1(Math.max(0, t0 - 0.03) * 100) / 100, b = r1(Math.min(1, t1 + 0.04) * 100) / 100;
   return anim("opacity", [0, 0, 1, 1, 0, 0], [0, a, t0, t1, b, 1], [HOLD, EASE, HOLD, EASE, HOLD]);
 }
+/** Annotations use the maths face (KaTeX's), never the code face. */
+const MATH_FONT = "KaTeX_Main, 'Times New Roman', Georgia, serif";
 const txt = (x, y, t, color, size = 13, anchor = "middle", extra = "") =>
-  `<text x="${r1(x)}" y="${r1(y)}" font-family="Geist Mono,monospace" font-size="${size}" font-weight="600" fill="${color}" text-anchor="${anchor}" dominant-baseline="middle">${extra}${t}</text>`;
+  `<text x="${r1(x)}" y="${r1(y)}" font-family="${MATH_FONT}" font-size="${size + 1.5}" fill="${color}" text-anchor="${anchor}" dominant-baseline="middle">${extra}${t}</text>`;
+/** Tick numbers keep the graph's own face so the overlay lands seamlessly. */
+const tickTxt = (x, y, t) =>
+  `<text x="${r1(x)}" y="${r1(y)}" font-family="Geist Mono,monospace" font-size="12" font-weight="600" fill="${C.grey}" text-anchor="middle" dominant-baseline="middle">${t}</text>`;
 const poly = (pts) => pts.map(([x, y]) => `${SX(x)},${SY(y)}`).join(" ");
 const dot = (p, color, r = 5, inner = "") =>
   `<circle cx="${SX(p[0])}" cy="${SY(p[1])}" r="${r}" fill="${color}" stroke="#0b1118" stroke-width="1.5">${inner}</circle>`;
@@ -49,14 +69,19 @@ function chip(x, y, text, color, size = 12) {
 }
 
 function base(inner, headline) {
+  const L = SX(X_MIN), R = SX(X_MAX), T = SY(Y_MAX), B = SY(Y_MIN);
   let s = `<svg viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" style="display:block;width:100%;height:100%" xmlns="http://www.w3.org/2000/svg">`;
-  for (let x = -7; x <= 9; x++) s += `<line x1="${SX(x)}" y1="20" x2="${SX(x)}" y2="300" stroke="${C.grid}" stroke-width="0.7"/>`;
-  for (let y = -5; y <= 5; y++) s += `<line x1="16" y1="${SY(y)}" x2="464" y2="${SY(y)}" stroke="${C.grid}" stroke-width="0.7"/>`;
-  s += `<line x1="16" y1="160" x2="464" y2="160" stroke="${C.faint}" stroke-width="1.2"/>`;
-  s += `<line x1="212" y1="20" x2="212" y2="300" stroke="${C.faint}" stroke-width="1.2"/>`;
-  for (let x = -7; x <= 9; x++) if (x !== 0) s += txt(SX(x), 171, x, C.grey, 11);
-  for (let y = -5; y <= 5; y++) if (y !== 0) s += txt(200, SY(y), y, C.grey, 11);
-  if (headline) s += `<rect x="0" y="0" width="480" height="26" fill="rgba(11,17,24,0.85)"/>` + txt(240, 13, headline, C.yellow, 12);
+  for (let x = X_MIN; x <= X_MAX; x++) s += `<line x1="${SX(x)}" y1="${T}" x2="${SX(x)}" y2="${B}" stroke="${C.grid}" stroke-width="0.7"/>`;
+  for (let y = Y_MIN; y <= Y_MAX; y++) s += `<line x1="${L}" y1="${SY(y)}" x2="${R}" y2="${SY(y)}" stroke="${C.grid}" stroke-width="0.7"/>`;
+  s += `<line x1="${L}" y1="${SY(0)}" x2="${R}" y2="${SY(0)}" stroke="${C.faint}" stroke-width="1.2"/>`;
+  s += `<line x1="${SX(0)}" y1="${T}" x2="${SX(0)}" y2="${B}" stroke="${C.faint}" stroke-width="1.2"/>`;
+  for (let x = X_MIN; x <= X_MAX; x++) if (x !== 0) s += tickTxt(SX(x), SY(0) + 11, x);
+  for (let y = Y_MIN; y <= Y_MAX; y++) if (y !== 0) s += tickTxt(SX(0) - 12, SY(y), y);
+  // the headline bar must never eat into the top row of the grid
+  if (headline) {
+    const h = Math.max(16, T - 3);
+    s += `<rect x="0" y="0" width="480" height="${r1(h)}" fill="rgba(11,17,24,0.9)"/>` + txt(240, h / 2, headline, C.yellow, Math.min(12, h - 6));
+  }
   return s + inner + "</svg>";
 }
 
@@ -75,7 +100,7 @@ const markerDef = (id, color = C.yellow) =>
 
 /** Column vector notation, top-right, numbers lighting in turn. */
 function vectorNote(a, b, phases) {
-  const x = 402, yTop = 52, yBot = 82;
+  const x = 402, yTop = 60, yBot = 90;
   const { xOn, xOff, yOn, yOff, done } = phases;
   const grey = C.grey;
   const topVals = [grey, grey, C.yellow, C.yellow, C.green, C.green, grey];
@@ -371,6 +396,7 @@ function demoAreaScale() {
 }
 
 module.exports = {
+  useGeometry,
   caption,
   chip,
   demoTranslation, demoTranslatePoint, demoReflection, demoRotation, demoEnlargement,

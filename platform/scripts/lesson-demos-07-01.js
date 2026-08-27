@@ -54,6 +54,11 @@ for (const s of L.slides) {
   if (!s.altExplain) continue;
   const gen = DEMOS[s.id];
   if (!gen) { missing.push(s.id); continue; }
+  // The demo overlays either a live widget / grid (PAD-28 geometry) or a
+  // contextHtml reference canvas (28 px per unit). Match it exactly or the
+  // graph visibly jumps when the demonstration opens.
+  const k = s.interaction.kind;
+  G.useGeometry(k === "widgetCanvas" || k === "clickOnGrid" ? "widget" : "card");
   s.altExplain = { demoSvg: gen() };
   n++;
 }
