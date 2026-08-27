@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import katex from "katex"
-import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, AltPanelCentered, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Handle = {
   id: string
@@ -36,6 +36,9 @@ export type ManipulateAndVerifyConfig = {
   /** Live readouts to show (e.g. "mirror: x = " + h.M.x). Form: (handles) => string[] */
   readoutHtml?: string
   successText?: string
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /**
@@ -164,6 +167,7 @@ export default function ManipulateAndVerify({ config, onComplete }: InteractionP
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
+      <AltPanelCentered text={config.altText} />
 
       <div className="relative w-full max-w-[520px]">
         <svg

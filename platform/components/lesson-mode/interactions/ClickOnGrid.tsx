@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { COLOR, MixedText, type InteractionProps } from "./_shared"
+import { AltPanel, COLOR, MixedText, type InteractionProps } from "./_shared"
 
 type ScenePoint = { x: number; y: number; color?: string; label?: string; primed?: boolean }
 type SceneLine  = { from: [number, number]; to: [number, number]; color?: string; dashed?: boolean; label?: string }
@@ -16,6 +16,9 @@ export type ClickOnGridConfig = {
   successText?: string
   /** Verify slides: no show-me ring. Injected by InteractionSlide. */
   noHelp?: boolean
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /**
@@ -327,6 +330,7 @@ export default function ClickOnGrid({ config, onComplete, onAdvance, onShowMeUse
             className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full"
           />
         )}
+        <AltPanel text={config.altText} />
         <div
           className="rounded-lg border px-4 py-3.5 transition-colors duration-300"
           style={{

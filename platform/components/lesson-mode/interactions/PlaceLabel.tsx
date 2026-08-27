@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { COLOR, Prompt, HelperRow, MixedText, ContextCanvas, type InteractionProps } from "./_shared"
+import { AltPanel, AltPanelCentered, COLOR, Prompt, HelperRow, MixedText, ContextCanvas, type InteractionProps } from "./_shared"
 
 type Slot = {
   id: string
@@ -30,6 +30,9 @@ export type PlaceLabelConfig = {
   slotsLayout?: "row" | "column"
   /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
   noHelp?: boolean
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /**
@@ -216,6 +219,7 @@ export default function PlaceLabel({ config, onComplete, onShowMeUsed }: Interac
               className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full mb-1"
             />
           )}
+          <AltPanel text={config.altText} />
           {slotRow}
           {tray}
           {successBlock}
@@ -229,6 +233,7 @@ export default function PlaceLabel({ config, onComplete, onShowMeUsed }: Interac
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
+      <AltPanelCentered text={config.altText} />
       {slotRow}
       {tray}
       {ghost}

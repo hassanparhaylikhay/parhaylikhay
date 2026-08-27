@@ -2,7 +2,7 @@
 
 import Visual from "../Visual"
 import UnderstoodButton from "./_UnderstoodButton"
-import { MixedText } from "../interactions/_shared"
+import { AltPanel, MixedText } from "../interactions/_shared"
 import type { HookSlide as HookSlideT } from "@/lib/lesson-mode/types"
 
 /**
@@ -12,9 +12,11 @@ import type { HookSlide as HookSlideT } from "@/lib/lesson-mode/types"
 export default function HookSlide({
   slide,
   onAdvance,
+  altText,
 }: {
   slide: HookSlideT
   onAdvance?: () => void
+  altText?: string
 }) {
   return (
     <div className="w-full flex flex-col items-center gap-5 sm:gap-6">
@@ -30,6 +32,7 @@ export default function HookSlide({
           className="block text-[17px] sm:text-[20px] text-[#c8c6be] text-center max-w-[680px] leading-relaxed"
         />
       )}
+      <AltPanel text={altText} className="max-w-[600px] w-full" />
       <UnderstoodButton onClick={onAdvance} label="let's go" />
     </div>
   )

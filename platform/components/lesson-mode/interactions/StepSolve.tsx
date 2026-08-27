@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { COLOR, MixedText, type InteractionProps } from "./_shared"
+import { AltPanel, COLOR, MixedText, type InteractionProps } from "./_shared"
 
 /**
  * One line of working. Two kinds:
@@ -58,6 +58,9 @@ export type StepSolveConfig = {
   successText?: string
   /** Verify slides: hides nudges. Injected by InteractionSlide. */
   noHelp?: boolean
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /**
@@ -293,6 +296,7 @@ export default function StepSolve({ config, onComplete, onRegisterStageInfo }: S
           style={{ color: COLOR.grey }}
         />
       )}
+      <AltPanel text={config.altText} />
       {script}
       {entry}
       {feedback}

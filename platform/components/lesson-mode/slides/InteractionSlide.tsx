@@ -36,6 +36,7 @@ export default function InteractionSlide({
   onShowMeUsed,
   onRegisterStepNav,
   onRegisterStageInfo,
+  altText,
 }: {
   slide: InteractionSlideT
   onComplete: (data?: Record<string, unknown>) => void
@@ -44,6 +45,7 @@ export default function InteractionSlide({
   onShowMeUsed?: () => void
   onRegisterStepNav?: (nav: StepNav | null) => void
   onRegisterStageInfo?: (info: StageInfo | null) => void
+  altText?: string
 }) {
   const inj = slide.interaction
   const baseConfig = {
@@ -53,6 +55,9 @@ export default function InteractionSlide({
     // show-me / eliminate / reveal affordances. (LessonRunner already
     // suppresses the 20s hint banner for verify slides.)
     ...(slide.kind === "verify" ? { noHelp: true } : null),
+    // The "explain another way" text rides ALONGSIDE the prompt (every
+    // interaction renders it in an AltPanel); it never replaces the question.
+    ...(altText ? { altText } : null),
   }
 
   // widgetCanvas / clickOnGrid handle their own post-success pause + auto-advance.

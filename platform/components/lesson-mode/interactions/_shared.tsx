@@ -94,6 +94,49 @@ export function Prompt({ children }: { children: React.ReactNode }) {
 }
 
 /**
+ * AltPanel — the "explain another way" re-explanation, rendered BESIDE the
+ * question rather than in place of it.
+ *
+ * This used to replace the prompt outright, which left a stuck student
+ * reading an explanation with no idea what task it belonged to. The
+ * question always stays on screen; the alternative explanation is an
+ * additional card underneath it.
+ */
+export function AltPanel({ text, className }: { text?: string; className?: string }) {
+  if (!text) return null
+  return (
+    <div
+      className={`pl-reveal rounded-lg border px-4 py-3 ${className ?? ""}`}
+      style={{
+        borderColor: "rgba(255,240,103,0.35)",
+        background: "rgba(255,240,103,0.05)",
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
+      }}
+    >
+      <p className="text-[10.5px] font-mono uppercase tracking-[2px] mb-1.5" style={{ color: COLOR.yellow }}>
+        another way
+      </p>
+      <MixedText
+        text={text}
+        className="block text-[15px] sm:text-[16.5px] leading-relaxed"
+        style={{ color: COLOR.text }}
+      />
+    </div>
+  )
+}
+
+/** Centered-layout variant: constrained width so it matches the Prompt column. */
+export function AltPanelCentered({ text }: { text?: string }) {
+  if (!text) return null
+  return (
+    <div className="w-full max-w-[560px] mx-auto mb-6 -mt-2">
+      <AltPanel text={text} />
+    </div>
+  )
+}
+
+/**
  * Tiny "show me" + "explain another way" link row that lives just under the
  * interactive canvas. Each is optional.
  */

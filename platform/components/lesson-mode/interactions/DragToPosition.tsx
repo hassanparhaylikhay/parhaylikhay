@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, AltPanelCentered, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Vertex = [number, number]
 
@@ -26,6 +26,9 @@ export type DragToPositionConfig = {
   showTarget?: boolean
   /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
   noHelp?: boolean
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /**
@@ -177,6 +180,7 @@ export default function DragToPosition({ config, onComplete, onShowMeUsed }: Int
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
+      <AltPanelCentered text={config.altText} />
 
       <div className="relative w-full max-w-[520px]">
         <svg

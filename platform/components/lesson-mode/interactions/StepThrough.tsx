@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import katex from "katex"
-import { COLOR, MixedText, type InteractionProps } from "./_shared"
+import { AltPanel, COLOR, MixedText, type InteractionProps } from "./_shared"
 
 export type StepThroughConfig = {
   /** Widget URL. Must carry lessonMode=1 and extChrome=1 so the widget hides
@@ -17,6 +17,9 @@ export type StepThroughConfig = {
   autoPlay?: boolean
   widget?: string
   noHelp?: boolean
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /** Navigation delegate registered with LessonRunner so the lesson's own
@@ -174,6 +177,8 @@ export default function StepThrough({ config, onComplete, onAdvance, onRegisterN
             className="block text-[15.5px] sm:text-[16.5px] text-[#7a7875] leading-relaxed"
           />
         )}
+
+        <AltPanel text={config.altText} />
 
         {/* step dots + counter */}
         <div className="flex items-center gap-2.5">

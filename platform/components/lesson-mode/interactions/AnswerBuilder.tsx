@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { COLOR, ContextCanvas, MixedText, Prompt, type InteractionProps } from "./_shared"
+import { AltPanel, AltPanelCentered, COLOR, ContextCanvas, MixedText, Prompt, type InteractionProps } from "./_shared"
 
 type BuilderOption = {
   id: string
@@ -36,6 +36,9 @@ export type AnswerBuilderConfig = {
   revealSvgInside?: string
   /** Set by the slide wrapper on verify slides: no help affordances. */
   noHelp?: boolean
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /**
@@ -199,6 +202,7 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
               className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full"
             />
           )}
+          <AltPanel text={config.altText} />
           {sentence}
           {tray}
           {feedback}
@@ -211,6 +215,7 @@ export default function AnswerBuilder({ config, onComplete }: InteractionProps<A
   return (
     <div className="w-full flex flex-col items-center gap-4">
       <Prompt>{config.prompt}</Prompt>
+      <AltPanelCentered text={config.altText} />
       <div className="w-full max-w-[640px] flex flex-col gap-4 items-center">
         {sentence}
         {tray}

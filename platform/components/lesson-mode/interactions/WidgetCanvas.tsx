@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { COLOR, MixedText, ReadoutPanel, useWidgetReadout, type InteractionProps } from "./_shared"
+import { AltPanel, COLOR, MixedText, ReadoutPanel, useWidgetReadout, type InteractionProps } from "./_shared"
 
 export type WidgetCanvasConfig = {
   src: string
@@ -15,6 +15,9 @@ export type WidgetCanvasConfig = {
    *  default is derived from the widget type and whether an outline shows. */
   taskText?: string
   widget?: string
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /**
@@ -167,6 +170,7 @@ export default function WidgetCanvas({ config, onComplete, onAdvance }: WidgetCa
             className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full"
           />
         )}
+        <AltPanel text={config.altText} />
         <ReadoutPanel readout={readout} solved={solved} />
         <div
           className="rounded-lg border px-4 py-3.5 transition-colors duration-300"

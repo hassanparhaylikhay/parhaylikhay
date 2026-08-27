@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { COLOR, ContextCanvas, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { AltPanel, AltPanelCentered, COLOR, ContextCanvas, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Option = {
   id: string
@@ -33,6 +33,9 @@ export type SelectFromOptionsConfig = {
   successText?: string
   /** Verify slides: no elimination hint. Injected by InteractionSlide. */
   noHelp?: boolean
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /**
@@ -183,6 +186,7 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
               className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full mb-1"
             />
           )}
+          <AltPanel text={config.altText} />
           <div className="flex flex-col gap-2.5">{optionButtons}</div>
           {feedback}
           {helper}
@@ -195,6 +199,7 @@ export default function SelectFromOptions({ config, onComplete, onShowMeUsed }: 
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
+      <AltPanelCentered text={config.altText} />
       <div className={isRow ? "flex flex-wrap gap-3 justify-center max-w-[760px]" : "flex flex-col gap-3 w-full max-w-[560px]"}>
         {optionButtons}
       </div>

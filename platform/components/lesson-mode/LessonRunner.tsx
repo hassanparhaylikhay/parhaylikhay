@@ -205,13 +205,8 @@ export default function LessonRunner({ lesson }: Props) {
         onExplainAgain={() => setShowAlt(true)}
       >
         <SlideDispatcher
-          slide={
-            showAlt && stageInfo?.alt
-              ? applyAltExplain({ ...slide, altExplain: { prompt: stageInfo.alt } } as Slide)
-              : showAlt && slide.altExplain
-              ? applyAltExplain(slide)
-              : slide
-          }
+          slide={showAlt && slide.altExplain ? applyAltExplain(slide) : slide}
+          altText={showAlt ? (stageInfo?.alt ?? slide.altExplain?.prompt) : undefined}
           onComplete={markComplete}
           onAdvance={goNext}
           canAdvance={canAdvance}
@@ -266,6 +261,7 @@ function isWideSlide(slide: Slide): boolean {
 
 function SlideDispatcher({
   slide,
+  altText,
   onComplete,
   onAdvance,
   canAdvance,
@@ -275,6 +271,7 @@ function SlideDispatcher({
   onRegisterStageInfo,
 }: {
   slide: Slide
+  altText?: string
   onComplete: (data?: Record<string, unknown>) => void
   onAdvance: () => void
   canAdvance: boolean
@@ -285,16 +282,16 @@ function SlideDispatcher({
 }) {
   switch (slide.kind) {
     case "hook":
-      return <HookSlide slide={slide} onAdvance={onAdvance} />
+      return <HookSlide slide={slide} onAdvance={onAdvance} altText={altText} />
     case "concept":
-      return <ConceptSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} canAdvance={canAdvance} />
+      return <ConceptSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} canAdvance={canAdvance} altText={altText} />
     case "interaction":
     case "verify":
-      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} onRegisterStepNav={onRegisterStepNav} onRegisterStageInfo={onRegisterStageInfo} />
+      return <InteractionSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} onRegisterStepNav={onRegisterStepNav} onRegisterStageInfo={onRegisterStageInfo} altText={altText} />
     case "recap":
-      return <RecapSlide slide={slide} onAdvance={onAdvance} />
+      return <RecapSlide slide={slide} onAdvance={onAdvance} altText={altText} />
     case "examLink":
-      return <ExamLinkSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} />
+      return <ExamLinkSlide slide={slide} onComplete={onComplete} onAdvance={onAdvance} savedData={savedData} onShowMeUsed={onShowMeUsed} altText={altText} />
   }
 }
 
@@ -320,21 +317,14 @@ function getHint(slide: Slide): string | undefined {
 function applyAltExplain(slide: Slide): Slide {
   const alt = slide.altExplain
   if (!alt) return slide
-  // shallow merge; interaction wins over visual if provided
+  // NOTE: the alt PROMPT is deliberately not applied here. It used to
+  // overwrite slide.prompt and interaction.config.prompt, which erased the
+  // question the moment a stuck student asked for another explanation,
+  // leaving them reading an explanation with no task attached. The alt text
+  // now travels separately as `altText` and renders in an AltPanel beside
+  // the prompt. Only a genuinely different VISUAL or INTERACTION replaces
+  // its counterpart here.
   const next: Slide = { ...slide }
-  if (alt.prompt !== undefined) {
-    next.prompt = alt.prompt
-    // Interactions read their prompt from interaction.config.prompt first
-    // (InteractionSlide falls back to slide.prompt only when the config has
-    // none). Thread the alt prompt into the config too, otherwise "explain
-    // another way" silently shows the original text on most puzzles.
-    if ((next.kind === "interaction" || next.kind === "verify" || next.kind === "examLink") && next.interaction) {
-      next.interaction = {
-        ...next.interaction,
-        config: { ...next.interaction.config, prompt: alt.prompt },
-      }
-    }
-  }
   if (alt.visual !== undefined && "visual" in next) {
     (next as { visual?: unknown }).visual = alt.visual
   }

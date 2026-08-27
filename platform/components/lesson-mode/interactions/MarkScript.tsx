@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { COLOR, MixedText, type InteractionProps } from "./_shared"
+import { AltPanel, COLOR, MixedText, type InteractionProps } from "./_shared"
 
 /** One judgment the examiner must make, in mark-scheme order. */
 type Judgment = {
@@ -34,6 +34,9 @@ export type MarkScriptConfig = {
   successText?: string
   /** Verify slides: injected by InteractionSlide. No extra affordances here anyway. */
   noHelp?: boolean
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /**
@@ -251,6 +254,7 @@ export default function MarkScript({ config, onComplete }: InteractionProps<Mark
           className="block text-[20px] sm:text-[23px] text-[#f0eeea] leading-snug"
         />
       )}
+      <AltPanel text={config.altText} />
       {scriptCard}
       {controls}
       {feedback}

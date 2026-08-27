@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { COLOR, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { COLOR, Prompt, AltPanelCentered, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Region = {
   id: string
@@ -22,6 +22,9 @@ export type ClickToIdentifyConfig = {
   cols?: number
   /** Verify slides: no show-me reveal. Injected by InteractionSlide. */
   noHelp?: boolean
+  /** Alternative explanation, injected by LessonRunner when the student
+   *  taps "explain another way". Shown ALONGSIDE the prompt. */
+  altText?: string
 }
 
 /**
@@ -60,6 +63,7 @@ export default function ClickToIdentify({ config, onComplete, onShowMeUsed }: In
   return (
     <div className="w-full flex flex-col items-center">
       <Prompt>{config.prompt}</Prompt>
+      <AltPanelCentered text={config.altText} />
 
       <div
         className="grid gap-3 sm:gap-4 w-full max-w-[720px]"
