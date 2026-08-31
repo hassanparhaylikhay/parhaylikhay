@@ -409,6 +409,34 @@ export const interactionStyles = `
 }
 .pl-primed { animation: pl-primed 2s ease-in-out infinite; }
 
+/* tapDiagram — the figure itself is the answer surface.
+   Each tappable part is a <g data-region="id"> holding a .pl-tap-vis
+   highlight shape and a fat invisible .pl-tap-hit shape. The parts breathe
+   until the first tap so the invitation needs no instruction line. */
+.pl-tap [data-region] { cursor: pointer; }
+.pl-tap [data-region] .pl-tap-vis {
+  transition: stroke 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              stroke-width 260ms cubic-bezier(0.16, 1, 0.3, 1),
+              fill 260ms ease, opacity 260ms ease;
+}
+.pl-tap:not(.pl-tap-locked) [data-region]:hover .pl-tap-vis {
+  stroke: #fff067; stroke-width: 6; opacity: 1;
+}
+.pl-tap:not(.pl-tap-locked) [data-region]:hover .pl-tap-fill { fill: rgba(255,240,103,0.28); }
+.pl-tap [data-region].pl-tap-right .pl-tap-vis { stroke: #0fee89; stroke-width: 6.5; opacity: 1; }
+.pl-tap [data-region].pl-tap-right .pl-tap-fill { fill: rgba(15,238,137,0.22); }
+.pl-tap [data-region].pl-tap-wrong .pl-tap-vis { stroke: #ff4670; stroke-width: 6; opacity: 1; }
+.pl-tap [data-region].pl-tap-wrong .pl-tap-fill { fill: rgba(255,70,112,0.20); }
+.pl-tap.pl-tap-locked [data-region] { cursor: default; }
+@keyframes pl-tap-invite {
+  0%, 100% { opacity: 0.28; }
+  50%      { opacity: 0.85; }
+}
+.pl-tap.pl-tap-fresh [data-region] .pl-tap-vis {
+  animation: pl-tap-invite 2.2s ease-in-out infinite;
+}
+.pl-tap.pl-tap-fresh [data-region]:hover .pl-tap-vis { animation: none; }
+
 /* Linear fill used as the auto-play pacing indicator on walkthroughs. */
 @keyframes pl-autofill {
   from { width: 0; }

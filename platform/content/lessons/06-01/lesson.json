@@ -67,31 +67,26 @@
       "title": "Find the hypotenuse",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "clickToIdentify",
+        "kind": "tapDiagram",
         "hint": "The hypotenuse never touches the right angle. It sits directly opposite it.",
         "config": {
-          "prompt": "The hypotenuse is the side opposite the right angle. Tap the triangle where the highlighted side is the hypotenuse.",
-          "cols": 3,
+          "prompt": "The hypotenuse is the side opposite the right angle. Tap it.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='140,254 340,254 340,96' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 327 254 L 327 241 L 340 241' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><g data-region='base'><line class='pl-tap-vis' x1='140' y1='254' x2='340' y2='254' stroke='#fff067' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='140' y1='254' x2='340' y2='254' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='upright'><line class='pl-tap-vis' x1='340' y1='254' x2='340' y2='96' stroke='#fff067' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='340' y1='254' x2='340' y2='96' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='140' y1='254' x2='340' y2='96' stroke='#fff067' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='140' y1='254' x2='340' y2='96' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
           "regions": [
             {
-              "id": "r-slanted-leg",
-              "label": "A",
-              "content": "<svg viewBox='0 0 140 110' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='70,18 126,60 22,66' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='1.8' stroke-linejoin='round'/><path d='M 77.2 23.4 L 70.8 29.8 L 63.6 24.4' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><line x1='70' y1='18' x2='126' y2='60' stroke='#fff067' stroke-width='4' stroke-linecap='round'/></svg>",
-              "whyWrong": "Slanted does not mean hypotenuse. That side runs into the right angle, so it is a leg."
+              "id": "hyp",
+              "isCorrect": true
             },
             {
-              "id": "r-hyp",
-              "label": "B",
-              "isCorrect": true,
-              "content": "<svg viewBox='0 0 140 110' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='22,18 22,92 124,92' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='1.8' stroke-linejoin='round'/><path d='M 22 83 L 31 83 L 31 92' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><line x1='22' y1='18' x2='124' y2='92' stroke='#fff067' stroke-width='4' stroke-linecap='round'/></svg>"
+              "id": "base",
+              "whyWrong": "That side runs into the right angle, so it is a leg."
             },
             {
-              "id": "r-vert-leg",
-              "label": "C",
-              "content": "<svg viewBox='0 0 140 110' style='display:block;width:100%;height:auto' xmlns='http://www.w3.org/2000/svg'><polygon points='24,20 24,94 126,20' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='1.8' stroke-linejoin='round'/><path d='M 24 29 L 33 29 L 33 20' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><line x1='24' y1='20' x2='24' y2='94' stroke='#fff067' stroke-width='4' stroke-linecap='round'/></svg>"
+              "id": "upright",
+              "whyWrong": "That side runs into the right angle too, so it is the other leg."
             }
           ],
-          "successText": "The highlighted side in B is the only one that never touches the right angle. That side is the hypotenuse, and it is always the longest of the three."
+          "successText": "That is the only side that never touches the right angle. It is the hypotenuse, and it is always the longest of the three."
         }
       }
     },
@@ -393,26 +388,23 @@
       "title": "Read the triangle first",
       "advance": "onSuccess",
       "interaction": {
-        "kind": "selectFromOptions",
+        "kind": "tapDiagram",
         "hint": "The hypotenuse is opposite the right angle, whatever the letters say.",
         "config": {
-          "prompt": "In this triangle, which side is the hypotenuse?",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='179' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260.3' y='151.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text></svg>",
-          "options": [
+          "prompt": "Tap the hypotenuse of this triangle.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='179' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260.3' y='151.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><g data-region='bottom'><line class='pl-tap-vis' x1='195' y1='268' x2='285' y2='268' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='195' y1='268' x2='285' y2='268' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='195' y1='52' x2='195' y2='268' stroke='#fff067' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='195' y1='52' x2='195' y2='268' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='195' y1='52' x2='285' y2='268' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='195' y1='52' x2='285' y2='268' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
+          "regions": [
             {
-              "id": "opt-13",
-              "text": "The $13$ cm side",
+              "id": "hyp",
               "isCorrect": true
             },
             {
-              "id": "opt-x",
-              "text": "The side marked $x$",
-              "whyWrong": "That side touches the right angle, so it is a leg. It is also the one being found."
+              "id": "left",
+              "whyWrong": "That side runs into the right angle, so it is a leg. It is also the side you are being asked to find."
             },
             {
-              "id": "opt-5",
-              "text": "The $5$ cm side",
-              "whyWrong": "That side touches the right angle too, so it is the other leg."
+              "id": "bottom",
+              "whyWrong": "That side runs into the right angle too, so it is the other leg."
             }
           ],
           "successText": "The $13$ cm side sits opposite the right angle, so its square stands alone in the equation. That decides whether you add or subtract."

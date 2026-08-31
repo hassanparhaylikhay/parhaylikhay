@@ -37,10 +37,20 @@ const WIDGETS_DIR = path.join(ROOT, "public", "widgets")
 
 const SLIDE_KINDS = new Set(["hook", "concept", "interaction", "verify", "recap", "examLink"])
 const INTERACTION_KINDS = new Set([
-  "clickToIdentify", "dragToPosition", "manipulateAndVerify", "selectFromOptions",
+  "tapDiagram", "clickToIdentify", "dragToPosition", "manipulateAndVerify", "selectFromOptions",
   "placeLabel", "orderSteps", "adjustSlider", "widgetCanvas", "clickOnGrid",
   "answerBuilder", "stepThrough", "stepSolve", "markScript",
 ])
+
+/**
+ * Words that name a part of a figure. When EVERY option of a diagram MCQ is
+ * one of these, the student is being asked to name something they can point
+ * at, and the answer belongs on the diagram (kind: tapDiagram), not in a
+ * list. Flagged by Hassan, September 2026: picking "Side 2, up the left"
+ * from a list makes the student translate the picture into prose and never
+ * touch the picture.
+ */
+const FIGURE_PART_RE = /\b(side|angle|line|point|vertex|edge|arc|axis|mirror)\b/i
 // Interactions whose hint requirement is waived (see header).
 const NO_HINT_REQUIRED = new Set(["stepThrough", "stepSolve"])
 // Whole-word caps that read as shouting in student-facing prose.
@@ -173,6 +183,35 @@ for (const lessonId of targets) {
       for (const o of opts) if (!o.isCorrect && !o.whyWrong) err(`${s.id}: option "${o.id}" missing whyWrong`)
       const idx = opts.findIndex(o => o.isCorrect)
       if (idx >= 0) mcqPositions[idx] = (mcqPositions[idx] ?? 0) + 1
+      // If every option names a part of the accompanying figure, the answer
+      // is a thing the student can point at, so it belongs on the figure.
+      if (c.contextHtml && opts.length >= 2 && opts.every(o => FIGURE_PART_RE.test(o.text ?? ""))) {
+        err(`${s.id}: every option names a part of the figure; use kind "tapDiagram" so the student taps the diagram instead of picking words`)
+      }
+    }
+
+    if (i.kind === "tapDiagram") {
+      const regions = c.regions ?? []
+      if (!c.contextHtml) err(`${s.id}: tapDiagram needs a contextHtml figure`)
+      if (regions.length < 2) err(`${s.id}: tapDiagram needs at least 2 regions`)
+      const correct = regions.filter(r => r.isCorrect)
+      if (correct.length !== 1) err(`${s.id}: tapDiagram has ${correct.length} correct regions (needs exactly 1)`)
+      for (const r of regions) {
+        if (!r.isCorrect && !r.whyWrong) err(`${s.id}: region "${r.id}" missing whyWrong`)
+        // Every declared region must actually be tappable in the figure, or
+        // the student can never reach it.
+        if (c.contextHtml && !c.contextHtml.includes(`data-region='${r.id}'`)) {
+          err(`${s.id}: region "${r.id}" has no data-region group in the figure`)
+        }
+      }
+      // Every tappable group in the figure must be declared, or a tap on it
+      // silently does nothing.
+      for (const m of String(c.contextHtml ?? "").matchAll(/data-region='([^']+)'/g)) {
+        if (!regions.some(r => r.id === m[1])) err(`${s.id}: figure has an undeclared tappable region "${m[1]}"`)
+      }
+      if (c.contextHtml && !/pl-tap-hit/.test(c.contextHtml)) {
+        err(`${s.id}: figure has no .pl-tap-hit targets; taps will be hard to land on a phone`)
+      }
     }
 
     if (i.kind === "answerBuilder") {
@@ -394,6 +433,10 @@ function* studentStrings(s) {
   for (const o of c.options ?? []) {
     if (o.text) yield [`option ${o.id}`, o.text]
     if (o.whyWrong) yield [`whyWrong ${o.id}`, o.whyWrong]
+  }
+  for (const r of c.regions ?? []) {
+    if (r.label) yield [`region ${r.id}`, r.label]
+    if (r.whyWrong) yield [`whyWrong ${r.id}`, r.whyWrong]
   }
   for (const p of c.parts ?? []) {
     if (p.label) yield [`part ${p.id}`, p.label]

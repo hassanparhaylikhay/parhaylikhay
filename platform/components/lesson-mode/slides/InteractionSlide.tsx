@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import type { InteractionSlide as InteractionSlideT } from "@/lib/lesson-mode/types"
+import TapDiagram, { type TapDiagramConfig } from "../interactions/TapDiagram"
 import ClickToIdentify, { type ClickToIdentifyConfig } from "../interactions/ClickToIdentify"
 import DragToPosition, { type DragToPositionConfig } from "../interactions/DragToPosition"
 import ManipulateAndVerify, { type ManipulateAndVerifyConfig } from "../interactions/ManipulateAndVerify"
@@ -102,6 +103,7 @@ export default function InteractionSlide({
         const baseProps = { config: baseConfig, onComplete: wrappedComplete, savedData, onShowMeUsed, onDismissAlt }
         const advProps = { config: baseConfig, onComplete, savedData, onShowMeUsed, onAdvance, onDismissAlt }
         switch (inj.kind) {
+          case "tapDiagram":          return <TapDiagram          {...(baseProps as { config: TapDiagramConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
           case "clickToIdentify":     return <ClickToIdentify     {...(baseProps as { config: ClickToIdentifyConfig;     onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
           case "dragToPosition":      return <DragToPosition      {...(baseProps as { config: DragToPositionConfig;      onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
           case "manipulateAndVerify": return <ManipulateAndVerify {...(baseProps as { config: ManipulateAndVerifyConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />

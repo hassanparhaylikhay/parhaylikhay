@@ -16,7 +16,8 @@ export type AdvanceCondition =
 // ─── interactions ──────────────────────────────────────────────────────
 
 export type InteractionKind =
-  | "clickToIdentify"      // tap a region of a diagram
+  | "tapDiagram"           // tap the actual part of the figure the question asks about
+  | "clickToIdentify"      // pick one of N side-by-side mini-diagram cards
   | "dragToPosition"       // drag a shape/marker to a target location
   | "manipulateAndVerify"  // adjust values until a condition is met
   | "selectFromOptions"    // pick from N visual or text options
