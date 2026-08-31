@@ -8,7 +8,7 @@ checks:
   - q: 'When joining plotted points on a cubic curve, you should...'
     options: ["use a ruler between consecutive points", "join with a single smooth curve", "use dashed lines", "leave them disconnected"]
     correct: 1
-    explain: '"Smooth curve" — never a ruler. Cambridge mark scheme awards a separate B1 for smoothness.'
+    explain: '"Smooth curve" means never a ruler. A separate B1 is awarded for smoothness.'
   - q: 'The graph of $y = \dfrac{a}{x}$ (with $a > 0$) has branches in...'
     options: ["all four quadrants", "Q1 and Q2", "Q1 and Q3", "Q2 and Q4"]
     correct: 2

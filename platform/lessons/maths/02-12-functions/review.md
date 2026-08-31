@@ -109,7 +109,7 @@ Full marks $= 7$.
 
 ## Practice: match the inverse
 
-The yellow line is $f(x)$. Slide $m$ and $c$ in your blue $g(x) = mx + c$ until $g$ equals $f^{-1}$ — the blue line should be the mirror image of the yellow one across the dashed $y = x$ line.
+The yellow line is $f(x)$. Slide $m$ and $c$ in your blue $g(x) = mx + c$ until $g$ equals $f^{-1}$. The blue line should be the mirror image of the yellow one across the dashed $y = x$ line.
 
 <iframe src="/widgets/match-trainer.html?mode=inverse" style="width:100%;max-width:696px;height:560px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 

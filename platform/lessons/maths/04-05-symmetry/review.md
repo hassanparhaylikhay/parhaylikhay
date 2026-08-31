@@ -90,6 +90,6 @@ A solid is made of a cube of side $4$ cm with a square-based pyramid stacked on 
 
 **Step b: Rotational order about the vertical axis.** A $90°$ rotation about the vertical axis maps the cube onto itself and the pyramid onto itself, so the solid lands on itself every $90°$. Order $\boxed{4}$. **[B1 for $4$]**
 
-**Step c: Lines of symmetry of the top-down view.** From above, the silhouette is a square. A square has $4$ lines of symmetry — $2$ through midpoints of opposite sides and $2$ along the diagonals. So $\boxed{4}$ lines of symmetry. **[B1 for $4$]**
+**Step c: Lines of symmetry of the top-down view.** From above, the silhouette is a square. A square has $4$ lines of symmetry: $2$ through midpoints of opposite sides and $2$ along the diagonals. So $\boxed{4}$ lines of symmetry. **[B1 for $4$]**
 
 Full marks $= 3$.

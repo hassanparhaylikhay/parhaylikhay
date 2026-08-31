@@ -94,7 +94,7 @@ Full marks $= 5$.
 
 ## Practice: pick the proportion type and find $k$
 
-The faded yellow curve is the target. First pick the relationship type (direct, inverse, square, square-root) — that fixes the SHAPE. Then slide $k$ until your blue curve covers the yellow one.
+The faded yellow curve is the target. First pick the relationship type (direct, inverse, square, square-root). That fixes the SHAPE. Then slide $k$ until your blue curve covers the yellow one.
 
 <iframe src="/widgets/match-trainer.html?mode=proportion" style="width:100%;max-width:696px;height:560px;border:0;border-radius:10px;display:block;margin:18px auto" loading="lazy"></iframe>
 

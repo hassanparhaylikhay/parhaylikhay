@@ -146,7 +146,7 @@ $$\text{AB} = \dfrac{12}{2} = 6\;\text{cm}, \qquad \text{AC} = \dfrac{9}{2} = 4.
 
 **Step c: Bearing of A from B.** Original bearing $068° < 180°$, so ADD $180°$: $068° + 180° = 248°$. **[B1 for $248°$]**
 
-**Step d: Angle BAC and its classification.** $\angle BAC = 158° - 068° = 90°$ — exactly a right angle (conventionally classified separately from acute and obtuse). **[B1 for $90°$; B1 for right angle]**
+**Step d: Angle BAC and its classification.** $\angle BAC = 158° - 068° = 90°$, exactly a right angle (conventionally classified separately from acute and obtuse). **[B1 for $90°$; B1 for right angle]**
 
 **Answer:** (a) $\boxed{4.5}$  ·  (b) $\boxed{15}$  ·  (c) $\boxed{248°}$  ·  (d) $\boxed{90°}$.
 

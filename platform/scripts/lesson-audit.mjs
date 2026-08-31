@@ -22,7 +22,10 @@
  *                lessonMode=1 and extChrome=1 and the file supports it;
  *                widgetCanvas src must not hardcode params the component adds
  *   language     no em dashes, no shouty caps, no fragment chains, balanced
- *                $...$ delimiters, Cambridge-as-authority phrasing (warning)
+ *                $...$ delimiters, Cambridge-as-authority phrasing (warning),
+ *                no AI-essay voice (rhetorical antithesis, meta-commentary,
+ *                inflated words), and a warning on any sentence too long or
+ *                too subordinated to read in one pass
  */
 
 import fs from "node:fs"
@@ -42,6 +45,33 @@ const INTERACTION_KINDS = new Set([
 const NO_HINT_REQUIRED = new Set(["stepThrough", "stepSolve"])
 // Whole-word caps that read as shouting in student-facing prose.
 const CAPS_RE = /\b(LEFT|RIGHT|UP|DOWN|AND|NOT|BOTH|SAME|MUST|NEVER|ALWAYS)\b/
+
+/**
+ * AI-essay voice. Hassan's rule: plain textbook English, one idea per
+ * sentence, no rhetorical shapes. These patterns are the mechanical tells;
+ * each one has a plain replacement, so they are errors, not warnings.
+ */
+const AI_VOICE = [
+  ["rhetorical antithesis", /\b(?:it|this|that|they)'?(?:s| is| are|re)\s+not\s+just\b/i],
+  ["rhetorical antithesis", /\bnot\s+just\s+[^.!?;]{2,50}?\s+but\b/i],
+  ["rhetorical antithesis", /\bless\s+(?:a|about)\b[^.!?]{2,60}\bthan\s+(?:a|about)\b/i],
+  ["meta-commentary", /\bhere'?s\s+the\s+(?:thing|catch|key|trick|clever\s+bit)\b/i],
+  ["meta-commentary", /\bthe\s+(?:key|real|core)\s+insight\b/i],
+  ["meta-commentary", /\bwhat'?s\s+(?:really|actually)\s+(?:happening|going\s+on)\b/i],
+  ["meta-commentary", /\bat\s+its\s+(?:core|heart)\b|\bin\s+essence\b/i],
+  ["meta-commentary", /\bthis\s+is\s+where\s+it\s+gets\b/i],
+  ["meta-commentary", /\bthe\s+(?:beauty|magic|elegance)\s+of\b/i],
+  ["inflated word", /\b(?:delve|delves|leverage|leverages|nuanced|pivotal|seamless|seamlessly|underscore|underscores|testament|realm|realms|myriad|plethora|moreover|furthermore|additionally|intricate|holistic|paradigm|empowers?|harnesses?|fosters?|elevates?|profound|profoundly|cornerstone|multifaceted|underpins?)\b/i],
+  ["hedge adverb", /\b(?:fundamentally|essentially|ultimately|arguably|crucially|inherently|invariably)\b/i],
+  ["rhythm over clarity", /\bNo\s+\w+\.\s+No\s+\w+\./],
+]
+// Soft tell: teacher-ish enough to keep sometimes, worth a second look.
+const AI_VOICE_SOFT = [
+  ["framing", /\bthink\s+of\s+(?:it|this|them)\s+as\b/i],
+  ["framing", /\bthat'?s\s+the\s+(?:whole\s+)?(?:point|magic|beauty)\b/i],
+]
+// Clause joints that make a sentence need a second read.
+const SUBORD_RE = /\b(?:which|that|where|when|while|although|though|because|since|whereas|whether|unless|before|after|so that|such that|rather than|instead of)\b/gi
 // Plot bounds of the standard 480x320 manipulative canvas (28px/unit).
 const PLOT = { x0: 16, x1: 464, y0: 20, y1: 300 }
 
@@ -301,6 +331,27 @@ for (const lessonId of targets) {
       // Cambridge-as-authority (paper attributions like "Cambridge Winter 2025" are fine)
       if (/\bCambridge\b/.test(v) && !/Cambridge\s+(Summer|Winter|[sw]\d\d)/.test(v)) {
         warn(`${s.id} ${label}: check Cambridge-as-authority phrasing: "${v.slice(0, 60)}"`)
+      }
+      // AI-essay voice: plain textbook English only
+      for (const [why, re] of AI_VOICE) {
+        const m = v.match(re)
+        if (m) err(`${s.id} ${label}: ${why} ("${m[0]}") in "${v.slice(0, 60)}"`)
+      }
+      for (const [why, re] of AI_VOICE_SOFT) {
+        const m = v.match(re)
+        if (m) warn(`${s.id} ${label}: ${why} ("${m[0]}") reads like an AI essay; consider plainer wording`)
+      }
+      // Sentences that need a second read. TeX is stripped so the word count
+      // reflects prose, not markup.
+      for (const sent of v.replace(/\$[^$]*\$/g, "N").split(/(?<=[.?!])\s+/)) {
+        const words = sent.split(/\s+/).filter(Boolean).length
+        if (words < 12) continue
+        const joints = (sent.match(/,/g) ?? []).length * 6
+          + (sent.match(SUBORD_RE) ?? []).length * 7
+          + (sent.match(/[;:]/g) ?? []).length * 5
+        if (words >= 26 || words + joints >= 46) {
+          warn(`${s.id} ${label}: hard to read in one pass (${words} words), split it: "${sent.slice(0, 70)}"`)
+        }
       }
     }
   }
