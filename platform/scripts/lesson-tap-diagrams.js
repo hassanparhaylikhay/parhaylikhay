@@ -298,6 +298,32 @@ EDITS.push({
   successText: "The mirror is $y = -x$. Each point $(x, y)$ maps to $(-y, -x)$: the coordinates swap and both signs flip.",
 })
 
+/**
+ * placeLabel slides whose slots are parts of the figure. Same region markup;
+ * the names get dropped onto the drawing instead of into boxes in the aside.
+ */
+const LABEL_EDITS = [
+  {
+    lesson: "06-02", slide: "03-place-sides",
+    build(ctx) {
+      // triangle (100,259) (380,259) (100,49); right angle bottom left, theta bottom right
+      return appendRegions(ctx,
+        regionLine("s-base", 100, 259, 380, 259, "#00abfa") +
+        regionLine("s-vert", 100, 49, 100, 259, "#ff822c") +
+        regionLine("s-hyp", 100, 49, 380, 259, "#ff4670"))
+    },
+    prompt: "Name the three sides of this triangle. The angle $\\theta$ is at the bottom right.",
+    // labelAt sits inside the triangle, clear of the existing "side N" labels
+    slots: [
+      { id: "s-base", hint: "side 1", correctLabelId: "lab-adj", region: "s-base", labelAt: [250, 240] },
+      { id: "s-vert", hint: "side 2", correctLabelId: "lab-opp", region: "s-vert", labelAt: [140, 150] },
+      // perpendicular inward from the hypotenuse midpoint (240,154), so the
+      // name sits the same distance off its own side as the other two
+      { id: "s-hyp", hint: "side 3", correctLabelId: "lab-hyp", region: "s-hyp", labelAt: [226, 176] },
+    ],
+  },
+]
+
 // ── apply ────────────────────────────────────────────────────────────────
 
 const byLesson = {}
@@ -337,4 +363,33 @@ for (const [lessonId, edits] of Object.entries(byLesson)) {
   fs.writeFileSync(p, JSON.stringify(L, null, 2) + "\n")
   JSON.parse(fs.readFileSync(p, "utf8"))
 }
-console.log(`\n${EDITS.length} slides converted to tapDiagram`)
+
+for (const e of LABEL_EDITS) {
+  const p = path.join(LESSONS, e.lesson, "lesson.json")
+  const L = JSON.parse(fs.readFileSync(p, "utf8"))
+  const s = L.slides.find(x => x.id === e.slide)
+  if (!s) throw new Error(`no slide ${e.lesson}/${e.slide}`)
+  const cfg = s.interaction.config
+  if (/data-region=/.test(cfg.contextHtml ?? "")) {
+    throw new Error(`${e.slide}: figure already has regions; git checkout the lesson.json and re-run`)
+  }
+  cfg.contextHtml = e.build(cfg.contextHtml)
+  cfg.prompt = e.prompt
+  // Keep the authored tile ids and success text; only the slots move onto
+  // the figure.
+  const byId = Object.fromEntries((cfg.slots ?? []).map(x => [x.id, x]))
+  cfg.slots = e.slots.map(sl => ({ ...byId[sl.id], ...sl }))
+  for (const sl of cfg.slots) {
+    if (!cfg.contextHtml.includes(`data-region='${sl.region}'`)) {
+      throw new Error(`${e.slide}: slot region "${sl.region}" is not in the figure`)
+    }
+    if (!(cfg.labels ?? []).some(l => l.id === sl.correctLabelId)) {
+      throw new Error(`${e.slide}: slot "${sl.id}" points at a missing tile`)
+    }
+  }
+  fs.writeFileSync(p, JSON.stringify(L, null, 2) + "\n")
+  JSON.parse(fs.readFileSync(p, "utf8"))
+  console.log(`${e.lesson} ${e.slide}: placeLabel slots moved onto the figure`)
+}
+
+console.log(`\n${EDITS.length} slides converted to tapDiagram, ${LABEL_EDITS.length} placeLabel slides moved onto the figure`)

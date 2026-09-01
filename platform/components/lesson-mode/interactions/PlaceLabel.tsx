@@ -11,6 +11,16 @@ type Slot = {
   visualHtml?: string
   /** ID of the label tile that's the correct fit. */
   correctLabelId: string
+  /**
+   * Figure mode: this slot IS a part of the drawing. The value is the id of a
+   * `<g data-region="...">` in contextHtml, and the tile is dropped straight
+   * onto that part instead of into a box in the side panel.
+   */
+  region?: string
+  /** Where the placed name sits, in the figure's own 480x320 coordinates. */
+  labelAt?: [number, number]
+  /** Brand colour for the placed name; defaults to green. */
+  labelColour?: string
 }
 
 type LabelTile = {
@@ -53,9 +63,67 @@ export default function PlaceLabel({ config, onComplete, onDismissAlt, onShowMeU
   const [dragLabelId, setDragLabelId] = useState<string | null>(null)
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null)
   const [shakeLabelId, setShakeLabelId] = useState<string | null>(null)
+  const [armedLabelId, setArmedLabelId] = useState<string | null>(null)
   const slotRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const hostRef = useRef<HTMLDivElement | null>(null)
 
   const done = config.slots.every(s => placement[s.id] === s.correctLabelId)
+
+  // Figure mode: the parts of the drawing ARE the slots. Naming a side by
+  // dropping the word into a box called "SIDE 2" makes the student answer in
+  // the side panel and never touch the triangle, which is the thing they are
+  // supposed to be reading.
+  const onFigure = !!config.contextHtml && config.slots.every(s => !!s.region)
+
+  /** Place `labelId` on the part of the figure with this region id. */
+  function placeOnRegion(regionId: string, labelId: string) {
+    if (done) return
+    const slot = config.slots.find(s => s.region === regionId)
+    if (!slot) return
+    if (slot.correctLabelId === labelId) {
+      setPlacement(p => ({ ...p, [slot.id]: labelId }))
+      setArmedLabelId(null)
+    } else {
+      setShakeLabelId(labelId)
+      setTimeout(() => setShakeLabelId(null), 260)
+    }
+  }
+
+  /** The region group under these client coordinates, if any. */
+  function regionAt(x: number, y: number): string | null {
+    const el = document.elementFromPoint(x, y) as Element | null
+    return el?.closest?.("[data-region]")?.getAttribute("data-region") ?? null
+  }
+
+  /** Paint hover/placed state onto the injected SVG. */
+  useEffect(() => {
+    if (!onFigure) return
+    const host = hostRef.current
+    if (!host) return
+    const hover = dragLabelId && dragPos ? regionAt(dragPos.x, dragPos.y) : null
+    for (const el of Array.from(host.querySelectorAll("[data-region]"))) {
+      const id = el.getAttribute("data-region")
+      const slot = config.slots.find(s => s.region === id)
+      const filled = slot ? placement[slot.id] === slot.correctLabelId : false
+      el.classList.toggle("pl-tap-right", filled)
+      el.classList.toggle("pl-tap-over", !filled && id === hover)
+    }
+  })
+
+  // Tap a name, then tap the part. Works everywhere and is far more reliable
+  // than drag on a phone; drag still works for anyone who reaches for it.
+  useEffect(() => {
+    if (!onFigure) return
+    const host = hostRef.current
+    if (!host) return
+    function onClick(e: MouseEvent) {
+      if (!armedLabelId) return
+      const id = (e.target as Element | null)?.closest?.("[data-region]")?.getAttribute("data-region")
+      if (id) placeOnRegion(id, armedLabelId)
+    }
+    host.addEventListener("click", onClick)
+    return () => host.removeEventListener("click", onClick)
+  })
 
   useEffect(() => {
     if (done) onComplete({ placement })
@@ -88,6 +156,14 @@ export default function PlaceLabel({ config, onComplete, onDismissAlt, onShowMeU
     if (dragLabelId === null) return
     setDragLabelId(null)
     setDragPos(null)
+    if (onFigure) {
+      const id = regionAt(e.clientX, e.clientY)
+      if (id) placeOnRegion(id, labelId)
+      // A drag that goes nowhere leaves the name armed, so the follow-up tap
+      // on the figure still lands.
+      else setArmedLabelId(labelId)
+      return
+    }
     // Find which slot we dropped on
     for (const s of config.slots) {
       const node = slotRefs.current[s.id]
@@ -162,6 +238,7 @@ export default function PlaceLabel({ config, onComplete, onDismissAlt, onShowMeU
       {trayLabels.map(l => {
         const isDragging = dragLabelId === l.id
         const isShaking = shakeLabelId === l.id
+        const isArmed = armedLabelId === l.id
         return (
           <div
             key={l.id}
@@ -169,10 +246,10 @@ export default function PlaceLabel({ config, onComplete, onDismissAlt, onShowMeU
             onPointerMove={move}
             onPointerUp={e => drop(e, l.id)}
             onPointerCancel={e => drop(e, l.id)}
-            className={`h-11 sm:h-12 px-4 rounded-lg border-[1.5px] flex items-center cursor-grab active:cursor-grabbing select-none touch-none transition-opacity duration-200 ${isShaking ? "pl-shake" : ""}`}
+            className={`h-11 sm:h-12 px-4 rounded-lg border-[1.5px] flex items-center cursor-grab active:cursor-grabbing select-none touch-none transition-all duration-200 ${isShaking ? "pl-shake" : ""}`}
             style={{
-              borderColor: "#2e3f58",
-              background: "#0f161f",
+              borderColor: isArmed ? COLOR.yellow : "#2e3f58",
+              background: isArmed ? "rgba(255,240,103,0.08)" : "#0f161f",
               opacity: isDragging ? 0.3 : 1,
             }}
           >
@@ -206,6 +283,66 @@ export default function PlaceLabel({ config, onComplete, onDismissAlt, onShowMeU
       <MixedText text={config.labels.find(l => l.id === dragLabelId)?.text ?? ""} className="text-[14.5px] sm:text-[16px] font-medium transition-colors duration-300" style={{ color: COLOR.white }} />
     </div>
   )
+
+  // Figure mode: names land on the drawing itself.
+  if (onFigure) {
+    const placedNames = (
+      <>
+        {config.slots.map(s => {
+          const filledId = placement[s.id]
+          if (filledId !== s.correctLabelId || !s.labelAt) return null
+          const tile = config.labels.find(l => l.id === filledId)
+          if (!tile) return null
+          return (
+            <div
+              key={s.id}
+              className="absolute pointer-events-none pl-reveal"
+              style={{
+                left: `${(s.labelAt[0] / 480) * 100}%`,
+                top: `${(s.labelAt[1] / 320) * 100}%`,
+                transform: "translate(-50%, -50%)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <MixedText
+                text={tile.text}
+                className="text-[13px] sm:text-[15px] font-medium"
+                style={{ color: s.labelColour ?? COLOR.green }}
+              />
+            </div>
+          )
+        })}
+      </>
+    )
+    return (
+      <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
+        <div ref={hostRef} className={`flex-1 min-w-0 flex items-center justify-center pl-tap ${done ? "pl-tap-locked" : "pl-tap-fresh"}`}>
+          <ContextCanvas
+            html={config.contextHtml!}
+            asideWidth={360}
+            overlay={<>{placedNames}<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} /></>}
+          />
+        </div>
+        <aside className="pl-stagger w-full xl:w-[360px] shrink-0 flex flex-col gap-3 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
+          {config.prompt && (
+            <MixedText
+              text={config.prompt}
+              className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full mb-1"
+            />
+          )}
+          {!done && (
+            <p className="text-[14px] text-[#7a7875] leading-relaxed">
+              Drag a name onto the triangle, or tap the name then tap its side.
+            </p>
+          )}
+          {tray}
+          {successBlock}
+          {!config.noHelp && <HelperRow onShowMe={!done ? showMe : undefined} />}
+        </aside>
+        {ghost}
+      </div>
+    )
+  }
 
   if (wide) {
     return (

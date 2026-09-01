@@ -423,6 +423,10 @@ export const interactionStyles = `
   stroke: #fff067; stroke-width: 6; opacity: 1;
 }
 .pl-tap:not(.pl-tap-locked) [data-region]:hover .pl-tap-fill { fill: rgba(255,240,103,0.28); }
+/* Same lift as :hover, but driven by JS while a label is being dragged over
+   a part (CSS :hover does not fire during pointer capture). */
+.pl-tap [data-region].pl-tap-over .pl-tap-vis { stroke: #fff067; stroke-width: 6; opacity: 1; }
+.pl-tap [data-region].pl-tap-over .pl-tap-fill { fill: rgba(255,240,103,0.28); }
 .pl-tap [data-region].pl-tap-right .pl-tap-vis { stroke: #0fee89; stroke-width: 6.5; opacity: 1; }
 .pl-tap [data-region].pl-tap-right .pl-tap-fill { fill: rgba(15,238,137,0.22); }
 .pl-tap [data-region].pl-tap-wrong .pl-tap-vis { stroke: #ff4670; stroke-width: 6; opacity: 1; }

@@ -190,6 +190,30 @@ for (const lessonId of targets) {
       }
     }
 
+    if (i.kind === "placeLabel") {
+      const slots = c.slots ?? []
+      const onFigure = slots.length > 0 && slots.every(sl => sl.region)
+      // Same principle as the MCQ rule above, one interaction kind over.
+      // Slots named after parts of the drawing ("side 1", "side 2") must BE
+      // those parts, or the student answers in the side panel and never
+      // touches the drawing.
+      if (c.contextHtml && !onFigure && slots.length >= 2 &&
+          slots.every(sl => FIGURE_PART_RE.test(sl.hint ?? ""))) {
+        err(`${s.id}: every slot names a part of the figure; give each slot a "region" + "labelAt" so the names drop onto the drawing`)
+      }
+      if (onFigure) {
+        if (!c.contextHtml) err(`${s.id}: figure-mode placeLabel needs a contextHtml figure`)
+        for (const sl of slots) {
+          if (!String(c.contextHtml ?? "").includes(`data-region='${sl.region}'`)) {
+            err(`${s.id}: slot "${sl.id}" targets region "${sl.region}", which is not in the figure`)
+          }
+          if (!Array.isArray(sl.labelAt) || sl.labelAt.length !== 2) {
+            err(`${s.id}: slot "${sl.id}" needs labelAt [x, y] so the placed name has somewhere to sit`)
+          }
+        }
+      }
+    }
+
     if (i.kind === "tapDiagram") {
       const regions = c.regions ?? []
       if (!c.contextHtml) err(`${s.id}: tapDiagram needs a contextHtml figure`)

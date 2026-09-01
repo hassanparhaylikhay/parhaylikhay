@@ -80,23 +80,38 @@
         "kind": "placeLabel",
         "hint": "Start with the hypotenuse, the side opposite the right angle. Then ask which of the other two touches $\\theta$.",
         "config": {
-          "prompt": "Drag each name onto its side. The angle $\\theta$ is at the bottom right.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>side 1</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>side 2</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>side 3</text></svg>",
+          "prompt": "Name the three sides of this triangle. The angle $\\theta$ is at the bottom right.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>side 1</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>side 2</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>side 3</text><g data-region='s-base'><line class='pl-tap-vis' x1='100' y1='259' x2='380' y2='259' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='259' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s-vert'><line class='pl-tap-vis' x1='100' y1='49' x2='100' y2='259' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='100' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s-hyp'><line class='pl-tap-vis' x1='100' y1='49' x2='380' y2='259' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
           "slots": [
             {
               "id": "s-base",
               "hint": "side 1",
-              "correctLabelId": "lab-adj"
+              "correctLabelId": "lab-adj",
+              "region": "s-base",
+              "labelAt": [
+                250,
+                240
+              ]
             },
             {
               "id": "s-vert",
               "hint": "side 2",
-              "correctLabelId": "lab-opp"
+              "correctLabelId": "lab-opp",
+              "region": "s-vert",
+              "labelAt": [
+                140,
+                150
+              ]
             },
             {
               "id": "s-hyp",
               "hint": "side 3",
-              "correctLabelId": "lab-hyp"
+              "correctLabelId": "lab-hyp",
+              "region": "s-hyp",
+              "labelAt": [
+                226,
+                176
+              ]
             }
           ],
           "labels": [
