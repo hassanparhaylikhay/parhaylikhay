@@ -69,8 +69,8 @@
             "anchor": "end"
           },
           {
-            "x": 254.4,
-            "y": 134.8,
+            "x": 261.5,
+            "y": 125.3,
             "text": "hypotenuse",
             "color": "#ff4670",
             "size": 14
@@ -123,8 +123,8 @@
             "anchor": "end"
           },
           {
-            "x": 254.4,
-            "y": 134.8,
+            "x": 261.5,
+            "y": 125.3,
             "text": "hypotenuse",
             "color": "#ff4670",
             "size": 14
@@ -847,8 +847,8 @@
           "successText": "$AD = 86.1$ m. In a show-that question the marks are for the working, so always write the formula line with the numbers in it.",
           "figureLabels": [
             {
-              "x": 205.1,
-              "y": 89,
+              "x": 223,
+              "y": 80.7,
               "tex": "25^\\circ",
               "color": "#fff067",
               "size": 14,

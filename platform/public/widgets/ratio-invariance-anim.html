@@ -58,7 +58,7 @@ var SIDE_COL = { opp: COL.orange, adj: COL.blue, hyp: COL.pink };
 var active = { opp: CFG.top === "opp" || CFG.bot === "opp", adj: CFG.top === "adj" || CFG.bot === "adj", hyp: CFG.top === "hyp" || CFG.bot === "hyp" };
 
 // ── geometry ────────────────────────────────────────────────────────────
-var V = { x: 96, y: 252 };                    // the 30-degree vertex
+var V = { x: 96, y: 226 };                    // the 30-degree vertex
 var UNIT = 26;                                // px per unit
 var H_MIN = 5.4, H_MAX = 11.6;                // hypotenuse range in units
 var hyp = 8.5;                                // current size (units)
@@ -133,7 +133,7 @@ function draw() {
     var col = active[name] ? SIDE_COL[name] : COL.faint;
     texLabel(x, y, "\\text{" + name + " } " + fmt(value, 1), col, 14.5, anchor);
   }
-  sideLabel("adj", adjU, (V.x + c.A.x) / 2, V.y + 20, "middle");
+  sideLabel("adj", adjU, (V.x + c.A.x) / 2, V.y + 17, "middle");
   sideLabel("opp", oppU, c.A.x + 14, (c.A.y + c.B.y) / 2, "start");
   sideLabel("hyp", hyp, (V.x + c.B.x) / 2 - 14, (V.y + c.B.y) / 2 - 16, "middle");
 
@@ -143,7 +143,7 @@ function draw() {
   var eqTex = "\\dfrac{\\textcolor{" + SIDE_COL[CFG.top] + "}{" + fmt(a1, 1) + "}}"
             + "{\\textcolor{" + SIDE_COL[CFG.bot] + "}{" + fmt(a2, 1) + "}}"
             + " = \\textcolor{" + COL.green + "}{" + fmt(a1 / a2, 2) + "}";
-  texLabel(240, 298, eqTex, COL.off, 19);
+  texLabel(240, 292, eqTex, COL.off, 18);
 
   // drag handle at B, pulsing until touched
   var hit = el("circle", { cx: c.B.x, cy: c.B.y, r: 16, fill: "transparent", style: "cursor:grab" });
