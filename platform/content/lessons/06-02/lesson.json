@@ -304,7 +304,7 @@
       "prompt": "Here are the three formulas. Each one uses an angle and two of the sides. You do not have to work them out, you just have to pick the right one. The short word next to each formula is how people remember it.",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:flex-start;gap:20px;padding:10px 0'><div style='display:flex;align-items:center;gap:18px'><span style=\"font-family:Geist Mono,monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;color:#fff067;background:rgba(255,240,103,0.10);border:1px solid rgba(255,240,103,0.32);border-radius:6px;padding:5px 9px\">SOH</span><span style='font-size:22px'>\\(\\sin\\theta = \\dfrac{\\textcolor{#ff822c}{\\text{opposite}}}{\\textcolor{#ff4670}{\\text{hypotenuse}}}\\)</span></div><div style='display:flex;align-items:center;gap:18px'><span style=\"font-family:Geist Mono,monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;color:#fff067;background:rgba(255,240,103,0.10);border:1px solid rgba(255,240,103,0.32);border-radius:6px;padding:5px 9px\">CAH</span><span style='font-size:22px'>\\(\\cos\\theta = \\dfrac{\\textcolor{#00abfa}{\\text{adjacent}}}{\\textcolor{#ff4670}{\\text{hypotenuse}}}\\)</span></div><div style='display:flex;align-items:center;gap:18px'><span style=\"font-family:Geist Mono,monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;color:#fff067;background:rgba(255,240,103,0.10);border:1px solid rgba(255,240,103,0.32);border-radius:6px;padding:5px 9px\">TOA</span><span style='font-size:22px'>\\(\\tan\\theta = \\dfrac{\\textcolor{#ff822c}{\\text{opposite}}}{\\textcolor{#00abfa}{\\text{adjacent}}}\\)</span></div></div>"
+        "content": "<div style='display:flex;justify-content:center;width:100%;padding:10px 0'><div style='display:flex;flex-direction:column;align-items:flex-start;gap:20px'><div style='display:flex;align-items:center;gap:18px'><span style=\"flex:none;font-family:Geist Mono,monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;color:#fff067;background:rgba(255,240,103,0.10);border:1px solid rgba(255,240,103,0.32);border-radius:6px;padding:5px 9px\">SOH</span><span style='font-size:22px'>\\(\\sin\\theta = \\dfrac{\\textcolor{#ff822c}{\\text{opposite}}}{\\textcolor{#ff4670}{\\text{hypotenuse}}}\\)</span></div><div style='display:flex;align-items:center;gap:18px'><span style=\"flex:none;font-family:Geist Mono,monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;color:#fff067;background:rgba(255,240,103,0.10);border:1px solid rgba(255,240,103,0.32);border-radius:6px;padding:5px 9px\">CAH</span><span style='font-size:22px'>\\(\\cos\\theta = \\dfrac{\\textcolor{#00abfa}{\\text{adjacent}}}{\\textcolor{#ff4670}{\\text{hypotenuse}}}\\)</span></div><div style='display:flex;align-items:center;gap:18px'><span style=\"flex:none;font-family:Geist Mono,monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;color:#fff067;background:rgba(255,240,103,0.10);border:1px solid rgba(255,240,103,0.32);border-radius:6px;padding:5px 9px\">TOA</span><span style='font-size:22px'>\\(\\tan\\theta = \\dfrac{\\textcolor{#ff822c}{\\text{opposite}}}{\\textcolor{#00abfa}{\\text{adjacent}}}\\)</span></div></div></div>"
       },
       "advance": "manual"
     },
@@ -486,7 +486,7 @@
       "prompt": "Every question from here on uses the same five steps. The first two are the ones that decide everything else.",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;gap:14px;padding:10px 0;max-width:36em'><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">1</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Circle what you are given.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">2</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Circle what you need to find.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">3</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Name those two sides: opposite, adjacent or hypotenuse.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">4</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Pick the formula that has both of those names in it.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">5</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Put the numbers in and work out the answer.</span></div></div>"
+        "content": "<div style='display:flex;justify-content:center;width:100%;padding:10px 0'><div style='display:flex;flex-direction:column;align-items:flex-start;gap:20px'><div style='display:flex;align-items:center;gap:16px;max-width:34em'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">1</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Circle what you are given.</span></div><div style='display:flex;align-items:center;gap:16px;max-width:34em'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">2</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Circle what you need to find.</span></div><div style='display:flex;align-items:center;gap:16px;max-width:34em'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">3</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Name those two sides: opposite, adjacent or hypotenuse.</span></div><div style='display:flex;align-items:center;gap:16px;max-width:34em'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">4</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Pick the formula that has both of those names in it.</span></div><div style='display:flex;align-items:center;gap:16px;max-width:34em'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">5</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Put the numbers in and work out the answer.</span></div></div></div>"
       },
       "advance": "manual"
     },
@@ -500,47 +500,47 @@
         "kind": "tapDiagram",
         "config": {
           "prompt": "Mark the two sides the question is about, then pick the formula that uses them.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='62,250 278.9,250 62,68' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 75 250 L 75 237 L 62 237' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 278.9 250 L 252.9 250 L 252.9 249 L 253 248 L 253.1 247 L 253.2 246 L 253.4 245 L 253.6 244 L 253.9 243 L 254.1 242.1 L 254.5 241.1 L 254.8 240.2 L 255.2 239.2 L 255.7 238.3 L 256.1 237.4 L 256.6 236.6 L 257.2 235.7 L 257.7 234.9 L 258.3 234.1 L 259 233.3 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><g data-region='base'><line class='pl-tap-vis' x1='62' y1='250' x2='278.9' y2='250' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='250' x2='278.9' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='62' y1='68' x2='62' y2='250' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='62' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='62' y1='68' x2='278.9' y2='250' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='278.9' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='f-sin'><rect class='pl-tap-vis pl-tap-fill' x='288' y='52' width='184' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='288' y='52' width='184' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='f-cos'><rect class='pl-tap-vis pl-tap-fill' x='288' y='128' width='184' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='288' y='128' width='184' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='f-tan'><rect class='pl-tap-vis pl-tap-fill' x='288' y='204' width='184' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='288' y='204' width='184' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='48,248 244,248 48,83.5' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 61 248 L 61 235 L 48 235' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 244 248 L 218 248 L 218 247 L 218.1 246 L 218.2 245 L 218.3 244 L 218.5 243 L 218.7 242 L 219 241 L 219.2 240.1 L 219.6 239.1 L 219.9 238.2 L 220.3 237.2 L 220.8 236.3 L 221.2 235.4 L 221.7 234.6 L 222.3 233.7 L 222.8 232.9 L 223.4 232.1 L 224.1 231.3 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><g data-region='base'><line class='pl-tap-vis' x1='48' y1='248' x2='244' y2='248' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='48' y1='248' x2='244' y2='248' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='48' y1='83.5' x2='48' y2='248' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='48' y1='83.5' x2='48' y2='248' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='48' y1='83.5' x2='244' y2='248' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='48' y1='83.5' x2='244' y2='248' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='f-sin'><rect class='pl-tap-vis pl-tap-fill' x='272' y='52' width='192' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='272' y='52' width='192' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='f-cos'><rect class='pl-tap-vis pl-tap-fill' x='272' y='128' width='192' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='272' y='128' width='192' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='f-tan'><rect class='pl-tap-vis pl-tap-fill' x='272' y='204' width='192' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='272' y='204' width='192' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g></svg>",
           "figureLabels": [
             {
-              "x": 380,
+              "x": 368,
               "y": 81,
               "tex": "\\sin\\theta = \\dfrac{\\text{O}}{\\text{H}}",
               "color": "#f0eeea",
               "size": 17
             },
             {
-              "x": 380,
+              "x": 368,
               "y": 157,
               "tex": "\\cos\\theta = \\dfrac{\\text{A}}{\\text{H}}",
               "color": "#f0eeea",
               "size": 17
             },
             {
-              "x": 380,
+              "x": 368,
               "y": 233,
               "tex": "\\tan\\theta = \\dfrac{\\text{O}}{\\text{A}}",
               "color": "#f0eeea",
               "size": 17
             },
             {
-              "x": 237.6,
-              "y": 235,
+              "x": 202.7,
+              "y": 233,
               "tex": "40^\\circ",
               "color": "#fff067",
               "size": 15
             },
             {
-              "x": 41.7,
-              "y": 150.5,
+              "x": 27.7,
+              "y": 157.3,
               "tex": "x",
               "color": "#ff822c",
               "size": 14,
               "anchor": "end"
             },
             {
-              "x": 188.8,
-              "y": 143.6,
+              "x": 164.4,
+              "y": 150.3,
               "tex": "9\\,\\text{cm}",
               "color": "#ff4670",
               "size": 14
@@ -551,8 +551,8 @@
               "regionId": "hyp",
               "tag": "H",
               "tagAt": [
-                153.8,
-                178.9
+                129.3,
+                185.6
               ],
               "prompt": "Tap the side you are given. It is the one with a number on it.",
               "hint": "One side has a length written on it. That is the side you are given."
@@ -561,8 +561,8 @@
               "regionId": "left",
               "tag": "O",
               "tagAt": [
-                83.5,
-                204.5
+                69.5,
+                206.9
               ],
               "prompt": "That side is opposite the right angle, so it is the hypotenuse, H. Now tap the side you need to find.",
               "hint": "The side you need is the one labelled with a letter instead of a number."

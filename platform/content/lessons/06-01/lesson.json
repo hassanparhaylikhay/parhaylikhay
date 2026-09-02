@@ -173,7 +173,7 @@
       "prompt": "Every Pythagoras question uses the same five steps. Circling the two things first is what tells you whether to add or subtract.",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;gap:14px;padding:10px 0;max-width:36em'><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">1</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Circle what you are given.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">2</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Circle what you need to find.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">3</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Find the hypotenuse. It is the side opposite the right angle.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">4</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>If you need the hypotenuse, add the squares. If not, subtract.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">5</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Take the square root at the end.</span></div></div>"
+        "content": "<div style='display:flex;justify-content:center;width:100%;padding:10px 0'><div style='display:flex;flex-direction:column;align-items:flex-start;gap:20px'><div style='display:flex;align-items:center;gap:16px;max-width:34em'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">1</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Circle what you are given.</span></div><div style='display:flex;align-items:center;gap:16px;max-width:34em'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">2</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Circle what you need to find.</span></div><div style='display:flex;align-items:center;gap:16px;max-width:34em'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">3</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Find the hypotenuse. It is the side opposite the right angle.</span></div><div style='display:flex;align-items:center;gap:16px;max-width:34em'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">4</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>If you need the hypotenuse, add the squares. If not, subtract.</span></div><div style='display:flex;align-items:center;gap:16px;max-width:34em'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">5</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Take the square root at the end.</span></div></div></div>"
       },
       "advance": "manual"
     },
@@ -187,40 +187,40 @@
         "kind": "tapDiagram",
         "config": {
           "prompt": "Mark the hypotenuse and the side you want, then decide whether to add or subtract.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='62,250 304.7,250 62,68' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 75 250 L 75 237 L 62 237' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><g data-region='base'><line class='pl-tap-vis' x1='62' y1='250' x2='304.7' y2='250' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='250' x2='304.7' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='62' y1='68' x2='62' y2='250' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='62' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='62' y1='68' x2='304.7' y2='250' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='304.7' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='e-add'><rect class='pl-tap-vis pl-tap-fill' x='274' y='88' width='196' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='274' y='88' width='196' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='e-sub'><rect class='pl-tap-vis pl-tap-fill' x='274' y='172' width='196' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='274' y='172' width='196' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='48,248 244,248 48,101' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 61 248 L 61 235 L 48 235' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><g data-region='base'><line class='pl-tap-vis' x1='48' y1='248' x2='244' y2='248' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='48' y1='248' x2='244' y2='248' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='48' y1='101' x2='48' y2='248' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='48' y1='101' x2='48' y2='248' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='48' y1='101' x2='244' y2='248' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='48' y1='101' x2='244' y2='248' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='e-add'><rect class='pl-tap-vis pl-tap-fill' x='272' y='88' width='192' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='272' y='88' width='192' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='e-sub'><rect class='pl-tap-vis pl-tap-fill' x='272' y='172' width='192' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='272' y='172' width='192' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g></svg>",
           "figureLabels": [
             {
-              "x": 372,
+              "x": 368,
               "y": 117,
               "tex": "x^{2} = 15^{2} + 12^{2}",
               "color": "#f0eeea",
               "size": 16
             },
             {
-              "x": 372,
+              "x": 368,
               "y": 201,
               "tex": "x^{2} = 15^{2} - 12^{2}",
               "color": "#f0eeea",
               "size": 16
             },
             {
-              "x": 195.5,
-              "y": 268.3,
+              "x": 158.2,
+              "y": 266.3,
               "tex": "12\\,\\text{cm}",
               "color": "#00abfa",
               "size": 14
             },
             {
-              "x": 41.4,
-              "y": 151.3,
+              "x": 27.4,
+              "y": 166.8,
               "tex": "x",
               "color": "#ff822c",
               "size": 14,
               "anchor": "end"
             },
             {
-              "x": 202.5,
-              "y": 144.6,
+              "x": 165.2,
+              "y": 160.1,
               "tex": "15\\,\\text{cm}",
               "color": "#ff4670",
               "size": 14
@@ -231,8 +231,8 @@
               "regionId": "hyp",
               "tag": "H",
               "tagAt": [
-                167.9,
-                179.6
+                130.6,
+                195.1
               ],
               "prompt": "Tap the hypotenuse. It is the side opposite the right angle.",
               "hint": "The hypotenuse is opposite the right angle, and it is the longest side."
@@ -241,8 +241,8 @@
               "regionId": "left",
               "tag": "find",
               "tagAt": [
-                97,
-                204.5
+                83,
+                211.3
               ],
               "prompt": "Now tap the side you need to find.",
               "hint": "The side you need is the one labelled with a letter instead of a number."

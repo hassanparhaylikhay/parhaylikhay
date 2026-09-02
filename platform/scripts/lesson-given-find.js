@@ -59,11 +59,14 @@ function wedge(c, a0, a1, r, steps = 18) {
  * side marked 12 is never drawn shorter than a side marked 9.
  */
 function triangle({ angleDeg, angleLabel, legRatio, base, left, hyp }) {
-  const A = [62, 250]                       // right angle
-  const LEFT = 182                          // vertical leg, px
-  const baseLen = angleDeg
-    ? LEFT / Math.tan(angleDeg * RAD)
-    : LEFT * legRatio                       // legRatio = base ÷ left
+  // The figure shares the canvas with a column of tappable chips on the
+  // right, so it is fitted into a box rather than given a fixed leg. A fixed
+  // vertical leg made the base long enough to run into the chips.
+  const A = [48, 248]                       // right angle
+  const MAX_W = 196, MAX_H = 168            // room before the chip column
+  const ratio = angleDeg ? 1 / Math.tan(angleDeg * RAD) : legRatio   // base ÷ left
+  const LEFT = Math.min(MAX_H, MAX_W / ratio)
+  const baseLen = LEFT * ratio
   const B = [A[0] + baseLen, A[1]]
   const C = [A[0], A[1] - LEFT]
 
@@ -150,7 +153,7 @@ function regionChip(id, x, y, w, h, colour) {
 }
 
 /** Stack chips down the right-hand side of the canvas, beside the figure. */
-function chipColumn(items, { x = 288, w = 184, h = 58, top = 52, gap = 18, size = 17 } = {}) {
+function chipColumn(items, { x = 272, w = 192, h = 58, top = 52, gap = 18, size = 17 } = {}) {
   let out = ""
   const labels = []
   const at = {}
@@ -227,7 +230,7 @@ const pyth = triangle({ legRatio: 12 / 9, base: "12 cm", left: "x", hyp: "15 cm"
 const pythChips = chipColumn([
   { id: "e-add", tex: "x^{2} = 15^{2} + 12^{2}" },
   { id: "e-sub", tex: "x^{2} = 15^{2} - 12^{2}" },
-], { top: 88, gap: 26, w: 196, x: 274, size: 16 })
+], { top: 88, gap: 26, w: 192, x: 272, size: 16 })
 const PYTH_SLIDE = {
   id: "05d-given-find",
   kind: "interaction",
