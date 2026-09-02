@@ -146,12 +146,73 @@
       "kind": "concept",
       "chapter": "rule",
       "title": "The steps for every question",
-      "prompt": "Every Pythagoras question uses the same four steps. The first one decides everything else.",
+      "prompt": "Every Pythagoras question uses the same five steps. Circling the two things first is what tells you whether to add or subtract.",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;gap:14px;padding:10px 0;max-width:34em'><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">1</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Find the hypotenuse. It is the side opposite the right angle.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">2</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>If the hypotenuse is the side you want, add the two squares.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">3</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>If you want a shorter side, subtract the smaller square from the bigger one.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">4</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Take the square root at the end.</span></div></div>"
+        "content": "<div style='display:flex;flex-direction:column;gap:14px;padding:10px 0;max-width:36em'><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">1</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Circle what you are given.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">2</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Circle what you need to find.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">3</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Find the hypotenuse. It is the side opposite the right angle.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">4</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>If you need the hypotenuse, add the squares. If not, subtract.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">5</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Take the square root at the end.</span></div></div>"
       },
       "advance": "manual"
+    },
+    {
+      "id": "05d-given-find",
+      "kind": "interaction",
+      "chapter": "rule",
+      "title": "What are we given, what do we need?",
+      "advance": "onSuccess",
+      "interaction": {
+        "kind": "tapDiagram",
+        "config": {
+          "prompt": "Mark what the question gives you and what it asks for, before you decide to add or subtract.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='252.2' y='277.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>12 cm</text><text x='79.4' y='146.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle' pointer-events='none'>x</text><text x='259.2' y='139.6' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>15 cm</text><g data-region='base'><line class='pl-tap-vis' x1='100' y1='259' x2='380' y2='259' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='259' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='100' y1='49' x2='100' y2='259' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='100' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='100' y1='49' x2='380' y2='259' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
+          "sequence": [
+            {
+              "regionId": "hyp",
+              "tag": "given",
+              "tagAt": [
+                190,
+                162.3
+              ],
+              "prompt": "Tap the hypotenuse. It is opposite the right angle, and here it is $15$ cm.",
+              "hint": "The hypotenuse is the side opposite the right angle. It is the longest side."
+            },
+            {
+              "regionId": "base",
+              "tag": "given",
+              "tagAt": [
+                217.6,
+                238
+              ],
+              "prompt": "Tap the other side you are given, the one measuring $12$ cm.",
+              "hint": "The bottom side has a number on it too, so it is given as well."
+            },
+            {
+              "regionId": "left",
+              "tag": "find",
+              "tagAt": [
+                139,
+                191.8
+              ],
+              "prompt": "Now tap the side you need to find.",
+              "hint": "One side is left, and it has a letter instead of a number."
+            }
+          ],
+          "regions": [
+            {
+              "id": "hyp",
+              "whyWrong": "Not that one yet. Follow the order in the instruction above the diagram."
+            },
+            {
+              "id": "base",
+              "whyWrong": "Not that one yet. Follow the order in the instruction above the diagram."
+            },
+            {
+              "id": "left",
+              "whyWrong": "Not that one yet. Follow the order in the instruction above the diagram."
+            }
+          ],
+          "successText": "You are given the hypotenuse, so the side you want is a shorter side. That means you subtract: $x^2 = 15^2 - 12^2$."
+        }
+      }
     },
     {
       "id": "05b-section-hypotenuse",

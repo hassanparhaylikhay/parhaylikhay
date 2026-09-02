@@ -171,7 +171,10 @@ for (const lessonId of targets) {
     if (s.altExplain?.prompt) err(`${s.id}: altExplain must be a demonstration (demoSvg), not re-worded prose`)
     if (i.kind === "stepSolve" && i.hint) err(`${s.id}: stepSolve help lives on lines (hint per line), not the interaction`)
     if (i.kind === "stepSolve" && s.altExplain) err(`${s.id}: stepSolve alt lives on lines (altDemo per line), not the slide`)
-    if (s.kind !== "verify" && !NO_HINT_REQUIRED.has(i.kind) && !i.hint) err(`${s.id}: interaction missing hint`)
+    // Multi-stage frames carry their help per stage, so they have no
+    // slide-level hint to require.
+    const multiStage = !!(i.config?.sequence)
+    if (s.kind !== "verify" && !NO_HINT_REQUIRED.has(i.kind) && !multiStage && !i.hint) err(`${s.id}: interaction missing hint`)
 
     const c = i.config ?? {}
 
@@ -216,12 +219,31 @@ for (const lessonId of targets) {
 
     if (i.kind === "tapDiagram") {
       const regions = c.regions ?? []
+      const seq = c.sequence
       if (!c.contextHtml) err(`${s.id}: tapDiagram needs a contextHtml figure`)
       if (regions.length < 2) err(`${s.id}: tapDiagram needs at least 2 regions`)
-      const correct = regions.filter(r => r.isCorrect)
-      if (correct.length !== 1) err(`${s.id}: tapDiagram has ${correct.length} correct regions (needs exactly 1)`)
+      if (seq) {
+        // given-then-find: the student marks several parts in order, so there
+        // is no single correct region.
+        if (seq.length < 2) err(`${s.id}: a tapDiagram sequence needs at least 2 stages`)
+        for (const st of seq) {
+          if (!regions.some(r => r.id === st.regionId)) err(`${s.id}: stage targets region "${st.regionId}", which is not declared`)
+          if (!st.prompt) err(`${s.id}: stage "${st.regionId}" has no prompt`)
+          if (!st.tag) err(`${s.id}: stage "${st.regionId}" has no tag to write on the diagram`)
+          if (!Array.isArray(st.tagAt) || st.tagAt.length !== 2) err(`${s.id}: stage "${st.regionId}" needs tagAt [x, y]`)
+          if (s.kind !== "verify" && !st.hint) err(`${s.id}: stage "${st.regionId}" needs a hint (multi-stage help lives on the stage)`)
+        }
+        // Help on a multi-stage frame belongs to the stage, never the slide,
+        // or the chrome serves the wrong stage's hint.
+        if (i.hint) err(`${s.id}: sequence tapDiagram must not carry a slide-level hint; put hints on each stage`)
+        if (regions.some(r => r.isCorrect)) err(`${s.id}: sequence tapDiagram regions must not set isCorrect; the sequence decides order`)
+      } else {
+        const correct = regions.filter(r => r.isCorrect)
+        if (correct.length !== 1) err(`${s.id}: tapDiagram has ${correct.length} correct regions (needs exactly 1)`)
+      }
       for (const r of regions) {
-        if (!r.isCorrect && !r.whyWrong) err(`${s.id}: region "${r.id}" missing whyWrong`)
+        if (!seq && !r.isCorrect && !r.whyWrong) err(`${s.id}: region "${r.id}" missing whyWrong`)
+        if (seq && !r.whyWrong) err(`${s.id}: region "${r.id}" missing whyWrong`)
         // Every declared region must actually be tappable in the figure, or
         // the student can never reach it.
         if (c.contextHtml && !c.contextHtml.includes(`data-region='${r.id}'`)) {
@@ -461,6 +483,10 @@ function* studentStrings(s) {
   for (const r of c.regions ?? []) {
     if (r.label) yield [`region ${r.id}`, r.label]
     if (r.whyWrong) yield [`whyWrong ${r.id}`, r.whyWrong]
+  }
+  for (const st of c.sequence ?? []) {
+    if (st.prompt) yield [`stage ${st.regionId}`, st.prompt]
+    if (st.hint) yield [`stage hint ${st.regionId}`, st.hint]
   }
   for (const p of c.parts ?? []) {
     if (p.label) yield [`part ${p.id}`, p.label]

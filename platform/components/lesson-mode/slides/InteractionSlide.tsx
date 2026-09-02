@@ -103,7 +103,7 @@ export default function InteractionSlide({
         const baseProps = { config: baseConfig, onComplete: wrappedComplete, savedData, onShowMeUsed, onDismissAlt }
         const advProps = { config: baseConfig, onComplete, savedData, onShowMeUsed, onAdvance, onDismissAlt }
         switch (inj.kind) {
-          case "tapDiagram":          return <TapDiagram          {...(baseProps as { config: TapDiagramConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
+          case "tapDiagram":          return <TapDiagram          {...(baseProps as { config: TapDiagramConfig;          onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} onRegisterStageInfo={slide.kind === "verify" ? undefined : onRegisterStageInfo} />
           case "clickToIdentify":     return <ClickToIdentify     {...(baseProps as { config: ClickToIdentifyConfig;     onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
           case "dragToPosition":      return <DragToPosition      {...(baseProps as { config: DragToPositionConfig;      onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
           case "manipulateAndVerify": return <ManipulateAndVerify {...(baseProps as { config: ManipulateAndVerifyConfig; onComplete: typeof onComplete; savedData?: Record<string, unknown>; onShowMeUsed?: () => void; onDismissAlt?: () => void })} />
