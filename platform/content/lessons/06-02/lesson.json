@@ -4,7 +4,7 @@
     "unit": "06",
     "topic": "02"
   },
-  "title": "Right-angled trigonometry: the whole topic",
+  "title": "Right-angled triangles: sin, cos and tan",
   "estimatedMinutes": 15,
   "chapters": [
     {
@@ -14,22 +14,22 @@
     },
     {
       "id": "ratios",
-      "title": "The three ratios",
+      "title": "The three formulas",
       "color": "#fff067"
     },
     {
       "id": "side",
-      "title": "Finding a side",
+      "title": "Finding a missing side",
       "color": "#ff822c"
     },
     {
       "id": "angle",
-      "title": "Finding an angle",
+      "title": "Finding a missing angle",
       "color": "#ff4670"
     },
     {
       "id": "exam",
-      "title": "The exam",
+      "title": "Exam questions",
       "color": "#0fee89"
     }
   ],
@@ -38,9 +38,9 @@
       "id": "01-hook",
       "kind": "hook",
       "chapter": "sides",
-      "title": "When Pythagoras is not enough",
+      "title": "Using an angle to find a side",
       "advance": "manual",
-      "prompt": "Pythagoras needs two known sides and only ever finds a third side. The moment an angle enters the question, sin, cos and tan take over. By the end of this lesson you will have banked 20 marks of real exam working, three of them from actual past papers.",
+      "prompt": "A right-angled triangle has three sides. If you know one angle and one side, you can work out the other sides. This lesson shows you how, step by step. By the end you will have written 20 marks of real exam answers, and three of the questions come from past papers.",
       "visual": {
         "kind": "html",
         "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>35°</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>adjacent</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>opposite</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>hypotenuse</text></svg>",
@@ -54,16 +54,16 @@
       "advance": "manual",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#00abfa;opacity:0.92'>chapter 1 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Naming the sides</div><div style='width:64px;height:2px;background:#00abfa;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>Every trig question starts by naming the three sides relative to the marked angle.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>Swap opposite and adjacent and both marks are gone before the calculator even opens. The hypotenuse never changes; the other two names depend on which angle is marked.</p></div>"
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#00abfa;opacity:0.92'>chapter 1 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Naming the sides</div><div style='width:64px;height:2px;background:#00abfa;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:40ch;line-height:1.55;margin:0'>Every question starts the same way. You give the three sides their names.</p></div>"
       }
     },
     {
       "id": "02-sides-concept",
       "kind": "concept",
       "chapter": "sides",
-      "title": "Three sides, three names",
+      "title": "The three sides have names",
       "advance": "manual",
-      "prompt": "The hypotenuse is opposite the right angle, as always. The other two names come from the marked angle $\\theta$. The side across from $\\theta$ is the opposite. The side touching $\\theta$ is the adjacent.",
+      "prompt": "This is a right-angled triangle. The side opposite the right angle is the longest one, and it is called the hypotenuse. To name the other two sides you first pick an angle. Here we have picked $\\theta$. The side across from $\\theta$ is the opposite. The side touching $\\theta$ is the adjacent.",
       "visual": {
         "kind": "html",
         "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>adjacent</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>opposite</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>hypotenuse</text></svg>",
@@ -74,11 +74,11 @@
       "id": "03-place-sides",
       "kind": "interaction",
       "chapter": "sides",
-      "title": "Name them yourself",
+      "title": "Name the sides yourself",
       "advance": "onSuccess",
       "interaction": {
         "kind": "placeLabel",
-        "hint": "Start with the hypotenuse, the side opposite the right angle. Then ask which of the other two touches $\\theta$.",
+        "hint": "Start with the hypotenuse. It is the side opposite the right angle. Then check which of the other two touches $\\theta$.",
         "config": {
           "prompt": "Name the three sides of this triangle. The angle $\\theta$ is at the bottom right.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>side 1</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>side 2</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>side 3</text><g data-region='s-base'><line class='pl-tap-vis' x1='100' y1='259' x2='380' y2='259' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='259' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s-vert'><line class='pl-tap-vis' x1='100' y1='49' x2='100' y2='259' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='100' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s-hyp'><line class='pl-tap-vis' x1='100' y1='49' x2='380' y2='259' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
@@ -128,7 +128,7 @@
               "text": "hypotenuse"
             }
           ],
-          "successText": "Side 1 touches $\\theta$, so it is the adjacent. Side 2 is across from $\\theta$, so it is the opposite. Side 3 faces the right angle, the hypotenuse."
+          "successText": "Side 3 is opposite the right angle, so it is the hypotenuse. Side 1 touches $\\theta$, so it is the adjacent. Side 2 is across from $\\theta$, so it is the opposite."
         }
       }
     },
@@ -136,13 +136,13 @@
       "id": "04-q-swap",
       "kind": "interaction",
       "chapter": "sides",
-      "title": "The angle moved",
+      "title": "Move the angle and the names change",
       "advance": "onSuccess",
       "interaction": {
         "kind": "tapDiagram",
-        "hint": "Opposite means across from the marked angle, wherever that angle sits.",
+        "hint": "The opposite side is the one that does not touch the angle.",
         "config": {
-          "prompt": "Now $\\theta$ has moved to the top. Tap the side opposite it.",
+          "prompt": "Now $\\theta$ is at the top. Tap the side that is opposite it.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 100 49 L 100 73 L 101.9 72.9 L 103.7 72.7 L 105.5 72.4 L 107.3 71.9 L 109 71.2 L 110.7 70.5 L 112.4 69.6 L 113.9 68.6 L 115.4 67.4 L 116.8 66.2 L 118 64.8 L 119.2 63.4 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='116' y='83' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>side 1</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>side 2</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>side 3</text><g data-region='s1'><line class='pl-tap-vis' x1='100' y1='259' x2='380' y2='259' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='259' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s2'><line class='pl-tap-vis' x1='100' y1='49' x2='100' y2='259' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='100' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s3'><line class='pl-tap-vis' x1='100' y1='49' x2='380' y2='259' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
           "regions": [
             {
@@ -151,14 +151,14 @@
             },
             {
               "id": "s2",
-              "whyWrong": "Side 2 runs into the corner where $\\theta$ sits, so it touches the angle. The opposite side never touches it."
+              "whyWrong": "Side 2 touches the corner where $\\theta$ is, so it cannot be the opposite."
             },
             {
               "id": "s3",
-              "whyWrong": "Side 3 also meets the corner where $\\theta$ sits. It is the hypotenuse here, not the opposite."
+              "whyWrong": "Side 3 touches that corner too. It is the hypotenuse."
             }
           ],
-          "successText": "Side 1 is the only side that does not touch the corner where $\\theta$ sits, so it is the opposite. Move $\\theta$ and the opposite side moves with it."
+          "successText": "Side 1 is the only side that does not touch $\\theta$, so it is the opposite. The hypotenuse never changes, but opposite and adjacent swap over when the angle moves."
         }
       }
     },
@@ -169,16 +169,28 @@
       "advance": "manual",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#fff067;opacity:0.92'>chapter 2 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>The three ratios</div><div style='width:64px;height:2px;background:#fff067;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>Sin, cos and tan are fixed ratios between pairs of sides, decided entirely by the angle.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>SOH CAH TOA: sin is opposite over hypotenuse, cos is adjacent over hypotenuse, tan is opposite over adjacent. Writing the right one with the numbers in is the method mark in every question.</p></div>"
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#fff067;opacity:0.92'>chapter 2 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>The three formulas</div><div style='width:64px;height:2px;background:#fff067;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:40ch;line-height:1.55;margin:0'>Three short formulas connect an angle to two of the sides.</p></div>"
       }
+    },
+    {
+      "id": "04c-formulas",
+      "kind": "concept",
+      "chapter": "ratios",
+      "title": "The three formulas",
+      "prompt": "Here are the three formulas. Each one uses an angle and two of the sides. You do not have to work them out, you just have to pick the right one. The short word next to each formula is how people remember it.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;align-items:flex-start;gap:20px;padding:10px 0'><div style='display:flex;align-items:center;gap:18px'><span style=\"font-family:Geist Mono,monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;color:#fff067;background:rgba(255,240,103,0.10);border:1px solid rgba(255,240,103,0.32);border-radius:6px;padding:5px 9px\">SOH</span><span style='font-size:22px'>\\(\\sin\\theta = \\dfrac{\\textcolor{#ff822c}{\\text{opposite}}}{\\textcolor{#ff4670}{\\text{hypotenuse}}}\\)</span></div><div style='display:flex;align-items:center;gap:18px'><span style=\"font-family:Geist Mono,monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;color:#fff067;background:rgba(255,240,103,0.10);border:1px solid rgba(255,240,103,0.32);border-radius:6px;padding:5px 9px\">CAH</span><span style='font-size:22px'>\\(\\cos\\theta = \\dfrac{\\textcolor{#00abfa}{\\text{adjacent}}}{\\textcolor{#ff4670}{\\text{hypotenuse}}}\\)</span></div><div style='display:flex;align-items:center;gap:18px'><span style=\"font-family:Geist Mono,monospace;font-size:12px;font-weight:600;letter-spacing:1.5px;color:#fff067;background:rgba(255,240,103,0.10);border:1px solid rgba(255,240,103,0.32);border-radius:6px;padding:5px 9px\">TOA</span><span style='font-size:22px'>\\(\\tan\\theta = \\dfrac{\\textcolor{#ff822c}{\\text{opposite}}}{\\textcolor{#00abfa}{\\text{adjacent}}}\\)</span></div></div>"
+      },
+      "advance": "manual"
     },
     {
       "id": "05-ratio-explore",
       "kind": "concept",
       "chapter": "ratios",
-      "title": "One angle fixes the ratio",
+      "title": "Why the sin formula works",
       "advance": "manual",
-      "prompt": "The triangle grows and shrinks on its own, and every number moves with it, except one: opposite divided by hypotenuse is stuck at $0.50$. That frozen number belongs to the $30°$ angle and is called $\\sin 30°$. Grab the corner and try to shake it loose.",
+      "prompt": "Watch the triangle change size. Every length changes. But opposite divided by hypotenuse stays at $0.50$ the whole time. For a $30°$ angle that answer is always $0.50$, and we call it $\\sin 30°$. Drag the corner and try to change it.",
       "visual": {
         "kind": "iframe",
         "src": "/widgets/ratio-invariance-anim.html?lessonMode=1&ratio=sin",
@@ -189,9 +201,9 @@
       "id": "05b-cos-anim",
       "kind": "concept",
       "chapter": "ratios",
-      "title": "Cos does the same with the adjacent",
+      "title": "Why the cos formula works",
       "advance": "manual",
-      "prompt": "Same triangle, different pair: now the adjacent and the hypotenuse are highlighted. Their quotient freezes at $0.87$, and that number is $\\cos 30°$.",
+      "prompt": "Same triangle, different pair of sides. Adjacent divided by hypotenuse stays at $0.87$, whatever size the triangle is. That number is $\\cos 30°$.",
       "visual": {
         "kind": "iframe",
         "src": "/widgets/ratio-invariance-anim.html?lessonMode=1&ratio=cos",
@@ -202,9 +214,9 @@
       "id": "05c-tan-anim",
       "kind": "concept",
       "chapter": "ratios",
-      "title": "Tan pairs the two shorter sides",
+      "title": "Why the tan formula works",
       "advance": "manual",
-      "prompt": "The last pair leaves the hypotenuse out entirely: opposite divided by adjacent freezes at $0.58$, which is $\\tan 30°$. Three pairs of sides, three ratios, and one angle in charge of all of them.",
+      "prompt": "This pair leaves the hypotenuse out. Opposite divided by adjacent stays at $0.58$, and that number is $\\tan 30°$. So every angle has three numbers of its own, and your calculator already knows all of them.",
       "visual": {
         "kind": "iframe",
         "src": "/widgets/ratio-invariance-anim.html?lessonMode=1&ratio=tan",
@@ -215,19 +227,19 @@
       "id": "06-q-which-ratio",
       "kind": "interaction",
       "chapter": "ratios",
-      "title": "Pick the ratio that connects them",
+      "title": "Pick the right formula",
       "advance": "onSuccess",
       "interaction": {
         "kind": "selectFromOptions",
-        "hint": "Name the two sides you have first: one faces $\\theta$, one faces the right angle.",
+        "hint": "Name your two sides first. One is opposite $\\theta$ and one is the hypotenuse. Then find the formula that uses that pair.",
         "config": {
-          "prompt": "You know the side opposite $\\theta$ and the hypotenuse. Which ratio connects them?",
+          "prompt": "You know the side opposite $\\theta$ and you know the hypotenuse. Which formula uses those two sides?",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='93.8,259 386.3,259 93.8,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 106.8 259 L 106.8 246 L 93.8 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 386.3 259 L 362.3 259 L 362.3 257.8 L 362.4 256.5 L 362.5 255.3 L 362.8 254.1 L 363.1 252.8 L 363.4 251.6 L 363.8 250.5 L 364.3 249.3 L 364.8 248.2 L 365.4 247.1 L 366.1 246 L 366.8 245 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='352.3' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='77.8' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>7 cm</text><text x='254' y='134.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>12 cm</text></svg>",
           "options": [
             {
               "id": "opt-cos",
               "text": "$\\cos\\theta = \\dfrac{7}{12}$",
-              "whyWrong": "Cos uses the adjacent, the side touching $\\theta$. The $7$ cm side is across from $\\theta$."
+              "whyWrong": "Cos uses the adjacent, which is the side touching $\\theta$. The $7$ cm side is across from $\\theta$, not touching it."
             },
             {
               "id": "opt-sin",
@@ -237,10 +249,10 @@
             {
               "id": "opt-tan",
               "text": "$\\tan\\theta = \\dfrac{7}{12}$",
-              "whyWrong": "Tan is opposite over adjacent, and the $12$ cm side is the hypotenuse, not the adjacent."
+              "whyWrong": "Tan uses the opposite and the adjacent. The $12$ cm side is the hypotenuse, and tan never uses the hypotenuse."
             }
           ],
-          "successText": "Opposite and hypotenuse is the S of SOH CAH TOA: $\\sin\\theta = \\dfrac{7}{12}$. Naming the sides chose the ratio for you."
+          "successText": "Opposite and hypotenuse means sin, the S in SOH CAH TOA. So $\\sin\\theta = \\dfrac{7}{12}$."
         }
       }
     },
@@ -248,24 +260,24 @@
       "id": "07-flashback-pythagoras",
       "kind": "interaction",
       "chapter": "ratios",
-      "title": "A quick look back",
+      "title": "A question from the last topic",
       "advance": "onSuccess",
       "interaction": {
         "kind": "selectFromOptions",
-        "hint": "Both known sides touch the right angle.",
+        "hint": "Both known sides touch the right angle, and no angle is given.",
         "config": {
-          "prompt": "One from the last topic. Which equation finds this hypotenuse?",
+          "prompt": "Which equation finds this hypotenuse?",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>8 cm</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>6 cm</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
           "options": [
             {
               "id": "opt-minus",
               "text": "$c^2 = 8^2 - 6^2$",
-              "whyWrong": "Both known sides are legs, so their squares are added. Subtraction is for when the hypotenuse is known."
+              "whyWrong": "Both known sides are legs, so you add their squares. You subtract only when the hypotenuse is one of the known sides."
             },
             {
               "id": "opt-trig",
               "text": "$c = 8\\sin 6°$",
-              "whyWrong": "No angle value is given here, and both sides are known. This is a Pythagoras job, not a trig one."
+              "whyWrong": "No angle is given here and both sides are known, so this is a Pythagoras question, not a trig one."
             },
             {
               "id": "opt-plus",
@@ -273,7 +285,7 @@
               "isCorrect": true
             }
           ],
-          "successText": "Two known sides and no angle is Pythagoras territory: $c = 10$. Trig takes over when an angle joins the question."
+          "successText": "Two sides are known and there is no angle, so this is Pythagoras: $c = 10$. Use sin, cos and tan only when an angle is involved."
         }
       }
     },
@@ -284,25 +296,37 @@
       "advance": "manual",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#ff822c;opacity:0.92'>chapter 3 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Finding a side</div><div style='width:64px;height:2px;background:#ff822c;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>One angle and one side are known. Pick the ratio that links them to the side you want.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>Worth 2 marks: one for the ratio with the numbers in, one for the value. Check your calculator says degrees before anything else.</p></div>"
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#ff822c;opacity:0.92'>chapter 3 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Finding a missing side</div><div style='width:64px;height:2px;background:#ff822c;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:40ch;line-height:1.55;margin:0'>You know one angle and one side. Now work out another side.</p></div>"
       }
+    },
+    {
+      "id": "07b2-steps",
+      "kind": "concept",
+      "chapter": "side",
+      "title": "The steps for every question",
+      "prompt": "Every question from here on uses the same five steps. Learn them once and they will work every time.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;gap:14px;padding:10px 0;max-width:34em'><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">1</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Mark the angle you are given.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">2</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Name the sides: hypotenuse, opposite, adjacent.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">3</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Find the two sides the question is about.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">4</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Pick the formula that uses those two sides.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">5</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Put the numbers in and work out the answer.</span></div></div>"
+      },
+      "advance": "manual"
     },
     {
       "id": "07c-predict-side",
       "kind": "interaction",
       "chapter": "side",
-      "title": "First, a prediction",
+      "title": "How big can the answer be?",
       "advance": "onSuccess",
       "interaction": {
         "kind": "selectFromOptions",
-        "hint": "The hypotenuse faces the right angle, and the right angle is the biggest angle in the triangle.",
+        "hint": "The hypotenuse is opposite the right angle, and the right angle is the biggest angle in the triangle.",
         "config": {
-          "prompt": "The hypotenuse is $12$ and the angle is $35°$. Before any working, how long can the opposite side $x$ be?",
+          "prompt": "The hypotenuse is $12$ and the angle is $35°$. Before you work anything out, how long can the opposite side $x$ be?",
           "options": [
             {
               "id": "opt-longer",
               "text": "Longer than $12$",
-              "whyWrong": "Nothing beats the hypotenuse: it faces the largest angle, so every other side is shorter."
+              "whyWrong": "Nothing is longer than the hypotenuse. It sits opposite the biggest angle, so every other side is shorter."
             },
             {
               "id": "opt-shorter",
@@ -312,10 +336,10 @@
             {
               "id": "opt-exact",
               "text": "Exactly $12$",
-              "whyWrong": "Only the hypotenuse is $12$. If another side matched it, the triangle would be squashed flat."
+              "whyWrong": "Only the hypotenuse is $12$. If another side was $12$ as well, the triangle would be squashed flat."
             }
           ],
-          "successText": "Every sin and cos value sits below $1$, which is exactly why the other two sides always come out shorter than the hypotenuse. Keep that as the sanity check for the next slide."
+          "successText": "The hypotenuse is the longest side of any right-angled triangle, so $x$ has to be less than $12$. Use that to check every answer you get."
         }
       }
     },
@@ -323,7 +347,7 @@
       "id": "08-solve-side-1",
       "kind": "interaction",
       "chapter": "side",
-      "title": "Your first trig solution",
+      "title": "Find a missing side",
       "advance": "onSuccess",
       "marks": 2,
       "interaction": {
@@ -336,7 +360,7 @@
             {
               "id": "l-ratio",
               "kind": "pick",
-              "label": "the ratio",
+              "label": "the formula",
               "markCode": "M1",
               "options": [
                 {
@@ -355,7 +379,7 @@
                   "whyWrong": "The hypotenuse goes on the bottom of the sin ratio, and $12$ is the hypotenuse here."
                 }
               ],
-              "hint": "Name the two sides in play, pick the ratio that pairs them, then rearrange.",
+              "hint": "Name the two sides you are working with, then pick the formula that uses that pair.",
               "altDemo": "<svg viewBox=\"0 0 480 320\" preserveAspectRatio=\"xMidYMid meet\" style=\"display:block;width:100%;height:100%\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"0\" y=\"0\" width=\"480\" height=\"26\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"13\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"13.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">name the sides against the 35° angle</text><polygon points='91.2,259 388.8,259 91.2,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 104.2 259 L 104.2 246 L 91.2 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 388.8 259 L 364.8 259 L 364.8 257.8 L 364.9 256.5 L 365.1 255.3 L 365.3 254.1 L 365.6 252.9 L 365.9 251.7 L 366.3 250.6 L 366.8 249.4 L 367.3 248.3 L 367.9 247.2 L 368.5 246.2 L 369.2 245.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='354.8' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>35°</text><text x='75.2' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='253.8' y='134.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>12 cm</text><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.07;0.1;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"91.2\" y1=\"65.8\" x2=\"91.2\" y2=\"242.2\" stroke=\"#ff822c\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"30.8\" y=\"144\" width=\"78.5\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"70\" y=\"154\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#ff822c\" text-anchor=\"middle\" dominant-baseline=\"middle\">opposite</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.23;0.26;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"365\" y1=\"242.2\" x2=\"115\" y2=\"65.8\" stroke=\"#ff4670\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"162.7\" y=\"170\" width=\"94.6\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"210\" y=\"180\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#ff4670\" text-anchor=\"middle\" dominant-baseline=\"middle\">hypotenuse</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.39;0.42000000000000004;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><rect x=\"127.1\" y=\"280\" width=\"225.8\" height=\"24\" rx=\"6\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"292\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">opposite ÷ hypotenuse = sin</text></g></svg>"
             },
             {
@@ -368,10 +392,10 @@
               "display": "x = 12\\sin 35° = {v}\\ \\text{cm}",
               "inputPrefix": "x = 12\\sin 35° =",
               "inputSuffix": "cm (2 dp)",
-              "nudge": "Multiply both sides by $12$, then type $12 \\times \\sin(35)$ into the calculator: it gives $6.883...$, which rounds to $6.88$."
+              "nudge": "Multiply both sides by $12$, then type $12 \\times \\sin(35)$ into your calculator. It gives $6.883...$, which rounds to $6.88$."
             }
           ],
-          "successText": "$x = 6.88$ cm, shorter than the hypotenuse as it must be. Ratio line for the method mark, value for the accuracy mark."
+          "successText": "$x = 6.88$ cm, which is shorter than the hypotenuse, so it makes sense. The formula line earns the method mark and the value earns the accuracy mark."
         }
       }
     },
@@ -391,7 +415,7 @@
             {
               "id": "l-ratio",
               "kind": "pick",
-              "label": "the ratio",
+              "label": "the formula",
               "markCode": "M1",
               "options": [
                 {
@@ -410,7 +434,7 @@
                   "whyWrong": "Sin pairs the opposite with the hypotenuse, but $9.5$ m touches the angle, so it is the adjacent."
                 }
               ],
-              "hint": "The unknown is the hypotenuse this time, so it lands on the bottom of the ratio, and the rearrangement becomes a division.",
+              "hint": "The unknown here is the hypotenuse, so it goes on the bottom of the formula.",
               "altDemo": "<svg viewBox=\"0 0 480 320\" preserveAspectRatio=\"xMidYMid meet\" style=\"display:block;width:100%;height:100%\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"0\" y=\"0\" width=\"480\" height=\"26\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"13\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"13.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">name the sides against the 52° angle</text><polygon points='158,259 322,259 158,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 171 259 L 171 246 L 158 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 322 259 L 298 259 L 298.1 257.2 L 298.3 255.4 L 298.6 253.6 L 299.1 251.8 L 299.7 250.1 L 300.5 248.5 L 301.3 246.9 L 302.3 245.3 L 303.4 243.9 L 304.6 242.5 L 305.9 241.3 L 307.3 240.1 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='288' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>52°</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>9.5 m</text><text x='258.9' y='139.2' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>h</text><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.07;0.1;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"171.1\" y1=\"259\" x2=\"308.9\" y2=\"259\" stroke=\"#00abfa\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"200.8\" y=\"254\" width=\"78.5\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"264\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#00abfa\" text-anchor=\"middle\" dominant-baseline=\"middle\">adjacent</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.23;0.26;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"308.9\" y1=\"242.2\" x2=\"171.1\" y2=\"65.8\" stroke=\"#ff4670\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"162.7\" y=\"170\" width=\"94.6\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"210\" y=\"180\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#ff4670\" text-anchor=\"middle\" dominant-baseline=\"middle\">hypotenuse</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.39;0.42000000000000004;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><rect x=\"127.1\" y=\"280\" width=\"225.8\" height=\"24\" rx=\"6\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"292\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">adjacent ÷ hypotenuse = cos</text></g></svg>"
             },
             {
@@ -426,7 +450,7 @@
               "nudge": "Rearranging gives $h = 9.5 \\div \\cos 52°$. The calculator gives $15.43...$, which rounds to $15.4$."
             }
           ],
-          "successText": "$h = 15.4$ m, and it is the longest side, which is the instant sanity check. Unknown on the bottom always means dividing."
+          "successText": "$h = 15.4$ m. It is the longest side, so it makes sense. When the unknown is on the bottom of the fraction, you divide."
         }
       }
     },
@@ -446,9 +470,9 @@
             {
               "id": "l-ratio",
               "kind": "pick",
-              "label": "the ratio",
+              "label": "the formula",
               "markCode": "M1",
-              "hint": "$AD$ runs into the $25°$ angle, and $95$ m faces the right angle.",
+              "hint": "$AD$ touches the $25°$ angle, so it is the adjacent. The $95$ m side is opposite the right angle, so it is the hypotenuse.",
               "options": [
                 {
                   "id": "r-sin",
@@ -481,7 +505,7 @@
               "nudge": "$95 \\times \\cos(25)$ gives $86.09...$, which rounds to $86.1$, exactly what the question asks you to show."
             }
           ],
-          "successText": "Shown: $AD = 86.1$ m. On a show-that question the marks live entirely in the working, which is why the ratio line matters more than the final number."
+          "successText": "$AD = 86.1$ m. In a show-that question the marks are for the working, so always write the formula line with the numbers in it."
         }
       }
     },
@@ -489,11 +513,11 @@
       "id": "10-mark-the-script",
       "kind": "interaction",
       "chapter": "side",
-      "title": "You be the examiner",
+      "title": "Mark this student's answer",
       "advance": "onSuccess",
       "interaction": {
         "kind": "markScript",
-        "hint": "The ratio line and the final value are judged separately, and a length can never be negative.",
+        "hint": "The formula line and the final value are marked separately. Also remember that a length can never be negative.",
         "config": {
           "prompt": "This candidate's calculator was set to the wrong mode. Rule on each mark.",
           "question": "Find $x$: the side opposite $35°$, with a hypotenuse of $12$ cm.",
@@ -532,7 +556,7 @@
           ],
           "faultLineId": "l3",
           "faultExplain": "The working was right and the calculator was wrong. A negative or absurd value is the radians giveaway: switch the mode to degrees and redo the last line.",
-          "successText": "One mark kept, one lost to a settings menu. Checking the degrees symbol on screen takes two seconds and has saved thousands of marks."
+          "successText": "One mark kept and one mark lost. The calculator was in the wrong mode. Check that the screen says DEG before you start."
         }
       }
     },
@@ -543,30 +567,30 @@
       "advance": "manual",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#ff4670;opacity:0.92'>chapter 4 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Finding an angle</div><div style='width:64px;height:2px;background:#ff4670;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>Two sides are known and the angle is missing. The inverse buttons turn a ratio back into an angle.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>Still 2 marks: the ratio line earns the method mark even before the inverse is applied. Angle answers go to 1 decimal place.</p></div>"
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#ff4670;opacity:0.92'>chapter 4 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Finding a missing angle</div><div style='width:64px;height:2px;background:#ff4670;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:40ch;line-height:1.55;margin:0'>You know two sides. Now work out the angle between them.</p></div>"
       }
     },
     {
       "id": "11-inverse-concept",
       "kind": "interaction",
       "chapter": "angle",
-      "title": "Running a ratio backwards",
+      "title": "Working backwards to the angle",
       "advance": "onSuccess",
       "interaction": {
         "kind": "selectFromOptions",
-        "hint": "The question asks WHICH angle has a sin of $0.5$. There is a button that answers exactly that.",
+        "hint": "You want the angle whose sin is $0.5$. Your calculator has a button that does exactly that.",
         "config": {
-          "prompt": "$\\sin\\theta = 0.5$. What is $\\theta$?",
+          "prompt": "$\\sin\\theta = 0.5$. Which angle is $\\theta$?",
           "options": [
             {
               "id": "opt-60",
               "text": "$60°$",
-              "whyWrong": "$60°$ is the angle whose COS is $0.5$. Sin and cos swap roles between the two acute angles."
+              "whyWrong": "$60°$ is the angle whose cos is $0.5$, not its sin."
             },
             {
               "id": "opt-half",
               "text": "$0.5°$",
-              "whyWrong": "The ratio is not the angle. The $\\sin^{-1}$ button converts the ratio $0.5$ back into the angle that made it."
+              "whyWrong": "$0.5$ is the ratio, not the angle. The $\\sin^{-1}$ button turns that ratio into the angle."
             },
             {
               "id": "opt-30",
@@ -574,7 +598,7 @@
               "isCorrect": true
             }
           ],
-          "successText": "$\\sin^{-1}(0.5) = 30°$. Each ratio has its own inverse button, and turning a fraction of sides back into an angle is the whole job of this chapter."
+          "successText": "$\\theta = 30°$. To turn a ratio back into an angle you press $\\sin^{-1}$ on your calculator. Cos and tan have their own inverse buttons."
         }
       }
     },
@@ -582,7 +606,7 @@
       "id": "12-solve-angle-1",
       "kind": "interaction",
       "chapter": "angle",
-      "title": "Find the angle",
+      "title": "Find a missing angle",
       "advance": "onSuccess",
       "marks": 2,
       "interaction": {
@@ -594,7 +618,7 @@
             {
               "id": "l-ratio",
               "kind": "pick",
-              "label": "the ratio",
+              "label": "the formula",
               "markCode": "M1",
               "options": [
                 {
@@ -608,7 +632,7 @@
                   "isCorrect": true
                 }
               ],
-              "hint": "Name the two known sides, write the ratio, then apply the matching inverse button.",
+              "hint": "Name the two sides you know, write the formula, then use the matching inverse button.",
               "altDemo": "<svg viewBox=\"0 0 480 320\" preserveAspectRatio=\"xMidYMid meet\" style=\"display:block;width:100%;height:100%\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"0\" y=\"0\" width=\"480\" height=\"26\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"13\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"13.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">name the two sides you were given</text><polygon points='93.8,259 386.3,259 93.8,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 106.8 259 L 106.8 246 L 93.8 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 386.3 259 L 362.3 259 L 362.3 257.8 L 362.4 256.5 L 362.5 255.3 L 362.8 254.1 L 363.1 252.8 L 363.4 251.6 L 363.8 250.5 L 364.3 249.3 L 364.8 248.2 L 365.4 247.1 L 366.1 246 L 366.8 245 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='352.3' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='77.8' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>7 cm</text><text x='254' y='134.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>12 cm</text><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.07;0.1;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"93.8\" y1=\"65.8\" x2=\"93.8\" y2=\"242.2\" stroke=\"#ff822c\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"30.8\" y=\"144\" width=\"78.5\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"70\" y=\"154\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#ff822c\" text-anchor=\"middle\" dominant-baseline=\"middle\">opposite</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.23;0.26;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"362.9\" y1=\"242.2\" x2=\"117.2\" y2=\"65.8\" stroke=\"#ff4670\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"162.8\" y=\"170\" width=\"94.6\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"210.1\" y=\"180\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#ff4670\" text-anchor=\"middle\" dominant-baseline=\"middle\">hypotenuse</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.39;0.42000000000000004;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><rect x=\"127.1\" y=\"280\" width=\"225.8\" height=\"24\" rx=\"6\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"292\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">opposite ÷ hypotenuse = sin</text></g></svg>"
             },
             {
@@ -624,7 +648,7 @@
               "nudge": "$\\sin^{-1}(7 \\div 12)$ on the calculator gives $35.68...$, which rounds to $35.7$."
             }
           ],
-          "successText": "$\\theta = 35.7°$. The ratio line alone earned the method mark, exactly as the mark scheme promises."
+          "successText": "$\\theta = 35.7°$. Writing the formula line earned the method mark on its own, before you pressed a single button."
         }
       }
     },
@@ -632,7 +656,7 @@
       "id": "13-solve-angle-2",
       "kind": "interaction",
       "chapter": "angle",
-      "title": "Now with the two shorter sides",
+      "title": "When there is no hypotenuse",
       "advance": "onSuccess",
       "marks": 2,
       "interaction": {
@@ -644,7 +668,7 @@
             {
               "id": "l-ratio",
               "kind": "pick",
-              "label": "the ratio",
+              "label": "the formula",
               "markCode": "M1",
               "options": [
                 {
@@ -663,7 +687,7 @@
                   "whyWrong": "That is the tan of the OTHER angle. The opposite of $\\theta$ is $8$, and it goes on top."
                 }
               ],
-              "hint": "Check whether the hypotenuse is even involved before choosing the ratio.",
+              "hint": "Check whether the hypotenuse is one of your two sides before you pick a formula.",
               "altDemo": "<svg viewBox=\"0 0 480 320\" preserveAspectRatio=\"xMidYMid meet\" style=\"display:block;width:100%;height:100%\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"0\" y=\"0\" width=\"480\" height=\"26\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"13\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"13.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">no hypotenuse here, so it cannot be sin or cos</text><polygon points='174.4,259 305.6,259 174.4,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 187.4 259 L 187.4 246 L 174.4 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 305.6 259 L 281.6 259 L 281.7 257 L 282 255 L 282.4 253 L 283 251.1 L 283.7 249.2 L 284.6 247.4 L 285.7 245.6 L 286.9 244 L 288.2 242.5 L 289.7 241.1 L 291.2 239.8 L 292.9 238.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='271.6' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 m</text><text x='158.4' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>8 m</text><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.07;0.1;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"174.4\" y1=\"65.8\" x2=\"174.4\" y2=\"242.2\" stroke=\"#ff822c\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"69.2\" y=\"144\" width=\"78.5\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"108.4\" y=\"154\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#ff822c\" text-anchor=\"middle\" dominant-baseline=\"middle\">opposite</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.23;0.26;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"184.9\" y1=\"259\" x2=\"295.1\" y2=\"259\" stroke=\"#00abfa\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"200.8\" y=\"254\" width=\"78.5\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"264\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#00abfa\" text-anchor=\"middle\" dominant-baseline=\"middle\">adjacent</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.39;0.42000000000000004;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><rect x=\"134.5\" y=\"280\" width=\"211\" height=\"24\" rx=\"6\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"292\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">opposite ÷ adjacent = tan</text></g></svg>"
             },
             {
@@ -679,7 +703,7 @@
               "nudge": "$\\tan^{-1}(8 \\div 5)$ gives $57.99...$, which rounds to $58.0$."
             }
           ],
-          "successText": "$\\theta = 58.0°$. Two legs and no hypotenuse always means tan. Remember these numbers: they return in the next chapter."
+          "successText": "$\\theta = 58.0°$. Two short sides and no hypotenuse always means tan. Remember these numbers, because they come back later."
         }
       }
     },
@@ -690,7 +714,7 @@
       "advance": "manual",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#0fee89;opacity:0.92'>chapter 5 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>The exam</div><div style='width:64px;height:2px;background:#0fee89;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>The exam dresses these questions in words: angles of elevation, ladders, masts. Find the triangle, then it is the same two lines.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>A real past-paper elevation question first, then two full solves with no help.</p></div>"
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#0fee89;opacity:0.92'>chapter 5 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Exam questions</div><div style='width:64px;height:2px;background:#0fee89;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:40ch;line-height:1.55;margin:0'>The exam hides these triangles inside words. Find the triangle first.</p></div>"
       }
     },
     {
@@ -701,9 +725,9 @@
       "advance": "onSuccess",
       "interaction": {
         "kind": "tapDiagram",
-        "hint": "Elevation starts from flat. Imagine looking straight ahead first, then tilting your eyes up.",
+        "hint": "Elevation starts from flat. Look straight ahead first, then tilt your eyes up to the top.",
         "config": {
-          "prompt": "Stand at the blue point and look at the top of the wall. Tap the angle of elevation.",
+          "prompt": "You are standing at the blue dot, looking up at the top of the wall. Tap the angle of elevation.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='40' y1='276' x2='440' y2='276' stroke='#7a7875' stroke-width='2'/><line x1='356' y1='276' x2='356' y2='102' stroke='#7a7875' stroke-width='2'/><line x1='96' y1='276' x2='376' y2='276' stroke='transparent' stroke-width='1'/><line x1='96' y1='276' x2='356' y2='116' stroke='#ff4670' stroke-width='2.2'/><path d='M 96 276 L 130 276 L 130 274.4 L 129.9 272.9 L 129.7 271.3 L 129.4 269.8 L 129.1 268.3 L 128.7 266.7 L 128.3 265.2 L 127.7 263.8 L 127.1 262.3 L 126.5 260.9 L 125.7 259.5 L 125 258.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><circle cx='96' cy='276' r='4.5' fill='#00abfa'/><path d='M 343 276 L 343 263 L 356 263' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='148' y='264' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='226' y='296' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>horizontal distance</text><text x='372' y='196' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>height</text><g data-region='a-elev'><path class='pl-tap-vis pl-tap-fill' d='M 96 276 L 136 276 L 136 274.8 L 135.9 273.5 L 135.8 272.3 L 135.7 271.1 L 135.5 269.9 L 135.3 268.7 L 135.1 267.5 L 134.8 266.3 L 134.5 265.1 L 134.1 263.9 L 133.7 262.8 L 133.3 261.6 L 132.9 260.5 L 132.4 259.4 L 131.8 258.3 L 131.3 257.2 L 130.7 256.1 L 130.1 255 Z' fill='#fff06722' stroke='#fff067' stroke-width='2' stroke-linejoin='round' opacity='0.4'/><path class='pl-tap-hit' d='M 96 276 L 136 276 L 136 274.8 L 135.9 273.5 L 135.8 272.3 L 135.7 271.1 L 135.5 269.9 L 135.3 268.7 L 135.1 267.5 L 134.8 266.3 L 134.5 265.1 L 134.1 263.9 L 133.7 262.8 L 133.3 261.6 L 132.9 260.5 L 132.4 259.4 L 131.8 258.3 L 131.3 257.2 L 130.7 256.1 L 130.1 255 Z' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='16' pointer-events='all'/></g><g data-region='a-right'><path class='pl-tap-vis pl-tap-fill' d='M 356 276 L 326 276 L 326.1 273.4 L 326.5 270.8 L 327 268.2 L 327.8 265.7 L 328.8 263.3 L 330 261 L 331.4 258.8 L 333 256.7 L 334.8 254.8 L 336.7 253 L 338.8 251.4 L 341 250 L 343.3 248.8 L 345.7 247.8 L 348.2 247 L 350.8 246.5 L 353.4 246.1 L 356 246 Z' fill='#fff06722' stroke='#fff067' stroke-width='2' stroke-linejoin='round' opacity='0.4'/><path class='pl-tap-hit' d='M 356 276 L 326 276 L 326.1 273.4 L 326.5 270.8 L 327 268.2 L 327.8 265.7 L 328.8 263.3 L 330 261 L 331.4 258.8 L 333 256.7 L 334.8 254.8 L 336.7 253 L 338.8 251.4 L 341 250 L 343.3 248.8 L 345.7 247.8 L 348.2 247 L 350.8 246.5 L 353.4 246.1 L 356 246 Z' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='16' pointer-events='all'/></g><g data-region='a-top'><path class='pl-tap-vis pl-tap-fill' d='M 356 116 L 356 154 L 353.8 153.9 L 351.7 153.8 L 349.6 153.5 L 347.5 153 L 345.4 152.5 L 343.3 151.8 L 341.3 151.1 L 339.4 150.2 L 337.5 149.2 L 335.6 148.1 L 333.8 146.9 L 332.1 145.6 L 330.5 144.2 L 328.9 142.7 L 327.5 141.1 L 326.1 139.4 L 324.8 137.7 L 323.6 135.9 Z' fill='#fff06722' stroke='#fff067' stroke-width='2' stroke-linejoin='round' opacity='0.4'/><path class='pl-tap-hit' d='M 356 116 L 356 154 L 353.8 153.9 L 351.7 153.8 L 349.6 153.5 L 347.5 153 L 345.4 152.5 L 343.3 151.8 L 341.3 151.1 L 339.4 150.2 L 337.5 149.2 L 335.6 148.1 L 333.8 146.9 L 332.1 145.6 L 330.5 144.2 L 328.9 142.7 L 327.5 141.1 L 326.1 139.4 L 324.8 137.7 L 323.6 135.9 Z' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='16' pointer-events='all'/></g></svg>",
           "regions": [
             {
@@ -716,10 +740,10 @@
             },
             {
               "id": "a-top",
-              "whyWrong": "That is the angle at the top, the depression looking back down. Elevation is measured from where you stand."
+              "whyWrong": "That is the angle at the top, looking back down. Elevation is measured from where you are standing."
             }
           ],
-          "successText": "Elevation is measured up from the flat horizontal to your line of sight. The height and the horizontal distance are then opposite and adjacent, which is why elevation questions are nearly always tan."
+          "successText": "The angle of elevation is measured from the flat ground up to your line of sight. The height is opposite it and the ground distance is next to it, so these questions nearly always use tan."
         }
       }
     },
@@ -747,13 +771,13 @@
               "inputPrefix": "d = 21 - 16 =",
               "inputSuffix": "m",
               "nudge": "The point is $21$ m out and the base sits $16$ m along, so the gap between them is the difference.",
-              "hint": "The first mark is for finding the horizontal distance hiding in the two ground measurements.",
+              "hint": "The first mark is for the horizontal distance, which is hidden in the two ground measurements.",
               "altDemo": "<svg viewBox=\"0 0 480 320\" preserveAspectRatio=\"xMidYMid meet\" style=\"display:block;width:100%;height:100%\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"0\" y=\"0\" width=\"480\" height=\"26\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"13\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"13.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">the two ground measurements do not match</text><line x1='40' y1='276' x2='440' y2='276' stroke='#7a7875' stroke-width='2'/><line x1='356' y1='276' x2='356' y2='102' stroke='#7a7875' stroke-width='2'/><line x1='96' y1='276' x2='376' y2='276' stroke='transparent' stroke-width='1'/><line x1='96' y1='276' x2='356' y2='116' stroke='#ff4670' stroke-width='2.2'/><path d='M 96 276 L 130 276 L 130 274.4 L 129.9 272.9 L 129.7 271.3 L 129.4 269.8 L 129.1 268.3 L 128.7 266.7 L 128.3 265.2 L 127.7 263.8 L 127.1 262.3 L 126.5 260.9 L 125.7 259.5 L 125 258.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><circle cx='96' cy='276' r='4.5' fill='#00abfa'/><path d='M 343 276 L 343 263 L 356 263' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='148' y='264' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='226' y='296' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>21 − 16 = 5 m</text><text x='372' y='196' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>8 m</text><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.07;0.1;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"116.8\" y1=\"276\" x2=\"335.2\" y2=\"276\" stroke=\"#00abfa\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"174.7\" y=\"254\" width=\"102.7\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"226\" y=\"264\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#00abfa\" text-anchor=\"middle\" dominant-baseline=\"middle\">21 − 16 = 5</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.23;0.26;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><rect x=\"79\" y=\"280\" width=\"322\" height=\"24\" rx=\"6\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"292\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#0fee89\" text-anchor=\"middle\" dominant-baseline=\"middle\">that subtraction earns a mark on its own</text></g></svg>"
             },
             {
               "id": "l-ratio",
               "kind": "pick",
-              "label": "the ratio",
+              "label": "the formula",
               "markCode": "M2",
               "options": [
                 {
@@ -772,7 +796,7 @@
                   "whyWrong": "The height $8$ is across from the angle of elevation, so it goes on top."
                 }
               ],
-              "hint": "The height $8$ is across from the angle and the $5$ m gap touches it. The slanted line of sight is unknown, so the hypotenuse ratios are out.",
+              "hint": "The height $8$ is across from the angle and the $5$ m gap touches it. The slanted line of sight is unknown, so you cannot use the hypotenuse.",
               "altDemo": "<svg viewBox=\"0 0 480 320\" preserveAspectRatio=\"xMidYMid meet\" style=\"display:block;width:100%;height:100%\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"0\" y=\"0\" width=\"480\" height=\"26\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"13\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"13.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">height and horizontal distance, no slant length</text><line x1='40' y1='276' x2='440' y2='276' stroke='#7a7875' stroke-width='2'/><line x1='356' y1='276' x2='356' y2='102' stroke='#7a7875' stroke-width='2'/><line x1='96' y1='276' x2='376' y2='276' stroke='transparent' stroke-width='1'/><line x1='96' y1='276' x2='356' y2='116' stroke='#ff4670' stroke-width='2.2'/><path d='M 96 276 L 130 276 L 130 274.4 L 129.9 272.9 L 129.7 271.3 L 129.4 269.8 L 129.1 268.3 L 128.7 266.7 L 128.3 265.2 L 127.7 263.8 L 127.1 262.3 L 126.5 260.9 L 125.7 259.5 L 125 258.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><circle cx='96' cy='276' r='4.5' fill='#00abfa'/><path d='M 343 276 L 343 263 L 356 263' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='148' y='264' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='226' y='296' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>21 − 16 = 5 m</text><text x='372' y='196' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>8 m</text><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.07;0.1;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"356\" y1=\"263.2\" x2=\"356\" y2=\"128.8\" stroke=\"#ff822c\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"346.8\" y=\"186\" width=\"78.5\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"386\" y=\"196\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#ff822c\" text-anchor=\"middle\" dominant-baseline=\"middle\">opposite</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.23;0.26;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><line x1=\"116.8\" y1=\"276\" x2=\"335.2\" y2=\"276\" stroke=\"#00abfa\" stroke-width=\"6\" stroke-linecap=\"round\" opacity=\"0.5\"/><rect x=\"186.8\" y=\"254\" width=\"78.5\" height=\"20\" rx=\"5\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"226\" y=\"264\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#00abfa\" text-anchor=\"middle\" dominant-baseline=\"middle\">adjacent</text></g><g><animate attributeName=\"opacity\" values=\"0;0;1;1;0;0\" keyTimes=\"0;0.39;0.42000000000000004;0.94;0.98;1\" calcMode=\"spline\" keySplines=\"0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1\" dur=\"9s\" repeatCount=\"indefinite\"/><rect x=\"134.5\" y=\"280\" width=\"211\" height=\"24\" rx=\"6\" fill=\"rgba(11,17,24,0.9)\"/><text x=\"240\" y=\"292\" font-family=\"KaTeX_Main, 'Times New Roman', Georgia, serif\" font-size=\"14.5\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">opposite ÷ adjacent = tan</text></g></svg>"
             },
             {
@@ -787,7 +811,7 @@
               "nudge": "The same $\\tan^{-1}(8 \\div 5)$ as the last chapter: $58.0°$."
             }
           ],
-          "successText": "$58.0°$, and the same triangle you solved a moment ago was hiding inside a prism question the whole time. The subtraction earned a mark on its own."
+          "successText": "$58.0°$. The same triangle you solved a moment ago was hiding inside this question. Working out the $5$ m gap earned a mark on its own."
         }
       }
     },
@@ -818,9 +842,9 @@
             {
               "id": "l-ratio",
               "kind": "pick",
-              "label": "the tilt of CB",
+              "label": "the formula for the tilt",
               "markCode": "M1",
-              "hint": "In the small dashed triangle, the $4$ cm overhang sits across from the tilt angle and the $16$ cm height sits next to it.",
+              "hint": "In the small dashed triangle, the $4$ cm overhang is across from the tilt angle and the $16$ cm height touches it.",
               "options": [
                 {
                   "id": "r-correct",
@@ -854,9 +878,9 @@
             {
               "id": "l-assemble",
               "kind": "pick",
-              "label": "assembling angle DCB",
+              "label": "angle $DCB$",
               "markCode": "M2",
-              "hint": "Starting from the base edge $CD$, turning to straight up is already $90°$, and $CB$ carries on past the vertical.",
+              "hint": "Start at the base edge $CD$. Turning to straight up is already $90°$, and $CB$ leans out past straight up.",
               "options": [
                 {
                   "id": "a-minus",
@@ -888,7 +912,7 @@
               "nudge": "Add the right angle and the tilt together."
             }
           ],
-          "successText": "$DCB = 104.0°$. An obtuse answer from right-angled trig: the small dashed triangle did the work, and the $90°$ did the rest."
+          "successText": "$DCB = 104.0°$. The small dashed triangle gave you the $14°$ tilt, and adding the right angle gave you the rest."
         }
       }
     },
@@ -896,7 +920,7 @@
       "id": "16-verify-side",
       "kind": "verify",
       "chapter": "exam",
-      "title": "Full solve, no help",
+      "title": "Your turn, with no help",
       "advance": "onSuccess",
       "marks": 2,
       "interaction": {
@@ -908,7 +932,7 @@
             {
               "id": "l-ratio",
               "kind": "pick",
-              "label": "the ratio",
+              "label": "the formula",
               "markCode": "M1",
               "options": [
                 {
@@ -948,7 +972,7 @@
       "id": "17-verify-angle",
       "kind": "verify",
       "chapter": "exam",
-      "title": "Last one",
+      "title": "The last one",
       "advance": "onSuccess",
       "marks": 2,
       "interaction": {
@@ -960,7 +984,7 @@
             {
               "id": "l-ratio",
               "kind": "pick",
-              "label": "the ratio",
+              "label": "the formula",
               "markCode": "M1",
               "options": [
                 {
@@ -987,7 +1011,7 @@
               "inputSuffix": "° (1 dp)"
             }
           ],
-          "successText": "$\\theta = 38.2°$. Name the sides, write the ratio, press the inverse: the whole topic in three moves."
+          "successText": "$\\theta = 38.2°$. Name the sides, write the formula, press the inverse button. That is the whole topic."
         }
       }
     },
@@ -995,9 +1019,9 @@
       "id": "18-celebrate",
       "kind": "concept",
       "chapter": "exam",
-      "title": "You banked 20 marks of examiner working",
+      "title": "You have banked 20 marks",
       "advance": "manual",
-      "prompt": "Every mark used the same opening move: name the sides against the marked angle, then write the ratio. That one line earns the method mark, whatever the rest of the question looks like.",
+      "prompt": "Every question used the same steps. Name the sides, pick the formula, put the numbers in, then work out the answer. Those steps work whatever the question looks like.",
       "visual": {
         "kind": "html",
         "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:18px;padding:6px 0'><div style='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>Finding a side · 6 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>Finding an angle · 4 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>The exam · 10 marks</span></div></div>"
@@ -1009,13 +1033,14 @@
       "chapter": "exam",
       "title": "You can now solve any right-angled triangle",
       "advance": "manual",
-      "prompt": "Pythagoras for two sides, trig for a side and an angle, and the naming step before everything.",
+      "prompt": "Use Pythagoras when you know two sides. Use sin, cos or tan whenever an angle is involved.",
       "bullets": [
-        "Name the sides against the marked angle before choosing anything.",
-        "SOH CAH TOA picks the ratio; the ratio line with numbers in earns the method mark.",
-        "Unknown on the bottom of the fraction means dividing, not multiplying.",
-        "Inverse buttons turn a ratio back into an angle, to $1$ decimal place.",
-        "Elevation questions are tan questions: height over horizontal distance."
+        "Name the sides against the marked angle before you choose anything.",
+        "SOH CAH TOA tells you which formula to use.",
+        "Writing the formula with the numbers in it earns the method mark.",
+        "If the unknown is on the bottom of the fraction, you divide.",
+        "To find an angle, use the inverse button and round to $1$ decimal place.",
+        "Angle of elevation questions are nearly always tan."
       ]
     }
   ]

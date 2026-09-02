@@ -4,7 +4,7 @@
     "unit": "06",
     "topic": "01"
   },
-  "title": "Pythagoras: the whole topic",
+  "title": "Pythagoras' theorem: finding the third side",
   "estimatedMinutes": 16,
   "chapters": [
     {
@@ -14,12 +14,12 @@
     },
     {
       "id": "hypotenuse",
-      "title": "The longest side",
+      "title": "Finding the longest side",
       "color": "#ff4670"
     },
     {
       "id": "leg",
-      "title": "A shorter side",
+      "title": "Finding a shorter side",
       "color": "#ff822c"
     },
     {
@@ -29,7 +29,7 @@
     },
     {
       "id": "exam",
-      "title": "The exam",
+      "title": "Exam questions",
       "color": "#0fee89"
     }
   ],
@@ -38,9 +38,9 @@
       "id": "01-hook",
       "kind": "hook",
       "chapter": "rule",
-      "title": "One rule pays out on almost every paper",
+      "title": "Finding the third side of a triangle",
       "advance": "manual",
-      "prompt": "Ladders against walls, diagonals across rectangles, and the height of a roof truss all obey one rule about right-angled triangles. By the end of this lesson you will have banked 18 marks of real exam working, including a question from an actual past paper.",
+      "prompt": "A ladder leaning on a wall, a diagonal across a rectangle, the height of a roof. All of them are right-angled triangles. If you know two sides of a right-angled triangle, one rule gives you the third. By the end of this lesson you will have written 18 marks of real exam answers, including one from a past paper.",
       "visual": {
         "kind": "html",
         "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><style>.sq{cursor:pointer}.sq:hover{opacity:1}</style><g class='sq' opacity='0.6'><animate attributeName='opacity' values='0.6;0.6;1;1;0.6;0.6' keyTimes='0;0.02;0.08;0.26;0.32;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='9s' repeatCount='indefinite'/><rect x='205' y='200' width='88' height='88' fill='rgba(0,171,250,0.14)' stroke='#00abfa' stroke-width='1.8'/><text x='249' y='244' font-family='Geist Mono,monospace' font-size='17' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>16</text><text x='249' y='189' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>4</text></g><g class='sq' opacity='0.6'><animate attributeName='opacity' values='0.6;0.6;1;1;0.6;0.6' keyTimes='0;0.30;0.36;0.54;0.60;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='9s' repeatCount='indefinite'/><rect x='139' y='134' width='66' height='66' fill='rgba(255,130,44,0.14)' stroke='#ff822c' stroke-width='1.8'/><text x='172' y='167' font-family='Geist Mono,monospace' font-size='17' font-weight='600' fill='#ff822c' text-anchor='middle' dominant-baseline='middle'>9</text><text x='216' y='167' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>3</text></g><g class='sq' opacity='0.6'><animate attributeName='opacity' values='0.6;0.6;1;1;0.6;0.6' keyTimes='0;0.58;0.64;0.86;0.92;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='9s' repeatCount='indefinite'/><polygon points='205,134 293,200 359,112 271,46' fill='rgba(255,70,112,0.14)' stroke='#ff4670' stroke-width='1.8'/><text x='282' y='123' font-family='Geist Mono,monospace' font-size='17' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>25</text><text x='235' y='155' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>5</text></g><polygon points='205,200 293,200 205,134' fill='rgba(255,240,103,0.10)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 218 200 L 218 187 L 205 187' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
@@ -51,7 +51,7 @@
       "id": "02-the-rule",
       "kind": "concept",
       "chapter": "rule",
-      "title": "The square on the longest side equals the other two added",
+      "title": "The rule",
       "advance": "manual",
       "prompt": "Count the areas. The blue square is $16$, the orange square is $9$, and the pink square on the longest side is exactly $25$. So $16 + 9 = 25$. In any right-angled triangle, $a^2 + b^2 = c^2$. The letter $c$ is always the side opposite the right angle.",
       "visual": {
@@ -94,9 +94,9 @@
       "id": "04-explore-squares",
       "kind": "concept",
       "chapter": "rule",
-      "title": "Watch the squares balance",
+      "title": "Watch the squares add up",
       "advance": "manual",
-      "prompt": "Drag the corner of the triangle, or use the sliders. However the two short sides change, their squares always add up to the square on the hypotenuse.",
+      "prompt": "Drag the corner of the triangle, or use the sliders. However you change the two short sides, their squares always add up to the square on the longest side.",
       "visual": {
         "kind": "iframe",
         "src": "/widgets/pythagoras-three-squares.html?lessonMode=1&chrome=1",
@@ -137,9 +137,21 @@
               "whyWrong": "The hypotenuse square is the two leg squares added together, never subtracted."
             }
           ],
-          "successText": "$r$ sits opposite the right angle, so $r^2 = p^2 + q^2$. Every Pythagoras question starts by spotting which side plays the part of $r$."
+          "successText": "$r$ is opposite the right angle, so $r$ is the hypotenuse and $r^2 = p^2 + q^2$. Every question starts by working out which side is the hypotenuse."
         }
       }
+    },
+    {
+      "id": "05c-steps",
+      "kind": "concept",
+      "chapter": "rule",
+      "title": "The steps for every question",
+      "prompt": "Every Pythagoras question uses the same four steps. The first one decides everything else.",
+      "visual": {
+        "kind": "html",
+        "content": "<div style='display:flex;flex-direction:column;gap:14px;padding:10px 0;max-width:34em'><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">1</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Find the hypotenuse. It is the side opposite the right angle.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">2</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>If the hypotenuse is the side you want, add the two squares.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">3</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>If you want a shorter side, subtract the smaller square from the bigger one.</span></div><div style='display:flex;align-items:center;gap:16px'><span style=\"flex:none;width:30px;height:30px;border-radius:50%;background:rgba(0,171,250,0.12);border:1px solid rgba(0,171,250,0.42);color:#00abfa;font-family:Geist Mono,monospace;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center\">4</span><span style='font-size:18px;color:#f0eeea;line-height:1.45'>Take the square root at the end.</span></div></div>"
+      },
+      "advance": "manual"
     },
     {
       "id": "05b-section-hypotenuse",
@@ -148,14 +160,14 @@
       "advance": "manual",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#ff4670;opacity:0.92'>chapter 2 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>The longest side</div><div style='width:64px;height:2px;background:#ff4670;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>Both short sides are known. Square them, add, and square-root to find the hypotenuse.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>Worth 2 marks when calculated: one for writing the equation with the numbers in, one for the value. Write the equation line down even when the calculator does the rest.</p></div>"
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#ff4670;opacity:0.92'>chapter 2 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Finding the longest side</div><div style='width:64px;height:2px;background:#ff4670;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:40ch;line-height:1.55;margin:0'>You know the two short sides. Now work out the hypotenuse.</p></div>"
       }
     },
     {
       "id": "06-predict-length",
       "kind": "interaction",
       "chapter": "hypotenuse",
-      "title": "First, a prediction",
+      "title": "How big can the answer be?",
       "advance": "onSuccess",
       "interaction": {
         "kind": "selectFromOptions",
@@ -185,7 +197,7 @@
               "whyWrong": "It has to be longer than either leg. If it matched a leg, the triangle would be flat."
             }
           ],
-          "successText": "It must beat the longest leg and undercut $6 + 8$. Pythagoras is what pins down the exact value, and that is next."
+          "successText": "The hypotenuse is longer than either short side, but shorter than the two of them added together. Pythagoras gives you the exact value, and that comes next."
         }
       }
     },
@@ -193,7 +205,7 @@
       "id": "07-solve-hyp-1",
       "kind": "interaction",
       "chapter": "hypotenuse",
-      "title": "Your first full solution",
+      "title": "Your first full answer",
       "advance": "onSuccess",
       "marks": 2,
       "interaction": {
@@ -250,7 +262,7 @@
               "nudge": "$c^2$ is $100$, so $c$ is the square root of $100$."
             }
           ],
-          "successText": "$c = 10$ cm, comfortably between $8$ and $14$. The equation line earned the method mark and the value earned the accuracy mark.",
+          "successText": "$c = 10$ cm, which sits between $8$ and $14$ as it should. The equation line earns the method mark and the value earns the accuracy mark.",
           "intro": "Build the working line by line, exactly as it would go on paper. Pick or type each line; the mark codes on the right show what each line earns."
         }
       }
@@ -259,7 +271,7 @@
       "id": "08-solve-hyp-2",
       "kind": "interaction",
       "chapter": "hypotenuse",
-      "title": "Now with an untidy answer",
+      "title": "An answer that is not a whole number",
       "advance": "onSuccess",
       "marks": 2,
       "interaction": {
@@ -316,7 +328,7 @@
               "nudge": "The square root of $106$ is $10.295...$, and to one decimal place that rounds to $10.3$."
             }
           ],
-          "successText": "$c = 10.3$ cm. Keep the full calculator value until the last line, then round once."
+          "successText": "$c = 10.3$ cm. Keep the full calculator value until the last line, then round once at the end."
         }
       }
     },
@@ -324,13 +336,13 @@
       "id": "09-trap-rounding",
       "kind": "interaction",
       "chapter": "hypotenuse",
-      "title": "You be the examiner",
+      "title": "Mark this student's answer",
       "advance": "onSuccess",
       "interaction": {
         "kind": "markScript",
         "hint": "The method mark and the answer mark are judged separately. A wrong final digit cannot touch the method mark.",
         "config": {
-          "prompt": "You be the examiner. Read the script, then rule on each mark.",
+          "prompt": "Read the student's working, then decide about each mark.",
           "question": "Find $c$ to $1$ decimal place. The legs are $9$ cm and $5$ cm.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,248.9 400,248.9 80,71.1' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 248.9 L 93 235.9 L 80 235.9' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='270.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>9 cm</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>5 cm</text><text x='250.7' y='140.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
           "script": [
@@ -367,7 +379,7 @@
           ],
           "faultLineId": "l3",
           "faultExplain": "The digit after the cut is a $9$, which rounds the answer up to $10.3$. Truncating to $10.2$ is the single most common way this accuracy mark is lost.",
-          "successText": "One mark out of two: method earned, answer lost. Now you know exactly what the examiner looks for on your own script."
+          "successText": "One mark out of two. The method was right but the answer was rounded the wrong way. Now you know what the examiner is looking at."
         }
       }
     },
@@ -378,14 +390,14 @@
       "advance": "manual",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#ff822c;opacity:0.92'>chapter 3 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>A shorter side</div><div style='width:64px;height:2px;background:#ff822c;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>This time the hypotenuse is known and a leg is missing. The squares get subtracted.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>Also 2 marks, and home of the most common Pythagoras mistake on the paper: adding the squares when the hypotenuse is already known.</p></div>"
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#ff822c;opacity:0.92'>chapter 3 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Finding a shorter side</div><div style='width:64px;height:2px;background:#ff822c;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:40ch;line-height:1.55;margin:0'>You know the hypotenuse and one short side. Now work out the other one.</p></div>"
       }
     },
     {
       "id": "11-q-spot-roles",
       "kind": "interaction",
       "chapter": "leg",
-      "title": "Read the triangle first",
+      "title": "Find the hypotenuse first",
       "advance": "onSuccess",
       "interaction": {
         "kind": "tapDiagram",
@@ -407,7 +419,7 @@
               "whyWrong": "That side runs into the right angle too, so it is the other leg."
             }
           ],
-          "successText": "The $13$ cm side sits opposite the right angle, so its square stands alone in the equation. That decides whether you add or subtract."
+          "successText": "The $13$ cm side is opposite the right angle, so it is the hypotenuse. That is what tells you to subtract here instead of adding."
         }
       }
     },
@@ -415,13 +427,13 @@
       "id": "12-solve-leg-1",
       "kind": "interaction",
       "chapter": "leg",
-      "title": "Find the missing leg",
+      "title": "Find a shorter side",
       "advance": "onSuccess",
       "marks": 2,
       "interaction": {
         "kind": "stepSolve",
         "config": {
-          "prompt": "Find $x$. The hypotenuse is $13$, so watch the signs.",
+          "prompt": "Find $x$. The hypotenuse is $13$, so think carefully about whether you add or subtract.",
           "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='179' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260.3' y='151.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text></svg>",
           "lines": [
             {
@@ -472,7 +484,7 @@
               "nudge": "$x^2$ is $144$, and the square root of $144$ is a whole number."
             }
           ],
-          "successText": "$x = 12$ cm, shorter than the hypotenuse as it must be. A quick size check like that catches sign mistakes before the examiner does."
+          "successText": "$x = 12$ cm, which is shorter than the hypotenuse, as it has to be. Checking the size like that catches mistakes early."
         }
       }
     },
@@ -532,7 +544,7 @@
               "nudge": "The square root of $74.25$ is $8.616...$, which rounds to $8.6$."
             }
           ],
-          "successText": "$x = 8.6$ m. Decimals change nothing about the method, only the arithmetic."
+          "successText": "$x = 8.6$ m. The method is exactly the same, only the arithmetic is untidier."
         }
       }
     },
@@ -540,7 +552,7 @@
       "id": "13b-mark-the-script",
       "kind": "interaction",
       "chapter": "leg",
-      "title": "Now mark a harder one",
+      "title": "Mark a harder one",
       "advance": "onSuccess",
       "interaction": {
         "kind": "markScript",
@@ -583,7 +595,7 @@
           ],
           "faultLineId": "l1",
           "faultExplain": "Line 1 is where both marks died: one wrong sign, two marks gone. A size check would have caught it too, because $13.9$ is longer than the hypotenuse, which is impossible.",
-          "successText": "Zero out of two from a single sign. This is the exact mistake this chapter exists to prevent."
+          "successText": "Zero out of two, all from one wrong sign. Adding when you should subtract loses both marks, which is why you find the hypotenuse first."
         }
       }
     },
@@ -591,7 +603,7 @@
       "id": "14-flashback-hyp",
       "kind": "interaction",
       "chapter": "leg",
-      "title": "A quick look back",
+      "title": "A question from the last chapter",
       "advance": "onSuccess",
       "interaction": {
         "kind": "selectFromOptions",
@@ -616,7 +628,7 @@
               "whyWrong": "The squares get added, never the plain sides."
             }
           ],
-          "successText": "The unknown sits opposite the right angle, so the squares are added. For the record, $x$ comes out to exactly $25$."
+          "successText": "The unknown side is opposite the right angle, so you add the squares. The answer is $x = 25$."
         }
       }
     },
@@ -627,16 +639,16 @@
       "advance": "manual",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#fff067;opacity:0.92'>chapter 4 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Hidden triangles</div><div style='width:64px;height:2px;background:#fff067;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>The exam rarely hands you a labelled right-angled triangle. It hides one inside a rectangle, a ladder, or an isosceles triangle.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>The first thing the examiner looks for is whether you found the right triangle at all. Sketch it separately if it helps; that is never penalised.</p></div>"
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#fff067;opacity:0.92'>chapter 4 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Hidden triangles</div><div style='width:64px;height:2px;background:#fff067;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:40ch;line-height:1.55;margin:0'>Most questions contain a right-angled triangle without telling you.</p></div>"
       }
     },
     {
       "id": "15-rectangle-concept",
       "kind": "concept",
       "chapter": "hidden",
-      "title": "A diagonal makes two right-angled triangles",
+      "title": "A rectangle contains two right-angled triangles",
       "advance": "manual",
-      "prompt": "Every rectangle hides two right-angled triangles: the diagonal cuts it corner to corner. The length and the width are the legs, and the diagonal is always the hypotenuse, because the corner of a rectangle is a right angle.",
+      "prompt": "Draw the diagonal of a rectangle from one corner to the opposite one and you get two right-angled triangles. The length and the width are the two short sides. The diagonal is the hypotenuse, because the corner of a rectangle is a right angle.",
       "visual": {
         "kind": "html",
         "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><rect x='75' y='91.3' width='330' height='137.5' fill='rgba(240,238,234,0.04)' stroke='#c8c6be' stroke-width='2'/><line x1='75' y1='228.8' x2='405' y2='91.3' stroke='#ff4670' stroke-width='2.2' stroke-dasharray='357.5' stroke-dashoffset='357.5'><animate attributeName='stroke-dashoffset' values='357.5;0;0' keyTimes='0;0.28;1' dur='7s' repeatCount='indefinite' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></line><g opacity='0'><animate attributeName='opacity' values='0;0;1;1' keyTimes='0;0.28;0.38;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><path d='M 392 228.8 L 392 215.8 L 405 215.8' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='220' y='144' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>d</text></g><text x='240' y='248.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>12 cm</text><text x='421' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>5 cm</text><circle r='4' fill='#fff067' stroke='#0b1118' stroke-width='1.5' cx='75' cy='228.8'><animate attributeName='cx' values='75;405;405' keyTimes='0;0.28;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><animate attributeName='cy' values='228.8;91.3;91.3' keyTimes='0;0.28;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/></circle></svg>",
@@ -704,7 +716,7 @@
               "nudge": "The square root of $169$ is a whole number, and it is bigger than $12$."
             }
           ],
-          "successText": "$d = 13$ cm. Any time a question mentions the diagonal of a rectangle, Pythagoras is the whole method."
+          "successText": "$d = 13$ cm. Whenever a question asks for the diagonal of a rectangle, this is the method."
         }
       }
     },
@@ -769,7 +781,7 @@
               "nudge": "The square root of $36$ is a whole number."
             }
           ],
-          "successText": "The ladder reaches $6$ m up the wall. In word problems the slanted thing, a ladder, a ramp, a wire, is nearly always the hypotenuse."
+          "successText": "The ladder reaches $6$ m up the wall. In word problems the slanted object, like a ladder or a ramp or a wire, is nearly always the hypotenuse."
         }
       }
     },
@@ -777,9 +789,9 @@
       "id": "18-isosceles-concept",
       "kind": "concept",
       "chapter": "hidden",
-      "title": "The isosceles trick: halve the base",
+      "title": "Isosceles triangles: cut the base in half",
       "advance": "manual",
-      "prompt": "Drop a line from the top of an isosceles triangle straight down to the base. It lands exactly halfway along, splitting the triangle into two matching right-angled ones. The half-base is $5$ here, and forgetting to halve the $10$ is the classic lost mark.",
+      "prompt": "Draw a line from the top of an isosceles triangle straight down to the base. It lands exactly halfway along, and it splits the triangle into two matching right-angled triangles. So the short side here is $5$, not $10$. Forgetting to halve the base is the most common lost mark in this topic.",
       "visual": {
         "kind": "html",
         "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='165,266 315,266 240,86' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><line x1='240' y1='86' x2='240' y2='86' stroke='#fff067' stroke-width='1.8' stroke-dasharray='6 5'><animate attributeName='y2' values='86;266;266' keyTimes='0;0.22;1' dur='7s' repeatCount='indefinite' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></line><g opacity='0'><animate attributeName='opacity' values='0;0;1;1' keyTimes='0;0.22;0.32;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><path d='M 253 266 L 253 253 L 240 253' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='254' y='176' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>h</text></g><g opacity='0.45'><animate attributeName='opacity' values='0.45;0.45;1;1;0.45;0.45' keyTimes='0;0.34;0.42;0.72;0.82;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><text x='202.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='277.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text></g><text x='178.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><text x='301.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><circle r='4' fill='#fff067' stroke='#0b1118' stroke-width='1.5' cx='240' cy='86'><animate attributeName='cy' values='86;266;266' keyTimes='0;0.22;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/></circle></svg>",
@@ -847,7 +859,7 @@
               "nudge": "The square root of $144$ is a whole number."
             }
           ],
-          "successText": "$h = 12$ cm, exactly as the mark scheme wants it. The whole question turns on using $5$ instead of $10$."
+          "successText": "$h = 12$ cm, exactly as the mark scheme wants it. The whole question depends on using $5$ instead of $10$."
         }
       }
     },
@@ -858,7 +870,7 @@
       "advance": "manual",
       "visual": {
         "kind": "html",
-        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#0fee89;opacity:0.92'>chapter 5 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>The exam</div><div style='width:64px;height:2px;background:#0fee89;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:38ch;line-height:1.55;margin:0'>Two decisions, then arithmetic: find the right triangle, and decide whether the unknown is the hypotenuse.</p><p style='font-family:Geist Mono,monospace;font-size:12px;color:#7a7875;text-align:center;max-width:52ch;line-height:1.75;margin:2px 0 0;letter-spacing:0.2px'>No hints from here. Decide add or subtract first, write the equation line for the method mark, then compute for the accuracy mark.</p></div>"
+        "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:22px;padding:32px 0 14px'><div style='font-family:Geist Mono,monospace;font-size:12px;letter-spacing:3.5px;text-transform:uppercase;color:#0fee89;opacity:0.92'>chapter 5 of 5</div><div style='font-family:Geist,Inter,sans-serif;font-size:clamp(46px,9vw,72px);font-weight:600;color:#f0eeea;letter-spacing:-0.025em;line-height:1;text-align:center'>Exam questions</div><div style='width:64px;height:2px;background:#0fee89;border-radius:2px;opacity:0.75'></div><p style='font-size:18px;color:#c8c6be;text-align:center;max-width:40ch;line-height:1.55;margin:0'>The same rule, this time with no help.</p></div>"
       }
     },
     {
@@ -929,7 +941,7 @@
       "id": "22-verify-solve-hyp",
       "kind": "verify",
       "chapter": "exam",
-      "title": "Full solve, no help",
+      "title": "Your turn, with no help",
       "advance": "onSuccess",
       "marks": 2,
       "interaction": {
@@ -985,7 +997,7 @@
       "id": "23-verify-solve-leg",
       "kind": "verify",
       "chapter": "exam",
-      "title": "Last one",
+      "title": "The last one",
       "advance": "onSuccess",
       "marks": 2,
       "interaction": {
@@ -1033,7 +1045,7 @@
               "inputSuffix": "cm"
             }
           ],
-          "successText": "$x = 15$ cm. Add for a hypotenuse, subtract for a leg, and always check the answer is shorter than the hypotenuse."
+          "successText": "$x = 15$ cm. Add the squares to find a hypotenuse, subtract to find a shorter side, and always check your answer is shorter than the hypotenuse."
         }
       }
     },
@@ -1041,9 +1053,9 @@
       "id": "24-celebrate",
       "kind": "concept",
       "chapter": "exam",
-      "title": "You banked 18 marks of examiner working",
+      "title": "You have banked 18 marks",
       "advance": "manual",
-      "prompt": "Every mark came from the same two-line pattern the examiner rewards: the equation with the numbers in, then the value. You used it on plain triangles, a rectangle, a ladder, and a real past-paper isosceles question.",
+      "prompt": "Every answer used the same two lines: the equation with the numbers in it, then the value. You used them on plain triangles, a rectangle, a ladder, and a real past-paper question.",
       "visual": {
         "kind": "html",
         "content": "<div style='display:flex;flex-direction:column;align-items:center;gap:18px;padding:6px 0'><div style='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-family:Geist Mono,monospace;font-size:11px'><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>The longest side · 4 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>A shorter side · 4 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>Hidden triangles · 6 marks</span><span style='padding:6px 12px;border-radius:6px;background:rgba(15,238,137,0.12);color:#0fee89;border:1px solid rgba(15,238,137,0.40)'>The exam · 4 marks</span></div></div>"
@@ -1053,14 +1065,15 @@
       "id": "25-recap",
       "kind": "recap",
       "chapter": "exam",
-      "title": "You can now use Pythagoras anywhere it hides",
+      "title": "You can now use Pythagoras anywhere",
       "advance": "manual",
-      "prompt": "One rule, two cases, and a habit of writing the equation line before the calculator comes out.",
+      "prompt": "One rule and two cases. Write the equation line before you touch the calculator.",
       "bullets": [
-        "The hypotenuse is the side opposite the right angle, and always the longest.",
-        "Add the squares to find the hypotenuse; subtract them to find a leg.",
+        "The hypotenuse is opposite the right angle, and it is always the longest side.",
+        "Add the squares to find the hypotenuse. Subtract to find a shorter side.",
         "Write the equation line first, because it earns the method mark on its own.",
-        "Diagonals, ladders and isosceles heights are hidden right-angled triangles, and the isosceles case uses half the base, never the whole thing."
+        "Diagonals, ladders and isosceles heights are all hidden right-angled triangles.",
+        "In an isosceles triangle use half the base, never the whole base."
       ]
     }
   ]
