@@ -993,8 +993,25 @@
       "prompt": "Draw the diagonal of a rectangle from one corner to the opposite one and you get two right-angled triangles. The length and the width are the two short sides. The diagonal is the hypotenuse, because the corner of a rectangle is a right angle.",
       "visual": {
         "kind": "html",
-        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><rect x='75' y='91.3' width='330' height='137.5' fill='rgba(240,238,234,0.04)' stroke='#c8c6be' stroke-width='2'/><line x1='75' y1='228.8' x2='405' y2='91.3' stroke='#ff4670' stroke-width='2.2' stroke-dasharray='357.5' stroke-dashoffset='357.5'><animate attributeName='stroke-dashoffset' values='357.5;0;0' keyTimes='0;0.28;1' dur='7s' repeatCount='indefinite' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></line><g opacity='0'><animate attributeName='opacity' values='0;0;1;1' keyTimes='0;0.28;0.38;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><path d='M 392 228.8 L 392 215.8 L 405 215.8' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='220' y='144' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>d</text></g><text x='240' y='248.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>12 cm</text><text x='421' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>5 cm</text><circle r='4' fill='#fff067' stroke='#0b1118' stroke-width='1.5' cx='75' cy='228.8'><animate attributeName='cx' values='75;405;405' keyTimes='0;0.28;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><animate attributeName='cy' values='228.8;91.3;91.3' keyTimes='0;0.28;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/></circle></svg>",
-        "wide": true
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><rect x='75' y='91.3' width='330' height='137.5' fill='rgba(240,238,234,0.04)' stroke='#c8c6be' stroke-width='2'/><line x1='75' y1='228.8' x2='405' y2='91.3' stroke='#ff4670' stroke-width='2.2' stroke-dasharray='357.5' stroke-dashoffset='357.5'><animate attributeName='stroke-dashoffset' values='357.5;0;0' keyTimes='0;0.28;1' dur='7s' repeatCount='indefinite' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></line><g opacity='0'><animate attributeName='opacity' values='0;0;1;1' keyTimes='0;0.28;0.38;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><path d='M 392 228.8 L 392 215.8 L 405 215.8' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='220' y='144' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>d</text></g><circle r='4' fill='#fff067' stroke='#0b1118' stroke-width='1.5' cx='75' cy='228.8'><animate attributeName='cx' values='75;405;405' keyTimes='0;0.28;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><animate attributeName='cy' values='228.8;91.3;91.3' keyTimes='0;0.28;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/></circle></svg>",
+        "wide": true,
+        "labels": [
+          {
+            "x": 240,
+            "y": 248.8,
+            "tex": "12\\,\\text{cm}",
+            "color": "#00abfa",
+            "size": 14
+          },
+          {
+            "x": 421,
+            "y": 160,
+            "tex": "5\\,\\text{cm}",
+            "color": "#ff822c",
+            "size": 14,
+            "anchor": "start"
+          }
+        ]
       }
     },
     {
@@ -1184,8 +1201,24 @@
       "prompt": "Draw a line from the top of an isosceles triangle straight down to the base. It lands exactly halfway along, and it splits the triangle into two matching right-angled triangles. So the short side here is $5$, not $10$. Forgetting to halve the base is the most common lost mark in this topic.",
       "visual": {
         "kind": "html",
-        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='165,266 315,266 240,86' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><line x1='240' y1='86' x2='240' y2='86' stroke='#fff067' stroke-width='1.8' stroke-dasharray='6 5'><animate attributeName='y2' values='86;266;266' keyTimes='0;0.22;1' dur='7s' repeatCount='indefinite' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></line><g opacity='0'><animate attributeName='opacity' values='0;0;1;1' keyTimes='0;0.22;0.32;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><path d='M 253 266 L 253 253 L 240 253' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='254' y='176' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>h</text></g><g opacity='0.45'><animate attributeName='opacity' values='0.45;0.45;1;1;0.45;0.45' keyTimes='0;0.34;0.42;0.72;0.82;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><text x='202.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='277.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text></g><text x='178.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><text x='301.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><circle r='4' fill='#fff067' stroke='#0b1118' stroke-width='1.5' cx='240' cy='86'><animate attributeName='cy' values='86;266;266' keyTimes='0;0.22;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/></circle></svg>",
-        "wide": true
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='165,266 315,266 240,86' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><line x1='240' y1='86' x2='240' y2='86' stroke='#fff067' stroke-width='1.8' stroke-dasharray='6 5'><animate attributeName='y2' values='86;266;266' keyTimes='0;0.22;1' dur='7s' repeatCount='indefinite' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></line><g opacity='0'><animate attributeName='opacity' values='0;0;1;1' keyTimes='0;0.22;0.32;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><path d='M 253 266 L 253 253 L 240 253' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='254' y='176' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>h</text></g><g opacity='0.45'><animate attributeName='opacity' values='0.45;0.45;1;1;0.45;0.45' keyTimes='0;0.34;0.42;0.72;0.82;1' calcMode='spline' keySplines='0 0 1 1;0.7 0 0.3 1;0 0 1 1;0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/><text x='202.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='277.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text></g><circle r='4' fill='#fff067' stroke='#0b1118' stroke-width='1.5' cx='240' cy='86'><animate attributeName='cy' values='86;266;266' keyTimes='0;0.22;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1' dur='7s' repeatCount='indefinite'/></circle></svg>",
+        "wide": true,
+        "labels": [
+          {
+            "x": 178.5,
+            "y": 176,
+            "tex": "13\\,\\text{cm}",
+            "color": "#ff4670",
+            "size": 14
+          },
+          {
+            "x": 301.5,
+            "y": 176,
+            "tex": "13\\,\\text{cm}",
+            "color": "#ff4670",
+            "size": 14
+          }
+        ]
       }
     },
     {

@@ -294,7 +294,7 @@ export function ReadoutPanel({ readout, solved }: { readout: { label: string; te
  * manipulative diagram embed their SVG here so it sits in the canvas
  * slot at the identical size, density and look as the real widgets.
  */
-export function ContextCanvas({ html, asideWidth, overlay }: { html: string; asideWidth?: number; overlay?: React.ReactNode }) {
+export function ContextCanvas({ html, labels, asideWidth, overlay }: { html: string; labels?: CanvasLabel[]; asideWidth?: number; overlay?: React.ReactNode }) {
   const wrapRef = useRef<HTMLDivElement | null>(null)
   const aside = asideWidth ?? 360
   useLayoutEffect(() => {
@@ -329,6 +329,7 @@ export function ContextCanvas({ html, asideWidth, overlay }: { html: string; asi
       style={{
         background: COLOR.card,
         border: `1px solid ${COLOR.border}`,
+        containerType: "inline-size",
       }}
     >
       <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: html }} />

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import Visual from "../Visual"
 import UnderstoodButton from "./_UnderstoodButton"
 import { AltDemoCard, AltDemoOverlay, MixedText, ReadoutPanel, useWidgetReadout, ContextCanvas } from "../interactions/_shared"
-import type { ConceptSlide as ConceptSlideT } from "@/lib/lesson-mode/types"
+import type { ConceptSlide as ConceptSlideT, CanvasLabelSpec } from "@/lib/lesson-mode/types"
 
 /**
  * ConceptSlide — introduces an idea.
@@ -118,11 +118,12 @@ function ConceptWideHtmlLayout({
   canAdvance?: boolean
   altDemo?: string
 }) {
-  const html = (slide.visual as { content?: string }).content ?? ""
+  const v = slide.visual as { content?: string; labels?: CanvasLabelSpec[] }
+  const html = v.content ?? ""
   return (
     <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-8 items-center xl:items-stretch">
       <div className="flex-1 min-w-0 flex items-center justify-center">
-        <ContextCanvas html={html} asideWidth={320} overlay={<AltDemoOverlay svg={altDemo} />} />
+        <ContextCanvas html={html} labels={v.labels} asideWidth={320} overlay={<AltDemoOverlay svg={altDemo} />} />
       </div>
       <aside className="pl-stagger w-full xl:w-[320px] shrink-0 flex flex-col gap-4 xl:gap-5 justify-center xl:py-4" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
         {slide.title && (

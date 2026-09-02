@@ -2090,8 +2090,194 @@
       "prompt": "Both triangles are exactly the same size and shape. The maths word for this is congruent.\n\nNotice the labels. On the blue triangle, A then B then C goes clockwise. On the pink triangle, A' then B' then C' goes the other way, anticlockwise. A reflection always reverses the order of the labels. Hold your right hand up to a mirror and it looks like a left hand.",
       "visual": {
         "kind": "html",
-        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='28' y1='292' x2='28' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='54.5' y1='292' x2='54.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='81' y1='292' x2='81' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='107.5' y1='292' x2='107.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='134' y1='292' x2='134' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='160.5' y1='292' x2='160.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='187' y1='292' x2='187' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='213.5' y1='292' x2='213.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='240' y1='292' x2='240' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='266.5' y1='292' x2='266.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='293' y1='292' x2='293' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='319.5' y1='292' x2='319.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='346' y1='292' x2='346' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='372.5' y1='292' x2='372.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='399' y1='292' x2='399' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='425.5' y1='292' x2='425.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='452' y1='292' x2='452' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='292' x2='452' y2='292' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='265.6' x2='452' y2='265.6' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='239.2' x2='452' y2='239.2' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='212.8' x2='452' y2='212.8' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='186.4' x2='452' y2='186.4' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='160' x2='452' y2='160' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='133.60000000000002' x2='452' y2='133.60000000000002' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='107.20000000000002' x2='452' y2='107.20000000000002' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='80.80000000000001' x2='452' y2='80.80000000000001' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='54.400000000000006' x2='452' y2='54.400000000000006' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='28' x2='452' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='160' x2='452' y2='160' stroke='#3a4a5a' stroke-width='1.2'/><line x1='213.5' y1='292' x2='213.5' y2='28' stroke='#3a4a5a' stroke-width='1.2'/><g fill='#7a7875' font-family='Geist Mono,monospace' font-size='12' font-weight='600' text-anchor='middle' dominant-baseline='middle'><text x='28' y='171'>-7</text><text x='54.5' y='171'>-6</text><text x='81' y='171'>-5</text><text x='107.5' y='171'>-4</text><text x='134' y='171'>-3</text><text x='160.5' y='171'>-2</text><text x='187' y='171'>-1</text><text x='240' y='171'>1</text><text x='266.5' y='171'>2</text><text x='293' y='171'>3</text><text x='319.5' y='171'>4</text><text x='346' y='171'>5</text><text x='372.5' y='171'>6</text><text x='399' y='171'>7</text><text x='425.5' y='171'>8</text><text x='452' y='171'>9</text><text x='201.5' y='292'>-5</text><text x='201.5' y='265.6'>-4</text><text x='201.5' y='239.2'>-3</text><text x='201.5' y='212.8'>-2</text><text x='201.5' y='186.4'>-1</text><text x='201.5' y='133.60000000000002'>1</text><text x='201.5' y='107.20000000000002'>2</text><text x='201.5' y='80.80000000000001'>3</text><text x='201.5' y='54.400000000000006'>4</text><text x='201.5' y='28'>5</text></g><line x1='213.5' y1='292' x2='213.5' y2='28' stroke='#fff067' stroke-width='1.6' stroke-dasharray='6 4' opacity='0.8'/><text x='219.5' y='38.56000000000003' fill='#fff067' font-family='Geist Mono,monospace' font-size='12' font-weight='600' text-anchor='start' dominant-baseline='middle'>mirror</text><polygon points='306.25,54.400000000000006 346,133.60000000000002 266.5,133.60000000000002' fill='rgba(0,171,250,0.16)' stroke='#00abfa' stroke-width='2.4' stroke-linejoin='round'/><text x='306.25' y='40.400000000000006' fill='#00abfa' font-family='Geist Mono,monospace' font-size='13' font-weight='700' text-anchor='middle' dominant-baseline='middle'>A</text><text x='356' y='143.60000000000002' fill='#00abfa' font-family='Geist Mono,monospace' font-size='13' font-weight='700' text-anchor='start' dominant-baseline='middle'>B</text><text x='256.5' y='143.60000000000002' fill='#00abfa' font-family='Geist Mono,monospace' font-size='13' font-weight='700' text-anchor='end' dominant-baseline='middle'>C</text><polygon points='120.75,54.400000000000006 81,133.60000000000002 160.5,133.60000000000002' fill='rgba(255,70,112,0.16)' stroke='#ff4670' stroke-width='2.4' stroke-linejoin='round'/><text x='120.75' y='40.400000000000006' fill='#ff4670' font-family='Geist Mono,monospace' font-size='13' font-weight='700' text-anchor='middle' dominant-baseline='middle'>A'</text><text x='71' y='143.60000000000002' fill='#ff4670' font-family='Geist Mono,monospace' font-size='13' font-weight='700' text-anchor='end' dominant-baseline='middle'>B'</text><text x='170.5' y='143.60000000000002' fill='#ff4670' font-family='Geist Mono,monospace' font-size='13' font-weight='700' text-anchor='start' dominant-baseline='middle'>C'</text><polygon points=\"306.25,54.4 346,133.6 266.5,133.6\" fill=\"rgba(255,240,103,0.10)\" stroke=\"#fff067\" stroke-width=\"1.8\" stroke-linejoin=\"round\" opacity=\"0.9\"><animate attributeName=\"points\" values=\"306.25,54.4 346,133.6 266.5,133.6; 120.75,54.4 81,133.6 160.5,133.6; 120.75,54.4 81,133.6 160.5,133.6; 306.25,54.4 346,133.6 266.5,133.6\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></polygon><circle cy=\"54.4\" r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"306.25\"><animate attributeName=\"cx\" values=\"306.25;120.75;120.75;306.25\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></circle><text y=\"40.4\" x=\"306.25\" font-family=\"Geist Mono,monospace\" font-size=\"12.5\" font-weight=\"600\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">A<animate attributeName=\"x\" values=\"306.25;120.75;120.75;306.25\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></text><circle cy=\"133.6\" r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"346\"><animate attributeName=\"cx\" values=\"346;81;81;346\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></circle><text y=\"143.6\" x=\"356\" font-family=\"Geist Mono,monospace\" font-size=\"12.5\" font-weight=\"600\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">B<animate attributeName=\"x\" values=\"356;71;71;356\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></text><circle cy=\"133.6\" r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"266.5\"><animate attributeName=\"cx\" values=\"266.5;160.5;160.5;266.5\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></circle><text y=\"143.6\" x=\"256.5\" font-family=\"Geist Mono,monospace\" font-size=\"12.5\" font-weight=\"600\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">C<animate attributeName=\"x\" values=\"256.5;170.5;170.5;256.5\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></text></svg>",
-        "wide": true
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='28' y1='292' x2='28' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='54.5' y1='292' x2='54.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='81' y1='292' x2='81' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='107.5' y1='292' x2='107.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='134' y1='292' x2='134' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='160.5' y1='292' x2='160.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='187' y1='292' x2='187' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='213.5' y1='292' x2='213.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='240' y1='292' x2='240' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='266.5' y1='292' x2='266.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='293' y1='292' x2='293' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='319.5' y1='292' x2='319.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='346' y1='292' x2='346' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='372.5' y1='292' x2='372.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='399' y1='292' x2='399' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='425.5' y1='292' x2='425.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='452' y1='292' x2='452' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='292' x2='452' y2='292' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='265.6' x2='452' y2='265.6' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='239.2' x2='452' y2='239.2' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='212.8' x2='452' y2='212.8' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='186.4' x2='452' y2='186.4' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='160' x2='452' y2='160' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='133.60000000000002' x2='452' y2='133.60000000000002' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='107.20000000000002' x2='452' y2='107.20000000000002' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='80.80000000000001' x2='452' y2='80.80000000000001' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='54.400000000000006' x2='452' y2='54.400000000000006' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='28' x2='452' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='160' x2='452' y2='160' stroke='#3a4a5a' stroke-width='1.2'/><line x1='213.5' y1='292' x2='213.5' y2='28' stroke='#3a4a5a' stroke-width='1.2'/><g fill='#7a7875' font-family='Geist Mono,monospace' font-size='12' font-weight='600' text-anchor='middle' dominant-baseline='middle'></g><line x1='213.5' y1='292' x2='213.5' y2='28' stroke='#fff067' stroke-width='1.6' stroke-dasharray='6 4' opacity='0.8'/><polygon points='306.25,54.400000000000006 346,133.60000000000002 266.5,133.60000000000002' fill='rgba(0,171,250,0.16)' stroke='#00abfa' stroke-width='2.4' stroke-linejoin='round'/><polygon points='120.75,54.400000000000006 81,133.60000000000002 160.5,133.60000000000002' fill='rgba(255,70,112,0.16)' stroke='#ff4670' stroke-width='2.4' stroke-linejoin='round'/><polygon points=\"306.25,54.4 346,133.6 266.5,133.6\" fill=\"rgba(255,240,103,0.10)\" stroke=\"#fff067\" stroke-width=\"1.8\" stroke-linejoin=\"round\" opacity=\"0.9\"><animate attributeName=\"points\" values=\"306.25,54.4 346,133.6 266.5,133.6; 120.75,54.4 81,133.6 160.5,133.6; 120.75,54.4 81,133.6 160.5,133.6; 306.25,54.4 346,133.6 266.5,133.6\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></polygon><circle cy=\"54.4\" r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"306.25\"><animate attributeName=\"cx\" values=\"306.25;120.75;120.75;306.25\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></circle><text y=\"40.4\" x=\"306.25\" font-family=\"Geist Mono,monospace\" font-size=\"12.5\" font-weight=\"600\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">A<animate attributeName=\"x\" values=\"306.25;120.75;120.75;306.25\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></text><circle cy=\"133.6\" r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"346\"><animate attributeName=\"cx\" values=\"346;81;81;346\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></circle><text y=\"143.6\" x=\"356\" font-family=\"Geist Mono,monospace\" font-size=\"12.5\" font-weight=\"600\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">B<animate attributeName=\"x\" values=\"356;71;71;356\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></text><circle cy=\"133.6\" r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"266.5\"><animate attributeName=\"cx\" values=\"266.5;160.5;160.5;266.5\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></circle><text y=\"143.6\" x=\"256.5\" font-family=\"Geist Mono,monospace\" font-size=\"12.5\" font-weight=\"600\" fill=\"#fff067\" text-anchor=\"middle\" dominant-baseline=\"middle\">C<animate attributeName=\"x\" values=\"256.5;170.5;170.5;256.5\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6s\" repeatCount=\"indefinite\"/></text></svg>",
+        "wide": true,
+        "labels": [
+          {
+            "x": 28,
+            "y": 171,
+            "tex": "-7"
+          },
+          {
+            "x": 54.5,
+            "y": 171,
+            "tex": "-6"
+          },
+          {
+            "x": 81,
+            "y": 171,
+            "tex": "-5"
+          },
+          {
+            "x": 107.5,
+            "y": 171,
+            "tex": "-4"
+          },
+          {
+            "x": 134,
+            "y": 171,
+            "tex": "-3"
+          },
+          {
+            "x": 160.5,
+            "y": 171,
+            "tex": "-2"
+          },
+          {
+            "x": 187,
+            "y": 171,
+            "tex": "-1"
+          },
+          {
+            "x": 240,
+            "y": 171,
+            "tex": "1"
+          },
+          {
+            "x": 266.5,
+            "y": 171,
+            "tex": "2"
+          },
+          {
+            "x": 293,
+            "y": 171,
+            "tex": "3"
+          },
+          {
+            "x": 319.5,
+            "y": 171,
+            "tex": "4"
+          },
+          {
+            "x": 346,
+            "y": 171,
+            "tex": "5"
+          },
+          {
+            "x": 372.5,
+            "y": 171,
+            "tex": "6"
+          },
+          {
+            "x": 399,
+            "y": 171,
+            "tex": "7"
+          },
+          {
+            "x": 425.5,
+            "y": 171,
+            "tex": "8"
+          },
+          {
+            "x": 452,
+            "y": 171,
+            "tex": "9"
+          },
+          {
+            "x": 201.5,
+            "y": 292,
+            "tex": "-5"
+          },
+          {
+            "x": 201.5,
+            "y": 265.6,
+            "tex": "-4"
+          },
+          {
+            "x": 201.5,
+            "y": 239.2,
+            "tex": "-3"
+          },
+          {
+            "x": 201.5,
+            "y": 212.8,
+            "tex": "-2"
+          },
+          {
+            "x": 201.5,
+            "y": 186.4,
+            "tex": "-1"
+          },
+          {
+            "x": 201.5,
+            "y": 133.60000000000002,
+            "tex": "1"
+          },
+          {
+            "x": 201.5,
+            "y": 107.20000000000002,
+            "tex": "2"
+          },
+          {
+            "x": 201.5,
+            "y": 80.80000000000001,
+            "tex": "3"
+          },
+          {
+            "x": 201.5,
+            "y": 54.400000000000006,
+            "tex": "4"
+          },
+          {
+            "x": 201.5,
+            "y": 28,
+            "tex": "5"
+          },
+          {
+            "x": 219.5,
+            "y": 38.56000000000003,
+            "text": "mirror",
+            "color": "#fff067",
+            "size": 12,
+            "anchor": "start"
+          },
+          {
+            "x": 306.25,
+            "y": 40.400000000000006,
+            "tex": "A",
+            "color": "#00abfa",
+            "size": 13
+          },
+          {
+            "x": 356,
+            "y": 143.60000000000002,
+            "tex": "B",
+            "color": "#00abfa",
+            "size": 13,
+            "anchor": "start"
+          },
+          {
+            "x": 256.5,
+            "y": 143.60000000000002,
+            "tex": "C",
+            "color": "#00abfa",
+            "size": 13,
+            "anchor": "end"
+          },
+          {
+            "x": 120.75,
+            "y": 40.400000000000006,
+            "tex": "A'",
+            "color": "#ff4670",
+            "size": 13
+          },
+          {
+            "x": 71,
+            "y": 143.60000000000002,
+            "tex": "B'",
+            "color": "#ff4670",
+            "size": 13,
+            "anchor": "end"
+          },
+          {
+            "x": 170.5,
+            "y": 143.60000000000002,
+            "tex": "C'",
+            "color": "#ff4670",
+            "size": 13,
+            "anchor": "start"
+          }
+        ]
       },
       "chapter": "reflection"
     },
@@ -3226,7 +3412,51 @@
       "prompt": "These three rules cover almost every rotation question on your exam. Memorise them.",
       "visual": {
         "kind": "html",
-        "content": "<svg viewBox='0 0 480 230' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;max-width:640px;height:auto' xmlns='http://www.w3.org/2000/svg'><line x1='44' y1='96' x2='136' y2='96' stroke='#3a4a5a' stroke-width='1'/><line x1='90' y1='50' x2='90' y2='142' stroke='#3a4a5a' stroke-width='1'/><path d='M 122 80 L 120 76.5 L 117.6 73.3 L 114.9 70.3 L 111.9 67.7 L 108.6 65.4 L 105 63.5 L 101.3 62.1 L 97.4 61 L 93.5 60.4 L 89.5 60.2 L 85.5 60.5 L 81.5 61.2 L 77.7 62.4 L 74 64' fill='none' stroke='#00abfa' stroke-width='1.4' stroke-dasharray='3 4' opacity='0.45'/><circle cx='122' cy='80' r='4' fill='#00abfa'/><circle cx='74' cy='64' r='4' fill='#ff4670'/><circle r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'><animateMotion path='M 122 80 L 120 76.5 L 117.6 73.3 L 114.9 70.3 L 111.9 67.7 L 108.6 65.4 L 105 63.5 L 101.3 62.1 L 97.4 61 L 93.5 60.4 L 89.5 60.2 L 85.5 60.5 L 81.5 61.2 L 77.7 62.4 L 74 64' dur='6s' repeatCount='indefinite' keyPoints='0;1;1' keyTimes='0;0.5;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></circle><text x='90' y='182' font-family='Geist Mono,monospace' font-size='13' font-weight='600' fill='#00abfa' text-anchor='middle'>90° anticlockwise</text><text x='90' y='204' font-family='Geist Mono,monospace' font-size='12.5' fill='#c8c6be' text-anchor='middle'>(x, y) → (−y, x)</text><line x1='194' y1='96' x2='286' y2='96' stroke='#3a4a5a' stroke-width='1'/><line x1='240' y1='50' x2='240' y2='142' stroke='#3a4a5a' stroke-width='1'/><path d='M 272 80 L 267.6 73.3 L 261.9 67.7 L 255 63.5 L 247.4 61 L 239.5 60.2 L 231.5 61.2 L 224 64 L 217.3 68.4 L 211.7 74.1 L 207.5 81 L 205 88.6 L 204.2 96.5 L 205.2 104.5 L 208 112' fill='none' stroke='#ff822c' stroke-width='1.4' stroke-dasharray='3 4' opacity='0.45'/><circle cx='272' cy='80' r='4' fill='#00abfa'/><circle cx='208' cy='112' r='4' fill='#ff4670'/><circle r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'><animateMotion path='M 272 80 L 267.6 73.3 L 261.9 67.7 L 255 63.5 L 247.4 61 L 239.5 60.2 L 231.5 61.2 L 224 64 L 217.3 68.4 L 211.7 74.1 L 207.5 81 L 205 88.6 L 204.2 96.5 L 205.2 104.5 L 208 112' dur='6s' repeatCount='indefinite' keyPoints='0;1;1' keyTimes='0;0.5;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></circle><text x='240' y='182' font-family='Geist Mono,monospace' font-size='13' font-weight='600' fill='#ff822c' text-anchor='middle'>180°</text><text x='240' y='204' font-family='Geist Mono,monospace' font-size='12.5' fill='#c8c6be' text-anchor='middle'>(x, y) → (−x, −y)</text><line x1='344' y1='96' x2='436' y2='96' stroke='#3a4a5a' stroke-width='1'/><line x1='390' y1='50' x2='390' y2='142' stroke='#3a4a5a' stroke-width='1'/><path d='M 422 80 L 423.6 83.7 L 424.8 87.5 L 425.5 91.5 L 425.8 95.5 L 425.6 99.5 L 425 103.4 L 423.9 107.3 L 422.5 111 L 420.6 114.6 L 418.3 117.9 L 415.7 120.9 L 412.7 123.6 L 409.5 126 L 406 128' fill='none' stroke='#ff4670' stroke-width='1.4' stroke-dasharray='3 4' opacity='0.45'/><circle cx='422' cy='80' r='4' fill='#00abfa'/><circle cx='406' cy='128' r='4' fill='#ff4670'/><circle r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'><animateMotion path='M 422 80 L 423.6 83.7 L 424.8 87.5 L 425.5 91.5 L 425.8 95.5 L 425.6 99.5 L 425 103.4 L 423.9 107.3 L 422.5 111 L 420.6 114.6 L 418.3 117.9 L 415.7 120.9 L 412.7 123.6 L 409.5 126 L 406 128' dur='6s' repeatCount='indefinite' keyPoints='0;1;1' keyTimes='0;0.5;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></circle><text x='390' y='182' font-family='Geist Mono,monospace' font-size='13' font-weight='600' fill='#ff4670' text-anchor='middle'>90° clockwise</text><text x='390' y='204' font-family='Geist Mono,monospace' font-size='12.5' fill='#c8c6be' text-anchor='middle'>(x, y) → (y, −x)</text></svg>"
+        "content": "<svg viewBox='0 0 480 230' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;max-width:640px;height:auto' xmlns='http://www.w3.org/2000/svg'><line x1='44' y1='96' x2='136' y2='96' stroke='#3a4a5a' stroke-width='1'/><line x1='90' y1='50' x2='90' y2='142' stroke='#3a4a5a' stroke-width='1'/><path d='M 122 80 L 120 76.5 L 117.6 73.3 L 114.9 70.3 L 111.9 67.7 L 108.6 65.4 L 105 63.5 L 101.3 62.1 L 97.4 61 L 93.5 60.4 L 89.5 60.2 L 85.5 60.5 L 81.5 61.2 L 77.7 62.4 L 74 64' fill='none' stroke='#00abfa' stroke-width='1.4' stroke-dasharray='3 4' opacity='0.45'/><circle cx='122' cy='80' r='4' fill='#00abfa'/><circle cx='74' cy='64' r='4' fill='#ff4670'/><circle r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'><animateMotion path='M 122 80 L 120 76.5 L 117.6 73.3 L 114.9 70.3 L 111.9 67.7 L 108.6 65.4 L 105 63.5 L 101.3 62.1 L 97.4 61 L 93.5 60.4 L 89.5 60.2 L 85.5 60.5 L 81.5 61.2 L 77.7 62.4 L 74 64' dur='6s' repeatCount='indefinite' keyPoints='0;1;1' keyTimes='0;0.5;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></circle><line x1='194' y1='96' x2='286' y2='96' stroke='#3a4a5a' stroke-width='1'/><line x1='240' y1='50' x2='240' y2='142' stroke='#3a4a5a' stroke-width='1'/><path d='M 272 80 L 267.6 73.3 L 261.9 67.7 L 255 63.5 L 247.4 61 L 239.5 60.2 L 231.5 61.2 L 224 64 L 217.3 68.4 L 211.7 74.1 L 207.5 81 L 205 88.6 L 204.2 96.5 L 205.2 104.5 L 208 112' fill='none' stroke='#ff822c' stroke-width='1.4' stroke-dasharray='3 4' opacity='0.45'/><circle cx='272' cy='80' r='4' fill='#00abfa'/><circle cx='208' cy='112' r='4' fill='#ff4670'/><circle r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'><animateMotion path='M 272 80 L 267.6 73.3 L 261.9 67.7 L 255 63.5 L 247.4 61 L 239.5 60.2 L 231.5 61.2 L 224 64 L 217.3 68.4 L 211.7 74.1 L 207.5 81 L 205 88.6 L 204.2 96.5 L 205.2 104.5 L 208 112' dur='6s' repeatCount='indefinite' keyPoints='0;1;1' keyTimes='0;0.5;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></circle><line x1='344' y1='96' x2='436' y2='96' stroke='#3a4a5a' stroke-width='1'/><line x1='390' y1='50' x2='390' y2='142' stroke='#3a4a5a' stroke-width='1'/><path d='M 422 80 L 423.6 83.7 L 424.8 87.5 L 425.5 91.5 L 425.8 95.5 L 425.6 99.5 L 425 103.4 L 423.9 107.3 L 422.5 111 L 420.6 114.6 L 418.3 117.9 L 415.7 120.9 L 412.7 123.6 L 409.5 126 L 406 128' fill='none' stroke='#ff4670' stroke-width='1.4' stroke-dasharray='3 4' opacity='0.45'/><circle cx='422' cy='80' r='4' fill='#00abfa'/><circle cx='406' cy='128' r='4' fill='#ff4670'/><circle r='4.5' fill='#fff067' stroke='#0b1118' stroke-width='1.5'><animateMotion path='M 422 80 L 423.6 83.7 L 424.8 87.5 L 425.5 91.5 L 425.8 95.5 L 425.6 99.5 L 425 103.4 L 423.9 107.3 L 422.5 111 L 420.6 114.6 L 418.3 117.9 L 415.7 120.9 L 412.7 123.6 L 409.5 126 L 406 128' dur='6s' repeatCount='indefinite' keyPoints='0;1;1' keyTimes='0;0.5;1' calcMode='spline' keySplines='0.7 0 0.3 1;0 0 1 1'/></circle></svg>",
+        "labels": [
+          {
+            "x": 90,
+            "y": 182,
+            "text": "$90^\\circ$ anticlockwise",
+            "color": "#00abfa",
+            "size": 13
+          },
+          {
+            "x": 90,
+            "y": 204,
+            "tex": "(x, y) → (-y, x)",
+            "color": "#c8c6be",
+            "size": 12.5
+          },
+          {
+            "x": 240,
+            "y": 182,
+            "tex": "180^\\circ",
+            "color": "#ff822c",
+            "size": 13
+          },
+          {
+            "x": 240,
+            "y": 204,
+            "tex": "(x, y) → (-x, -y)",
+            "color": "#c8c6be",
+            "size": 12.5
+          },
+          {
+            "x": 390,
+            "y": 182,
+            "text": "$90^\\circ$ clockwise",
+            "color": "#ff4670",
+            "size": 13
+          },
+          {
+            "x": 390,
+            "y": 204,
+            "tex": "(x, y) → (y, -x)",
+            "color": "#c8c6be",
+            "size": 12.5
+          }
+        ]
       },
       "chapter": "rotation"
     },
@@ -4330,8 +4560,162 @@
       "prompt": "A negative scale factor does two jobs at once. The number $2$ makes the new shape twice as big. The minus sign sends it to the opposite side of the centre.\n\nDraw a line from each corner of the object through the centre, and the matching corner of the image lands on it. Three corners, three lines, all crossing at the centre.",
       "visual": {
         "kind": "html",
-        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='28' y1='292' x2='28' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='54.5' y1='292' x2='54.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='81' y1='292' x2='81' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='107.5' y1='292' x2='107.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='134' y1='292' x2='134' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='160.5' y1='292' x2='160.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='187' y1='292' x2='187' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='213.5' y1='292' x2='213.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='240' y1='292' x2='240' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='266.5' y1='292' x2='266.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='293' y1='292' x2='293' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='319.5' y1='292' x2='319.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='346' y1='292' x2='346' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='372.5' y1='292' x2='372.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='399' y1='292' x2='399' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='425.5' y1='292' x2='425.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='452' y1='292' x2='452' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='292' x2='452' y2='292' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='265.6' x2='452' y2='265.6' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='239.2' x2='452' y2='239.2' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='212.8' x2='452' y2='212.8' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='186.4' x2='452' y2='186.4' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='160' x2='452' y2='160' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='133.60000000000002' x2='452' y2='133.60000000000002' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='107.20000000000002' x2='452' y2='107.20000000000002' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='80.80000000000001' x2='452' y2='80.80000000000001' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='54.400000000000006' x2='452' y2='54.400000000000006' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='28' x2='452' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='160' x2='452' y2='160' stroke='#3a4a5a' stroke-width='1.2'/><line x1='213.5' y1='292' x2='213.5' y2='28' stroke='#3a4a5a' stroke-width='1.2'/><g fill='#7a7875' font-family='Geist Mono,monospace' font-size='12' font-weight='600' text-anchor='middle' dominant-baseline='middle'><text x='28' y='171'>-7</text><text x='54.5' y='171'>-6</text><text x='81' y='171'>-5</text><text x='107.5' y='171'>-4</text><text x='134' y='171'>-3</text><text x='160.5' y='171'>-2</text><text x='187' y='171'>-1</text><text x='240' y='171'>1</text><text x='266.5' y='171'>2</text><text x='293' y='171'>3</text><text x='319.5' y='171'>4</text><text x='346' y='171'>5</text><text x='372.5' y='171'>6</text><text x='399' y='171'>7</text><text x='425.5' y='171'>8</text><text x='452' y='171'>9</text><text x='201.5' y='292'>-5</text><text x='201.5' y='265.6'>-4</text><text x='201.5' y='239.2'>-3</text><text x='201.5' y='212.8'>-2</text><text x='201.5' y='186.4'>-1</text><text x='201.5' y='133.60000000000002'>1</text><text x='201.5' y='107.20000000000002'>2</text><text x='201.5' y='80.80000000000001'>3</text><text x='201.5' y='54.400000000000006'>4</text><text x='201.5' y='28'>5</text></g><line x1='266.5' y1='133.60000000000002' x2='107.5' y2='212.8' stroke='#fff067' stroke-width='1.2' stroke-dasharray='4 4' opacity='0.55'/><line x1='293' y1='133.60000000000002' x2='54.5' y2='212.8' stroke='#fff067' stroke-width='1.2' stroke-dasharray='4 4' opacity='0.55'/><line x1='279.75' y1='107.20000000000002' x2='81' y2='265.6' stroke='#fff067' stroke-width='1.2' stroke-dasharray='4 4' opacity='0.55'/><polygon points='266.5,133.60000000000002 293,133.60000000000002 279.75,107.20000000000002' fill='rgba(0,171,250,0.16)' stroke='#00abfa' stroke-width='2.4' stroke-linejoin='round'/><text x='279.75' y='148.12' fill='#00abfa' font-family='Geist Mono,monospace' font-size='11' font-weight='600' text-anchor='middle'>object</text><polygon points='107.5,212.8 54.5,212.8 81,265.6' fill='rgba(255,70,112,0.16)' stroke='#ff4670' stroke-width='2.4' stroke-linejoin='round'/><text x='81' y='198.28000000000003' fill='#ff4670' font-family='Geist Mono,monospace' font-size='11' font-weight='600' text-anchor='middle'>image · k = -2</text><circle cx='213.5' cy='160' r='6' fill='#fff067' stroke='#0b1118' stroke-width='2'/><text x='225.5' y='174' fill='#fff067' font-family='Geist Mono,monospace' font-size='11' font-weight='600' text-anchor='start'>centre</text><polygon points=\"266.5,133.6 293,133.6 279.75,107.2\" fill=\"rgba(255,240,103,0.10)\" stroke=\"#fff067\" stroke-width=\"1.8\" stroke-linejoin=\"round\" opacity=\"0.9\"><animate attributeName=\"points\" values=\"266.5,133.6 293,133.6 279.75,107.2; 107.5,212.8 54.5,212.8 81,265.6; 107.5,212.8 54.5,212.8 81,265.6; 266.5,133.6 293,133.6 279.75,107.2\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/></polygon><circle r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"266.5\" cy=\"133.6\"><animate attributeName=\"cx\" values=\"266.5;107.5;107.5;266.5\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/><animate attributeName=\"cy\" values=\"133.6;212.8;212.8;133.6\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/></circle><circle r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"293\" cy=\"133.6\"><animate attributeName=\"cx\" values=\"293;54.5;54.5;293\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/><animate attributeName=\"cy\" values=\"133.6;212.8;212.8;133.6\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/></circle><circle r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"279.75\" cy=\"107.2\"><animate attributeName=\"cx\" values=\"279.75;81;81;279.75\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/><animate attributeName=\"cy\" values=\"107.2;265.6;265.6;107.2\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/></circle></svg>",
-        "wide": true
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='28' y1='292' x2='28' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='54.5' y1='292' x2='54.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='81' y1='292' x2='81' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='107.5' y1='292' x2='107.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='134' y1='292' x2='134' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='160.5' y1='292' x2='160.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='187' y1='292' x2='187' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='213.5' y1='292' x2='213.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='240' y1='292' x2='240' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='266.5' y1='292' x2='266.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='293' y1='292' x2='293' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='319.5' y1='292' x2='319.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='346' y1='292' x2='346' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='372.5' y1='292' x2='372.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='399' y1='292' x2='399' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='425.5' y1='292' x2='425.5' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='452' y1='292' x2='452' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='292' x2='452' y2='292' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='265.6' x2='452' y2='265.6' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='239.2' x2='452' y2='239.2' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='212.8' x2='452' y2='212.8' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='186.4' x2='452' y2='186.4' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='160' x2='452' y2='160' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='133.60000000000002' x2='452' y2='133.60000000000002' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='107.20000000000002' x2='452' y2='107.20000000000002' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='80.80000000000001' x2='452' y2='80.80000000000001' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='54.400000000000006' x2='452' y2='54.400000000000006' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='28' x2='452' y2='28' stroke='#141e2a' stroke-width='0.7'/><line x1='28' y1='160' x2='452' y2='160' stroke='#3a4a5a' stroke-width='1.2'/><line x1='213.5' y1='292' x2='213.5' y2='28' stroke='#3a4a5a' stroke-width='1.2'/><g fill='#7a7875' font-family='Geist Mono,monospace' font-size='12' font-weight='600' text-anchor='middle' dominant-baseline='middle'></g><line x1='266.5' y1='133.60000000000002' x2='107.5' y2='212.8' stroke='#fff067' stroke-width='1.2' stroke-dasharray='4 4' opacity='0.55'/><line x1='293' y1='133.60000000000002' x2='54.5' y2='212.8' stroke='#fff067' stroke-width='1.2' stroke-dasharray='4 4' opacity='0.55'/><line x1='279.75' y1='107.20000000000002' x2='81' y2='265.6' stroke='#fff067' stroke-width='1.2' stroke-dasharray='4 4' opacity='0.55'/><polygon points='266.5,133.60000000000002 293,133.60000000000002 279.75,107.20000000000002' fill='rgba(0,171,250,0.16)' stroke='#00abfa' stroke-width='2.4' stroke-linejoin='round'/><polygon points='107.5,212.8 54.5,212.8 81,265.6' fill='rgba(255,70,112,0.16)' stroke='#ff4670' stroke-width='2.4' stroke-linejoin='round'/><circle cx='213.5' cy='160' r='6' fill='#fff067' stroke='#0b1118' stroke-width='2'/><polygon points=\"266.5,133.6 293,133.6 279.75,107.2\" fill=\"rgba(255,240,103,0.10)\" stroke=\"#fff067\" stroke-width=\"1.8\" stroke-linejoin=\"round\" opacity=\"0.9\"><animate attributeName=\"points\" values=\"266.5,133.6 293,133.6 279.75,107.2; 107.5,212.8 54.5,212.8 81,265.6; 107.5,212.8 54.5,212.8 81,265.6; 266.5,133.6 293,133.6 279.75,107.2\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/></polygon><circle r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"266.5\" cy=\"133.6\"><animate attributeName=\"cx\" values=\"266.5;107.5;107.5;266.5\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/><animate attributeName=\"cy\" values=\"133.6;212.8;212.8;133.6\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/></circle><circle r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"293\" cy=\"133.6\"><animate attributeName=\"cx\" values=\"293;54.5;54.5;293\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/><animate attributeName=\"cy\" values=\"133.6;212.8;212.8;133.6\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/></circle><circle r=\"4\" fill=\"#fff067\" stroke=\"#0b1118\" stroke-width=\"1.5\" cx=\"279.75\" cy=\"107.2\"><animate attributeName=\"cx\" values=\"279.75;81;81;279.75\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/><animate attributeName=\"cy\" values=\"107.2;265.6;265.6;107.2\" keyTimes=\"0;0.4;0.6;1\" calcMode=\"spline\" keySplines=\"0.7 0 0.3 1; 0 0 1 1; 0.7 0 0.3 1\" dur=\"6.5s\" repeatCount=\"indefinite\"/></circle></svg>",
+        "wide": true,
+        "labels": [
+          {
+            "x": 28,
+            "y": 171,
+            "tex": "-7"
+          },
+          {
+            "x": 54.5,
+            "y": 171,
+            "tex": "-6"
+          },
+          {
+            "x": 81,
+            "y": 171,
+            "tex": "-5"
+          },
+          {
+            "x": 107.5,
+            "y": 171,
+            "tex": "-4"
+          },
+          {
+            "x": 134,
+            "y": 171,
+            "tex": "-3"
+          },
+          {
+            "x": 160.5,
+            "y": 171,
+            "tex": "-2"
+          },
+          {
+            "x": 187,
+            "y": 171,
+            "tex": "-1"
+          },
+          {
+            "x": 240,
+            "y": 171,
+            "tex": "1"
+          },
+          {
+            "x": 266.5,
+            "y": 171,
+            "tex": "2"
+          },
+          {
+            "x": 293,
+            "y": 171,
+            "tex": "3"
+          },
+          {
+            "x": 319.5,
+            "y": 171,
+            "tex": "4"
+          },
+          {
+            "x": 346,
+            "y": 171,
+            "tex": "5"
+          },
+          {
+            "x": 372.5,
+            "y": 171,
+            "tex": "6"
+          },
+          {
+            "x": 399,
+            "y": 171,
+            "tex": "7"
+          },
+          {
+            "x": 425.5,
+            "y": 171,
+            "tex": "8"
+          },
+          {
+            "x": 452,
+            "y": 171,
+            "tex": "9"
+          },
+          {
+            "x": 201.5,
+            "y": 292,
+            "tex": "-5"
+          },
+          {
+            "x": 201.5,
+            "y": 265.6,
+            "tex": "-4"
+          },
+          {
+            "x": 201.5,
+            "y": 239.2,
+            "tex": "-3"
+          },
+          {
+            "x": 201.5,
+            "y": 212.8,
+            "tex": "-2"
+          },
+          {
+            "x": 201.5,
+            "y": 186.4,
+            "tex": "-1"
+          },
+          {
+            "x": 201.5,
+            "y": 133.60000000000002,
+            "tex": "1"
+          },
+          {
+            "x": 201.5,
+            "y": 107.20000000000002,
+            "tex": "2"
+          },
+          {
+            "x": 201.5,
+            "y": 80.80000000000001,
+            "tex": "3"
+          },
+          {
+            "x": 201.5,
+            "y": 54.400000000000006,
+            "tex": "4"
+          },
+          {
+            "x": 201.5,
+            "y": 28,
+            "tex": "5"
+          },
+          {
+            "x": 279.75,
+            "y": 148.12,
+            "text": "object",
+            "color": "#00abfa",
+            "size": 11
+          },
+          {
+            "x": 81,
+            "y": 198.28000000000003,
+            "text": "image · k = -2",
+            "color": "#ff4670",
+            "size": 11
+          },
+          {
+            "x": 225.5,
+            "y": 174,
+            "text": "centre",
+            "color": "#fff067",
+            "size": 11,
+            "anchor": "start"
+          }
+        ]
       },
       "chapter": "enlargement"
     },

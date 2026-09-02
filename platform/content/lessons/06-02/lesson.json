@@ -43,8 +43,39 @@
       "prompt": "A right-angled triangle has three sides. If you know one angle and one side, you can work out the other sides. This lesson shows you how, step by step. By the end you will have written 20 marks of real exam answers, and three of the questions come from past papers.",
       "visual": {
         "kind": "html",
-        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>35°</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>adjacent</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>opposite</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>hypotenuse</text></svg>",
-        "wide": true
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
+        "wide": true,
+        "labels": [
+          {
+            "x": 346,
+            "y": 247,
+            "tex": "35^\\circ",
+            "color": "#fff067",
+            "size": 15
+          },
+          {
+            "x": 240,
+            "y": 281,
+            "text": "adjacent",
+            "color": "#00abfa",
+            "size": 14
+          },
+          {
+            "x": 84,
+            "y": 154,
+            "text": "opposite",
+            "color": "#ff822c",
+            "size": 14,
+            "anchor": "end"
+          },
+          {
+            "x": 254.4,
+            "y": 134.8,
+            "text": "hypotenuse",
+            "color": "#ff4670",
+            "size": 14
+          }
+        ]
       }
     },
     {
@@ -66,8 +97,39 @@
       "prompt": "This is a right-angled triangle. The side opposite the right angle is the longest one, and it is called the hypotenuse. To name the other two sides you first pick an angle. Here we have picked $\\theta$. The side across from $\\theta$ is the opposite. The side touching $\\theta$ is the adjacent.",
       "visual": {
         "kind": "html",
-        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>adjacent</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>opposite</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>hypotenuse</text></svg>",
-        "wide": true
+        "content": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
+        "wide": true,
+        "labels": [
+          {
+            "x": 346,
+            "y": 247,
+            "tex": "\\theta",
+            "color": "#fff067",
+            "size": 15
+          },
+          {
+            "x": 240,
+            "y": 281,
+            "text": "adjacent",
+            "color": "#00abfa",
+            "size": 14
+          },
+          {
+            "x": 84,
+            "y": 154,
+            "text": "opposite",
+            "color": "#ff822c",
+            "size": 14,
+            "anchor": "end"
+          },
+          {
+            "x": 254.4,
+            "y": 134.8,
+            "text": "hypotenuse",
+            "color": "#ff4670",
+            "size": 14
+          }
+        ]
       }
     },
     {

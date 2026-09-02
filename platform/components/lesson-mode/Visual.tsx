@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import katex from "katex"
+import { CanvasLabels, type CanvasLabel } from "./interactions/_shared"
 import type { VisualSpec } from "@/lib/lesson-mode/types"
 
 /**
@@ -17,7 +18,7 @@ export default function Visual({
   iframeRef?: React.RefObject<HTMLIFrameElement | null>
 }) {
   if (spec.kind === "iframe") return <IframeVisual src={spec.src} externalRef={iframeRef} />
-  if (spec.kind === "html")   return <HtmlVisual content={spec.content} />
+  if (spec.kind === "html")   return <HtmlVisual content={spec.content} labels={spec.labels} />
   if (spec.kind === "katex")  return <KatexVisual tex={spec.tex} display={spec.display !== false} />
   if (spec.kind === "shape")  return <ShapeVisual svg={spec.svg} />
   if (spec.kind === "stack")  return (
@@ -143,7 +144,7 @@ function IframeVisual({
   )
 }
 
-function HtmlVisual({ content }: { content: string }) {
+function HtmlVisual({ content, labels }: { content: string; labels?: CanvasLabel[] }) {
   const ref = useRef<HTMLDivElement | null>(null)
   // post-render KaTeX walker for any \(...\) in the raw HTML
   useEffect(() => {
@@ -173,7 +174,12 @@ function HtmlVisual({ content }: { content: string }) {
       node.parentNode?.replaceChild(wrapper, node)
     }
   }, [content])
-  return <div ref={ref} dangerouslySetInnerHTML={{ __html: content }} />
+  return (
+    <div ref={ref} className="relative w-full" style={{ containerType: "inline-size" }}>
+      <div dangerouslySetInnerHTML={{ __html: content }} />
+      <CanvasLabels labels={labels} />
+    </div>
+  )
 }
 
 function KatexVisual({ tex, display }: { tex: string; display: boolean }) {

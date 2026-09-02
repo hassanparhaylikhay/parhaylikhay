@@ -41,11 +41,39 @@ export interface InteractionSpec {
   reveal?: Record<string, unknown>
 }
 
+/**
+ * A label positioned over a figure, in the figure's own 480x320 units.
+ * Maths renders through KaTeX as real DOM above the SVG, never as SVG
+ * <text> and never inside a foreignObject (which drifts on iOS Safari).
+ */
+export type CanvasLabelSpec = {
+  x: number
+  y: number
+  /** Maths, rendered via KaTeX. */
+  tex?: string
+  /** A word or phrase, rendered in the UI face. */
+  text?: string
+  color?: string
+  /** Font size in the figure's own units. */
+  size?: number
+  anchor?: "middle" | "start" | "end"
+}
+
 // ─── visual primitives (for concept / recap / examLink slides) ─────────
 
 export type VisualSpec =
   | { kind: "iframe"; src: string; height?: number }
-  | { kind: "html"; content: string; wide?: boolean }       // raw HTML/CSS diagram; wide=true routes the concept slide to canvas-left + aside-right layout
+  | {
+      kind: "html"
+      content: string
+      /** wide=true routes the concept slide to canvas-left + aside-right layout */
+      wide?: boolean
+      /**
+       * KaTeX labels positioned over the diagram, in its own 480x320 units.
+       * Maths on a figure never renders as SVG <text>: see CanvasLabel.
+       */
+      labels?: CanvasLabelSpec[]
+    }
   | { kind: "katex"; tex: string; display?: boolean }       // a single equation
   | { kind: "shape"; svg: string }                          // small inline SVG snippet
   | { kind: "stack"; children: VisualSpec[]; gap?: number } // vertical composition

@@ -69,12 +69,40 @@ function convert(raw) {
   return { tex: t }
 }
 
-/** Pull every <text> out of an SVG string, returning the stripped svg + labels. */
+/**
+ * Character ranges of <g> groups that carry SMIL animation. A label inside
+ * one of these is riding a morph (a corner letter travelling with the shape),
+ * so it must stay in the SVG where the animation can move it.
+ */
+function animatedRanges(svg) {
+  const ranges = []
+  const stack = []
+  const re = /<(\/?)g\b[^>]*?(\/?)>/g
+  let m
+  while ((m = re.exec(svg))) {
+    const closing = m[1] === "/", selfClose = m[2] === "/"
+    if (!closing && !selfClose) stack.push(m.index)
+    else if (closing) {
+      const start = stack.pop()
+      if (start !== undefined) ranges.push([start, re.lastIndex])
+    }
+  }
+  return ranges.filter(([a, b]) => /<animate|<set\b/.test(svg.slice(a, b)))
+}
+
+/** Pull every static <text> out of an SVG string, returning svg + labels. */
 function extract(svg) {
   const labels = []
+  const frozen = animatedRanges(svg)
+  let kept = 0
   const stripped = svg.replace(
     /<text\b([^>]*)>([\s\S]*?)<\/text>/g,
-    (_m, attrs, body) => {
+    (_m, attrs, body, offset) => {
+      // leave anything the animation drives exactly where it is
+      if (/<animate|<set\b/.test(body) || frozen.some(([a, b]) => offset >= a && offset < b)) {
+        kept++
+        return _m
+      }
       const at = n => {
         const m = attrs.match(new RegExp(`${n}='([^']*)'`)) || attrs.match(new RegExp(`${n}="([^"]*)"`))
         return m ? m[1] : undefined
@@ -95,10 +123,22 @@ function extract(svg) {
     },
   )
   // drop keys that are undefined so the JSON stays tidy
-  return { svg: stripped, labels: labels.map(l => Object.fromEntries(Object.entries(l).filter(([, v]) => v !== undefined))) }
+  return {
+    svg: stripped,
+    kept,
+    labels: labels.map(l => Object.fromEntries(Object.entries(l).filter(([, v]) => v !== undefined))),
+  }
 }
 
-let files = 0, moved = 0, prose = 0
+/** Every html visual on a slide, including ones nested in stack/row. */
+function htmlVisuals(v, out = []) {
+  if (!v) return out
+  if (v.kind === "html" && typeof v.content === "string") out.push(v)
+  for (const c of v.children ?? []) htmlVisuals(c, out)
+  return out
+}
+
+let files = 0, moved = 0, prose = 0, animKept = 0
 for (const id of fs.readdirSync(LESSONS)) {
   const p = path.join(LESSONS, id, "lesson.json")
   if (!fs.existsSync(p)) continue
@@ -106,17 +146,31 @@ for (const id of fs.readdirSync(LESSONS)) {
   let touched = 0
   for (const s of L.slides) {
     const c = s.interaction?.config
-    if (!c?.contextHtml) continue
-    if (!/<text/.test(c.contextHtml)) continue
-    const { svg, labels } = extract(c.contextHtml)
-    if (labels.length === 0) continue
-    c.contextHtml = svg
-    // Generators may already have emitted their own labels (formula chips
-    // written as proper fractions), so append rather than replace.
-    c.figureLabels = [...(c.figureLabels ?? []), ...labels]
-    moved += labels.length
-    prose += labels.filter(l => l.text).length
-    touched++
+    if (c?.contextHtml && /<text/.test(c.contextHtml)) {
+      const { svg, labels, kept } = extract(c.contextHtml)
+      animKept += kept
+      if (labels.length) {
+        c.contextHtml = svg
+        // Generators may already have emitted their own labels (formula chips
+        // written as proper fractions), so append rather than replace.
+        c.figureLabels = [...(c.figureLabels ?? []), ...labels]
+        moved += labels.length
+        prose += labels.filter(l => l.text).length
+        touched++
+      }
+    }
+    // Concept-slide diagrams are figures too: same fonts, same rule.
+    for (const v of htmlVisuals(s.visual)) {
+      if (!/<text/.test(v.content)) continue
+      const { svg, labels, kept } = extract(v.content)
+      animKept += kept
+      if (!labels.length) continue
+      v.content = svg
+      v.labels = [...(v.labels ?? []), ...labels]
+      moved += labels.length
+      prose += labels.filter(l => l.text).length
+      touched++
+    }
   }
   if (touched) {
     fs.writeFileSync(p, JSON.stringify(L, null, 2) + "\n")
@@ -126,3 +180,4 @@ for (const id of fs.readdirSync(LESSONS)) {
   }
 }
 console.log(`\n${moved} labels moved out of ${files} lesson files (${moved - prose} maths, ${prose} phrases)`)
+if (animKept) console.log(`${animKept} labels left in the SVG because animation moves them`)
