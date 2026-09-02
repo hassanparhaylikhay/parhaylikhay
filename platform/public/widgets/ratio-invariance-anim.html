@@ -4,6 +4,8 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Ratio invariance</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"/>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <style>
   html, body { margin:0; background:#0b1118; color:#c8c6be; font-family:'Geist Mono', ui-monospace, monospace; overflow:hidden; }
   .wrap { padding:10px 12px 12px; }
@@ -11,6 +13,13 @@
   .step-title { font-size:12px; color:#fff067; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; }
   .meta { font-size:10px; color:#7a7875; }
   svg { display:block; width:100%; height:auto; }
+  /* Maths renders as KaTeX in a layer over the SVG, never as SVG <text>:
+     inside the SVG it would need a foreignObject, which iOS Safari places
+     at unscaled coordinates so the labels drift off their anchors. The
+     layer scales with the figure through container query units. */
+  .stagewrap { position:relative; container-type:inline-size; }
+  .lbl { position:absolute; white-space:nowrap; line-height:1.1; pointer-events:none; }
+  .lbl .katex { font-size:1em; color:inherit; }
   html.lesson-mode, body.lesson-mode { background: transparent; }
   .lesson-mode .head { display:none; }
   .lesson-mode .wrap { padding:0; }
@@ -23,7 +32,10 @@
     <span class="step-title" id="title">ONE ANGLE, ONE RATIO</span>
     <span class="meta">drag the corner · or just watch</span>
   </div>
-  <svg id="stage" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+  <div class="stagewrap" id="stagewrap">
+    <svg id="stage" viewBox="0 0 480 320" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div id="labels"></div>
+  </div>
 </div>
 <script>
 "use strict";
@@ -36,10 +48,10 @@ var COL = { blue:"#00abfa", yellow:"#fff067", orange:"#ff822c", green:"#0fee89",
 
 var ANGLE = Math.PI / 6;                      // 30 degrees, fixed: that is the whole point
 var CFG = {
-  sin: { header: "sin 30° = opposite ÷ hypotenuse", top: "opp", bot: "hyp" },
-  cos: { header: "cos 30° = adjacent ÷ hypotenuse", top: "adj", bot: "hyp" },
-  tan: { header: "tan 30° = opposite ÷ adjacent",   top: "opp", bot: "adj" },
-}[MODE] || { header: "sin 30° = opposite ÷ hypotenuse", top: "opp", bot: "hyp" };
+  sin: { header: "\\sin 30^\\circ = \\dfrac{\\text{opposite}}{\\text{hypotenuse}}", top: "opp", bot: "hyp" },
+  cos: { header: "\\cos 30^\\circ = \\dfrac{\\text{adjacent}}{\\text{hypotenuse}}", top: "adj", bot: "hyp" },
+  tan: { header: "\\tan 30^\\circ = \\dfrac{\\text{opposite}}{\\text{adjacent}}", top: "opp", bot: "adj" },
+}[MODE] || { header: "\\sin 30^\\circ = \\dfrac{\\text{opposite}}{\\text{hypotenuse}}", top: "opp", bot: "hyp" };
 
 // side colours: active pair bright, third side dimmed
 var SIDE_COL = { opp: COL.orange, adj: COL.blue, hyp: COL.pink };
@@ -62,6 +74,27 @@ function el(name, attrs) {
 }
 function fmt(n, dp) { return n.toFixed(dp); }
 
+var labelLayer = document.getElementById("labels");
+/** Place a KaTeX label at figure coordinates (480x320 space). */
+function texLabel(x, y, tex, colour, size, anchor) {
+  var d = document.createElement("div");
+  d.className = "lbl";
+  d.style.left = (x / 480 * 100) + "%";
+  d.style.top = (y / 320 * 100) + "%";
+  d.style.transform = anchor === "start" ? "translate(0,-50%)"
+    : anchor === "end" ? "translate(-100%,-50%)" : "translate(-50%,-50%)";
+  d.style.fontSize = (size / 480 * 100).toFixed(3) + "cqw";
+  d.style.color = colour;
+  if (typeof katex !== "undefined") {
+    try { katex.render(tex, d, { throwOnError: false, output: "html" }); }
+    catch (e) { d.textContent = tex; }
+  } else {
+    d.textContent = tex;
+    setTimeout(draw, 60);            // KaTeX still loading; redraw once it lands
+  }
+  labelLayer.appendChild(d);
+}
+
 function corners(h) {
   var adj = h * Math.cos(ANGLE) * UNIT, opp = h * Math.sin(ANGLE) * UNIT;
   return { A: { x: V.x + adj, y: V.y }, B: { x: V.x + adj, y: V.y - opp } };
@@ -69,13 +102,12 @@ function corners(h) {
 
 function draw() {
   while (stage.firstChild) stage.removeChild(stage.firstChild);
+  while (labelLayer.firstChild) labelLayer.removeChild(labelLayer.firstChild);
   var c = corners(hyp);
   var adjU = hyp * Math.cos(ANGLE), oppU = hyp * Math.sin(ANGLE);
 
   // header
-  var head = el("text", { x: 240, y: 30, "font-size": 15, "font-weight": 600, fill: COL.yellow, "text-anchor": "middle", "dominant-baseline": "middle", "font-family": "'Geist Mono',monospace" });
-  head.textContent = CFG.header;
-  stage.appendChild(head);
+  texLabel(240, 34, CFG.header, COL.yellow, 17);
 
   // triangle
   stage.appendChild(el("polygon", {
@@ -94,16 +126,12 @@ function draw() {
     wp += " L " + (V.x + 28 * Math.cos(a)) + " " + (V.y + 28 * Math.sin(a));
   }
   stage.appendChild(el("path", { d: wp + " Z", fill: "rgba(255,240,103,0.18)", stroke: COL.yellow, "stroke-width": 1.2 }));
-  var th = el("text", { x: V.x + 40, y: V.y - 11, "font-size": 13, "font-weight": 600, fill: COL.yellow, "text-anchor": "start", "dominant-baseline": "middle", "font-family": "'Geist Mono',monospace" });
-  th.textContent = "30°";
-  stage.appendChild(th);
+  texLabel(V.x + 40, V.y - 11, "30^\\circ", COL.yellow, 14, "start");
 
   // side labels with LIVE values
   function sideLabel(name, value, x, y, anchor) {
     var col = active[name] ? SIDE_COL[name] : COL.faint;
-    var t = el("text", { x: x, y: y, "font-size": 13.5, "font-weight": 600, fill: col, "text-anchor": anchor, "dominant-baseline": "middle", "font-family": "'Geist Mono',monospace" });
-    t.textContent = name + " " + fmt(value, 1);
-    stage.appendChild(t);
+    texLabel(x, y, "\\text{" + name + " } " + fmt(value, 1), col, 14.5, anchor);
   }
   sideLabel("adj", adjU, (V.x + c.A.x) / 2, V.y + 20, "middle");
   sideLabel("opp", oppU, c.A.x + 14, (c.A.y + c.B.y) / 2, "start");
@@ -112,14 +140,10 @@ function draw() {
   // the living equation: numbers churn, the quotient never moves
   var vals = { opp: oppU, adj: adjU, hyp: hyp };
   var a1 = vals[CFG.top], a2 = vals[CFG.bot];
-  var eq = el("text", { x: 240, y: 300, "font-size": 16, "font-weight": 600, "text-anchor": "middle", "dominant-baseline": "middle", "font-family": "'Geist Mono',monospace" });
-  var t1 = el("tspan", { fill: SIDE_COL[CFG.top] }); t1.textContent = fmt(a1, 1);
-  var t2 = el("tspan", { fill: COL.off }); t2.textContent = " ÷ ";
-  var t3 = el("tspan", { fill: SIDE_COL[CFG.bot] }); t3.textContent = fmt(a2, 1);
-  var t4 = el("tspan", { fill: COL.off }); t4.textContent = " = ";
-  var t5 = el("tspan", { fill: COL.green, "font-size": 18 }); t5.textContent = fmt(a1 / a2, 2);
-  eq.appendChild(t1); eq.appendChild(t2); eq.appendChild(t3); eq.appendChild(t4); eq.appendChild(t5);
-  stage.appendChild(eq);
+  var eqTex = "\\dfrac{\\textcolor{" + SIDE_COL[CFG.top] + "}{" + fmt(a1, 1) + "}}"
+            + "{\\textcolor{" + SIDE_COL[CFG.bot] + "}{" + fmt(a2, 1) + "}}"
+            + " = \\textcolor{" + COL.green + "}{" + fmt(a1 / a2, 2) + "}";
+  texLabel(240, 298, eqTex, COL.off, 19);
 
   // drag handle at B, pulsing until touched
   var hit = el("circle", { cx: c.B.x, cy: c.B.y, r: 16, fill: "transparent", style: "cursor:grab" });

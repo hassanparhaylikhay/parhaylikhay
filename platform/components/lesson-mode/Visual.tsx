@@ -174,9 +174,27 @@ function HtmlVisual({ content, labels }: { content: string; labels?: CanvasLabel
       node.parentNode?.replaceChild(wrapper, node)
     }
   }, [content])
+  // A 480x320 diagram with width:100% took the whole 1200px column and came
+  // out 800px tall, which pushed the slide past the viewport. Cap it against
+  // the viewport height as well, so the figure fits next to a title, a
+  // paragraph and a button without the student ever scrolling.
+  const isDiagram = /<svg[^>]*viewBox=['"]0 0 480 320/.test(content)
   return (
-    <div ref={ref} className="relative w-full" style={{ containerType: "inline-size" }}>
-      <div dangerouslySetInnerHTML={{ __html: content }} />
+    <div
+      ref={ref}
+      className="relative w-full mx-auto"
+      style={{
+        containerType: "inline-size",
+        ...(isDiagram
+          ? {
+              aspectRatio: "480 / 320",
+              maxHeight: "calc(100dvh - 360px)",
+              maxWidth: "calc((100dvh - 360px) * 1.5)",
+            }
+          : null),
+      }}
+    >
+      <div className={isDiagram ? "w-full h-full" : undefined} dangerouslySetInnerHTML={{ __html: content }} />
       <CanvasLabels labels={labels} />
     </div>
   )

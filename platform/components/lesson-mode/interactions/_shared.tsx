@@ -333,6 +333,7 @@ export function ContextCanvas({ html, labels, asideWidth, overlay }: { html: str
       }}
     >
       <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: html }} />
+      <CanvasLabels labels={labels} />
       {overlay}
     </div>
   )
