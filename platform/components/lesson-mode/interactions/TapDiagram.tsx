@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { AltDemoOverlay, CanvasStage, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoOverlay, CanvasStage, HelperRow, MixedText, type CanvasLabel, type InteractionProps } from "./_shared"
 
 type Region = {
   id: string
@@ -50,6 +50,8 @@ export type TapDiagramConfig = {
    * (`pointer-events="all"`) so the target is comfortable on a phone.
    */
   contextHtml: string
+  /** KaTeX labels positioned over the figure (see CanvasLabel). */
+  figureLabels?: CanvasLabel[]
   regions: Region[]
   successText?: string
   /** Verify slides: no show-me. Injected by InteractionSlide. */
@@ -196,6 +198,7 @@ export default function TapDiagram({
       >
         <CanvasStage
           html={config.contextHtml}
+          labels={config.figureLabels}
           asideWidth={0}
           instruction={instruction}
           note={note}

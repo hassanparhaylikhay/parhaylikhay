@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AltDemoCard, AltDemoOverlay, COLOR, CanvasStage, MixedText, Prompt, type InteractionProps } from "./_shared"
+import { AltDemoCard, AltDemoOverlay, COLOR, CanvasStage, MixedText, Prompt, type CanvasLabel, type InteractionProps } from "./_shared"
 
 type BuilderOption = {
   id: string
@@ -25,6 +25,8 @@ export type AnswerBuilderConfig = {
   prompt?: string
   /** Optional manipulative-style diagram. When present, the slide uses the wide canvas + aside layout. */
   contextHtml?: string
+  /** KaTeX labels positioned over the figure (see CanvasLabel). */
+  figureLabels?: CanvasLabel[]
   /** The parts of the examiner sentence, in the order they are assembled. */
   parts: BuilderPart[]
   successText?: string
@@ -203,6 +205,7 @@ export default function AnswerBuilder({ config, onComplete, onDismissAlt }: Inte
         <div className="flex-1 min-w-0 flex items-center justify-center">
           <CanvasStage
             html={effectiveHtml}
+            labels={config.figureLabels}
             asideWidth={360}
             instruction={<MixedText text={config.prompt} />}
             note={note}

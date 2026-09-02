@@ -114,7 +114,7 @@
         "hint": "First decide which side is the hypotenuse, then put its square alone on one side of the equation.",
         "config": {
           "prompt": "The sides are labelled $p$, $q$ and $r$. Which equation does Pythagoras give for this triangle?",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,260 400,260 80,60' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 260 L 93 247 L 80 247' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='282' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>p</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>q</text><text x='251.7' y='141.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>r</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,260 400,260 80,60' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 260 L 93 247 L 80 247' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "options": [
             {
               "id": "opt-correct",
@@ -137,7 +137,31 @@
               "whyWrong": "The hypotenuse square is the two leg squares added together, never subtracted."
             }
           ],
-          "successText": "$r$ is opposite the right angle, so $r$ is the hypotenuse and $r^2 = p^2 + q^2$. Every question starts by working out which side is the hypotenuse."
+          "successText": "$r$ is opposite the right angle, so $r$ is the hypotenuse and $r^2 = p^2 + q^2$. Every question starts by working out which side is the hypotenuse.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 282,
+              "tex": "p",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 64,
+              "y": 160,
+              "tex": "q",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 251.7,
+              "y": 141.3,
+              "tex": "r",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -163,7 +187,45 @@
         "kind": "tapDiagram",
         "config": {
           "prompt": "Mark the hypotenuse and the side you want, then decide whether to add or subtract.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='62,250 304.7,250 62,68' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 75 250 L 75 237 L 62 237' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='195.5' y='268.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>12 cm</text><text x='41.4' y='151.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle' pointer-events='none'>x</text><text x='202.5' y='144.6' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>15 cm</text><g data-region='base'><line class='pl-tap-vis' x1='62' y1='250' x2='304.7' y2='250' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='250' x2='304.7' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='62' y1='68' x2='62' y2='250' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='62' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='62' y1='68' x2='304.7' y2='250' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='304.7' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='e-add'><rect class='pl-tap-vis pl-tap-fill' x='296' y='96' width='172' height='44' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><text x='382' y='118' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>add the squares</text><rect class='pl-tap-hit' x='296' y='96' width='172' height='44' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='e-sub'><rect class='pl-tap-vis pl-tap-fill' x='296' y='162' width='172' height='44' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><text x='382' y='184' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>take one away</text><rect class='pl-tap-hit' x='296' y='162' width='172' height='44' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='62,250 304.7,250 62,68' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 75 250 L 75 237 L 62 237' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><g data-region='base'><line class='pl-tap-vis' x1='62' y1='250' x2='304.7' y2='250' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='250' x2='304.7' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='62' y1='68' x2='62' y2='250' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='62' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='62' y1='68' x2='304.7' y2='250' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='304.7' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='e-add'><rect class='pl-tap-vis pl-tap-fill' x='274' y='88' width='196' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='274' y='88' width='196' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='e-sub'><rect class='pl-tap-vis pl-tap-fill' x='274' y='172' width='196' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='274' y='172' width='196' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g></svg>",
+          "figureLabels": [
+            {
+              "x": 372,
+              "y": 117,
+              "tex": "x^{2} = 15^{2} + 12^{2}",
+              "color": "#f0eeea",
+              "size": 16
+            },
+            {
+              "x": 372,
+              "y": 201,
+              "tex": "x^{2} = 15^{2} - 12^{2}",
+              "color": "#f0eeea",
+              "size": 16
+            },
+            {
+              "x": 195.5,
+              "y": 268.3,
+              "tex": "12\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 41.4,
+              "y": 151.3,
+              "tex": "x",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 202.5,
+              "y": 144.6,
+              "tex": "15\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ],
           "sequence": [
             {
               "regionId": "hyp",
@@ -187,8 +249,8 @@
             },
             {
               "regionId": "e-sub",
-              "prompt": "The side you want is not the H, so it is a shorter side. Tap what that means you do to the squares.",
-              "hint": "You add the squares only when the side you want IS the hypotenuse. This one is not."
+              "prompt": "The side you want is not the H, so it is a shorter side. Tap the equation that gives you it.",
+              "hint": "You add the squares only when the side you want is the hypotenuse. This one is not, so the squares come apart."
             }
           ],
           "regions": [
@@ -238,7 +300,7 @@
         "hint": "The hypotenuse is the longest side, but a straight path is always shorter than walking the two legs.",
         "config": {
           "prompt": "The legs are $6$ and $8$. Before any working, how long must the hypotenuse be?",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>8 cm</text><text x='80' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>6 cm</text><text x='253.2' y='142.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "options": [
             {
               "id": "opt-14",
@@ -261,7 +323,31 @@
               "whyWrong": "It has to be longer than either leg. If it matched a leg, the triangle would be flat."
             }
           ],
-          "successText": "The hypotenuse is longer than either short side, but shorter than the two of them added together. Pythagoras gives you the exact value, and that comes next."
+          "successText": "The hypotenuse is longer than either short side, but shorter than the two of them added together. Pythagoras gives you the exact value, and that comes next.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 290,
+              "tex": "8\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 80,
+              "y": 160,
+              "tex": "6\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 253.2,
+              "y": 142.4,
+              "tex": "c",
+              "color": "#fff067",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -276,7 +362,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find $c$.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>8 cm</text><text x='80' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>6 cm</text><text x='253.2' y='142.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "lines": [
             {
               "id": "l-eq",
@@ -327,7 +413,31 @@
             }
           ],
           "successText": "$c = 10$ cm, which sits between $8$ and $14$ as it should. The equation line earns the method mark and the value earns the accuracy mark.",
-          "intro": "Build the working line by line, exactly as it would go on paper. Pick or type each line; the mark codes on the right show what each line earns."
+          "intro": "Build the working line by line, exactly as it would go on paper. Pick or type each line; the mark codes on the right show what each line earns.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 290,
+              "tex": "8\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 80,
+              "y": 160,
+              "tex": "6\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 253.2,
+              "y": 142.4,
+              "tex": "c",
+              "color": "#fff067",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -342,7 +452,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find $c$ to $1$ decimal place.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,248.9 400,248.9 80,71.1' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 248.9 L 93 235.9 L 80 235.9' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='270.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>9 cm</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>5 cm</text><text x='250.7' y='140.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,248.9 400,248.9 80,71.1' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 248.9 L 93 235.9 L 80 235.9' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "lines": [
             {
               "id": "l-eq",
@@ -392,7 +502,31 @@
               "nudge": "The square root of $106$ is $10.295...$, and to one decimal place that rounds to $10.3$."
             }
           ],
-          "successText": "$c = 10.3$ cm. Keep the full calculator value until the last line, then round once at the end."
+          "successText": "$c = 10.3$ cm. Keep the full calculator value until the last line, then round once at the end.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 270.9,
+              "tex": "9\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 64,
+              "y": 160,
+              "tex": "5\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 250.7,
+              "y": 140.8,
+              "tex": "c",
+              "color": "#fff067",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -408,7 +542,7 @@
         "config": {
           "prompt": "Read the student's working, then decide about each mark.",
           "question": "Find $c$ to $1$ decimal place. The legs are $9$ cm and $5$ cm.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,248.9 400,248.9 80,71.1' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 248.9 L 93 235.9 L 80 235.9' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='270.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>9 cm</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>5 cm</text><text x='250.7' y='140.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,248.9 400,248.9 80,71.1' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 248.9 L 93 235.9 L 80 235.9' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "script": [
             {
               "id": "l1",
@@ -443,7 +577,31 @@
           ],
           "faultLineId": "l3",
           "faultExplain": "The digit after the cut is a $9$, which rounds the answer up to $10.3$. Truncating to $10.2$ is the single most common way this accuracy mark is lost.",
-          "successText": "One mark out of two. The method was right but the answer was rounded the wrong way. Now you know what the examiner is looking at."
+          "successText": "One mark out of two. The method was right but the answer was rounded the wrong way. Now you know what the examiner is looking at.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 270.9,
+              "tex": "9\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 64,
+              "y": 160,
+              "tex": "5\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 250.7,
+              "y": 140.8,
+              "tex": "c",
+              "color": "#fff067",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -468,7 +626,7 @@
         "hint": "The hypotenuse is opposite the right angle, whatever the letters say.",
         "config": {
           "prompt": "Tap the hypotenuse of this triangle.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='179' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260.3' y='151.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><g data-region='bottom'><line class='pl-tap-vis' x1='195' y1='268' x2='285' y2='268' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='195' y1='268' x2='285' y2='268' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='195' y1='52' x2='195' y2='268' stroke='#fff067' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='195' y1='52' x2='195' y2='268' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='195' y1='52' x2='285' y2='268' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='195' y1='52' x2='285' y2='268' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><g data-region='bottom'><line class='pl-tap-vis' x1='195' y1='268' x2='285' y2='268' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='195' y1='268' x2='285' y2='268' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='195' y1='52' x2='195' y2='268' stroke='#fff067' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='195' y1='52' x2='195' y2='268' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='195' y1='52' x2='285' y2='268' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='195' y1='52' x2='285' y2='268' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
           "regions": [
             {
               "id": "hyp",
@@ -483,7 +641,31 @@
               "whyWrong": "That side runs into the right angle too, so it is the other leg."
             }
           ],
-          "successText": "The $13$ cm side is opposite the right angle, so it is the hypotenuse. That is what tells you to subtract here instead of adding."
+          "successText": "The $13$ cm side is opposite the right angle, so it is the hypotenuse. That is what tells you to subtract here instead of adding.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 290,
+              "tex": "5\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 179,
+              "y": 160,
+              "tex": "x",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 260.3,
+              "y": 151.5,
+              "tex": "13\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -498,7 +680,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find $x$. The hypotenuse is $13$, so think carefully about whether you add or subtract.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='179' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260.3' y='151.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "lines": [
             {
               "id": "l-eq",
@@ -548,7 +730,31 @@
               "nudge": "$x^2$ is $144$, and the square root of $144$ is a whole number."
             }
           ],
-          "successText": "$x = 12$ cm, which is shorter than the hypotenuse, as it has to be. Checking the size like that catches mistakes early."
+          "successText": "$x = 12$ cm, which is shorter than the hypotenuse, as it has to be. Checking the size like that catches mistakes early.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 290,
+              "tex": "5\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 179,
+              "y": 160,
+              "tex": "x",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 260.3,
+              "y": 151.5,
+              "tex": "13\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -563,7 +769,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find $x$ to $1$ decimal place.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='189.9,268 290.1,268 189.9,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 202.9 268 L 202.9 255 L 189.9 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>4 m</text><text x='173.9' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260' y='150.7' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>9.5 m</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='189.9,268 290.1,268 189.9,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 202.9 268 L 202.9 255 L 189.9 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "lines": [
             {
               "id": "l-eq",
@@ -608,7 +814,31 @@
               "nudge": "The square root of $74.25$ is $8.616...$, which rounds to $8.6$."
             }
           ],
-          "successText": "$x = 8.6$ m. The method is exactly the same, only the arithmetic is untidier."
+          "successText": "$x = 8.6$ m. The method is exactly the same, only the arithmetic is untidier.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 290,
+              "tex": "4\\,\\text{m}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 173.9,
+              "y": 160,
+              "tex": "x",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 260,
+              "y": 150.7,
+              "tex": "9.5\\,\\text{m}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -624,7 +854,7 @@
         "config": {
           "prompt": "Another candidate, another script. Rule on each mark.",
           "question": "The hypotenuse is $13$ cm and one leg is $5$ cm. Find the other leg $x$.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='179' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='260.3' y='151.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='195,268 285,268 195,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 208 268 L 208 255 L 195 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "script": [
             {
               "id": "l1",
@@ -659,7 +889,31 @@
           ],
           "faultLineId": "l1",
           "faultExplain": "Line 1 is where both marks died: one wrong sign, two marks gone. A size check would have caught it too, because $13.9$ is longer than the hypotenuse, which is impossible.",
-          "successText": "Zero out of two, all from one wrong sign. Adding when you should subtract loses both marks, which is why you find the hypotenuse first."
+          "successText": "Zero out of two, all from one wrong sign. Adding when you should subtract loses both marks, which is why you find the hypotenuse first.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 290,
+              "tex": "5\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 179,
+              "y": 160,
+              "tex": "x",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 260.3,
+              "y": 151.5,
+              "tex": "13\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -674,7 +928,7 @@
         "hint": "Both known sides touch the right angle here, so what part does the unknown play?",
         "config": {
           "prompt": "One from the last chapter. Which equation finds this hypotenuse?",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,206.7 400,206.7 80,113.3' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 206.7 L 93 193.7 L 80 193.7' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='228.7' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>24 cm</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>7 cm</text><text x='246.2' y='138.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>x</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,206.7 400,206.7 80,113.3' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 206.7 L 93 193.7 L 80 193.7' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "options": [
             {
               "id": "opt-minus",
@@ -692,7 +946,31 @@
               "whyWrong": "The squares get added, never the plain sides."
             }
           ],
-          "successText": "The unknown side is opposite the right angle, so you add the squares. The answer is $x = 25$."
+          "successText": "The unknown side is opposite the right angle, so you add the squares. The answer is $x = 25$.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 228.7,
+              "tex": "24\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 64,
+              "y": 160,
+              "tex": "7\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 246.2,
+              "y": 138.9,
+              "tex": "x",
+              "color": "#fff067",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -730,7 +1008,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find the diagonal $d$ of the rectangle.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><rect x='75' y='91.3' width='330' height='137.5' fill='rgba(240,238,234,0.04)' stroke='#c8c6be' stroke-width='2'/><line x1='75' y1='228.8' x2='405' y2='91.3' stroke='#ff4670' stroke-width='2.2'/><path d='M 392 228.8 L 392 215.8 L 405 215.8' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='248.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>12 cm</text><text x='421' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>5 cm</text><text x='220' y='144' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>d</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><rect x='75' y='91.3' width='330' height='137.5' fill='rgba(240,238,234,0.04)' stroke='#c8c6be' stroke-width='2'/><line x1='75' y1='228.8' x2='405' y2='91.3' stroke='#ff4670' stroke-width='2.2'/><path d='M 392 228.8 L 392 215.8 L 405 215.8' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "lines": [
             {
               "id": "l-eq",
@@ -780,7 +1058,31 @@
               "nudge": "The square root of $169$ is a whole number, and it is bigger than $12$."
             }
           ],
-          "successText": "$d = 13$ cm. Whenever a question asks for the diagonal of a rectangle, this is the method."
+          "successText": "$d = 13$ cm. Whenever a question asks for the diagonal of a rectangle, this is the method.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 248.8,
+              "tex": "12\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 421,
+              "y": 160,
+              "tex": "5\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "start"
+            },
+            {
+              "x": 220,
+              "y": 144,
+              "tex": "d",
+              "color": "#fff067",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -795,7 +1097,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "A $6.5$ m ladder leans against a wall, with its foot $2.5$ m out from the base. How high up the wall does it reach?",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='120' y1='280' x2='400' y2='280' stroke='#7a7875' stroke-width='2'/><line x1='300' y1='280' x2='300' y2='70' stroke='#7a7875' stroke-width='2'/><line x1='220' y1='280' x2='300' y2='88' stroke='#ff4670' stroke-width='2.6'/><path d='M 287 280 L 287 267 L 300 267' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='260' y='300' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>2.5 m</text><text x='236' y='174' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>6.5 m</text><text x='316' y='184' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>h</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='120' y1='280' x2='400' y2='280' stroke='#7a7875' stroke-width='2'/><line x1='300' y1='280' x2='300' y2='70' stroke='#7a7875' stroke-width='2'/><line x1='220' y1='280' x2='300' y2='88' stroke='#ff4670' stroke-width='2.6'/><path d='M 287 280 L 287 267 L 300 267' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "lines": [
             {
               "id": "l-eq",
@@ -845,7 +1147,31 @@
               "nudge": "The square root of $36$ is a whole number."
             }
           ],
-          "successText": "The ladder reaches $6$ m up the wall. In word problems the slanted object, like a ladder or a ramp or a wire, is nearly always the hypotenuse."
+          "successText": "The ladder reaches $6$ m up the wall. In word problems the slanted object, like a ladder or a ramp or a wire, is nearly always the hypotenuse.",
+          "figureLabels": [
+            {
+              "x": 260,
+              "y": 300,
+              "tex": "2.5\\,\\text{m}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 236,
+              "y": 174,
+              "tex": "6.5\\,\\text{m}",
+              "color": "#ff4670",
+              "size": 14
+            },
+            {
+              "x": 316,
+              "y": 184,
+              "tex": "h",
+              "color": "#fff067",
+              "size": 15,
+              "anchor": "start"
+            }
+          ]
         }
       }
     },
@@ -873,7 +1199,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find the height $h$ of the isosceles triangle with sides $13$ cm and base $10$ cm.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='165,266 315,266 240,86' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><line x1='240' y1='86' x2='240' y2='266' stroke='#fff067' stroke-width='1.8' stroke-dasharray='6 5'/><path d='M 253 266 L 253 253 L 240 253' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='178.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><text x='301.5' y='176' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>13 cm</text><text x='202.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='277.5' y='286' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 cm</text><text x='254' y='176' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>h</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='165,266 315,266 240,86' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><line x1='240' y1='86' x2='240' y2='266' stroke='#fff067' stroke-width='1.8' stroke-dasharray='6 5'/><path d='M 253 266 L 253 253 L 240 253' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "lines": [
             {
               "id": "l-eq",
@@ -923,7 +1249,45 @@
               "nudge": "The square root of $144$ is a whole number."
             }
           ],
-          "successText": "$h = 12$ cm, exactly as the mark scheme wants it. The whole question depends on using $5$ instead of $10$."
+          "successText": "$h = 12$ cm, exactly as the mark scheme wants it. The whole question depends on using $5$ instead of $10$.",
+          "figureLabels": [
+            {
+              "x": 178.5,
+              "y": 176,
+              "tex": "13\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            },
+            {
+              "x": 301.5,
+              "y": 176,
+              "tex": "13\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            },
+            {
+              "x": 202.5,
+              "y": 286,
+              "tex": "5\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 277.5,
+              "y": 286,
+              "tex": "5\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 254,
+              "y": 176,
+              "tex": "h",
+              "color": "#fff067",
+              "size": 15,
+              "anchor": "start"
+            }
+          ]
         }
       }
     },
@@ -947,7 +1311,7 @@
         "kind": "selectFromOptions",
         "config": {
           "prompt": "Which equation earns the method mark here?",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,251.4 400,251.4 80,68.6' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 251.4 L 93 238.4 L 80 238.4' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='273.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>7 m</text><text x='64' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>4 m</text><text x='250.9' y='140.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>y</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='80,251.4 400,251.4 80,68.6' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 93 251.4 L 93 238.4 L 80 238.4' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "options": [
             {
               "id": "opt-plus",
@@ -965,7 +1329,31 @@
               "whyWrong": "The plain sides never add. Their squares do."
             }
           ],
-          "successText": "The unknown is the hypotenuse, so the squares are added."
+          "successText": "The unknown is the hypotenuse, so the squares are added.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 273.4,
+              "tex": "7\\,\\text{m}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 64,
+              "y": 160,
+              "tex": "4\\,\\text{m}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 250.9,
+              "y": 140.9,
+              "tex": "y",
+              "color": "#fff067",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -979,7 +1367,7 @@
         "kind": "selectFromOptions",
         "config": {
           "prompt": "Which equation earns the method mark here?",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='153.6,268 326.4,268 153.6,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 166.6 268 L 166.6 255 L 153.6 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>6 m</text><text x='137.6' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>y</text><text x='257.2' y='146.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>9.6 m</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='153.6,268 326.4,268 153.6,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 166.6 268 L 166.6 255 L 153.6 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "options": [
             {
               "id": "opt-plus",
@@ -997,7 +1385,31 @@
               "isCorrect": true
             }
           ],
-          "successText": "The hypotenuse is known this time, so the leg square comes off it."
+          "successText": "The hypotenuse is known this time, so the leg square comes off it.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 290,
+              "tex": "6\\,\\text{m}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 137.6,
+              "y": 160,
+              "tex": "y",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 257.2,
+              "y": 146.3,
+              "tex": "9.6\\,\\text{m}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -1012,7 +1424,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find $c$.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>12 cm</text><text x='80' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>9 cm</text><text x='253.2' y='142.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='96,268 384,268 96,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 109 268 L 109 255 L 96 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "lines": [
             {
               "id": "l-eq",
@@ -1053,7 +1465,31 @@
               "inputSuffix": "cm"
             }
           ],
-          "successText": "$c = 15$ cm. Both marks banked under exam conditions."
+          "successText": "$c = 15$ cm. Both marks banked under exam conditions.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 290,
+              "tex": "12\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 80,
+              "y": 160,
+              "tex": "9\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 253.2,
+              "y": 142.4,
+              "tex": "c",
+              "color": "#fff067",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -1068,7 +1504,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find $x$.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='182.4,268 297.6,268 182.4,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 195.4 268 L 195.4 255 L 182.4 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='240' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>8 cm</text><text x='166.4' y='160' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='259.4' y='149.6' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>17 cm</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='182.4,268 297.6,268 182.4,52' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 195.4 268 L 195.4 255 L 182.4 255' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "lines": [
             {
               "id": "l-eq",
@@ -1109,7 +1545,31 @@
               "inputSuffix": "cm"
             }
           ],
-          "successText": "$x = 15$ cm. Add the squares to find a hypotenuse, subtract to find a shorter side, and always check your answer is shorter than the hypotenuse."
+          "successText": "$x = 15$ cm. Add the squares to find a hypotenuse, subtract to find a shorter side, and always check your answer is shorter than the hypotenuse.",
+          "figureLabels": [
+            {
+              "x": 240,
+              "y": 290,
+              "tex": "8\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 166.4,
+              "y": 160,
+              "tex": "x",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 259.4,
+              "y": 149.6,
+              "tex": "17\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },

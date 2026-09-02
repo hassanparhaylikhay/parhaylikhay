@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { AltDemoOverlay, COLOR, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoOverlay, COLOR, CanvasFigure, MixedText, type CanvasLabel, type InteractionProps } from "./_shared"
 
 /**
  * One line of working. Two kinds:
@@ -54,6 +54,8 @@ export type StepSolveConfig = {
   /** Standing one-line explanation of how the frame works. A default is provided. */
   intro?: string
   contextHtml?: string
+  /** KaTeX labels positioned over the figure (see CanvasLabel). */
+  figureLabels?: CanvasLabel[]
   lines: StepSolveLine[]
   successText?: string
   /** Verify slides: hides nudges. Injected by InteractionSlide. */
@@ -329,10 +331,13 @@ export default function StepSolve({ config, onComplete, onDismissAlt, onRegister
                 />
               </div>
             )}
-            <div className="relative w-full" style={{ aspectRatio: "480 / 320" }}>
-              <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: config.contextHtml }} />
+            <CanvasFigure
+              html={config.contextHtml}
+              labels={config.figureLabels}
+              style={{ aspectRatio: "480 / 320" }}
+            >
               <AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />
-            </div>
+            </CanvasFigure>
           </div>
         </aside>
       </div>

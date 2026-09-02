@@ -81,7 +81,7 @@
         "hint": "Start with the hypotenuse. It is the side opposite the right angle. Then check which of the other two touches $\\theta$.",
         "config": {
           "prompt": "Name the three sides of this triangle. The angle $\\theta$ is at the bottom right.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>side 1</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>side 2</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>side 3</text><g data-region='s-base'><line class='pl-tap-vis' x1='100' y1='259' x2='380' y2='259' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='259' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s-vert'><line class='pl-tap-vis' x1='100' y1='49' x2='100' y2='259' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='100' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s-hyp'><line class='pl-tap-vis' x1='100' y1='49' x2='380' y2='259' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><g data-region='s-base'><line class='pl-tap-vis' x1='100' y1='259' x2='380' y2='259' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='259' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s-vert'><line class='pl-tap-vis' x1='100' y1='49' x2='100' y2='259' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='100' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s-hyp'><line class='pl-tap-vis' x1='100' y1='49' x2='380' y2='259' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
           "slots": [
             {
               "id": "s-base",
@@ -128,7 +128,38 @@
               "text": "hypotenuse"
             }
           ],
-          "successText": "Side 3 is opposite the right angle, so it is the hypotenuse. Side 1 touches $\\theta$, so it is the adjacent. Side 2 is across from $\\theta$, so it is the opposite."
+          "successText": "Side 3 is opposite the right angle, so it is the hypotenuse. Side 1 touches $\\theta$, so it is the adjacent. Side 2 is across from $\\theta$, so it is the opposite.",
+          "figureLabels": [
+            {
+              "x": 346,
+              "y": 247,
+              "tex": "\\theta",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 240,
+              "y": 281,
+              "text": "side 1",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 84,
+              "y": 154,
+              "text": "side 2",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 254.4,
+              "y": 134.8,
+              "text": "side 3",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -143,7 +174,7 @@
         "hint": "The opposite side is the one that does not touch the angle.",
         "config": {
           "prompt": "Now $\\theta$ is at the top. Tap the side that is opposite it.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 100 49 L 100 73 L 101.9 72.9 L 103.7 72.7 L 105.5 72.4 L 107.3 71.9 L 109 71.2 L 110.7 70.5 L 112.4 69.6 L 113.9 68.6 L 115.4 67.4 L 116.8 66.2 L 118 64.8 L 119.2 63.4 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='116' y='83' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>side 1</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>side 2</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>side 3</text><g data-region='s1'><line class='pl-tap-vis' x1='100' y1='259' x2='380' y2='259' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='259' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s2'><line class='pl-tap-vis' x1='100' y1='49' x2='100' y2='259' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='100' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s3'><line class='pl-tap-vis' x1='100' y1='49' x2='380' y2='259' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 100 49 L 100 73 L 101.9 72.9 L 103.7 72.7 L 105.5 72.4 L 107.3 71.9 L 109 71.2 L 110.7 70.5 L 112.4 69.6 L 113.9 68.6 L 115.4 67.4 L 116.8 66.2 L 118 64.8 L 119.2 63.4 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><g data-region='s1'><line class='pl-tap-vis' x1='100' y1='259' x2='380' y2='259' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='259' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s2'><line class='pl-tap-vis' x1='100' y1='49' x2='100' y2='259' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='100' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='s3'><line class='pl-tap-vis' x1='100' y1='49' x2='380' y2='259' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
           "regions": [
             {
               "id": "s1",
@@ -158,7 +189,38 @@
               "whyWrong": "Side 3 touches that corner too. It is the hypotenuse."
             }
           ],
-          "successText": "Side 1 is the only side that does not touch $\\theta$, so it is the opposite. The hypotenuse never changes, but opposite and adjacent swap over when the angle moves."
+          "successText": "Side 1 is the only side that does not touch $\\theta$, so it is the opposite. The hypotenuse never changes, but opposite and adjacent swap over when the angle moves.",
+          "figureLabels": [
+            {
+              "x": 116,
+              "y": 83,
+              "tex": "\\theta",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 240,
+              "y": 281,
+              "text": "side 1",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 84,
+              "y": 154,
+              "text": "side 2",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 254.4,
+              "y": 134.8,
+              "text": "side 3",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -234,7 +296,7 @@
         "hint": "Name your two sides first. One is opposite $\\theta$ and one is the hypotenuse. Then find the formula that uses that pair.",
         "config": {
           "prompt": "You know the side opposite $\\theta$ and you know the hypotenuse. Which formula uses those two sides?",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='93.8,259 386.3,259 93.8,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 106.8 259 L 106.8 246 L 93.8 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 386.3 259 L 362.3 259 L 362.3 257.8 L 362.4 256.5 L 362.5 255.3 L 362.8 254.1 L 363.1 252.8 L 363.4 251.6 L 363.8 250.5 L 364.3 249.3 L 364.8 248.2 L 365.4 247.1 L 366.1 246 L 366.8 245 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='352.3' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='77.8' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>7 cm</text><text x='254' y='134.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>12 cm</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='93.8,259 386.3,259 93.8,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 106.8 259 L 106.8 246 L 93.8 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 386.3 259 L 362.3 259 L 362.3 257.8 L 362.4 256.5 L 362.5 255.3 L 362.8 254.1 L 363.1 252.8 L 363.4 251.6 L 363.8 250.5 L 364.3 249.3 L 364.8 248.2 L 365.4 247.1 L 366.1 246 L 366.8 245 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "options": [
             {
               "id": "opt-cos",
@@ -252,7 +314,31 @@
               "whyWrong": "Tan uses the opposite and the adjacent. The $12$ cm side is the hypotenuse, and tan never uses the hypotenuse."
             }
           ],
-          "successText": "Opposite and hypotenuse means sin, the S in SOH CAH TOA. So $\\sin\\theta = \\dfrac{7}{12}$."
+          "successText": "Opposite and hypotenuse means sin, the S in SOH CAH TOA. So $\\sin\\theta = \\dfrac{7}{12}$.",
+          "figureLabels": [
+            {
+              "x": 352.3,
+              "y": 247,
+              "tex": "\\theta",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 77.8,
+              "y": 154,
+              "tex": "7\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 254,
+              "y": 134.5,
+              "tex": "12\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -267,7 +353,7 @@
         "hint": "Both known sides touch the right angle, and no angle is given.",
         "config": {
           "prompt": "Which equation finds this hypotenuse?",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='346' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>8 cm</text><text x='84' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>6 cm</text><text x='254.4' y='134.8' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>c</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 380 259 L 356 259 L 356 257.7 L 356.1 256.4 L 356.3 255.2 L 356.6 253.9 L 356.9 252.6 L 357.2 251.4 L 357.7 250.2 L 358.2 249 L 358.7 247.9 L 359.4 246.7 L 360.1 245.6 L 360.8 244.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "options": [
             {
               "id": "opt-minus",
@@ -285,7 +371,38 @@
               "isCorrect": true
             }
           ],
-          "successText": "Two sides are known and there is no angle, so this is Pythagoras: $c = 10$. Use sin, cos and tan only when an angle is involved."
+          "successText": "Two sides are known and there is no angle, so this is Pythagoras: $c = 10$. Use sin, cos and tan only when an angle is involved.",
+          "figureLabels": [
+            {
+              "x": 346,
+              "y": 247,
+              "tex": "\\theta",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 240,
+              "y": 281,
+              "tex": "8\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 84,
+              "y": 154,
+              "tex": "6\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 254.4,
+              "y": 134.8,
+              "tex": "c",
+              "color": "#fff067",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -321,7 +438,52 @@
         "kind": "tapDiagram",
         "config": {
           "prompt": "Mark the two sides the question is about, then pick the formula that uses them.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='62,250 278.9,250 62,68' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 75 250 L 75 237 L 62 237' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 278.9 250 L 252.9 250 L 252.9 249 L 253 248 L 253.1 247 L 253.2 246 L 253.4 245 L 253.6 244 L 253.9 243 L 254.1 242.1 L 254.5 241.1 L 254.8 240.2 L 255.2 239.2 L 255.7 238.3 L 256.1 237.4 L 256.6 236.6 L 257.2 235.7 L 257.7 234.9 L 258.3 234.1 L 259 233.3 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='237.6' y='235' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>40°</text><text x='181.7' y='268.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle' pointer-events='none'></text><text x='41.7' y='150.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle' pointer-events='none'>x</text><text x='188.8' y='143.6' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>9 cm</text><g data-region='base'><line class='pl-tap-vis' x1='62' y1='250' x2='278.9' y2='250' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='250' x2='278.9' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='62' y1='68' x2='62' y2='250' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='62' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='62' y1='68' x2='278.9' y2='250' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='278.9' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='f-sin'><rect class='pl-tap-vis pl-tap-fill' x='296' y='62' width='172' height='44' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><text x='382' y='84' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>sin = O / H</text><rect class='pl-tap-hit' x='296' y='62' width='172' height='44' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='f-cos'><rect class='pl-tap-vis pl-tap-fill' x='296' y='122' width='172' height='44' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><text x='382' y='144' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>cos = A / H</text><rect class='pl-tap-hit' x='296' y='122' width='172' height='44' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='f-tan'><rect class='pl-tap-vis pl-tap-fill' x='296' y='182' width='172' height='44' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><text x='382' y='204' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>tan = O / A</text><rect class='pl-tap-hit' x='296' y='182' width='172' height='44' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='62,250 278.9,250 62,68' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 75 250 L 75 237 L 62 237' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 278.9 250 L 252.9 250 L 252.9 249 L 253 248 L 253.1 247 L 253.2 246 L 253.4 245 L 253.6 244 L 253.9 243 L 254.1 242.1 L 254.5 241.1 L 254.8 240.2 L 255.2 239.2 L 255.7 238.3 L 256.1 237.4 L 256.6 236.6 L 257.2 235.7 L 257.7 234.9 L 258.3 234.1 L 259 233.3 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><g data-region='base'><line class='pl-tap-vis' x1='62' y1='250' x2='278.9' y2='250' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='250' x2='278.9' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='62' y1='68' x2='62' y2='250' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='62' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='62' y1='68' x2='278.9' y2='250' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='278.9' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='f-sin'><rect class='pl-tap-vis pl-tap-fill' x='288' y='52' width='184' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='288' y='52' width='184' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='f-cos'><rect class='pl-tap-vis pl-tap-fill' x='288' y='128' width='184' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='288' y='128' width='184' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='f-tan'><rect class='pl-tap-vis pl-tap-fill' x='288' y='204' width='184' height='58' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><rect class='pl-tap-hit' x='288' y='204' width='184' height='58' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g></svg>",
+          "figureLabels": [
+            {
+              "x": 380,
+              "y": 81,
+              "tex": "\\sin\\theta = \\dfrac{\\text{O}}{\\text{H}}",
+              "color": "#f0eeea",
+              "size": 17
+            },
+            {
+              "x": 380,
+              "y": 157,
+              "tex": "\\cos\\theta = \\dfrac{\\text{A}}{\\text{H}}",
+              "color": "#f0eeea",
+              "size": 17
+            },
+            {
+              "x": 380,
+              "y": 233,
+              "tex": "\\tan\\theta = \\dfrac{\\text{O}}{\\text{A}}",
+              "color": "#f0eeea",
+              "size": 17
+            },
+            {
+              "x": 237.6,
+              "y": 235,
+              "tex": "40^\\circ",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 41.7,
+              "y": 150.5,
+              "tex": "x",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 188.8,
+              "y": 143.6,
+              "tex": "9\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ],
           "sequence": [
             {
               "regionId": "hyp",
@@ -423,7 +585,7 @@
         "config": {
           "prompt": "Find $x$ to $2$ decimal places.",
           "intro": "Same frame as Pythagoras: build the working line by line, and the mark codes show what each line earns.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='91.2,259 388.8,259 91.2,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 104.2 259 L 104.2 246 L 91.2 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 388.8 259 L 364.8 259 L 364.8 257.8 L 364.9 256.5 L 365.1 255.3 L 365.3 254.1 L 365.6 252.9 L 365.9 251.7 L 366.3 250.6 L 366.8 249.4 L 367.3 248.3 L 367.9 247.2 L 368.5 246.2 L 369.2 245.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='354.8' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>35°</text><text x='75.2' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='253.8' y='134.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>12 cm</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='91.2,259 388.8,259 91.2,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 104.2 259 L 104.2 246 L 91.2 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 388.8 259 L 364.8 259 L 364.8 257.8 L 364.9 256.5 L 365.1 255.3 L 365.3 254.1 L 365.6 252.9 L 365.9 251.7 L 366.3 250.6 L 366.8 249.4 L 367.3 248.3 L 367.9 247.2 L 368.5 246.2 L 369.2 245.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "lines": [
             {
               "id": "l-ratio",
@@ -463,7 +625,31 @@
               "nudge": "Multiply both sides by $12$, then type $12 \\times \\sin(35)$ into your calculator. It gives $6.883...$, which rounds to $6.88$."
             }
           ],
-          "successText": "$x = 6.88$ cm, which is shorter than the hypotenuse, so it makes sense. The formula line earns the method mark and the value earns the accuracy mark."
+          "successText": "$x = 6.88$ cm, which is shorter than the hypotenuse, so it makes sense. The formula line earns the method mark and the value earns the accuracy mark.",
+          "figureLabels": [
+            {
+              "x": 354.8,
+              "y": 247,
+              "tex": "35^\\circ",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 75.2,
+              "y": 154,
+              "tex": "x",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 253.8,
+              "y": 134.4,
+              "tex": "12\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -478,7 +664,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find the hypotenuse $h$ to $1$ decimal place.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='158,259 322,259 158,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 171 259 L 171 246 L 158 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 322 259 L 298 259 L 298.1 257.2 L 298.3 255.4 L 298.6 253.6 L 299.1 251.8 L 299.7 250.1 L 300.5 248.5 L 301.3 246.9 L 302.3 245.3 L 303.4 243.9 L 304.6 242.5 L 305.9 241.3 L 307.3 240.1 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='288' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>52°</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>9.5 m</text><text x='258.9' y='139.2' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>h</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='158,259 322,259 158,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 171 259 L 171 246 L 158 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 322 259 L 298 259 L 298.1 257.2 L 298.3 255.4 L 298.6 253.6 L 299.1 251.8 L 299.7 250.1 L 300.5 248.5 L 301.3 246.9 L 302.3 245.3 L 303.4 243.9 L 304.6 242.5 L 305.9 241.3 L 307.3 240.1 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "lines": [
             {
               "id": "l-ratio",
@@ -518,7 +704,30 @@
               "nudge": "Rearranging gives $h = 9.5 \\div \\cos 52°$. The calculator gives $15.43...$, which rounds to $15.4$."
             }
           ],
-          "successText": "$h = 15.4$ m. It is the longest side, so it makes sense. When the unknown is on the bottom of the fraction, you divide."
+          "successText": "$h = 15.4$ m. It is the longest side, so it makes sense. When the unknown is on the bottom of the fraction, you divide.",
+          "figureLabels": [
+            {
+              "x": 288,
+              "y": 247,
+              "tex": "52^\\circ",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 240,
+              "y": 281,
+              "tex": "9.5\\,\\text{m}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 258.9,
+              "y": 139.2,
+              "tex": "h",
+              "color": "#fff067",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -533,7 +742,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "From a bearings question: in triangle $ACD$ the angle at $A$ is $25°$, $AC = 95$ m, and the angle at $D$ is a right angle. Show that $AD = 86.1$ m.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='191.1,259 288.9,259 191.1,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 203.1 259 L 203.1 247 L 191.1 247' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 191.1 49 L 191.1 75 L 192 75 L 193 74.9 L 193.9 74.8 L 194.9 74.7 L 195.8 74.6 L 196.7 74.4 L 197.6 74.2 L 198.5 73.9 L 199.4 73.6 L 200.3 73.3 L 201.2 73 L 202.1 72.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='205.1' y='89' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>25°</text><text x='173.1' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>AD</text><text x='268' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>95 m</text><text x='183.1' y='275' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>D</text><text x='296.9' y='275' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>C</text><text x='183.1' y='37' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>A</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='191.1,259 288.9,259 191.1,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 203.1 259 L 203.1 247 L 191.1 247' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 191.1 49 L 191.1 75 L 192 75 L 193 74.9 L 193.9 74.8 L 194.9 74.7 L 195.8 74.6 L 196.7 74.4 L 197.6 74.2 L 198.5 73.9 L 199.4 73.6 L 200.3 73.3 L 201.2 73 L 202.1 72.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "lines": [
             {
               "id": "l-ratio",
@@ -573,7 +782,53 @@
               "nudge": "$95 \\times \\cos(25)$ gives $86.09...$, which rounds to $86.1$, exactly what the question asks you to show."
             }
           ],
-          "successText": "$AD = 86.1$ m. In a show-that question the marks are for the working, so always write the formula line with the numbers in it."
+          "successText": "$AD = 86.1$ m. In a show-that question the marks are for the working, so always write the formula line with the numbers in it.",
+          "figureLabels": [
+            {
+              "x": 205.1,
+              "y": 89,
+              "tex": "25^\\circ",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "start"
+            },
+            {
+              "x": 173.1,
+              "y": 154,
+              "tex": "AD",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 268,
+              "y": 154,
+              "tex": "95\\,\\text{m}",
+              "color": "#ff4670",
+              "size": 14
+            },
+            {
+              "x": 183.1,
+              "y": 275,
+              "tex": "D",
+              "color": "#7a7875",
+              "size": 12.5
+            },
+            {
+              "x": 296.9,
+              "y": 275,
+              "tex": "C",
+              "color": "#7a7875",
+              "size": 12.5
+            },
+            {
+              "x": 183.1,
+              "y": 37,
+              "tex": "A",
+              "color": "#7a7875",
+              "size": 12.5
+            }
+          ]
         }
       }
     },
@@ -589,7 +844,7 @@
         "config": {
           "prompt": "This candidate's calculator was set to the wrong mode. Rule on each mark.",
           "question": "Find $x$: the side opposite $35°$, with a hypotenuse of $12$ cm.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='91.2,259 388.8,259 91.2,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 104.2 259 L 104.2 246 L 91.2 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 388.8 259 L 364.8 259 L 364.8 257.8 L 364.9 256.5 L 365.1 255.3 L 365.3 254.1 L 365.6 252.9 L 365.9 251.7 L 366.3 250.6 L 366.8 249.4 L 367.3 248.3 L 367.9 247.2 L 368.5 246.2 L 369.2 245.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='354.8' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>35°</text><text x='75.2' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='253.8' y='134.4' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>12 cm</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='91.2,259 388.8,259 91.2,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 104.2 259 L 104.2 246 L 91.2 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 388.8 259 L 364.8 259 L 364.8 257.8 L 364.9 256.5 L 365.1 255.3 L 365.3 254.1 L 365.6 252.9 L 365.9 251.7 L 366.3 250.6 L 366.8 249.4 L 367.3 248.3 L 367.9 247.2 L 368.5 246.2 L 369.2 245.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "script": [
             {
               "id": "l1",
@@ -624,7 +879,31 @@
           ],
           "faultLineId": "l3",
           "faultExplain": "The working was right and the calculator was wrong. A negative or absurd value is the radians giveaway: switch the mode to degrees and redo the last line.",
-          "successText": "One mark kept and one mark lost. The calculator was in the wrong mode. Check that the screen says DEG before you start."
+          "successText": "One mark kept and one mark lost. The calculator was in the wrong mode. Check that the screen says DEG before you start.",
+          "figureLabels": [
+            {
+              "x": 354.8,
+              "y": 247,
+              "tex": "35^\\circ",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 75.2,
+              "y": 154,
+              "tex": "x",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 253.8,
+              "y": 134.4,
+              "tex": "12\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -681,7 +960,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find $\\theta$ to $1$ decimal place.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='93.8,259 386.3,259 93.8,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 106.8 259 L 106.8 246 L 93.8 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 386.3 259 L 362.3 259 L 362.3 257.8 L 362.4 256.5 L 362.5 255.3 L 362.8 254.1 L 363.1 252.8 L 363.4 251.6 L 363.8 250.5 L 364.3 249.3 L 364.8 248.2 L 365.4 247.1 L 366.1 246 L 366.8 245 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='352.3' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='77.8' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>7 cm</text><text x='254' y='134.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>12 cm</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='93.8,259 386.3,259 93.8,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 106.8 259 L 106.8 246 L 93.8 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 386.3 259 L 362.3 259 L 362.3 257.8 L 362.4 256.5 L 362.5 255.3 L 362.8 254.1 L 363.1 252.8 L 363.4 251.6 L 363.8 250.5 L 364.3 249.3 L 364.8 248.2 L 365.4 247.1 L 366.1 246 L 366.8 245 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "lines": [
             {
               "id": "l-ratio",
@@ -716,7 +995,31 @@
               "nudge": "$\\sin^{-1}(7 \\div 12)$ on the calculator gives $35.68...$, which rounds to $35.7$."
             }
           ],
-          "successText": "$\\theta = 35.7°$. Writing the formula line earned the method mark on its own, before you pressed a single button."
+          "successText": "$\\theta = 35.7°$. Writing the formula line earned the method mark on its own, before you pressed a single button.",
+          "figureLabels": [
+            {
+              "x": 352.3,
+              "y": 247,
+              "tex": "\\theta",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 77.8,
+              "y": 154,
+              "tex": "7\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 254,
+              "y": 134.5,
+              "tex": "12\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -731,7 +1034,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find $\\theta$ to $1$ decimal place.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='174.4,259 305.6,259 174.4,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 187.4 259 L 187.4 246 L 174.4 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 305.6 259 L 281.6 259 L 281.7 257 L 282 255 L 282.4 253 L 283 251.1 L 283.7 249.2 L 284.6 247.4 L 285.7 245.6 L 286.9 244 L 288.2 242.5 L 289.7 241.1 L 291.2 239.8 L 292.9 238.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='271.6' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>5 m</text><text x='158.4' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle'>8 m</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='174.4,259 305.6,259 174.4,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 187.4 259 L 187.4 246 L 174.4 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 305.6 259 L 281.6 259 L 281.7 257 L 282 255 L 282.4 253 L 283 251.1 L 283.7 249.2 L 284.6 247.4 L 285.7 245.6 L 286.9 244 L 288.2 242.5 L 289.7 241.1 L 291.2 239.8 L 292.9 238.6 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "lines": [
             {
               "id": "l-ratio",
@@ -771,7 +1074,31 @@
               "nudge": "$\\tan^{-1}(8 \\div 5)$ gives $57.99...$, which rounds to $58.0$."
             }
           ],
-          "successText": "$\\theta = 58.0°$. Two short sides and no hypotenuse always means tan. Remember these numbers, because they come back later."
+          "successText": "$\\theta = 58.0°$. Two short sides and no hypotenuse always means tan. Remember these numbers, because they come back later.",
+          "figureLabels": [
+            {
+              "x": 271.6,
+              "y": 247,
+              "tex": "\\theta",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 240,
+              "y": 281,
+              "tex": "5\\,\\text{m}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 158.4,
+              "y": 154,
+              "tex": "8\\,\\text{m}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "end"
+            }
+          ]
         }
       }
     },
@@ -796,7 +1123,7 @@
         "hint": "Elevation starts from flat. Look straight ahead first, then tilt your eyes up to the top.",
         "config": {
           "prompt": "You are standing at the blue dot, looking up at the top of the wall. Tap the angle of elevation.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='40' y1='276' x2='440' y2='276' stroke='#7a7875' stroke-width='2'/><line x1='356' y1='276' x2='356' y2='102' stroke='#7a7875' stroke-width='2'/><line x1='96' y1='276' x2='376' y2='276' stroke='transparent' stroke-width='1'/><line x1='96' y1='276' x2='356' y2='116' stroke='#ff4670' stroke-width='2.2'/><path d='M 96 276 L 130 276 L 130 274.4 L 129.9 272.9 L 129.7 271.3 L 129.4 269.8 L 129.1 268.3 L 128.7 266.7 L 128.3 265.2 L 127.7 263.8 L 127.1 262.3 L 126.5 260.9 L 125.7 259.5 L 125 258.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><circle cx='96' cy='276' r='4.5' fill='#00abfa'/><path d='M 343 276 L 343 263 L 356 263' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='148' y='264' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='226' y='296' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>horizontal distance</text><text x='372' y='196' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>height</text><g data-region='a-elev'><path class='pl-tap-vis pl-tap-fill' d='M 96 276 L 136 276 L 136 274.8 L 135.9 273.5 L 135.8 272.3 L 135.7 271.1 L 135.5 269.9 L 135.3 268.7 L 135.1 267.5 L 134.8 266.3 L 134.5 265.1 L 134.1 263.9 L 133.7 262.8 L 133.3 261.6 L 132.9 260.5 L 132.4 259.4 L 131.8 258.3 L 131.3 257.2 L 130.7 256.1 L 130.1 255 Z' fill='#fff06722' stroke='#fff067' stroke-width='2' stroke-linejoin='round' opacity='0.4'/><path class='pl-tap-hit' d='M 96 276 L 136 276 L 136 274.8 L 135.9 273.5 L 135.8 272.3 L 135.7 271.1 L 135.5 269.9 L 135.3 268.7 L 135.1 267.5 L 134.8 266.3 L 134.5 265.1 L 134.1 263.9 L 133.7 262.8 L 133.3 261.6 L 132.9 260.5 L 132.4 259.4 L 131.8 258.3 L 131.3 257.2 L 130.7 256.1 L 130.1 255 Z' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='16' pointer-events='all'/></g><g data-region='a-right'><path class='pl-tap-vis pl-tap-fill' d='M 356 276 L 326 276 L 326.1 273.4 L 326.5 270.8 L 327 268.2 L 327.8 265.7 L 328.8 263.3 L 330 261 L 331.4 258.8 L 333 256.7 L 334.8 254.8 L 336.7 253 L 338.8 251.4 L 341 250 L 343.3 248.8 L 345.7 247.8 L 348.2 247 L 350.8 246.5 L 353.4 246.1 L 356 246 Z' fill='#fff06722' stroke='#fff067' stroke-width='2' stroke-linejoin='round' opacity='0.4'/><path class='pl-tap-hit' d='M 356 276 L 326 276 L 326.1 273.4 L 326.5 270.8 L 327 268.2 L 327.8 265.7 L 328.8 263.3 L 330 261 L 331.4 258.8 L 333 256.7 L 334.8 254.8 L 336.7 253 L 338.8 251.4 L 341 250 L 343.3 248.8 L 345.7 247.8 L 348.2 247 L 350.8 246.5 L 353.4 246.1 L 356 246 Z' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='16' pointer-events='all'/></g><g data-region='a-top'><path class='pl-tap-vis pl-tap-fill' d='M 356 116 L 356 154 L 353.8 153.9 L 351.7 153.8 L 349.6 153.5 L 347.5 153 L 345.4 152.5 L 343.3 151.8 L 341.3 151.1 L 339.4 150.2 L 337.5 149.2 L 335.6 148.1 L 333.8 146.9 L 332.1 145.6 L 330.5 144.2 L 328.9 142.7 L 327.5 141.1 L 326.1 139.4 L 324.8 137.7 L 323.6 135.9 Z' fill='#fff06722' stroke='#fff067' stroke-width='2' stroke-linejoin='round' opacity='0.4'/><path class='pl-tap-hit' d='M 356 116 L 356 154 L 353.8 153.9 L 351.7 153.8 L 349.6 153.5 L 347.5 153 L 345.4 152.5 L 343.3 151.8 L 341.3 151.1 L 339.4 150.2 L 337.5 149.2 L 335.6 148.1 L 333.8 146.9 L 332.1 145.6 L 330.5 144.2 L 328.9 142.7 L 327.5 141.1 L 326.1 139.4 L 324.8 137.7 L 323.6 135.9 Z' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='16' pointer-events='all'/></g></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='40' y1='276' x2='440' y2='276' stroke='#7a7875' stroke-width='2'/><line x1='356' y1='276' x2='356' y2='102' stroke='#7a7875' stroke-width='2'/><line x1='96' y1='276' x2='376' y2='276' stroke='transparent' stroke-width='1'/><line x1='96' y1='276' x2='356' y2='116' stroke='#ff4670' stroke-width='2.2'/><path d='M 96 276 L 130 276 L 130 274.4 L 129.9 272.9 L 129.7 271.3 L 129.4 269.8 L 129.1 268.3 L 128.7 266.7 L 128.3 265.2 L 127.7 263.8 L 127.1 262.3 L 126.5 260.9 L 125.7 259.5 L 125 258.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><circle cx='96' cy='276' r='4.5' fill='#00abfa'/><path d='M 343 276 L 343 263 L 356 263' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><g data-region='a-elev'><path class='pl-tap-vis pl-tap-fill' d='M 96 276 L 136 276 L 136 274.8 L 135.9 273.5 L 135.8 272.3 L 135.7 271.1 L 135.5 269.9 L 135.3 268.7 L 135.1 267.5 L 134.8 266.3 L 134.5 265.1 L 134.1 263.9 L 133.7 262.8 L 133.3 261.6 L 132.9 260.5 L 132.4 259.4 L 131.8 258.3 L 131.3 257.2 L 130.7 256.1 L 130.1 255 Z' fill='#fff06722' stroke='#fff067' stroke-width='2' stroke-linejoin='round' opacity='0.4'/><path class='pl-tap-hit' d='M 96 276 L 136 276 L 136 274.8 L 135.9 273.5 L 135.8 272.3 L 135.7 271.1 L 135.5 269.9 L 135.3 268.7 L 135.1 267.5 L 134.8 266.3 L 134.5 265.1 L 134.1 263.9 L 133.7 262.8 L 133.3 261.6 L 132.9 260.5 L 132.4 259.4 L 131.8 258.3 L 131.3 257.2 L 130.7 256.1 L 130.1 255 Z' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='16' pointer-events='all'/></g><g data-region='a-right'><path class='pl-tap-vis pl-tap-fill' d='M 356 276 L 326 276 L 326.1 273.4 L 326.5 270.8 L 327 268.2 L 327.8 265.7 L 328.8 263.3 L 330 261 L 331.4 258.8 L 333 256.7 L 334.8 254.8 L 336.7 253 L 338.8 251.4 L 341 250 L 343.3 248.8 L 345.7 247.8 L 348.2 247 L 350.8 246.5 L 353.4 246.1 L 356 246 Z' fill='#fff06722' stroke='#fff067' stroke-width='2' stroke-linejoin='round' opacity='0.4'/><path class='pl-tap-hit' d='M 356 276 L 326 276 L 326.1 273.4 L 326.5 270.8 L 327 268.2 L 327.8 265.7 L 328.8 263.3 L 330 261 L 331.4 258.8 L 333 256.7 L 334.8 254.8 L 336.7 253 L 338.8 251.4 L 341 250 L 343.3 248.8 L 345.7 247.8 L 348.2 247 L 350.8 246.5 L 353.4 246.1 L 356 246 Z' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='16' pointer-events='all'/></g><g data-region='a-top'><path class='pl-tap-vis pl-tap-fill' d='M 356 116 L 356 154 L 353.8 153.9 L 351.7 153.8 L 349.6 153.5 L 347.5 153 L 345.4 152.5 L 343.3 151.8 L 341.3 151.1 L 339.4 150.2 L 337.5 149.2 L 335.6 148.1 L 333.8 146.9 L 332.1 145.6 L 330.5 144.2 L 328.9 142.7 L 327.5 141.1 L 326.1 139.4 L 324.8 137.7 L 323.6 135.9 Z' fill='#fff06722' stroke='#fff067' stroke-width='2' stroke-linejoin='round' opacity='0.4'/><path class='pl-tap-hit' d='M 356 116 L 356 154 L 353.8 153.9 L 351.7 153.8 L 349.6 153.5 L 347.5 153 L 345.4 152.5 L 343.3 151.8 L 341.3 151.1 L 339.4 150.2 L 337.5 149.2 L 335.6 148.1 L 333.8 146.9 L 332.1 145.6 L 330.5 144.2 L 328.9 142.7 L 327.5 141.1 L 326.1 139.4 L 324.8 137.7 L 323.6 135.9 Z' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='16' pointer-events='all'/></g></svg>",
           "regions": [
             {
               "id": "a-elev",
@@ -811,7 +1138,31 @@
               "whyWrong": "That is the angle at the top, looking back down. Elevation is measured from where you are standing."
             }
           ],
-          "successText": "The angle of elevation is measured from the flat ground up to your line of sight. The height is opposite it and the ground distance is next to it, so these questions nearly always use tan."
+          "successText": "The angle of elevation is measured from the flat ground up to your line of sight. The height is opposite it and the ground distance is next to it, so these questions nearly always use tan.",
+          "figureLabels": [
+            {
+              "x": 148,
+              "y": 264,
+              "tex": "\\theta",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 226,
+              "y": 296,
+              "text": "horizontal distance",
+              "color": "#00abfa",
+              "size": 12.5
+            },
+            {
+              "x": 372,
+              "y": 196,
+              "text": "height",
+              "color": "#ff822c",
+              "size": 12.5,
+              "anchor": "start"
+            }
+          ]
         }
       }
     },
@@ -826,7 +1177,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "A face of a prism is $8$ m tall. A point on the ground is $21$ m from a wall that stands $16$ m before it. Find the angle of elevation of the top from that point.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='40' y1='276' x2='440' y2='276' stroke='#7a7875' stroke-width='2'/><line x1='356' y1='276' x2='356' y2='102' stroke='#7a7875' stroke-width='2'/><line x1='96' y1='276' x2='376' y2='276' stroke='transparent' stroke-width='1'/><line x1='96' y1='276' x2='356' y2='116' stroke='#ff4670' stroke-width='2.2'/><path d='M 96 276 L 130 276 L 130 274.4 L 129.9 272.9 L 129.7 271.3 L 129.4 269.8 L 129.1 268.3 L 128.7 266.7 L 128.3 265.2 L 127.7 263.8 L 127.1 262.3 L 126.5 260.9 L 125.7 259.5 L 125 258.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><circle cx='96' cy='276' r='4.5' fill='#00abfa'/><path d='M 343 276 L 343 263 L 356 263' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='148' y='264' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='226' y='296' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>21 − 16 = 5 m</text><text x='372' y='196' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='start' dominant-baseline='middle'>8 m</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><line x1='40' y1='276' x2='440' y2='276' stroke='#7a7875' stroke-width='2'/><line x1='356' y1='276' x2='356' y2='102' stroke='#7a7875' stroke-width='2'/><line x1='96' y1='276' x2='376' y2='276' stroke='transparent' stroke-width='1'/><line x1='96' y1='276' x2='356' y2='116' stroke='#ff4670' stroke-width='2.2'/><path d='M 96 276 L 130 276 L 130 274.4 L 129.9 272.9 L 129.7 271.3 L 129.4 269.8 L 129.1 268.3 L 128.7 266.7 L 128.3 265.2 L 127.7 263.8 L 127.1 262.3 L 126.5 260.9 L 125.7 259.5 L 125 258.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><circle cx='96' cy='276' r='4.5' fill='#00abfa'/><path d='M 343 276 L 343 263 L 356 263' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/></svg>",
           "lines": [
             {
               "id": "l-dist",
@@ -879,7 +1230,31 @@
               "nudge": "The same $\\tan^{-1}(8 \\div 5)$ as the last chapter: $58.0°$."
             }
           ],
-          "successText": "$58.0°$. The same triangle you solved a moment ago was hiding inside this question. Working out the $5$ m gap earned a mark on its own."
+          "successText": "$58.0°$. The same triangle you solved a moment ago was hiding inside this question. Working out the $5$ m gap earned a mark on its own.",
+          "figureLabels": [
+            {
+              "x": 148,
+              "y": 264,
+              "tex": "\\theta",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 226,
+              "y": 296,
+              "tex": "21 - 16 = 5\\,\\text{m}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 372,
+              "y": 196,
+              "tex": "8\\,\\text{m}",
+              "color": "#ff822c",
+              "size": 14,
+              "anchor": "start"
+            }
+          ]
         }
       }
     },
@@ -894,7 +1269,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "A container has this cross-section. The top edge $AB = 28$ cm, the base $DC = 24$ cm, and the left side $AD = 16$ cm. There are right angles at $A$ and $D$. Calculate angle $DCB$.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='90,270 90,110 370,110 330,270' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 102 110 L 102 122 L 90 122' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 102 270 L 102 258 L 90 258' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><line x1='370' y1='110' x2='370' y2='270' stroke='#fff067' stroke-width='1.6' stroke-dasharray='6 5'/><line x1='330' y1='270' x2='370' y2='270' stroke='#fff067' stroke-width='1.6' stroke-dasharray='6 5'/><path d='M 330 270 L 306 270 L 306.3 266.4 L 307.1 262.8 L 308.4 259.5 L 310.3 256.3 L 312.5 253.5 L 315.2 251.1 L 318.3 249.1 L 321.5 247.5 L 325 246.5 L 328.6 246 L 332.2 246.1 L 335.8 246.7 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='230' y='96' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>28 cm</text><text x='190' y='290' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='middle' dominant-baseline='middle'>24 cm</text><text x='74' y='190' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#c8c6be' text-anchor='end' dominant-baseline='middle'>16 cm</text><text x='350' y='290' font-family='Geist Mono,monospace' font-size='13' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>4</text><text x='382' y='190' font-family='Geist Mono,monospace' font-size='13' font-weight='600' fill='#fff067' text-anchor='start' dominant-baseline='middle'>16</text><text x='300' y='236' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>?</text><text x='82' y='286' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>D</text><text x='80' y='100' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>A</text><text x='380' y='100' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>B</text><text x='326' y='286' font-family='Geist Mono,monospace' font-size='12.5' font-weight='600' fill='#7a7875' text-anchor='middle' dominant-baseline='middle'>C</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='90,270 90,110 370,110 330,270' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 102 110 L 102 122 L 90 122' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 102 270 L 102 258 L 90 258' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><line x1='370' y1='110' x2='370' y2='270' stroke='#fff067' stroke-width='1.6' stroke-dasharray='6 5'/><line x1='330' y1='270' x2='370' y2='270' stroke='#fff067' stroke-width='1.6' stroke-dasharray='6 5'/><path d='M 330 270 L 306 270 L 306.3 266.4 L 307.1 262.8 L 308.4 259.5 L 310.3 256.3 L 312.5 253.5 L 315.2 251.1 L 318.3 249.1 L 321.5 247.5 L 325 246.5 L 328.6 246 L 332.2 246.1 L 335.8 246.7 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "lines": [
             {
               "id": "l-over",
@@ -980,7 +1355,81 @@
               "nudge": "Add the right angle and the tilt together."
             }
           ],
-          "successText": "$DCB = 104.0°$. The small dashed triangle gave you the $14°$ tilt, and adding the right angle gave you the rest."
+          "successText": "$DCB = 104.0°$. The small dashed triangle gave you the $14°$ tilt, and adding the right angle gave you the rest.",
+          "figureLabels": [
+            {
+              "x": 230,
+              "y": 96,
+              "tex": "28\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 190,
+              "y": 290,
+              "tex": "24\\,\\text{cm}",
+              "color": "#ff822c",
+              "size": 14
+            },
+            {
+              "x": 74,
+              "y": 190,
+              "tex": "16\\,\\text{cm}",
+              "color": "#c8c6be",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 350,
+              "y": 290,
+              "tex": "4",
+              "color": "#fff067",
+              "size": 13
+            },
+            {
+              "x": 382,
+              "y": 190,
+              "tex": "16",
+              "color": "#fff067",
+              "size": 13,
+              "anchor": "start"
+            },
+            {
+              "x": 300,
+              "y": 236,
+              "tex": "?",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 82,
+              "y": 286,
+              "tex": "D",
+              "color": "#7a7875",
+              "size": 12.5
+            },
+            {
+              "x": 80,
+              "y": 100,
+              "tex": "A",
+              "color": "#7a7875",
+              "size": 12.5
+            },
+            {
+              "x": 380,
+              "y": 100,
+              "tex": "B",
+              "color": "#7a7875",
+              "size": 12.5
+            },
+            {
+              "x": 326,
+              "y": 286,
+              "tex": "C",
+              "color": "#7a7875",
+              "size": 12.5
+            }
+          ]
         }
       }
     },
@@ -995,7 +1444,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find $x$ to $1$ decimal place.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='119,259 361,259 119,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 132 259 L 132 246 L 119 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 361 259 L 337 259 L 337.1 257.6 L 337.2 256.1 L 337.4 254.7 L 337.7 253.3 L 338.1 252 L 338.5 250.6 L 339.1 249.3 L 339.7 248 L 340.4 246.7 L 341.2 245.5 L 342 244.4 L 342.9 243.3 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='327' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>41°</text><text x='103' y='154' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#fff067' text-anchor='end' dominant-baseline='middle'>x</text><text x='255.7' y='135.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>20 cm</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='119,259 361,259 119,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 132 259 L 132 246 L 119 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 361 259 L 337 259 L 337.1 257.6 L 337.2 256.1 L 337.4 254.7 L 337.7 253.3 L 338.1 252 L 338.5 250.6 L 339.1 249.3 L 339.7 248 L 340.4 246.7 L 341.2 245.5 L 342 244.4 L 342.9 243.3 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "lines": [
             {
               "id": "l-ratio",
@@ -1032,7 +1481,31 @@
               "inputSuffix": "cm (1 dp)"
             }
           ],
-          "successText": "$x = 13.1$ cm. Both marks banked under exam conditions."
+          "successText": "$x = 13.1$ cm. Both marks banked under exam conditions.",
+          "figureLabels": [
+            {
+              "x": 327,
+              "y": 247,
+              "tex": "41^\\circ",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 103,
+              "y": 154,
+              "tex": "x",
+              "color": "#fff067",
+              "size": 14,
+              "anchor": "end"
+            },
+            {
+              "x": 255.7,
+              "y": 135.9,
+              "tex": "20\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },
@@ -1047,7 +1520,7 @@
         "kind": "stepSolve",
         "config": {
           "prompt": "Find $\\theta$ to $1$ decimal place.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='106.6,259 373.4,259 106.6,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 119.6 259 L 119.6 246 L 106.6 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 373.4 259 L 349.4 259 L 349.4 257.7 L 349.5 256.3 L 349.7 255 L 350 253.7 L 350.3 252.4 L 350.7 251.1 L 351.2 249.9 L 351.7 248.7 L 352.3 247.5 L 353 246.3 L 353.7 245.2 L 354.5 244.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='339.4' y='247' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle'>θ</text><text x='240' y='281' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle'>11 cm</text><text x='254.8' y='135.1' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle'>14 cm</text></svg>",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='106.6,259 373.4,259 106.6,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 119.6 259 L 119.6 246 L 106.6 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 373.4 259 L 349.4 259 L 349.4 257.7 L 349.5 256.3 L 349.7 255 L 350 253.7 L 350.3 252.4 L 350.7 251.1 L 351.2 249.9 L 351.7 248.7 L 352.3 247.5 L 353 246.3 L 353.7 245.2 L 354.5 244.2 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/></svg>",
           "lines": [
             {
               "id": "l-ratio",
@@ -1079,7 +1552,30 @@
               "inputSuffix": "° (1 dp)"
             }
           ],
-          "successText": "$\\theta = 38.2°$. Name the sides, write the formula, press the inverse button. That is the whole topic."
+          "successText": "$\\theta = 38.2°$. Name the sides, write the formula, press the inverse button. That is the whole topic.",
+          "figureLabels": [
+            {
+              "x": 339.4,
+              "y": 247,
+              "tex": "\\theta",
+              "color": "#fff067",
+              "size": 15
+            },
+            {
+              "x": 240,
+              "y": 281,
+              "tex": "11\\,\\text{cm}",
+              "color": "#00abfa",
+              "size": 14
+            },
+            {
+              "x": 254.8,
+              "y": 135.1,
+              "tex": "14\\,\\text{cm}",
+              "color": "#ff4670",
+              "size": 14
+            }
+          ]
         }
       }
     },

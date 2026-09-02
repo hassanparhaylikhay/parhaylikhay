@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AltDemoOverlay, COLOR, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoOverlay, COLOR, CanvasFigure, MixedText, type CanvasLabel, type InteractionProps } from "./_shared"
 
 /** One judgment the examiner must make, in mark-scheme order. */
 type Judgment = {
@@ -22,6 +22,8 @@ export type MarkScriptConfig = {
   prompt?: string
   /** Optional diagram (reference card, StepSolve-style). */
   contextHtml?: string
+  /** KaTeX labels positioned over the figure (see CanvasLabel). */
+  figureLabels?: CanvasLabel[]
   /** The question as the candidate saw it. */
   question?: string
   /** The candidate's working, line by line. May contain $...$. */
@@ -272,7 +274,7 @@ export default function MarkScript({ config, onComplete, onDismissAlt }: Interac
             className="relative w-full rounded-xl overflow-hidden"
             style={{ background: COLOR.card, border: `1px solid ${COLOR.border}`, aspectRatio: "480 / 320" }}
           >
-            <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: config.contextHtml }} />
+            <CanvasFigure html={config.contextHtml} labels={config.figureLabels} className="h-full" />
             <AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />
           </div>
         </aside>

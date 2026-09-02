@@ -352,6 +352,105 @@ export function ContextCanvas({ html, asideWidth, overlay }: { html: string; asi
  * Layout is one card: a caption strip on top, the figure underneath at the
  * usual 480x320 aspect.
  */
+/**
+ * A label positioned on a figure, in the figure's own 480x320 coordinates.
+ *
+ * Math renders through KaTeX. It CANNOT go inside the SVG: iOS Safari places
+ * <foreignObject> content at unscaled CSS coordinates, so KaTeX labels drift
+ * away from their anchors (see the iOS foreignObject memory). So labels are
+ * real DOM positioned over the figure instead, and they scale with it via
+ * container query units: 1cqw is 1% of the figure's width, so a label sized
+ * for the 480-wide viewBox stays correct at every rendered size, with no JS
+ * and no resize listener.
+ */
+export type CanvasLabel = {
+  x: number
+  y: number
+  /** Math, rendered via KaTeX. */
+  tex?: string
+  /** A word or phrase. Rendered in the UI face, never in KaTeX. */
+  text?: string
+  color?: string
+  /** Font size in the figure's own units (as if it were an SVG font-size). */
+  size?: number
+  anchor?: "middle" | "start" | "end"
+}
+
+export function CanvasLabels({ labels }: { labels?: CanvasLabel[] }) {
+  if (!labels?.length) return null
+  return (
+    <>
+      {labels.map((l, i) => {
+        const size = l.size ?? 14
+        const style: React.CSSProperties = {
+          left: `${(l.x / 480) * 100}%`,
+          top: `${(l.y / 320) * 100}%`,
+          transform:
+            l.anchor === "start" ? "translate(0, -50%)"
+              : l.anchor === "end" ? "translate(-100%, -50%)"
+              : "translate(-50%, -50%)",
+          fontSize: `${((size / 480) * 100).toFixed(3)}cqw`,
+          color: l.color ?? COLOR.text,
+          whiteSpace: "nowrap",
+          lineHeight: 1.1,
+        }
+        if (l.tex) {
+          let html = l.tex
+          try {
+            html = katex.renderToString(l.tex, { throwOnError: false, output: "html" })
+          } catch { /* fall back to the raw source */ }
+          return (
+            <div
+              key={i}
+              className="absolute pointer-events-none pl-canvas-label"
+              style={style}
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          )
+        }
+        // A phrase can still carry maths inside $...$, so route it through
+        // MixedText rather than printing it raw.
+        return (
+          <div key={i} className="absolute pointer-events-none pl-canvas-label" style={{ ...style, fontWeight: 500 }}>
+            <MixedText text={l.text} />
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
+/**
+ * A figure plus its KaTeX labels. Use this anywhere a contextHtml SVG is
+ * rendered, so labels come along with it.
+ */
+export function CanvasFigure({
+  html,
+  labels,
+  children,
+  className,
+  style,
+}: {
+  html?: string
+  labels?: CanvasLabel[]
+  children?: React.ReactNode
+  className?: string
+  style?: React.CSSProperties
+}) {
+  return (
+    <div
+      className={`relative w-full ${className ?? ""}`}
+      style={{ containerType: "inline-size", ...style }}
+    >
+      {html !== undefined
+        ? <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: html }} />
+        : null}
+      <CanvasLabels labels={labels} />
+      {children}
+    </div>
+  )
+}
+
 export function CanvasStage({
   instruction,
   note,
@@ -359,6 +458,7 @@ export function CanvasStage({
   asideWidth,
   overlay,
   html,
+  labels,
   children,
   shake,
 }: {
@@ -370,6 +470,7 @@ export function CanvasStage({
   asideWidth?: number
   overlay?: React.ReactNode
   html?: string
+  labels?: CanvasLabel[]
   children?: React.ReactNode
   shake?: boolean
 }) {
@@ -429,10 +530,11 @@ export function CanvasStage({
           )}
         </div>
       )}
-      <div ref={figRef} className="relative w-full">
+      <div ref={figRef} className="relative w-full" style={{ containerType: "inline-size" }}>
         {html !== undefined
           ? <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: html }} />
           : children}
+        <CanvasLabels labels={labels} />
         {overlay}
       </div>
     </div>
@@ -542,6 +644,8 @@ export const interactionStyles = `
   animation: pl-tap-invite 2.2s ease-in-out infinite;
 }
 .pl-tap.pl-tap-fresh [data-region]:hover .pl-tap-vis { animation: none; }
+
+.pl-canvas-label .katex { font-size: 1em; color: inherit; }
 
 /* Linear fill used as the auto-play pacing indicator on walkthroughs. */
 @keyframes pl-autofill {

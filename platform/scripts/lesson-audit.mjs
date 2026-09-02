@@ -217,6 +217,18 @@ for (const lessonId of targets) {
       }
     }
 
+    // Every label on a figure renders through KaTeX, positioned over the
+    // SVG. A raw <text> means maths drawn in the UI font, with a slash for a
+    // divide instead of a fraction bar.
+    if (c.contextHtml && /<text\b/.test(c.contextHtml)) {
+      err(`${s.id}: figure still has SVG <text>; run scripts/lesson-katex-labels.js so labels render as KaTeX`)
+    }
+    for (const l of c.figureLabels ?? []) {
+      if (!Number.isFinite(l.x) || !Number.isFinite(l.y)) err(`${s.id}: figure label has no position`)
+      if (!l.tex && !l.text) err(`${s.id}: figure label has neither tex nor text`)
+      if (l.tex && /[^\\]\//.test(l.tex)) err(`${s.id}: figure label "${l.tex}" uses a slash for a divide; use \\dfrac`)
+    }
+
     if (i.kind === "tapDiagram") {
       const regions = c.regions ?? []
       const seq = c.sequence

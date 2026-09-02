@@ -138,13 +138,11 @@ function triangle({ angleDeg, angleLabel, legRatio, base, left, hyp }) {
 
 
 /** A tappable rounded chip drawn on the canvas: the choice happens on the board. */
-function regionChip(id, x, y, w, h, label, colour) {
+function regionChip(id, x, y, w, h, colour) {
   return (
     `<g data-region='${id}'>` +
     `<rect class='pl-tap-vis pl-tap-fill' x='${f(x)}' y='${f(y)}' width='${f(w)}' height='${f(h)}' rx='8' ` +
     `fill='${colour}22' stroke='${colour}' stroke-width='2' opacity='0.4'/>` +
-    `<text x='${f(x + w / 2)}' y='${f(y + h / 2)}' font-family='Geist Mono,monospace' font-size='14' font-weight='600' ` +
-    `fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>${label}</text>` +
     `<rect class='pl-tap-hit' x='${f(x)}' y='${f(y)}' width='${f(w)}' height='${f(h)}' rx='8' ` +
     `fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/>` +
     `</g>`
@@ -152,15 +150,19 @@ function regionChip(id, x, y, w, h, label, colour) {
 }
 
 /** Stack chips down the right-hand side of the canvas, beside the figure. */
-function chipColumn(items, { x = 296, w = 172, h = 44, top = 62, gap = 16 } = {}) {
+function chipColumn(items, { x = 288, w = 184, h = 58, top = 52, gap = 18, size = 17 } = {}) {
   let out = ""
+  const labels = []
   const at = {}
   items.forEach((it, i) => {
     const y = top + i * (h + gap)
-    out += regionChip(it.id, x, y, w, h, it.label, it.colour ?? "#fff067")
+    out += regionChip(it.id, x, y, w, h, it.colour ?? "#fff067")
+    // The formula is a KaTeX label over the chip, so a divide is a real
+    // fraction bar rather than a forward slash.
+    labels.push({ x: x + w / 2, y: y + h / 2, tex: it.tex, color: "#f0eeea", size })
     at[it.id] = [x + w / 2, y + h / 2]
   })
-  return { svg: out, at }
+  return { svg: out, labels, at }
 }
 
 // ── the two new slides ───────────────────────────────────────────────────
@@ -170,9 +172,9 @@ function chipColumn(items, { x = 296, w = 172, h = 44, top = 62, gap = 16 } = {}
 // letters are what makes the decision visual rather than verbal.
 const trig = triangle({ angleDeg: 40, angleLabel: "40°", base: "", left: "x", hyp: "9 cm" })
 const trigChips = chipColumn([
-  { id: "f-sin", label: "sin = O / H" },
-  { id: "f-cos", label: "cos = A / H" },
-  { id: "f-tan", label: "tan = O / A" },
+  { id: "f-sin", tex: "\\sin\\theta = \\dfrac{\\text{O}}{\\text{H}}" },
+  { id: "f-cos", tex: "\\cos\\theta = \\dfrac{\\text{A}}{\\text{H}}" },
+  { id: "f-tan", tex: "\\tan\\theta = \\dfrac{\\text{O}}{\\text{A}}" },
 ])
 const TRIG_SLIDE = {
   id: "07b3-given-find",
@@ -185,6 +187,7 @@ const TRIG_SLIDE = {
     config: {
       prompt: "Mark the two sides the question is about, then pick the formula that uses them.",
       contextHtml: trig.svg.replace("</svg>", trigChips.svg + "</svg>"),
+      figureLabels: trigChips.labels,
       sequence: [
         {
           regionId: "hyp",
@@ -222,9 +225,9 @@ const TRIG_SLIDE = {
 // 6.1: same idea, and the H marker is what decides add against subtract.
 const pyth = triangle({ legRatio: 12 / 9, base: "12 cm", left: "x", hyp: "15 cm" })
 const pythChips = chipColumn([
-  { id: "e-add", label: "add the squares" },
-  { id: "e-sub", label: "take one away" },
-], { top: 96, gap: 22 })
+  { id: "e-add", tex: "x^{2} = 15^{2} + 12^{2}" },
+  { id: "e-sub", tex: "x^{2} = 15^{2} - 12^{2}" },
+], { top: 88, gap: 26, w: 196, x: 274, size: 16 })
 const PYTH_SLIDE = {
   id: "05d-given-find",
   kind: "interaction",
@@ -236,6 +239,7 @@ const PYTH_SLIDE = {
     config: {
       prompt: "Mark the hypotenuse and the side you want, then decide whether to add or subtract.",
       contextHtml: pyth.svg.replace("</svg>", pythChips.svg + "</svg>"),
+      figureLabels: pythChips.labels,
       sequence: [
         {
           regionId: "hyp",
@@ -253,8 +257,8 @@ const PYTH_SLIDE = {
         },
         {
           regionId: "e-sub",
-          prompt: "The side you want is not the H, so it is a shorter side. Tap what that means you do to the squares.",
-          hint: "You add the squares only when the side you want IS the hypotenuse. This one is not.",
+          prompt: "The side you want is not the H, so it is a shorter side. Tap the equation that gives you it.",
+          hint: "You add the squares only when the side you want is the hypotenuse. This one is not, so the squares come apart.",
         },
       ],
       regions: [

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AltDemoCard, AltDemoOverlay, COLOR, CanvasStage, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoCard, AltDemoOverlay, COLOR, CanvasStage, Prompt, HelperRow, MixedText, type CanvasLabel, type InteractionProps } from "./_shared"
 
 type Option = {
   id: string
@@ -27,6 +27,8 @@ export type SelectFromOptionsConfig = {
   prompt?: string
   /** Optional intro HTML (e.g. the source diagram). Rendered above the options. */
   contextHtml?: string
+  /** KaTeX labels positioned over the figure (see CanvasLabel). */
+  figureLabels?: CanvasLabel[]
   options: Option[]
   layout?: "stack" | "row"
   /** Tap-after-correct success text. */
@@ -189,6 +191,7 @@ export default function SelectFromOptions({ config, onComplete, onDismissAlt, on
         <div className="flex-1 min-w-0 flex items-center justify-center">
           <CanvasStage
             html={effectiveContextHtml}
+            labels={config.figureLabels}
             asideWidth={360}
             instruction={<MixedText text={config.prompt} />}
             note={note}

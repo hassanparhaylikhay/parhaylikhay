@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { AltDemoCard, AltDemoOverlay, COLOR, Prompt, HelperRow, MixedText, CanvasStage, ContextCanvas, type InteractionProps } from "./_shared"
+import { AltDemoCard, AltDemoOverlay, COLOR, Prompt, HelperRow, MixedText, CanvasStage, ContextCanvas, type CanvasLabel, type InteractionProps } from "./_shared"
 
 type Slot = {
   id: string
@@ -33,6 +33,8 @@ export type PlaceLabelConfig = {
   prompt?: string
   /** Optional raw-HTML scaffolding shown above the slots (a diagram, a problem statement). */
   contextHtml?: string
+  /** KaTeX labels positioned over the figure (see CanvasLabel). */
+  figureLabels?: CanvasLabel[]
   slots: Slot[]
   labels: LabelTile[]
   successText?: string
@@ -331,6 +333,7 @@ export default function PlaceLabel({ config, onComplete, onDismissAlt, onShowMeU
         <div ref={hostRef} className={`flex-1 min-w-0 flex items-center justify-center pl-tap ${done ? "pl-tap-locked" : "pl-tap-fresh"}`}>
           <CanvasStage
             html={config.contextHtml!}
+            labels={config.figureLabels}
             asideWidth={360}
             instruction={instruction}
             note={done ? <MixedText text={config.successText} /> : undefined}
