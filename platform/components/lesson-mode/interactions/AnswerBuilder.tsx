@@ -193,20 +193,20 @@ export default function AnswerBuilder({ config, onComplete, onDismissAlt }: Inte
       : config.contextHtml
     // Teaching text on the board; the aside keeps the sentence being built
     // and the tiles, which are what the student operates.
-    const caption = (wrongOption?.whyWrong && !done)
+    const note = (wrongOption?.whyWrong && !done)
       ? <MixedText text={wrongOption.whyWrong} />
       : (done && config.successText)
       ? <MixedText text={config.successText} />
-      : <MixedText text={config.prompt} />
-    const tone = (wrongOption?.whyWrong && !done) ? "wrong" : done ? "success" : "instruct"
+      : undefined
     return (
       <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
         <div className="flex-1 min-w-0 flex items-center justify-center">
           <CanvasStage
             html={effectiveHtml}
             asideWidth={360}
-            caption={caption}
-            tone={tone}
+            instruction={<MixedText text={config.prompt} />}
+            note={note}
+            noteTone={done ? "success" : "wrong"}
             overlay={<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />}
           />
         </div>

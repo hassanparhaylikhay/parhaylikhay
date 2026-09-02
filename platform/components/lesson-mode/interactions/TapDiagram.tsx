@@ -173,18 +173,18 @@ export default function TapDiagram({
     }
   })
 
-  // Every word the student reads sits on the board with the figure. Which
-  // sentence is showing depends on where they are: the correction wins while
-  // it is fresh, then the explanation, then the current instruction.
-  const wrong = !solved && pickedRegion?.whyWrong
-  const caption = wrong
-    ? <MixedText text={pickedRegion!.whyWrong} />
+  // Help is ADDITIVE, never substitutive. The instruction stays put and the
+  // correction or explanation appears under it, or a wrong tap deletes the
+  // question and leaves the student reading feedback with no task attached.
+  const wrong = !solved ? pickedRegion?.whyWrong : undefined
+  const instruction = seq
+    ? <MixedText text={solved ? config.prompt : seq[stage]?.prompt} />
+    : <MixedText text={config.prompt} />
+  const note = wrong
+    ? <MixedText text={wrong} />
     : solved
     ? <MixedText text={config.successText} />
-    : seq
-    ? <MixedText text={seq[stage]?.prompt} />
-    : <MixedText text={config.prompt} />
-  const tone = wrong ? "wrong" : solved ? "success" : "instruct"
+    : undefined
 
   // No side panel: this interaction has no controls, so the figure gets the
   // full slide and the only thing under it is the way out when stuck.
@@ -197,8 +197,9 @@ export default function TapDiagram({
         <CanvasStage
           html={config.contextHtml}
           asideWidth={0}
-          caption={caption}
-          tone={tone}
+          instruction={instruction}
+          note={note}
+          noteTone={solved ? "success" : "wrong"}
           shake={shaking}
           overlay={
             <>

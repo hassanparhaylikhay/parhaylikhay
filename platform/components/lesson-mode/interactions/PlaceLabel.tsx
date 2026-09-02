@@ -316,24 +316,25 @@ export default function PlaceLabel({ config, onComplete, onDismissAlt, onShowMeU
     )
     // Teaching text on the board; the tray of names stays in the aside
     // because that is the thing the student picks up and moves.
-    const caption = done
-      ? <MixedText text={config.successText} />
-      : (
-        <span>
-          <MixedText text={config.prompt} />
+    const instruction = (
+      <span>
+        <MixedText text={config.prompt} />
+        {!done && (
           <span className="block mt-1.5 text-[14px] text-[#7a7875]">
             Drag a name onto the triangle, or tap the name then tap its side.
           </span>
-        </span>
-      )
+        )}
+      </span>
+    )
     return (
       <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
         <div ref={hostRef} className={`flex-1 min-w-0 flex items-center justify-center pl-tap ${done ? "pl-tap-locked" : "pl-tap-fresh"}`}>
           <CanvasStage
             html={config.contextHtml!}
             asideWidth={360}
-            caption={caption}
-            tone={done ? "success" : "instruct"}
+            instruction={instruction}
+            note={done ? <MixedText text={config.successText} /> : undefined}
+            noteTone="success"
             overlay={<>{placedNames}<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} /></>}
           />
         </div>

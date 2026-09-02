@@ -353,16 +353,20 @@ export function ContextCanvas({ html, asideWidth, overlay }: { html: string; asi
  * usual 480x320 aspect.
  */
 export function CanvasStage({
-  caption,
-  tone = "instruct",
+  instruction,
+  note,
+  noteTone = "wrong",
   asideWidth,
   overlay,
   html,
   children,
   shake,
 }: {
-  caption?: React.ReactNode
-  tone?: "instruct" | "success" | "wrong"
+  /** The question or current step. ALWAYS visible. */
+  instruction?: React.ReactNode
+  /** Correction or explanation. Appears BELOW the instruction, never instead of it. */
+  note?: React.ReactNode
+  noteTone?: "success" | "wrong"
   asideWidth?: number
   overlay?: React.ReactNode
   html?: string
@@ -378,18 +382,23 @@ export function CanvasStage({
       const fig = figRef.current
       if (!wrap || !fig) return
       const SVG_ASPECT = 480 / 320
-      const RESERVED = 240            // chrome + caption headroom
+      // Vertical budget. A student must never scroll inside a slide, so the
+      // figure is sized from what is actually left after the chrome, the
+      // slide padding and the caption block.
+      const CHROME = 100          // SlideFrame header + footer
+      const PAD = 44              // slide padding + breathing room
+      const CAPTION = 108         // reserved for instruction + note
+      const MAX_W = 900           // a manipulative gains nothing past this
       const vw = window.innerWidth
       const SIDEBAR_W = vw >= 768 ? 256 : 0
       const SLIDE_PAD = 64
       const SLIDE_MAX = 1200
       const slideW = Math.min(vw - SIDEBAR_W - SLIDE_PAD, SLIDE_MAX)
       const isWide = vw >= 1280
-      const ASIDE_RESERVE = isWide ? aside + 28 : 0
+      const ASIDE_RESERVE = isWide && aside > 0 ? aside + 28 : 0
       const availableW = Math.max(280, slideW - ASIDE_RESERVE)
-      const availableH = Math.max(260, window.innerHeight - RESERVED)
-      const widthByHeight = SVG_ASPECT * availableH
-      const w = Math.max(320, Math.min(availableW, widthByHeight))
+      const availableH = Math.max(200, window.innerHeight - CHROME - PAD - CAPTION)
+      const w = Math.max(300, Math.min(availableW, SVG_ASPECT * availableH, MAX_W))
       wrap.style.width = `${Math.round(w)}px`
       fig.style.height = `${Math.round(w / SVG_ASPECT)}px`
     }
@@ -398,25 +407,26 @@ export function CanvasStage({
     return () => window.removeEventListener("resize", fit)
   }, [aside])
 
-  const colour = tone === "success" ? COLOR.green : tone === "wrong" ? COLOR.pink : COLOR.white
+  // No card frame. The figure sits on the page like work on a board, not
+  // inside a panel.
   return (
-    <div
-      ref={wrapRef}
-      className={`relative block rounded-xl overflow-hidden ${shake ? "pl-shake" : ""}`}
-      style={{ background: COLOR.card, border: `1px solid ${COLOR.border}` }}
-    >
-      {caption !== undefined && caption !== null && caption !== "" && (
-        <div
-          className="px-5 sm:px-6 py-4"
-          style={{ borderBottom: `1px solid ${COLOR.border}`, minHeight: 64 }}
-        >
-          <div
-            key={tone + String(caption)}
-            className="pl-reveal text-[16px] sm:text-[17.5px] leading-snug"
-            style={{ color: colour }}
-          >
-            {caption}
-          </div>
+    <div ref={wrapRef} className={`relative block ${shake ? "pl-shake" : ""}`}>
+      {(instruction || note) && (
+        <div className="pb-3.5" style={{ minHeight: 92 }}>
+          {instruction && (
+            <div className="text-[17px] sm:text-[19px] leading-snug" style={{ color: COLOR.white }}>
+              {instruction}
+            </div>
+          )}
+          {note && (
+            <div
+              key={String(note)}
+              className="pl-reveal mt-2 text-[15px] sm:text-[16px] leading-relaxed"
+              style={{ color: noteTone === "success" ? COLOR.green : COLOR.pink }}
+            >
+              {note}
+            </div>
+          )}
         </div>
       )}
       <div ref={figRef} className="relative w-full">

@@ -177,20 +177,22 @@ export default function SelectFromOptions({ config, onComplete, onDismissAlt, on
       : config.contextHtml!
     // Teaching text lives on the board with the figure; the aside keeps only
     // the options, which are the thing the student operates.
-    const caption = wrongPick?.whyWrong
+    // The question stays visible; feedback is added under it, never in place
+    // of it.
+    const note = wrongPick?.whyWrong
       ? <MixedText text={wrongPick.whyWrong} />
       : (isResolved && config.successText)
       ? <MixedText text={config.successText} />
-      : <MixedText text={config.prompt} />
-    const tone = wrongPick?.whyWrong ? "wrong" : isResolved ? "success" : "instruct"
+      : undefined
     return (
       <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
         <div className="flex-1 min-w-0 flex items-center justify-center">
           <CanvasStage
             html={effectiveContextHtml}
             asideWidth={360}
-            caption={caption}
-            tone={tone}
+            instruction={<MixedText text={config.prompt} />}
+            note={note}
+            noteTone={isResolved ? "success" : "wrong"}
             overlay={<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />}
           />
         </div>
