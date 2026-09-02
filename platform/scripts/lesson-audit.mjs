@@ -229,8 +229,10 @@ for (const lessonId of targets) {
         for (const st of seq) {
           if (!regions.some(r => r.id === st.regionId)) err(`${s.id}: stage targets region "${st.regionId}", which is not declared`)
           if (!st.prompt) err(`${s.id}: stage "${st.regionId}" has no prompt`)
-          if (!st.tag) err(`${s.id}: stage "${st.regionId}" has no tag to write on the diagram`)
-          if (!Array.isArray(st.tagAt) || st.tagAt.length !== 2) err(`${s.id}: stage "${st.regionId}" needs tagAt [x, y]`)
+          // A stage may skip the tag when its target already reads as a
+          // label (a formula chip), but tag and tagAt travel together.
+          if (!!st.tag !== Array.isArray(st.tagAt)) err(`${s.id}: stage "${st.regionId}" needs tag AND tagAt, or neither`)
+          if (st.tagAt && st.tagAt.length !== 2) err(`${s.id}: stage "${st.regionId}" tagAt must be [x, y]`)
           if (s.kind !== "verify" && !st.hint) err(`${s.id}: stage "${st.regionId}" needs a hint (multi-stage help lives on the stage)`)
         }
         // Help on a multi-stage frame belongs to the stage, never the slide,

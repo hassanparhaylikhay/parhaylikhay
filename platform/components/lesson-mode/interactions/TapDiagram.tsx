@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { AltDemoOverlay, ContextCanvas, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoOverlay, CanvasStage, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Region = {
   id: string
@@ -21,10 +21,15 @@ type SeqStep = {
   prompt: string
   /** Which region must be tapped. */
   regionId: string
-  /** Tag written on the diagram once tapped, e.g. "given" or "find". */
-  tag: string
+  /**
+   * Role letter written on the diagram once tapped: "H", "O", "A". Seeing O
+   * and H marked on the figure is what lets the student pick the formula
+   * with O and H in it, instead of being told which formula to use.
+   * Omit for a stage whose target is already labelled, like a formula chip.
+   */
+  tag?: string
   /** Where the tag sits, in the figure's own 480x320 coordinates. */
-  tagAt: [number, number]
+  tagAt?: [number, number]
   /** Stage-level hint. Multi-stage frames put help on the stage, not the slide. */
   hint?: string
 }
@@ -168,34 +173,51 @@ export default function TapDiagram({
     }
   })
 
+  // Every word the student reads sits on the board with the figure. Which
+  // sentence is showing depends on where they are: the correction wins while
+  // it is fresh, then the explanation, then the current instruction.
+  const wrong = !solved && pickedRegion?.whyWrong
+  const caption = wrong
+    ? <MixedText text={pickedRegion!.whyWrong} />
+    : solved
+    ? <MixedText text={config.successText} />
+    : seq
+    ? <MixedText text={seq[stage]?.prompt} />
+    : <MixedText text={config.prompt} />
+  const tone = wrong ? "wrong" : solved ? "success" : "instruct"
+
+  // No side panel: this interaction has no controls, so the figure gets the
+  // full slide and the only thing under it is the way out when stuck.
   return (
-    <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
+    <div className="w-full flex flex-col items-center">
       <div
         ref={hostRef}
-        className={`flex-1 min-w-0 flex items-center justify-center pl-tap ${shaking ? "pl-shake" : ""} ${solved ? "pl-tap-locked" : ""} ${touched ? "" : "pl-tap-fresh"}`}
+        className={`w-full flex items-center justify-center pl-tap ${solved ? "pl-tap-locked" : ""} ${touched ? "" : "pl-tap-fresh"}`}
       >
-        <ContextCanvas
+        <CanvasStage
           html={config.contextHtml}
-          asideWidth={360}
+          asideWidth={0}
+          caption={caption}
+          tone={tone}
+          shake={shaking}
           overlay={
             <>
-              {doneSteps.map(s => (
+              {doneSteps.filter(s => s.tag && s.tagAt).map(s => (
                 <div
                   key={s.regionId}
                   className="absolute pointer-events-none pl-reveal"
                   style={{
-                    left: `${(s.tagAt[0] / 480) * 100}%`,
-                    top: `${(s.tagAt[1] / 320) * 100}%`,
+                    left: `${(s.tagAt![0] / 480) * 100}%`,
+                    top: `${(s.tagAt![1] / 320) * 100}%`,
                     transform: "translate(-50%, -50%)",
                     whiteSpace: "nowrap",
-                    font: "600 12px 'Geist Mono', ui-monospace, monospace",
-                    letterSpacing: "1px",
-                    textTransform: "uppercase",
+                    font: "600 13px 'Geist Mono', ui-monospace, monospace",
+                    letterSpacing: "0.5px",
                     color: "#0fee89",
-                    background: "rgba(15,238,137,0.12)",
-                    border: "1px solid rgba(15,238,137,0.45)",
+                    background: "rgba(15,238,137,0.14)",
+                    border: "1px solid rgba(15,238,137,0.5)",
                     borderRadius: 6,
-                    padding: "3px 8px",
+                    padding: "3px 9px",
                   }}
                 >
                   {s.tag}
@@ -207,62 +229,21 @@ export default function TapDiagram({
         />
       </div>
 
-      <aside
-        className="pl-stagger w-full xl:w-[360px] shrink-0 flex flex-col gap-3 justify-center"
-        style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}
-      >
-        {config.prompt && (
-          <MixedText
-            text={config.prompt}
-            className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug"
-          />
-        )}
-
-        {seq && !solved && (
-          <MixedText
-            key={stage}
-            text={seq[stage]?.prompt}
-            className="block text-[16px] sm:text-[17px] text-[#fff067] leading-relaxed pl-reveal"
-          />
-        )}
-
-        {!solved && !picked && !seq && (
-          <p className="text-[14px] text-[#7a7875] leading-relaxed">
-            Tap it on the diagram.
-          </p>
-        )}
-
-        {!solved && pickedRegion?.whyWrong && (
-          <MixedText
-            key={picked}
-            text={pickedRegion.whyWrong}
-            className="block text-[14.5px] text-[#ff4670] leading-relaxed pl-reveal"
-          />
-        )}
-
-        {solved && config.successText && (
-          <MixedText
-            text={config.successText}
-            className="block text-[15px] sm:text-[16px] text-[#0fee89] leading-relaxed pl-reveal"
-          />
-        )}
-
-        {!config.noHelp && (
-          <HelperRow
-            onShowMe={
-              !solved
-                ? () => {
-                    setRevealed(true)
-                    setTouched(true)
-                    if (seq) setStage(seq.length)
-                    onShowMeUsed?.()
-                    onComplete({ revealed: true })
-                  }
-                : undefined
-            }
-          />
-        )}
-      </aside>
+      {!config.noHelp && (
+        <HelperRow
+          onShowMe={
+            !solved
+              ? () => {
+                  setRevealed(true)
+                  setTouched(true)
+                  if (seq) setStage(seq.length)
+                  onShowMeUsed?.()
+                  onComplete({ revealed: true })
+                }
+              : undefined
+          }
+        />
+      )}
     </div>
   )
 }

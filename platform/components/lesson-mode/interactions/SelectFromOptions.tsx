@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AltDemoCard, AltDemoOverlay, COLOR, ContextCanvas, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
+import { AltDemoCard, AltDemoOverlay, COLOR, CanvasStage, Prompt, HelperRow, MixedText, type InteractionProps } from "./_shared"
 
 type Option = {
   id: string
@@ -175,20 +175,27 @@ export default function SelectFromOptions({ config, onComplete, onDismissAlt, on
     const effectiveContextHtml = (isResolved && correctReveal)
       ? config.contextHtml!.replace("</svg>", correctReveal + "</svg>")
       : config.contextHtml!
+    // Teaching text lives on the board with the figure; the aside keeps only
+    // the options, which are the thing the student operates.
+    const caption = wrongPick?.whyWrong
+      ? <MixedText text={wrongPick.whyWrong} />
+      : (isResolved && config.successText)
+      ? <MixedText text={config.successText} />
+      : <MixedText text={config.prompt} />
+    const tone = wrongPick?.whyWrong ? "wrong" : isResolved ? "success" : "instruct"
     return (
       <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
         <div className="flex-1 min-w-0 flex items-center justify-center">
-          <ContextCanvas html={effectiveContextHtml} asideWidth={360} overlay={<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />} />
+          <CanvasStage
+            html={effectiveContextHtml}
+            asideWidth={360}
+            caption={caption}
+            tone={tone}
+            overlay={<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />}
+          />
         </div>
         <aside className="pl-stagger w-full xl:w-[360px] shrink-0 flex flex-col gap-3 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
-          {config.prompt && (
-            <MixedText
-              text={config.prompt}
-              className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full mb-1"
-            />
-          )}
           <div className="flex flex-col gap-2.5">{optionButtons}</div>
-          {feedback}
           {helper}
         </aside>
       </div>

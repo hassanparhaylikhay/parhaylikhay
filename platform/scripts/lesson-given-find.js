@@ -59,8 +59,8 @@ function wedge(c, a0, a1, r, steps = 18) {
  * side marked 12 is never drawn shorter than a side marked 9.
  */
 function triangle({ angleDeg, angleLabel, legRatio, base, left, hyp }) {
-  const A = [100, 259]                      // right angle
-  const LEFT = 210                          // vertical leg, px
+  const A = [62, 250]                       // right angle
+  const LEFT = 182                          // vertical leg, px
   const baseLen = angleDeg
     ? LEFT / Math.tan(angleDeg * RAD)
     : LEFT * legRatio                       // legRatio = base ÷ left
@@ -105,12 +105,15 @@ function triangle({ angleDeg, angleLabel, legRatio, base, left, hyp }) {
    * they never line up) and is pushed off the line by exactly enough to
    * clear the tag box.
    */
-  function tagPoint(P, Q, t) {
+  function tagPoint(P, Q, t, tagText = "H") {
     const m = [P[0] + (Q[0] - P[0]) * t, P[1] + (Q[1] - P[1]) * t]
     const u = unit(P, Q)
     let n = [-u[1], u[0]]
     if ((cen[0] - m[0]) * n[0] + (cen[1] - m[1]) * n[1] < 0) n = [-n[0], -n[1]]
-    const HW = 30, HH = 12, PAD = 9      // half box, plus breathing room
+    // Clearance depends on how wide the marker actually is: a single letter
+    // needs far less room than a word, and one fixed offset pushed the
+    // letters off their own side into a huddle in the middle.
+    const HW = 11 + 4.5 * tagText.length, HH = 13, PAD = 6
     const d = HW * Math.abs(n[0]) + HH * Math.abs(n[1]) + PAD
     return add(m, n, d).map(v => Math.round(v * 10) / 10)
   }
@@ -123,18 +126,54 @@ function triangle({ angleDeg, angleLabel, legRatio, base, left, hyp }) {
       regionLine("hyp", C[0], C[1], B[0], B[1], "#ff4670") +
       `</svg>`,
     // tags sit inside the triangle, the value labels sit outside it
-    tagAt: {
-      base: tagPoint(A, B, 0.42),
-      left: tagPoint(C, A, 0.68),
-      hyp: tagPoint(C, B, 0.40),
-    },
+    // Spread along each side as well as off it, so two markers never end up
+    // shoulder to shoulder near the middle.
+    tagAt: (side, tagText) => ({
+      base: () => tagPoint(A, B, 0.40, tagText),
+      left: () => tagPoint(C, A, 0.75, tagText),
+      hyp: () => tagPoint(C, B, 0.50, tagText),
+    })[side](),
   }
+}
+
+
+/** A tappable rounded chip drawn on the canvas: the choice happens on the board. */
+function regionChip(id, x, y, w, h, label, colour) {
+  return (
+    `<g data-region='${id}'>` +
+    `<rect class='pl-tap-vis pl-tap-fill' x='${f(x)}' y='${f(y)}' width='${f(w)}' height='${f(h)}' rx='8' ` +
+    `fill='${colour}22' stroke='${colour}' stroke-width='2' opacity='0.4'/>` +
+    `<text x='${f(x + w / 2)}' y='${f(y + h / 2)}' font-family='Geist Mono,monospace' font-size='14' font-weight='600' ` +
+    `fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>${label}</text>` +
+    `<rect class='pl-tap-hit' x='${f(x)}' y='${f(y)}' width='${f(w)}' height='${f(h)}' rx='8' ` +
+    `fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/>` +
+    `</g>`
+  )
+}
+
+/** Stack chips down the right-hand side of the canvas, beside the figure. */
+function chipColumn(items, { x = 296, w = 172, h = 44, top = 62, gap = 16 } = {}) {
+  let out = ""
+  const at = {}
+  items.forEach((it, i) => {
+    const y = top + i * (h + gap)
+    out += regionChip(it.id, x, y, w, h, it.label, it.colour ?? "#fff067")
+    at[it.id] = [x + w / 2, y + h / 2]
+  })
+  return { svg: out, at }
 }
 
 // ── the two new slides ───────────────────────────────────────────────────
 
-// 6.2: given the hypotenuse, find the opposite. Marks both, no formula yet.
+// 6.2: circle the given side and the side we want, each marked with its ROLE
+// letter, then pick the formula that carries those same two letters. The
+// letters are what makes the decision visual rather than verbal.
 const trig = triangle({ angleDeg: 40, angleLabel: "40°", base: "", left: "x", hyp: "9 cm" })
+const trigChips = chipColumn([
+  { id: "f-sin", label: "sin = O / H" },
+  { id: "f-cos", label: "cos = A / H" },
+  { id: "f-tan", label: "tan = O / A" },
+])
 const TRIG_SLIDE = {
   id: "07b3-given-find",
   kind: "interaction",
@@ -144,36 +183,48 @@ const TRIG_SLIDE = {
   interaction: {
     kind: "tapDiagram",
     config: {
-      prompt: "Before you pick a formula, mark the two sides the question is about.",
-      contextHtml: trig.svg,
+      prompt: "Mark the two sides the question is about, then pick the formula that uses them.",
+      contextHtml: trig.svg.replace("</svg>", trigChips.svg + "</svg>"),
       sequence: [
         {
           regionId: "hyp",
-          tag: "given",
-          tagAt: trig.tagAt.hyp,
-          prompt: "First, tap the side you are given. Its length is written on the diagram.",
-          hint: "One side already has a number on it. That is the side you are given.",
+          tag: "H",
+          tagAt: trig.tagAt("hyp", "H"),
+          prompt: "Tap the side you are given. It is the one with a number on it.",
+          hint: "One side has a length written on it. That is the side you are given.",
         },
         {
           regionId: "left",
-          tag: "find",
-          tagAt: trig.tagAt.left,
-          prompt: "Now tap the side you need to find. It is the one labelled $x$.",
-          hint: "The side you need is the one with a letter instead of a number.",
+          tag: "O",
+          tagAt: trig.tagAt("left", "O"),
+          prompt: "That side is opposite the right angle, so it is the hypotenuse, H. Now tap the side you need to find.",
+          hint: "The side you need is the one labelled with a letter instead of a number.",
+        },
+        {
+          regionId: "f-sin",
+          prompt: "That side is across from the $40°$ angle, so it is the opposite, O. You have O and H. Tap the formula that uses those two.",
+          hint: "Look for the formula with O on top and H underneath.",
         },
       ],
       regions: [
-        { id: "hyp", whyWrong: "Check again. You want the side with a number on it first, then the side with the letter." },
-        { id: "left", whyWrong: "Check again. You want the side with a number on it first, then the side with the letter." },
-        { id: "base", whyWrong: "That side has nothing written on it, so the question is not about it at all." },
+        { id: "hyp", whyWrong: "Not that one right now. Read the instruction above the diagram." },
+        { id: "left", whyWrong: "Not that one right now. Read the instruction above the diagram." },
+        { id: "base", whyWrong: "Nothing is written on that side, so the question is not about it." },
+        { id: "f-sin", whyWrong: "Not yet. Mark the two sides on the triangle first." },
+        { id: "f-cos", whyWrong: "Cos uses A and H. You marked O and H, so cos is not the one." },
+        { id: "f-tan", whyWrong: "Tan uses O and A. You have no A here, and you do have H, so tan is not the one." },
       ],
-      successText: "The $9$ cm side is opposite the right angle, so it is the hypotenuse. The side $x$ is across from the $40°$ angle, so it is the opposite. Opposite and hypotenuse is the sin formula, so use sin.",
+      successText: "You marked O and H, and sin is the formula with O and H in it. So $\\sin 40° = \\dfrac{x}{9}$.",
     },
   },
 }
 
-// 6.1: same method for Pythagoras. Given two sides, find the third.
+// 6.1: same idea, and the H marker is what decides add against subtract.
 const pyth = triangle({ legRatio: 12 / 9, base: "12 cm", left: "x", hyp: "15 cm" })
+const pythChips = chipColumn([
+  { id: "e-add", label: "add the squares" },
+  { id: "e-sub", label: "take one away" },
+], { top: 96, gap: 22 })
 const PYTH_SLIDE = {
   id: "05d-given-find",
   kind: "interaction",
@@ -183,37 +234,37 @@ const PYTH_SLIDE = {
   interaction: {
     kind: "tapDiagram",
     config: {
-      prompt: "Mark what the question gives you and what it asks for, before you decide to add or subtract.",
-      contextHtml: pyth.svg,
+      prompt: "Mark the hypotenuse and the side you want, then decide whether to add or subtract.",
+      contextHtml: pyth.svg.replace("</svg>", pythChips.svg + "</svg>"),
       sequence: [
         {
           regionId: "hyp",
-          tag: "given",
-          tagAt: pyth.tagAt.hyp,
-          prompt: "Tap the hypotenuse. It is opposite the right angle, and here it is $15$ cm.",
-          hint: "The hypotenuse is the side opposite the right angle. It is the longest side.",
-        },
-        {
-          regionId: "base",
-          tag: "given",
-          tagAt: pyth.tagAt.base,
-          prompt: "Tap the other side you are given, the one measuring $12$ cm.",
-          hint: "The bottom side has a number on it too, so it is given as well.",
+          tag: "H",
+          tagAt: pyth.tagAt("hyp", "H"),
+          prompt: "Tap the hypotenuse. It is the side opposite the right angle.",
+          hint: "The hypotenuse is opposite the right angle, and it is the longest side.",
         },
         {
           regionId: "left",
           tag: "find",
-          tagAt: pyth.tagAt.left,
+          tagAt: pyth.tagAt("left", "find"),
           prompt: "Now tap the side you need to find.",
-          hint: "One side is left, and it has a letter instead of a number.",
+          hint: "The side you need is the one labelled with a letter instead of a number.",
+        },
+        {
+          regionId: "e-sub",
+          prompt: "The side you want is not the H, so it is a shorter side. Tap what that means you do to the squares.",
+          hint: "You add the squares only when the side you want IS the hypotenuse. This one is not.",
         },
       ],
       regions: [
-        { id: "hyp", whyWrong: "Not that one yet. Follow the order in the instruction above the diagram." },
-        { id: "base", whyWrong: "Not that one yet. Follow the order in the instruction above the diagram." },
-        { id: "left", whyWrong: "Not that one yet. Follow the order in the instruction above the diagram." },
+        { id: "hyp", whyWrong: "Not that one right now. Read the instruction above the diagram." },
+        { id: "left", whyWrong: "Not that one right now. Read the instruction above the diagram." },
+        { id: "base", whyWrong: "Not that one right now. Read the instruction above the diagram." },
+        { id: "e-add", whyWrong: "You add the squares when the side you want is the hypotenuse. Here the H is already given, so this is the other case." },
+        { id: "e-sub", whyWrong: "Not yet. Mark the hypotenuse and the side you want first." },
       ],
-      successText: "You are given the hypotenuse, so the side you want is a shorter side. That means you subtract: $x^2 = 15^2 - 12^2$.",
+      successText: "The H is given and you want a shorter side, so you take one square away from the other: $x^2 = 15^2 - 12^2$.",
     },
   },
 }

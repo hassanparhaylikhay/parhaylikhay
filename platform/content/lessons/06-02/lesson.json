@@ -320,45 +320,62 @@
       "interaction": {
         "kind": "tapDiagram",
         "config": {
-          "prompt": "Before you pick a formula, mark the two sides the question is about.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 350.3,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 350.3 259 L 324.3 259 L 324.3 258 L 324.3 257 L 324.4 256 L 324.6 255 L 324.8 254 L 325 253 L 325.2 252 L 325.5 251.1 L 325.8 250.1 L 326.2 249.2 L 326.6 248.2 L 327 247.3 L 327.5 246.4 L 328 245.6 L 328.5 244.7 L 329.1 243.9 L 329.7 243.1 L 330.4 242.3 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='308.9' y='244' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>40°</text><text x='236.4' y='277.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle' pointer-events='none'></text><text x='79.7' y='145.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle' pointer-events='none'>x</text><text x='243.5' y='138.6' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>9 cm</text><g data-region='base'><line class='pl-tap-vis' x1='100' y1='259' x2='350.3' y2='259' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='259' x2='350.3' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='100' y1='49' x2='100' y2='259' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='100' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='100' y1='49' x2='350.3' y2='259' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='350.3' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
+          "prompt": "Mark the two sides the question is about, then pick the formula that uses them.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='62,250 278.9,250 62,68' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 75 250 L 75 237 L 62 237' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><path d='M 278.9 250 L 252.9 250 L 252.9 249 L 253 248 L 253.1 247 L 253.2 246 L 253.4 245 L 253.6 244 L 253.9 243 L 254.1 242.1 L 254.5 241.1 L 254.8 240.2 L 255.2 239.2 L 255.7 238.3 L 256.1 237.4 L 256.6 236.6 L 257.2 235.7 L 257.7 234.9 L 258.3 234.1 L 259 233.3 Z' fill='rgba(255,240,103,0.18)' stroke='#fff067' stroke-width='1.2'/><text x='237.6' y='235' font-family='Geist Mono,monospace' font-size='15' font-weight='600' fill='#fff067' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>40°</text><text x='181.7' y='268.9' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle' pointer-events='none'></text><text x='41.7' y='150.5' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle' pointer-events='none'>x</text><text x='188.8' y='143.6' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>9 cm</text><g data-region='base'><line class='pl-tap-vis' x1='62' y1='250' x2='278.9' y2='250' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='250' x2='278.9' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='62' y1='68' x2='62' y2='250' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='62' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='62' y1='68' x2='278.9' y2='250' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='278.9' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='f-sin'><rect class='pl-tap-vis pl-tap-fill' x='296' y='62' width='172' height='44' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><text x='382' y='84' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>sin = O / H</text><rect class='pl-tap-hit' x='296' y='62' width='172' height='44' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='f-cos'><rect class='pl-tap-vis pl-tap-fill' x='296' y='122' width='172' height='44' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><text x='382' y='144' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>cos = A / H</text><rect class='pl-tap-hit' x='296' y='122' width='172' height='44' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='f-tan'><rect class='pl-tap-vis pl-tap-fill' x='296' y='182' width='172' height='44' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><text x='382' y='204' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>tan = O / A</text><rect class='pl-tap-hit' x='296' y='182' width='172' height='44' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g></svg>",
           "sequence": [
             {
               "regionId": "hyp",
-              "tag": "given",
+              "tag": "H",
               "tagAt": [
-                176,
-                161.7
+                153.8,
+                178.9
               ],
-              "prompt": "First, tap the side you are given. Its length is written on the diagram.",
-              "hint": "One side already has a number on it. That is the side you are given."
+              "prompt": "Tap the side you are given. It is the one with a number on it.",
+              "hint": "One side has a length written on it. That is the side you are given."
             },
             {
               "regionId": "left",
-              "tag": "find",
+              "tag": "O",
               "tagAt": [
-                139,
-                191.8
+                83.5,
+                204.5
               ],
-              "prompt": "Now tap the side you need to find. It is the one labelled $x$.",
-              "hint": "The side you need is the one with a letter instead of a number."
+              "prompt": "That side is opposite the right angle, so it is the hypotenuse, H. Now tap the side you need to find.",
+              "hint": "The side you need is the one labelled with a letter instead of a number."
+            },
+            {
+              "regionId": "f-sin",
+              "prompt": "That side is across from the $40°$ angle, so it is the opposite, O. You have O and H. Tap the formula that uses those two.",
+              "hint": "Look for the formula with O on top and H underneath."
             }
           ],
           "regions": [
             {
               "id": "hyp",
-              "whyWrong": "Check again. You want the side with a number on it first, then the side with the letter."
+              "whyWrong": "Not that one right now. Read the instruction above the diagram."
             },
             {
               "id": "left",
-              "whyWrong": "Check again. You want the side with a number on it first, then the side with the letter."
+              "whyWrong": "Not that one right now. Read the instruction above the diagram."
             },
             {
               "id": "base",
-              "whyWrong": "That side has nothing written on it, so the question is not about it at all."
+              "whyWrong": "Nothing is written on that side, so the question is not about it."
+            },
+            {
+              "id": "f-sin",
+              "whyWrong": "Not yet. Mark the two sides on the triangle first."
+            },
+            {
+              "id": "f-cos",
+              "whyWrong": "Cos uses A and H. You marked O and H, so cos is not the one."
+            },
+            {
+              "id": "f-tan",
+              "whyWrong": "Tan uses O and A. You have no A here, and you do have H, so tan is not the one."
             }
           ],
-          "successText": "The $9$ cm side is opposite the right angle, so it is the hypotenuse. The side $x$ is across from the $40°$ angle, so it is the opposite. Opposite and hypotenuse is the sin formula, so use sin."
+          "successText": "You marked O and H, and sin is the formula with O and H in it. So $\\sin 40° = \\dfrac{x}{9}$."
         }
       }
     },

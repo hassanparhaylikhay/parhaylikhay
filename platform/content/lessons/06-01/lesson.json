@@ -162,55 +162,58 @@
       "interaction": {
         "kind": "tapDiagram",
         "config": {
-          "prompt": "Mark what the question gives you and what it asks for, before you decide to add or subtract.",
-          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='100,259 380,259 100,49' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 113 259 L 113 246 L 100 246' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='252.2' y='277.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>12 cm</text><text x='79.4' y='146.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle' pointer-events='none'>x</text><text x='259.2' y='139.6' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>15 cm</text><g data-region='base'><line class='pl-tap-vis' x1='100' y1='259' x2='380' y2='259' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='259' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='100' y1='49' x2='100' y2='259' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='100' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='100' y1='49' x2='380' y2='259' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='100' y1='49' x2='380' y2='259' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g></svg>",
+          "prompt": "Mark the hypotenuse and the side you want, then decide whether to add or subtract.",
+          "contextHtml": "<svg viewBox='0 0 480 320' preserveAspectRatio='xMidYMid meet' style='display:block;width:100%;height:100%' xmlns='http://www.w3.org/2000/svg'><polygon points='62,250 304.7,250 62,68' fill='rgba(240,238,234,0.05)' stroke='#c8c6be' stroke-width='2.2' stroke-linejoin='round'/><path d='M 75 250 L 75 237 L 62 237' fill='none' stroke='#fff067' stroke-width='1.6' opacity='0.9'/><text x='195.5' y='268.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#00abfa' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>12 cm</text><text x='41.4' y='151.3' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff822c' text-anchor='end' dominant-baseline='middle' pointer-events='none'>x</text><text x='202.5' y='144.6' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#ff4670' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>15 cm</text><g data-region='base'><line class='pl-tap-vis' x1='62' y1='250' x2='304.7' y2='250' stroke='#00abfa' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='250' x2='304.7' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='left'><line class='pl-tap-vis' x1='62' y1='68' x2='62' y2='250' stroke='#ff822c' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='62' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='hyp'><line class='pl-tap-vis' x1='62' y1='68' x2='304.7' y2='250' stroke='#ff4670' stroke-width='4' stroke-linecap='round' fill='none' opacity='0.28'/><line class='pl-tap-hit' x1='62' y1='68' x2='304.7' y2='250' stroke='#000' stroke-opacity='0' stroke-width='26' stroke-linecap='round' fill='none' pointer-events='all'/></g><g data-region='e-add'><rect class='pl-tap-vis pl-tap-fill' x='296' y='96' width='172' height='44' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><text x='382' y='118' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>add the squares</text><rect class='pl-tap-hit' x='296' y='96' width='172' height='44' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g><g data-region='e-sub'><rect class='pl-tap-vis pl-tap-fill' x='296' y='162' width='172' height='44' rx='8' fill='#fff06722' stroke='#fff067' stroke-width='2' opacity='0.4'/><text x='382' y='184' font-family='Geist Mono,monospace' font-size='14' font-weight='600' fill='#f0eeea' text-anchor='middle' dominant-baseline='middle' pointer-events='none'>take one away</text><rect class='pl-tap-hit' x='296' y='162' width='172' height='44' rx='8' fill='#000' fill-opacity='0' stroke='#000' stroke-opacity='0' stroke-width='2' pointer-events='all'/></g></svg>",
           "sequence": [
             {
               "regionId": "hyp",
-              "tag": "given",
+              "tag": "H",
               "tagAt": [
-                190,
-                162.3
+                167.9,
+                179.6
               ],
-              "prompt": "Tap the hypotenuse. It is opposite the right angle, and here it is $15$ cm.",
-              "hint": "The hypotenuse is the side opposite the right angle. It is the longest side."
-            },
-            {
-              "regionId": "base",
-              "tag": "given",
-              "tagAt": [
-                217.6,
-                238
-              ],
-              "prompt": "Tap the other side you are given, the one measuring $12$ cm.",
-              "hint": "The bottom side has a number on it too, so it is given as well."
+              "prompt": "Tap the hypotenuse. It is the side opposite the right angle.",
+              "hint": "The hypotenuse is opposite the right angle, and it is the longest side."
             },
             {
               "regionId": "left",
               "tag": "find",
               "tagAt": [
-                139,
-                191.8
+                97,
+                204.5
               ],
               "prompt": "Now tap the side you need to find.",
-              "hint": "One side is left, and it has a letter instead of a number."
+              "hint": "The side you need is the one labelled with a letter instead of a number."
+            },
+            {
+              "regionId": "e-sub",
+              "prompt": "The side you want is not the H, so it is a shorter side. Tap what that means you do to the squares.",
+              "hint": "You add the squares only when the side you want IS the hypotenuse. This one is not."
             }
           ],
           "regions": [
             {
               "id": "hyp",
-              "whyWrong": "Not that one yet. Follow the order in the instruction above the diagram."
-            },
-            {
-              "id": "base",
-              "whyWrong": "Not that one yet. Follow the order in the instruction above the diagram."
+              "whyWrong": "Not that one right now. Read the instruction above the diagram."
             },
             {
               "id": "left",
-              "whyWrong": "Not that one yet. Follow the order in the instruction above the diagram."
+              "whyWrong": "Not that one right now. Read the instruction above the diagram."
+            },
+            {
+              "id": "base",
+              "whyWrong": "Not that one right now. Read the instruction above the diagram."
+            },
+            {
+              "id": "e-add",
+              "whyWrong": "You add the squares when the side you want is the hypotenuse. Here the H is already given, so this is the other case."
+            },
+            {
+              "id": "e-sub",
+              "whyWrong": "Not yet. Mark the hypotenuse and the side you want first."
             }
           ],
-          "successText": "You are given the hypotenuse, so the side you want is a shorter side. That means you subtract: $x^2 = 15^2 - 12^2$."
+          "successText": "The H is given and you want a shorter side, so you take one square away from the other: $x^2 = 15^2 - 12^2$."
         }
       }
     },

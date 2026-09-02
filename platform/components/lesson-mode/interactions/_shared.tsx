@@ -338,6 +338,98 @@ export function ContextCanvas({ html, asideWidth, overlay }: { html: string; asi
 }
 
 /**
+ * CanvasStage — the figure WITH its teaching text, as one object.
+ *
+ * Hassan, September 2026: "ALL teaching text MUST render on CANVAS, not on
+ * the side. It should be like a teacher guiding a student visually, not like
+ * an AI chatbot generating text on the side."
+ *
+ * So the instruction, the correction and the explanation all live on the
+ * board with the diagram, and the side panel keeps only things the student
+ * operates: option buttons, inputs, tiles. The student's eye stays in one
+ * place instead of ping-ponging between a picture and a column of prose.
+ *
+ * Layout is one card: a caption strip on top, the figure underneath at the
+ * usual 480x320 aspect.
+ */
+export function CanvasStage({
+  caption,
+  tone = "instruct",
+  asideWidth,
+  overlay,
+  html,
+  children,
+  shake,
+}: {
+  caption?: React.ReactNode
+  tone?: "instruct" | "success" | "wrong"
+  asideWidth?: number
+  overlay?: React.ReactNode
+  html?: string
+  children?: React.ReactNode
+  shake?: boolean
+}) {
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+  const figRef = useRef<HTMLDivElement | null>(null)
+  const aside = asideWidth ?? 360
+  useLayoutEffect(() => {
+    function fit() {
+      const wrap = wrapRef.current
+      const fig = figRef.current
+      if (!wrap || !fig) return
+      const SVG_ASPECT = 480 / 320
+      const RESERVED = 240            // chrome + caption headroom
+      const vw = window.innerWidth
+      const SIDEBAR_W = vw >= 768 ? 256 : 0
+      const SLIDE_PAD = 64
+      const SLIDE_MAX = 1200
+      const slideW = Math.min(vw - SIDEBAR_W - SLIDE_PAD, SLIDE_MAX)
+      const isWide = vw >= 1280
+      const ASIDE_RESERVE = isWide ? aside + 28 : 0
+      const availableW = Math.max(280, slideW - ASIDE_RESERVE)
+      const availableH = Math.max(260, window.innerHeight - RESERVED)
+      const widthByHeight = SVG_ASPECT * availableH
+      const w = Math.max(320, Math.min(availableW, widthByHeight))
+      wrap.style.width = `${Math.round(w)}px`
+      fig.style.height = `${Math.round(w / SVG_ASPECT)}px`
+    }
+    fit()
+    window.addEventListener("resize", fit)
+    return () => window.removeEventListener("resize", fit)
+  }, [aside])
+
+  const colour = tone === "success" ? COLOR.green : tone === "wrong" ? COLOR.pink : COLOR.white
+  return (
+    <div
+      ref={wrapRef}
+      className={`relative block rounded-xl overflow-hidden ${shake ? "pl-shake" : ""}`}
+      style={{ background: COLOR.card, border: `1px solid ${COLOR.border}` }}
+    >
+      {caption !== undefined && caption !== null && caption !== "" && (
+        <div
+          className="px-5 sm:px-6 py-4"
+          style={{ borderBottom: `1px solid ${COLOR.border}`, minHeight: 64 }}
+        >
+          <div
+            key={tone + String(caption)}
+            className="pl-reveal text-[16px] sm:text-[17.5px] leading-snug"
+            style={{ color: colour }}
+          >
+            {caption}
+          </div>
+        </div>
+      )}
+      <div ref={figRef} className="relative w-full">
+        {html !== undefined
+          ? <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: html }} />
+          : children}
+        {overlay}
+      </div>
+    </div>
+  )
+}
+
+/**
  * useShake — returns [isShaking, fire()] so a parent can briefly shake an
  * element when the student answers wrong.
  */

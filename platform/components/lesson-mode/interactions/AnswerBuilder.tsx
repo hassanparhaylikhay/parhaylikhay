@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AltDemoCard, AltDemoOverlay, COLOR, ContextCanvas, MixedText, Prompt, type InteractionProps } from "./_shared"
+import { AltDemoCard, AltDemoOverlay, COLOR, CanvasStage, MixedText, Prompt, type InteractionProps } from "./_shared"
 
 type BuilderOption = {
   id: string
@@ -191,21 +191,28 @@ export default function AnswerBuilder({ config, onComplete, onDismissAlt }: Inte
     const effectiveHtml = done && config.revealSvgInside
       ? config.contextHtml.replace("</svg>", config.revealSvgInside + "</svg>")
       : config.contextHtml
+    // Teaching text on the board; the aside keeps the sentence being built
+    // and the tiles, which are what the student operates.
+    const caption = (wrongOption?.whyWrong && !done)
+      ? <MixedText text={wrongOption.whyWrong} />
+      : (done && config.successText)
+      ? <MixedText text={config.successText} />
+      : <MixedText text={config.prompt} />
+    const tone = (wrongOption?.whyWrong && !done) ? "wrong" : done ? "success" : "instruct"
     return (
       <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
         <div className="flex-1 min-w-0 flex items-center justify-center">
-          <ContextCanvas html={effectiveHtml} asideWidth={360} overlay={<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />} />
+          <CanvasStage
+            html={effectiveHtml}
+            asideWidth={360}
+            caption={caption}
+            tone={tone}
+            overlay={<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />}
+          />
         </div>
         <aside className="pl-stagger w-full xl:w-[360px] shrink-0 flex flex-col gap-3.5 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
-          {config.prompt && (
-            <MixedText
-              text={config.prompt}
-              className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full"
-            />
-          )}
           {sentence}
           {tray}
-          {feedback}
         </aside>
       </div>
     )

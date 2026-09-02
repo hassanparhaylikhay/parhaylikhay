@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { AltDemoCard, AltDemoOverlay, COLOR, Prompt, HelperRow, MixedText, ContextCanvas, type InteractionProps } from "./_shared"
+import { AltDemoCard, AltDemoOverlay, COLOR, Prompt, HelperRow, MixedText, CanvasStage, ContextCanvas, type InteractionProps } from "./_shared"
 
 type Slot = {
   id: string
@@ -314,29 +314,31 @@ export default function PlaceLabel({ config, onComplete, onDismissAlt, onShowMeU
         })}
       </>
     )
+    // Teaching text on the board; the tray of names stays in the aside
+    // because that is the thing the student picks up and moves.
+    const caption = done
+      ? <MixedText text={config.successText} />
+      : (
+        <span>
+          <MixedText text={config.prompt} />
+          <span className="block mt-1.5 text-[14px] text-[#7a7875]">
+            Drag a name onto the triangle, or tap the name then tap its side.
+          </span>
+        </span>
+      )
     return (
       <div className="w-full flex flex-col xl:flex-row gap-5 xl:gap-7 items-center xl:items-stretch">
         <div ref={hostRef} className={`flex-1 min-w-0 flex items-center justify-center pl-tap ${done ? "pl-tap-locked" : "pl-tap-fresh"}`}>
-          <ContextCanvas
+          <CanvasStage
             html={config.contextHtml!}
             asideWidth={360}
+            caption={caption}
+            tone={done ? "success" : "instruct"}
             overlay={<>{placedNames}<AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} /></>}
           />
         </div>
         <aside className="pl-stagger w-full xl:w-[360px] shrink-0 flex flex-col gap-3 justify-center" style={{ overflowWrap: "anywhere", wordBreak: "break-word" }}>
-          {config.prompt && (
-            <MixedText
-              text={config.prompt}
-              className="block text-[18px] sm:text-[20px] text-[#f0eeea] leading-snug max-w-full mb-1"
-            />
-          )}
-          {!done && (
-            <p className="text-[14px] text-[#7a7875] leading-relaxed">
-              Drag a name onto the triangle, or tap the name then tap its side.
-            </p>
-          )}
           {tray}
-          {successBlock}
           {!config.noHelp && <HelperRow onShowMe={!done ? showMe : undefined} />}
         </aside>
         {ghost}

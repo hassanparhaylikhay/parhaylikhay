@@ -282,9 +282,12 @@ export default function StepSolve({ config, onComplete, onDismissAlt, onRegister
     </>
   )
 
+  // With a figure present the question moves onto it, because that is where
+  // a paper puts the question: beside the diagram it is about. Line-level
+  // feedback stays with the line it belongs to, in the working column.
   const working = (
     <>
-      {config.prompt && (
+      {!config.contextHtml && config.prompt && (
         <MixedText
           text={config.prompt}
           className="block text-[20px] sm:text-[23px] text-[#f0eeea] leading-snug"
@@ -315,10 +318,21 @@ export default function StepSolve({ config, onComplete, onDismissAlt, onRegister
         <aside className="w-full max-w-[540px] xl:w-[460px] shrink-0 xl:pt-1">
           <div
             className="relative w-full rounded-xl overflow-hidden"
-            style={{ background: COLOR.card, border: `1px solid ${COLOR.border}`, aspectRatio: "480 / 320" }}
+            style={{ background: COLOR.card, border: `1px solid ${COLOR.border}` }}
           >
-            <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: config.contextHtml }} />
-            <AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />
+            {config.prompt && (
+              <div className="px-5 py-4" style={{ borderBottom: `1px solid ${COLOR.border}` }}>
+                <MixedText
+                  text={config.prompt}
+                  className="block text-[17px] sm:text-[18.5px] leading-snug"
+                  style={{ color: COLOR.white }}
+                />
+              </div>
+            )}
+            <div className="relative w-full" style={{ aspectRatio: "480 / 320" }}>
+              <div className="w-full h-full" dangerouslySetInnerHTML={{ __html: config.contextHtml }} />
+              <AltDemoOverlay svg={config.altDemo} onDismiss={onDismissAlt} />
+            </div>
           </div>
         </aside>
       </div>
