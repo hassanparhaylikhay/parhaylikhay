@@ -21,10 +21,12 @@ import {
 export default function TriangleAnglesLesson({ closeHref }: { closeHref: string }) {
   const sceneRef = useRef<Scene | null>(null)
   if (sceneRef.current === null) sceneRef.current = createScene()
-  const [view, setView] = useState<{ S: Scene; idx: number; frame: number } | null>(null)
+  const [view, setView] = useState<{ S: Scene; idx: number; frame: number; doneAt: number | null } | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const idxRef = useRef(0)
   const doneFired = useRef(false)
+  // When a playing beat's goal was first met (scene time), or null.
+  const doneAt = useRef<number | null>(null)
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const go = useCallback((n: number) => {
@@ -33,6 +35,7 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
     const next = Math.max(0, Math.min(BEATS.length - 1, n))
     idxRef.current = next
     doneFired.current = false
+    doneAt.current = null
     S.beatStart = S.time
     BEATS[next].enter(S)
   }, [])
@@ -74,15 +77,20 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
       const b = BEATS[idxRef.current]
       if (b.done && !doneFired.current && b.done(S)) {
         doneFired.current = true
+        doneAt.current = S.time
         S.flashGood = Math.max(S.flashGood, 0.8)
-        const from = idxRef.current
-        advanceTimer.current = setTimeout(() => {
-          advanceTimer.current = null
-          if (idxRef.current === from) go(from + 1)
-        }, b.id === "draw" ? 1200 : 1100)
+        // A playing beat stays put: the student keeps going and taps on
+        // when ready. Every other doing beat moves on by itself.
+        if (!b.free) {
+          const from = idxRef.current
+          advanceTimer.current = setTimeout(() => {
+            advanceTimer.current = null
+            if (idxRef.current === from) go(from + 1)
+          }, 1800)
+        }
       }
       frame = (frame + 1) % 1_000_000
-      setView({ S, idx: idxRef.current, frame })
+      setView({ S, idx: idxRef.current, frame, doneAt: doneAt.current })
       raf = requestAnimationFrame(loop)
     }
     raf = requestAnimationFrame(loop)
@@ -94,8 +102,7 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
 
   const ctaReady = useCallback(() => {
     const S = sceneRef.current!
-    const b = BEATS[idxRef.current]
-    return b.cta !== undefined && S.time - S.beatStart >= (b.ctaAfter ?? 1)
+    return showsCta(BEATS[idxRef.current], S, doneAt.current)
   }, [])
 
   const onCta = useCallback(() => {
@@ -128,7 +135,7 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
   const S = view?.S
   const beat = BEATS[view?.idx ?? 0]
   const L = S ? layout(S) : null
-  const ctaShown = !!S && beat.cta !== undefined && S.time - S.beatStart >= (beat.ctaAfter ?? 1)
+  const ctaShown = !!S && showsCta(beat, S, view?.doneAt ?? null)
 
   return (
     <Shell
@@ -137,7 +144,7 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
       phraseKey={S ? beat.id : "-"}
       note={S?.note?.text ?? null}
       noteKey={String(S?.note?.until ?? 0)}
-      cta={ctaShown ? beat.cta ?? "" : null}
+      cta={ctaShown ? (beat.free ? "" : beat.cta ?? "") : null}
       onCta={onCta}
       closeHref={closeHref}
     >
@@ -159,4 +166,14 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
       )}
     </Shell>
   )
+}
+
+/**
+ * Whether the continue button is up. A playing beat offers it once its goal
+ * is met and the student has had at least `minPlay` seconds with the board.
+ */
+function showsCta(b: (typeof BEATS)[number], S: Scene, doneAt: number | null) {
+  const elapsed = S.time - S.beatStart
+  if (b.free) return doneAt !== null && elapsed >= (b.minPlay ?? 0) && S.time - doneAt >= 0.8
+  return b.cta !== undefined && elapsed >= (b.ctaAfter ?? 1)
 }

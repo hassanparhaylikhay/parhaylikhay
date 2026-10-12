@@ -12,7 +12,7 @@
 
 import {
   type Vec, type Rect,
-  add, sub, mul, dot, dist, len, unit, lerp, lerpV, clamp, clampToRect, ease,
+  add, sub, mul, dot, cross, dist, len, unit, lerp, lerpV, clamp, clampToRect, ease, DEG, RAD,
   anglesOf, wholeAngles, wedgeAt, area, centroid, fitInto, centreIn, triFromAngles,
   projectOnLine, rotateAbout, turn, apexFor, bbox,
 } from "../geometry"
@@ -381,7 +381,7 @@ export function morphTo(S: Scene, deg: number[], order = ORDER_BASE, maxSize?: n
 
 /** Any beat after the first needs a triangle. Make one if we arrived cold. */
 export function ensureTriangle(S: Scene) {
-  if (S.P) return
+  if (S.P) { wholeDegrees(S); return }
   morphTo(S, [64, 48, 68], ORDER_BASE)
   S.D = S.P!.map(p => [p[0], p[1]] as Vec)
 }
@@ -485,30 +485,48 @@ export function pointerMove(S: Scene, p: Vec) {
   let next: Vec[] | null = null
 
   if (S.mode === "free") {
-    const c = S.P.slice()
-    c[i] = q
+    // The corner settles where every angle is a whole number of degrees,
+    // a few pixels from the finger at most. The numbers on screen are then
+    // exact: they add to 180 with no rounding, and equal angles read equal.
     S.snapped = false
-    if (S.snapKind === "iso") {
-      const s = isoSnap(c, i)
-      if (s) { c[i] = s.p; S.apex = s.apex; S.snapped = true }
+    const j = (i + 1) % 3, k = (i + 2) % 3
+    const Pj = S.P[j], Pk = S.P[k]
+    let aj = angleBetween(sub(Pk, Pj), sub(q, Pj))
+    let ak = angleBetween(sub(Pj, Pk), sub(q, Pk))
+    if (aj > 1.5 && ak > 1.5 && aj + ak < 177.5) {
+      aj = Math.round(aj)
+      ak = Math.round(ak)
+      if (S.snapKind === "iso") {
+        const iso = isoAngles(aj, ak)
+        if (iso) {
+          aj = iso.aj
+          ak = iso.ak
+          S.apex = iso.apex === "i" ? i : iso.apex === "j" ? j : k
+          S.snapped = true
+        }
+      }
+      if (S.snapKind === "targets" && S.targets) [aj, ak] = magnet(aj, ak, S.targets)
+      const c = S.P.slice()
+      c[i] = apexFor(Pj, Pk, aj, ak, q)
+      if (healthy(c) && inside(c, L.tri)) next = c
     }
-    if (healthy(c)) next = c
   } else if (S.mode === "iso") {
+    // The top corner slides along the line of symmetry, stepping in whole
+    // degrees of base angle, so the two equal angles always read the same.
     const j = (S.apex + 1) % 3, k = (S.apex + 2) % 3
     const m = lerpV(S.P[j], S.P[k], 0.5)
     const b = sub(S.P[k], S.P[j])
+    const half = len(b) / 2
     const n = unit([-b[1], b[0]])
     const sideNow = Math.sign(dot(sub(S.P[S.apex], m), n)) || 1
-    const proj = projectOnLine(q, m, n)
-    let s = dot(sub(proj, m), n)
-    if (Math.sign(s) !== sideNow || Math.abs(s) < 26) s = 26 * sideNow
+    let s = dot(sub(projectOnLine(q, m, n), m), n)
+    if (Math.sign(s) !== sideNow) s = 0
+    const lowest = Math.max(3, Math.ceil(Math.atan2(26, half) * DEG))
+    let base = clamp(Math.round(Math.atan2(Math.abs(s), half) * DEG), lowest, 87)
     S.snapped = false
-    if (S.snapKind === "equi") {
-      const H = (len(b) * Math.sqrt(3)) / 2
-      if (Math.abs(Math.abs(s) - H) / H < 0.075) { s = H * sideNow; S.snapped = true }
-    }
+    if (S.snapKind === "equi" && Math.abs(base - 60) <= 4) { base = 60; S.snapped = true }
     const c = S.P.slice()
-    c[S.apex] = add(m, mul(n, s))
+    c[S.apex] = add(m, mul(n, half * Math.tan(base * RAD) * sideNow))
     if (inside(c, L.tri)) next = c
   } else if (S.mode === "equi") {
     const G = centroid(S.P)
@@ -544,23 +562,11 @@ export function pointerMove(S: Scene, p: Vec) {
 export function pointerUp(S: Scene) {
   if (S.stroke) { endStroke(S); return }
   if (!S.drag || !S.P) { S.drag = null; return }
-  const i = S.drag.i
   S.drag = null
   S.releases++
   S.lastRelease = S.time
   if ((S.snapKind === "iso" || S.snapKind === "equi") && S.snapped) S.locked = true
-  if (S.snapKind === "targets" && S.targets) {
-    const m = bestMatch(anglesOf(S.P), S.targets)
-    if (m.err <= 3.2) {
-      const j = (i + 1) % 3, k = (i + 2) % 3
-      const c = S.P.slice()
-      c[i] = apexFor(c[j], c[k], S.targets[m.perm[j]], S.targets[m.perm[k]], c[i])
-      S.P = c
-      refit(S)
-      litChips(S)
-      S.locked = true
-    }
-  }
+  if (S.snapKind === "targets" && S.targets && S.chipLit.every(Boolean)) S.locked = true
 }
 
 /** A triangle the eye can still read: no sliver, no needle. */
@@ -572,65 +578,105 @@ function inside(P: Vec[], r: Rect) {
   return P.every(p => p[0] >= r.x0 - 0.5 && p[0] <= r.x1 + 0.5 && p[1] >= r.y0 - 0.5 && p[1] <= r.y1 + 0.5)
 }
 
-/**
- * While the student drags corner i, catch the moment two sides come close
- * to equal and lock them exactly. Three ways it can happen: i becomes the
- * corner between the equal sides, or one of the other corners does.
- */
-function isoSnap(P: Vec[], i: number): { p: Vec; apex: number } | null {
-  const TOL = 0.075
-  const j = (i + 1) % 3, k = (i + 2) % 3
-  const cands: { e: number; p: Vec; apex: number }[] = []
-  {
-    const a = dist(P[i], P[j]), b = dist(P[i], P[k])
-    const m = lerpV(P[j], P[k], 0.5), d = sub(P[k], P[j])
-    cands.push({ e: Math.abs(a - b) / Math.max(a, b), p: projectOnLine(P[i], m, [-d[1], d[0]]), apex: i })
-  }
-  for (const c of [j, k]) {
-    const other = c === j ? k : j
-    const R = dist(P[c], P[other]), r = dist(P[c], P[i])
-    cands.push({ e: Math.abs(r - R) / Math.max(r, R), p: add(P[c], mul(unit(sub(P[i], P[c])), R)), apex: c })
-  }
-  cands.sort((a, b) => a.e - b.e)
-  const best = cands[0]
-  if (best.e > TOL) return null
-  const test = P.slice()
-  test[i] = best.p
-  return healthy(test) ? { p: best.p, apex: best.apex } : null
+/** The angle between two directions, in degrees. */
+function angleBetween(u: Vec, v: Vec) {
+  return Math.abs(Math.atan2(cross(u, v), dot(u, v))) * DEG
 }
 
-const PERMS = [[0, 1, 2], [0, 2, 1], [1, 0, 2], [1, 2, 0], [2, 0, 1], [2, 1, 0]]
+/**
+ * While corner i is dragged, catch the moment two angles come close to
+ * equal and make them exactly equal. Equal angles mean equal sides, so this
+ * is the isosceles snap. Three ways it can happen: the two angles at the
+ * other corners match (i becomes the top), or i's own angle matches one of
+ * them. aj and ak are the whole-degree angles at the other two corners.
+ */
+function isoAngles(aj: number, ak: number): { aj: number; ak: number; apex: "i" | "j" | "k" } | null {
+  const TOL = 4
+  const ai = 180 - aj - ak
+  const cands: { d: number; aj: number; ak: number; apex: "i" | "j" | "k" }[] = []
+  {
+    const e = Math.round((aj + ak) / 2)
+    cands.push({ d: Math.abs(aj - ak), aj: e, ak: e, apex: "i" })
+  }
+  {
+    // i and j equal: k is the top corner
+    const e = Math.round((ai + aj) / 2)
+    cands.push({ d: Math.abs(ai - aj), aj: e, ak: 180 - 2 * e, apex: "k" })
+  }
+  {
+    // i and k equal: j is the top corner
+    const e = Math.round((ai + ak) / 2)
+    cands.push({ d: Math.abs(ai - ak), aj: 180 - 2 * e, ak: e, apex: "j" })
+  }
+  const ok = cands.filter(c => c.d <= TOL && c.aj >= 3 && c.ak >= 3 && 180 - c.aj - c.ak >= 3)
+  if (!ok.length) return null
+  ok.sort((a, b) => a.d - b.d)
+  return ok[0]
+}
 
-/** Pair each corner with the target angle nearest to it, as a whole. */
-export function bestMatch(a: number[], T: number[]) {
-  let best = { perm: PERMS[0], err: Infinity }
-  for (const p of PERMS) {
-    const err = Math.max(...a.map((x, i) => Math.abs(x - T[p[i]])))
-    if (err < best.err) best = { perm: p, err }
+/**
+ * Building to order: pull each of the two angles the drag controls onto a
+ * target it is close to, so the target clicks into place and its chip
+ * lights. The dragged corner's own angle is whatever is left, which is the
+ * lesson: two angles fix the third.
+ */
+function magnet(aj: number, ak: number, T: number[]): [number, number] {
+  const PULL = 2.5
+  let best: [number, number] = [aj, ak]
+  let bestScore = -1
+  for (const order of [[0, 1], [1, 0]]) {
+    const vals = [aj, ak]
+    const used = new Set<number>()
+    let score = 0
+    for (const w of order) {
+      let pick = -1, gap = Infinity
+      T.forEach((t, idx) => {
+        if (used.has(idx)) return
+        const d = Math.abs(vals[w] - t)
+        if (d <= PULL && d < gap) { gap = d; pick = idx }
+      })
+      if (pick >= 0) { vals[w] = T[pick]; used.add(pick); score += 10 - gap }
+    }
+    if (score > bestScore && vals[0] + vals[1] <= 177) { bestScore = score; best = [vals[0], vals[1]] }
   }
   return best
 }
 
+/** A chip lights when some corner shows exactly its number. */
 function litChips(S: Scene) {
   if (!S.P || !S.targets) return
-  const a = anglesOf(S.P)
-  const T = S.targets
-  // Light a chip for each target some corner is within a hair of, matching
-  // greedily from the closest pair so one corner cannot light two chips.
-  const pairs: [number, number, number][] = []
-  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) pairs.push([Math.abs(a[i] - T[j]), i, j])
-  pairs.sort((x, y) => x[0] - y[0])
-  const usedC = new Set<number>(), usedT = new Set<number>()
-  const lit = [false, false, false]
-  for (const [e, i, j] of pairs) {
-    if (usedC.has(i) || usedT.has(j)) continue
-    usedC.add(i); usedT.add(j)
-    if (e <= 2.6) lit[j] = true
-  }
-  S.chipLit = lit
+  const a = shownAngles(S.P)
+  const used = new Set<number>()
+  S.chipLit = S.targets.map(t => {
+    const c = [0, 1, 2].find(i => !used.has(i) && a[i] === t)
+    if (c === undefined) return false
+    used.add(c)
+    return true
+  })
 }
 
 export function refreshChips(S: Scene) { litChips(S) }
+
+/**
+ * The angles as the student sees them. The geometry keeps every angle a
+ * whole number of degrees, so plain rounding is exact; the fallback only
+ * covers a triangle that has not been settled yet.
+ */
+export function shownAngles(P: Vec[]): number[] {
+  const r = anglesOf(P).map(Math.round)
+  if (r[0] + r[1] + r[2] === 180) return r
+  return wholeAngles(P)
+}
+
+/** Settle a triangle onto whole-degree angles by nudging one corner. */
+export function wholeDegrees(S: Scene) {
+  if (!S.P) return
+  const a = anglesOf(S.P)
+  if (a.every(x => Math.abs(x - Math.round(x)) < 1e-6)) return
+  const c = S.P.slice()
+  c[2] = apexFor(c[0], c[1], Math.round(a[0]), Math.round(a[1]), c[2])
+  S.P = c
+}
 
 // ── drawing a triangle with straight strokes ─────────────────────────────
 

@@ -29,6 +29,14 @@ export interface Beat {
   cta?: string
   /** Seconds before the button appears. */
   ctaAfter?: number
+  /**
+   * A playing beat: when `done` turns true the board does NOT move on.
+   * The continue button appears instead, and the student keeps playing
+   * until they choose to go on.
+   */
+  free?: boolean
+  /** Seconds of play before a playing beat offers to move on. */
+  minPlay?: number
   restart?: boolean
 }
 
@@ -51,7 +59,7 @@ const movedEnough = (px: number, corners = 1) => (S: Scene) =>
 const afterRelease = (test: (S: Scene) => boolean) => (S: Scene) =>
   !S.drag && S.releases > 0 && !!S.P && test(S)
 
-const watch = (id: string, text: string, enter: (S: Scene) => void, ctaAfter = 1.1): Beat =>
+const watch = (id: string, text: string, enter: (S: Scene) => void, ctaAfter = 1.6): Beat =>
   ({ id, say: text, enter, cta: "", ctaAfter })
 
 /** The sum written as an equation with a box for the unknown. */
@@ -141,52 +149,64 @@ export const BEATS: Beat[] = [
     id: "move",
     say: "Move the corners.",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, ["tri", "nodes"]); refit(S) },
-    done: movedEnough(260, 2),
+    done: movedEnough(420, 2),
+    free: true,
+    minPlay: 7,
   },
   {
     id: "flat",
     say: "Make it long and flat.",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, ["tri", "nodes"]) },
     done: afterRelease(S => { const r = shapeRatio(S.P!); return r.w >= 3 * r.h && r.w > 150 * screenScale(S) }),
+    free: true,
+    minPlay: 3,
   },
   {
     id: "tall",
     say: "Now make it tall and thin.",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, ["tri", "nodes"]) },
     done: afterRelease(S => { const r = shapeRatio(S.P!); return r.h >= 1.8 * r.w && r.h > 130 * screenScale(S) }),
+    free: true,
+    minPlay: 3,
   },
 
   // Its angles.
   watch("angles", "Each corner has an angle.", S => {
     resetBeat(S); ensureTriangle(S); colours(S, DEFAULT); show(S, ["tri", "nodes", "arcs"])
-  }, 1.4),
+  }, 1.8),
   {
     id: "watch-angles",
     say: "Move a corner. Watch the angles.",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, ["tri", "nodes", "arcs"]) },
-    done: movedEnough(240),
+    done: movedEnough(380),
+    free: true,
+    minPlay: 7,
   },
   watch("sizes", "Each angle has a size.", S => {
     resetBeat(S); ensureTriangle(S); show(S, [...ALL])
-  }, 1.4),
+  }, 1.8),
   {
     id: "big",
     say: "Make one angle really big.",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, [...ALL]) },
     done: afterRelease(S => Math.max(...anglesOf(S.P!)) >= 120),
+    free: true,
+    minPlay: 3,
   },
   {
     id: "small",
     say: "Now make one really small.",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, [...ALL]) },
     done: afterRelease(S => Math.min(...anglesOf(S.P!)) <= 15),
+    free: true,
+    minPlay: 3,
   },
   {
     id: "spot",
     say: "One thing never changes. Can you spot it?",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, [...ALL]) },
     cta: "Show me",
-    ctaAfter: 6,
+    ctaAfter: 12,
   },
 
   // The sum.
@@ -197,11 +217,13 @@ export const BEATS: Beat[] = [
     id: "again",
     say: "Move the corners again.",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, [...ALL, "sum"]); refit(S) },
-    done: movedEnough(280, 2),
+    done: movedEnough(420, 2),
+    free: true,
+    minPlay: 8,
   },
   watch("always", "The total is always $180^\\circ$.", S => {
     resetBeat(S); ensureTriangle(S); show(S, [...ALL, "sum"])
-  }, 1.4),
+  }, 1.8),
 
   // Why: the corners fit together on a straight line.
   {
@@ -230,17 +252,17 @@ export const BEATS: Beat[] = [
     if (!S.tear.every(t => t.on)) tearAll(S)
     show(S, [...ALL, "fan"]); refit(S)
     S.pulseLine = true
-  }, 1.6),
+  }, 2),
   watch("line-180", "A straight line is $180^\\circ$.", S => {
     resetBeat(S); ensureTriangle(S)
     if (!S.tear.every(t => t.on)) tearAll(S)
     show(S, [...ALL, "fan", "fan180"]); refit(S)
-  }, 1.4),
+  }, 1.8),
   watch("rule", "So the angles in a triangle add up to $180^\\circ$.", S => {
     resetBeat(S); ensureTriangle(S)
     if (!S.tear.every(t => t.on)) tearAll(S)
     show(S, [...ALL, "fan", "fan180"]); refit(S)
-  }, 1.6),
+  }, 2),
 
   // Isosceles: two equal sides.
   {
@@ -258,16 +280,16 @@ export const BEATS: Beat[] = [
   },
   watch("iso-marks", "These marks mean the sides are equal.", S => {
     resetBeat(S); ensureIso(S); S.tickKind = "iso"; show(S, ["tri", "nodes", "ticks"])
-  }, 1.2),
+  }, 1.8),
   watch("iso-name", "It is called an isosceles triangle.", S => {
     resetBeat(S); ensureIso(S); S.tickKind = "iso"; show(S, ["tri", "nodes", "ticks"])
-  }, 1.2),
+  }, 1.8),
   watch("iso-angles", "Look at these two angles.", S => {
     resetBeat(S); ensureIso(S); S.tickKind = "iso"
     isoColours(S)
     S.pulse = [0, 1, 2].map(i => i !== S.apex)
     show(S, [...ALL, "ticks"])
-  }, 1.6),
+  }, 2),
   {
     id: "iso-move",
     say: "Move the glowing corner.",
@@ -277,13 +299,15 @@ export const BEATS: Beat[] = [
       S.glow = [0, 1, 2].map(i => i === S.apex)
       show(S, [...ALL, "ticks"])
     },
-    done: movedEnough(180),
+    done: movedEnough(300),
+    free: true,
+    minPlay: 7,
   },
   watch("iso-equal", "Those two angles always match.", S => {
     resetBeat(S); ensureIso(S); S.tickKind = "iso"; isoColours(S)
     S.pulse = [0, 1, 2].map(i => i !== S.apex)
     show(S, [...ALL, "ticks"])
-  }, 1.2),
+  }, 1.8),
   watch("iso-sum", "They still add up to $180^\\circ$.", S => {
     resetBeat(S); ensureIso(S); S.tickKind = "iso"; isoColours(S)
     show(S, [...ALL, "ticks", "sum"]); refit(S)
@@ -306,16 +330,16 @@ export const BEATS: Beat[] = [
   },
   watch("equi-name", "This is an equilateral triangle.", S => {
     resetBeat(S); ensureEqui(S); S.tickKind = "equi"; show(S, ["tri", "nodes", "ticks"])
-  }, 1.2),
+  }, 1.8),
   watch("equi-60", "Every angle is $60^\\circ$.", S => {
     resetBeat(S); ensureEqui(S); S.tickKind = "equi"; colours(S, [BLUE, BLUE, BLUE])
     show(S, [...ALL, "ticks"])
-  }, 1.4),
+  }, 1.8),
   watch("equi-why", "Three equal angles share $180^\\circ$.", S => {
     resetBeat(S); ensureEqui(S); S.tickKind = "equi"; colours(S, [BLUE, BLUE, BLUE])
     S.lineTex = `\\dfrac{${c(GREEN, deg(180))}}{3} = ${c(BLUE, deg(60))}`
     show(S, [...ALL, "ticks", "line"]); refit(S)
-  }, 1.6),
+  }, 2),
   {
     id: "equi-move",
     say: "Move any corner.",
@@ -326,12 +350,14 @@ export const BEATS: Beat[] = [
       show(S, [...ALL, "ticks"])
       refit(S)
     },
-    done: movedEnough(240),
+    done: movedEnough(360),
+    free: true,
+    minPlay: 7,
   },
   watch("equi-stays", "It stays $60^\\circ$ every time.", S => {
     resetBeat(S); ensureEqui(S); S.tickKind = "equi"; colours(S, [BLUE, BLUE, BLUE])
     show(S, [...ALL, "ticks"])
-  }, 1),
+  }, 1.8),
 
   // Using it: the missing angle.
   watch("p1-a", "This angle is $50^\\circ$.", S => {
@@ -341,7 +367,7 @@ export const BEATS: Beat[] = [
     colours(S, [BLUE, GREY, GREY])
     S.label = [deg(50), "", ""]
     S.pulse = [true, false, false]
-  }, 1),
+  }, 1.8),
   watch("p1-b", "This one is $60^\\circ$.", S => {
     resetBeat(S); untear(S)
     show(S, ["tri", "arcs", "values"])
@@ -349,7 +375,7 @@ export const BEATS: Beat[] = [
     colours(S, [BLUE, ORANGE, GREY])
     S.label = [deg(50), deg(60), ""]
     S.pulse = [false, true, false]
-  }, 1),
+  }, 1.8),
   {
     id: "p1-c",
     say: "What is the third angle?",
@@ -375,7 +401,7 @@ export const BEATS: Beat[] = [
     colours(S, [BLUE, GREY, GREY])
     S.label = [deg(90), "", ""]
     S.pulse = [true, false, false]
-  }, 1.2),
+  }, 1.8),
   {
     id: "p3",
     say: "Find the missing angle.",
@@ -460,11 +486,11 @@ export const BEATS: Beat[] = [
     resetBeat(S); ensureTriangle(S); colours(S, DEFAULT)
     S.lineTex = `100^\\circ + 50^\\circ + 60^\\circ = ${c(PINK, deg(210))}`
     show(S, [...ALL, "line"]); refit(S)
-  }, 1.4),
+  }, 1.8),
   watch("only-180", "A triangle only has $180^\\circ$ to share.", S => {
     resetBeat(S); ensureTriangle(S); colours(S, DEFAULT)
     show(S, [...ALL, "sum"]); refit(S)
-  }, 1.4),
+  }, 1.8),
   {
     id: "end",
     say: "Any triangle you make adds up to $180^\\circ$.",

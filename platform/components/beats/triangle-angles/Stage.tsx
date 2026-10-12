@@ -3,11 +3,11 @@
 import styles from "../beats.module.css"
 import { Tex } from "../Tex"
 import {
-  type Vec, add, sub, mul, unit, lerpV, clamp, ease, sectorPath, arcPath, wedgeAt, wholeAngles,
+  type Vec, add, sub, mul, unit, lerpV, clamp, ease, sectorPath, arcPath, wedgeAt,
 } from "../geometry"
 import {
   type Scene, type Layout, CHALK, GREEN, YELLOW, PINK, GREY,
-  rgb, hexRgb, arcRadius, valuePos, sumSlots, tornWedge,
+  rgb, hexRgb, arcRadius, valuePos, sumSlots, tornWedge, shownAngles,
 } from "./scene"
 
 /**
@@ -103,7 +103,7 @@ function TriangleLayer({ S, L, D, vis }: { S: Scene; L: Layout; D: Vec[]; vis: V
   const stroke = flash > 0 ? mix(CHALK, GREEN, Math.min(1, flash * 1.6)) : CHALK
   const pts = D.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ")
   const arcsV = vis("arcs")
-  const whole = wholeAngles(D)
+  const whole = shownAngles(S.P ?? D)
 
   const arcs: React.ReactNode[] = []
   if (arcsV > 0.01) {
@@ -266,7 +266,7 @@ function Nodes({ S, D, vis }: { S: Scene; D: Vec[]; vis: VisFn }) {
 function Labels({ S, L, D, vis }: { S: Scene; L: Layout; D: Vec[]; vis: VisFn }) {
   const out: React.ReactNode[] = []
   const vv = vis("values")
-  const whole = wholeAngles(D)
+  const whole = shownAngles(S.P ?? D)
   const place = (p: Vec): React.CSSProperties => ({
     transform: `translate(${p[0].toFixed(1)}px, ${p[1].toFixed(1)}px) translate(-50%, -50%)`,
   })
