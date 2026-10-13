@@ -206,7 +206,7 @@ export const BEATS: Beat[] = [
     say: "One thing never changes. Can you spot it?",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, [...ALL]) },
     cta: "Show me",
-    ctaAfter: 12,
+    ctaAfter: 10,
   },
 
   // The sum.
@@ -482,21 +482,35 @@ export const BEATS: Beat[] = [
     cta: "I can't do it",
     ctaAfter: 14,
   },
-  watch("why-not", "They add up to $210^\\circ$.", S => {
+  // The impossible task, explained one step at a time. Some students saw
+  // "they add up to 210" and said "oh" without connecting it to the rule,
+  // so the rule is now the last thing said, not assumed.
+  watch("why-not", "Do you know why you couldn't do it?", S => {
+    resetBeat(S); ensureTriangle(S); colours(S, DEFAULT)
+    S.targets = [100, 50, 60]
+    refreshChips(S)
+    show(S, [...ALL, "line"]); refit(S)
+  }, 1.8),
+  watch("cannot-exist", "Because a triangle like this can't exist.", S => {
+    resetBeat(S); ensureTriangle(S); colours(S, DEFAULT)
+    S.targets = [100, 50, 60]
+    show(S, [...ALL, "line"]); refit(S)
+  }, 1.8),
+  watch("adds-210", "These angles add up to $210^\\circ$.", S => {
     resetBeat(S); ensureTriangle(S); colours(S, DEFAULT)
     S.lineTex = `100^\\circ + 50^\\circ + 60^\\circ = ${c(PINK, deg(210))}`
     show(S, [...ALL, "line"]); refit(S)
   }, 1.8),
-  watch("only-180", "A triangle only has $180^\\circ$ to share.", S => {
+  watch("always-180", "A triangle's angles always add up to $180^\\circ$.", S => {
     resetBeat(S); ensureTriangle(S); colours(S, DEFAULT)
     show(S, [...ALL, "sum"]); refit(S)
-  }, 1.8),
+  }, 2.6),
   {
     id: "end",
-    say: "Any triangle you make adds up to $180^\\circ$.",
+    say: "Move it however you like. It stays $180^\\circ$.",
     enter: S => { resetBeat(S); ensureTriangle(S); colours(S, DEFAULT); free(S); show(S, [...ALL, "sum"]); refit(S) },
     cta: "Start again",
-    ctaAfter: 2.5,
+    ctaAfter: 4,
     restart: true,
   },
 ]
