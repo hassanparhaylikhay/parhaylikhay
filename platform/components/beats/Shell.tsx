@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowRight, Delete, X } from "lucide-react"
+import { ArrowRight, Delete, Minus, Plus, X } from "lucide-react"
 import styles from "./beats.module.css"
 import { Phrase } from "./Tex"
 
@@ -16,6 +16,7 @@ export default function Shell({
   phraseKey,
   note,
   noteKey,
+  noteTone = "wrong",
   cta,
   onCta,
   closeHref,
@@ -26,6 +27,8 @@ export default function Shell({
   phraseKey: string
   note: string | null
   noteKey: string
+  /** "wrong" is a correction (pink); "calm" is a neutral remark. */
+  noteTone?: "wrong" | "calm"
   cta: string | null
   onCta: () => void
   closeHref: string
@@ -40,7 +43,7 @@ export default function Shell({
       {children}
       <PhraseLine text={phrase} k={phraseKey} />
       {note && (
-        <div key={noteKey} className={styles.note}>
+        <div key={noteKey} className={styles.note} style={noteTone === "calm" ? { color: "#c8c6be" } : undefined}>
           <Phrase text={note} />
         </div>
       )}
@@ -99,6 +102,25 @@ export function Keypad({ top, onKey }: { top: number; onKey: (k: string) => void
     <div className={styles.keypad} style={{ top }}>
       {row(["1", "2", "3", "4", "5", "back"])}
       {row(["6", "7", "8", "9", "0", "go"])}
+    </div>
+  )
+}
+
+/** Fewer or more sides: the only controls that sit off the shape. */
+export function Stepper({ top, n, onStep }: { top: number; n: number; onStep: (d: number) => void }) {
+  return (
+    <div className={styles.keypad} style={{ top, flexDirection: "row", justifyContent: "center", gap: 18 }}>
+      <button type="button" className={styles.key} style={{ width: 52, height: 52, borderRadius: 26 }}
+        onPointerDown={e => { e.preventDefault(); onStep(-1) }} aria-label="Fewer sides">
+        <Minus size={20} strokeWidth={2} />
+      </button>
+      <span style={{ minWidth: 92, textAlign: "center", fontSize: 17, color: "#c8c6be", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+        <Phrase text={`$${n}$ sides`} />
+      </span>
+      <button type="button" className={styles.key} style={{ width: 52, height: 52, borderRadius: 26 }}
+        onPointerDown={e => { e.preventDefault(); onStep(1) }} aria-label="More sides">
+        <Plus size={20} strokeWidth={2} />
+      </button>
     </div>
   )
 }

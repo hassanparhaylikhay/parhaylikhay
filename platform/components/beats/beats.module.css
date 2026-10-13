@@ -86,6 +86,8 @@
 }
 .phrase :global(.katex) {
   font-size: 1.06em;
+  /* a formula never breaks across two lines; the words around it can */
+  white-space: nowrap;
 }
 .phraseOut {
   animation: phraseOut 380ms cubic-bezier(0.4, 0, 1, 1) both;

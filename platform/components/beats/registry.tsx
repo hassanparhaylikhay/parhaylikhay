@@ -1,5 +1,6 @@
 import type { ComponentType } from "react"
 import TriangleAnglesLesson from "./triangle-angles/TriangleAnglesLesson"
+import PolygonAnglesLesson from "./polygon-angles/PolygonAnglesLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -17,5 +18,11 @@ export const BEAT_LESSONS: Record<string, {
     description: "Draw a triangle, play with it, and find out why its angles always add up to 180°.",
     topicHref: "/dashboard/maths/04/06",
     Lesson: TriangleAnglesLesson,
+  },
+  "angles-in-polygons": {
+    title: "Angles in polygons",
+    description: "Draw a shape, cut it into triangles, walk round it, and find out what its angles add up to.",
+    topicHref: "/dashboard/maths/04/06",
+    Lesson: PolygonAnglesLesson,
   },
 }
