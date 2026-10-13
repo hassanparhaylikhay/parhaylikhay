@@ -14,7 +14,7 @@ import {
   type Vec, type Rect,
   add, sub, mul, dot, cross, dist, len, unit, lerp, lerpV, clamp, clampToRect, ease, DEG, RAD,
   anglesOf, wholeAngles, wedgeAt, area, centroid, fitInto, centreIn, triFromAngles,
-  projectOnLine, rotateAbout, turn, apexFor, bbox,
+  projectOnLine, rotateAbout, turn, apexFor,
 } from "../geometry"
 
 export const BLUE = "#00abfa"
@@ -100,6 +100,8 @@ export interface Scene {
   chipLit: boolean[]
 
   // feedback
+  /** second wrong try: the help picture's gap and 180 pulse */
+  helpEmphasis: boolean
   flashGood: number
   shakeAt: number[]
   note: { text: string; until: number } | null
@@ -133,6 +135,7 @@ export function createScene(): Scene {
     input: null,
     targets: null,
     chipLit: [false, false, false],
+    helpEmphasis: false,
     flashGood: 0,
     shakeAt: [-9, -9, -9],
     note: null,
@@ -354,6 +357,7 @@ export function resetBeat(S: Scene) {
   S.targets = null
   S.chipLit = [false, false, false]
   S.note = null
+  S.helpEmphasis = false
 }
 
 export function say(S: Scene, text: string, seconds = 2.8) {
@@ -832,17 +836,12 @@ function checkInput(S: Scene) {
   inp.tries++
   inp.state = "wrong"
   inp.wrongAt = S.time
-  // Help adds to the board: first the picture, then the sum written out.
+  // Help adds to the board, as a picture, never as the answer worked out:
+  // first the angles on a straight line with the gap, then the gap and
+  // the 180 pulse to point at what is missing.
   if (inp.tries >= 1) S.vis.helpFan.t = 1
-  if (inp.tries >= 2) S.vis.hint.t = 1
+  if (inp.tries >= 2) S.helpEmphasis = true
   refit(S)
-}
-
-// ── a few shape facts the beats test for ─────────────────────────────────
-
-export function shapeRatio(P: Vec[]) {
-  const b = bbox(P)
-  return { w: b.x1 - b.x0, h: b.y1 - b.y0 }
 }
 
 export { anglesOf, wholeAngles }

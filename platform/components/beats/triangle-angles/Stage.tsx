@@ -223,8 +223,15 @@ function HelpFan({ S, L, vis }: { S: Scene; L: Layout; vis: VisFn }) {
   const gap = 2 * Math.PI - start
   parts.push(
     <path key="gap" d={sectorPath(O, start, gap, R)} fill="rgba(255,70,112,0.08)" stroke={PINK} strokeWidth={2}
-      strokeDasharray="5 5" strokeLinejoin="round" />,
+      strokeDasharray="5 5" strokeLinejoin="round">
+      {S.helpEmphasis && <animate attributeName="fill-opacity" values="0.4;2.6;0.4" dur="1.4s" repeatCount="indefinite" />}
+    </path>,
   )
+  // two equal angles still to find: the gap splits down the middle
+  if (S.input.unknown.length === 2) {
+    const m = start + gap / 2
+    parts.push(<line key="split" x1={O[0]} y1={O[1]} x2={O[0] + R * Math.cos(m)} y2={O[1] + R * Math.sin(m)} stroke={PINK} strokeWidth={1.6} strokeDasharray="4 4" />)
+  }
   const half = R + 34
   return (
     <g opacity={hv}>
@@ -339,16 +346,18 @@ function Labels({ S, L, D, vis }: { S: Scene; L: Layout; D: Vec[]; vis: VisFn })
       )
       start += sw
     }
-    const mid = (start + 2 * Math.PI) / 2
-    out.push(
-      <div key="hq" className={styles.label}
+    const gapMids = S.input.unknown.length === 2
+      ? [start + (2 * Math.PI - start) / 4, start + (3 * (2 * Math.PI - start)) / 4]
+      : [(start + 2 * Math.PI) / 2]
+    gapMids.forEach((mid, k) => out.push(
+      <div key={`hq${k}`} className={`${styles.label} ${S.helpEmphasis ? styles.pulse : ""}`}
         style={{ ...place(add(L.fanO, mul([Math.cos(mid), Math.sin(mid)], R * 0.62))), color: PINK, fontSize: 18, opacity: hv }}>
         <Tex tex="?" />
       </div>,
-    )
+    ))
     out.push(
-      <div key="h180" className={styles.label}
-        style={{ ...place([L.fanO[0], L.fanO[1] - R - 20]), color: GREEN, fontSize: 15, opacity: hv }}>
+      <div key="h180" className={`${styles.label} ${S.helpEmphasis ? styles.pulse : ""}`}
+        style={{ ...place([L.fanO[0], L.fanO[1] - R - 20]), color: GREEN, fontSize: S.helpEmphasis ? 19 : 15, opacity: hv }}>
         <Tex tex={"180^\\circ"} />
       </div>,
     )

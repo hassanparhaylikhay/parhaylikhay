@@ -51,7 +51,8 @@ export interface InputState {
   answer: number
   value: string
   tries: number
-  state: "idle" | "wrong" | "right"
+  /** "guessed": a guess went in. Only a right guess turns green. */
+  state: "idle" | "wrong" | "right" | "guessed"
   wrongAt: number
   /** hint lines (TeX), one per wrong try from the first */
   hints: string[]
@@ -61,10 +62,17 @@ export interface InputState {
   deg?: boolean
   /** what changes on the board when it is right */
   onRight?: (S: Scene) => void
+  /** what lights up on the board after each wrong try: a reminder, never the answer */
+  help?: (S: Scene, tries: number) => void
 }
 
-export interface Wedge { c: Vec; start: number; sweep: number; r: number; color: string; label?: string; labelColor?: string }
-export interface Overlay { polys: { pts: Vec[]; stroke: string; fill: string }[]; wedges: Wedge[] }
+export interface Wedge { c: Vec; start: number; sweep: number; r: number; color: string; label?: string; labelColor?: string; pulse?: boolean; dashed?: boolean }
+export interface Overlay {
+  polys: { pts: Vec[]; stroke: string; fill: string }[]
+  wedges: Wedge[]
+  lines?: { a: Vec; b: Vec; dashed?: boolean }[]
+  texts?: { p: Vec; tex: string; color: string; size?: number; pulse?: boolean }[]
+}
 
 export interface Scene {
   w: number
@@ -116,10 +124,26 @@ export interface Scene {
 
   // the walk round the shape
   walk: { at: number; phase: "idle" | "walk" | "turn"; t: number; steps: number; turns: number; h: number; h0: number; h1: number } | null
-  dial: { wedges: { deg: number; color: string; born: number }[]; mode: "none" | "walk" | "live" | "regular" | "fill" | "impossible"; fill?: { deg: number; start: number; every: number; max: number } }
+  dial: {
+    wedges: { deg: number; color: string; born: number }[]
+    mode: "none" | "walk" | "live" | "regular" | "fill" | "impossible" | "known"
+    fill?: { deg: number; start: number; every: number; max: number }
+    /** "known": these angles round a full turn, and the gap left */
+    known?: { deg: number; color: string }[]
+  }
+  /** help: the dial's turns light up one after another, from this time */
+  dialPulse: number | null
+  /** help: number the dial's turns so they can be counted */
+  dialCount: boolean
+  /** help: the straight line at this corner (inside + outside = 180) */
+  lineAt: number | null
+  /** help: a total written in the middle of the shape */
+  centreText: { tex: string; color: string } | null
+  /** help: the 180 inside each triangle breathes */
+  triPulse: boolean
 
   // the sides and triangles table
-  table: { cols: [number, number | null][]; start: number; gap: boolean } | null
+  table: { cols: [number, number | null][]; start: number; gap: boolean; pulse?: boolean } | null
 
   lineTex: string | null
   lineWords: string | null
@@ -148,6 +172,7 @@ export function createScene(): Scene {
     diagFrom: 0, diags: [], diagGrow: {}, diagAuto: null, diagStroke: null,
     extCorners: [], extLen: 0, extCorner: 1,
     walk: null, dial: { wedges: [], mode: "none" },
+    dialPulse: null, dialCount: false, lineAt: null, centreText: null, triPulse: false,
     table: null, lineTex: null, lineWords: null, lineScale: 1, names: null, stepper: null, overlay: null,
     input: null, termPos: [], sumShownAt: 0,
     flashGood: 0, note: null,
@@ -508,6 +533,11 @@ export function resetBeat(S: Scene) {
   S.table = null
   S.note = null
   S.pending = null
+  S.dialPulse = null
+  S.dialCount = false
+  S.lineAt = null
+  S.centreText = null
+  S.triPulse = false
 }
 
 export function say(S: Scene, text: string, tone: "wrong" | "calm" = "wrong", seconds = 2.8) {
@@ -817,8 +847,11 @@ function check(S: Scene) {
   if (!inp.value) return
   const v = Number(inp.value)
   if (inp.guess) {
-    inp.state = "right"
-    say(S, v === inp.answer ? "Spot on." : "Let's see.", "calm", 2.4)
+    // a guess is never wrong, but only a right one looks right
+    const hit = v === inp.answer
+    inp.state = hit ? "right" : "guessed"
+    if (hit) S.flashGood = 1
+    say(S, hit ? "Spot on." : "Let's see.", "calm", 2.4)
     inp.onRight?.(S)
     return
   }
@@ -831,7 +864,9 @@ function check(S: Scene) {
   inp.tries++
   inp.state = "wrong"
   inp.wrongAt = S.time
-  if (inp.hints.length) { S.vis.hint.t = 1; refit(S) }
+  inp.help?.(S, inp.tries)
+  if (inp.hints.length) S.vis.hint.t = 1
+  refit(S)
 }
 
 // ── the − and + stepper ──────────────────────────────────────────────────

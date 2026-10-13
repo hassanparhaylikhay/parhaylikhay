@@ -9,8 +9,8 @@
  * beat cold.
  */
 
-import { type Vec, add, mul, bbox, centreIn } from "../geometry"
-import { diagonalsFrom, regular, heading } from "./poly"
+import { type Vec, add, mul, centreIn, thinness } from "../geometry"
+import { diagonalsFrom, regular, heading, wedgeIn, centroidOf } from "./poly"
 import {
   type Scene, type EqPart, type Overlay,
   BLUE, ORANGE, PINK, GREEN, YELLOW, cornerColour,
@@ -58,6 +58,7 @@ const watch = (id: string, text: string, enter: (S: Scene) => void, ctaAfter = 1
   ({ id, say: text, enter, cta: "", ctaAfter })
 
 const inputRight = (S: Scene) => S.input?.state === "right"
+const guessIn = (S: Scene) => S.input?.state === "right" || S.input?.state === "guessed"
 
 /**
  * Cleans the board down to a plain shape, keeping the student's own shape.
@@ -75,16 +76,43 @@ function base(S: Scene, keepWalk = false) {
   S.oneColour = null
 }
 
-function ask(S: Scene, parts: EqPart[], answer: number, opts: { hints?: string[]; deg?: boolean; guess?: boolean; onRight?: (S: Scene) => void } = {}) {
-  startInput(S, { parts, answer, hints: opts.hints ?? [], deg: opts.deg, guess: opts.guess, onRight: opts.onRight })
+function ask(S: Scene, parts: EqPart[], answer: number, opts: { deg?: boolean; guess?: boolean; onRight?: (S: Scene) => void; help?: (S: Scene, tries: number) => void } = {}) {
+  startInput(S, { parts, answer, hints: [], deg: opts.deg, guess: opts.guess, onRight: opts.onRight, help: opts.help })
+}
+
+// ── help after a wrong answer: the idea lights up on the board ───────────
+
+/** Equal angles share a total: they pulse together, the total sits in the middle. */
+const shareHelp = (total: number, n: number) => (S: Scene, t: number) => {
+  S.pulse = (S.P ?? []).map(() => true)
+  S.centreText = { tex: c(GREEN, deg(total)), color: GREEN }
+  if (t >= 2) remind(S, `${n} \\times ${c(BLUE, "?")} = ${c(GREEN, deg(total))}`)
+}
+
+/** Equal turns make one full turn: the dial lights them up one by one. */
+const turnsHelp = (n: number) => (S: Scene, t: number) => {
+  S.dialPulse = S.time
+  if (t >= 2) remind(S, `${n} \\times ${c(YELLOW, "?")} = ${c(GREEN, deg(360))}`)
+}
+
+/** Inside and outside make a straight line at a corner. */
+const lineHelp = (outside: number) => (S: Scene, t: number) => {
+  S.lineAt = 0
+  if (t >= 2) remind(S, `${c(BLUE, "?")} + ${deg(outside)} = ${c(GREEN, deg(180))}`)
+}
+
+/** Turns of the same size, counted round the dial. */
+const countHelp = (S: Scene, t: number) => {
+  S.dialPulse = S.time
+  if (t >= 2) S.dialCount = true
 }
 
 const allExt = (S: Scene) => { S.extCorners = (S.P ?? []).map((_, i) => i) }
 
-function shapeRatio(S: Scene) {
-  const b = bbox(S.P!)
-  const w = b.x1 - b.x0, h = b.y1 - b.y0
-  return Math.max(w, h) / Math.max(1, Math.min(w, h))
+/** Hint helper: a reminder line under the equation (TeX), never the worked answer. */
+function remind(S: Scene, tex: string) {
+  if (!S.input) return
+  S.input.hints = [tex]
 }
 
 /** Walk state for a cold open: `steps` sides walked and `turns` corners turned. */
@@ -103,8 +131,30 @@ function walkTo(S: Scene, steps: number, turns: number) {
   }
 }
 
+/** A corner on its own: inside and outside angles on one straight line. */
+function straightLine(S: Scene, inside: number): Overlay {
+  const L = layout(S)
+  const O: Vec = [(L.shape.x0 + L.shape.x1) / 2, (L.shape.y0 + L.shape.y1) / 2 + 30]
+  const len = L.compact ? 110 : 150
+  const t = Math.PI + (inside * Math.PI) / 180
+  const r = L.compact ? 34 : 42
+  return {
+    polys: [],
+    lines: [
+      { a: add(O, [-len, 0]), b: O },
+      { a: O, b: add(O, [len, 0]), dashed: true },
+      { a: O, b: add(O, mul([Math.cos(t), Math.sin(t)], len)) },
+    ],
+    wedges: [
+      { c: O, start: Math.PI, sweep: (inside * Math.PI) / 180, r, color: BLUE, label: deg(inside) },
+      { c: O, start: t, sweep: Math.PI - (inside * Math.PI) / 180, r, color: PINK, label: "?", pulse: true },
+    ],
+    texts: [{ p: add(O, [0, -(r + 62)]), tex: deg(180), color: GREEN, pulse: true }],
+  }
+}
+
 /** A regular pentagon and a regular hexagon sharing a side; x is the gap round the shared corner. */
-function pentHex(S: Scene, labels: { p?: string; h?: string; x?: string }): Overlay {
+function pentHex(S: Scene, labels: { p?: string; h?: string; x?: string }, help: { helpPent?: boolean; helpHex?: boolean; helpPoint?: boolean } = {}): Overlay {
   const L = layout(S)
   // walk each polygon from the shared corner V up the shared side
   const side = 1
@@ -132,17 +182,31 @@ function pentHex(S: Scene, labels: { p?: string; h?: string; x?: string }): Over
   const pw = { start: pentOther, sweep: norm(up - pentOther) }
   const hw = { start: up, sweep: norm(hexOther - up) }
   const xw = { start: hexOther, sweep: norm(pentOther - hexOther) }
-  return {
+  const O: Overlay = {
     polys: [
       { pts: P5, stroke: "#e8e6e0", fill: "rgba(0,171,250,0.06)" },
       { pts: P6, stroke: "#e8e6e0", fill: "rgba(255,130,44,0.06)" },
     ],
     wedges: [
-      { c: V, ...pw, r, color: BLUE, label: labels.p },
-      { c: V, ...hw, r, color: ORANGE, label: labels.h },
-      { c: V, ...xw, r: r * 0.8, color: PINK, label: labels.x },
+      { c: V, ...pw, r, color: BLUE, label: labels.p, pulse: help.helpPoint },
+      { c: V, ...hw, r, color: ORANGE, label: labels.h, pulse: help.helpPoint },
+      { c: V, ...xw, r: r * 0.8, color: PINK, label: labels.x, pulse: help.helpPoint },
     ],
+    texts: [],
   }
+  // help: every corner of the shape, equal, sharing the total in the middle
+  const corners = (pts: Vec[], color: string, total: number) => {
+    pts.forEach((_, i) => { if (i !== 0) O.wedges.push({ ...wedgeIn(pts, i), r: r * 0.7, color, pulse: true }) })
+    O.texts!.push({ p: centroidOf(pts), tex: deg(total), color: GREEN, pulse: true })
+  }
+  if (help.helpPent) corners(P5, BLUE, 540)
+  if (help.helpHex) corners(P6, ORANGE, 720)
+  if (help.helpPoint) {
+    // out past the x, in the open gap round the point
+    const mid = xw.start + xw.sweep / 2
+    O.texts!.push({ p: add(V, mul([Math.cos(mid), Math.sin(mid)], r * 0.8 + 56)), tex: deg(360), color: GREEN, pulse: true })
+  }
+  return O
 }
 
 // ── the beats ────────────────────────────────────────────────────────────
@@ -171,7 +235,8 @@ export const BEATS: Beat[] = [
     id: "thin",
     say: "Make it long and thin.",
     enter: S => { base(S); ensureShape(S, 4, QUAD); free(S); show(S, ["shape", "nodes"]) },
-    done: S => !S.drag && S.releases > 0 && shapeRatio(S) >= 2.6, free: true, minPlay: 3,
+    // any direction counts: a thin shape at a slant is still long and thin
+    done: S => !S.drag && S.releases > 0 && thinness(S.P!) >= 2.6 && S.moved >= 100 * screenScale(S), free: true, minPlay: 3,
   },
   watch("angles", "Each corner has an angle.", S => {
     base(S); ensureShape(S, 4, QUAD); colours(S); show(S, ["shape", "nodes", "arcs"]); relax(S)
@@ -193,7 +258,7 @@ export const BEATS: Beat[] = [
       show(S, ["shape", "nodes", "arcs", "values", "line", "keypad"]); refit(S)
       ask(S, [{ box: true }], 360, { guess: true, deg: true })
     },
-    done: inputRight,
+    done: guessIn,
   },
   watch("add", "Add the four angles.", S => {
     base(S); ensureShape(S, 4, QUAD); show(S, ["shape", "nodes", "arcs", "values", "sum"]); refit(S)
@@ -308,7 +373,7 @@ export const BEATS: Beat[] = [
         onRight: S2 => { autoDiagonals(S2, 0); S2.vis.tris.t = 1 },
       })
     },
-    done: S => inputRight(S) && !S.diagAuto && S.diags.length === 3 && S.diags.every(k => (S.diagGrow[k] ?? 0) >= 1),
+    done: S => guessIn(S) && !S.diagAuto && S.diags.length === 3 && S.diags.every(k => (S.diagGrow[k] ?? 0) >= 1),
   },
   watch("sum-720", "Four triangles: $4 \\times 180^\\circ = 720^\\circ$.", S => {
     base(S); ensureShape(S, 6); allDiagonals(S, 0)
@@ -336,7 +401,7 @@ export const BEATS: Beat[] = [
       S.diagFrom = 0
       colours(S)
       ask(S, [], 8, {
-        hints: ["10 - 2 = \\, ?", "10 - 2 = 8"],
+        help: (S2, t) => { if (S2.table) S2.table.pulse = true; if (t >= 2) { autoDiagonals(S2, 0); S2.vis.diags.t = 1; S2.vis.tris.t = 1 } },
         onRight: S2 => {
           S2.table!.cols[4] = [10, 8]
           autoDiagonals(S2, 0)
@@ -400,8 +465,8 @@ export const BEATS: Beat[] = [
       S.ticks = true
       show(S, ["shape", "ticks", "arcs", "line", "keypad"]); refit(S)
       ask(S, [`\\dfrac{${c(GREEN, deg(720))}}{6} =`, { box: true }], 120, {
+        help: shareHelp(720, 6),
         deg: true,
-        hints: ["720 \\div 6", "720 \\div 6 = 120"],
         onRight: S2 => { S2.vis.values.t = 1 },
       })
     },
@@ -428,8 +493,8 @@ export const BEATS: Beat[] = [
       regularShape(S, 5); S.oneColour = BLUE; colours(S)
       S.ticks = true
       ask(S, [`\\dfrac{${c(GREEN, deg(540))}}{5} =`, { box: true }], 108, {
+        help: shareHelp(540, 5),
         deg: true,
-        hints: ["540 \\div 5", "540 \\div 5 = 108"],
         onRight: S2 => { S2.vis.values.t = 1 },
       })
     },
@@ -566,8 +631,8 @@ export const BEATS: Beat[] = [
       allExt(S)
       S.dial = { wedges: [], mode: "regular" }
       ask(S, [`\\dfrac{${deg(360)}}{6} =`, { box: true }], 60, {
+        help: turnsHelp(6),
         deg: true,
-        hints: ["360 \\div 6", "360 \\div 6 = 60"],
         onRight: S2 => { S2.vis.extValues.t = 1 },
       })
     },
@@ -583,8 +648,8 @@ export const BEATS: Beat[] = [
       S.ticks = true
       allExt(S)
       ask(S, [`${deg(180)} - ${deg(60)} =`, { box: true }], 120, {
+        help: lineHelp(60),
         deg: true,
-        hints: ["180 - 60", "180 - 60 = 120"],
         onRight: S2 => { S2.vis.values.t = 1; say(S2, "Same $120^\\circ$ as before.", "calm", 3) },
       })
     },
@@ -601,8 +666,8 @@ export const BEATS: Beat[] = [
       allExt(S)
       S.dial = { wedges: [], mode: "regular" }
       ask(S, [`\\dfrac{${deg(360)}}{10} =`, { box: true }], 36, {
+        help: turnsHelp(10),
         deg: true,
-        hints: ["360 \\div 10", "360 \\div 10 = 36"],
       })
     },
     done: inputRight,
@@ -616,8 +681,8 @@ export const BEATS: Beat[] = [
       regularShape(S, 10); S.oneColour = BLUE; colours(S)
       S.ticks = true
       ask(S, [`${deg(180)} - ${deg(36)} =`, { box: true }], 144, {
+        help: (S2, t) => { S2.extCorners = [0]; S2.vis.ext.t = 1; S2.vis.extValues.t = 1; lineHelp(36)(S2, t) },
         deg: true,
-        hints: ["180 - 36", "180 - 36 = 144"],
         onRight: S2 => { S2.vis.values.t = 1 },
       })
     },
@@ -631,7 +696,7 @@ export const BEATS: Beat[] = [
       show(S, ["dial", "line", "keypad"])
       S.dial = { wedges: [], mode: "fill", fill: { deg: 30, start: S.time + 0.6, every: 0.32, max: 12 } }
       ask(S, [`\\dfrac{${deg(360)}}{${deg(30)}} =`, { box: true }], 12, {
-        hints: ["360 \\div 30", "360 \\div 30 = 12"],
+        help: countHelp,
         onRight: S2 => { regularShape(S2, 12); colours(S2); S2.vis.shape.t = 1 },
       })
     },
@@ -644,8 +709,8 @@ export const BEATS: Beat[] = [
       base(S)
       show(S, ["line", "keypad"])
       ask(S, [`${deg(180)} - ${deg(140)} =`, { box: true }], 40, {
+        help: (S2, t) => { S2.overlay = straightLine(S2, 140); S2.vis.overlay.t = 1; if (t >= 2) remind(S2, `${c(BLUE, deg(140))} + ${c(PINK, "?")} = ${c(GREEN, deg(180))}`) },
         deg: true,
-        hints: ["180 - 140", "180 - 140 = 40"],
       })
     },
     done: inputRight,
@@ -658,7 +723,7 @@ export const BEATS: Beat[] = [
       show(S, ["dial", "line", "keypad"])
       S.dial = { wedges: [], mode: "fill", fill: { deg: 40, start: S.time + 0.4, every: 0.36, max: 9 } }
       ask(S, [`\\dfrac{${deg(360)}}{${deg(40)}} =`, { box: true }], 9, {
-        hints: ["360 \\div 40", "360 \\div 40 = 9"],
+        help: countHelp,
         onRight: S2 => { regularShape(S2, 9); colours(S2); S2.vis.shape.t = 1 },
       })
     },
@@ -677,8 +742,8 @@ export const BEATS: Beat[] = [
       S.label = [deg(100), deg(85), deg(70), "?"]
       S.pulse = [false, false, false, true]
       ask(S, [`${c(BLUE, deg(100))} + ${c(ORANGE, deg(85))} + ${c(YELLOW, deg(70))} +`, { box: true }, `= ${c(GREEN, deg(360))}`], 105, {
+        help: (S2, t) => { allDiagonals(S2, 0); S2.vis.diags.t = 1; S2.vis.tris.t = 1; S2.vis.triLabels.t = 1; if (t >= 2) { S2.dial = { wedges: [], mode: "known", known: [{ deg: 100, color: BLUE }, { deg: 85, color: ORANGE }, { deg: 70, color: YELLOW }] }; S2.vis.dial.t = 1 } },
         deg: true,
-        hints: [`360 - 100 - 85 - 70`, `360 - 100 - 85 - 70 = 105`],
         onRight: S2 => { S2.label[3] = deg(105); S2.colT[3] = GREEN; S2.pulse[3] = false },
       })
     },
@@ -692,8 +757,8 @@ export const BEATS: Beat[] = [
       show(S, ["shape", "line", "keypad"])
       shapeFromAngles(S, PENT_Q); colours(S)
       ask(S, [`(5 - 2) \\times 180^\\circ =`, { box: true }], 540, {
+        help: (S2, t) => { allDiagonals(S2, 0); S2.vis.diags.t = 1; S2.vis.tris.t = 1; S2.vis.triLabels.t = 1; if (t >= 2) S2.triPulse = true },
         deg: true,
-        hints: ["3 \\times 180", "3 \\times 180 = 540"],
       })
     },
     done: inputRight,
@@ -710,8 +775,8 @@ export const BEATS: Beat[] = [
       S.label = [deg(110), deg(95), deg(120), deg(100), "?"]
       S.pulse = [false, false, false, false, true]
       ask(S, [`110^\\circ + 95^\\circ + 120^\\circ + 100^\\circ +`, { box: true }, `= ${c(GREEN, deg(540))}`], 115, {
+        help: (S2, t) => { allDiagonals(S2, 0); S2.vis.diags.t = 1; S2.vis.tris.t = 1; S2.vis.triLabels.t = 1; if (t >= 2) { S2.triPulse = true; remind(S2, `3 \\times ${deg(180)} = ${c(GREEN, deg(540))}`) } },
         deg: true,
-        hints: [`540 - 110 - 95 - 120 - 100`, `540 - 425 = 115`],
         onRight: S2 => { S2.label[4] = deg(115); S2.colT[4] = GREEN; S2.pulse[4] = false },
       })
     },
@@ -731,8 +796,8 @@ export const BEATS: Beat[] = [
       show(S, ["overlay", "line", "keypad"])
       S.overlay = pentHex(S, { p: "?", x: "x" })
       ask(S, [{ box: true }], 108, {
+        help: (S2, t) => { S2.overlay = pentHex(S2, { p: "?", x: "x" }, { helpPent: true }); if (t >= 2) remind(S2, `5 \\times ${c(BLUE, "?")} = ${c(GREEN, deg(540))}`) },
         deg: true,
-        hints: [`\\dfrac{540^\\circ}{5}`, `\\dfrac{540^\\circ}{5} = 108^\\circ`],
         onRight: S2 => { S2.overlay = pentHex(S2, { p: deg(108), x: "x" }) },
       })
     },
@@ -746,8 +811,8 @@ export const BEATS: Beat[] = [
       show(S, ["overlay", "line", "keypad"])
       S.overlay = pentHex(S, { p: deg(108), h: "?", x: "x" })
       ask(S, [{ box: true }], 120, {
+        help: (S2, t) => { S2.overlay = pentHex(S2, { p: deg(108), h: "?", x: "x" }, { helpHex: true }); if (t >= 2) remind(S2, `6 \\times ${c(ORANGE, "?")} = ${c(GREEN, deg(720))}`) },
         deg: true,
-        hints: [`\\dfrac{720^\\circ}{6}`, `\\dfrac{720^\\circ}{6} = 120^\\circ`],
         onRight: S2 => { S2.overlay = pentHex(S2, { p: deg(108), h: deg(120), x: "x" }) },
       })
     },
@@ -766,8 +831,8 @@ export const BEATS: Beat[] = [
       show(S, ["overlay", "line", "keypad"])
       S.overlay = pentHex(S, { p: deg(108), h: deg(120), x: "x" })
       ask(S, [`x = 360^\\circ - ${c(BLUE, deg(108))} - ${c(ORANGE, deg(120))} =`, { box: true }], 132, {
+        help: (S2) => { S2.overlay = pentHex(S2, { p: deg(108), h: deg(120), x: "x" }, { helpPoint: true }) },
         deg: true,
-        hints: ["360 - 228", "360 - 228 = 132"],
         onRight: S2 => { S2.overlay = pentHex(S2, { p: deg(108), h: deg(120), x: deg(132) }) },
       })
     },

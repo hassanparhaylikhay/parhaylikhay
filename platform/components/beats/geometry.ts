@@ -178,3 +178,29 @@ export function apexFor(Pj: Vec, Pk: Vec, angJDeg: number, angKDeg: number, side
   if (dot(sub(sideRef, Pj), n) < 0) n = [-n[0], -n[1]]
   return add(Pj, add(mul(ub, s * Math.cos(a)), mul(n, s * Math.sin(a))))
 }
+
+/**
+ * How long and thin a convex shape is, whichever way it is turned: its
+ * longest stretch over its narrowest width. A thin shape lying at a slant
+ * scores the same as one lying flat.
+ */
+export function thinness(P: Vec[]): number {
+  let diam = 0
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) diam = Math.max(diam, dist(P[i], P[j]))
+  let minW = Infinity
+  for (let i = 0; i < P.length; i++) {
+    const a = P[i], e = unit(sub(P[(i + 1) % P.length], a))
+    const nrm: Vec = [-e[1], e[0]]
+    let w = 0
+    for (const p of P) w = Math.max(w, Math.abs(dot(sub(p, a), nrm)))
+    minW = Math.min(minW, w)
+  }
+  return diam / Math.max(1, minW)
+}
+
+/** The longest stretch across a shape. */
+export function diameter(P: Vec[]): number {
+  let d = 0
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) d = Math.max(d, dist(P[i], P[j]))
+  return d
+}

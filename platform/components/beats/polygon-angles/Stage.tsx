@@ -2,7 +2,7 @@
 
 import styles from "../beats.module.css"
 import { Tex, Phrase } from "../Tex"
-import { type Vec, add, sub, mul, unit, lerpV, clamp, ease, sectorPath, arcPath } from "../geometry"
+import { type Vec, add, sub, mul, unit, lerpV, clamp, ease, sectorPath, arcPath, turn } from "../geometry"
 import { nxt, wedgeIn, wedgeOut, fan, centroidOf, shownInteriors, angleSum } from "./poly"
 import {
   type Scene, type Layout, CHALK, GREEN, YELLOW, PINK, GREY, TRI_COLOURS,
@@ -238,7 +238,33 @@ function ExteriorLayer({ S, L, D, vis }: { S: Scene; L: Layout; D: Vec[]; vis: V
     if (S.extLen > 1) ext(i, S.extLen, 1, false)
   }
   if (ev > 0.01) for (const i of S.extCorners) if (i < D.length) ext(i, full, ev, true)
+  // help: inside and outside together make a straight line at this corner
+  if (S.lineAt !== null && S.lineAt < D.length) {
+    const i = S.lineAt
+    const { back, sweep, r } = halfTurnAt(S, L, D, i)
+    const w = wedgeOut(D, i)
+    const tip = add(D[i], mul(w.dirIn, full))
+    out.push(<line key="la-ext" x1={D[i][0]} y1={D[i][1]} x2={tip[0]} y2={tip[1]} stroke={CHALK} strokeWidth={1.8} strokeDasharray="6 5" />)
+    out.push(
+      <path key="la" d={arcPath(D[i], back, sweep, r)} fill="none" stroke={GREEN} strokeWidth={2.4} strokeLinecap="round">
+        <animate attributeName="stroke-opacity" values="0.35;1;0.35" dur="1.4s" repeatCount="indefinite" />
+      </path>,
+    )
+  }
   return <>{out}</>
+}
+
+/**
+ * Half a turn at corner i: from back along the incoming side, round past
+ * the next side, to straight on. Inside and outside angles fill it.
+ */
+function halfTurnAt(S: Scene, L: Layout, D: Vec[], i: number) {
+  const w = wedgeOut(D, i)
+  const back = Math.atan2(-w.dirIn[1], -w.dirIn[0])
+  const nx = D[nxt(i, D.length)]
+  const toNext = Math.atan2(nx[1] - D[i][1], nx[0] - D[i][0])
+  const sweep = turn(back, toNext) >= 0 ? Math.PI : -Math.PI
+  return { back, sweep, r: Math.min(46, arcR(S, L, i) + 14) }
 }
 
 // ── the dial that collects the turns ─────────────────────────────────────
@@ -247,6 +273,7 @@ function ExteriorLayer({ S, L, D, vis }: { S: Scene; L: Layout; D: Vec[]; vis: V
 function dialWedges(S: Scene): { deg: number; color: string; op: number; over?: boolean }[] {
   const d = S.dial
   const P = S.P
+  if (d.mode === "known" && d.known) return d.known.map(w => ({ deg: w.deg, color: w.color, op: 1 }))
   if (d.mode === "live" && P) return P.map((_, i) => ({ deg: shownTurn(S, i), color: cornerColour(i), op: 1 }))
   if (d.mode === "regular" && P) return P.map((_, i) => ({ deg: 360 / P.length, color: cornerColour(i), op: 1 }))
   if (d.mode === "walk") return d.wedges.map(w => ({ deg: w.deg, color: w.color, op: clamp((S.time - w.born) / 0.4, 0, 1) }))
@@ -272,16 +299,27 @@ function DialLayer({ S, L, vis }: { S: Scene; L: Layout; vis: VisFn }) {
   const items = dialWedges(S)
   const total = items.reduce((s, w) => s + w.deg, 0)
   const out: React.ReactNode[] = []
+  // help: light the turns one after another, so a full turn is seen being made
+  const lit = S.dialPulse !== null ? Math.floor((S.time - S.dialPulse) / 0.42) % (items.length + 3) : -1
   items.forEach((w, k) => {
     const sw = (w.deg * Math.PI) / 180
     const r = w.over ? R * 1.12 : R
+    const on = k === lit || (S.dialPulse !== null && lit >= items.length)
     out.push(
       <g key={k} opacity={w.op * dv}>
-        <path d={sectorPath(C, start, sw, r)} fill={rgb(hexRgb(w.color), w.over ? 0.25 : 0.32)} stroke={w.color} strokeWidth={w.over ? 2 : 1.2} strokeDasharray={w.over ? "4 4" : undefined} />
+        <path d={sectorPath(C, start, sw, on ? r * 1.08 : r)} fill={rgb(hexRgb(w.color), on ? 0.7 : w.over ? 0.25 : 0.32)} stroke={w.color} strokeWidth={w.over || on ? 2 : 1.2} strokeDasharray={w.over ? "4 4" : undefined} />
       </g>,
     )
     start += sw
   })
+  if (S.dial.mode === "known") {
+    const gap = 2 * Math.PI - (start + Math.PI / 2)
+    out.push(
+      <path key="gap" d={sectorPath(C, start, gap, R)} fill="rgba(255,70,112,0.1)" stroke={PINK} strokeWidth={2} strokeDasharray="5 5" opacity={dv}>
+        <animate attributeName="fill-opacity" values="0.5;2.2;0.5" dur="1.4s" repeatCount="indefinite" />
+      </path>,
+    )
+  }
   // the gap still to fill, when the impossible case falls short
   if (S.dial.mode === "impossible" && total < 360 && items.length >= 4) {
     const gap = ((360 - total) * Math.PI) / 180
@@ -301,13 +339,42 @@ function DialLabels({ S, L, vis }: { S: Scene; L: Layout; vis: VisFn }) {
   if (dv < 0.01 || L.dialR <= 0) return null
   const items = dialWedges(S)
   const total = items.reduce((s, w) => s + w.deg * (w.op > 0.5 ? 1 : 0), 0)
-  const full = Math.abs(total - 360) < 0.01 && S.dial.mode !== "impossible"
-  if (!full) return null
-  return (
-    <div className={styles.label} style={{ ...place([L.dialC[0] + L.dialR + 34, L.dialC[1]]), color: GREEN, fontSize: L.labelSize, opacity: dv }}>
-      <Tex tex={"360^\\circ"} />
-    </div>
-  )
+  const known = S.dial.mode === "known"
+  const full = (Math.abs(total - 360) < 0.01 && S.dial.mode !== "impossible") || known
+  const out: React.ReactNode[] = []
+  if (full) {
+    out.push(
+      <div key="360" className={`${styles.label} ${S.dialPulse !== null || known ? styles.pulse : ""}`}
+        style={{ ...place([L.dialC[0] + L.dialR + 34, L.dialC[1]]), color: GREEN, fontSize: L.labelSize, opacity: dv }}>
+        <Tex tex={"360^\\circ"} />
+      </div>,
+    )
+  }
+  // each known angle inside its wedge, and a ? in the gap
+  let start = -Math.PI / 2
+  items.forEach((w, k) => {
+    const sw = (w.deg * Math.PI) / 180
+    const mid = start + sw / 2
+    if (known || S.dialCount) {
+      out.push(
+        <div key={`w${k}`} className={styles.label}
+          style={{ ...place(add(L.dialC, mul([Math.cos(mid), Math.sin(mid)], L.dialR * 0.66))), color: known ? w.color : "#f0eeea", fontSize: known ? 13 : 12, opacity: dv * w.op }}>
+          <Tex tex={known ? `${w.deg}^\\circ` : `${k + 1}`} />
+        </div>,
+      )
+    }
+    start += sw
+  })
+  if (known) {
+    const mid = (start + 3 * Math.PI / 2) / 2
+    out.push(
+      <div key="gapq" className={`${styles.label} ${styles.pulse}`}
+        style={{ ...place(add(L.dialC, mul([Math.cos(mid), Math.sin(mid)], L.dialR * 0.62))), color: PINK, fontSize: 17, opacity: dv }}>
+        <Tex tex="?" />
+      </div>,
+    )
+  }
+  return <>{out}</>
 }
 
 // ── the walker going round ───────────────────────────────────────────────
@@ -381,10 +448,13 @@ function OverlayLayer({ S, vis }: { S: Scene; vis: VisFn }) {
   return (
     <g opacity={ov}>
       {O.polys.map((p, k) => <polygon key={k} points={pts(p.pts)} fill={p.fill} stroke={p.stroke} strokeWidth={2.4} strokeLinejoin="round" />)}
+      {(O.lines ?? []).map((l, k) => <line key={`l${k}`} x1={l.a[0]} y1={l.a[1]} x2={l.b[0]} y2={l.b[1]} stroke={CHALK} strokeWidth={l.dashed ? 1.8 : 2.4} strokeDasharray={l.dashed ? "6 5" : undefined} strokeLinecap="round" />)}
       {O.wedges.map((w, k) => (
         <g key={`w${k}`}>
-          <path d={sectorPath(w.c, w.start, w.sweep, w.r)} fill={rgb(hexRgb(w.color), 0.22)} />
-          <path d={arcPath(w.c, w.start, w.sweep, w.r)} fill="none" stroke={w.color} strokeWidth={2.2} />
+          <path d={sectorPath(w.c, w.start, w.sweep, w.r)} fill={rgb(hexRgb(w.color), 0.22)}>
+            {w.pulse && <animate attributeName="fill-opacity" values="0.5;2.4;0.5" dur="1.4s" repeatCount="indefinite" />}
+          </path>
+          <path d={arcPath(w.c, w.start, w.sweep, w.r)} fill="none" stroke={w.color} strokeWidth={2.2} strokeDasharray={w.dashed ? "5 5" : undefined} />
         </g>
       ))}
     </g>
@@ -396,6 +466,11 @@ function OverlayLabels({ S, vis }: { S: Scene; vis: VisFn }) {
   if (!S.overlay || ov < 0.01) return null
   return (
     <>
+      {(S.overlay.texts ?? []).map((t, k) => (
+        <div key={`t${k}`} className={`${styles.label} ${t.pulse ? styles.pulse : ""}`} style={{ ...place(t.p), color: t.color, fontSize: t.size ?? 22, opacity: ov }}>
+          <Tex tex={t.tex} />
+        </div>
+      ))}
       {S.overlay.wedges.filter(w => w.label).map((w, k) => {
         const mid = w.start + w.sweep / 2
         const p = add(w.c, mul([Math.cos(mid), Math.sin(mid)], w.r + 22))
@@ -430,13 +505,31 @@ function Labels({ S, L, D, vis }: { S: Scene; L: Layout; D: Vec[]; vis: VisFn })
     }
   }
 
+  if (S.lineAt !== null && S.lineAt < n) {
+    const { back, sweep, r } = halfTurnAt(S, L, D, S.lineAt)
+    const mid = back + sweep / 2
+    const p = add(D[S.lineAt], mul([Math.cos(mid), Math.sin(mid)], r + 22))
+    out.push(
+      <div key="la180" className={`${styles.label} ${styles.pulse}`} style={{ ...place(p), color: GREEN, fontSize: size }}>
+        <Tex tex={"180^\\circ"} />
+      </div>,
+    )
+  }
+  if (S.centreText) {
+    out.push(
+      <div key="ctr" className={`${styles.label} ${styles.pulse}`} style={{ ...place(centroidOf(D)), color: S.centreText.color, fontSize: size * 1.25 }}>
+        <Tex tex={S.centreText.tex} />
+      </div>,
+    )
+  }
+
   // 180 inside each triangle
   const tl = vis("triLabels")
   if (tl > 0.01) {
     fan(S.diagFrom % n, n).forEach((t, k) => {
       const c = centroidOf(t.map(i => D[i]))
       out.push(
-        <div key={`tl${k}`} className={styles.label} style={{ ...place(c), color: GREEN, fontSize: size * 0.9, opacity: tl }}>
+        <div key={`tl${k}`} className={`${styles.label} ${S.triPulse ? styles.pulse : ""}`} style={{ ...place(c), color: GREEN, fontSize: size * 0.9, opacity: tl }}>
           <Tex tex={"180^\\circ"} />
         </div>,
       )
@@ -546,7 +639,7 @@ function BottomLine({ S, L }: { S: Scene; L: Layout }) {
 /** The box the student types into. */
 function AnswerBox({ S }: { S: Scene }) {
   const inp = S.input!
-  const cls = [styles.box, inp.state === "wrong" ? styles.boxWrong : "", inp.state === "right" ? styles.boxRight : ""].join(" ")
+  const cls = [styles.box, inp.state === "wrong" ? styles.boxWrong : "", inp.state === "right" ? styles.boxRight : "", inp.state === "guessed" ? styles.boxGuessed : ""].join(" ")
   return (
     <span className={cls}>
       {inp.value
@@ -574,7 +667,7 @@ function Table({ S, L }: { S: Scene; L: Layout }) {
         <div style={{ display: "flex", alignItems: "center", height: size * 0.9 }}>
           <span style={head} />
           {T.cols.map((_, k) => (
-            <span key={k} style={{ ...cell, opacity: T.gap ? visible(k) : 0, color: GREEN, fontSize: size * 0.6, transition: "opacity 400ms" }}>
+            <span key={k} className={T.pulse ? styles.pulse : undefined} style={{ ...cell, opacity: T.gap ? visible(k) : 0, color: GREEN, fontSize: size * (T.pulse ? 0.75 : 0.6), transition: "opacity 400ms, font-size 300ms" }}>
               <Tex tex={"\\downarrow -2"} />
             </span>
           ))}

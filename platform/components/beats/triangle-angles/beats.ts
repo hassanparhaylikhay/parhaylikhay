@@ -10,12 +10,12 @@
  * can be opened cold (?beat=N) or returned to.
  */
 
-import { anglesOf } from "../geometry"
+import { anglesOf, thinness, diameter } from "../geometry"
 import {
   type Scene, type EqPart,
   BLUE, ORANGE, PINK, GREEN, GREY,
   resetBeat, show, ensureTriangle, ensureIso, ensureEqui, refit, morphTo, colours,
-  untear, tearAll, startInput, refreshChips, shapeRatio, say, roomForEqui, roomToBuild, screenScale,
+  untear, tearAll, startInput, refreshChips, say, roomForEqui, roomToBuild, screenScale,
 } from "./scene"
 
 export interface Beat {
@@ -157,7 +157,8 @@ export const BEATS: Beat[] = [
     id: "flat",
     say: "Make it long and flat.",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, ["tri", "nodes"]) },
-    done: afterRelease(S => { const r = shapeRatio(S.P!); return r.w >= 3 * r.h && r.w > 150 * screenScale(S) }),
+    // any direction counts: a thin triangle at a slant is still long and flat
+    done: afterRelease(S => thinness(S.P!) >= 3 && diameter(S.P!) > 150 * screenScale(S) && S.moved >= 120 * screenScale(S)),
     free: true,
     minPlay: 3,
   },
@@ -165,7 +166,7 @@ export const BEATS: Beat[] = [
     id: "tall",
     say: "Now make it tall and thin.",
     enter: S => { resetBeat(S); ensureTriangle(S); free(S); show(S, ["tri", "nodes"]) },
-    done: afterRelease(S => { const r = shapeRatio(S.P!); return r.h >= 1.8 * r.w && r.h > 130 * screenScale(S) }),
+    done: afterRelease(S => thinness(S.P!) >= 1.8 && diameter(S.P!) > 130 * screenScale(S) && S.moved >= 120 * screenScale(S)),
     free: true,
     minPlay: 3,
   },
@@ -381,7 +382,7 @@ export const BEATS: Beat[] = [
     say: "What is the third angle?",
     enter: S => practice(S, {
       angles: [50, 60, 70], given: [0, 1], unknown: [2], givenColours: [BLUE, ORANGE],
-      hints: [`180^\\circ - 50^\\circ - 60^\\circ`, `180^\\circ - 50^\\circ - 60^\\circ = 70^\\circ`],
+      hints: [],
     }),
     done: inputRight,
   },
@@ -390,7 +391,7 @@ export const BEATS: Beat[] = [
     say: "Find the missing angle.",
     enter: S => practice(S, {
       angles: [40, 65, 75], given: [0, 2], unknown: [1], givenColours: [BLUE, ORANGE],
-      hints: [`180^\\circ - 40^\\circ - 75^\\circ`, `180^\\circ - 40^\\circ - 75^\\circ = 65^\\circ`],
+      hints: [],
     }),
     done: inputRight,
   },
@@ -407,7 +408,7 @@ export const BEATS: Beat[] = [
     say: "Find the missing angle.",
     enter: S => practice(S, {
       angles: [90, 35, 55], given: [0, 1], unknown: [2], givenColours: [BLUE, ORANGE],
-      hints: [`180^\\circ - 90^\\circ - 35^\\circ`, `180^\\circ - 90^\\circ - 35^\\circ = 55^\\circ`],
+      hints: [],
     }),
     done: inputRight,
   },
@@ -416,7 +417,7 @@ export const BEATS: Beat[] = [
     say: "Two equal sides. Find the missing angles.",
     enter: S => practice(S, {
       angles: [70, 70, 40], given: [2], unknown: [0, 1], givenColours: [BLUE], iso: true,
-      hints: [`180^\\circ - 40^\\circ = 140^\\circ`, `\\tfrac{140^\\circ}{2} = 70^\\circ`],
+      hints: [],
     }),
     done: inputRight,
   },
@@ -457,7 +458,7 @@ export const BEATS: Beat[] = [
     say: "Now find the top angle.",
     enter: S => practice(S, {
       angles: [65, 65, 50], given: [0, 1], unknown: [2], givenColours: [ORANGE, ORANGE], iso: true,
-      hints: [`180^\\circ - 65^\\circ - 65^\\circ`, `180^\\circ - 130^\\circ = 50^\\circ`],
+      hints: [],
     }),
     done: inputRight,
   },
