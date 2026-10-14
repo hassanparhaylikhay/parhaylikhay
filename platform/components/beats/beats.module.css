@@ -103,17 +103,17 @@
 }
 
 /* A short correction under the phrase. It never replaces the phrase. */
+/* inside the phrase block, so it always sits under the phrase's last line */
 .note {
-  position: absolute;
-  top: calc(max(44px, calc(env(safe-area-inset-top) + 34px)) + 50px);
-  left: 0;
-  right: 0;
+  margin-top: 10px;
   text-align: center;
   font-size: 16px;
+  line-height: 1.35;
+  font-weight: 400;
+  letter-spacing: 0;
   color: #ff4670;
   pointer-events: none;
   animation: noteIn 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  z-index: 4;
 }
 .note :global(.katex) {
   font-size: 1.05em;
@@ -362,4 +362,9 @@
     padding: 0 12px;
     font-size: 15px;
   }
+}
+
+/* a worked step during "Show me how": it settles in like the phrase */
+.walkLine {
+  animation: phraseIn 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }

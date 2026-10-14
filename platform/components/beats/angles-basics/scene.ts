@@ -157,6 +157,8 @@ export interface Scene {
 
   input: InputState | null
   choices: Choices | null
+  /** a worked step shown on the bottom line during "Show me how" */
+  walkTex: string | null
 
   flashGood: number
   /** the line or ray the student last drew or moved: the only one a success flash lights */
@@ -175,7 +177,7 @@ export function createScene(): Scene {
     drag: null, touch: false, moved: 0, turned: 0, releases: 0, snapped: false, locked: false,
     vis, show: "all", label: {}, colourMode: "palette", fixed: {}, pulse: new Set(), sel: null, onTap: null, tapIds: null,
     sum: null, sumShownAt: 0, termPos: {}, halfIds: null, fullAt: false, shape: null, got: new Set(), tween: null, slide: null, meet: false, letters: false,
-    lineTex: null, lineWords: null, input: null, choices: null, flashGood: 0, touched: null, note: null,
+    lineTex: null, lineWords: null, input: null, choices: null, walkTex: null, flashGood: 0, touched: null, note: null,
   }
 }
 
@@ -582,6 +584,7 @@ export function resetBeat(S: Scene) {
   S.lineWords = null
   S.input = null
   S.choices = null
+  S.walkTex = null
   S.note = null
   S.temp = null
 }

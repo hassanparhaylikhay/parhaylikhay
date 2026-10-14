@@ -5,7 +5,7 @@ import { Tex } from "../Tex"
 import { type Vec, add, sub, mul, lerpV, clamp, ease, sectorPath, arcPath, turn } from "../geometry"
 import {
   type Scene, type Layout, type AngleInfo, CHALK, GREEN, YELLOW, BLUE,
-  angleList, posOf, angOf, dirOf, norm, compassR,
+  angleList, posOf, angOf, dirOf, norm, compassR, distToSeg,
 } from "./scene"
 
 /**
@@ -302,7 +302,19 @@ function Points({ S }: { S: Scene }) {
             <animate attributeName="opacity" values="0.75;0;0.75" dur="2s" repeatCount="indefinite" />
           </circle>
         )}
-        <circle cx={p[0]} cy={p[1]} r={held ? 10 : live ? 7 : 4} fill={lit ? GREEN : live ? YELLOW : CHALK} filter={live ? "url(#pl-soft)" : undefined} />
+        {S.pulsePts.has(n) && (
+          <circle cx={p[0]} cy={p[1]} r={11} fill={BLUE} fillOpacity={0.25} stroke={BLUE} strokeWidth={2} filter="url(#pl-soft)">
+            <animate attributeName="r" values="8;15;8" dur="1.6s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.5;1;0.5" dur="1.6s" repeatCount="indefinite" />
+          </circle>
+        )}
+        {S.mode === "tapPts" && !S.pulsePts.has(n) && (
+          <circle cx={p[0]} cy={p[1]} r={12} fill="none" stroke={YELLOW} strokeWidth={1.4}>
+            <animate attributeName="r" values="8;20;8" dur="2.2s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.55;0;0.55" dur="2.2s" repeatCount="indefinite" />
+          </circle>
+        )}
+        <circle cx={p[0]} cy={p[1]} r={held ? 10 : live ? 7 : S.pulsePts.has(n) ? 5 : 4} fill={lit ? GREEN : live ? YELLOW : S.pulsePts.has(n) ? BLUE : CHALK} filter={live ? "url(#pl-soft)" : undefined} />
       </g>,
     )
   }
@@ -406,7 +418,7 @@ function Labels({ S, L, list, shown, vis }: { S: Scene; L: Layout; list: AngleIn
     }
     if (S.letters.has("O")) {
       out.push(
-        <div key="LO" className={styles.label} style={{ ...place(add(S.OD, centreLetterOffset(S))), color: CHALK, fontSize: L.labelSize + 1, opacity: lv }}>
+        <div key="LO" className={styles.label} style={{ ...place(add(S.OD, centreLetterOffset(S, shown))), color: CHALK, fontSize: L.labelSize + 1, opacity: lv }}>
           <Tex tex="O" />
         </div>,
       )
@@ -439,28 +451,30 @@ function Labels({ S, L, list, shown, vis }: { S: Scene; L: Layout; list: AngleIn
   return <>{out}</>
 }
 
-/** Put the O away from every line that leaves the centre. */
-function centreLetterOffset(S: Scene): Vec {
+/**
+ * Where the letter O sits: below the centre if that is clear, otherwise
+ * the nearest clear spot round it. It stays where it is while that spot
+ * stays clear, so it never hops from side to side as a line turns.
+ */
+const O_PREFS = [90, 112.5, 67.5, 135, 45, 157.5, 22.5, 180, 0, 202.5, 337.5, 225, 315, 247.5, 292.5, 270].map(d => (d * Math.PI) / 180)
+function centreLetterOffset(S: Scene, shown: AngleInfo[]): Vec {
   const O = posOf(S, "O")
-  const dirs: number[] = []
-  for (const s of S.segs) {
-    if (S.showSegs !== "all" && !S.showSegs.has(s.id)) continue
-    for (const [x, y] of [[s.a, s.b], [s.b, s.a]]) {
-      if (x === "O") { const p = posOf(S, y); dirs.push(Math.atan2(p[1] - O[1], p[0] - O[0])) }
-    }
-    // a line straight through the centre (a diameter) leaves it both ways
-    if (s.a !== "O" && s.b !== "O") {
-      const a = posOf(S, s.a), b = posOf(S, s.b)
-      const d = sub(b, a), l = Math.hypot(d[0], d[1]) || 1
-      const off = Math.abs((O[0] - a[0]) * d[1] - (O[1] - a[1]) * d[0]) / l
-      if (off < 3) { dirs.push(Math.atan2(d[1], d[0])); dirs.push(Math.atan2(-d[1], -d[0])) }
-    }
+  const D = 20
+  const segs = S.segs.filter(s => S.showSegs === "all" || S.showSegs.has(s.id)).map(s => [posOf(S, s.a), posOf(S, s.b)] as const)
+  const atO = shown.filter(a => Math.hypot(a.c[0] - O[0], a.c[1] - O[1]) < 1)
+  const clearOfLines = (th: number) => {
+    const q = add(O, mul(dirOf(th), D))
+    return segs.every(([a, b]) => distToSeg(q, a, b) >= 10)
   }
-  if (!dirs.length) return [-12, 16]
-  const as = dirs.map(norm).sort((p, q) => p - q)
-  let best = as[0], gap = -1
-  as.forEach((x, k) => { const nx = k + 1 < as.length ? as[k + 1] : as[0] + Math.PI * 2; if (nx - x > gap) { gap = nx - x; best = x + (nx - x) / 2 } })
-  return mul(dirOf(best), 20)
+  const outsideWedges = (th: number) => atO.every(w => {
+    const rel = w.sweep >= 0 ? norm(th - w.start) : norm(w.start - th)
+    return rel > Math.abs(w.sweep) + 0.15
+  })
+  const ok = (th: number) => clearOfLines(th) && outsideWedges(th)
+  if (S.oDir !== null && ok(S.oDir)) return mul(dirOf(S.oDir), D)
+  const pick = O_PREFS.find(ok) ?? (S.oDir !== null && clearOfLines(S.oDir) ? S.oDir : O_PREFS.find(clearOfLines)) ?? O_PREFS[0]
+  S.oDir = pick
+  return mul(dirOf(pick), D)
 }
 
 // ── the line near the bottom ─────────────────────────────────────────────
@@ -483,6 +497,12 @@ function BottomLine({ S, L }: { S: Scene; L: Layout }) {
   const hint = inp && inp.hints.length && inp.tries > 0 ? inp.hints[Math.min(inp.hints.length - 1, inp.tries - 1)] : null
   const style: React.CSSProperties = { top: L.lineY - L.lineSize * 0.85, height: L.lineSize * 1.7, opacity: lv, ["--line-size" as string]: `${L.lineSize}px` }
   const tex = S.lineFn ? S.lineFn(S) : S.lineTex
+  if (S.walkTex !== null) {
+    if (!S.walkTex) return null
+    return (
+      <div key={S.walkTex} className={`${styles.line} ${styles.walkLine}`} style={style}><Tex tex={S.walkTex} /></div>
+    )
+  }
   return (
     <>
       {lv > 0.01 && inp && (

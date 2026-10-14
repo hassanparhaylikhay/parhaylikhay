@@ -96,6 +96,8 @@ export interface Scene {
 
   // practice
   input: InputState | null
+  /** a worked step shown on the bottom line during "Show me how" */
+  walkTex: string | null
   targets: number[] | null
   chipLit: boolean[]
 
@@ -132,7 +134,7 @@ export function createScene(): Scene {
     tearOrder: [],
     onTap: null,
     lineTex: null,
-    input: null,
+    input: null, walkTex: null,
     targets: null,
     chipLit: [false, false, false],
     helpEmphasis: false,
@@ -354,6 +356,7 @@ export function resetBeat(S: Scene) {
   S.onTap = null
   S.lineTex = null
   S.input = null
+  S.walkTex = null
   S.targets = null
   S.chipLit = [false, false, false]
   S.note = null

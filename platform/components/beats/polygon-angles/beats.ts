@@ -10,6 +10,7 @@
  */
 
 import { type Vec, add, mul, centreIn, thinness } from "../geometry"
+import type { WalkStep } from "../walk"
 import { diagonalsFrom, regular, heading, wedgeIn, centroidOf } from "./poly"
 import {
   type Scene, type EqPart, type Overlay,
@@ -34,6 +35,8 @@ export interface Beat {
   /** Seconds of play before a playing beat offers to move on. */
   minPlay?: number
   restart?: boolean
+  /** "Show me how": the worked solution, one step at a time, for a student who is stuck */
+  walk?: WalkStep<Scene>[]
 }
 
 const deg = (n: number) => `${n}^\\circ`
@@ -108,6 +111,41 @@ const countHelp = (S: Scene, t: number) => {
 }
 
 const allExt = (S: Scene) => { S.extCorners = (S.P ?? []).map((_, i) => i) }
+
+// ── "Show me how" walkthroughs ───────────────────────────────────────────
+
+/** Equal angles sharing a total: each is total ÷ n. */
+function shareWalk(total: number, n: number, name: string): WalkStep<Scene>[] {
+  const each = total / n
+  return [
+    { say: `A ${name}'s angles add up to $${total}^\\circ$.`, show: S => shareHelp(total, n)(S, 1) },
+    { say: `Its ${n} angles are all equal. So each one is $${total}^\\circ \\div ${n}$.`, tex: `\\dfrac{${c(GREEN, deg(total))}}{${n}} = ${c(GREEN, deg(each))}` },
+  ]
+}
+
+/** Equal turns making one full turn: each is 360 ÷ n. */
+function turnsWalk(n: number): WalkStep<Scene>[] {
+  return [
+    { say: `Going once round, the ${n} turns make one full turn: $360^\\circ$.`, show: S => turnsHelp(n)(S, 1) },
+    { say: `They're all the same. So each turn is $360^\\circ \\div ${n}$.`, tex: `\\dfrac{${deg(360)}}{${n}} = ${c(GREEN, deg(360 / n))}` },
+  ]
+}
+
+/** Inside and outside make a straight line at a corner. */
+function lineWalk(outside: number, show?: (S: Scene) => void): WalkStep<Scene>[] {
+  return [
+    { say: "At each corner, inside and outside make a straight line.", show: S => { if (show) show(S); else lineHelp(outside)(S, 1) } },
+    { say: `So the inside angle is $180^\\circ - ${outside}^\\circ$.`, tex: `${deg(180)} - ${deg(outside)} = ${c(GREEN, deg(180 - outside))}` },
+  ]
+}
+
+/** Equal turns of `turn` degrees: how many make 360? */
+function countWalk(turn: number): WalkStep<Scene>[] {
+  return [
+    { say: `Each turn is $${turn}^\\circ$. Together they make one full turn: $360^\\circ$.`, show: S => { S.dialPulse = S.time } },
+    { say: `So there are $360 \\div ${turn}$ turns, one at each corner.`, tex: `\\dfrac{${deg(360)}}{${deg(turn)}} = ${c(GREEN, String(360 / turn))}`, show: S => { S.dialCount = true } },
+  ]
+}
 
 /** Hint helper: a reminder line under the equation (TeX), never the worked answer. */
 function remind(S: Scene, tex: string) {
@@ -411,6 +449,10 @@ export const BEATS: Beat[] = [
       })
     },
     done: S => inputRight(S) && !S.diagAuto && S.diags.length === 7 && S.diags.every(k => (S.diagGrow[k] ?? 0) >= 1),
+    walk: [
+      { say: "Look at the table. There are always two fewer triangles than sides.", show: S => { if (S.table) S.table.pulse = true } },
+      { say: "So $10$ sides make $10 - 2 = 8$ triangles." },
+    ],
   },
   watch("sum-1440", "So its angles add up to $8 \\times 180^\\circ = 1440^\\circ$.", S => {
     base(S); ensureShape(S, 10); allDiagonals(S, 0)
@@ -471,6 +513,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: shareWalk(720, 6, "hexagon"),
   },
   {
     id: "turn-resize",
@@ -499,6 +542,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: shareWalk(540, 5, "pentagon"),
   },
 
   // ── 5. Exterior angles ──
@@ -637,6 +681,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: turnsWalk(6),
   },
   {
     id: "inside-120",
@@ -654,6 +699,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: lineWalk(60),
   },
   {
     id: "decagon-ext",
@@ -671,6 +717,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: turnsWalk(10),
   },
   {
     id: "decagon-int",
@@ -687,6 +734,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: lineWalk(36, S => { S.extCorners = [0]; S.vis.ext.t = 1; S.vis.extValues.t = 1; lineHelp(36)(S, 1) }),
   },
   {
     id: "sides-12",
@@ -701,6 +749,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: countWalk(30),
   },
   {
     id: "turn-40",
@@ -714,6 +763,10 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "At each corner, inside and outside make a straight line.", show: S => { S.overlay = straightLine(S, 140); S.vis.overlay.t = 1 } },
+      { say: "So each turn is $180^\\circ - 140^\\circ$.", tex: `${deg(180)} - ${c(BLUE, deg(140))} = ${c(GREEN, deg(40))}` },
+    ],
   },
   {
     id: "sides-9",
@@ -728,6 +781,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: countWalk(40),
   },
 
   // ── 7. Missing angles ──
@@ -748,6 +802,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "One line cuts the shape into two triangles: $360^\\circ$ in all.", show: S => { allDiagonals(S, 0); S.vis.diags.t = 1; S.vis.tris.t = 1; S.vis.triLabels.t = 1 } },
+      { say: "The three angles you know make $255^\\circ$.", tex: `${c(BLUE, deg(100))} + ${c(ORANGE, deg(85))} + ${c(YELLOW, deg(70))} = ${deg(255)}` },
+      { say: "So the missing angle is $360^\\circ - 255^\\circ$.", tex: `${c(PINK, "?")} = ${deg(360)} - ${deg(255)} = ${c(GREEN, deg(105))}`, show: S => { S.label[3] = deg(105) } },
+    ],
   },
   {
     id: "pent-sum",
@@ -762,6 +821,10 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "Lines from one corner cut a pentagon into $3$ triangles.", show: S => { allDiagonals(S, 0); S.vis.diags.t = 1; S.vis.tris.t = 1; S.vis.triLabels.t = 1 } },
+      { say: "Each triangle's angles add up to $180^\\circ$.", tex: `3 \\times 180^\\circ = ${c(GREEN, deg(540))}`, show: S => { S.triPulse = true } },
+    ],
   },
   {
     id: "missing-pent",
@@ -781,6 +844,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "A pentagon's angles add up to $3 \\times 180^\\circ = 540^\\circ$.", show: S => { allDiagonals(S, 0); S.vis.diags.t = 1; S.vis.tris.t = 1; S.vis.triLabels.t = 1 } },
+      { say: "The four angles you know make $425^\\circ$.", tex: `110^\\circ + 95^\\circ + 120^\\circ + 100^\\circ = ${deg(425)}` },
+      { say: "So the missing angle is $540^\\circ - 425^\\circ$.", tex: `${c(PINK, "?")} = ${deg(540)} - ${deg(425)} = ${c(GREEN, deg(115))}`, show: S => { S.label[4] = deg(115) } },
+    ],
   },
   watch("pent-hex", "A regular pentagon and a regular hexagon, side by side.", S => {
     base(S); clearLines(S)
@@ -802,6 +870,10 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "A pentagon's angles add up to $540^\\circ$.", show: S => { S.overlay = pentHex(S, { p: "?", x: "x" }, { helpPent: true }) } },
+      { say: "Its five angles are equal. So each is $540^\\circ \\div 5$.", tex: `\\dfrac{${c(GREEN, deg(540))}}{5} = ${c(GREEN, deg(108))}`, show: S => { S.overlay = pentHex(S, { p: deg(108), x: "x" }, { helpPent: true }) } },
+    ],
   },
   {
     id: "hex-120",
@@ -817,6 +889,10 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "A hexagon's angles add up to $720^\\circ$.", show: S => { S.overlay = pentHex(S, { p: deg(108), h: "?", x: "x" }, { helpHex: true }) } },
+      { say: "Its six angles are equal. So each is $720^\\circ \\div 6$.", tex: `\\dfrac{${c(GREEN, deg(720))}}{6} = ${c(GREEN, deg(120))}`, show: S => { S.overlay = pentHex(S, { p: deg(108), h: deg(120), x: "x" }, { helpHex: true }) } },
+    ],
   },
   watch("round-point", "Angles round a point add up to $360^\\circ$.", S => {
     base(S); S.P = null; S.D = null
@@ -837,6 +913,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "The three angles go all the way round the point.", show: S => { S.overlay = pentHex(S, { p: deg(108), h: deg(120), x: "x" }, { helpPoint: true }) } },
+      { say: "Angles round a point add up to $360^\\circ$.", tex: `${c(BLUE, deg(108))} + ${c(ORANGE, deg(120))} + x = ${c(GREEN, deg(360))}` },
+      { say: "So $x$ is $360^\\circ - 108^\\circ - 120^\\circ$.", tex: `x = ${c(GREEN, deg(132))}`, show: S => { S.overlay = pentHex(S, { p: deg(108), h: deg(120), x: deg(132) }) } },
+    ],
   },
 
   // ── 8. Build to order, and the impossible one ──

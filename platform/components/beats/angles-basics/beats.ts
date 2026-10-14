@@ -10,6 +10,7 @@
  */
 
 import { type Vec, RAD } from "../geometry"
+import type { WalkStep } from "../walk"
 import {
   type Scene, type EqPart, type Board, type VisKey,
   BLUE, ORANGE, PINK, GREEN, YELLOW, NEUTRAL,
@@ -33,6 +34,8 @@ export interface Beat {
   /** Seconds of play before a playing beat offers to move on. */
   minPlay?: number
   restart?: boolean
+  /** "Show me how": the worked solution, one step at a time, for a student who is stuck */
+  walk?: WalkStep<Scene>[]
 }
 
 const deg = (n: number) => `${n}^\\circ`
@@ -85,6 +88,18 @@ function given(S: Scene, known: Record<string, string>, unknown: string, mark = 
   S.fixed = { ...known, [unknown]: PINK }
   S.label = { [unknown]: mark }
   S.pulse = new Set([unknown])
+}
+
+/** Show the true value where the "?" was (the walkthrough's last step). */
+function uncover(S: Scene, id: string) {
+  delete S.label[id]
+  S.pulse = new Set([id])
+}
+
+/** The parallel-line pair shape for a walkthrough step. */
+function shapeOn(S: Scene, kind: "F" | "Z" | "C", q: [number, number], on?: [number, number, number]) {
+  S.shape = { kind, q, on }
+  S.vis.shape.t = 1
 }
 
 /** The unknown, answered: its number shows, green. */
@@ -500,6 +515,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "The two angles share a straight line.", show: S => { S.halfIds = ["W0", "W1"]; S.vis.half.t = 1; S.pulse = new Set(["W0", "W1"]) } },
+      { say: "Angles on a straight line add up to $180^\\circ$.", tex: `${c(BLUE, deg(130))} + ${Q} = ${c(GREEN, deg(180))}` },
+      { say: "So the missing angle is $50^\\circ$.", tex: `${Q} = 180^\\circ - 130^\\circ = ${c(GREEN, deg(50))}`, show: S => uncover(S, "W1") },
+    ],
   },
   {
     id: "line-q2",
@@ -518,6 +538,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "The three angles share a straight line.", show: S => { S.halfIds = ["W0", "W1", "W2"]; S.vis.half.t = 1; S.pulse = new Set(["W0", "W1", "W2"]) } },
+      { say: "Angles on a straight line add up to $180^\\circ$.", tex: `${c(BLUE, deg(40))} + ${c(ORANGE, deg(75))} + ${Q} = ${c(GREEN, deg(180))}` },
+      { say: "So the missing angle is $65^\\circ$.", tex: `${Q} = 180^\\circ - 40^\\circ - 75^\\circ = ${c(GREEN, deg(65))}`, show: S => uncover(S, "W2") },
+    ],
   },
 
   // ── 5. Angles round a point ──
@@ -577,6 +602,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "The angles go all the way round the point.", show: S => { S.fullAt = true; S.vis.full.t = 1 } },
+      { say: "Angles round a point add up to $360^\\circ$.", tex: `${c(BLUE, deg(90))} + ${c(ORANGE, deg(110))} + ${c(YELLOW, deg(85))} + ${Q} = ${c(GREEN, deg(360))}` },
+      { say: "So the missing angle is $75^\\circ$.", tex: `${Q} = 360^\\circ - 285^\\circ = ${c(GREEN, deg(75))}`, show: S => uncover(S, "P3") },
+    ],
   },
   {
     id: "point-q2",
@@ -595,6 +625,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "The angles go all the way round the point.", show: S => { S.fullAt = true; S.vis.full.t = 1 } },
+      { say: "Angles round a point add up to $360^\\circ$.", tex: `${c(BLUE, deg(140))} + ${c(ORANGE, deg(95))} + ${Q} = ${c(GREEN, deg(360))}` },
+      { say: "So the missing angle is $125^\\circ$.", tex: `${Q} = 360^\\circ - 235^\\circ = ${c(GREEN, deg(125))}`, show: S => uncover(S, "P2") },
+    ],
   },
 
   // ── 6. Crossing lines ──
@@ -710,6 +745,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "The two angles are opposite each other.", show: S => { S.pulse = new Set(["C0", "C2"]) } },
+      { say: "Vertically opposite angles are equal." },
+      { say: "So the missing angle is $70^\\circ$ too.", tex: `${Q} = ${c(GREEN, deg(70))}`, show: S => uncover(S, "C2") },
+    ],
   },
   {
     id: "cross-q2",
@@ -728,6 +768,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "The two angles share a straight line.", show: S => { S.halfIds = ["C0", "C1"]; S.vis.half.t = 1; S.pulse = new Set(["C0", "C1"]) } },
+      { say: "So they add up to $180^\\circ$.", tex: `${c(BLUE, deg(70))} + ${Q} = ${c(GREEN, deg(180))}` },
+      { say: "So the missing angle is $110^\\circ$.", tex: `${Q} = 180^\\circ - 70^\\circ = ${c(GREEN, deg(110))}`, show: S => uncover(S, "C1") },
+    ],
   },
 
   // ── 7. Parallel lines ──
@@ -992,6 +1037,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "The two angles make an F shape.", show: S => shapeOn(S, "F", CORR) },
+      { say: "They're corresponding angles. Corresponding angles are equal." },
+      { say: "So the missing angle is $65^\\circ$.", tex: `${Q} = ${c(GREEN, deg(65))}`, show: S => uncover(S, "B0") },
+    ],
   },
   {
     id: "par-q2",
@@ -1010,6 +1060,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "The two angles make a Z shape.", show: S => shapeOn(S, "Z", [2, 0]) },
+      { say: "They're alternate angles. Alternate angles are equal." },
+      { say: "So the missing angle is $65^\\circ$.", tex: `${Q} = ${c(GREEN, deg(65))}`, show: S => uncover(S, "B0") },
+    ],
   },
   {
     id: "par-q3",
@@ -1028,6 +1083,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "The two angles make a C shape.", show: S => shapeOn(S, "C", COI) },
+      { say: "They're co-interior angles. They add up to $180^\\circ$.", tex: `${c(BLUE, deg(65))} + ${Q} = ${c(GREEN, deg(180))}` },
+      { say: "So the missing angle is $115^\\circ$.", tex: `${Q} = 180^\\circ - 65^\\circ = ${c(GREEN, deg(115))}`, show: S => uncover(S, "A1") },
+    ],
   },
   {
     id: "par-x1",
@@ -1051,6 +1111,12 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "Start with this angle. It makes an F shape with $72^\\circ$.", show: S => { reveal(S, "B0"); S.fixed.B0 = BLUE; S.label.B0 = ""; shapeOn(S, "F", CORR); S.pulse = new Set(["B0"]) } },
+      { say: "Corresponding angles are equal. So it's $72^\\circ$ too.", show: S => { delete S.label.B0 } },
+      { say: "It shares a straight line with $x$.", show: S => { S.vis.shape.t = 0; S.halfIds = ["B0", "B1"]; S.vis.half.t = 1; S.pulse = new Set(["B0", "B1"]) } },
+      { say: "So $x$ is $108^\\circ$.", tex: `x = 180^\\circ - 72^\\circ = ${c(GREEN, deg(108))}`, show: S => uncover(S, "B1") },
+    ],
   },
   {
     id: "par-x2",
@@ -1074,6 +1140,12 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "Start with this angle. It's vertically opposite $115^\\circ$.", show: S => { reveal(S, "A1"); S.fixed.A1 = BLUE; S.label.A1 = ""; S.pulse = new Set(["A3", "A1"]) } },
+      { say: "So it's $115^\\circ$ too.", show: S => { delete S.label.A1 } },
+      { say: "It and $x$ make a C shape. They're co-interior angles.", show: S => { shapeOn(S, "C", COI); S.pulse = new Set(["A1", "B0"]) } },
+      { say: "Co-interior angles add up to $180^\\circ$. So $x$ is $65^\\circ$.", tex: `x = 180^\\circ - 115^\\circ = ${c(GREEN, deg(65))}`, show: S => uncover(S, "B0") },
+    ],
   },
   {
     id: "exam-p",
@@ -1095,6 +1167,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "$112^\\circ$ and $p$ make a C shape between two of the parallel lines.", show: S => shapeOn(S, "C", COI, [0, 1, 3]) },
+      { say: "They're co-interior angles. They add up to $180^\\circ$.", tex: `${c(BLUE, deg(112))} + ${c(PINK, "p")} = ${c(GREEN, deg(180))}` },
+      { say: "So $p$ is $68^\\circ$.", tex: `p = 180^\\circ - 112^\\circ = ${c(GREEN, deg(68))}`, show: S => uncover(S, "p") },
+    ],
   },
   {
     id: "exam-q",
@@ -1116,6 +1193,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "$p$ and $q$ make an F shape.", show: S => shapeOn(S, "F", CORR, [1, 2, 3]) },
+      { say: "They're corresponding angles. Corresponding angles are equal." },
+      { say: "So $q$ is $68^\\circ$.", tex: `q = ${c(GREEN, deg(68))}`, show: S => uncover(S, "q") },
+    ],
   },
   {
     id: "make-70",

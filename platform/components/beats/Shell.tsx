@@ -41,12 +41,12 @@ export default function Shell({
         <X size={18} strokeWidth={1.8} />
       </a>
       {children}
-      <PhraseLine text={phrase} k={phraseKey} />
-      {note && (
+      <PhraseLine text={phrase} k={phraseKey} note={note ? (
+        // the note sits right under the phrase, however many lines the phrase wraps to
         <div key={noteKey} className={styles.note} style={noteTone === "calm" ? { color: "#c8c6be" } : undefined}>
           <Phrase text={note} />
         </div>
-      )}
+      ) : null} />
       {cta !== null && (
         <div className={styles.ctaWrap}>
           <button key={phraseKey} type="button" onClick={onCta} className={`${styles.cta} ${cta ? styles.ctaWide : ""}`}
@@ -60,7 +60,7 @@ export default function Shell({
 }
 
 /** The outgoing phrase lifts away while the next one settles in. */
-function PhraseLine({ text, k }: { text: string; k: string }) {
+function PhraseLine({ text, k, note }: { text: string; k: string; note: React.ReactNode }) {
   const [cur, setCur] = useState({ k, text })
   const [old, setOld] = useState<{ k: string; text: string } | null>(null)
   if (cur.k !== k) {
@@ -81,6 +81,7 @@ function PhraseLine({ text, k }: { text: string; k: string }) {
       )}
       <div key={`n-${cur.k}`} className={styles.phrase} style={{ animationDelay: old ? "200ms" : "0ms" }}>
         <Phrase text={cur.text} />
+        {note}
       </div>
     </div>
   )

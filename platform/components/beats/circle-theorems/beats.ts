@@ -37,6 +37,17 @@ export interface Beat {
   /** Milliseconds a finished doing beat waits before moving on (default 1800). */
   advanceAfter?: number
   restart?: boolean
+  /** "Show me how": the worked solution, one step at a time, for a student who is stuck */
+  walk?: WalkStep[]
+}
+
+export interface WalkStep {
+  /** what the teacher says at this step */
+  say: string
+  /** the line of working under the figure */
+  tex?: string
+  /** what lights up or appears on the figure */
+  show?: (S: Scene) => void
 }
 
 const deg = (n: number) => `${n}^\\circ`
@@ -87,6 +98,31 @@ function given(S: Scene, known: Record<string, string>, unknown: string, mark = 
   S.label = { [unknown]: mark }
   S.pulse = new Set([unknown])
 }
+
+/** The two points an angle is made from glow, and the lines from them. */
+function madeFrom(S: Scene, pts: string[], segs: string[]) {
+  S.pulsePts = new Set(pts)
+  S.pulseSegs = new Set(segs)
+}
+
+/** Show the true value where the "?" was (the walkthrough's last step). */
+function uncover(S: Scene, id: string) {
+  delete S.label[id]
+  S.pulse = new Set([id])
+}
+
+/** Tap the two points an angle is made from. */
+function tapTwo(S: Scene, want: string[], wrong: Record<string, string>) {
+  S.mode = "tapPts"
+  S.onTapPt = (S2, n) => {
+    if (want.includes(n)) {
+      if (!S2.got.has(n)) { S2.got.add(n); S2.pulsePts.add(n); S2.note = null }
+      return
+    }
+    say(S2, wrong[n] ?? "Follow the angle's two lines.")
+  }
+}
+const tappedAll = (want: string[]) => (S: Scene) => want.every(n => S.got.has(n))
 
 function solved(S: Scene, id: string) {
   delete S.label[id]
@@ -375,6 +411,20 @@ export const BEATS: Beat[] = [
     S.angles = [atCirc("P", "P")]
     look(S, ["letters", "arcs", "values"])
   }),
+  watch("arms", "Its two lines go to $A$ and $B$.", S => {
+    base(S, ["A", "B", "P", "O"]); ensureDiam(S); ensureP(S)
+    S.showPts = ["A", "B", "P"]; setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"]])
+    S.angles = [atCirc("P", "P")]
+    madeFrom(S, ["A", "B"], ["PA", "PB"])
+    look(S, ["letters", "arcs", "values"])
+  }, 2.2),
+  watch("made-from", "We say the angle is made from $A$ and $B$.", S => {
+    base(S, ["A", "B", "P", "O"]); ensureDiam(S); ensureP(S)
+    S.showPts = ["A", "B", "P"]; setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"]])
+    S.angles = [atCirc("P", "P")]
+    madeFrom(S, ["A", "B"], [])
+    look(S, ["letters", "arcs", "values"])
+  }, 2.2),
   {
     id: "move-P-90",
     say: "Move $P$ round the circle. Watch the angle.",
@@ -382,7 +432,8 @@ export const BEATS: Beat[] = [
       base(S, ["A", "B", "P", "O"]); ensureDiam(S); ensureP(S)
       S.showPts = ["A", "B", "P"]; setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"]])
       S.angles = [atCirc("P", "P")]
-      S.movable = ["P"]; S.mode = "slide"
+      // either side of the diameter is a semicircle, so P may go anywhere
+      S.movable = ["P"]; S.crossOK = new Set(["P"]); S.mode = "slide"
       look(S, ["letters", "arcs", "values"])
     },
     done: movedBy("P", 120), free: true, minPlay: 8,
@@ -394,7 +445,7 @@ export const BEATS: Beat[] = [
       base(S, ["A", "B", "P", "O"]); ensureDiam(S); ensureP(S)
       S.showPts = ["A", "B", "P"]; setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"]])
       S.angles = [atCirc("P", "P")]
-      S.movable = ["P"]; S.mode = "slide"
+      S.movable = ["P"]; S.crossOK = new Set(["P"]); S.mode = "slide"
       look(S, ["letters", "arcs", "values"])
     },
     cta: "I can't", ctaAfter: 8,
@@ -404,7 +455,7 @@ export const BEATS: Beat[] = [
     S.showPts = ["A", "B", "P"]; setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"]])
     S.angles = [atCirc("P", "P")]
     S.tints = [{ a: "A", b: "B", side: "P", color: BLUE }]
-    S.movable = ["P"]; S.mode = "slide"
+    S.movable = ["P"]; S.crossOK = new Set(["P"]); S.mode = "slide"
     look(S, ["letters", "arcs", "values", "tints"])
   }, 2.2),
   {
@@ -414,7 +465,7 @@ export const BEATS: Beat[] = [
       base(S, ["A", "B", "P", "O"]); ensureDiam(S); ensureP(S)
       S.showPts = ["A", "B", "P"]; setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"]])
       S.angles = [atCirc("P", "P")]
-      S.movable = ["A"]; S.diamLock = true; S.mode = "slide"
+      S.movable = ["A"]; S.diamLock = true; S.crossOK = new Set(["A", "B"]); S.mode = "slide"
       look(S, ["letters", "arcs", "values"])
     },
     done: movedBy("A", 50), free: true, minPlay: 6,
@@ -439,6 +490,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: semiWalk(35, 55),
   },
 
   // ── 4. Angles in the same segment ──
@@ -495,6 +547,28 @@ export const BEATS: Beat[] = [
     look(S, ["letters", "arcs", "values"])
   }),
   {
+    id: "tap-Q-points",
+    say: "Tap the two points $Q$'s angle is made from.",
+    enter: S => {
+      base(S, ["A", "B", "P", "Q", "O"]); ensureChord(S); placeQ(S)
+      S.showPts = ["A", "B", "P", "Q"]
+      setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"], ["Q", "A"], ["Q", "B"]])
+      S.angles = [atCirc("P", "P"), atCirc("Q", "Q")]
+      S.pulse = new Set(["Q"])
+      tapTwo(S, ["A", "B"], { P: "That's $P$. Follow $Q$'s two lines.", Q: "That's the corner. Follow its two lines." })
+      look(S, ["letters", "arcs", "values"])
+    },
+    done: tappedAll(["A", "B"]),
+  },
+  watch("same-two", "$P$'s angle is made from the same two points.", S => {
+    base(S, ["A", "B", "P", "Q", "O"]); ensureChord(S); placeQ(S)
+    S.showPts = ["A", "B", "P", "Q"]
+    setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"], ["Q", "A"], ["Q", "B"]])
+    S.angles = [atCirc("P", "P"), atCirc("Q", "Q")]
+    madeFrom(S, ["A", "B"], ["PA", "PB", "QA", "QB"])
+    look(S, ["letters", "arcs", "values"])
+  }, 2.2),
+  {
     id: "move-Q",
     say: "Move $Q$. Compare it with $P$.",
     enter: S => {
@@ -502,7 +576,8 @@ export const BEATS: Beat[] = [
       S.showPts = ["A", "B", "P", "Q"]
       setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"], ["Q", "A"], ["Q", "B"]])
       S.angles = [atCirc("P", "P"), atCirc("Q", "Q")]
-      S.movable = ["Q"]; S.mode = "slide"
+      // Q may pass P, but not A or B: past them it would be in the other segment
+      S.movable = ["Q"]; S.passable = new Set(["P"]); S.mode = "slide"
       look(S, ["letters", "arcs", "values"])
     },
     done: movedBy("Q", 80), free: true, minPlay: 6,
@@ -524,6 +599,15 @@ export const BEATS: Beat[] = [
     S.pulse = new Set(["P", "Q"])
     look(S, ["letters", "arcs", "values", "tints"])
   }, 2.2),
+  watch("same-two-rule", "Both angles must be made from the same two points.", S => {
+    base(S, ["A", "B", "P", "Q", "O"]); ensureChord(S); placeQ(S)
+    S.showPts = ["A", "B", "P", "Q"]
+    setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"], ["Q", "A"], ["Q", "B"]])
+    S.angles = [atCirc("P", "P"), atCirc("Q", "Q")]
+    S.tints = [{ a: "A", b: "B", side: "P", color: BLUE }]
+    madeFrom(S, ["A", "B"], ["PA", "PB", "QA", "QB"])
+    look(S, ["letters", "arcs", "values", "tints"])
+  }, 2.4),
   {
     id: "Q-across",
     say: "Now move $Q$ into the other segment.",
@@ -533,7 +617,7 @@ export const BEATS: Beat[] = [
       setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"], ["Q", "A"], ["Q", "B"]])
       S.angles = [atCirc("P", "P"), atCirc("Q", "Q", "A", "B", { colour: qColour })]
       S.tints = [{ a: "A", b: "B", side: "P", color: BLUE }]
-      S.movable = ["Q"]; S.crossOK = new Set(["Q"]); S.mode = "slide"
+      S.movable = ["Q"]; S.crossOK = new Set(["Q"]); S.passable = new Set(["P"]); S.mode = "slide"
       look(S, ["letters", "arcs", "values", "tints"])
     },
     done: S => !S.drag && !sameSide(S, "A", "B", "P", "Q"),
@@ -570,6 +654,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: segmentWalk("P", "Q", 38),
   },
 
   // ── 5. Angle at the centre ──
@@ -593,9 +678,25 @@ export const BEATS: Beat[] = [
     S.pulse = new Set(["C0"])
     look(S, ["letters", "arcs", "values"])
   }),
+  {
+    id: "tap-O-points",
+    say: "Tap the two points it's made from.",
+    enter: S => {
+      centreBoard(S)
+      S.pulse = new Set(["C0"])
+      tapTwo(S, ["A", "B"], { P: "That's $P$. Follow the lines from $O$." })
+      look(S, ["letters", "arcs", "values"])
+    },
+    done: tappedAll(["A", "B"]),
+  },
   watch("circ-angle", "The angle at $P$ is the angle at the circumference.", S => {
     centreBoard(S)
     S.pulse = new Set(["P"])
+    look(S, ["letters", "arcs", "values"])
+  }, 2.2),
+  watch("both-from", "Both angles are made from $A$ and $B$.", S => {
+    centreBoard(S)
+    madeFrom(S, ["A", "B"], ["PA", "PB", "OA", "OB"])
     look(S, ["letters", "arcs", "values"])
   }, 2.2),
   {
@@ -639,6 +740,12 @@ export const BEATS: Beat[] = [
     S.lineFn = twiceLine
     look(S, ["letters", "arcs", "values", "line"])
   }, 2.4),
+  watch("centre-same-two", "Both must be made from the same two points.", S => {
+    centreBoard(S)
+    S.lineFn = twiceLine
+    madeFrom(S, ["A", "B"], ["PA", "PB", "OA", "OB"])
+    look(S, ["letters", "arcs", "values", "line"])
+  }, 2.2),
   {
     id: "into-minor",
     say: "Move $P$ into the small segment.",
@@ -677,6 +784,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "Both angles are made from $A$ and $B$.", show: S => madeFrom(S, ["A", "B"], ["PA", "PB", "OA", "OB"]) },
+      { say: "The angle at the centre is twice the angle at the circumference.", tex: `${Q} = 2 \\times ${c(BLUE, deg(42))}`, show: S => { S.pulseSegs = new Set(); S.pulse = new Set(["P", "C0"]) } },
+      { say: "So the angle at the centre is $84^\\circ$.", tex: `${Q} = ${c(GREEN, deg(84))}`, show: S => uncover(S, "C0") },
+    ],
   },
   {
     id: "centre-q2",
@@ -696,6 +808,11 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "Both angles are made from $A$ and $B$.", show: S => madeFrom(S, ["A", "B"], ["PA", "PB", "OA", "OB"]) },
+      { say: "The angle at the centre is twice the angle at $P$.", tex: `${c(ORANGE, deg(130))} = 2 \\times ${Q}`, show: S => { S.pulseSegs = new Set(); S.pulse = new Set(["P", "C0"]) } },
+      { say: "So the angle at $P$ is half of $130^\\circ$: $65^\\circ$.", tex: `${Q} = 130^\\circ \\div 2 = ${c(GREEN, deg(65))}`, show: S => uncover(S, "P") },
+    ],
   },
 
   // ── 6. Why twice ──
@@ -885,6 +1002,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: semiWalk(24, 66),
   },
   {
     id: "use-bowtie",
@@ -908,6 +1026,7 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: segmentWalk("C", "D", 32),
   },
   {
     id: "use-reflex",
@@ -929,6 +1048,12 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      { say: "Both angles are made from $A$ and $B$.", show: S => madeFrom(S, ["A", "B"], ["PA", "PB", "OA", "OB"]) },
+      { say: "$P$ is in the small segment, so its centre angle is the reflex one.", show: S => { S.pulseSegs = new Set(); S.pulse = new Set(["C0"]) } },
+      { say: "The angle at the centre is twice the angle at $P$.", tex: `${c(BLUE, deg(250))} = 2 \\times ${c(PINK, "x")}`, show: S => { S.pulse = new Set(["C0", "P"]) } },
+      { say: "So $x$ is half of $250^\\circ$: $125^\\circ$.", tex: `x = 250^\\circ \\div 2 = ${c(GREEN, deg(125))}`, show: S => uncover(S, "P") },
+    ],
   },
   {
     id: "use-OAB",
@@ -960,6 +1085,31 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      {
+        say: "Angles $ACB$ and $AOB$ are both made from $A$ and $B$.",
+        show: S => { reveal(S, "C0"); S.fixed.C0 = ORANGE; S.label.C0 = ""; madeFrom(S, ["A", "B"], ["CA", "CB", "OA", "OB"]) },
+      },
+      {
+        say: "So angle $AOB$ is twice angle $ACB$.",
+        tex: `\\angle AOB = 2 \\times ${c(BLUE, deg(35))} = ${c(ORANGE, deg(70))}`,
+        show: S => { S.pulsePts = new Set(); S.pulseSegs = new Set(); delete S.label.C0; S.pulse = new Set(["C0"]) },
+      },
+      {
+        say: "$OA$ and $OB$ are radii. So triangle $OAB$ is isosceles.",
+        show: S => { S.ticks = ["OA", "OB"]; S.vis.ticks.t = 1; S.fills = [{ pts: ["O", "A", "B"], color: ORANGE }]; S.pulse = new Set() },
+      },
+      {
+        say: "Its two base angles are equal. They share what's left of $180^\\circ$.",
+        tex: `${Q} + ${Q} = 180^\\circ - 70^\\circ = 110^\\circ`,
+        show: S => { S.pulse = new Set(["OAB"]) },
+      },
+      {
+        say: "So angle $OAB$ is $55^\\circ$.",
+        tex: `\\angle OAB = 110^\\circ \\div 2 = ${c(GREEN, deg(55))}`,
+        show: S => uncover(S, "OAB"),
+      },
+    ],
   },
   {
     id: "use-exam",
@@ -992,6 +1142,26 @@ export const BEATS: Beat[] = [
       })
     },
     done: inputRight,
+    walk: [
+      {
+        say: "$AB$ is a diameter. So angle $ADB$ is $90^\\circ$.",
+        show: S => { reveal(S, "ADB"); S.fixed.ADB = NEUTRAL; delete S.label.ADB; S.tints = [{ a: "A", b: "B", side: "D", color: BLUE }]; S.vis.tints.t = 1; S.pulse = new Set(["ADB"]) },
+      },
+      {
+        say: "Angles $BDC$ and $BAC$ are both made from $B$ and $C$.",
+        show: S => { S.vis.tints.t = 0; reveal(S, "BDC"); S.fixed.BDC = BLUE; S.label.BDC = ""; madeFrom(S, ["B", "C"], ["DB", "DC", "AB", "AC"]); S.pulse = new Set(["BAC", "BDC"]) },
+      },
+      {
+        say: "They're in the same segment. So angle $BDC$ is $24^\\circ$.",
+        show: S => { S.pulsePts = new Set(); S.pulseSegs = new Set(); delete S.label.BDC; S.pulse = new Set(["BDC"]) },
+      },
+      {
+        say: "So angle $ADC$ is $90^\\circ + 24^\\circ$.",
+        tex: `\\angle ADC = 90^\\circ + 24^\\circ = ${c(GREEN, deg(114))}`,
+        // only the answer keeps its number; the two parts keep their arcs
+        show: S => { S.label.ADB = ""; S.label.BDC = ""; uncover(S, "ADC") },
+      },
+    ],
   },
 
   // ── 9. Build to order ──
@@ -1054,6 +1224,48 @@ export const BEATS: Beat[] = [
     restart: true,
   },
 ]
+
+// ── worked walkthroughs used by more than one question ───────────────────
+
+/** Diameter AB, angle at A given, angle at B wanted. */
+function semiWalk(atA: number, answer: number): WalkStep[] {
+  return [
+    {
+      say: "$AB$ is a diameter. So the angle at $P$ is $90^\\circ$.",
+      tex: "\\angle APB = 90^\\circ",
+      show: S => { reveal(S, "tP"); S.fixed.tP = NEUTRAL; S.tints = [{ a: "A", b: "B", side: "P", color: BLUE }]; S.vis.tints.t = 1; S.pulse = new Set(["tP"]) },
+    },
+    {
+      say: "A triangle's angles add up to $180^\\circ$.",
+      tex: `${c(BLUE, deg(atA))} + ${Q} + 90^\\circ = ${c(GREEN, deg(180))}`,
+      show: S => { S.vis.tints.t = 0; S.fills = [{ pts: ["A", "B", "P"], color: BLUE }]; S.pulse = new Set(["tA", "tB", "tP"]) },
+    },
+    {
+      say: `So the missing angle is $${answer}^\\circ$.`,
+      tex: `${Q} = 180^\\circ - ${deg(atA)} - 90^\\circ = ${c(GREEN, deg(answer))}`,
+      show: S => { S.fills = []; uncover(S, "tB") },
+    },
+  ]
+}
+
+/** Two angles in the same segment on chord AB: the first given, the second wanted. */
+function segmentWalk(V: string, W: string, v: number): WalkStep[] {
+  return [
+    {
+      say: `The angles at $${V}$ and $${W}$ are both made from $A$ and $B$.`,
+      show: S => madeFrom(S, ["A", "B"], [`${V}A`, `${V}B`, `${W}A`, `${W}B`]),
+    },
+    {
+      say: "They're in the same segment.",
+      show: S => { S.pulsePts = new Set(); S.pulseSegs = new Set(); S.tints = [{ a: "A", b: "B", side: V, color: BLUE }]; S.vis.tints.t = 1 },
+    },
+    {
+      say: `Angles in the same segment are equal. So the angle at $${W}$ is $${v}^\\circ$.`,
+      tex: `${Q} = ${c(BLUE, deg(v))}`,
+      show: S => uncover(S, W),
+    },
+  ]
+}
 
 // ── boards used by several beats ─────────────────────────────────────────
 

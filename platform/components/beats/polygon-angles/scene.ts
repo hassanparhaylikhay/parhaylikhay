@@ -153,6 +153,8 @@ export interface Scene {
   overlay: Overlay | null
 
   input: InputState | null
+  /** a worked step shown on the bottom line during "Show me how" */
+  walkTex: string | null
   termPos: Vec[]
   sumShownAt: number
 
@@ -174,7 +176,7 @@ export function createScene(): Scene {
     walk: null, dial: { wedges: [], mode: "none" },
     dialPulse: null, dialCount: false, lineAt: null, centreText: null, triPulse: false,
     table: null, lineTex: null, lineWords: null, lineScale: 1, names: null, stepper: null, overlay: null,
-    input: null, termPos: [], sumShownAt: 0,
+    input: null, walkTex: null, termPos: [], sumShownAt: 0,
     flashGood: 0, note: null,
   }
 }
@@ -530,6 +532,7 @@ export function resetBeat(S: Scene) {
   S.stepper = null
   S.overlay = null
   S.input = null
+  S.walkTex = null
   S.table = null
   S.note = null
   S.pending = null

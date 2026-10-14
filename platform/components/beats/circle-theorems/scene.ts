@@ -26,7 +26,7 @@ export const NEUTRAL = "#c9c7bf"
 
 export type Mode =
   | "none" | "place" | "compass" | "slide" | "tapPoint" | "join" | "drawDiam" | "drawChord" | "drawThrough"
-  | "tapAngle" | "tapLine" | "tapRegion"
+  | "tapAngle" | "tapLine" | "tapRegion" | "tapPts"
 export type VisKey = "board" | "arcs" | "values" | "letters" | "line" | "keypad" | "hint" | "tints" | "ticks" | "half"
 const VIS_KEYS: VisKey[] = ["board", "arcs", "values", "letters", "line", "keypad", "hint", "tints", "ticks", "half"]
 
@@ -104,7 +104,10 @@ export interface Scene {
   showPts: string[]
   letters: Set<string>
   movable: string[]
+  /** points that may pass every other point */
   crossOK: Set<string>
+  /** points that others may pass (P and Q pass each other; A and B, the chord ends, stay walls) */
+  passable: Set<string>
   diamLock: boolean
   snaps: { name: string; at: number[] } | null
   lockOnSnap: boolean
@@ -133,6 +136,12 @@ export interface Scene {
   pulseSegs: Set<string>
   segColour: Record<string, string>
   pulseCircle: boolean
+  /** points that glow: the two points an angle is made from */
+  pulsePts: Set<string>
+  /** which way the letter O sits from the centre, kept steady between frames */
+  oDir: number | null
+  /** a worked step shown on the bottom line during "Show me how" */
+  walkTex: string | null
   ticks: string[]
   tints: Tint[]
   /** shaded triangles, by their corner names */
@@ -149,6 +158,7 @@ export interface Scene {
   onTap: ((S: Scene, id: string) => void) | null
   onTapLine: ((S: Scene, id: string) => void) | null
   onTapRegion: ((S: Scene, side: "minor" | "major") => void) | null
+  onTapPt: ((S: Scene, name: string) => void) | null
   regionChord: [string, string] | null
   got: Set<string>
   tapRing: Vec | null
@@ -173,12 +183,12 @@ export function createScene(): Scene {
   return {
     w: 0, h: 0, time: 0, beatStart: 0, mode: "none",
     O: null, OD: null, Rwant: 0, R: 0, RD: 0, drawn: false, sweep: null, compass: null,
-    pts: {}, ptsD: {}, derived: {}, showPts: [], letters: new Set(), movable: [], crossOK: new Set(), diamLock: false,
+    pts: {}, ptsD: {}, derived: {}, showPts: [], letters: new Set(), movable: [], crossOK: new Set(), passable: new Set(), diamLock: false,
     snaps: null, lockOnSnap: true, arcLimit: null, proofLimit: false, tapName: null,
     segs: [], showSegs: "all", joinNeed: [], joinHint: "", stroke: null, fading: [], drewOnce: false,
-    vis, angles: [], show: "all", label: {}, fixed: {}, pulse: new Set(), pulseSegs: new Set(), segColour: {}, pulseCircle: false,
+    vis, angles: [], show: "all", label: {}, fixed: {}, pulse: new Set(), pulseSegs: new Set(), segColour: {}, pulseCircle: false, pulsePts: new Set(), oDir: null, walkTex: null,
     ticks: [], tints: [], fills: [], half: null, fly: {}, lineTex: null, lineFn: null, chips: [],
-    tapIds: null, onTap: null, onTapLine: null, onTapRegion: null, regionChord: null, got: new Set(), tapRing: null,
+    tapIds: null, onTap: null, onTapLine: null, onTapRegion: null, onTapPt: null, regionChord: null, got: new Set(), tapRing: null,
     input: null, drag: null, touch: false, moved: 0, movedBy: {}, releases: 0, snapped: false, locked: false,
     touched: null, flashGood: 0, note: null,
   }
@@ -389,6 +399,7 @@ export function resetBeat(S: Scene) {
   S.locked = false
   S.movable = []
   S.crossOK = new Set()
+  S.passable = new Set()
   S.diamLock = false
   S.snaps = null
   S.lockOnSnap = true
@@ -406,6 +417,8 @@ export function resetBeat(S: Scene) {
   S.pulseSegs = new Set()
   S.segColour = {}
   S.pulseCircle = false
+  S.pulsePts = new Set()
+  S.walkTex = null
   S.ticks = []
   S.tints = []
   S.fills = []
@@ -418,6 +431,7 @@ export function resetBeat(S: Scene) {
   S.onTap = null
   S.onTapLine = null
   S.onTapRegion = null
+  S.onTapPt = null
   S.regionChord = null
   S.got = new Set()
   S.tapRing = null
@@ -529,6 +543,16 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     if (best && bd < (S.touch ? 30 : 20)) S.onTapLine?.(S, best)
     return false
   }
+  if (S.mode === "tapPts") {
+    let best: string | null = null, bd = Infinity
+    for (const n of S.showPts) {
+      if (S.derived[n]) continue
+      const d = dist(p, posOf(S, n))
+      if (d < bd) { bd = d; best = n }
+    }
+    if (best && bd < tol(S) + 4) S.onTapPt?.(S, best)
+    return false
+  }
   if (S.mode === "tapRegion" && S.OD && S.regionChord) {
     if (dist(p, S.OD) > S.RD) return false
     const [X, Y] = S.regionChord
@@ -542,7 +566,7 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
   return false
 }
 
-function distToSeg(p: Vec, a: Vec, b: Vec) {
+export function distToSeg(p: Vec, a: Vec, b: Vec) {
   const ab = sub(b, a)
   const t = clamp(dot(sub(p, a), ab) / Math.max(1e-9, dot(ab, ab)), 0, 1)
   return dist(p, add(a, mul(ab, t)))
@@ -602,8 +626,8 @@ function tryMove(S: Scene, name: string, a: number) {
   if (partner) moving.push({ n: partner, from: S.pts[partner] })
   const others = S.showPts.filter(n => !moving.some(m => m.n === n) && !S.derived[n])
   for (const m of moving) {
-    const cross = S.crossOK.has(m.n)
     for (const o of others) {
+      const cross = S.crossOK.has(m.n) || S.passable.has(o)
       const rel = turn(m.from, S.pts[o])
       const end = Math.abs(turn(m.from + d, S.pts[o]))
       if (end < (cross ? 5 : 10) * RAD) return

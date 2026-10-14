@@ -595,6 +595,12 @@ function BottomLine({ S, L }: { S: Scene; L: Layout }) {
     </div>
   ) : null
 
+  // "Show me how": the worked step's line, never the student's wrong answer
+  if (S.walkTex !== null) {
+    if (S.table && S.vis.table.v > 0.01) return <Table S={S} L={L} />
+    return S.walkTex ? <div key={S.walkTex} className={`${styles.line} ${styles.walkLine}`} style={style}><Tex tex={S.walkTex} /></div> : null
+  }
+
   if (S.table && S.vis.table.v > 0.01) return <><Table S={S} L={L} />{hintLine}</>
 
   if (inp) {
@@ -676,7 +682,7 @@ function Table({ S, L }: { S: Scene; L: Layout }) {
           <span style={head}>triangles</span>
           {T.cols.map(([, t], k) => (
             <span key={k} style={{ ...cell, opacity: visible(k), color: t === null ? PINK : "#f0eeea", display: "flex", justifyContent: "center" }}>
-              {t === null && S.input
+              {t === null && S.input && S.walkTex === null
                 ? <span key={S.input.wrongAt} style={{ fontSize: "0.85em" }}><AnswerBox S={S} /></span>
                 : <Tex tex={t === null ? "?" : `${t}`} />}
             </span>

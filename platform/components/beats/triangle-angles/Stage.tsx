@@ -388,6 +388,11 @@ function BottomLine({ S, L }: { S: Scene; L: Layout }) {
   const top = L.lineY - L.lineSize * 0.85
   const style: React.CSSProperties = { top, height: L.lineSize * 1.7, opacity: lv, ["--line-size" as string]: `${L.lineSize}px` }
 
+  // "Show me how": the worked step's line, never the student's wrong answer
+  if (S.walkTex !== null) {
+    return S.walkTex ? <div key={S.walkTex} className={`${styles.line} ${styles.walkLine}`} style={style}><Tex tex={S.walkTex} /></div> : null
+  }
+
   if (S.input) {
     const inp = S.input
     const cls = [styles.box, inp.state === "wrong" ? styles.boxWrong : "", inp.state === "right" ? styles.boxRight : ""].join(" ")

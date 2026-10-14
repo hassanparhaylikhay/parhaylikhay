@@ -11,6 +11,7 @@
  */
 
 import { anglesOf, thinness, diameter } from "../geometry"
+import type { WalkStep } from "../walk"
 import {
   type Scene, type EqPart,
   BLUE, ORANGE, PINK, GREEN, GREY,
@@ -38,6 +39,8 @@ export interface Beat {
   /** Seconds of play before a playing beat offers to move on. */
   minPlay?: number
   restart?: boolean
+  /** "Show me how": the worked solution, one step at a time, for a student who is stuck */
+  walk?: WalkStep<Scene>[]
 }
 
 const DEFAULT = [BLUE, ORANGE, PINK]
@@ -124,6 +127,16 @@ function targets(S: Scene, T: number[]) {
 }
 
 const inputRight = (S: Scene) => S.input?.state === "right"
+
+/** A walkthrough for "two angles known, find the third". */
+function thirdWalk(a: number, b: number, ca: string, cb: string, unknown: number): WalkStep<Scene>[] {
+  const ans = 180 - a - b
+  return [
+    { say: "A triangle's angles always add up to $180^\\circ$.", tex: `${c(ca, deg(a))} + ${c(cb, deg(b))} + ${c(PINK, "?")} = ${c(GREEN, deg(180))}`, show: S => { S.vis.helpFan.t = 1; S.pulse = [true, true, true] } },
+    { say: `The two you know make $${a + b}^\\circ$.`, tex: `${c(ca, deg(a))} + ${c(cb, deg(b))} = ${deg(a + b)}` },
+    { say: `So the missing angle is $${ans}^\\circ$.`, tex: `${c(PINK, "?")} = 180^\\circ - ${deg(a + b)} = ${c(GREEN, deg(ans))}`, show: S => { S.label[unknown] = deg(ans); S.pulse = [0, 1, 2].map(i => i === unknown) } },
+  ]
+}
 
 // ── the beats ────────────────────────────────────────────────────────────
 
@@ -385,6 +398,7 @@ export const BEATS: Beat[] = [
       hints: [],
     }),
     done: inputRight,
+    walk: thirdWalk(50, 60, BLUE, ORANGE, 2),
   },
   {
     id: "p2",
@@ -394,6 +408,7 @@ export const BEATS: Beat[] = [
       hints: [],
     }),
     done: inputRight,
+    walk: thirdWalk(40, 75, BLUE, ORANGE, 1),
   },
   watch("p3-square", "This square means $90^\\circ$.", S => {
     resetBeat(S); untear(S)
@@ -411,6 +426,7 @@ export const BEATS: Beat[] = [
       hints: [],
     }),
     done: inputRight,
+    walk: thirdWalk(90, 35, BLUE, ORANGE, 2),
   },
   {
     id: "p4",
@@ -420,6 +436,11 @@ export const BEATS: Beat[] = [
       hints: [],
     }),
     done: inputRight,
+    walk: [
+      { say: "Two equal sides mean two equal angles.", show: S => { S.pulse = [true, true, false] } },
+      { say: "Together they make what's left of $180^\\circ$.", tex: `${c(PINK, "?")} + ${c(PINK, "?")} = 180^\\circ - ${c(BLUE, deg(40))} = ${deg(140)}`, show: S => { S.vis.helpFan.t = 1 } },
+      { say: "So each one is half of $140^\\circ$: $70^\\circ$.", tex: `${c(PINK, "?")} = 140^\\circ \\div 2 = ${c(GREEN, deg(70))}`, show: S => { S.label[0] = deg(70); S.label[1] = deg(70) } },
+    ],
   },
   {
     id: "p5-tap",
@@ -461,6 +482,7 @@ export const BEATS: Beat[] = [
       hints: [],
     }),
     done: inputRight,
+    walk: thirdWalk(65, 65, ORANGE, ORANGE, 2),
   },
 
   // Building triangles to order.

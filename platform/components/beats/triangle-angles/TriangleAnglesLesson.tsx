@@ -6,6 +6,7 @@ import styles from "../beats.module.css"
 import Shell, { Keypad } from "../Shell"
 import Stage from "./Stage"
 import { BEATS } from "./beats"
+import { offerShowMe, applyStep, endWalk, SHOW_ME_LABEL, TYPE_IT_IN, STEP_READ } from "../walk"
 import {
   type Scene, createScene, layout, step, resize, pointerDown, pointerMove, pointerUp, typeKey,
 } from "./scene"
@@ -21,13 +22,16 @@ import {
 export default function TriangleAnglesLesson({ closeHref }: { closeHref: string }) {
   const sceneRef = useRef<Scene | null>(null)
   if (sceneRef.current === null) sceneRef.current = createScene()
-  const [view, setView] = useState<{ S: Scene; idx: number; frame: number; doneAt: number | null } | null>(null)
+  const [view, setView] = useState<{ S: Scene; idx: number; frame: number; doneAt: number | null; walk: number; walkSince: number } | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const idxRef = useRef(0)
   const doneFired = useRef(false)
   // When a playing beat's goal was first met (scene time), or null.
   const doneAt = useRef<number | null>(null)
   const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // "Show me how": -1 before it starts, then the step on screen, then the number of steps once done
+  const walkAt = useRef(-1)
+  const walkSince = useRef(0)
 
   const go = useCallback((n: number) => {
     const S = sceneRef.current!
@@ -36,6 +40,7 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
     idxRef.current = next
     doneFired.current = false
     doneAt.current = null
+    walkAt.current = -1
     S.beatStart = S.time
     BEATS[next].enter(S)
   }, [])
@@ -58,7 +63,8 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
     // Handle for scripted play-throughs: always in development, and with
     // ?debug in production.
     if (process.env.NODE_ENV !== "production" || new URLSearchParams(window.location.search).has("debug")) {
-      (window as unknown as { __beatScene?: Scene }).__beatScene = S
+      (window as unknown as { __beatScene?: Scene }).__beatScene = S;
+      (window as unknown as { __beatApi?: unknown }).__beatApi = { beats: BEATS.map(b => ({ id: b.id, walk: b.walk?.length ?? 0 })) }
     }
     let raf = 0
     let last = performance.now()
@@ -90,7 +96,7 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
         }
       }
       frame = (frame + 1) % 1_000_000
-      setView({ S, idx: idxRef.current, frame, doneAt: doneAt.current })
+      setView({ S, idx: idxRef.current, frame, doneAt: doneAt.current, walk: walkAt.current, walkSince: walkSince.current })
       raf = requestAnimationFrame(loop)
     }
     raf = requestAnimationFrame(loop)
@@ -100,15 +106,37 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
     }
   }, [go])
 
-  const ctaReady = useCallback(() => {
-    const S = sceneRef.current!
-    return showsCta(BEATS[idxRef.current], S, doneAt.current)
-  }, [])
+  const ctaNow = useCallback(
+    () => ctaFor(BEATS[idxRef.current], sceneRef.current!, doneAt.current, walkAt.current, walkSince.current),
+    [],
+  )
+
+  const ctaReady = useCallback(() => ctaNow() !== null, [ctaNow])
 
   const onCta = useCallback(() => {
+    const S = sceneRef.current!
     const b = BEATS[idxRef.current]
+    const c = ctaNow()
+    const steps = b.walk
+    if (c?.act === "showMe" && steps) {
+      // start from the question as it was asked: hints from wrong answers go,
+      // and each step then adds one thing
+      b.enter(S)
+      walkAt.current = 0
+      walkSince.current = S.time
+      applyStep(S, steps[0])
+      return
+    }
+    if (c?.act === "step" && steps) {
+      const nx = walkAt.current + 1
+      walkAt.current = nx
+      walkSince.current = S.time
+      if (nx < steps.length) applyStep(S, steps[nx])
+      else endWalk(S)
+      return
+    }
     go(b.restart ? 0 : idxRef.current + 1)
-  }, [go])
+  }, [go, ctaNow])
 
   // Keyboard: digits for answers, Enter or the right arrow to continue,
   // the left arrow to step back.
@@ -135,16 +163,20 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
   const S = view?.S
   const beat = BEATS[view?.idx ?? 0]
   const L = S ? layout(S) : null
-  const ctaShown = !!S && showsCta(beat, S, view?.doneAt ?? null)
+  const w = view?.walk ?? -1
+  const cta = S ? ctaFor(beat, S, view?.doneAt ?? null, w, view?.walkSince ?? 0) : null
+  const steps = beat.walk
+  const walking = !!steps && w >= 0
+  const phrase = !S ? "" : walking && w < steps.length ? steps[w].say : walking ? TYPE_IT_IN : beat.say
 
   return (
     <Shell
       progress={(view?.idx ?? 0) / (BEATS.length - 1)}
-      phrase={S ? beat.say : ""}
-      phraseKey={S ? beat.id : "-"}
+      phrase={phrase}
+      phraseKey={S ? `${beat.id}${walking ? `~${w}` : ""}` : "-"}
       note={S?.note?.text ?? null}
       noteKey={String(S?.note?.until ?? 0)}
-      cta={ctaShown ? (beat.free ? "" : beat.cta ?? "") : null}
+      cta={cta ? cta.label : null}
       onCta={onCta}
       closeHref={closeHref}
     >
@@ -166,6 +198,14 @@ export default function TriangleAnglesLesson({ closeHref }: { closeHref: string 
       )}
     </Shell>
   )
+}
+
+/** What the button at the bottom does right now, if it is up. */
+function ctaFor(b: (typeof BEATS)[number], S: Scene, doneAt: number | null, w: number, walkSince: number): { label: string; act: "next" | "showMe" | "step" } | null {
+  const steps = b.walk
+  if (steps && w >= 0 && w < steps.length) return S.time - walkSince >= STEP_READ ? { label: "", act: "step" } : null
+  if (offerShowMe(S, steps, w)) return { label: SHOW_ME_LABEL, act: "showMe" }
+  return showsCta(b, S, doneAt) ? { label: b.free ? "" : b.cta ?? "", act: "next" } : null
 }
 
 /**

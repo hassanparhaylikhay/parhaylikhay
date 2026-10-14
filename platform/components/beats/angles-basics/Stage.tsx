@@ -492,6 +492,10 @@ function BottomLine({ S, L }: { S: Scene; L: Layout }) {
   const inp = S.input
   const hint = inp && inp.hints.length && inp.tries > 0 ? inp.hints[Math.min(inp.hints.length - 1, inp.tries - 1)] : null
   const style: React.CSSProperties = { top: L.lineY - L.lineSize * 0.85, height: L.lineSize * 1.7, opacity: lv, ["--line-size" as string]: `${L.lineSize}px` }
+  if (S.walkTex !== null) {
+    if (!S.walkTex) return null
+    return <div key={S.walkTex} className={`${styles.line} ${styles.walkLine}`} style={style}><Tex tex={S.walkTex} /></div>
+  }
   return (
     <>
       {lv > 0.01 && inp && (
