@@ -124,3 +124,27 @@ export function Stepper({ top, n, onStep }: { top: number; n: number; onStep: (d
     </div>
   )
 }
+
+/** A few words to pick from, for questions whose answer is a name. */
+export function Choices({ top, options, picked, state, wrongAt, onPick }: {
+  top: number
+  options: string[]
+  picked: number | null
+  state: "idle" | "wrong" | "right"
+  wrongAt: number
+  onPick: (k: number) => void
+}) {
+  return (
+    <div className={styles.choices} style={{ top }}>
+      {options.map((o, k) => {
+        const mark = picked === k ? (state === "right" ? styles.choiceRight : state === "wrong" ? styles.choiceWrong : "") : ""
+        return (
+          <button key={picked === k ? `${k}-${wrongAt}` : k} type="button" className={`${styles.choice} ${mark}`}
+            onPointerDown={e => { e.preventDefault(); onPick(k) }}>
+            {o}
+          </button>
+        )
+      })}
+    </div>
+  )
+}

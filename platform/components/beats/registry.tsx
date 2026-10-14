@@ -1,6 +1,7 @@
 import type { ComponentType } from "react"
 import TriangleAnglesLesson from "./triangle-angles/TriangleAnglesLesson"
 import PolygonAnglesLesson from "./polygon-angles/PolygonAnglesLesson"
+import AnglesLesson from "./angles-basics/AnglesLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -13,6 +14,12 @@ export const BEAT_LESSONS: Record<string, {
   topicHref: string
   Lesson: ComponentType<{ closeHref: string }>
 }> = {
+  angles: {
+    title: "Angles",
+    description: "Turn a line to see what an angle is, then find the rules for straight lines, crossing lines and parallel lines.",
+    topicHref: "/dashboard/maths/04/06",
+    Lesson: AnglesLesson,
+  },
   "angles-in-a-triangle": {
     title: "Angles in a triangle",
     description: "Draw a triangle, play with it, and find out why its angles always add up to 180°.",
