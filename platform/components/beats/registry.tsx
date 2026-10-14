@@ -2,6 +2,7 @@ import type { ComponentType } from "react"
 import TriangleAnglesLesson from "./triangle-angles/TriangleAnglesLesson"
 import PolygonAnglesLesson from "./polygon-angles/PolygonAnglesLesson"
 import AnglesLesson from "./angles-basics/AnglesLesson"
+import CircleTheoremsLesson from "./circle-theorems/CircleTheoremsLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -19,6 +20,12 @@ export const BEAT_LESSONS: Record<string, {
     description: "Turn a line to see what an angle is, then find the rules for straight lines, crossing lines and parallel lines.",
     topicHref: "/dashboard/maths/04/06",
     Lesson: AnglesLesson,
+  },
+  "circle-theorems-1": {
+    title: "Circle theorems I",
+    description: "Draw a circle, find that the angle in a semicircle is always 90°, and see why the angle at the centre is twice the angle at the circumference.",
+    topicHref: "/dashboard/maths/04/07",
+    Lesson: CircleTheoremsLesson,
   },
   "angles-in-a-triangle": {
     title: "Angles in a triangle",
