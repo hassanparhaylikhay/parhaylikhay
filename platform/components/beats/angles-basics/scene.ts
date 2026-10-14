@@ -159,6 +159,8 @@ export interface Scene {
   choices: Choices | null
 
   flashGood: number
+  /** the line or ray the student last drew or moved: the only one a success flash lights */
+  touched: { kind: "line" | "ray"; i: number } | null
   note: { text: string; until: number; tone: "wrong" | "calm" } | null
 }
 
@@ -173,7 +175,7 @@ export function createScene(): Scene {
     drag: null, touch: false, moved: 0, turned: 0, releases: 0, snapped: false, locked: false,
     vis, show: "all", label: {}, colourMode: "palette", fixed: {}, pulse: new Set(), sel: null, onTap: null, tapIds: null,
     sum: null, sumShownAt: 0, termPos: {}, halfIds: null, fullAt: false, shape: null, got: new Set(), tween: null, slide: null, meet: false, letters: false,
-    lineTex: null, lineWords: null, input: null, choices: null, flashGood: 0, note: null,
+    lineTex: null, lineWords: null, input: null, choices: null, flashGood: 0, touched: null, note: null,
   }
 }
 
@@ -572,6 +574,7 @@ export function resetBeat(S: Scene) {
   S.shape = null
   S.got = new Set()
   S.tween = null
+  S.touched = null
   S.slide = null
   S.meet = false
   S.letters = false
@@ -719,6 +722,7 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     })
     if (best < 0 || bd > R) return false
     S.drag = { kind: "ray", i: best, last: 0, raw: 0 }
+    S.touched = { kind: "ray", i: best }
     return true
   }
   if (S.mode === "rotLine") {
@@ -726,6 +730,7 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     const h = lineHandle(S, L, S.rotLine)
     if (!h || dist(p, h) > R + 6) return false
     S.drag = { kind: "line", i: S.rotLine, last: 0, raw: 0 }
+    S.touched = { kind: "line", i: S.rotLine }
     return true
   }
   if (S.mode === "addRay" && S.board === "point" && S.rays.length) {
@@ -738,6 +743,7 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     if (tooClose) { say(S, "Tap a gap between the lines.", "calm", 2); return false }
     S.rays = [...S.rays, { from: c, a, len: S.rays[0].len }]
     S.raysD = [...S.raysD, { from: c, a, len: 4 }]
+    S.touched = { kind: "ray", i: S.rays.length - 1 }
     S.flashGood = 0.6
     return false
   }
@@ -881,6 +887,7 @@ function endStroke(S: Scene) {
   if (g === "line" || (g === "twoCross" && S.lines.length === 0) || (g === "parallel" && S.lines.length === 0)) {
     S.lines = [{ p: mid, a }]
     S.linesD = [{ p: mid, a }]
+    S.touched = { kind: "line", i: 0 }
     S.flashGood = 0.6
     return
   }
@@ -892,6 +899,7 @@ function endStroke(S: Scene) {
     const ray = { from: foot, a: ra, len: clamp(dist(foot, st.to), 80, L.arm * 1.2) }
     S.rays = [ray]
     S.raysD = [{ ...ray }]
+    S.touched = { kind: "ray", i: 0 }
     S.flashGood = 0.6
     return
   }
@@ -902,6 +910,7 @@ function endStroke(S: Scene) {
     if (!X || !inside || lineGap(a, S.lines[0].a) < 20 * RAD) { fade(); say(S, "Make it cross the first line."); return }
     S.lines = [S.lines[0], { p: X, a }]
     S.linesD = [S.linesD[0], { p: X, a }]
+    S.touched = { kind: "line", i: 1 }
     S.flashGood = 0.8
     return
   }
@@ -912,6 +921,7 @@ function endStroke(S: Scene) {
       if (gap < 50 * screenScale(S)) { fade(); say(S, "Leave a gap between them."); return }
       S.lines = [l0, { p: mid, a: l0.a }]
       S.linesD = [S.linesD[0], { p: mid, a }]
+      S.touched = { kind: "line", i: 1 }
       S.flashGood = 1
       return
     }
@@ -930,6 +940,7 @@ function endStroke(S: Scene) {
     const c = lerpV(X1!, X2!, 0.5)
     S.lines = [S.lines[0], S.lines[1], { p: c, a }]
     S.linesD = [S.linesD[0], S.linesD[1], { p: c, a }]
+    S.touched = { kind: "line", i: 2 }
     S.flashGood = 1
     return
   }

@@ -74,12 +74,15 @@ function BoardLayer({ S, L }: { S: Scene; L: Layout }) {
     for (const k of ["P", "R", "S"] as const) out.push(seg(g.Q, g.pts[k], `n${k}`))
     out.push(<circle key="Q" cx={g.Q[0]} cy={g.Q[1]} r={4} fill={CHALK} />)
   } else {
+    // only the line or ray the student drew or moved lights up: a right
+    // answer typed or tapped elsewhere must not light an unrelated line
+    const lit = (kind: "line" | "ray", i: number) => S.flashGood > 0 && S.touched?.kind === kind && S.touched.i === i
     S.linesD.forEach((l, i) => {
       const s = clipLine(l, L.board)
-      if (s) out.push(seg(s[0], s[1], `l${i}`, i === S.lines.length - 1 && S.flashGood > 0 ? { stroke, strokeOpacity: sop } : {}))
+      if (s) out.push(seg(s[0], s[1], `l${i}`, lit("line", i) ? { stroke, strokeOpacity: sop } : {}))
     })
     S.raysD.forEach((r, i) => {
-      out.push(seg(r.from, add(r.from, mul(dirOf(r.a), r.len)), `r${i}`))
+      out.push(seg(r.from, add(r.from, mul(dirOf(r.a), r.len)), `r${i}`, lit("ray", i) ? { stroke, strokeOpacity: sop } : {}))
     })
     if (S.raysD.length) out.push(<circle key="foot" cx={S.raysD[0].from[0]} cy={S.raysD[0].from[1]} r={4} fill={CHALK} />)
   }
