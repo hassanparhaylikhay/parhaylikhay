@@ -26,8 +26,7 @@ export function Tex({ tex, className, style }: { tex: string; className?: string
 
 /**
  * A phrase of plain words with $...$ maths inside it. A word the student
- * should learn is written *like this*: it shows in yellow, and a line draws
- * in under it.
+ * should learn is written *like this*: it shows in yellow.
  */
 export function Phrase({ text }: { text: string }) {
   const parts = text.split(/(\$[^$]+\$)/g).filter(Boolean)

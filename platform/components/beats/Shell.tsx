@@ -36,7 +36,7 @@ export default function Shell({
   onCta: () => void
   closeHref: string
   /** a section title over the board (see chapter.ts) */
-  card?: { text: string; key: string; colour: string; leaving: boolean } | null
+  card?: { text: string; key: string; leaving: boolean } | null
   onSkipCard?: () => void
   children: React.ReactNode
 }) {
@@ -66,7 +66,6 @@ export default function Shell({
           onPointerDown={card.leaving ? undefined : e => { e.preventDefault(); onSkipCard?.() }}>
           <div className={styles.cardInner}>
             <div className={styles.cardTitle}><Phrase text={card.text} /></div>
-            <div className={styles.cardRule} style={{ background: card.colour }} />
           </div>
         </div>
       )}

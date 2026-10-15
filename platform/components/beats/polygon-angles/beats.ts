@@ -365,7 +365,7 @@ export const BEATS: Beat[] = [
     },
     done: S => (S.P?.length ?? 0) >= 5,
   },
-  watch("pentagon", "It has five sides. It is called a *pentagon*.", S => {
+  watch("pentagon", "It has five sides. It is called a pentagon.", S => {
     base(S); ensureShape(S, 5, PENT); clearLines(S); colours(S); show(S, ["shape", "nodes"]); relax(S)
   }),
   {
@@ -401,7 +401,7 @@ export const BEATS: Beat[] = [
     },
     done: S => (S.P?.length ?? 0) >= 6,
   },
-  watch("hexagon", "It has six sides. It is called a *hexagon*.", S => {
+  watch("hexagon", "It has six sides. It is called a hexagon.", S => {
     base(S); ensureShape(S, 6); clearLines(S); colours(S); show(S, ["shape", "nodes"]); relax(S)
   }),
   {

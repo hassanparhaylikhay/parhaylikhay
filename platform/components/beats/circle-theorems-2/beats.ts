@@ -364,7 +364,7 @@ export const BEATS: Beat[] = [
     },
     done: movedAll(150), free: true, minPlay: 8,
   },
-  watch("opposite", "$A$ and $C$ are *opposite angles*.", S => {
+  watch("opposite", "$A$ and $C$ are opposite angles.", S => {
     quadBoard(S, "AC")
     S.pulse = new Set(["A", "C"])
     look(S, ["letters", "arcs", "values"])

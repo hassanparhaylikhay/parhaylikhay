@@ -255,7 +255,7 @@ export const BEATS: Beat[] = [
     done: S => S.drawn,
     advanceAfter: 900,
   },
-  watch("centre", "This point is the *centre*, $O$.", S => {
+  watch("centre", "This point is the centre, $O$.", S => {
     base(S); S.showPts = []; S.segs = []
     look(S, ["letters"])
   }),
@@ -594,7 +594,7 @@ export const BEATS: Beat[] = [
     },
     done: movedBy("Q", 80), free: true, minPlay: 6,
   },
-  watch("same-seg", "$P$ and $Q$ are in the *same segment*.", S => {
+  watch("same-seg", "$P$ and $Q$ are in the same segment.", S => {
     base(S, ["A", "B", "P", "Q", "O"]); ensureChord(S); placeQ(S)
     S.showPts = ["A", "B", "P", "Q"]
     setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"], ["Q", "A"], ["Q", "B"]])

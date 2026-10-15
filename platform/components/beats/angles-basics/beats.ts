@@ -289,7 +289,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "how-far",
-    say: "How far it turns is the *angle*.",
+    say: "How far it turns is the angle.",
     enter: S => { resetBeat(S); turning(S); look(S, ["arcs", "values"]) },
     cta: "", ctaAfter: 2,
   },
