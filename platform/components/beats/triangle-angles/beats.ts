@@ -22,6 +22,8 @@ import {
 export interface Beat {
   id: string
   /** The one phrase on screen. $...$ is KaTeX. */
+  /** This beat starts a new part of the lesson: its title comes up first (chapter.ts). */
+  chapter?: string
   say: string
   enter: (S: Scene) => void
   /** A doing beat finishes itself when this turns true. */
@@ -295,7 +297,7 @@ export const BEATS: Beat[] = [
   watch("iso-marks", "These marks mean the sides are equal.", S => {
     resetBeat(S); ensureIso(S); S.tickKind = "iso"; show(S, ["tri", "nodes", "ticks"])
   }, 1.8),
-  watch("iso-name", "It is called an isosceles triangle.", S => {
+  watch("iso-name", "It is called an *isosceles* triangle.", S => {
     resetBeat(S); ensureIso(S); S.tickKind = "iso"; show(S, ["tri", "nodes", "ticks"])
   }, 1.8),
   watch("iso-angles", "Look at these two angles.", S => {
@@ -342,7 +344,7 @@ export const BEATS: Beat[] = [
     },
     done: S => S.locked,
   },
-  watch("equi-name", "This is an equilateral triangle.", S => {
+  watch("equi-name", "This is an *equilateral* triangle.", S => {
     resetBeat(S); ensureEqui(S); S.tickKind = "equi"; show(S, ["tri", "nodes", "ticks"])
   }, 1.8),
   watch("equi-60", "Every angle is $60^\\circ$.", S => {
@@ -368,7 +370,7 @@ export const BEATS: Beat[] = [
     free: true,
     minPlay: 7,
   },
-  watch("equi-stays", "It stays $60^\\circ$ every time.", S => {
+  watch("equi-stays", "Each angle stays $60^\\circ$.", S => {
     resetBeat(S); ensureEqui(S); S.tickKind = "equi"; colours(S, [BLUE, BLUE, BLUE])
     show(S, [...ALL, "ticks"])
   }, 1.8),
@@ -430,7 +432,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "p4",
-    say: "Two equal sides. Find the missing angles.",
+    say: "Two sides are equal. Find the missing angles.",
     enter: S => practice(S, {
       angles: [70, 70, 40], given: [2], unknown: [0, 1], givenColours: [BLUE], iso: true,
       hints: [],
@@ -439,7 +441,7 @@ export const BEATS: Beat[] = [
     walk: [
       { say: "Two equal sides mean two equal angles.", show: S => { S.pulse = [true, true, false] } },
       { say: "Together they make what's left of $180^\\circ$.", tex: `${c(PINK, "?")} + ${c(PINK, "?")} = 180^\\circ - ${c(BLUE, deg(40))} = ${deg(140)}`, show: S => { S.vis.helpFan.t = 1 } },
-      { say: "So each one is half of $140^\\circ$: $70^\\circ$.", tex: `${c(PINK, "?")} = 140^\\circ \\div 2 = ${c(GREEN, deg(70))}`, show: S => { S.label[0] = deg(70); S.label[1] = deg(70) } },
+      { say: "So each one is half of $140^\\circ$, which is $70^\\circ$.", tex: `${c(PINK, "?")} = 140^\\circ \\div 2 = ${c(GREEN, deg(70))}`, show: S => { S.label[0] = deg(70); S.label[1] = deg(70) } },
     ],
   },
   {
@@ -530,7 +532,7 @@ export const BEATS: Beat[] = [
   }, 2.6),
   {
     id: "end",
-    say: "Move it however you like. It stays $180^\\circ$.",
+    say: "Move it however you like. The angles still add up to $180^\\circ$.",
     enter: S => { resetBeat(S); ensureTriangle(S); colours(S, DEFAULT); free(S); show(S, [...ALL, "sum"]); refit(S) },
     cta: "Start again",
     ctaAfter: 4,
@@ -542,4 +544,19 @@ function isoColours(S: Scene) {
   const col = [ORANGE, ORANGE, ORANGE]
   col[S.apex] = BLUE
   colours(S, col)
+}
+
+// ── the parts of the lesson: each title comes up before its first beat ──
+const PARTS: [string, string][] = [
+  ["draw", "Angles in a triangle"],
+  ["tear", "Why they add up to $180^\\circ$"],
+  ["iso-make", "Isosceles triangles"],
+  ["equi-make", "Equilateral triangles"],
+  ["p1-a", "Finding missing angles"],
+  ["make-1", "Build a triangle"],
+]
+for (const [id, title] of PARTS) {
+  const b = BEATS.find(x => x.id === id)
+  if (!b) throw new Error(`no beat called ${id}`)
+  b.chapter = title
 }

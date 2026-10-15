@@ -22,6 +22,8 @@ import {
 export interface Beat {
   id: string
   /** The one phrase on screen. $...$ is KaTeX. */
+  /** This beat starts a new part of the lesson: its title comes up first (chapter.ts). */
+  chapter?: string
   say: string
   enter: (S: Scene) => void
   /** A doing beat finishes itself when this turns true. */
@@ -126,7 +128,7 @@ function shareWalk(total: number, n: number, name: string): WalkStep<Scene>[] {
 /** Equal turns making one full turn: each is 360 ÷ n. */
 function turnsWalk(n: number): WalkStep<Scene>[] {
   return [
-    { say: `Going once round, the ${n} turns make one full turn: $360^\\circ$.`, show: S => turnsHelp(n)(S, 1) },
+    { say: `Going once round, the ${n} turns make one full turn of $360^\\circ$.`, show: S => turnsHelp(n)(S, 1) },
     { say: `They're all the same. So each turn is $360^\\circ \\div ${n}$.`, tex: `\\dfrac{${deg(360)}}{${n}} = ${c(GREEN, deg(360 / n))}` },
   ]
 }
@@ -142,7 +144,7 @@ function lineWalk(outside: number, show?: (S: Scene) => void): WalkStep<Scene>[]
 /** Equal turns of `turn` degrees: how many make 360? */
 function countWalk(turn: number): WalkStep<Scene>[] {
   return [
-    { say: `Each turn is $${turn}^\\circ$. Together they make one full turn: $360^\\circ$.`, show: S => { S.dialPulse = S.time } },
+    { say: `Each turn is $${turn}^\\circ$. Together they make one full turn of $360^\\circ$.`, show: S => { S.dialPulse = S.time } },
     { say: `So there are $360 \\div ${turn}$ turns, one at each corner.`, tex: `\\dfrac{${deg(360)}}{${deg(turn)}} = ${c(GREEN, String(360 / turn))}`, show: S => { S.dialCount = true } },
   ]
 }
@@ -263,6 +265,9 @@ export const BEATS: Beat[] = [
     },
     done: S => S.P !== null,
   },
+  watch("quad-name", "A shape with four straight sides is a *quadrilateral*.", S => {
+    base(S); ensureShape(S, 4, QUAD); colours(S); show(S, ["shape", "nodes"])
+  }),
   {
     id: "move",
     say: "Move the corners.",
@@ -307,7 +312,7 @@ export const BEATS: Beat[] = [
     enter: S => { base(S); ensureShape(S, 4, QUAD); free(S); show(S, ["shape", "nodes", "arcs", "values", "sum"]); refit(S) },
     done: movedEnough(320, 2), free: true, minPlay: 8,
   },
-  watch("always-360", "Four angles always add up to $360^\\circ$.", S => {
+  watch("always-360", "A quadrilateral's angles always add up to $360^\\circ$.", S => {
     base(S); ensureShape(S, 4, QUAD); show(S, ["shape", "nodes", "arcs", "values", "sum"])
   }),
 
@@ -329,7 +334,7 @@ export const BEATS: Beat[] = [
   watch("each-180", "Each triangle's angles add up to $180^\\circ$.", S => {
     base(S); ensureShape(S, 4, QUAD); allDiagonals(S, 0); show(S, ["shape", "diags", "tris", "triLabels"])
   }),
-  watch("two-180", "Two triangles: $2 \\times 180^\\circ = 360^\\circ$.", S => {
+  watch("two-180", "Two triangles make $2 \\times 180^\\circ = 360^\\circ$.", S => {
     base(S); ensureShape(S, 4, QUAD); allDiagonals(S, 0)
     S.lineTex = `2 \\times 180^\\circ = ${c(GREEN, deg(360))}`
     show(S, ["shape", "diags", "tris", "triLabels", "line"]); refit(S)
@@ -360,7 +365,7 @@ export const BEATS: Beat[] = [
     },
     done: S => (S.P?.length ?? 0) >= 5,
   },
-  watch("pentagon", "Five sides. It is called a pentagon.", S => {
+  watch("pentagon", "It has five sides. It is called a *pentagon*.", S => {
     base(S); ensureShape(S, 5, PENT); clearLines(S); colours(S); show(S, ["shape", "nodes"]); relax(S)
   }),
   {
@@ -382,7 +387,7 @@ export const BEATS: Beat[] = [
     S.lineTex = `3 \\times 180^\\circ = ${c(GREEN, deg(540))}`
     show(S, ["shape", "diags", "tris", "triLabels", "line"]); refit(S)
   }),
-  watch("check-540", "Check: add the five angles.", S => {
+  watch("check-540", "Check it. Add the five angles.", S => {
     base(S); ensureShape(S, 5, PENT); colours(S); show(S, ["shape", "nodes", "arcs", "values", "sum"]); refit(S)
   }, 2.8),
   {
@@ -396,7 +401,7 @@ export const BEATS: Beat[] = [
     },
     done: S => (S.P?.length ?? 0) >= 6,
   },
-  watch("hexagon", "Six sides. It is called a hexagon.", S => {
+  watch("hexagon", "It has six sides. It is called a *hexagon*.", S => {
     base(S); ensureShape(S, 6); clearLines(S); colours(S); show(S, ["shape", "nodes"]); relax(S)
   }),
   {
@@ -413,7 +418,7 @@ export const BEATS: Beat[] = [
     },
     done: S => guessIn(S) && !S.diagAuto && S.diags.length === 3 && S.diags.every(k => (S.diagGrow[k] ?? 0) >= 1),
   },
-  watch("sum-720", "Four triangles: $4 \\times 180^\\circ = 720^\\circ$.", S => {
+  watch("sum-720", "Four triangles make $4 \\times 180^\\circ = 720^\\circ$.", S => {
     base(S); ensureShape(S, 6); allDiagonals(S, 0)
     S.lineTex = `4 \\times 180^\\circ = ${c(GREEN, deg(720))}`
     show(S, ["shape", "diags", "tris", "triLabels", "line"]); refit(S)
@@ -459,23 +464,23 @@ export const BEATS: Beat[] = [
     S.lineTex = `8 \\times 180^\\circ = ${c(GREEN, deg(1440))}`
     show(S, ["shape", "diags", "tris", "line"]); refit(S)
   }),
-  watch("polygon", "Any shape with straight sides is a polygon.", S => {
+  watch("polygon", "Any shape with straight sides is a *polygon*.", S => {
     base(S); ensureShape(S, 10); clearLines(S); show(S, ["shape"])
   }),
-  watch("rule", "A polygon with $n$ sides: $(n - 2) \\times 180^\\circ$.", S => {
+  watch("rule", "With $n$ sides, the angles add up to $(n - 2) \\times 180^\\circ$.", S => {
     base(S); ensureShape(S, 10); clearLines(S)
     S.lineTex = `(n - 2) \\times 180^\\circ`
     S.lineScale = 1.3
     show(S, ["shape", "line"]); refit(S)
   }, 2.2),
-  watch("names", "Their names.", S => {
+  watch("names", "Here are some of their names.", S => {
     base(S); clearLines(S)
     show(S, ["shape", "line"])
     S.names = { list: [{ n: 5, name: "pentagon" }, { n: 6, name: "hexagon" }, { n: 8, name: "octagon" }, { n: 10, name: "decagon" }], start: S.time, shown: -1 }
   }, 7.6),
 
   // ── 4. Regular polygons ──
-  watch("make-regular", "Watch this hexagon become regular.", S => {
+  watch("make-regular", "Watch this hexagon become *regular*.", S => {
     base(S); clearLines(S)
     show(S, ["shape"])
     shapeFromAngles(S, [130, 110, 125, 115, 120, 120])
@@ -517,7 +522,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "turn-resize",
-    say: "Turn it or resize it. Still $120^\\circ$.",
+    say: "Turn it or resize it. Each angle is still $120^\\circ$.",
     enter: S => {
       base(S); regularShape(S, 6); S.oneColour = BLUE; colours(S)
       S.ticks = true
@@ -529,7 +534,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "each-108",
-    say: "A regular pentagon. Find each angle.",
+    say: "This is a regular pentagon. Find each angle.",
     enter: S => {
       base(S); clearLines(S)
       show(S, ["shape", "ticks", "arcs", "line", "keypad"])
@@ -546,7 +551,7 @@ export const BEATS: Beat[] = [
   },
 
   // ── 5. Exterior angles ──
-  watch("any-pentagon", "Back to any pentagon.", S => {
+  watch("any-pentagon", "Now a pentagon that isn't regular.", S => {
     base(S); clearLines(S)
     show(S, ["shape", "arcs", "values"])
     shapeFromAngles(S, PENT); colours(S)
@@ -563,12 +568,18 @@ export const BEATS: Beat[] = [
     },
     done: S => !S.drag && S.extLen >= 50 * screenScale(S),
   },
-  watch("exterior", "This outside angle is an exterior angle.", S => {
+  watch("exterior", "This outside angle is an *exterior angle*.", S => {
     base(S); ensureShape(S, 5, PENT); colours(S)
     S.extCorners = [1]
     show(S, ["shape", "ext", "extValues"])
   }),
-  watch("straight-line", "Inside and outside make a straight line.", S => {
+  watch("interior", "The angle inside is an *interior angle*.", S => {
+    base(S); ensureShape(S, 5, PENT); colours(S)
+    S.extCorners = [1]
+    S.pulse = S.P!.map((_, i) => i === 1)
+    show(S, ["shape", "arcs", "values", "ext", "extValues"])
+  }),
+  watch("straight-line", "The interior and exterior angles make a straight line.", S => {
     base(S); ensureShape(S, 5, PENT); colours(S)
     S.extCorners = [1]
     S.pulse = S.P!.map((_, i) => i === 1)
@@ -576,13 +587,13 @@ export const BEATS: Beat[] = [
     S.lineTex = `${c(ORANGE, deg(inside))} + ${c(ORANGE, deg(180 - inside))} = 180^\\circ`
     show(S, ["shape", "arcs", "values", "ext", "extValues", "line"]); refit(S)
   }, 2.2),
-  watch("outside-rule", "Outside $= 180^\\circ -$ inside.", S => {
+  watch("outside-rule", "So the exterior angle is $180^\\circ$ minus the interior angle.", S => {
     base(S); ensureShape(S, 5, PENT); colours(S)
     S.extCorners = [1]
-    S.lineWords = "outside $= 180^\\circ -$ inside"
+    S.lineWords = "exterior $= 180^\\circ -$ interior"
     show(S, ["shape", "arcs", "values", "ext", "extValues", "line"]); refit(S)
   }),
-  watch("all-five", "Here are all five.", S => {
+  watch("all-five", "Here are all five exterior angles.", S => {
     base(S); ensureShape(S, 5, PENT); colours(S)
     allExt(S)
     show(S, ["shape", "ext", "extValues"]); refit(S)
@@ -695,7 +706,7 @@ export const BEATS: Beat[] = [
       ask(S, [`${deg(180)} - ${deg(60)} =`, { box: true }], 120, {
         help: lineHelp(60),
         deg: true,
-        onRight: S2 => { S2.vis.values.t = 1; say(S2, "Same $120^\\circ$ as before.", "calm", 3) },
+        onRight: S2 => { S2.vis.values.t = 1; say(S2, "That's the same $120^\\circ$ as before.", "calm", 3) },
       })
     },
     done: inputRight,
@@ -703,7 +714,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "decagon-ext",
-    say: "A regular decagon. Find each exterior angle.",
+    say: "This is a regular decagon. Find each exterior angle.",
     enter: S => {
       base(S)
       show(S, ["shape", "ticks", "ext", "dial", "line", "keypad"])
@@ -803,7 +814,7 @@ export const BEATS: Beat[] = [
     },
     done: inputRight,
     walk: [
-      { say: "One line cuts the shape into two triangles: $360^\\circ$ in all.", show: S => { allDiagonals(S, 0); S.vis.diags.t = 1; S.vis.tris.t = 1; S.vis.triLabels.t = 1 } },
+      { say: "One line cuts the shape into two triangles. That makes $360^\\circ$ in all.", show: S => { allDiagonals(S, 0); S.vis.diags.t = 1; S.vis.tris.t = 1; S.vis.triLabels.t = 1 } },
       { say: "The three angles you know make $255^\\circ$.", tex: `${c(BLUE, deg(100))} + ${c(ORANGE, deg(85))} + ${c(YELLOW, deg(70))} = ${deg(255)}` },
       { say: "So the missing angle is $360^\\circ - 255^\\circ$.", tex: `${c(PINK, "?")} = ${deg(360)} - ${deg(255)} = ${c(GREEN, deg(105))}`, show: S => { S.label[3] = deg(105) } },
     ],
@@ -850,7 +861,7 @@ export const BEATS: Beat[] = [
       { say: "So the missing angle is $540^\\circ - 425^\\circ$.", tex: `${c(PINK, "?")} = ${deg(540)} - ${deg(425)} = ${c(GREEN, deg(115))}`, show: S => { S.label[4] = deg(115) } },
     ],
   },
-  watch("pent-hex", "A regular pentagon and a regular hexagon, side by side.", S => {
+  watch("pent-hex", "Here are a regular pentagon and a regular hexagon, side by side.", S => {
     base(S); clearLines(S)
     S.P = null; S.D = null
     show(S, ["overlay"])
@@ -858,7 +869,7 @@ export const BEATS: Beat[] = [
   }, 2.2),
   {
     id: "pent-108",
-    say: "Each angle of the pentagon?",
+    say: "What is each angle of the pentagon?",
     enter: S => {
       base(S); S.P = null; S.D = null
       show(S, ["overlay", "line", "keypad"])
@@ -877,7 +888,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "hex-120",
-    say: "Each angle of the hexagon?",
+    say: "What is each angle of the hexagon?",
     enter: S => {
       base(S); S.P = null; S.D = null
       show(S, ["overlay", "line", "keypad"])
@@ -973,7 +984,7 @@ export const BEATS: Beat[] = [
     show(S, ["dial"])
     S.dial = { wedges: [], mode: "impossible", fill: { deg: 80, start: S.time + 0.5, every: 0.85, max: 5 } }
   }, 5),
-  watch("too-few-many", "Four turns are too few. Five are too many.", S => {
+  watch("too-few-many", "Four turns make $320^\\circ$. Five turns make $400^\\circ$.", S => {
     base(S)
     show(S, ["dial"])
     S.dial = { wedges: [], mode: "impossible", fill: { deg: 80, start: S.time - 10, every: 0.85, max: 5 } }
@@ -991,7 +1002,7 @@ export const BEATS: Beat[] = [
   }),
   {
     id: "end",
-    say: "Any polygon: the turns add up to $360^\\circ$.",
+    say: "In any polygon, the turns add up to $360^\\circ$.",
     enter: S => {
       base(S); clearLines(S)
       show(S, ["shape", "nodes", "ext", "extValues", "dial"])
@@ -1005,3 +1016,20 @@ export const BEATS: Beat[] = [
     restart: true,
   },
 ]
+
+// ── the parts of the lesson: each title comes up before its first beat ──
+const PARTS: [string, string][] = [
+  ["draw", "Angles in a quadrilateral"],
+  ["diagonal", "Why they add up to $360^\\circ$"],
+  ["add-5", "More sides"],
+  ["make-regular", "Regular polygons"],
+  ["any-pentagon", "Exterior angles"],
+  ["equal-turns", "The quick way for regular polygons"],
+  ["missing-quad", "Finding missing angles"],
+  ["build-120", "Build a regular polygon"],
+]
+for (const [id, title] of PARTS) {
+  const b = BEATS.find(x => x.id === id)
+  if (!b) throw new Error(`no beat called ${id}`)
+  b.chapter = title
+}

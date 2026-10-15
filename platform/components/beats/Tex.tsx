@@ -1,6 +1,7 @@
 "use client"
 
 import katex from "katex"
+import styles from "./beats.module.css"
 
 /**
  * KaTeX for beat lessons. Every number, unit and symbol a student reads goes
@@ -23,7 +24,11 @@ export function Tex({ tex, className, style }: { tex: string; className?: string
   return <span className={className} style={style} dangerouslySetInnerHTML={{ __html: texHtml(tex) }} />
 }
 
-/** A phrase of plain words with $...$ maths inside it. */
+/**
+ * A phrase of plain words with $...$ maths inside it. A word the student
+ * should learn is written *like this*: it shows in yellow, and a line draws
+ * in under it.
+ */
 export function Phrase({ text }: { text: string }) {
   const parts = text.split(/(\$[^$]+\$)/g).filter(Boolean)
   return (
@@ -31,7 +36,20 @@ export function Phrase({ text }: { text: string }) {
       {parts.map((p, i) =>
         p.startsWith("$") && p.endsWith("$")
           ? <Tex key={i} tex={p.slice(1, -1)} />
-          : <span key={i}>{p}</span>,
+          : <Words key={i} text={p} />,
+      )}
+    </>
+  )
+}
+
+function Words({ text }: { text: string }) {
+  const bits = text.split(/(\*[^*]+\*)/g).filter(Boolean)
+  return (
+    <>
+      {bits.map((b, i) =>
+        b.length > 2 && b.startsWith("*") && b.endsWith("*")
+          ? <span key={i} className={styles.keyword}>{b.slice(1, -1)}</span>
+          : <span key={i}>{b}</span>,
       )}
     </>
   )

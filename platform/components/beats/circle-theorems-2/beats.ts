@@ -17,13 +17,15 @@ import type { WalkStep } from "../walk"
 import {
   type Scene, type EqPart, type VisKey, type AngSpec,
   BLUE, ORANGE, PINK, GREEN, YELLOW, NEUTRAL,
-  resetBeat, show, startInput, ensureCircle, place, setSegs, layout, insc, arcDeg, joined,
+  resetBeat, show, say, startInput, ensureCircle, place, setSegs, layout, insc, arcDeg, joined,
   angOf, posOf, norm, dirOf, turn, quadVals, tangentAngles, tangentCm,
 } from "./scene"
 
 export interface Beat {
   id: string
   /** The one phrase on screen. $...$ is KaTeX. */
+  /** This beat starts a new part of the lesson: its title comes up first (chapter.ts). */
+  chapter?: string
   say: string
   enter: (S: Scene) => void
   /** A doing beat finishes itself when this turns true. */
@@ -342,7 +344,7 @@ export const BEATS: Beat[] = [
     },
     done: joined,
   },
-  watch("cyclic", "All four corners are on the circle. It's a cyclic quadrilateral.", S => {
+  watch("cyclic", "All four corners are on the circle. It's a *cyclic quadrilateral*.", S => {
     quadBoard(S)
     S.angles = []
     S.pulsePts = new Set(QUAD)
@@ -362,7 +364,7 @@ export const BEATS: Beat[] = [
     },
     done: movedAll(150), free: true, minPlay: 8,
   },
-  watch("opposite", "$A$ and $C$ are opposite angles.", S => {
+  watch("opposite", "$A$ and $C$ are *opposite angles*.", S => {
     quadBoard(S, "AC")
     S.pulse = new Set(["A", "C"])
     look(S, ["letters", "arcs", "values"])
@@ -384,7 +386,7 @@ export const BEATS: Beat[] = [
   }, 2.2),
   {
     id: "still-180",
-    say: "Move the corners. Still $180^\\circ$?",
+    say: "Move the corners. Is it still $180^\\circ$?",
     enter: S => {
       quadBoard(S, "AC")
       S.lineFn = pairLine("A", "C")
@@ -496,19 +498,19 @@ export const BEATS: Beat[] = [
     S.pulse = new Set(["C", "cC"])
     look(S, ["letters", "arcs", "values"])
   }, 2.2),
-  watch("full-turn", "Together they go all the way round: $360^\\circ$.", S => {
+  watch("full-turn", "Together they go all the way round. That's $360^\\circ$.", S => {
     whyBoard(S, ["A", "C", "cA", "cC"])
     S.ringAt = true
     look(S, ["letters", "arcs", "values"])
   }, 2.2),
-  watch("half-360", "So $A + C$ is half of $360^\\circ$: $180^\\circ$.", S => {
+  watch("half-360", "So $A + C$ is half of $360^\\circ$, which is $180^\\circ$.", S => {
     whyBoard(S, ["A", "C", "cA", "cC"])
     S.lineTex = `2${c(BLUE, "A")} + 2${c(ORANGE, "C")} = ${deg(360)}, \\quad ${c(BLUE, "A")} + ${c(ORANGE, "C")} = ${c(GREEN, deg(180))}`
     look(S, ["letters", "arcs", "values", "line"])
   }, 2.6),
   {
     id: "why-play",
-    say: "Move $B$ and $D$. It always works.",
+    say: "Move $B$ and $D$. The same steps work every time.",
     enter: S => {
       whyBoard(S, ["A", "C", "cA", "cC"])
       S.lineFn = S2 => { const v = quadVals(S2, QUAD); return `${c(BLUE, deg(2 * v.A))} + ${c(ORANGE, deg(2 * v.C))} = ${c(GREEN, deg(360))}` }
@@ -555,7 +557,7 @@ export const BEATS: Beat[] = [
     },
     done: S => S.locked,
   },
-  watch("tangent", "It touches at one point. It's a tangent.", S => {
+  watch("tangent", "It touches at one point. It's a *tangent*.", S => {
     base(S, ["O", "T"])
     tangentAt(S, -90)
     S.showPts = ["T"]; S.segs = []
@@ -626,7 +628,7 @@ export const BEATS: Beat[] = [
     },
     done: S => !!S.tline && Math.abs(S.tline.tilt) > 3 * RAD && !S.drag,
   },
-  watch("cuts-again", "Any tilt and it cuts the circle again.", S => {
+  watch("cuts-again", "If you tilt it at all, it cuts the circle again.", S => {
     base(S, ["O", "T"])
     tangentAt(S, S.pts.T !== undefined ? angOf(S, "T", false) / RAD : -90)
     S.tlineFollow = null
@@ -744,12 +746,26 @@ export const BEATS: Beat[] = [
     },
     done: joined,
   },
-  watch("why-equal", "Two right angles. Two radii. One shared side.", S => {
+  // why the two lengths match: one idea per beat, then the fold
+  watch("why-equal", "$OA$ and $OB$ are both *radii*, so they are equal.", S => {
+    kiteBoard(S)
+    S.ticks = ["OA", "OB"]
+    S.pulseSegs = new Set(["OA", "OB"])
+    say(S, "Radii means more than one radius.", "calm", 600)
+    look(S, ["letters", "ticks"])
+  }, 2.2),
+  watch("right-angles", "Each tangent meets its radius at $90^\\circ$.", S => {
+    kiteBoard(S)
+    S.ticks = ["OA", "OB"]
+    S.pulse = new Set(["OAP", "OBP"])
+    look(S, ["letters", "arcs", "values", "ticks"])
+  }, 2.2),
+  watch("share-OP", "The two triangles share the side $OP$.", S => {
     kiteBoard(S)
     S.ticks = ["OA", "OB"]
     S.pulseSegs = new Set(["OP"])
     look(S, ["letters", "arcs", "values", "ticks"])
-  }, 2.6),
+  }, 2.2),
   watch("fold", "Fold along $OP$. The two halves match.", S => {
     kiteBoard(S)
     S.ticks = ["OA", "OB"]
@@ -819,7 +835,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "two-q3",
-    say: "And the angle at $D$.",
+    say: "Now find the angle at $D$.",
     enter: S => {
       examTangents(S)
       look(S, ["letters", "arcs", "values", "line", "keypad"])
@@ -937,7 +953,7 @@ export const BEATS: Beat[] = [
   }),
   {
     id: "move-A",
-    say: "Move $A$. Still equal?",
+    say: "Move $A$. Are they still equal?",
     enter: S => {
       altBoard(S)
       S.movable = ["A"]; S.mode = "slide"
@@ -945,7 +961,7 @@ export const BEATS: Beat[] = [
     },
     done: movedBy("A", 40), free: true, minPlay: 6,
   },
-  watch("alternate", "$C$ is in the alternate segment: on the other side of the chord.", S => {
+  watch("alternate", "$C$ is in the *alternate segment*. That's the segment on the other side of the chord.", S => {
     altBoard(S)
     S.tints = [{ a: "T", b: "A", side: "C", color: BLUE }]
     look(S, ["letters", "arcs", "values", "tints"])
@@ -956,7 +972,7 @@ export const BEATS: Beat[] = [
     S.pulse = new Set(["tc", "C"])
     look(S, ["letters", "arcs", "values", "tints"])
   }, 2.6),
-  watch("alt-name", "This is the alternate segment theorem.", S => {
+  watch("alt-name", "This is the *alternate segment theorem*.", S => {
     altBoard(S)
     S.tints = [{ a: "T", b: "A", side: "C", color: BLUE }]
     look(S, ["letters", "arcs", "values", "tints"])
@@ -979,7 +995,7 @@ export const BEATS: Beat[] = [
     S.pulseSegs = new Set(["CT"])
     look(S, ["letters", "arcs", "values"])
   }, 2.6),
-  watch("never-changed", "The angle at $C$ never changed: same segment.", S => {
+  watch("never-changed", "The angle at $C$ never changed, because $C$ stayed in the same segment.", S => {
     altBoard(S)
     if (Math.abs(turn(S.pts.C, S.pts.T)) > 9 * RAD) S.pts.C = S.pts.T + Math.sign(turn(S.pts.T, S.pts.C) || 1) * 5 * RAD
     S.pulse = new Set(["C"])
@@ -1019,7 +1035,7 @@ export const BEATS: Beat[] = [
     done: inputRight,
     walk: [
       { say: "$x$ is between the tangent and the chord $TA$.", show: S => { S.pulse = new Set(["tc"]); S.pulseSegs = new Set(["TA"]) } },
-      { say: "Angle $C$ is in the alternate segment: on the other side of the chord.", show: S => { S.pulseSegs = new Set(); S.tints = [{ a: "T", b: "A", side: "C", color: BLUE }]; S.vis.tints.t = 1; S.pulse = new Set(["C"]) } },
+      { say: "Angle $C$ is in the alternate segment, on the other side of the chord.", show: S => { S.pulseSegs = new Set(); S.tints = [{ a: "T", b: "A", side: "C", color: BLUE }]; S.vis.tints.t = 1; S.pulse = new Set(["C"]) } },
       { say: "The alternate segment theorem says they're equal. So $x$ is $50^\\circ$.", tex: `x = ${c(GREEN, deg(50))}`, show: S => uncover(S, "tc") },
     ],
   },
@@ -1044,7 +1060,7 @@ export const BEATS: Beat[] = [
     walk: [
       { say: "Angle $SPB$ is between the tangent and the chord $PS$.", show: S => { S.pulse = new Set(["SPB"]); S.pulseSegs = new Set(["SP"]) } },
       { say: "Angle $PQS$ is in the alternate segment.", show: S => { S.pulseSegs = new Set(); S.tints = [{ a: "P", b: "S", side: "Q", color: BLUE }]; S.vis.tints.t = 1; S.pulse = new Set(["PQS"]) } },
-      { say: "So they're equal: angle $PQS$ is $37^\\circ$.", tex: `\\angle PQS = ${c(GREEN, deg(37))}`, show: S => uncover(S, "PQS") },
+      { say: "So they're equal. Angle $PQS$ is $37^\\circ$.", tex: `\\angle PQS = ${c(GREEN, deg(37))}`, show: S => uncover(S, "PQS") },
     ],
   },
   {
@@ -1121,7 +1137,7 @@ export const BEATS: Beat[] = [
     quadBoard(S, "AC")
     look(S, ["letters", "arcs", "values"])
   }),
-  watch("too-much", "$100^\\circ + 100^\\circ = 200^\\circ$.", S => {
+  watch("too-much", "But $100^\\circ + 100^\\circ = 200^\\circ$.", S => {
     quadBoard(S, "AC")
     S.lineTex = `${c(BLUE, deg(100))} + ${c(ORANGE, deg(100))} = ${c(PINK, deg(200))}`
     look(S, ["letters", "arcs", "values", "line"])
@@ -1133,7 +1149,7 @@ export const BEATS: Beat[] = [
   }, 2.4),
   {
     id: "end",
-    say: "Move anything. The rules always hold.",
+    say: "Move anything you like. It still follows the rules.",
     enter: S => {
       quadBoard(S)
       S.lineFn = S2 => `${pairLine("A", "C")(S2)}, \\quad ${pairLine("B", "D")(S2).replace(/#00abfa/g, "#ff4670").replace(/#ff822c/g, "#fff067")}`
@@ -1245,3 +1261,18 @@ function examPQRS(S: Scene) {
   ]
 }
 
+// ── the parts of the lesson: each title comes up before its first beat ──
+const PARTS: [string, string][] = [
+  ["place", "Cyclic quadrilaterals"],
+  ["from-BD", "Why they add up to $180^\\circ$"],
+  ["slide-on", "Tangents"],
+  ["outside", "Two tangents from a point"],
+  ["put-A", "The alternate segment theorem"],
+  ["slide-C", "Why the angles are equal"],
+  ["make-40", "Make the angles"],
+]
+for (const [id, title] of PARTS) {
+  const b = BEATS.find(x => x.id === id)
+  if (!b) throw new Error(`no beat called ${id}`)
+  b.chapter = title
+}

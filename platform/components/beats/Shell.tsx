@@ -8,7 +8,8 @@ import { Phrase } from "./Tex"
 /**
  * Everything around the board: a hairline for progress, a quiet way out,
  * one phrase at a time, a short note under it when needed, and a continue
- * button only when the beat asks for one. Nothing else.
+ * button only when the beat asks for one. Nothing else. When a new part
+ * of the lesson starts, its title comes up over the board and leaves.
  */
 export default function Shell({
   progress,
@@ -20,6 +21,8 @@ export default function Shell({
   cta,
   onCta,
   closeHref,
+  card = null,
+  onSkipCard,
   children,
 }: {
   progress: number
@@ -32,6 +35,9 @@ export default function Shell({
   cta: string | null
   onCta: () => void
   closeHref: string
+  /** a section title over the board (see chapter.ts) */
+  card?: { text: string; key: string; colour: string; leaving: boolean } | null
+  onSkipCard?: () => void
   children: React.ReactNode
 }) {
   return (
@@ -53,6 +59,15 @@ export default function Shell({
             aria-label={cta || "Continue"}>
             {cta ? <span>{cta}</span> : <ArrowRight size={20} strokeWidth={1.8} />}
           </button>
+        </div>
+      )}
+      {card && (
+        <div key={card.key} className={`${styles.card} ${card.leaving ? styles.cardLeaving : ""}`}
+          onPointerDown={card.leaving ? undefined : e => { e.preventDefault(); onSkipCard?.() }}>
+          <div className={styles.cardInner}>
+            <div className={styles.cardTitle}><Phrase text={card.text} /></div>
+            <div className={styles.cardRule} style={{ background: card.colour }} />
+          </div>
         </div>
       )}
     </div>

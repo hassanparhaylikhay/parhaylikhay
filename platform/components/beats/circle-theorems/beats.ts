@@ -22,6 +22,8 @@ import {
 export interface Beat {
   id: string
   /** The one phrase on screen. $...$ is KaTeX. */
+  /** This beat starts a new part of the lesson: its title comes up first (chapter.ts). */
+  chapter?: string
   say: string
   enter: (S: Scene) => void
   /** A doing beat finishes itself when this turns true. */
@@ -187,7 +189,7 @@ function ensureMajor(S: Scene) {
 // ── the beats ────────────────────────────────────────────────────────────
 
 const FIGURE_TAPS: Record<string, { say: string; answer: string; wrong: Record<string, string> }> = {
-  radius: { say: "Tap a radius.", answer: "OT", wrong: { AB: "That's the diameter: two radii in a line.", EF: "That's a chord. It misses the centre." } },
+  radius: { say: "Tap a radius.", answer: "OT", wrong: { AB: "That's the diameter. It's two radii in a line.", EF: "That's a chord. It misses the centre." } },
   chord: { say: "Tap the chord.", answer: "EF", wrong: { OT: "That's a radius.", AB: "That's the diameter. It goes through $O$." } },
   diameter: { say: "Tap the diameter.", answer: "AB", wrong: { OT: "That's a radius.", EF: "That's a chord. It misses the centre." } },
 }
@@ -253,7 +255,7 @@ export const BEATS: Beat[] = [
     done: S => S.drawn,
     advanceAfter: 900,
   },
-  watch("centre", "This point is the centre, $O$.", S => {
+  watch("centre", "This point is the *centre*, $O$.", S => {
     base(S); S.showPts = []; S.segs = []
     look(S, ["letters"])
   }),
@@ -277,7 +279,7 @@ export const BEATS: Beat[] = [
     S.movable = ["T"]; S.mode = "slide"
     look(S, ["letters"])
   }),
-  watch("radius", "That distance is the radius.", S => {
+  watch("radius", "That distance is the *radius*.", S => {
     base(S)
     if (S.pts.T === undefined) place(S, { T: -40 })
     S.showPts = ["T"]; setSegs(S, [["O", "T"]])
@@ -298,12 +300,21 @@ export const BEATS: Beat[] = [
     },
     done: S => S.segs.some(s => s.id === "AB"),
   },
-  watch("diameter", "That's a diameter. It's two radii in a line.", S => {
+  watch("diameter", "That's a *diameter*.", S => {
+    base(S, []); ensureDiam(S)
+    S.showPts = ["A", "B"]
+    setSegs(S, [["A", "B"]])
+    S.pulseSegs = new Set(["AB"])
+    look(S, [])
+  }),
+  // "radii" is a new word for most students: say what it means, right under it
+  watch("two-radii", "It's two *radii* in a line.", S => {
     base(S, []); ensureDiam(S)
     S.showPts = ["A", "B"]
     setSegs(S, [["A", "B"], ["O", "A"], ["O", "B"]])
     S.segColour = { OA: BLUE, OB: ORANGE }
     S.ticks = ["OA", "OB"]
+    say(S, "Radii means more than one radius.", "calm", 600)
     look(S, ["ticks"])
   }, 2.2),
   {
@@ -318,14 +329,14 @@ export const BEATS: Beat[] = [
     },
     done: S => S.segs.some(s => s.id === "EF"),
   },
-  watch("chord", "A line joining two points on the circle is a chord.", S => {
+  watch("chord", "A line joining two points on the circle is a *chord*.", S => {
     base(S, []); ensureDiam(S)
     if (S.pts.E === undefined || S.pts.F === undefined) place(S, { E: 25, F: 115 })
     S.showPts = ["A", "B", "E", "F"]; setSegs(S, [["A", "B"], ["E", "F"]])
     S.pulseSegs = new Set(["EF"])
     look(S, [])
   }, 2.2),
-  watch("circumference", "The circle itself is the circumference.", S => {
+  watch("circumference", "The circle itself is the *circumference*.", S => {
     base(S, []); ensureDiam(S)
     if (S.pts.E === undefined || S.pts.F === undefined) place(S, { E: 25, F: 115 })
     S.showPts = ["A", "B", "E", "F"]; setSegs(S, [["A", "B"], ["E", "F"]])
@@ -339,7 +350,7 @@ export const BEATS: Beat[] = [
     S.tints = [{ a: "E", b: "F", side: "minor", color: BLUE }, { a: "E", b: "F", side: "major", color: ORANGE }]
     look(S, ["tints"])
   }),
-  watch("segment", "Each part is a segment.", S => {
+  watch("segment", "Each part is a *segment*.", S => {
     base(S, [])
     if (S.pts.E === undefined || S.pts.F === undefined) place(S, { E: 25, F: 115 })
     S.showPts = ["E", "F"]; setSegs(S, [["E", "F"]])
@@ -418,7 +429,7 @@ export const BEATS: Beat[] = [
     madeFrom(S, ["A", "B"], ["PA", "PB"])
     look(S, ["letters", "arcs", "values"])
   }, 2.2),
-  watch("made-from", "We say the angle is made from $A$ and $B$.", S => {
+  watch("made-from", "We say the angle is *made from* $A$ and $B$.", S => {
     base(S, ["A", "B", "P", "O"]); ensureDiam(S); ensureP(S)
     S.showPts = ["A", "B", "P"]; setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"]])
     S.angles = [atCirc("P", "P")]
@@ -450,11 +461,12 @@ export const BEATS: Beat[] = [
     },
     cta: "I can't", ctaAfter: 8,
   },
-  watch("semicircle", "You can't. The angle in a semicircle is $90^\\circ$.", S => {
+  watch("semicircle", "You can't. The angle in a *semicircle* is $90^\\circ$.", S => {
     base(S, ["A", "B", "P", "O"]); ensureDiam(S); ensureP(S)
     S.showPts = ["A", "B", "P"]; setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"]])
     S.angles = [atCirc("P", "P")]
     S.tints = [{ a: "A", b: "B", side: "P", color: BLUE }]
+    say(S, "A semicircle is half a circle.", "calm", 600)
     S.movable = ["P"]; S.crossOK = new Set(["P"]); S.mode = "slide"
     look(S, ["letters", "arcs", "values", "tints"])
   }, 2.2),
@@ -582,7 +594,7 @@ export const BEATS: Beat[] = [
     },
     done: movedBy("Q", 80), free: true, minPlay: 6,
   },
-  watch("same-seg", "$P$ and $Q$ are in the same segment.", S => {
+  watch("same-seg", "$P$ and $Q$ are in the *same segment*.", S => {
     base(S, ["A", "B", "P", "Q", "O"]); ensureChord(S); placeQ(S)
     S.showPts = ["A", "B", "P", "Q"]
     setSegs(S, [["A", "B"], ["P", "A"], ["P", "B"], ["Q", "A"], ["Q", "B"]])
@@ -673,7 +685,7 @@ export const BEATS: Beat[] = [
     },
     done: joined,
   },
-  watch("centre-angle", "This is the angle at the centre.", S => {
+  watch("centre-angle", "This is the *angle at the centre*.", S => {
     centreBoard(S)
     S.pulse = new Set(["C0"])
     look(S, ["letters", "arcs", "values"])
@@ -689,7 +701,7 @@ export const BEATS: Beat[] = [
     },
     done: tappedAll(["A", "B"]),
   },
-  watch("circ-angle", "The angle at $P$ is the angle at the circumference.", S => {
+  watch("circ-angle", "The angle at $P$ is the *angle at the circumference*.", S => {
     centreBoard(S)
     S.pulse = new Set(["P"])
     look(S, ["letters", "arcs", "values"])
@@ -726,7 +738,7 @@ export const BEATS: Beat[] = [
   }),
   {
     id: "still-twice",
-    say: "Move $B$ and $P$. Still twice?",
+    say: "Move $B$ and $P$. Is it still twice?",
     enter: S => {
       centreBoard(S)
       S.lineFn = twiceLine
@@ -759,7 +771,7 @@ export const BEATS: Beat[] = [
     },
     done: S => !S.drag && arcDeg(S, "A", "B", "P") > 180,
   },
-  watch("reflex", "Now the centre angle is the reflex one. Still twice.", S => {
+  watch("reflex", "Now the centre angle is the reflex one. It is still twice the angle at $P$.", S => {
     centreBoard(S, false)
     if (arcDeg(S, "A", "B", "P") <= 180) place(S, { A: 145, B: 35, P: 95 })
     S.lineFn = twiceLine
@@ -811,14 +823,14 @@ export const BEATS: Beat[] = [
     walk: [
       { say: "Both angles are made from $A$ and $B$.", show: S => madeFrom(S, ["A", "B"], ["PA", "PB", "OA", "OB"]) },
       { say: "The angle at the centre is twice the angle at $P$.", tex: `${c(ORANGE, deg(130))} = 2 \\times ${Q}`, show: S => { S.pulseSegs = new Set(); S.pulse = new Set(["P", "C0"]) } },
-      { say: "So the angle at $P$ is half of $130^\\circ$: $65^\\circ$.", tex: `${Q} = 130^\\circ \\div 2 = ${c(GREEN, deg(65))}`, show: S => uncover(S, "P") },
+      { say: "So the angle at $P$ is half of $130^\\circ$, which is $65^\\circ$.", tex: `${Q} = 130^\\circ \\div 2 = ${c(GREEN, deg(65))}`, show: S => uncover(S, "P") },
     ],
   },
 
   // ── 6. Why twice ──
   {
     id: "draw-through",
-    say: "Why twice? Draw a line from $P$ through $O$.",
+    say: "Why is it twice? Draw a line from $P$ through $O$.",
     enter: S => {
       proofBoard(S, 0)
       S.angles = [atCirc("P", "P"), atCentre("P", "C0", "A", "B", { colour: () => ORANGE })]
@@ -908,7 +920,7 @@ export const BEATS: Beat[] = [
     },
     done: landed(["bB", "bP"]),
   },
-  watch("sum-both", "At $P$: $a + b$. At the centre: $2a + 2b$.", S => {
+  watch("sum-both", "The angle at $P$ is $a + b$. The angle at the centre is $2a + 2b$.", S => {
     proofBoard(S, 1)
     only(S, ["aP", "bP", "aA", "bB"])
     S.ticks = ["OA", "OP", "OB"]
@@ -926,7 +938,7 @@ export const BEATS: Beat[] = [
   }, 2.2),
   {
     id: "proof-play",
-    say: "Move $P$. It works wherever $P$ is.",
+    say: "Move $P$. The same steps work wherever $P$ is.",
     enter: S => {
       proofBoard(S, 1)
       only(S, ["aP", "bP", "aA", "bB"])
@@ -956,17 +968,17 @@ export const BEATS: Beat[] = [
     },
     done: S => S.locked,
   },
-  watch("straight", "The angle at the centre is now a straight line: $180^\\circ$.", S => {
+  watch("straight", "The angle at the centre is now a straight line. It is $180^\\circ$.", S => {
     diamBoard(S)
     S.pulse = new Set(["C0"])
     look(S, ["letters", "arcs", "values"])
   }, 2.2),
-  watch("half-of", "Half of $180^\\circ$ is $90^\\circ$: the angle in a semicircle.", S => {
+  watch("half-of", "Half of $180^\\circ$ is $90^\\circ$. That's the angle in a semicircle.", S => {
     diamBoard(S)
     S.pulse = new Set(["P"])
     look(S, ["letters", "arcs", "values"])
   }, 2.2),
-  watch("share", "$P$ and $Q$ in one segment share one centre angle.", S => {
+  watch("share", "$P$ and $Q$ are in the same segment. They share one centre angle.", S => {
     shareBoard(S)
     S.pulse = new Set(["C0"])
     look(S, ["letters", "arcs", "values"])
@@ -1052,7 +1064,7 @@ export const BEATS: Beat[] = [
       { say: "Both angles are made from $A$ and $B$.", show: S => madeFrom(S, ["A", "B"], ["PA", "PB", "OA", "OB"]) },
       { say: "$P$ is in the small segment, so its centre angle is the reflex one.", show: S => { S.pulseSegs = new Set(); S.pulse = new Set(["C0"]) } },
       { say: "The angle at the centre is twice the angle at $P$.", tex: `${c(BLUE, deg(250))} = 2 \\times ${c(PINK, "x")}`, show: S => { S.pulse = new Set(["C0", "P"]) } },
-      { say: "So $x$ is half of $250^\\circ$: $125^\\circ$.", tex: `x = 250^\\circ \\div 2 = ${c(GREEN, deg(125))}`, show: S => uncover(S, "P") },
+      { say: "So $x$ is half of $250^\\circ$, which is $125^\\circ$.", tex: `x = 250^\\circ \\div 2 = ${c(GREEN, deg(125))}`, show: S => uncover(S, "P") },
     ],
   },
   {
@@ -1168,7 +1180,7 @@ export const BEATS: Beat[] = [
   buildTo("make-30", "Make the angle at $P$ $30^\\circ$.", [90], 170),
   buildTo("make-140", "Now make the angle at the centre $140^\\circ$.", [10], 170),
   buildTo("make-90", "Make the angle at $P$ exactly $90^\\circ$.", [-30], 180),
-  watch("only-way", "The only way: $AB$ must be a diameter.", S => {
+  watch("only-way", "The only way is to make $AB$ a diameter.", S => {
     diamBoard(S)
     S.pulse = new Set(["P"])
     look(S, ["letters", "arcs", "values"])
@@ -1211,7 +1223,7 @@ export const BEATS: Beat[] = [
   }, 2.4),
   {
     id: "end",
-    say: "Move anything. The rules always hold.",
+    say: "Move anything you like. It still follows the rules.",
     enter: S => {
       buildBoard(S, 60)
       S.lineFn = twiceLine
@@ -1407,4 +1419,21 @@ function impossibleChipsFor() {
     { tex: `\\angle APB = ${deg(50)}`, test: (S: Scene) => insc(S, "P", "A", "B") === 50 },
     { tex: `\\angle AOB = ${deg(120)}`, test: (S: Scene) => 2 * insc(S, "P", "A", "B") === 120 },
   ]
+}
+
+// ── the parts of the lesson: each title comes up before its first beat ──
+const PARTS: [string, string][] = [
+  ["place", "Parts of a circle"],
+  ["ends", "The angle in a semicircle"],
+  ["off-diameter", "Angles in the same segment"],
+  ["join-centre", "The angle at the centre"],
+  ["draw-through", "Why the centre angle is twice"],
+  ["make-diameter", "Where the other rules come from"],
+  ["use-semi", "Finding missing angles"],
+  ["make-30", "Make the angles"],
+]
+for (const [id, title] of PARTS) {
+  const b = BEATS.find(x => x.id === id)
+  if (!b) throw new Error(`no beat called ${id}`)
+  b.chapter = title
 }

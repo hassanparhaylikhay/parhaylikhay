@@ -21,6 +21,8 @@ import {
 export interface Beat {
   id: string
   /** The one phrase on screen. $...$ is KaTeX. */
+  /** This beat starts a new part of the lesson: its title comes up first (chapter.ts). */
+  chapter?: string
   say: string
   enter: (S: Scene) => void
   /** A doing beat finishes itself when this turns true. */
@@ -287,7 +289,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "how-far",
-    say: "How far it turns is the angle.",
+    say: "How far it turns is the *angle*.",
     enter: S => { resetBeat(S); turning(S); look(S, ["arcs", "values"]) },
     cta: "", ctaAfter: 2,
   },
@@ -330,7 +332,7 @@ export const BEATS: Beat[] = [
     },
     done: S => S.locked && val(S) === 90,
   },
-  watch("is-90", "A quarter turn is $90^\\circ$. It's a right angle.", S => {
+  watch("is-90", "A quarter turn is $90^\\circ$. It's a *right angle*.", S => {
     resetBeat(S); turnBoard(S, 90); look(S, ["arcs", "values"])
   }, 2.2),
   {
@@ -351,7 +353,7 @@ export const BEATS: Beat[] = [
     },
     done: S => !S.drag && S.releases > 0 && val(S) > 0 && val(S) < 90,
   },
-  watch("acute", "That's an acute angle.", S => {
+  watch("acute", "That's an *acute* angle.", S => {
     resetBeat(S); turnBoard(S)
     if (!(val(S) > 0 && val(S) < 90)) S.theta = 50
     S.lineTex = `${c(BLUE, "\\text{acute}")} < 90^\\circ`
@@ -359,7 +361,7 @@ export const BEATS: Beat[] = [
   }),
   {
     id: "make-obtuse",
-    say: "Bigger than a right angle, less than straight.",
+    say: "Now make one bigger than a right angle, but less than a straight line.",
     enter: S => {
       resetBeat(S); turning(S)
       if (val(S) > 90) S.theta = 50
@@ -367,7 +369,7 @@ export const BEATS: Beat[] = [
     },
     done: S => !S.drag && S.releases > 0 && val(S) > 90 && val(S) < 180,
   },
-  watch("obtuse", "That's an obtuse angle.", S => {
+  watch("obtuse", "That's an *obtuse* angle.", S => {
     resetBeat(S); turnBoard(S)
     if (!(val(S) > 90 && val(S) < 180)) S.theta = 125
     S.lineTex = `90^\\circ < ${c(BLUE, "\\text{obtuse}")} < 180^\\circ`
@@ -383,7 +385,7 @@ export const BEATS: Beat[] = [
     },
     done: S => !S.drag && S.releases > 0 && val(S) > 180 && val(S) < 360,
   },
-  watch("reflex", "Bigger than $180^\\circ$ is a reflex angle.", S => {
+  watch("reflex", "An angle bigger than $180^\\circ$ is a *reflex* angle.", S => {
     resetBeat(S); turnBoard(S)
     if (!(val(S) > 180 && val(S) < 360)) S.theta = 240
     S.lineTex = `${c(BLUE, "\\text{reflex}")} > 180^\\circ`
@@ -579,7 +581,7 @@ export const BEATS: Beat[] = [
     enter: S => { resetBeat(S); pointBoard(S, [110, 120, 130], 3); S.mode = "addRay"; look(S, ["arcs", "values"]) },
     done: S => S.rays.length >= 4,
   },
-  watch("still-360", "Four angles. Still $360^\\circ$.", S => {
+  watch("still-360", "Now there are four angles. They still add up to $360^\\circ$.", S => {
     resetBeat(S); pointBoard(S, [80, 105, 95, 80], 4); S.mode = "rays"
     S.sum = { ids: ["P0", "P1", "P2", "P3"], total: 360 }
     S.fullAt = true
@@ -645,7 +647,7 @@ export const BEATS: Beat[] = [
     },
     done: S => S.lines.length >= 2,
   },
-  watch("four", "Four angles.", S => {
+  watch("four", "That makes four angles.", S => {
     resetBeat(S); crossBoard(S); look(S, ["arcs", "values"])
   }),
   {
@@ -692,7 +694,7 @@ export const BEATS: Beat[] = [
     S.mode = "rotLine"; S.rotLine = 1
     look(S, ["arcs", "values"])
   }),
-  watch("vert-opp", "They're called vertically opposite angles.", S => {
+  watch("vert-opp", "They're called *vertically opposite* angles.", S => {
     resetBeat(S); crossBoard(S)
     S.colourMode = "pairs"
     S.mode = "rotLine"; S.rotLine = 1
@@ -800,7 +802,7 @@ export const BEATS: Beat[] = [
     },
     done: S => S.lines.length >= 2,
   },
-  watch("parallel", "Lines that never meet are parallel.", S => {
+  watch("parallel", "Lines that never meet are *parallel*.", S => {
     resetBeat(S); parBoard(S); look(S, [])
   }),
   watch("arrows", "These arrows mean parallel.", S => {
@@ -858,14 +860,14 @@ export const BEATS: Beat[] = [
     },
     done: guessIn,
   },
-  watch("two-sizes", "Only two sizes. They add up to $180^\\circ$.", S => {
+  watch("two-sizes", "There are only two sizes. They add up to $180^\\circ$.", S => {
     resetBeat(S); transBoard(S); S.colourMode = "size"
     S.sum = { ids: ["A0", "A1"], total: 180 }
     look(S, ["arcs", "values", "arrows", "sum"])
   }, 2.4),
   {
     id: "still-two",
-    say: "Turn it again. Still only two.",
+    say: "Turn it again. There are still only two sizes.",
     enter: S => {
       resetBeat(S); transBoard(S); S.colourMode = "size"; turnAcross(S)
       S.sum = { ids: ["A0", "A1"], total: 180 }
@@ -878,7 +880,7 @@ export const BEATS: Beat[] = [
     S.slide = S.time
     look(S, ["arcs", "values", "arrows"])
   }, 4.4),
-  watch("copies", "The two crossings are copies.", S => {
+  watch("copies", "The two crossings are copies of each other.", S => {
     resetBeat(S); transBoard(S); S.colourMode = "size"; turnAcross(S)
     look(S, ["arcs", "values", "arrows", "ghost"])
   }, 2.2),
@@ -912,7 +914,7 @@ export const BEATS: Beat[] = [
   },
 
   // ── 9. Three pairs ──
-  watch("corr", "These are corresponding angles.", S => {
+  watch("corr", "These are *corresponding* angles.", S => {
     resetBeat(S); transBoard(S); turnAcross(S)
     only(S, ["A0", "B0"]); S.fixed = { A0: BLUE, B0: BLUE }; S.pulse = new Set(["A0", "B0"])
     look(S, ["arcs", "values", "arrows"])
@@ -938,7 +940,7 @@ export const BEATS: Beat[] = [
     },
     done: tapped("B3"),
   },
-  watch("alt", "These are alternate angles.", S => {
+  watch("alt", "These are *alternate* angles.", S => {
     resetBeat(S); transBoard(S); turnAcross(S)
     only(S, ["A1", "B3"]); S.fixed = { A1: BLUE, B3: BLUE }; S.pulse = new Set(["A1", "B3"])
     look(S, ["arcs", "values", "arrows"])
@@ -964,7 +966,7 @@ export const BEATS: Beat[] = [
     },
     done: tapped("B0"),
   },
-  watch("alt-why-1", "Why? These two are corresponding.", S => {
+  watch("alt-why-1", "Why are they equal? These two are corresponding.", S => {
     resetBeat(S); transBoard(S)
     only(S, ["A2", "B2"]); S.fixed = { A2: BLUE, B2: BLUE }
     S.shape = { kind: "F", q: [2, 2] }
@@ -982,7 +984,7 @@ export const BEATS: Beat[] = [
     S.shape = { kind: "Z", q: [2, 0] }
     look(S, ["arcs", "values", "arrows", "shape"])
   }, 2.2),
-  watch("coi", "These are co-interior angles.", S => {
+  watch("coi", "These are *co-interior* angles.", S => {
     resetBeat(S); transBoard(S); turnAcross(S)
     only(S, ["A1", "B0"]); S.colourMode = "size"; S.pulse = new Set(["A1", "B0"])
     look(S, ["arcs", "values", "arrows"])
@@ -1014,7 +1016,7 @@ export const BEATS: Beat[] = [
   pairQuiz("quiz-3", [1, 1], 0),
   {
     id: "rules-hold",
-    say: "Turn the crossing line. The rules still hold.",
+    say: "Turn the crossing line. It still follows the rules.",
     enter: S => { resetBeat(S); transBoard(S); S.colourMode = "size"; turnAcross(S); look(S, ["arcs", "values", "arrows"]) },
     done: turnedEnough(20), free: true, minPlay: 6,
   },
@@ -1149,7 +1151,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "exam-p",
-    say: "Three parallel lines, crossed by two more. Find $p$.",
+    say: "Here are three parallel lines with two lines across them. Find $p$.",
     enter: S => {
       resetBeat(S)
       look(S, ["arcs", "values", "arrows", "line", "keypad"])
@@ -1278,10 +1280,29 @@ export const BEATS: Beat[] = [
   }, 2.6),
   {
     id: "end",
-    say: "Turn it any way. Only two sizes, always.",
+    say: "Turn it any way you like. There are always only two sizes.",
     enter: S => { resetBeat(S); transBoard(S); S.colourMode = "size"; turnAcross(S); look(S, ["arcs", "values", "arrows"]) },
     cta: "Start again",
     ctaAfter: 4,
     restart: true,
   },
 ]
+
+// ── the parts of the lesson: each title comes up before its first beat ──
+const PARTS: [string, string][] = [
+  ["turn", "What an angle is"],
+  ["make-acute", "Types of angle"],
+  ["letters", "Naming angles"],
+  ["draw-line", "Angles on a straight line"],
+  ["point", "Angles round a point"],
+  ["draw-cross", "Vertically opposite angles"],
+  ["draw-first", "Parallel lines"],
+  ["draw-trans", "Angles on parallel lines"],
+  ["par-q1", "Finding missing angles"],
+  ["make-70", "Make the angles"],
+]
+for (const [id, title] of PARTS) {
+  const b = BEATS.find(x => x.id === id)
+  if (!b) throw new Error(`no beat called ${id}`)
+  b.chapter = title
+}
