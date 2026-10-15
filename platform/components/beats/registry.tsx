@@ -3,6 +3,7 @@ import TriangleAnglesLesson from "./triangle-angles/TriangleAnglesLesson"
 import PolygonAnglesLesson from "./polygon-angles/PolygonAnglesLesson"
 import AnglesLesson from "./angles-basics/AnglesLesson"
 import CircleTheoremsLesson from "./circle-theorems/CircleTheoremsLesson"
+import CircleTheorems2Lesson from "./circle-theorems-2/CircleTheorems2Lesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -26,6 +27,12 @@ export const BEAT_LESSONS: Record<string, {
     description: "Draw a circle, find that the angle in a semicircle is always 90°, and see why the angle at the centre is twice the angle at the circumference.",
     topicHref: "/dashboard/maths/04/07",
     Lesson: CircleTheoremsLesson,
+  },
+  "circle-theorems-2": {
+    title: "Circle theorems II",
+    description: "Cyclic quadrilaterals, tangents, two tangents from a point, and the alternate segment theorem, each found by moving the figure yourself.",
+    topicHref: "/dashboard/maths/04/07",
+    Lesson: CircleTheorems2Lesson,
   },
   "angles-in-a-triangle": {
     title: "Angles in a triangle",
