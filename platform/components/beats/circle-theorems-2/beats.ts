@@ -224,12 +224,15 @@ function radiusLineAngle(): AngSpec {
       return Math.round(90 - tilt)
     },
     geom: S => {
-      if (!S.tlineD) return null
+      if (!S.tline) return null
       const Tp = posOf(S, "T"), O = posOf(S, "O")
       const a1 = Math.atan2(O[1] - Tp[1], O[0] - Tp[0])
-      const u = S.tlineD.t + Math.PI / 2 + S.tlineD.tilt
-      const cand = [u, u + Math.PI].map(x => ({ x, d: turn(a1, x) })).sort((p, q) => Math.abs(p.d) - Math.abs(q.d))[0]
-      return { c: Tp, start: a1, sweep: cand.d }
+      // The two sides of the line make 90 - tilt and 90 + tilt with the
+      // radius. Pick the side from the tilt itself (the acute one, and one
+      // fixed side when there is no tilt): comparing the two, which are
+      // equal for a tangent, flipped the mark from side to side every frame.
+      const tilt = S.tline.tilt
+      return { c: Tp, start: a1, sweep: tilt >= 0 ? -Math.PI / 2 + tilt : Math.PI / 2 + tilt }
     },
   }
 }
