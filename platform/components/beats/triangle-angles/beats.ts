@@ -10,6 +10,8 @@
  * can be opened cold (?beat=N) or returned to.
  */
 
+import type { BeatOf } from "../beat"
+import { applyParts } from "../chapter"
 import { anglesOf, thinness, diameter } from "../geometry"
 import type { WalkStep } from "../walk"
 import {
@@ -19,31 +21,7 @@ import {
   untear, tearAll, startInput, refreshChips, say, roomForEqui, roomToBuild, screenScale,
 } from "./scene"
 
-export interface Beat {
-  id: string
-  /** The one phrase on screen. $...$ is KaTeX. */
-  /** This beat starts a new part of the lesson: its title comes up first (chapter.ts). */
-  chapter?: string
-  say: string
-  enter: (S: Scene) => void
-  /** A doing beat finishes itself when this turns true. */
-  done?: (S: Scene) => boolean
-  /** Continue button: "" is a plain arrow; undefined means none. */
-  cta?: string
-  /** Seconds before the button appears. */
-  ctaAfter?: number
-  /**
-   * A playing beat: when `done` turns true the board does NOT move on.
-   * The continue button appears instead, and the student keeps playing
-   * until they choose to go on.
-   */
-  free?: boolean
-  /** Seconds of play before a playing beat offers to move on. */
-  minPlay?: number
-  restart?: boolean
-  /** "Show me how": the worked solution, one step at a time, for a student who is stuck */
-  walk?: WalkStep<Scene>[]
-}
+export type Beat = BeatOf<Scene>
 
 const DEFAULT = [BLUE, ORANGE, PINK]
 const deg = (n: number) => `${n}^\\circ`
@@ -555,8 +533,4 @@ const PARTS: [string, string][] = [
   ["p1-a", "Finding missing angles"],
   ["make-1", "Build a triangle"],
 ]
-for (const [id, title] of PARTS) {
-  const b = BEATS.find(x => x.id === id)
-  if (!b) throw new Error(`no beat called ${id}`)
-  b.chapter = title
-}
+applyParts(BEATS, PARTS)

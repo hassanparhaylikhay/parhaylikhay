@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "lesson:audit": "node scripts/lesson-audit.mjs"
+    "lesson:audit": "node scripts/lesson-audit.mjs",
+    "test:lessons": "node tests/lessons/run.mjs quick --serve",
+    "test:lessons:full": "node tests/lessons/run.mjs full --serve"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
@@ -39,6 +41,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "puppeteer-core": "^25.14.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

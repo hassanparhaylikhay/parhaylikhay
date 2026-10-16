@@ -12,6 +12,9 @@
  * a question needs a set figure; then the points glide there.
  */
 
+import type { BeatOf } from "../beat"
+import { applyParts } from "../chapter"
+import type { WalkStep as WalkStepOf } from "../walk"
 import {
   type Scene, type EqPart, type VisKey, type AngSpec,
   BLUE, ORANGE, PINK, GREEN, NEUTRAL,
@@ -19,38 +22,9 @@ import {
   angOf, turn, RAD,
 } from "./scene"
 
-export interface Beat {
-  id: string
-  /** The one phrase on screen. $...$ is KaTeX. */
-  /** This beat starts a new part of the lesson: its title comes up first (chapter.ts). */
-  chapter?: string
-  say: string
-  enter: (S: Scene) => void
-  /** A doing beat finishes itself when this turns true. */
-  done?: (S: Scene) => boolean
-  /** Continue button: "" is a plain arrow; undefined means none. */
-  cta?: string
-  /** Seconds before the button appears. */
-  ctaAfter?: number
-  /** A playing beat: when done, the arrow appears and the student chooses when to go on. */
-  free?: boolean
-  /** Seconds of play before a playing beat offers to move on. */
-  minPlay?: number
-  /** Milliseconds a finished doing beat waits before moving on (default 1800). */
-  advanceAfter?: number
-  restart?: boolean
-  /** "Show me how": the worked solution, one step at a time, for a student who is stuck */
-  walk?: WalkStep[]
-}
+export type Beat = BeatOf<Scene>
 
-export interface WalkStep {
-  /** what the teacher says at this step */
-  say: string
-  /** the line of working under the figure */
-  tex?: string
-  /** what lights up or appears on the figure */
-  show?: (S: Scene) => void
-}
+export type WalkStep = WalkStepOf<Scene>
 
 const deg = (n: number) => `${n}^\\circ`
 const c = (col: string, tex: string) => `\\textcolor{${col}}{${tex}}`
@@ -1432,8 +1406,4 @@ const PARTS: [string, string][] = [
   ["use-semi", "Finding missing angles"],
   ["make-30", "Make the angles"],
 ]
-for (const [id, title] of PARTS) {
-  const b = BEATS.find(x => x.id === id)
-  if (!b) throw new Error(`no beat called ${id}`)
-  b.chapter = title
-}
+applyParts(BEATS, PARTS)

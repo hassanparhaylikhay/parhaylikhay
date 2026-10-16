@@ -33,3 +33,12 @@ export function cardFor(beats: { chapter?: string }[], n: number, now: number): 
 export function cardView(c: Card | null) {
   return c ? { text: c.text, key: c.key, leaving: c.leaving !== null } : null
 }
+
+/** Mark where each part of a lesson starts. A title on a beat that does not exist throws, so a typo never ships. */
+export function applyParts(beats: { id: string; chapter?: string }[], parts: [string, string][]) {
+  for (const [id, title] of parts) {
+    const b = beats.find(x => x.id === id)
+    if (!b) throw new Error(`no beat called ${id}`)
+    b.chapter = title
+  }
+}

@@ -858,39 +858,7 @@ export const joined = (S: Scene) => S.joinNeed.every(([a, b]) => S.segs.some(s =
 
 // ── typed answers ────────────────────────────────────────────────────────
 
-export function typeKey(S: Scene, key: string) {
-  const inp = S.input
-  if (!inp || inp.state === "right" || inp.state === "guessed") return
-  if (key === "back") { inp.value = inp.value.slice(0, -1); inp.state = "idle"; return }
-  if (key === "go") { check(S); return }
-  if (/^\d$/.test(key) && inp.value.length < 4) {
-    if (inp.state === "wrong") inp.value = ""
-    inp.value += key
-    inp.state = "idle"
-  }
-}
-
-function check(S: Scene) {
-  const inp = S.input!
-  if (!inp.value) return
-  const v = Number(inp.value)
-  if (inp.guess) {
-    const hit = v === inp.answer
-    inp.state = hit ? "right" : "guessed"
-    say(S, hit ? "Spot on." : "Let's see.", "calm", 2.4)
-    inp.onRight?.(S)
-    return
-  }
-  if (v === inp.answer) {
-    inp.state = "right"
-    inp.onRight?.(S)
-    return
-  }
-  inp.tries++
-  inp.state = "wrong"
-  inp.wrongAt = S.time
-  inp.help?.(S, inp.tries)
-  if (inp.hints.length) S.vis.hint.t = 1
-}
+// shared with the other lessons (answers.ts)
+export { typeKey } from "../answers"
 
 export { dist, lerpV, clamp, turn, RAD, DEG }

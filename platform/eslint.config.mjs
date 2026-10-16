@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // browser tests: plain Node scripts, run with `npm run test:lessons`
+    "tests/**",
   ]),
 ]);
 

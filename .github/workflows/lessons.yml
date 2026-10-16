@@ -1,0 +1,56 @@
+# Lesson tests: on every push that touches the site, build it and run the
+# quick lesson suite (every beat of every lesson opened, title cards, notes,
+# and the flicker checks). Run the full suite from the Actions tab.
+name: Lesson tests
+
+on:
+  push:
+    branches: [main]
+    paths: ["platform/**", ".github/workflows/lessons.yml"]
+  pull_request:
+    paths: ["platform/**"]
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: "quick (about 10 minutes) or full (about an hour)"
+        default: quick
+
+concurrency:
+  group: lessons-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lessons:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    defaults:
+      run:
+        working-directory: platform
+    env:
+      # The lessons need no login. The login check on every page only needs a
+      # Supabase address to fail against, so placeholders are enough here.
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      CHROME_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: platform/package-lock.json
+      - run: npm ci
+      - name: Types
+        run: npx tsc --noEmit
+      - name: Lint the lessons
+        run: npx eslint components/beats
+      - name: Build
+        run: npx next build
+      - name: Lesson suite
+        run: node tests/lessons/run.mjs ${{ github.event.inputs.suite || 'quick' }} --serve --no-build
+      - name: Keep the logs of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lesson-test-logs
+          path: /tmp/lesson-tests
