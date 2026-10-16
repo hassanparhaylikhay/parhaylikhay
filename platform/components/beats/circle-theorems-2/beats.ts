@@ -301,7 +301,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "compass",
-    say: "Now drag out to draw your circle.",
+    say: "Now drag out to draw your circle. Make it as big as you can.",
     enter: S => {
       resetBeat(S)
       const L = layout(S)

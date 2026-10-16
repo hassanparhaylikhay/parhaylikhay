@@ -2,10 +2,11 @@
 
 import styles from "../beats.module.css"
 import { Tex } from "../Tex"
+import { boxFor, spread, overlaps, type LabelBox } from "../labels"
 import { type Vec, add, sub, mul, lerpV, clamp, ease, sectorPath, arcPath, turn } from "../geometry"
 import {
   type Scene, type Layout, type AngleInfo, CHALK, GREEN, YELLOW, BLUE, PINK,
-  angleList, posOf, angOf, dirOf, norm, compassR, distToSeg, lineGeom, lineHits, lineHandle,
+  angleList, posOf, angOf, dirOf, norm, compassR, compassMax, distToSeg, lineGeom, lineHits, lineHandle,
 } from "./scene"
 
 /**
@@ -63,6 +64,12 @@ function CircleLayer({ S, L }: { S: Scene; L: Layout }) {
   const O = S.OD
   const out: React.ReactNode[] = []
   const lit = S.flashGood > 0 && S.touched?.kind === "circle"
+  // how big the circle can be: a faint ring to pull the compass out to
+  if (S.mode === "compass" && !S.drawn && !S.sweep) {
+    const max = compassMax(S, L)
+    const reached = S.compass && compassR(S, L) >= max
+    out.push(<circle key="ring" cx={O[0]} cy={O[1]} r={max} fill="none" stroke={YELLOW} strokeOpacity={reached ? 0.55 : 0.18} strokeWidth={reached ? 2 : 1.4} strokeDasharray="3 7" />)
+  }
   // the compass, while the student drags it out
   if (S.compass) {
     const R = compassR(S, L)
@@ -432,7 +439,7 @@ function ghost(S: Scene, L: Layout): { kind: "tap"; p: Vec } | { kind: "drag"; a
   const O = S.OD, R = S.RD
   if (S.mode === "place" && !S.O) return { kind: "tap", p: L.centre }
   if (!O) return null
-  if (S.mode === "compass" && !S.sweep) return { kind: "drag", a: O, b: add(O, mul(dirOf(-0.5), Math.min(L.Rmax, 150) * 0.8)) }
+  if (S.mode === "compass" && !S.sweep) return { kind: "drag", a: O, b: add(O, mul(dirOf(-0.5), compassMax(S, L))) }
   if (S.mode === "drawDiam") return { kind: "drag", a: add(O, mul(dirOf(Math.PI - 0.25), R * 0.92)), b: add(O, mul(dirOf(-0.25), R * 0.92)) }
   if (S.mode === "drawChord") {
     const n = dirOf(Math.PI / 2 - 0.2), u: Vec = [-n[1], n[0]]
@@ -478,7 +485,9 @@ function Labels({ S, L, list, shown, vis }: { S: Scene; L: Layout; list: AngleIn
       </div>,
     )
   }
-  if (vv > 0.01) for (const a of shown) tag(a, `v${a.id}`, S.label[a.id], colourOf(S, a.id), vv)
+  // where each number wants to sit; letters claim their spots first and the numbers keep clear of them
+  const want = vv > 0.01 ? shown.filter(a => S.label[a.id] !== "").map(a => ({ key: a.id, from: a.c, box: boxFor(S.label[a.id] ?? `${a.value}^\\circ`, a.label, L.labelSize) })) : []
+  const taken: LabelBox[] = []
   for (const id of Object.keys(S.fly)) {
     const w = flyingWedge(S, list, id)
     if (w) tag(w, `fl${id}`, S.label[id], colourOf(S, id), 1)
@@ -492,6 +501,7 @@ function Labels({ S, L, list, shown, vis }: { S: Scene; L: Layout; list: AngleIn
       const at = posOf(S, n)
       const away = sub(at, S.OD), al = Math.hypot(away[0], away[1]) || 1
       const p = add(at, mul(away, 19 / al))
+      taken.push(boxFor(n, p, L.labelSize + 1))
       out.push(
         <div key={`L${n}`} className={styles.label} style={{ ...place(p), color: CHALK, fontSize: L.labelSize + 1, opacity: lv }}>
           <Tex tex={n} />
@@ -499,13 +509,18 @@ function Labels({ S, L, list, shown, vis }: { S: Scene; L: Layout; list: AngleIn
       )
     }
     if (S.letters.has("O")) {
+      const oAt = add(S.OD, centreLetterOffset(S, shown, want.map(w => w.box), L.labelSize + 1))
+      taken.push(boxFor("O", oAt, L.labelSize + 1))
       out.push(
-        <div key="LO" className={styles.label} style={{ ...place(add(S.OD, centreLetterOffset(S, shown))), color: CHALK, fontSize: L.labelSize + 1, opacity: lv }}>
+        <div key="LO" className={styles.label} style={{ ...place(oAt), color: CHALK, fontSize: L.labelSize + 1, opacity: lv }}>
           <Tex tex="O" />
         </div>,
       )
     }
   }
+  // the numbers, each on its own spot or nudged clear of the letters and of each other
+  const spot = spread(want, taken)
+  if (vv > 0.01) for (const a of shown) tag({ ...a, label: spot[a.id] ?? a.label }, `v${a.id}`, S.label[a.id], colourOf(S, a.id), vv)
   // a name written along a line (r on the radius), or a live length
   for (const s of S.segs) {
     const t = S.segText[s.id]?.(S) ?? S.label[`seg:${s.id}`]
@@ -547,7 +562,7 @@ function Labels({ S, L, list, shown, vis }: { S: Scene; L: Layout; list: AngleIn
  * stays clear, so it never hops from side to side as a line turns.
  */
 const O_PREFS = [90, 112.5, 67.5, 135, 45, 157.5, 22.5, 180, 0, 202.5, 337.5, 225, 315, 247.5, 292.5, 270].map(d => (d * Math.PI) / 180)
-function centreLetterOffset(S: Scene, shown: AngleInfo[]): Vec {
+function centreLetterOffset(S: Scene, shown: AngleInfo[], avoid: LabelBox[] = [], size = 20): Vec {
   const O = posOf(S, "O")
   const D = 20
   const segs = S.segs.filter(s => S.showSegs === "all" || S.showSegs.has(s.id)).map(s => [posOf(S, s.a), posOf(S, s.b)] as const)
@@ -560,7 +575,9 @@ function centreLetterOffset(S: Scene, shown: AngleInfo[]): Vec {
     const rel = w.sweep >= 0 ? norm(th - w.start) : norm(w.start - th)
     return rel > Math.abs(w.sweep) + 0.15
   })
-  const ok = (th: number) => clearOfLines(th) && outsideWedges(th)
+  // and off the numbers: an O on top of an angle's value hides it
+  const clearOfLabels = (th: number) => { const b = boxFor("O", add(O, mul(dirOf(th), D)), size); return avoid.every(a => !overlaps(a, b)) }
+  const ok = (th: number) => clearOfLines(th) && outsideWedges(th) && clearOfLabels(th)
   if (S.oDir !== null && ok(S.oDir)) return mul(dirOf(S.oDir), D)
   const pick = O_PREFS.find(ok) ?? (S.oDir !== null && clearOfLines(S.oDir) ? S.oDir : O_PREFS.find(clearOfLines)) ?? O_PREFS[0]
   S.oDir = pick

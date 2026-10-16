@@ -2,10 +2,11 @@
 
 import styles from "../beats.module.css"
 import { Tex } from "../Tex"
+import { boxFor, spread, overlaps, type LabelBox } from "../labels"
 import { type Vec, add, sub, mul, dot, lerpV, clamp, ease, sectorPath, arcPath } from "../geometry"
 import {
   type Scene, type Layout, type AngleInfo, CHALK, GREEN, YELLOW, BLUE, PINK, NEUTRAL,
-  angleList, posOf, dirOf, norm, compassR, distToSeg, bisectorEnds,
+  angleList, posOf, dirOf, norm, compassR, compassMax, distToSeg, bisectorEnds,
 } from "./scene"
 
 /**
@@ -60,6 +61,12 @@ function CircleLayer({ S, L }: { S: Scene; L: Layout }) {
   const O = S.OD
   const out: React.ReactNode[] = []
   const lit = S.flashGood > 0 && S.touched?.kind === "circle"
+  // how big the circle can be: a faint ring to pull the compass out to
+  if (S.mode === "compass" && !S.drawn && !S.sweep) {
+    const max = compassMax(S, L)
+    const reached = S.compass && compassR(S, L) >= max
+    out.push(<circle key="ring" cx={O[0]} cy={O[1]} r={max} fill="none" stroke={YELLOW} strokeOpacity={reached ? 0.55 : 0.18} strokeWidth={reached ? 2 : 1.4} strokeDasharray="3 7" />)
+  }
   // the compass, while the student drags it out
   if (S.compass) {
     const R = compassR(S, L)
@@ -332,7 +339,7 @@ function ghost(S: Scene, L: Layout): { kind: "tap"; p: Vec } | { kind: "drag"; a
   const O = S.OD, R = S.RD
   if (S.mode === "place" && !S.O) return { kind: "tap", p: L.centre }
   if (!O) return null
-  if (S.mode === "compass" && !S.sweep) return { kind: "drag", a: O, b: add(O, mul(dirOf(-0.5), Math.min(L.Rmax, 150) * 0.8)) }
+  if (S.mode === "compass" && !S.sweep) return { kind: "drag", a: O, b: add(O, mul(dirOf(-0.5), compassMax(S, L))) }
   if (S.mode === "drawChord") {
     // a chord on the side away from any chord already there
     const n = dirOf(S.chordDiffer ? -0.35 : Math.PI / 2 - 0.2), u: Vec = [-n[1], n[0]]
@@ -357,18 +364,9 @@ function ghost(S: Scene, L: Layout): { kind: "tap"; p: Vec } | { kind: "drag"; a
 function Labels({ S, L, shown, vis }: { S: Scene; L: Layout; shown: AngleInfo[]; vis: VisFn }) {
   const out: React.ReactNode[] = []
   const vv = vis("values")
-  if (vv > 0.01) {
-    for (const a of shown) {
-      const ov = S.label[a.id]
-      if (ov === "") continue
-      out.push(
-        <div key={`v${a.id}`} className={`${styles.label} ${S.pulse.has(a.id) && ov === "?" ? styles.pulse : ""}`}
-          style={{ ...place(a.label), color: colourOf(S, a.id), fontSize: L.labelSize, opacity: vv, transition: "color 400ms" }}>
-          <Tex tex={ov ?? `${a.value}^\\circ`} />
-        </div>,
-      )
-    }
-  }
+  // where each number wants to sit; letters claim their spots first and the numbers keep clear of them
+  const want = vv > 0.01 ? shown.filter(a => S.label[a.id] !== "").map(a => ({ key: a.id, from: a.c, box: boxFor(S.label[a.id] ?? `${a.value}^\\circ`, a.label, L.labelSize) })) : []
+  const taken: LabelBox[] = []
 
   // letters
   const lv = vis("letters")
@@ -388,6 +386,7 @@ function Labels({ S, L, shown, vis }: { S: Scene; L: Layout; shown: AngleInfo[];
         const base = al > 4 ? Math.atan2(away[1], away[0]) : -Math.PI / 4
         off = mul(dirOf(base + Math.PI / 4), 21)
       } else off = mul(away, 19 / (al || 1))
+      taken.push(boxFor(n, add(at, off), L.labelSize + 1))
       out.push(
         <div key={`L${n}`} className={styles.label} style={{ ...place(add(at, off)), color: CHALK, fontSize: L.labelSize + 1, opacity: lv }}>
           <Tex tex={n} />
@@ -395,9 +394,25 @@ function Labels({ S, L, shown, vis }: { S: Scene; L: Layout; shown: AngleInfo[];
       )
     }
     if (S.letters.has("O") && S.oVis.v > 0.01) {
+      const oAt = add(S.OD, centreLetterOffset(S, shown, want.map(w => w.box), L.labelSize + 1))
+      taken.push(boxFor("O", oAt, L.labelSize + 1))
       out.push(
-        <div key="LO" className={styles.label} style={{ ...place(add(S.OD, centreLetterOffset(S, shown))), color: CHALK, fontSize: L.labelSize + 1, opacity: lv * S.oVis.v }}>
+        <div key="LO" className={styles.label} style={{ ...place(oAt), color: CHALK, fontSize: L.labelSize + 1, opacity: lv * S.oVis.v }}>
           <Tex tex="O" />
+        </div>,
+      )
+    }
+  }
+  // the numbers, each on its own spot or nudged clear of the letters and of each other
+  const spot = spread(want, taken)
+  if (vv > 0.01) {
+    for (const a of shown) {
+      const ov = S.label[a.id]
+      if (ov === "") continue
+      out.push(
+        <div key={`v${a.id}`} className={`${styles.label} ${S.pulse.has(a.id) && ov === "?" ? styles.pulse : ""}`}
+          style={{ ...place(spot[a.id] ?? a.label), color: colourOf(S, a.id), fontSize: L.labelSize, opacity: vv, transition: "color 400ms" }}>
+          <Tex tex={ov ?? `${a.value}^\\circ`} />
         </div>,
       )
     }
@@ -441,7 +456,7 @@ function Labels({ S, L, shown, vis }: { S: Scene; L: Layout; shown: AngleInfo[];
  * stays clear, so it never hops from side to side as a line turns.
  */
 const O_PREFS = [90, 112.5, 67.5, 135, 45, 157.5, 22.5, 180, 0, 202.5, 337.5, 225, 315, 247.5, 292.5, 270].map(d => (d * Math.PI) / 180)
-function centreLetterOffset(S: Scene, shown: AngleInfo[]): Vec {
+function centreLetterOffset(S: Scene, shown: AngleInfo[], avoid: LabelBox[] = [], size = 20): Vec {
   const O = posOf(S, "O")
   const D = 20
   const segs = S.segs.filter(s => S.showSegs === "all" || S.showSegs.has(s.id)).map(s => [posOf(S, s.a), posOf(S, s.b)] as const)
@@ -456,7 +471,9 @@ function centreLetterOffset(S: Scene, shown: AngleInfo[]): Vec {
     const rel = w.sweep >= 0 ? norm(th - w.start) : norm(w.start - th)
     return rel > Math.abs(w.sweep) + 0.15
   })
-  const ok = (th: number) => clearOfLines(th) && outsideWedges(th)
+  // and off the numbers: an O on top of an angle's value hides it
+  const clearOfLabels = (th: number) => { const b = boxFor("O", add(O, mul(dirOf(th), D)), size); return avoid.every(a => !overlaps(a, b)) }
+  const ok = (th: number) => clearOfLines(th) && outsideWedges(th) && clearOfLabels(th)
   if (S.oDir !== null && ok(S.oDir)) return mul(dirOf(S.oDir), D)
   const pick = O_PREFS.find(ok) ?? (S.oDir !== null && clearOfLines(S.oDir) ? S.oDir : O_PREFS.find(clearOfLines)) ?? O_PREFS[0]
   S.oDir = pick

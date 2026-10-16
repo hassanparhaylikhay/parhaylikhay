@@ -454,9 +454,9 @@ export function ensureCircle(S: Scene) {
   const L = layout(S)
   S.O = [L.centre[0], L.centre[1]]
   S.OD = [L.centre[0], L.centre[1]]
-  S.Rwant = L.Rmin + (L.Rmax - L.Rmin) * 0.85
-  S.R = S.Rwant
-  S.RD = S.Rwant
+  S.Rwant = 1e6
+  S.R = L.Rmax
+  S.RD = L.Rmax
   S.drawn = true
   S.sweep = { t0: S.time - 5, a0: 0 }
 }
@@ -484,7 +484,8 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     if (S.O) return false
     const inset = L.Rmin + 34
     const q = clampToRect(p, { x0: L.board.x0 + inset, x1: L.board.x1 - inset, y0: L.board.y0 + inset, y1: L.board.y1 - inset })
-    S.O = [q[0], q[1]]
+    // the dot lands where they tapped, then glides to the middle so the circle has room to be big
+    S.O = [L.centre[0], L.centre[1]]
     S.OD = [q[0], q[1]]
     S.R = 0
     S.RD = 0
@@ -593,10 +594,25 @@ function maxFit(S: Scene, L: Layout) {
   return Math.min(S.O[0] - b.x0, b.x1 - S.O[0], S.O[1] - b.y0, b.y1 - S.O[1]) - 30
 }
 
+/** The biggest circle the board has room for. */
+export function compassMax(S: Scene, L: Layout) {
+  return Math.min(maxFit(S, L), L.Rmax)
+}
+
+/**
+ * How far the compass reaches. Near the edge it clicks out to the biggest
+ * circle: a small circle crowds every letter and number for the rest of
+ * the lesson, so the lesson nudges the student to draw it big.
+ */
 export function compassR(S: Scene, L: Layout) {
   if (!S.O || !S.compass) return 0
-  return clamp(dist(S.compass.to, S.O), 0, Math.min(maxFit(S, L), L.Rmax))
+  const max = compassMax(S, L)
+  const r = clamp(dist(S.compass.to, S.O), 0, max)
+  return r >= max * BIG ? max : r
 }
+
+/** How close to the biggest circle the compass must reach before it clicks out. */
+const BIG = 0.8
 
 export function pointerMove(S: Scene, p: Vec) {
   const L = layout(S)
@@ -658,8 +674,9 @@ export function pointerUp(S: Scene) {
     const R = compassR(S, L)
     const a0 = Math.atan2(S.compass.to[1] - S.O[1], S.compass.to[0] - S.O[0])
     S.compass = null
-    if (R < L.Rmin * 0.92) { say(S, "Make it a bit bigger."); return }
-    S.Rwant = R
+    if (R < compassMax(S, L) * BIG) { say(S, "Make it bigger. Pull it right out to the ring."); return }
+    // from now on the circle is as big as the board allows, whatever the screen does
+    S.Rwant = 1e6
     S.R = R
     S.RD = R
     S.sweep = { t0: S.time, a0 }
