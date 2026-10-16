@@ -334,10 +334,18 @@ export const arcForDist = (cm: number) => 2 * Math.acos(clamp(cm / RADIUS_CM, 0,
 export function cmBetween(S: Scene, a: string, b: string): number {
   return (dist(posOf(S, a, false), posOf(S, b, false)) / Math.max(1, S.R)) * RADIUS_CM
 }
-/** A length for the board: one decimal place, whole numbers without one. */
+/**
+ * A length for the board. A whole number only when it IS one; otherwise one
+ * decimal place, or more when one would look whole (7.96, never 8.0), so the
+ * board never shows a target the lesson has not accepted.
+ */
 export function cmText(x: number): string {
-  const r = Math.round(x * 10) / 10
-  return `${Number.isInteger(r) ? r : r.toFixed(1)}\\text{ cm}`
+  if (Math.abs(x - Math.round(x)) < 1e-6) return `${Math.round(x)}\\text{ cm}`
+  for (let d = 1; d <= 3; d++) {
+    const r = Math.round(x * 10 ** d) / 10 ** d
+    if (Math.abs(r - Math.round(r)) > 1e-9) return `${r.toFixed(d)}\\text{ cm}`
+  }
+  return `${x.toFixed(3)}\\text{ cm}`
 }
 /** The rounded value a length shows as, for checking what the student sees. */
 export const shown = (x: number) => Math.round(x * 10) / 10

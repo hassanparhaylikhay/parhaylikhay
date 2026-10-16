@@ -18,7 +18,7 @@ import {
   type Scene, type EqPart, type VisKey, type AngSpec, type Bisector,
   BLUE, ORANGE, PINK, GREEN, NEUTRAL, CHALK,
   resetBeat, show, say, startInput, ensureCircle, place, setSegs, layout, joined,
-  turn, midOf, slideOn, chordArc, chordCm, distCm, cmText, shown, arcForLength, arcForDist, cmBetween, sliderAngle,
+  turn, midOf, slideOn, chordArc, chordCm, distCm, cmText, arcForLength, arcForDist, cmBetween, sliderAngle,
 } from "./scene"
 
 export interface Beat {
@@ -1161,10 +1161,13 @@ export const BEATS: Beat[] = [
     say: "Make this chord $8$ cm long and $2$ cm from the centre.",
     enter: S => {
       buildTwo(S, 74)
+      // a chip lights only when the board shows exactly that number; magnets make each one reachable
       S.chips = [
-        { tex: `CD = 8${CM}`, test: S2 => shown(chordCm(S2, "C", "D")) === 8 },
-        { tex: `ON = 2${CM}`, test: S2 => shown(distCm(S2, "C", "D")) === 2 },
+        { tex: `CD = 8${CM}`, test: S2 => cmText(chordCm(S2, "C", "D")) === cmText(8) },
+        { tex: `ON = 2${CM}`, test: S2 => cmText(distCm(S2, "C", "D")) === cmText(2) },
       ]
+      S.snapFn = (S2, name, a) => arcSnap(arcForLength(8), "C", "D")(S2, name, a) ?? arcSnap(arcForDist(2), "C", "D")(S2, name, a)
+      S.lockOnSnap = false
       S.movable = ["C", "D"]; S.minGap = 12; S.mode = "slide"
       look(S, ["letters", "arcs", "line"])
     },

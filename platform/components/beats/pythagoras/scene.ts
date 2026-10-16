@@ -158,6 +158,8 @@ export interface Scene {
   locked: boolean
   /** the drag has a goal: when the board meets it, the point clicks and stays */
   lockWhen: ((S: Scene) => boolean) | null
+  /** a word after letting go short of the goal (null: nothing to say) */
+  releaseNote: ((S: Scene) => string | null) | null
   touched: { kind: "seg"; id: string } | { kind: "pt"; name: string } | { kind: "sq"; id: string } | null
   flashGood: number
   note: { text: string; until: number; tone: "wrong" | "calm" } | null
@@ -174,7 +176,7 @@ export function createScene(): Scene {
     sumFly: null, sumVals: null,
     joinNeed: [], joinHint: "", stroke: null, fading: [], drewOnce: false, tapIds: null, onTapSeg: null, breatheTri: false,
     vis, pulse: new Set(), pulseSegs: new Set(), pulseSquares: new Set(), walkTex: null, lineTex: null, lineFn: null, chips: [], got: new Set(),
-    input: null, drag: null, touch: false, moved: 0, movedBy: {}, releases: 0, snapped: false, locked: false, lockWhen: null,
+    input: null, drag: null, touch: false, moved: 0, movedBy: {}, releases: 0, snapped: false, locked: false, lockWhen: null, releaseNote: null,
     touched: null, flashGood: 0, note: null,
   }
 }
@@ -248,10 +250,18 @@ export function sq2(S: Scene, a: string, b: string): number {
   return (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2
 }
 
-/** A whole number when it is one (to 6 places), otherwise one decimal place. */
+/**
+ * A whole number only when it IS one. Otherwise one decimal place, or more
+ * when one place would look whole: √170 shows as 13.04, never 13.0, so a
+ * student is never shown the target while the board says it is not there.
+ */
 export function numText(x: number): string {
   if (Math.abs(x - Math.round(x)) < 1e-6) return String(Math.round(x))
-  return (Math.round(x * 10) / 10).toFixed(1)
+  for (let d = 1; d <= 4; d++) {
+    const r = Math.round(x * 10 ** d) / 10 ** d
+    if (Math.abs(r - Math.round(r)) > 1e-9) return r.toFixed(d)
+  }
+  return x.toFixed(4)
 }
 
 /** The square's four corners in world units (drawn), grown by its spring. */
@@ -379,6 +389,7 @@ export function resetBeat(S: Scene) {
   S.snapped = false
   S.locked = false
   S.lockWhen = null
+  S.releaseNote = null
   S.movable = []
   S.constrain = {}
   S.frameFn = null
@@ -523,7 +534,9 @@ export function pointerUp(S: Scene) {
   if (!S.drag) return
   S.drag = null
   S.releases++
-  if (S.snapped) { S.locked = true; S.flashGood = 1 }
+  if (S.snapped) { S.locked = true; S.flashGood = 1; S.note = null; return }
+  const n = S.releaseNote?.(S)
+  if (n) say(S, n, "calm", 3.2)
 }
 
 function endStroke(S: Scene) {

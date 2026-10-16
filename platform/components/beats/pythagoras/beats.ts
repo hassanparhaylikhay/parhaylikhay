@@ -985,6 +985,11 @@ function makeTo(id: string, text: string, c2: number, max: number): Beat {
       if (sq2(S, "A", "B") === c2) setLegs(S, 2, 2)
       S.chips = [{ tex: `c = ${Math.round(Math.sqrt(c2))}`, test: S2 => sq2(S2, "A", "B") === c2 }]
       S.lockWhen = S2 => sq2(S2, "A", "B") === c2
+      // close but not there: say so, so a near miss never looks like a broken board
+      S.releaseNote = S2 => {
+        const d = Math.sqrt(sq2(S2, "A", "B")) - Math.sqrt(c2)
+        return Math.abs(d) < 0.35 && d !== 0 ? `Close. The hypotenuse must be exactly $${Math.round(Math.sqrt(c2))}$.` : null
+      }
       look(S, ["grid", "arcs", "lengths", "line"])
     },
     done: S => S.locked,

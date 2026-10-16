@@ -70,7 +70,7 @@ function gridLines(S: Scene, x0: number, x1: number, y0: number, y1: number, key
 function Grid({ S, L, op }: { S: Scene; L: Layout; op: number }) {
   if (op < 0.01) return null
   const p = toWorld(S, [L.board.x0, L.board.y1]), q = toWorld(S, [L.board.x1, L.board.y0])
-  return <g opacity={op}>{gridLines(S, p[0], q[0], p[1], q[1], "g", "#1a3350", 1)}</g>
+  return <g opacity={op}>{gridLines(S, p[0], q[0], p[1], q[1], "g", "#2a2e31", 1)}</g>
 }
 
 // ── shapes ───────────────────────────────────────────────────────────────
