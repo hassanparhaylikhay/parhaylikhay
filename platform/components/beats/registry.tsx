@@ -4,6 +4,7 @@ import PolygonAnglesLesson from "./polygon-angles/PolygonAnglesLesson"
 import AnglesLesson from "./angles-basics/AnglesLesson"
 import CircleTheoremsLesson from "./circle-theorems/CircleTheoremsLesson"
 import CircleTheorems2Lesson from "./circle-theorems-2/CircleTheorems2Lesson"
+import CircleTheorems3Lesson from "./circle-theorems-3/CircleTheorems3Lesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -33,6 +34,12 @@ export const BEAT_LESSONS: Record<string, {
     description: "Cyclic quadrilaterals, tangents, two tangents from a point, and the alternate segment theorem, each found by moving the figure yourself.",
     topicHref: "/dashboard/maths/04/07",
     Lesson: CircleTheorems2Lesson,
+  },
+  "circle-theorems-3": {
+    title: "Circle theorems III",
+    description: "Find the middle of a chord, see why the line through it at 90° always hits the centre, find a lost centre, and learn why equal chords are the same distance from the centre.",
+    topicHref: "/dashboard/maths/04/08",
+    Lesson: CircleTheorems3Lesson,
   },
   "angles-in-a-triangle": {
     title: "Angles in a triangle",
