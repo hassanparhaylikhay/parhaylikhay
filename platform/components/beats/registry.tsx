@@ -5,6 +5,7 @@ import AnglesLesson from "./angles-basics/AnglesLesson"
 import CircleTheoremsLesson from "./circle-theorems/CircleTheoremsLesson"
 import CircleTheorems2Lesson from "./circle-theorems-2/CircleTheorems2Lesson"
 import CircleTheorems3Lesson from "./circle-theorems-3/CircleTheorems3Lesson"
+import PythagorasLesson from "./pythagoras/PythagorasLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -40,6 +41,12 @@ export const BEAT_LESSONS: Record<string, {
     description: "Find the middle of a chord, see why the line through it at 90° always hits the centre, find a lost centre, and learn why equal chords are the same distance from the centre.",
     topicHref: "/dashboard/maths/04/08",
     Lesson: CircleTheorems3Lesson,
+  },
+  pythagoras: {
+    title: "Pythagoras' theorem",
+    description: "Build squares on the sides of a right-angled triangle, see why the two small ones always make the big one, and use it to find any side.",
+    topicHref: "/dashboard/maths/06/01",
+    Lesson: PythagorasLesson,
   },
   "angles-in-a-triangle": {
     title: "Angles in a triangle",
