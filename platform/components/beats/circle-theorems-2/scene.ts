@@ -825,11 +825,18 @@ export function pointerMove(S: Scene, p: Vec) {
     if (moveFree(S, name, p, L)) return
   }
   let a = Math.atan2(p[1] - S.OD[1], p[0] - S.OD[0])
-  S.snapped = false
-  if (S.snaps && S.snaps.name === name) {
-    for (const t of S.snaps.at) if (Math.abs(turn(a, t)) < 3 * RAD) { a = t; S.snapped = true }
-  }
+  const snaps = S.snaps && S.snaps.name === name ? S.snaps.at : []
+  for (const t of snaps) if (Math.abs(turn(a, t)) < 3 * RAD) a = t
   tryMove(S, name, a)
+  // Clicked into place is decided by where the point IS, not by the last
+  // finger move: a finger that runs on past a limit leaves the point against
+  // it, and a point that ends close to a target goes onto it exactly.
+  S.snapped = false
+  for (const t of snaps) {
+    if (Math.abs(turn(S.pts[name], t)) >= 3 * RAD) continue
+    if (Math.abs(turn(S.pts[name], t)) > 1e-9) tryMove(S, name, t)
+    if (Math.abs(turn(S.pts[name], t)) < 1e-6) S.snapped = true
+  }
 }
 
 /**
@@ -877,9 +884,23 @@ function moveFree(S: Scene, name: string, p: Vec, L: Layout): boolean {
  * chord stays within its limits, and the proof keeps the centre inside.
  */
 function tryMove(S: Scene, name: string, a: number) {
-  const old = S.pts[name]
-  const d = turn(old, a)
+  const d = turn(S.pts[name], a)
   if (Math.abs(d) < 1e-7) return
+  if (moveBy(S, name, d)) return
+  // the whole move breaks a rule of the beat: go as far as the rules allow,
+  // so the point stops against the limit like a wall
+  let lo = 0, hi = 1
+  for (let k = 0; k < 14; k++) {
+    const mid = (lo + hi) / 2
+    if (moveBy(S, name, d * mid, true)) lo = mid
+    else hi = mid
+  }
+  if (lo > 0) moveBy(S, name, d * lo)
+}
+
+/** Move a point (and its partner) by `d` if the beat's rules allow it; with `test`, only check. */
+function moveBy(S: Scene, name: string, d: number, test = false): boolean {
+  const old = S.pts[name]
   const moving: { n: string; from: number }[] = [{ n: name, from: old }]
   const partner = S.diamLock ? (name === "A" ? "B" : name === "B" ? "A" : null) : null
   if (partner) moving.push({ n: partner, from: S.pts[partner] })
@@ -889,8 +910,8 @@ function tryMove(S: Scene, name: string, a: number) {
       const cross = S.crossOK.has(m.n) || S.passable.has(o)
       const rel = turn(m.from, S.pts[o])
       const end = Math.abs(turn(m.from + d, S.pts[o]))
-      if (end < (cross ? 5 : S.minGap) * RAD) return
-      if (!cross && Math.sign(rel) === Math.sign(d) && Math.abs(rel) <= Math.abs(d)) return
+      if (end < (cross ? 5 : S.minGap) * RAD) return false
+      if (!cross && Math.sign(rel) === Math.sign(d) && Math.abs(rel) <= Math.abs(d)) return false
     }
   }
   const before: Record<string, number> = {}
@@ -898,17 +919,19 @@ function tryMove(S: Scene, name: string, a: number) {
   const undo = () => { for (const m of moving) S.pts[m.n] = before[m.n] }
   if (S.arcLimit && S.pts.A !== undefined && S.pts.B !== undefined && S.pts.P !== undefined) {
     const arc = arcDeg(S, "A", "B", "P")
-    if (arc > S.arcLimit.max + 1e-6 || arc < S.arcLimit.min) { undo(); return }
+    if (arc > S.arcLimit.max + 1e-6 || arc < S.arcLimit.min) { undo(); return false }
   }
   if (S.proofLimit) {
     const x = S.pts.P + Math.PI
     const inArc = onArc(S.pts.A, S.pts.B, S.pts.P, x)
     const gap = Math.min(Math.abs(turn(x, S.pts.A)), Math.abs(turn(x, S.pts.B)))
-    if (!inArc || gap < 10 * RAD) { undo(); return }
+    if (!inArc || gap < 10 * RAD) { undo(); return false }
   }
+  if (test) { undo(); return true }
   const step = Math.abs(d) * DEG
   S.moved += step
   for (const m of moving) S.movedBy[m.n] = (S.movedBy[m.n] ?? 0) + step
+  return true
 }
 
 export function pointerUp(S: Scene) {

@@ -60,12 +60,13 @@ for (const [short, slug] of LESSONS) {
 JOBS.push({ name: "cards", script: "cards.cjs", env: {}, pass: out => /all good/.test(out) })
 JOBS.push({ name: "note", script: "note.cjs", env: {}, pass: out => (out.match(/ OK$/gm) || []).length >= 3 && !/OVERLAP/.test(out) })
 JOBS.push({ name: "near-miss", script: "near-miss.cjs", env: {}, pass: out => /near miss: ok/.test(out) })
+JOBS.push({ name: "overshoot", script: "overshoot.cjs", env: {}, pass: out => /overshoot: ok/.test(out) && /errors: none/.test(out) })
 JOBS.push({ name: "o-letter", script: "o-letter.cjs", env: {}, pass: out => /flicks/.test(out) && !/\b[1-9]\d* flicks/.test(out) })
 JOBS.push({ name: "right-mark", script: "right-mark.cjs", env: {}, pass: out => /side changes/.test(out) && !/\b[1-9]\d* side changes/.test(out) })
 JOBS.push({ name: "flash", script: "flash.cjs", env: {}, pass: out => /\d+ checks, 0 wrong/.test(out) })
 
 const SUITES = {
-  quick: JOBS.filter(j => j.name.startsWith("cold:") || ["cards", "note", "near-miss", "o-letter", "right-mark"].includes(j.name)),
+  quick: JOBS.filter(j => j.name.startsWith("cold:") || ["cards", "note", "near-miss", "overshoot", "o-letter", "right-mark"].includes(j.name)),
   full: JOBS,
 }
 

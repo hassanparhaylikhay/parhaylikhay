@@ -490,6 +490,8 @@ export function pointerMove(S: Scene, p: Vec) {
   const q = clampToRect(add(p, S.drag.off), L.tri)
   const before = S.P[i]
   let next: Vec[] | null = null
+  // a refused move leaves the corner where it was, clicked in or not
+  const wasSnapped = S.snapped
 
   if (S.mode === "free") {
     // The corner follows the finger exactly. It only clicks into place for
@@ -554,7 +556,7 @@ export function pointerMove(S: Scene, p: Vec) {
     S.movedCorners.add(i)
     S.P = next
     if (S.snapKind === "targets") litChips(S)
-  }
+  } else S.snapped = wasSnapped
 }
 
 export function pointerUp(S: Scene) {

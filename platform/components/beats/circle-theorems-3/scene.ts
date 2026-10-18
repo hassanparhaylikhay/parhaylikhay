@@ -701,20 +701,25 @@ export function pointerMove(S: Scene, p: Vec) {
     return
   }
   const a = Math.atan2(p[1] - S.OD[1], p[0] - S.OD[0])
-  S.snapped = false
   const snap = S.snapFn?.(S, name, a)
-  if (snap !== null && snap !== undefined) {
-    // a magnet the beat chose: it may land a point exactly on another
-    const d = turn(S.pts[name], snap)
-    S.pts[name] = snap
-    const partner = S.linked[name]
-    if (partner) S.pts[partner] += d
-    S.snapped = true
-    S.moved += Math.abs(d) * DEG
-    S.movedBy[name] = (S.movedBy[name] ?? 0) + Math.abs(d) * DEG
-    return
-  }
+  if (snap !== null && snap !== undefined) { landOn(S, name, snap); S.snapped = true; return }
   tryMove(S, name, a)
+  // Clicked into place is decided by where the point IS: a finger that runs
+  // on past a limit leaves the point against it, and a point that ends in a
+  // magnet's reach goes onto it, so a refused move never undoes a click.
+  const after = S.snapFn?.(S, name, S.pts[name])
+  S.snapped = after !== null && after !== undefined
+  if (S.snapped && Math.abs(turn(S.pts[name], after as number)) > 1e-9) landOn(S, name, after as number)
+}
+
+/** A magnet the beat chose: the point goes exactly there (it may land on another point), and its partner with it. */
+function landOn(S: Scene, name: string, at: number) {
+  const d = turn(S.pts[name], at)
+  S.pts[name] = at
+  const partner = S.linked[name]
+  if (partner) S.pts[partner] += d
+  S.moved += Math.abs(d) * DEG
+  S.movedBy[name] = (S.movedBy[name] ?? 0) + Math.abs(d) * DEG
 }
 
 /**
@@ -723,9 +728,23 @@ export function pointerMove(S: Scene, p: Vec) {
  * never sit on top of each other. A linked point moves with it.
  */
 function tryMove(S: Scene, name: string, a: number) {
-  const old = S.pts[name]
-  const d = turn(old, a)
+  const d = turn(S.pts[name], a)
   if (Math.abs(d) < 1e-7) return
+  if (moveBy(S, name, d)) return
+  // the whole move breaks a rule of the beat: go as far as the rules allow,
+  // so the point stops against the limit like a wall
+  let lo = 0, hi = 1
+  for (let k = 0; k < 14; k++) {
+    const mid = (lo + hi) / 2
+    if (moveBy(S, name, d * mid, true)) lo = mid
+    else hi = mid
+  }
+  if (lo > 0) moveBy(S, name, d * lo)
+}
+
+/** Move a point (and its partner) by `d` if the beat's rules allow it; with `test`, only check. */
+function moveBy(S: Scene, name: string, d: number, test = false): boolean {
+  const old = S.pts[name]
   const moving: { n: string; from: number }[] = [{ n: name, from: old }]
   const partner = S.linked[name]
   if (partner) moving.push({ n: partner, from: S.pts[partner] })
@@ -735,14 +754,16 @@ function tryMove(S: Scene, name: string, a: number) {
       const cross = S.crossOK.has(m.n)
       const rel = turn(m.from, S.pts[o])
       const end = Math.abs(turn(m.from + d, S.pts[o]))
-      if (end < (cross ? 4 : S.minGap) * RAD) return
-      if (!cross && Math.sign(rel) === Math.sign(d) && Math.abs(rel) <= Math.abs(d)) return
+      if (end < (cross ? 4 : S.minGap) * RAD) return false
+      if (!cross && Math.sign(rel) === Math.sign(d) && Math.abs(rel) <= Math.abs(d)) return false
     }
   }
+  if (test) return true
   for (const m of moving) S.pts[m.n] = m.from + d
   const step = Math.abs(d) * DEG
   S.moved += step
   for (const m of moving) S.movedBy[m.n] = (S.movedBy[m.n] ?? 0) + step
+  return true
 }
 
 export function pointerUp(S: Scene) {

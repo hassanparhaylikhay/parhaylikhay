@@ -24,6 +24,7 @@ board. CI (`.github/workflows/lessons.yml`) runs the quick suite on every push.
 | `fuzz:<lesson>` | Random drags at random screen sizes; after each, the maths on screen must still hold and labels stay on screen |
 | `cards` | Part titles: show on open and when moving forward, never with `?beat=N` or going back; a tap skips |
 | `note` | A note always sits under the phrase's last line |
+| `overshoot` | A finger that runs on past a target (a fast flick past the diameter) still clicks the point in, and the beat moves on |
 | `near-miss` | A length that is not the target never reads as the target (√170 shows 13.04, not 13) |
 | `o-letter`, `right-mark` | The letter O and the right-angle mark never flick from side to side |
 | `flash` | Only what the student touched flashes green |
