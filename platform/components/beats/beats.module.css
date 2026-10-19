@@ -305,6 +305,12 @@
 .key:active {
   transform: scale(0.93);
 }
+/* sin, cos, tan: a word on a key, a little smaller */
+.keyFn {
+  font-size: 18px;
+  font-style: normal;
+  color: #c8c6be;
+}
 .keyGo {
   background: rgba(15, 238, 137, 0.12);
   border-color: rgba(15, 238, 137, 0.4);
@@ -428,4 +434,31 @@
 @keyframes cardTitleOut {
   from { opacity: 1; transform: translateY(0); filter: blur(0); }
   to   { opacity: 0; transform: translateY(-12px); filter: blur(6px); }
+}
+
+/* a move you can drag onto the equation: it breathes, yellow */
+.chipBreathe {
+  animation: chipBreathe 1.8s ease-in-out infinite;
+}
+@keyframes chipBreathe {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 240, 103, 0); }
+  50% { box-shadow: 0 0 18px rgba(255, 240, 103, 0.35); }
+}
+
+/* the steps of a method, written over the board */
+.stepsCard {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.stepsCard > div {
+  animation: phraseIn 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stepsCard :global(.katex) {
+  font-size: 1.04em;
 }

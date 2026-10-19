@@ -21,7 +21,7 @@ board. CI (`.github/workflows/lessons.yml`) runs the quick suite on every push.
 | `walk:<lesson>` | Every "Show me how": it appears after 30 s or 3 wrong answers, each step changes the phrase, the keypad comes back, the right answer moves on |
 | `play:<lesson>` | A full play-through as a student, mouse, desktop size: every phrase in order, every task done, wrong attempts get their note |
 | `play-phone:<lesson>` | The same with touch at 390 x 844 |
-| `fuzz:<lesson>` | Random drags at random screen sizes; after each, the maths on screen must still hold and labels stay on screen |
+| `fuzz:<lesson>` | Random drags at random screen sizes; after each, the maths on screen must still hold and labels stay on screen. The two trig lessons share `fuzz-trig.cjs` (`LESSON=trigonometry-1` or `-2`): it also drops chips onto the equation, drags its pieces and types on the calculator, and checks the equation stays true, the lengths agree with the angle, and nothing leaves the screen |
 | `cards` | Part titles: show on open and when moving forward, never with `?beat=N` or going back; a tap skips |
 | `note` | A note always sits under the phrase's last line |
 | `overshoot` | A finger that runs on past a target (a fast flick past the diameter) still clicks the point in, and the beat moves on |
@@ -33,6 +33,10 @@ Settings: `HOST` (default `http://localhost:3124`), `CHROME_PATH` (Chrome or
 Chromium; found automatically on a Mac and on Linux), `OUT` (screenshots;
 default a temp folder), `WIDTH` (jobs at once, default 3). Logs of each run
 are in `<temp>/lesson-tests/logs/`.
+
+`trig-lib.cjs` holds what the trig play-throughs share (turn the arm, slide
+the triangle, tap a side by its role, tap a rule card, drag a chip onto the
+equation, tap or drag a piece of the equation, type on the calculator).
 
 `shots.cjs` (with `LESSON=<slug>`) screenshots every beat, and
 `contact-sheet.py <folder> <out>` lays them out on sheets for review.

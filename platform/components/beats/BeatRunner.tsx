@@ -44,6 +44,10 @@ export interface BeatEngine<S extends RunnerScene, L extends { keypadTop: number
   onDone?: (S: S) => void
   /** seconds past `minPlay` after which a playing beat offers the arrow anyway (null: never) */
   freeFallback?: number | null
+  /** the keypad's keys, when not just digits (a calculator) */
+  keypadKeys?: (S: S) => string[][]
+  /** the keypad key a keyboard key stands for (default: digits, Backspace, Enter) */
+  keyOf?: (key: string) => string | null
 }
 
 /**
@@ -211,9 +215,14 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
         return
       }
       if (S.input && S.vis.keypad.t > 0.5) {
-        if (/^\d$/.test(e.key)) { engine.typeKey(S, e.key); return }
-        if (e.key === "Backspace") { engine.typeKey(S, "back"); return }
-        if (e.key === "Enter") { engine.typeKey(S, "go"); return }
+        if (engine.keyOf) {
+          const k = engine.keyOf(e.key)
+          if (k) { e.preventDefault(); engine.typeKey(S, k); return }
+        } else {
+          if (/^\d$/.test(e.key)) { engine.typeKey(S, e.key); return }
+          if (e.key === "Backspace") { engine.typeKey(S, "back"); return }
+          if (e.key === "Enter") { engine.typeKey(S, "go"); return }
+        }
       }
       if (engine.onKey?.(S, e)) return
       if ((e.key === "Enter" || e.key === "ArrowRight" || e.key === " ") && ctaReady()) { e.preventDefault(); onCta() }
@@ -268,7 +277,7 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
         {S && L && <Stage S={S} L={L} />}
       </div>
       {S && L && S.input && S.vis.keypad.t > 0.5 && (
-        <Keypad top={L.keypadTop} onKey={k => engine.typeKey(sceneRef.current!, k)} />
+        <Keypad top={L.keypadTop} rows={engine.keypadKeys?.(S)} onKey={k => engine.typeKey(sceneRef.current!, k)} />
       )}
       {S && L && engine.controls?.(S, L)}
     </Shell>

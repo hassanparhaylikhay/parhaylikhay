@@ -37,6 +37,8 @@ const LESSONS = [
   ["circle-2", "circle-theorems-2"],
   ["circle-3", "circle-theorems-3"],
   ["pythagoras", "pythagoras"],
+  ["trig-1", "trigonometry-1"],
+  ["trig-2", "trigonometry-2"],
 ]
 
 const noPageErrors = out => !/PAGEERROR/.test(out)
@@ -55,7 +57,9 @@ for (const [short, slug] of LESSONS) {
   JOBS.push({ name: `walk:${short}`, script: "walk.cjs", env: { LESSON: slug }, pass: PASS.walk, solo: true })
   JOBS.push({ name: `play:${short}`, script: `play-${short}.cjs`, env: {}, pass: PASS.play })
   JOBS.push({ name: `play-phone:${short}`, script: `play-${short}.cjs`, env: { TOUCH: "1", W: "390", H: "844" }, pass: PASS.play })
-  JOBS.push({ name: `fuzz:${short}`, script: `fuzz-${short}.cjs`, env: {}, pass: short === "triangle" || short === "polygons" ? PASS.fuzzOld : PASS.fuzz })
+  // the trig lessons share one fuzz script, told which lesson by LESSON
+  const fuzz = short.startsWith("trig") ? { script: "fuzz-trig.cjs", env: { LESSON: slug } } : { script: `fuzz-${short}.cjs`, env: {} }
+  JOBS.push({ name: `fuzz:${short}`, ...fuzz, pass: short === "triangle" || short === "polygons" ? PASS.fuzzOld : PASS.fuzz })
 }
 JOBS.push({ name: "cards", script: "cards.cjs", env: {}, pass: out => /all good/.test(out) })
 JOBS.push({ name: "note", script: "note.cjs", env: {}, pass: out => (out.match(/ OK$/gm) || []).length >= 3 && !/OVERLAP/.test(out) })

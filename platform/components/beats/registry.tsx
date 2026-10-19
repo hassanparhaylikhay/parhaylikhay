@@ -6,6 +6,8 @@ import CircleTheoremsLesson from "./circle-theorems/CircleTheoremsLesson"
 import CircleTheorems2Lesson from "./circle-theorems-2/CircleTheorems2Lesson"
 import CircleTheorems3Lesson from "./circle-theorems-3/CircleTheorems3Lesson"
 import PythagorasLesson from "./pythagoras/PythagorasLesson"
+import Trig1Lesson from "./trigonometry/Trig1Lesson"
+import Trig2Lesson from "./trigonometry/Trig2Lesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -47,6 +49,18 @@ export const BEAT_LESSONS: Record<string, {
     description: "Build squares on the sides of a right-angled triangle, see why the two small ones always make the big one, and use it to find any side.",
     topicHref: "/dashboard/maths/06/01",
     Lesson: PythagorasLesson,
+  },
+  "trigonometry-1": {
+    title: "Trigonometry I: sin, cos and tan",
+    description: "Build a right-angled triangle inside an angle, name its sides, and find out why every angle has its own sin, cos and tan.",
+    topicHref: "/dashboard/maths/06/02",
+    Lesson: Trig1Lesson,
+  },
+  "trigonometry-2": {
+    title: "Trigonometry II: finding a side",
+    description: "Use sin, cos and tan to find a missing side, and watch the algebra happen: every move is done to both sides, right in front of you.",
+    topicHref: "/dashboard/maths/06/02",
+    Lesson: Trig2Lesson,
   },
   "angles-in-a-triangle": {
     title: "Angles in a triangle",

@@ -101,22 +101,28 @@ function PhraseLine({ text, k, note }: { text: string; k: string; note: React.Re
   )
 }
 
-export function Keypad({ top, onKey }: { top: number; onKey: (k: string) => void }) {
-  const row = (keys: string[]) => (
-    <div className={styles.keyRow}>
+export const DIGIT_KEYS: string[][] = [
+  ["1", "2", "3", "4", "5", "back"],
+  ["6", "7", "8", "9", "0", "go"],
+]
+
+/** The keypad: digits by default, or any rows of keys (a calculator: see calc.ts). */
+export function Keypad({ top, onKey, rows = DIGIT_KEYS }: { top: number; onKey: (k: string) => void; rows?: string[][] }) {
+  const calc = rows.some(r => r.includes("sin"))
+  const row = (keys: string[], i: number) => (
+    <div key={i} className={styles.keyRow}>
       {keys.map(k => (
-        <button key={k} type="button" className={`${styles.key} ${k === "go" ? styles.keyGo : ""}`}
+        <button key={k} type="button" className={`${styles.key} ${k === "go" ? styles.keyGo : ""} ${k.length > 1 && k !== "go" && k !== "back" ? styles.keyFn : ""}`}
           onPointerDown={e => { e.preventDefault(); onKey(k) }}
           aria-label={k === "go" ? "Check" : k === "back" ? "Delete" : k}>
-          {k === "back" ? <Delete size={19} strokeWidth={1.7} /> : k === "go" ? <ArrowRight size={20} strokeWidth={2} /> : k}
+          {k === "back" ? <Delete size={19} strokeWidth={1.7} /> : k === "go" ? (calc ? "=" : <ArrowRight size={20} strokeWidth={2} />) : k}
         </button>
       ))}
     </div>
   )
   return (
     <div className={styles.keypad} style={{ top }}>
-      {row(["1", "2", "3", "4", "5", "back"])}
-      {row(["6", "7", "8", "9", "0", "go"])}
+      {rows.map(row)}
     </div>
   )
 }
@@ -156,7 +162,7 @@ export function Choices({ top, options, picked, state, wrongAt, onPick }: {
         return (
           <button key={picked === k ? `${k}-${wrongAt}` : k} type="button" className={`${styles.choice} ${mark}`}
             onPointerDown={e => { e.preventDefault(); onPick(k) }}>
-            {o}
+            <Phrase text={o} />
           </button>
         )
       })}
