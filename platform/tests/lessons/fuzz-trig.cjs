@@ -2,7 +2,7 @@
 // trigonometry-1 or trigonometry-2). Turns and slides the triangle, drops
 // chips onto the equation, drags its pieces about, types on the calculator.
 // After every move: the lengths on screen agree with each other and with the
-// angle shown, the equation is still a true equation (both sides equal), no
+// angle shown (to within their rounding), the equation is still a true equation (both sides equal), no
 // label or piece of the equation is off screen, the triangle stays inside its
 // board, and nothing on screen says NaN.
 const puppeteer = require("puppeteer-core")
@@ -39,8 +39,10 @@ const KEYS = ["1", "2", "5", "9", ".", "*", "/", "s", "c", "t", "Backspace"]
       const live = S.roleLabels.H && /^\d/.test(lab("role-H")?.tex || "") && S.tri.at === "V" && S.tri.drop === 1 && S.thExact === null && !S.input
       if (live && ang !== null && H !== null) {
         const r = ang * Math.PI / 180
-        if (O !== null && /^\d/.test(lab("role-O").tex) && Math.abs(O - H * Math.sin(r)) > 0.0051 + 0.0001 * H) out.push(`O ${O} vs ${H} sin ${ang}`)
-        if (Ad !== null && /^\d/.test(lab("role-A").tex) && Math.abs(Ad - H * Math.cos(r)) > 0.0051 + 0.0001 * H) out.push(`A ${Ad} vs ${H} cos ${ang}`)
+        // within two roundings: a side may be rounded from the true size, like the hypotenuse beside it
+        const tolr = 0.0102 + 0.0001 * H
+        if (O !== null && /^\d/.test(lab("role-O").tex) && Math.abs(O - H * Math.sin(r)) > tolr) out.push(`O ${O} vs ${H} sin ${ang}`)
+        if (Ad !== null && /^\d/.test(lab("role-A").tex) && Math.abs(Ad - H * Math.cos(r)) > tolr) out.push(`A ${Ad} vs ${H} cos ${ang}`)
       }
       // the equation is still true
       if (S.alg && S.mode === "solve") {

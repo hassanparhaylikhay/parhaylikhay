@@ -29,7 +29,7 @@ import type { Vec } from "../geometry"
 import {
   type Scene, type Role,
   GREEN, PINK, CHALK, ROLE_COL, RAD,
-  say, later, thText, hText, legText, ratioOf, chipRects, layout, boxNode, triFrame,
+  say, later, thText, hText, legText, ratioOf, chipRects, layout, boxNode, triFrame, numText,
 } from "./scene"
 import {
   type Beat, watch, look, base, madeTri, armsBoard, UPRIGHT, inputRight, c,
@@ -152,8 +152,10 @@ function board(S: Scene, Q: Question, o: { colours?: boolean } = {}) {
 // ── beat makers ──────────────────────────────────────────────────────────
 
 /** Which rule? The cards come up; the right one comes down as the equation. */
-function ruleBeat(id: string, text: string, Q: Question, o: { colours?: boolean; boardFn?: (S: Scene) => void } = {}): Beat {
+function ruleBeat(id: string, text: string, Q: Question, o: { colours?: boolean; boardFn?: (S: Scene) => void; put?: boolean } = {}): Beat {
   const fn = fnOf(Q)
+  // put: false when the next beat puts the numbers in, slowly, on its own
+  const put = o.put !== false
   return {
     id,
     say: text,
@@ -162,12 +164,12 @@ function ruleBeat(id: string, text: string, Q: Question, o: { colours?: boolean;
       else board(S, Q, { colours: o.colours })
       cardsTap(S, fn, S2 => {
         S2.roleColours = new Set(["O", "A", "H"])
-        later(S2, 0.5, S3 => putNumbers(S3, Q, 0.9))
+        if (put) later(S2, 0.5, S3 => putNumbers(S3, Q, 0.9))
       }, S2 => { S2.roleColours = new Set(["O", "A", "H"]); S2.roleLabels = { ...S2.roleLabels, ...nameHints(Q) } })
       look(S, [...TRI, "letters", "extra", "cards", "eq"])
     },
-    done: S => S.got.has("rule") && !!S.alg,
-    advanceAfter: 1800,
+    done: S => S.got.has("rule") && (!put || !!S.alg),
+    advanceAfter: put ? 1800 : 1200,
   }
 }
 
@@ -338,9 +340,9 @@ export const BEATS: Beat[] = [
   },
   watch("put-30", "Put the numbers into the rule.", S => {
     firstBoard(S)
-    putNumbers(S, Q30, 1.1)
+    putNumbers(S, Q30, 1.1, true)
     look(S, ["arms", ...TRI, "eq"])
-  }, 2.8),
+  }, 8.2),
   watch("own-30", "Now we get $x$ on its own.", S => {
     firstBoard(S)
     firstEqn(S, "start")
@@ -348,8 +350,8 @@ export const BEATS: Beat[] = [
     look(S, ["arms", ...TRI, "eq"])
   }),
   {
-    id: "stuck-30",
-    say: "What is stuck to $x$? Tap it.",
+    id: "dividing-30",
+    say: "What is dividing $x$? Tap it.",
     enter: S => {
       firstBoard(S)
       firstEqn(S, "start")
@@ -359,8 +361,8 @@ export const BEATS: Beat[] = [
       S.onAtom = (S2, id) => {
         if (S2.got.has("tapped")) return
         if (id === "k") { S2.got.add("tapped"); S2.touched = { kind: "eq" }; S2.flashGood = 1; say(S2, "$x$ is divided by $10$.", "calm", 600); return }
-        if (id === "x") say(S2, "That's $x$ itself. What is joined to it?", "wrong", 3)
-        else say(S2, "That is on the other side. Look next to $x$.", "wrong", 3)
+        if (id === "x") say(S2, "That's $x$ itself. Tap the number it is divided by.", "wrong", 3.4)
+        else say(S2, "That is on the other side. Look under $x$.", "wrong", 3)
       }
       look(S, ["arms", ...TRI, "eq"])
     },
@@ -586,14 +588,13 @@ export const BEATS: Beat[] = [
     S.pulseLabs = new Set(["H"])
     look(S, TRI)
   }),
-  ruleBeat("rule-65", "Which rule? Tap it.", Q65, { colours: true }),
+  ruleBeat("rule-65", "Which rule? Tap it.", Q65, { colours: true, put: false }),
   watch("put-65", "Put the numbers in.", S => {
     board(S, Q65)
     S.roleColours = new Set(["O", "A", "H"])
-    if (!S.alg) putNumbers(S, Q65, 0.6)
-    else numbersIn(S, Q65)
+    putNumbers(S, Q65, 0.7, true)
     look(S, [...TRI, "eq"])
-  }, 2.2),
+  }, 7.8),
   watch("under", "This time $x$ is underneath.", S => {
     board(S, Q65)
     S.roleColours = new Set(["O", "A", "H"])
@@ -623,8 +624,8 @@ export const BEATS: Beat[] = [
     advanceAfter: 1200,
   },
   {
-    id: "stuck-65",
-    say: "What is stuck to $x$ now? Tap it.",
+    id: "multiplying-65",
+    say: "What is multiplying $x$ now? Tap it.",
     enter: S => {
       board(S, Q65)
       S.roleColours = new Set(["O", "A", "H"])
@@ -636,7 +637,7 @@ export const BEATS: Beat[] = [
       S.onAtom = (S2, id) => {
         if (S2.got.has("tapped")) return
         if (id === "fn" || id === "ang") { S2.got.add("tapped"); S2.touched = { kind: "eq" }; S2.flashGood = 1; say(S2, "$x$ is multiplied by $\\sin 65^\\circ$.", "calm", 600); return }
-        if (id === xId) say(S2, "That's $x$ itself. What is joined to it?", "wrong", 3)
+        if (id === xId) say(S2, "That's $x$ itself. Tap what it is multiplied by.", "wrong", 3.4)
         else say(S2, "That is on the other side. Look next to $x$.", "wrong", 3)
       }
       look(S, [...TRI, "eq"])
@@ -807,7 +808,8 @@ export const BEATS: Beat[] = [
       S.hMax = 11.4
       madeTri(S, { th: 40, h: 5 })
       S.angText = thText
-      S.roleLabels = { O: s => ({ tex: legText(s, "O") }), H: s => ({ tex: hText(s) }) }
+      // from the true size (not the rounded hypotenuse), so the opposite reads 6 the moment it clicks in
+      S.roleLabels = { O: s => ({ tex: numText(s.tri.h * Math.sin(40 * RAD), 2) }), H: s => ({ tex: numText(s.tri.h, 2) }) }
       S.roleColours = new Set(["O", "A", "H"])
       S.mode = "slide"
       S.magnet = { h: 6 / Math.sin(40 * RAD), within: 0.35 }

@@ -729,6 +729,7 @@ export function resetBeat(S: Scene) {
   S.choice = null
   S.stepsCard = null
   S.eq.goneTo = {}
+  S.eq.goneFade = {}
   S.eq.tilt.t = 0
   S.eq.stand.t = 0
   S.cards = []

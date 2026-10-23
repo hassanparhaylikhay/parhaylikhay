@@ -7,7 +7,7 @@
 import type { BeatOf } from "../beat"
 import type { WalkStep } from "../walk"
 import type { Vec } from "../geometry"
-import { type ENode, atom, op, row, frac, eqnNode } from "../equation"
+import { type ENode, type Fac, atom, op, row, frac, eqnNode } from "../equation"
 import { sigText } from "../calc"
 import {
   type Scene, type VisKey, type Role, type Fn, type Pose, type SideLabel,
@@ -15,7 +15,7 @@ import {
   resetBeat, show, say, startInput, boxNode, later, clamp,
   sideOf, thText, ratioOf, ratioText, hText, legText, labAt, armsFrame, triFrame, cardRects, layout,
 } from "./scene"
-import { type Question, fnOf, answerOf, answerText, hypOf, solvedEqn, solvedTex, slipsFor, startEqn, ruleNode, fromSide, nameOf } from "./solve"
+import { type Question, fnOf, answerOf, answerText, hypOf, solvedEqn, solvedTex, slipsFor, startEqn, fromSide, nameOf, xFac, kFac } from "./solve"
 
 export type Beat = BeatOf<Scene>
 
@@ -186,22 +186,61 @@ export function qBoard(S: Scene, q: Question, o: { colours?: boolean; unknownLab
   S.roleColours = o.colours === false ? new Set() : new Set([q.known, q.unknown])
 }
 
-/** The rule comes down off its card and the numbers fly into it (sin θ = O/H, then sin 30° = x/10). */
-export function putNumbers(S: Scene, q: Question, delay = 0.9) {
+/**
+ * The rule comes down off its card, then the numbers go into it one at a
+ * time, slowly: the angle, then the top of the fraction, then the bottom.
+ * Each one lights up on the triangle first, then flies down to the letter it
+ * replaces, and the letter fades as it lands. `slow` is for the first time;
+ * later questions go a little quicker. Returns how long it all takes.
+ */
+export function putNumbers(S: Scene, q: Question, delay = 0.9, slow = false): number {
   const fn = fnOf(q)
+  const [topRole, botRole] = RULE[fn]
   const card = cardRects(S, layout(S)).find(r => r.fn === fn)?.r
-  const from: Vec | undefined = card ? [(card.x0 + card.x1) / 2, (card.y0 + card.y1) / 2] : undefined
+  const cardAt: Vec | undefined = card ? [(card.x0 + card.x1) / 2, (card.y0 + card.y1) / 2] : undefined
+  const fly = slow ? 1.35 : 1.0
+  const lead = slow ? 0.6 : 0.4
+  const rest = slow ? 0.3 : 0.15
+  // the pieces each stage shows: letters until their number has come
+  const num = (r: Role) => (r === q.unknown ? xFac(q) : kFac(q))
+  const letter = (r: Role, id: string): Fac => ({ id, tex: r, col: ROLE_COL[r], key: id, v: 1 })
+  let stage = 0
+  let pulse = new Set<string>()
+  const from: Record<string, Vec> = {}
+  const node = () => eqnNode({
+    L: { num: [{ id: "F", tex: "", key: "F", v: 1, parts: [{ id: "fn", tex: `\\${fn}` }, stage >= 1 ? { id: "ang", tex: `${q.th}^\\circ` } : { id: "th", tex: "\\theta" }] }], den: [] },
+    R: { num: [stage >= 2 ? num(topRole) : letter(topRole, "r0")], den: [stage >= 3 ? num(botRole) : letter(botRole, "r1")] },
+  }, { from, pulse, fly })
   S.alg = null
-  S.eqFn = () => ruleNode(fn, from)
   S.vis.cards.t = 0
-  later(S, delay, S2 => {
+  // the rule itself comes down off its card
+  if (cardAt) for (const id of ["fn", "th", "r0", "r1", "eq"]) from[id] = cardAt
+  S.eqFn = node
+  // one number: it lights up where it is, then flies to its letter
+  const step = (t: number, n: number, light: (S: Scene) => void, go: (S: Scene) => void) => {
+    later(S, t, S2 => light(S2))
+    later(S, t + lead, S2 => { go(S2); stage = n })
+  }
+  let t = delay
+  step(t, 1,
+    S2 => { S2.pulseArc = true; pulse = new Set(["th"]) },
+    S2 => { from.ang = labAt(S2, "ang") ?? cardAt ?? [S2.w / 2, S2.h / 2]; S2.eq.goneFade.th = fly; later(S2, fly, S3 => { S3.pulseArc = false; pulse = new Set() }) })
+  t += lead + fly + rest
+  const fact = (r: Role) => (r === q.unknown ? "x" : "k")
+  step(t, 2,
+    S2 => { S2.pulseLabs = new Set([topRole]); pulse = new Set(["r0"]) },
+    S2 => { from[fact(topRole)] = fromSide(S2, topRole); S2.eq.goneFade.r0 = fly; later(S2, fly, S3 => { S3.pulseLabs = new Set(); pulse = new Set() }) })
+  t += lead + fly + rest
+  step(t, 3,
+    S2 => { S2.pulseLabs = new Set([botRole]); pulse = new Set(["r1"]) },
+    S2 => { from[fact(botRole)] = fromSide(S2, botRole); S2.eq.goneFade.r1 = fly; later(S2, fly, S3 => { S3.pulseLabs = new Set(); pulse = new Set() }) })
+  t += lead + fly + rest
+  // all in: the same pieces, now as the equation to solve
+  later(S, t, S2 => {
     S2.alg = startEqn(q)
-    const from: Record<string, Vec> = {}
-    const a = labAt(S2, "ang"); if (a) from.ang = a
-    from.x = fromSide(S2, q.unknown)
-    from.k = fromSide(S2, q.known)
-    S2.eqFn = S3 => eqnNode(S3.alg!, { from })
+    S2.eqFn = S3 => eqnNode(S3.alg!, {})
   })
+  return t
 }
 
 /** The equation with the numbers already in (a beat opened cold, or a later question). */

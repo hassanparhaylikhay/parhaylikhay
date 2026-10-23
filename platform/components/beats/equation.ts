@@ -35,6 +35,8 @@ export interface EAtom {
   op?: boolean
   /** a new piece flies in from this screen point */
   from?: Vec
+  /** seconds that flight takes (a slow, eased arc); without it the piece springs in */
+  fly?: number
   /** breathing: the student should look here */
   pulse?: boolean
   /** glowing yellow: the student can drag this */
@@ -190,8 +192,11 @@ export function extent(n: ENode, size: number): { w: number; up: number; down: n
 
 // ── the board ────────────────────────────────────────────────────────────
 
-/** A piece as drawn: eased toward where it belongs. */
-export interface Drawn { x: number; y: number; w: number; base: number; h: number; op: number; node: EAtom | EBox }
+/** A piece as drawn: eased toward where it belongs, or on a timed flight there. */
+export interface Drawn {
+  x: number; y: number; w: number; base: number; h: number; op: number; node: EAtom | EBox
+  flight?: { from: Vec; t0: number; dur: number }
+}
 export interface DBar { x: number; y: number; w: number; op: number; col: string }
 
 export interface EqBoard {
@@ -206,6 +211,10 @@ export interface EqBoard {
   gone: { d: Drawn; to: Vec | null; life: number }[]
   /** where pieces that leave should fly to, by id */
   goneTo: Record<string, Vec>
+  /** seconds a leaving piece takes to fade, by id (a letter fading while its number flies in) */
+  goneFade: Record<string, number>
+  /** the board's own clock, for timed flights */
+  time: number
   /** degrees the line is tipped, like a balance (springs to `t`) */
   tilt: { v: number; t: number }
   /** draw a small stand under the equals sign */
@@ -215,7 +224,7 @@ export interface EqBoard {
 }
 
 export function createBoard(): EqBoard {
-  return { node: null, size: 28, cx: 0, cy: 0, atoms: {}, bars: {}, gone: [], goneTo: {}, tilt: { v: 0, t: 0 }, stand: { v: 0, t: 0 }, snap: false }
+  return { node: null, size: 28, cx: 0, cy: 0, atoms: {}, bars: {}, gone: [], goneTo: {}, goneFade: {}, time: 0, tilt: { v: 0, t: 0 }, stand: { v: 0, t: 0 }, snap: false }
 }
 
 /** Put a new equation on the board. Pieces with the same id glide; others come and go. */
@@ -237,10 +246,11 @@ export function eqClear(B: EqBoard) {
 /** Lay out the current equation and ease every piece toward its place. */
 export function eqStep(B: EqBoard, dt: number) {
   const k = (f: number) => 1 - Math.pow(1 - f, dt * 60)
+  B.time += dt
   B.tilt.v += (B.tilt.t - B.tilt.v) * k(0.09)
   B.stand.v += (B.stand.t - B.stand.v) * k(0.12)
   for (const g of B.gone) {
-    g.life -= dt / (g.to ? 0.55 : 0.32)
+    g.life -= dt / (B.goneFade[g.d.node.id] ?? (g.to ? 0.55 : 0.32))
     if (g.to) {
       const c: Vec = [g.d.x + g.d.w / 2, g.d.y - g.d.base + g.d.h / 2]
       const f = k(0.16)
@@ -262,12 +272,31 @@ export function eqStep(B: EqBoard, dt: number) {
       const d = B.atoms[a.id]
       if (!d) {
         const from = a.node.k === "a" ? a.node.from : undefined
-        if (from && !B.snap) B.atoms[a.id] = { x: from[0] - a.w / 2, y: from[1] - a.h / 2 + a.base, w: a.w, base: a.base, h: a.h, op: 0.35, node: a.node }
-        else B.atoms[a.id] = { x: tx, y: ty + (B.snap ? 0 : 0.35 * B.size), w: a.w, base: a.base, h: a.h, op: B.snap ? 1 : 0, node: a.node }
+        const fly = a.node.k === "a" ? a.node.fly : undefined
+        if (from && !B.snap) {
+          B.atoms[a.id] = { x: from[0] - a.w / 2, y: from[1] - a.h / 2 + a.base, w: a.w, base: a.base, h: a.h, op: fly ? 1 : 0.35, node: a.node }
+          if (fly) B.atoms[a.id].flight = { from: [from[0] - a.w / 2, from[1] - a.h / 2 + a.base], t0: B.time, dur: fly }
+        } else B.atoms[a.id] = { x: tx, y: ty + (B.snap ? 0 : 0.35 * B.size), w: a.w, base: a.base, h: a.h, op: B.snap ? 1 : 0, node: a.node }
         continue
       }
       d.node = a.node
       d.w = a.w; d.base = a.base; d.h = a.h
+      if (d.flight) {
+        // a slow flight, eased at both ends, toward wherever its place is now. It curves
+        // in from above, or, for the bottom of a fraction, round the right-hand end and in
+        // under the bar, so it never passes over what is already there.
+        const u = Math.min(1, (B.time - d.flight.t0) / d.flight.dur)
+        const e = u * u * (3 - 2 * u)
+        const [fx, fy] = d.flight.from
+        const below = ty - a.base + a.h / 2 > B.cy + 0.2 * B.size
+        const cx = tx + (below ? 3.8 : -0.6) * B.size, cy = ty + (below ? 0.7 : -1.8) * B.size
+        const q = 1 - e
+        d.x = q * q * fx + 2 * q * e * cx + e * e * tx
+        d.y = q * q * fy + 2 * q * e * cy + e * e * ty
+        d.op = 1
+        if (u >= 1) delete d.flight
+        continue
+      }
       d.x += (tx - d.x) * fp
       d.y += (ty - d.y) * fp
       d.op += (1 - d.op) * k(0.14)
@@ -363,6 +392,8 @@ export interface EqnLook {
   from?: Record<string, Vec>
   /** pieces after the right-hand side ("=", the answer box ...) */
   tail?: ENode[]
+  /** seconds a piece flying in `from` a point takes */
+  fly?: number
 }
 
 function facNode(f: Fac, look: EqnLook): ENode {
@@ -371,6 +402,7 @@ function facNode(f: Fac, look: EqnLook): ENode {
     pulse: look.pulse?.has(f.id) || look.pulse?.has(id),
     grab: look.grab?.has(f.id) || look.grab?.has(id),
     from: look.from?.[id] ?? look.from?.[f.id],
+    fly: look.fly,
   })
   if (f.parts) return row(f.parts.map(p => atom(p.id, p.tex, { col: p.col ?? f.col, ...more(p.id) })), 0.17)
   return atom(f.id, f.tex, { col: f.col, ...more(f.id) })
@@ -390,7 +422,8 @@ function product(fs: Fac[], look: EqnLook, tag: string): ENode {
 export function sideNode(s: Side, look: EqnLook = {}, tag = "s"): ENode {
   const top = product(s.num, look, `${tag}n`)
   if (!s.den.length) return top
-  return frac(`bar-${s.den[0].id}`, top, product(s.den, look, `${tag}d`))
+  // one bar per side, so it stays put while what is under it changes
+  return frac(`bar-${tag}`, top, product(s.den, look, `${tag}d`))
 }
 
 /** The whole equation as a tree, the equals sign's id is "eq". */
