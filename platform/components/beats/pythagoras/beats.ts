@@ -563,14 +563,17 @@ export const BEATS: Beat[] = [
     say: "Make the angle at $C$ bigger than $90^\\circ$.",
     enter: S => {
       unlockBoard(S)
+      // never open already done: from a right angle again if it is past 90 already
+      if (Math.round(angleAt(S, "C", "A", "B")) > 90) place(S, { C: [0, 0] })
       S.movable = ["C"]; S.mode = "slide"
       look(S, ["grid", "arcs", "areas", "sum", "letters"])
     },
-    done: S => !S.drag && angleAt(S, "C", "A", "B") > 100,
+    // the angle as shown (whole degrees) is past 90: what the phrase asks, no more
+    done: S => !S.drag && Math.round(angleAt(S, "C", "A", "B")) > 90,
   },
   watch("too-big", "Now the big square is more than the two small ones.", S => {
     unlockBoard(S)
-    if (angleAt(S, "C", "A", "B") <= 100) place(S, { C: [1, 1] })
+    if (Math.round(angleAt(S, "C", "A", "B")) <= 90) place(S, { C: [1, 1] })
     S.pulseSquares = new Set(["AB"])
     look(S, ["grid", "arcs", "areas", "sum", "letters"])
   }, 2.4),
@@ -579,14 +582,15 @@ export const BEATS: Beat[] = [
     say: "Now make it smaller than $90^\\circ$.",
     enter: S => {
       unlockBoard(S)
+      if (Math.round(angleAt(S, "C", "A", "B")) < 90) place(S, { C: [0, 0] })
       S.movable = ["C"]; S.mode = "slide"
       look(S, ["grid", "arcs", "areas", "sum", "letters"])
     },
-    done: S => !S.drag && angleAt(S, "C", "A", "B") < 80,
+    done: S => !S.drag && Math.round(angleAt(S, "C", "A", "B")) < 90,
   },
   watch("too-small", "Now the big square is less than the two small ones.", S => {
     unlockBoard(S)
-    if (angleAt(S, "C", "A", "B") >= 80) place(S, { C: [-1, -2] })
+    if (Math.round(angleAt(S, "C", "A", "B")) >= 90) place(S, { C: [-1, -2] })
     S.pulseSquares = new Set(["AB"])
     look(S, ["grid", "arcs", "areas", "sum", "letters"])
   }, 2.4),

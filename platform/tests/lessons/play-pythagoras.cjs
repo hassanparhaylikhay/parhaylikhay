@@ -105,7 +105,7 @@ const D2R = Math.PI / 180
   await want("It works the same"); await sleep(1500); await shot("breathe"); await next()
   // ── 4. right angle only ──
   await want("Now let corner"); await dragTo("C", [1, 1])
-  await want("Make the angle at"); await sleep(300)
+  await want("Make the angle at"); await dragTo("C", [1, 1]); await expect((await page.evaluate(() => window.__beatScene.drag)) === null, "still dragging")
   await want("Now the big square is more"); { const a = await sq2("C", "A"), b = await sq2("C", "B"), c = await sq2("A", "B"); await expect(a + b < c, "not more") } await shot("too-big"); await next()
   await want("Now make it smaller"); await dragTo("C", [-1, -2])
   await want("Now the big square is less"); { const a = await sq2("C", "A"), b = await sq2("C", "B"), c = await sq2("A", "B"); await expect(a + b > c, "not less") } await next()

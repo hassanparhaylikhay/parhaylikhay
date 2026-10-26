@@ -181,7 +181,7 @@ export function qBoard(S: Scene, q: Question, o: { colours?: boolean; unknownLab
   S.roleLabels = {}
   const unit = q.unit ? `\\text{ ${q.unit}}` : ""
   // until the sides are named, a number is not in its side's colour (that would give the side away)
-  S.roleLabels[q.known] = s => ({ tex: `${q.kv}${unit}`, col: s.roleColours.has(q.known) ? undefined : CHALK })
+  S.roleLabels[q.known] = s => ({ tex: `${q.kv}${unit}`, col: s.roleColours.has(q.known) ? undefined : CHALK, inside: q.inside })
   if (o.unknownLabel !== false) S.roleLabels[q.unknown] = () => ({ tex: nameOf(q), col: PINK })
   S.roleColours = o.colours === false ? new Set() : new Set([q.known, q.unknown])
 }
@@ -213,6 +213,7 @@ export function putNumbers(S: Scene, q: Question, delay = 0.9, slow = false): nu
   }, { from, pulse, fly })
   S.alg = null
   S.vis.cards.t = 0
+  S.vis.eq.t = 1
   // the rule itself comes down off its card
   if (cardAt) for (const id of ["fn", "th", "r0", "r1", "eq"]) from[id] = cardAt
   S.eqFn = node

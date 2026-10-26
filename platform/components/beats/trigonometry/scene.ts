@@ -67,7 +67,13 @@ export interface Tri {
   pose: Pose
 }
 
-export interface SideLabel { tex: string; col?: string; pulse?: boolean }
+export interface SideLabel {
+  tex: string
+  col?: string
+  pulse?: boolean
+  /** inside the triangle: for an exam figure where other lines crowd the outside of this side */
+  inside?: boolean
+}
 
 /** A label laid over the board this frame. */
 export interface Lab { key: string; tex: string; col: string; at: Vec; size: number; op: number; pulse?: boolean }
@@ -542,14 +548,16 @@ function triMiddle(S: Scene): Vec {
 }
 
 /** Where a side's label goes: just outside the triangle, by its middle. */
-export function sideLabelAt(S: Scene, side: SideId, size: number, text = "x"): Vec {
+export function sideLabelAt(S: Scene, side: SideId, size: number, text = "x", inside = false): Vec {
   const a = cornerS(S, side[0]), b = cornerS(S, side.slice(1))
   const m = lerpV(a, b, 0.5)
   const d = sub(b, a), l = Math.hypot(d[0], d[1]) || 1
   let n: Vec = [-d[1] / l, d[0] / l]
-  if (dot(n, sub(triMiddle(S), m)) > 0) n = mul(n, -1)
-  // wide labels need more room when the side is upright
-  const wide = Math.max(1, text.length * 0.42)
+  // outside the triangle, unless asked to sit inside it
+  if ((dot(n, sub(triMiddle(S), m)) > 0) !== inside) n = mul(n, -1)
+  // wide labels need more room when the side is upright (counting what is seen, not the TeX)
+  const seen = text.replace(/\\text\{([^}]*)\}/g, "$1").replace(/\\[a-zA-Z]+/g, "x").replace(/[{}^_\\ ]/g, "")
+  const wide = Math.max(1, seen.length * 0.42)
   const off = size * (0.75 + 0.35 * Math.abs(n[0]) * (wide - 1)) + 6
   return add(m, mul(n, off))
 }
@@ -582,7 +590,7 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       const l = fn?.(S)
       if (!l) continue
       const side = sideOf(S.tri.at, role)
-      out.push({ key: `role-${role}`, tex: l.tex, col: l.col ?? ROLE_COL[role], at: sideLabelAt(S, side, size, l.tex), size: size + 2, op: lv, pulse: l.pulse || S.pulseLabs.has(role) })
+      out.push({ key: `role-${role}`, tex: l.tex, col: l.col ?? ROLE_COL[role], at: sideLabelAt(S, side, size, l.tex, l.inside), size: size + 2, op: lv, pulse: l.pulse || S.pulseLabs.has(role) })
     }
   }
   if (S.angText && S.vis.arc.v > 0.01) {

@@ -29,7 +29,7 @@ import type { Vec } from "../geometry"
 import {
   type Scene, type Role, type Fn,
   GREEN, PINK, CHALK, ROLE_COL, RAD, DEG, RULE, sideOf,
-  say, later, thText, hText, legText, ratioOf, chipRects, layout, boxNode, triFrame, numText,
+  say, later, thText, hText, legText, ratioOf, chipRects, layout, boxNode, triFrame, numText, cornerW,
 } from "./scene"
 import {
   type Beat, watch, look, base, madeTri, armsBoard, triBoard, UPRIGHT, inputRight, c, TRI, names,
@@ -86,7 +86,7 @@ const EX2: Question = (() => {
   const PS = 15 * Math.cos(58 * RAD), PQ = 15 * Math.sin(58 * RAD)
   const Rx = PQ - Math.sqrt(11 * 11 - PS * PS)
   return q("ex2", 58, "V", "H", 15, "A", {
-    name: "PS", unit: "cm", pose,
+    name: "PS", unit: "cm", pose, inside: true,
     letters: { V: "S", F: "P", P: "Q", R: "R" },
     extra: { pts: { R: flat(pose, [Rx, 0]) }, segs: [["V", "R"], ["R", "P"]], fills: [], labels: [{ a: "R", b: "P", tex: "11" }] },
     regions: [{ id: "PQS", pts: ["V", "F", "P"] }, { id: "QRS", pts: ["V", "R", "P"] }],
@@ -98,17 +98,19 @@ const EX3: Question = (() => {
   const pose = { phi: -55, s: -1, at: [0, 0] as Vec }
   const AB = 64 / Math.cos(35 * RAD)
   const C: Vec = [64 * Math.sin(35 * RAD), -64 * Math.cos(35 * RAD)]
-  const D: Vec = [C[0] + 80, C[1]]
+  // the paper's figure is not to scale: the sign is drawn narrower than its 80 cm, so the triangle that matters is bigger
+  const D: Vec = [C[0] + 52, C[1]]
   const pts: Record<string, Vec> = {
     D: flat(pose, D),
-    E: flat(pose, [D[0] - 5, D[1] - 40]),
-    G: flat(pose, [C[0] + 10, C[1] - 40]),
-    W0: flat(pose, [0, 14]),
-    W1: flat(pose, [0, -AB - 10]),
+    E: flat(pose, [D[0] - 4, D[1] - 30]),
+    G: flat(pose, [C[0] + 8, C[1] - 30]),
+    W0: flat(pose, [0, 8]),
+    W1: flat(pose, [0, -AB - 6]),
   }
   return q("ex3", 35, "V", "A", 64, "H", {
-    name: "AB", unit: "cm", pose,
+    name: "AB", unit: "cm", pose, inside: true,
     letters: { V: "A", F: "C", P: "B", D: "D" },
+    regions: [{ id: "ABC", pts: ["V", "F", "P"] }, { id: "ACD", pts: ["V", "F", "D"] }, { id: "sign", pts: ["F", "D", "E", "G"] }],
     extra: {
       pts, segs: [["W0", "W1"], ["F", "D"], ["V", "D"], ["D", "E"], ["E", "G"], ["G", "F"]],
       fills: [{ pts: ["F", "D", "E", "G"], col: CHALK, op: 0.1 }],
@@ -178,6 +180,23 @@ function firstBoard(S: Scene, o: { x?: boolean } = {}) {
   S.roleColours = new Set(["O", "A", "H"])
 }
 
+/**
+ * The shop-sign question, once the right-angled triangle is found: the view
+ * closes in on triangle ABC and the rest of the frame fades to a faint
+ * outline, so the triangle is big and its 64 cm is plainly on AC.
+ */
+function focusABC(S: Scene) {
+  S.frameFn = s => {
+    const ps = (["V", "F", "P"] as const).map(n => cornerW(s, n, false))
+    const xs = ps.map(p => p[0]), ys = ps.map(p => p[1])
+    const m = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)) * 0.16
+    return { x0: Math.min(...xs) - m, x1: Math.max(...xs) + m, y0: Math.min(...ys) - m, y1: Math.max(...ys) + m }
+  }
+  S.vis.extra.t = 0.13
+  S.letters = { V: "A", F: "C", P: "B" }
+  S.regionLit = null
+}
+
 /** A question's board: the triangle with its numbers. */
 function board(S: Scene, Q: Question, o: { colours?: boolean } = {}) {
   base(S)
@@ -187,7 +206,7 @@ function board(S: Scene, Q: Question, o: { colours?: boolean } = {}) {
 // ── beat makers ──────────────────────────────────────────────────────────
 
 /** Which rule? The cards come up; the right one comes down as the equation. */
-function ruleBeat(id: string, text: string, Q: Question, o: { colours?: boolean; boardFn?: (S: Scene) => void; put?: boolean } = {}): Beat {
+function ruleBeat(id: string, text: string, Q: Question, o: { colours?: boolean; boardFn?: (S: Scene) => void; put?: boolean; after?: (S: Scene) => void } = {}): Beat {
   const fn = fnOf(Q)
   // put: false when the next beat puts the numbers in, slowly, on its own
   const put = o.put !== false
@@ -201,7 +220,9 @@ function ruleBeat(id: string, text: string, Q: Question, o: { colours?: boolean;
         S2.roleColours = new Set(["O", "A", "H"])
         if (put) later(S2, 0.5, S3 => putNumbers(S3, Q, 0.9))
       }, S2 => { S2.roleColours = new Set(["O", "A", "H"]); S2.roleLabels = { ...S2.roleLabels, ...nameHints(Q) } })
-      look(S, [...TRI, "letters", "extra", "cards", "eq"])
+      // the equation's band opens when the rule comes down (putNumbers), so the figure has the room till then
+      look(S, [...TRI, "letters", "extra", "cards"])
+      o.after?.(S)
     },
     done: S => S.got.has("rule") && (!put || !!S.alg),
     advanceAfter: put ? 1800 : 1200,
@@ -218,7 +239,7 @@ function nameHints(Q: Question): Scene["roleLabels"] {
 }
 
 /** Get x on its own: the chips are dealt and the student makes the moves. */
-function solveBeat(id: string, text: string, Q: Question, o: { boardFn?: (S: Scene) => void; swap?: boolean; note?: string } = {}): Beat {
+function solveBeat(id: string, text: string, Q: Question, o: { boardFn?: (S: Scene) => void; swap?: boolean; note?: string; after?: (S: Scene) => void } = {}): Beat {
   return {
     id,
     say: text,
@@ -231,6 +252,7 @@ function solveBeat(id: string, text: string, Q: Question, o: { boardFn?: (S: Sce
       startSolve(S, Q, { allowSwap: o.swap })
       if (o.note) say(S, o.note, "calm", 600)
       look(S, [...TRI, "letters", "extra", "eq", "chips"])
+      o.after?.(S)
     },
     done: solved,
     advanceAfter: 1500,
@@ -244,7 +266,7 @@ function solvedOr(prev: Eqn | null, Q: Question): Eqn {
 }
 
 /** Work it out on the calculator. */
-function calcBeat(id: string, text: string, Q: Question, o: { boardFn?: (S: Scene) => void; after?: (S: Scene) => void } = {}): Beat {
+function calcBeat(id: string, text: string, Q: Question, o: { boardFn?: (S: Scene) => void; after?: (S: Scene) => void; then?: (S: Scene) => void } = {}): Beat {
   return {
     id,
     say: text,
@@ -260,6 +282,7 @@ function calcBeat(id: string, text: string, Q: Question, o: { boardFn?: (S: Scen
       const right = S.input!.onRight
       S.input!.onRight = S2 => { right?.(S2); o.after?.(S2) }
       look(S, [...TRI, "letters", "extra", "eq", "keypad"])
+      o.then?.(S)
     },
     done: inputRight,
     advanceAfter: 2200,
@@ -929,7 +952,7 @@ export const BEATS: Beat[] = [
 
   watch("ex2", "$PQRS$ is a trapezium. $SQ = 15$ cm and angle $PSQ = 58^\\circ$.", S => {
     board(S, EX2, { colours: false })
-    S.roleLabels = { H: () => ({ tex: "15\\text{ cm}" }) }
+    S.roleLabels = { H: () => ({ tex: "15\\text{ cm}", inside: true }) }
     look(S, [...TRI, "letters", "extra"])
   }, 2.6),
   {
@@ -937,7 +960,7 @@ export const BEATS: Beat[] = [
     say: "Tap the right-angled triangle.",
     enter: S => {
       board(S, EX2, { colours: false })
-      S.roleLabels = { H: () => ({ tex: "15\\text{ cm}" }) }
+      S.roleLabels = { H: () => ({ tex: "15\\text{ cm}", inside: true }) }
       S.mode = "tapRegion"
       S.onRegion = (S2, id) => {
         if (S2.got.has("tri")) return
@@ -956,12 +979,30 @@ export const BEATS: Beat[] = [
 
   watch("ex3", "A frame on a wall holds up a sign. Angle $BCA = 90^\\circ$.", S => {
     board(S, EX3, { colours: false })
-    S.roleLabels = { A: () => ({ tex: "64\\text{ cm}" }) }
+    S.roleLabels = { A: () => ({ tex: "64\\text{ cm}", col: CHALK, inside: true }) }
     look(S, [...TRI, "letters", "extra"])
   }, 2.6),
-  ruleBeat("ex3-rule", "Calculate $AB$. Which rule?", EX3, { colours: false }),
-  solveBeat("ex3-solve", "Get $AB$ on its own.", EX3, { swap: true }),
-  calcBeat("ex3-calc", "Work it out.", EX3),
+  {
+    id: "ex3-tri",
+    say: "Tap the right-angled triangle.",
+    enter: S => {
+      board(S, EX3, { colours: false })
+      S.roleLabels = { A: () => ({ tex: "64\\text{ cm}", col: CHALK, inside: true }) }
+      S.mode = "tapRegion"
+      S.onRegion = (S2, id) => {
+        if (S2.got.has("tri")) return
+        if (id === "ABC") { S2.got.add("tri"); S2.regionLit = "ABC"; S2.pulseRt = true; S2.touched = { kind: "tri" }; S2.flashGood = 1; S2.note = null; later(S2, 0.9, focusABC); return }
+        say(S2, id === "sign" ? "That is the sign. Look for the square corner." : "That triangle has no right angle. Look for the square corner.", "wrong", 3.4)
+        S2.pulseRt = true
+      }
+      look(S, [...TRI, "letters", "extra"])
+    },
+    done: S => S.got.has("tri"),
+    advanceAfter: 2000,
+  },
+  ruleBeat("ex3-rule", "Calculate $AB$. Which rule?", EX3, { colours: false, after: focusABC }),
+  solveBeat("ex3-solve", "Get $AB$ on its own.", EX3, { swap: true, after: focusABC }),
+  calcBeat("ex3-calc", "Work it out.", EX3, { then: focusABC }),
 
   watch("ex4", "A ladder from $Q$ reaches a light $L$, $8$ m up a wall.", S => {
     board(S, EX4, { colours: false })

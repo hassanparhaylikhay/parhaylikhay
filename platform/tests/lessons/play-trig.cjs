@@ -117,6 +117,11 @@ const { open, sleep } = require("./trig-lib.cjs")
   }
   await question("Calculate PS", "cos", null, "15*c58")
   await want("A frame on a wall"); await shot("ex3"); await next()
+  await want("Tap the right-angled"); {
+    const v = await corner("V"), f = await corner("F"), d = await corner("D"), p = await corner("P")
+    await tap((v[0] + f[0] + d[0]) / 3, (v[1] + f[1] + d[1]) / 3); await expect((await S()).note, "no note tapping ACD")
+    await tap((v[0] + f[0] + p[0]) / 3, (v[1] + f[1] + p[1]) / 3)
+  }
   await question("Calculate AB", "cos", "sin", "64/c35", { swap: true })
   await want("A ladder from"); await next()
   await question("The ladder makes", "sin", null, "8.51")

@@ -36,6 +36,8 @@ export interface Question {
   extra?: Scene["extra"]
   regions?: { id: string; pts: string[] }[]
   unit?: string
+  /** the known side's length is written inside the triangle (other lines crowd its outside) */
+  inside?: boolean
 }
 
 export const fnOf = (q: Question): Fn => {
