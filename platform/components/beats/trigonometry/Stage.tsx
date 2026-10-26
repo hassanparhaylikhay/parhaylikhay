@@ -463,12 +463,26 @@ function TanLine({ S }: { S: Scene }) {
     const e = ease((S.time - tl.stretch) / 1.0)
     const tip = W([Math.cos(th), Math.sin(th)])
     if (Math.cos(th) > 1e-3) {
-      const T = W([1, Math.min(Math.tan(th), yTop)])
-      out.push(ln(tip, lerpV(tip, T, e), "ext", { stroke: CHALK, strokeWidth: 2, strokeDasharray: "5 6" }))
+      const tanV = Math.tan(th)
+      // where the radius, stretched, meets the tangent; above the board it is off screen,
+      // so both lines keep their true paths up to the top edge, and an arrow shows they go on
+      const off = tanV > yTop
+      const meet: Vec = off ? [yTop / tanV, yTop] : [1, tanV]
+      out.push(ln(tip, lerpV(tip, W(meet), e), "ext", { stroke: CHALK, strokeWidth: 2, strokeDasharray: "5 6" }))
       if (e >= 1) {
+        const T = W([1, Math.min(tanV, yTop)])
         out.push(ln(W([0, 0]), touch, "big-a", { stroke: BLUE, strokeWidth: 3.2, strokeOpacity: 0.9 }))
         out.push(ln(touch, T, "tan", { stroke: ORANGE, strokeWidth: 3.8 }))
-        out.push(<circle key="T" cx={T[0]} cy={T[1]} r={4.5} fill={ORANGE} />)
+        if (!off) out.push(<circle key="T" cx={T[0]} cy={T[1]} r={4.5} fill={ORANGE} />)
+        else {
+          // as in the angles lesson: an arrow at the edge, pointing at where they meet
+          const a = add(T, [-8, 12]), b = add(T, [8, 12]), up = add(T, [0, -2])
+          out.push(<path key="T-far" d={`M ${a[0]} ${a[1]} L ${up[0]} ${up[1]} L ${b[0]} ${b[1]} Z`} fill={ORANGE} opacity={0.95} />)
+          // and a small one on the stretched radius: it carries on too
+          const E = W(meet), u = unitV(sub(E, tip)), nn: Vec = [-u[1], u[0]]
+          const ra = add(sub(E, mul(u, 10)), mul(nn, 6)), rb = add(sub(E, mul(u, 10)), mul(nn, -6))
+          out.push(<path key="E-far" d={`M ${ra[0]} ${ra[1]} L ${E[0]} ${E[1]} L ${rb[0]} ${rb[1]}`} fill="none" stroke={CHALK} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />)
+        }
       }
     } else {
       // straight up: the radius runs alongside the tangent and never meets it
@@ -503,7 +517,8 @@ function CircleLabels({ S, L }: { S: Scene; L: Layout }) {
   if (tl && tl.stretch !== null && S.time - tl.stretch > 1) {
     const th = S.triD.th * RAD
     if (Math.cos(th) > 1e-3) {
-      const top = Math.min(Math.tan(th), 2.4)
+      const yTop = toWorld(S, [0, L.board.y0])[1]
+      const top = Math.min(Math.tan(th), yTop - 0.2)
       put(add(W([1, top / 2]), [size * 1.9, 0]), "\\tan\\theta", "lt", ORANGE)
       put(add(W([0.5, 0]), [0, size * 0.95]), "1", "l1", BLUE)
     }
