@@ -1,5 +1,5 @@
 // Random play on the trigonometry boards at random screen sizes (LESSON =
-// trigonometry-1 or trigonometry-2). Turns and slides the triangle, drops
+// trigonometry or why-trig-works). Turns and slides the triangle, drops
 // chips onto the equation, drags its pieces about, types on the calculator.
 // After every move: the lengths on screen agree with each other and with the
 // angle shown (to within their rounding), the equation is still a true equation (both sides equal), no
@@ -7,7 +7,7 @@
 // board, and nothing on screen says NaN.
 const puppeteer = require("puppeteer-core")
 const { CHROME, HOST } = require("./lib.cjs")
-const LESSON = process.env.LESSON || "trigonometry-1"
+const LESSON = process.env.LESSON || "trigonometry"
 const BASE = process.env.BASE || `${HOST}/learn/${LESSON}`
 const ROUNDS = +(process.env.ROUNDS || 2)
 const sleep = ms => new Promise(r => setTimeout(r, ms))
@@ -15,8 +15,8 @@ const SIZES = [[1440, 900], [1280, 720], [390, 844], [360, 640], [820, 1180], [1
 let seed = +(process.env.SEED || 5)
 const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
 const IDS = {
-  "trigonometry-1": ["open", "slide", "names-play", "watch-lengths", "half-play", "ratio-play", "turn-watch", "sin-play", "cos-play", "tan-play", "tan-big", "to-one", "draw-sin", "draw-cos", "make-tan1", "make-half", "make-06", "end", "type-sin50"],
-  "trigonometry-2": ["turn-30", "drag-30", "solve-40", "solve-55", "solve-35", "drag-x", "undo-65", "solve-u1", "u2-solve", "any1-solve", "any2-solve", "any3-solve", "any4-solve", "ex3-solve", "ex4-solve", "calc-65", "any3-calc", "make-slide", "end"],
+  "trigonometry": ["turn-30", "tap-1", "drag-30", "solve-40", "solve-55", "solve-35", "drag-x", "undo-65", "solve-u1", "u2-solve", "any1-solve", "any2-solve", "any3-solve", "any4-solve", "ex3-solve", "ex4-solve", "calc-65", "any3-calc", "make-slide", "end"],
+  "why-trig-works": ["open", "slide", "turn-family", "same-place", "else", "to-one", "round-sin", "round-cos", "to-35", "tan-90", "end"],
 }[LESSON]
 const KEYS = ["1", "2", "5", "9", ".", "*", "/", "s", "c", "t", "Backspace"]
 

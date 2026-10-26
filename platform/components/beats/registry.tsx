@@ -6,20 +6,22 @@ import CircleTheoremsLesson from "./circle-theorems/CircleTheoremsLesson"
 import CircleTheorems2Lesson from "./circle-theorems-2/CircleTheorems2Lesson"
 import CircleTheorems3Lesson from "./circle-theorems-3/CircleTheorems3Lesson"
 import PythagorasLesson from "./pythagoras/PythagorasLesson"
-import Trig1Lesson from "./trigonometry/Trig1Lesson"
-import Trig2Lesson from "./trigonometry/Trig2Lesson"
+import TrigLesson from "./trigonometry/TrigLesson"
+import WhyTrigLesson from "./trigonometry/WhyTrigLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
  * both read from here, so a lesson is added once and appears in both.
  */
-export const BEAT_LESSONS: Record<string, {
+type BeatLesson = {
   title: string
   description: string
   /** Where the X goes for a logged-in student. */
   topicHref: string
   Lesson: ComponentType<{ closeHref: string }>
-}> = {
+}
+
+export const BEAT_LESSONS: Record<string, BeatLesson> = {
   angles: {
     title: "Angles",
     description: "Turn a line to see what an angle is, then find the rules for straight lines, crossing lines and parallel lines.",
@@ -50,17 +52,17 @@ export const BEAT_LESSONS: Record<string, {
     topicHref: "/dashboard/maths/06/01",
     Lesson: PythagorasLesson,
   },
-  "trigonometry-1": {
-    title: "Trigonometry I: sin, cos and tan",
-    description: "Build a right-angled triangle inside an angle, name its sides, and find out why every angle has its own sin, cos and tan.",
+  trigonometry: {
+    title: "Trigonometry: sin, cos and tan",
+    description: "From Pythagoras to trigonometry: name the sides, learn SOH CAH TOA, and find any missing side, with every step of the algebra done in front of you.",
     topicHref: "/dashboard/maths/06/02",
-    Lesson: Trig1Lesson,
+    Lesson: TrigLesson,
   },
-  "trigonometry-2": {
-    title: "Trigonometry II: finding a side",
-    description: "Use sin, cos and tan to find a missing side, and watch the algebra happen: every move is done to both sides, right in front of you.",
+  "why-trig-works": {
+    title: "Why trigonometry works",
+    description: "An optional tour behind the scenes: why every angle has its own sin, cos and tan, where your calculator's numbers come from, and why tan is called tangent.",
     topicHref: "/dashboard/maths/06/02",
-    Lesson: Trig2Lesson,
+    Lesson: WhyTrigLesson,
   },
   "angles-in-a-triangle": {
     title: "Angles in a triangle",
@@ -75,3 +77,8 @@ export const BEAT_LESSONS: Record<string, {
     Lesson: PolygonAnglesLesson,
   },
 }
+
+// Old links keep working: the first two trig lessons were reshaped into the
+// main lesson and the optional tour (26 Oct 2026).
+BEAT_LESSONS["trigonometry-2"] = BEAT_LESSONS.trigonometry
+BEAT_LESSONS["trigonometry-1"] = BEAT_LESSONS["why-trig-works"]

@@ -1,8 +1,8 @@
-// Scripted play-through of Trigonometry II (finding a side), the way a student would do it.
+// Scripted play-through of the main trigonometry lesson (from Pythagoras to finding any side), the way a student would do it.
 const { open, sleep } = require("./trig-lib.cjs")
 
 ;(async () => {
-  const T = await open("trigonometry-2", "play-trig-2")
+  const T = await open("trigonometry", "play-trig")
   const { want, next, tap, shot, expect, S, turnTo, slideTo, dropLine, tapCard, tapAtom, dropChip, solveIt, type, page, atomAt, drag, corner } = T
 
   /** One question: which rule, get x on its own, work it out. */
@@ -22,9 +22,40 @@ const { open, sleep } = require("./trig-lib.cjs")
     await expect((await S()).input === "right", "answer not right: " + calc)
   }
 
-  // ── 1. finding a side ──
-  await want("Turn the arm"); await turnTo(36); await expect(/Close/.test((await S()).note || ""), "no 'Close' at 36"); await turnTo(30.5)
+  // ── 1. sides and angles ──
+  await want("Pythagoras finds"); await sleep(1400); await shot("pythagoras"); await next()
+  await want("But what if"); await next()
+  await want("Pythagoras can't"); await next()
+  await want("Trigonometry uses"); await next()
+  await want("Let's make one"); await turnTo(36); await expect(/Close/.test((await S()).note || ""), "no 'Close' at 36"); await turnTo(30.5)
   await want("Pull a line"); await dropLine(1.2)
+  // ── 2. naming the sides ──
+  await want("The longest side"); await T.tapSide("VF"); await expect((await S()).note, "no note tapping a short side"); await sleep(300); await T.tapSide("VP")
+  await want("We call the angle"); await next()
+  await want("The side across"); await T.tapSide("VF"); await expect((await S()).note, "no note tapping the adjacent"); await T.tapSide("FP")
+  await want("The side next to"); await T.tapSide("VP"); await expect((await S()).note, "no note tapping the hypotenuse"); await T.tapSide("VF")
+  await want("Now look from"); await next()
+  await want("The opposite and the adjacent"); await next()
+  await want("The hypotenuse stays"); await next()
+  for (const [w, role] of [["Tap the opposite", "O"], ["Tap the adjacent", "A"], ["Tap the hypotenuse", "H"], ["Tap the opposite", "O"]]) {
+    await want(w)
+    const wrong = role === "H" ? "O" : "H"
+    await T.tapRole(wrong); await expect((await S()).note, `no note tapping ${wrong} for ${role}`); await sleep(300)
+    await T.tapRole(role)
+  }
+  // ── 3. the three rules ──
+  await want("Trigonometry has"); await next()
+  await want("Each rule uses"); await sleep(2000); await shot("two-sides"); await next()
+  await want("Many students"); await next()
+  for (const [a, b, fn, wrongFn] of [["O", "A", "tan", "sin"], ["A", "H", "cos", "tan"], ["O", "H", "sin", "cos"]]) {
+    await want(`Which rule uses ${a} and ${b}`)
+    await tapCard(wrongFn); await expect((await S()).note, "no note on a wrong card"); await sleep(400)
+    await tapCard(fn)
+  }
+  await want("Your calculator knows"); await next()
+  await want("Type"); await type("c30"); await expect((await S()).input === "wrong", "cos 30 accepted for sin 30"); await type("s30")
+  await want("Your own calculator"); await next()
+  // ── 4. finding a side ──
   await want("The hypotenuse is"); await next()
   await want("This side is missing"); await next()
   await want("Which rule uses O and H"); await tapCard("cos"); await expect((await S()).note, "no note on cos"); await sleep(400); await tapCard("sin")

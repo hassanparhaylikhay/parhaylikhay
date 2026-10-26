@@ -73,6 +73,8 @@ export interface SideLabel { tex: string; col?: string; pulse?: boolean }
 export interface Lab { key: string; tex: string; col: string; at: Vec; size: number; op: number; pulse?: boolean }
 
 export interface Card { fn: Fn; lit: boolean }
+/** One sum on a calculator's screen: what was typed (left) and its answer (right). */
+export interface CalcLine { q: string; a: string }
 export interface Chip { id: string; tex: string; kind: "mul" | "div"; fac: Fac }
 
 export interface CalcInput {
@@ -165,8 +167,24 @@ export interface Scene {
   ghost: { h: number; text: string } | null
   /** equal ticks on two sides */
   ticks: SideId[]
-  /** the unit circle and the graph it draws */
+  /** the waves the unit circle draws as it turns: every whole degree it has passed through, 0 to 360 */
   graph: { fn: "sin" | "cos"; seen: boolean[]; seenCos: boolean[]; last: number | null } | null
+  /** angles all the way round: 0° to 360°, the arc measured from the floor, the unit circle drawn */
+  fullTurn: boolean
+  /** many triangles in one angle: their hypotenuses, when they came, and when they flew out to sit on each other */
+  family: { hs: number[]; since: number; stack: number | null; at: Vec; size: number } | null
+  /** a faint outline of the triangle at this hypotenuse (where it started) */
+  outline: number | null
+  /** ten marks along the hypotenuse, counted from P (when they came) */
+  marks: number | null
+  /** the opposite swung down onto the hypotenuse about P (when it started) */
+  door: number | null
+  /** a calculator screen: what was typed and what it gives (KaTeX), fixed or worked out every frame */
+  calcScreen: CalcLine[] | ((S: Scene) => CalcLine[]) | null
+  /** the tangent at the floor, and the radius stretched out to meet it (when) */
+  tanLine: { since: number; stretch: number | null } | null
+  /** two angles whose points are at the same height */
+  mirror: [number, number] | null
   /** one tenth of x, as a bar */
   tenth: { since: number; ten: number | null } | null
 
@@ -242,6 +260,7 @@ export function createScene(): Scene {
     roleLabels: {}, roleColours: new Set(), sideColour: {}, sideColD: { VF: [...c], FP: [...c], VP: [...c] }, angText: null, letters: {},
     extra: null, regions: [], onRegion: null, regionLit: null,
     light: null, glow: new Set(), pulseArc: false, pulseRt: false, pulseLabs: new Set(), halves: null, ghost: null, ticks: [], graph: null, tenth: null,
+    fullTurn: false, family: null, outline: null, marks: null, door: null, calcScreen: null, tanLine: null, mirror: null,
     eq: createBoard(), eqFn: null, alg: null, solve: null, tick: null, choice: null, stepsCard: null,
     cards: [], cardPick: null, onCard: null, soh: null,
     chips: [], onChip: null, tapAtoms: [], onAtom: null, dragAtoms: [], onAtomDrop: null,
@@ -445,14 +464,22 @@ export function triFrame(S: Scene): Rect {
 }
 
 /** The unit circle, its quarter, and the graph to its right. */
-/** Where the graph sits beside the circle: narrower on a tall screen, so the circle can be bigger. */
-export function graphGeom(S: Scene): { x0: number; w: number } {
-  return S.h > S.w * 1.2 ? { x0: 1.52, w: 1.15 } : { x0: 1.5, w: 1.9 }
+/**
+ * Where the waves sit: beside the unit circle on a wide screen, under it on
+ * a tall one. `x0` is where 0° is, `w` the width for 360°, `y0` the wave's
+ * floor; one unit of height is one unit, the same as the circle's radius.
+ */
+export function graphGeom(S: Scene): { x0: number; w: number; y0: number; below: boolean } {
+  return S.h > S.w * 1.2 ? { x0: -1.2, w: 2.4, y0: -2.6, below: true } : { x0: 1.5, w: 3.0, y0: 0, below: false }
 }
 export function graphFrame(S: Scene): Rect {
   const g = graphGeom(S)
-  return { x0: -0.22, x1: g.x0 + g.w + 0.22, y0: -0.32, y1: 1.18 }
+  return g.below
+    ? { x0: -1.35, x1: 1.35, y0: g.y0 - 1.3, y1: 1.3 }
+    : { x0: -1.3, x1: g.x0 + g.w + 0.3, y0: -1.3, y1: 1.3 }
 }
+/** The unit circle alone, with room round it. */
+export const circleFrame = (): Rect => ({ x0: -1.35, x1: 1.35, y0: -1.3, y1: 1.3 })
 
 function fitView(S: Scene, L: Layout): View {
   const f = S.frame
@@ -529,6 +556,11 @@ export function sideLabelAt(S: Scene, side: SideId, size: number, text = "x"): V
 
 /** Where the marked angle's label goes: inside its arc, along the bisector. */
 export function angleLabelAt(S: Scene, size: number): Vec {
+  if (S.fullTurn) {
+    // measured from the floor, however far round it has gone
+    const c = cornerS(S, "V"), h = S.triD.th * RAD / 2
+    return add(c, [Math.cos(h) * size * 2.6, -Math.sin(h) * size * 2.6])
+  }
   const at = S.triD.at
   const c = cornerS(S, at)
   const p = cornerS(S, at === "V" ? "F" : "V"), q = cornerS(S, at === "V" ? "P" : "F")
@@ -660,7 +692,7 @@ export function step(S: Scene, dt: number) {
     const now = Math.round(S.tri.th)
     const from = S.graph.last ?? now
     for (let d = Math.min(from, now); d <= Math.max(from, now); d++) {
-      if (d < 0 || d > 90) continue
+      if (d < 0 || d > 360) continue
       if (S.graph.fn === "sin") S.graph.seen[d] = true
       else S.graph.seenCos[d] = true
     }
@@ -722,6 +754,14 @@ export function resetBeat(S: Scene) {
   S.ticks = []
   S.graph = null
   S.tenth = null
+  S.fullTurn = false
+  S.family = null
+  S.outline = null
+  S.marks = null
+  S.door = null
+  S.calcScreen = null
+  S.tanLine = null
+  S.mirror = null
   S.eqFn = null
   S.alg = null
   S.solve = null
@@ -858,7 +898,14 @@ export function pointerMove(S: Scene, p: Vec) {
   const w = poseUnmap(S.tri.pose, toWorld(S, p))
   const T = S.tri
   if (d.kind === "turn") {
-    let th = clamp(Math.atan2(w[1], w[0]) * DEG, S.thMin, S.thMax)
+    let raw = Math.atan2(w[1], w[0]) * DEG
+    if (S.fullTurn) {
+      // 0° to 360°, following the finger round past 180° without jumping
+      if (raw < 0) raw += 360
+      while (raw - T.th > 180) raw -= 360
+      while (raw - T.th < -180) raw += 360
+    }
+    let th = clamp(raw, S.thMin, S.thMax)
     S.thExact = null
     S.snapped = false
     if (S.magnet?.th !== undefined && Math.abs(th - S.magnet.th) < S.magnet.within) { th = S.magnet.th; S.snapped = true; if (!Number.isInteger(th)) S.thExact = th }

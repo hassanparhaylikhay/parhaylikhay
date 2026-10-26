@@ -25,7 +25,7 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
     <>
       <svg className={styles.svg} viewBox={`0 0 ${w} ${h}`} width={w} height={h} aria-hidden>
         <defs>
-          <filter id="pl-soft" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id="pl-soft" filterUnits="userSpaceOnUse" x={0} y={0} width={S.w} height={S.h}>
             <feGaussianBlur stdDeviation="5" result="b" />
             <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>

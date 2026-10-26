@@ -37,8 +37,8 @@ const LESSONS = [
   ["circle-2", "circle-theorems-2"],
   ["circle-3", "circle-theorems-3"],
   ["pythagoras", "pythagoras"],
-  ["trig-1", "trigonometry-1"],
-  ["trig-2", "trigonometry-2"],
+  ["trig", "trigonometry"],
+  ["trig-why", "why-trig-works"],
 ]
 
 const noPageErrors = out => !/PAGEERROR/.test(out)

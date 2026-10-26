@@ -1,7 +1,7 @@
 /**
- * What the two trigonometry lessons' beats share: setting up the board,
- * the student's triangle, labels, the rule cards, word choices, the
- * equation lines, and the calculator questions.
+ * What the trigonometry lessons' beats share: setting up the board, the
+ * student's angle and triangle, naming its sides, labels, the rule cards,
+ * word choices, the equation lines, and the calculator questions.
  */
 
 import type { BeatOf } from "../beat"
@@ -13,7 +13,7 @@ import {
   type Scene, type VisKey, type Role, type Fn, type Pose, type SideLabel,
   GREEN, PINK, CHALK, ROLE_COL, RULE,
   resetBeat, show, say, startInput, boxNode, later, clamp,
-  sideOf, thText, ratioOf, ratioText, hText, legText, labAt, armsFrame, triFrame, cardRects, layout,
+  sideOf, roleOf, thText, ratioOf, ratioText, hText, legText, labAt, armsFrame, triFrame, cardRects, layout,
 } from "./scene"
 import { type Question, fnOf, answerOf, answerText, hypOf, solvedEqn, solvedTex, slipsFor, startEqn, fromSide, nameOf, xFac, kFac } from "./solve"
 
@@ -292,3 +292,117 @@ export function calcWalk(q: Question): WalkStep<Scene>[] {
   ]
 }
 
+
+// ── the student's angle and triangle (building, naming the sides) ────────
+
+/** Just the angle: two arms from a corner, nothing dropped yet. */
+export function angleOnly(S: Scene, th = 35, h = 6.5, R = 10) {
+  base(S)
+  armsBoard(S, R)
+  const t = S.tri
+  t.drop = 0
+  t.at = "V"
+  t.pose = { ...UPRIGHT, at: [0, 0] }
+  t.th = th
+  t.h = h
+  S.angText = thText
+}
+
+/**
+ * The student's triangle inside its angle, the arms showing. `framed`: no
+ * arms, and the view fits the triangle itself (beats where nothing slides,
+ * so it stays big beside the cards or the keypad).
+ */
+export function angleTri(S: Scene, o: { th?: number; h?: number; framed?: boolean; R?: number } = {}) {
+  base(S)
+  armsBoard(S, o.R ?? 10)
+  madeTri(S, { th: o.th, h: o.h ?? clamp(S.tri.h, 0.45 * (o.R ?? 10), 0.84 * (o.R ?? 10)) })
+  if (o.framed) triBoard(S)
+  S.angText = thText
+}
+
+export const ALL: VisKey[] = ["arms", "tri", "fill", "rt", "arc", "labels"]
+/** The triangle without its arms. */
+export const TRI: VisKey[] = ["tri", "fill", "rt", "arc", "labels"]
+
+/** One side named, by its role, in its colour. */
+export function nameRole(S: Scene, r: Role) {
+  S.roleLabels[r] = () => ({ tex: r })
+  S.roleColours.add(r)
+}
+
+/** Tap a side: the right one lights and is named. */
+export function tapFor(S: Scene, want: Role, wrong: (got: Role) => string, after?: (S: Scene) => void) {
+  S.mode = "tapSide"
+  S.onSide = (S2, side) => {
+    if (S2.got.has("tap")) return
+    const r = roleOf(S2.tri.at, side)
+    if (r === want) {
+      S2.got.add("tap")
+      nameRole(S2, want)
+      S2.touched = { kind: "side", id: side }
+      S2.flashGood = 1.2
+      S2.note = null
+      after?.(S2)
+      return
+    }
+    say(S2, wrong(r), "wrong", 3.4)
+    S2.light = want === "H" ? { from: "F", side: "VP", since: S2.time } : { from: S2.tri.at, side: sideOf(S2.tri.at, "O"), since: S2.time }
+  }
+}
+
+/** The student's triangle turned and flipped, for tapping a side by its name. */
+export const PRACTICE: { pose: Pose; at: "V" | "P"; want: Role }[] = [
+  { pose: { phi: 180, s: 1, at: [0, 0] }, at: "V", want: "O" },
+  { pose: { phi: 180, s: -1, at: [0, 0] }, at: "P", want: "A" },
+  { pose: { phi: 90, s: -1, at: [0, 0] }, at: "V", want: "H" },
+  { pose: { phi: -35, s: 1, at: [0, 0] }, at: "P", want: "O" },
+]
+
+const WORD: Record<Role, string> = { O: "opposite", A: "adjacent", H: "hypotenuse" }
+
+function wrongTap(want: Role, got: Role): string {
+  if (want === "H") return "The hypotenuse is across from the right angle."
+  if (want === "O") return got === "H" ? "That's the hypotenuse. The opposite is across from $\\theta$." : "That side touches $\\theta$. The opposite is across from it."
+  return got === "H" ? "That's the hypotenuse. Find the other side next to $\\theta$." : "That one is across from $\\theta$. The adjacent is next to it."
+}
+
+export function tapRole(id: string, k: number, size = 7): Beat {
+  const P = PRACTICE[k]
+  return {
+    id,
+    say: `Tap the ${WORD[P.want]}.`,
+    enter: S => {
+      base(S)
+      triBoard(S)
+      madeTri(S, { th: clamp(S.tri.th, 32, 58), h: size })
+      S.tri.pose = { ...P.pose, at: [0, 0] }
+      S.tri.at = P.at
+      S.angText = () => "\\theta"
+      tapFor(S, P.want, got => wrongTap(P.want, got))
+      look(S, TRI)
+    },
+    done: S => S.got.has("tap"),
+    advanceAfter: 1300,
+  }
+}
+
+// ── a first press on the calculator ──────────────────────────────────────
+
+/** Type a calculation on the calculator; the box shows it, then its value. */
+export function askValue(S: Scene, answer: number, onRight?: (S: Scene) => void) {
+  startInput(S, { answer, sf: 3, onRight })
+  S.eqFn = S2 => {
+    const inp = S2.input
+    const items: ENode[] = [boxNode(S2)]
+    if (inp?.state === "right" && /[×÷sctSCT]/.test(inp.value)) items.push(op("eq", "="), atom("res", Math.abs(answer - Math.round(answer)) < 1e-9 ? String(Math.round(answer)) : sigText(answer, 3), { col: GREEN }))
+    return row(items)
+  }
+}
+
+export function typeWalk(fn: Fn, deg: number, shows: string): WalkStep<Scene>[] {
+  return [
+    { say: `Press $\\${fn}$, then $${String(deg).split("").join("$, $")}$.`, tex: `\\${fn}\\ ${deg}` },
+    { say: `Then press $=$. It shows $${shows}$.`, tex: `\\${fn}\\ ${deg} = ${c(GREEN, shows)}` },
+  ]
+}

@@ -27,13 +27,14 @@ import { type ENode, type Eqn, atom, op, row, eqnNode, mulOne, sideVal } from ".
 import { sigText } from "../calc"
 import type { Vec } from "../geometry"
 import {
-  type Scene, type Role,
-  GREEN, PINK, CHALK, ROLE_COL, RAD,
+  type Scene, type Role, type Fn,
+  GREEN, PINK, CHALK, ROLE_COL, RAD, DEG, RULE, sideOf,
   say, later, thText, hText, legText, ratioOf, chipRects, layout, boxNode, triFrame, numText,
 } from "./scene"
 import {
-  type Beat, watch, look, base, madeTri, armsBoard, UPRIGHT, inputRight, c,
+  type Beat, watch, look, base, madeTri, armsBoard, triBoard, UPRIGHT, inputRight, c, TRI, names,
   cardsTap, qBoard, putNumbers, numbersIn, askCalc, calcWalk, showAnswer,
+  nameRole, tapFor, tapRole, askValue, typeWalk,
 } from "./common"
 import {
   type Question, fnOf, answerOf, answerText, kFac, xFac, fnFac, startEqn, solvedEqn,
@@ -130,7 +131,41 @@ const EX4: Question = (() => {
 
 // ── boards ───────────────────────────────────────────────────────────────
 
-const TRI: ("tri" | "fill" | "rt" | "arc" | "labels")[] = ["tri", "fill", "rt", "arc", "labels"]
+/** The 6, 8, 10 triangle Pythagoras has just solved. */
+function pythBoard(S: Scene) {
+  base(S)
+  triBoard(S)
+  madeTri(S, { th: Math.atan2(6, 8) * DEG, h: 10 })
+  S.angText = null
+}
+
+/** One side and one angle: the hypotenuse is 10, the angle 30°, the opposite missing. */
+function oneAngleBoard(S: Scene) {
+  base(S)
+  triBoard(S)
+  madeTri(S, { th: 30, h: 10 })
+  S.angText = thText
+  S.roleLabels = { H: () => ({ tex: "10" }), O: () => ({ tex: "?", col: PINK }) }
+  S.roleColours = new Set(["H"])
+}
+
+/** The student's triangle inside its angle (θ = 30°, hypotenuse 10), for naming its sides. */
+function nameBoard(S: Scene) {
+  base(S)
+  armsBoard(S, 12)
+  madeTri(S, { th: 30, h: 10 })
+  S.angText = thText
+}
+
+/** The triangle framed on its own, its sides named, with the rule cards beneath. */
+function rulesBoard(S: Scene) {
+  base(S)
+  madeTri(S, { th: 30, h: 10 })
+  triBoard(S)
+  names(S)
+  S.angText = () => "\\theta"
+  S.cards = (["sin", "cos", "tan"] as Fn[]).map(fn => ({ fn, lit: false }))
+}
 
 /** The first question on the student's own triangle, inside its angle (θ = 30°, hypotenuse 10). */
 function firstBoard(S: Scene, o: { x?: boolean } = {}) {
@@ -276,10 +311,41 @@ function balanceTick(S: Scene) {
 // ── the lesson ───────────────────────────────────────────────────────────
 
 export const BEATS: Beat[] = [
-  // ── 1. Finding a side ──
+  // ── 1. Sides and angles ──
+  {
+    id: "pyth",
+    say: "Pythagoras finds a missing side from the other two.",
+    enter: S => {
+      pythBoard(S)
+      S.roleLabels = {
+        O: () => ({ tex: "6", col: CHALK }),
+        A: () => ({ tex: "8", col: CHALK }),
+        H: s => (s.got.has("found") ? { tex: "10", col: GREEN } : { tex: "?", col: PINK }),
+      }
+      later(S, 1.2, S2 => { S2.got.add("found"); S2.roleColours = new Set(["H"]); S2.touched = { kind: "side", id: "VP" }; S2.flashGood = 1 })
+      S.eqFn = s => (s.got.has("found") ? row([atom("sq", "\\sqrt{6^2 + 8^2}"), op("eq", "="), atom("ten", "10", { col: GREEN })]) : null)
+      look(S, ["tri", "fill", "rt", "labels", "eq"])
+    },
+    cta: "",
+    ctaAfter: 2.6,
+  },
+  watch("one-angle", "But what if we only know one side and an angle?", S => {
+    oneAngleBoard(S)
+    look(S, TRI)
+  }, 2.4),
+  watch("needs-two", "Pythagoras can't do this. It needs two sides.", S => {
+    oneAngleBoard(S)
+    S.pulseLabs = new Set(["H"])
+    look(S, TRI)
+  }, 2.2),
+  watch("trig-uses", "*Trigonometry* uses the angle as well.", S => {
+    oneAngleBoard(S)
+    S.pulseArc = true
+    look(S, TRI)
+  }, 2.2),
   {
     id: "turn-30",
-    say: "Turn the arm to $30^\\circ$.",
+    say: "Let's make one. Turn the arm to $30^\\circ$.",
     enter: S => {
       base(S)
       armsBoard(S, 12)
@@ -317,6 +383,141 @@ export const BEATS: Beat[] = [
     done: S => S.tri.drop === 1,
     advanceAfter: 1300,
   },
+
+  // ── 2. Naming the sides ──
+  {
+    id: "tap-H",
+    say: "The longest side is the hypotenuse. Tap it.",
+    enter: S => {
+      nameBoard(S)
+      tapFor(S, "H", () => "That one is shorter. The hypotenuse is the longest side.")
+      look(S, ["arms", ...TRI])
+    },
+    done: S => S.got.has("tap"),
+    advanceAfter: 1300,
+  },
+  watch("theta", "We call the angle $\\theta$.", S => {
+    nameBoard(S)
+    nameRole(S, "H")
+    S.angText = () => "\\theta"
+    S.pulseArc = true
+    say(S, "$\\theta$ is a Greek letter, said \"theta\".", "calm", 600)
+    look(S, ["arms", ...TRI])
+  }),
+  {
+    id: "tap-O",
+    say: "The side across from $\\theta$ is the *opposite*. Tap it.",
+    enter: S => {
+      nameBoard(S)
+      nameRole(S, "H")
+      S.angText = () => "\\theta"
+      S.light = { from: "V", side: "FP", since: S.time }
+      tapFor(S, "O", got => (got === "H" ? "That's the hypotenuse. Go across from $\\theta$." : "That side touches $\\theta$. Go across."), S2 => { S2.light = null })
+      look(S, ["arms", ...TRI])
+    },
+    done: S => S.got.has("tap"),
+    advanceAfter: 1300,
+  },
+  {
+    id: "tap-A",
+    say: "The side next to $\\theta$ is the *adjacent*. Tap it.",
+    enter: S => {
+      nameBoard(S)
+      nameRole(S, "H")
+      nameRole(S, "O")
+      S.angText = () => "\\theta"
+      say(S, "Adjacent means next to.", "calm", 600)
+      tapFor(S, "A", got => (got === "H" ? "That's the hypotenuse. Find the other side next to $\\theta$." : "That's the opposite. Find the side next to $\\theta$."))
+      look(S, ["arms", ...TRI])
+    },
+    done: S => S.got.has("tap"),
+    advanceAfter: 1300,
+  },
+  watch("hop", "Now look from the other angle.", S => {
+    nameBoard(S)
+    names(S)
+    S.angText = () => "\\theta"
+    S.tri.at = "P"
+    look(S, TRI)
+  }, 2.4),
+  watch("swapped", "The opposite and the adjacent swap places.", S => {
+    nameBoard(S)
+    names(S)
+    S.angText = () => "\\theta"
+    S.tri.at = "P"
+    S.pulseLabs = new Set(["O", "A"])
+    look(S, TRI)
+  }),
+  watch("stays", "The hypotenuse stays where it is.", S => {
+    nameBoard(S)
+    names(S)
+    S.angText = () => "\\theta"
+    S.tri.at = "P"
+    S.pulseLabs = new Set(["H"])
+    S.glow = new Set(["VP"])
+    look(S, TRI)
+  }),
+  tapRole("tap-1", 0, 10),
+  tapRole("tap-2", 1, 10),
+  tapRole("tap-3", 2, 10),
+  tapRole("tap-4", 3, 10),
+
+  // ── 3. The three rules ──
+  watch("three-rules", "Trigonometry has three rules.", S => {
+    rulesBoard(S)
+    look(S, [...TRI, "cards"])
+  }, 2.2),
+  watch("two-sides", "Each rule uses two of the sides.", S => {
+    rulesBoard(S)
+    // each card lights in turn, and its two sides glow with it
+    const fns: Fn[] = ["sin", "cos", "tan"]
+    fns.forEach((fn, i) => later(S, 0.5 + i * 1.3, S2 => {
+      S2.cards = S2.cards.map(c2 => ({ ...c2, lit: c2.fn === fn }))
+      S2.glow = new Set(RULE[fn].map(r => sideOf("V", r)))
+    }))
+    later(S, 0.5 + 3 * 1.3, S2 => { S2.cards = S2.cards.map(c2 => ({ ...c2, lit: false })); S2.glow = new Set() })
+    look(S, [...TRI, "cards"])
+  }, 4.6),
+  watch("soh", "Many students remember them as SOH CAH TOA.", S => {
+    rulesBoard(S)
+    S.soh = S.time + 0.3
+    look(S, [...TRI, "cards"])
+  }, 2.8),
+  ...([["rule-OA", "O", "A", "tan"], ["rule-AH", "A", "H", "cos"], ["rule-OH", "O", "H", "sin"]] as [string, Role, Role, Fn][]).map(([id, a, b, fn]): Beat => ({
+    id,
+    say: `Which rule uses $${a}$ and $${b}$? Tap it.`,
+    enter: S => {
+      rulesBoard(S)
+      S.glow = new Set([sideOf("V", a), sideOf("V", b)])
+      cardsTap(S, fn)
+      S.soh = S.time - 10
+      look(S, [...TRI, "cards"])
+    },
+    done: S => S.got.has("rule"),
+    advanceAfter: 1300,
+  })),
+  watch("calc-knows", "Your calculator knows sin, cos and tan for every angle.", S => {
+    rulesBoard(S)
+    look(S, TRI)
+  }, 2.2),
+  {
+    id: "type-sin30",
+    say: "Type $\\sin 30$ and press $=$.",
+    enter: S => {
+      rulesBoard(S)
+      askValue(S, 0.5, S2 => { S2.touched = { kind: "tri" }; S2.flashGood = 1 })
+      look(S, [...TRI, "eq", "keypad"])
+    },
+    done: inputRight,
+    walk: typeWalk("sin", 30, "0.5"),
+  },
+  watch("degrees", "Your own calculator must be in degrees.", S => {
+    rulesBoard(S)
+    say(S, "Look for a small D at the top of its screen.", "calm", 600)
+    look(S, TRI)
+  }, 2.2),
+
+  // ── 4. Finding a side ──
   watch("hyp-10", "The hypotenuse is $10$ cm.", S => {
     firstBoard(S, { x: false })
     S.pulseLabs = new Set(["H"])
@@ -581,7 +782,7 @@ export const BEATS: Beat[] = [
     show(S, [])
   }, 3.2),
 
-  // ── 2. When x is underneath ──
+  // ── 5. When x is underneath ──
   watch("hyp-missing", "Now the hypotenuse is missing.", S => {
     board(S, Q65)
     S.roleColours = new Set(["O", "A", "H"])
@@ -713,10 +914,10 @@ export const BEATS: Beat[] = [
   calcBeat("calc-u1", "Work it out.", QU1),
   ...question("u2", QU2, "Find $x$. Which rule?", { swap: true, colours: true }),
 
-  // ── 3. Any side ──
+  // ── 6. Any side ──
   ...ANY.flatMap((Q, i) => question(`any${i + 1}`, Q, i === 0 ? "Find $x$. Which rule do you need?" : "Find $x$. Which rule?", { swap: true, colours: false })),
 
-  // ── 4. Exam questions ──
+  // ── 7. Exam questions ──
   watch("ex1", "Triangle $PQR$ has a right angle at $P$.", S => {
     board(S, EX1, { colours: false })
     S.roleLabels = { H: () => ({ tex: "12\\text{ cm}" }) }
@@ -771,7 +972,7 @@ export const BEATS: Beat[] = [
   solveBeat("ex4-solve", "Get $QL$ on its own.", EX4, { swap: true }),
   calcBeat("ex4-calc", "Work it out.", EX4),
 
-  // ── 5. Make the triangle ──
+  // ── 8. Make the triangle ──
   watch("make", "$\\theta$ is $40^\\circ$ and the opposite must be $6$ cm.", S => {
     makeBoard(S)
     look(S, ["arms", ...TRI])
@@ -863,7 +1064,10 @@ function show(S: Scene, keys: Parameters<typeof look>[1]) {
 
 // ── the parts of the lesson: each title comes up before its first beat ──
 const PARTS: [string, string][] = [
-  ["turn-30", "Finding a side"],
+  ["pyth", "Sides and angles"],
+  ["tap-H", "Naming the sides"],
+  ["three-rules", "The three rules"],
+  ["hyp-10", "Finding a side"],
   ["hyp-missing", "When $x$ is underneath"],
   ["any1-rule", "Any side"],
   ["ex1", "Exam questions"],
