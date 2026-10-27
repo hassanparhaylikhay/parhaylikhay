@@ -42,6 +42,7 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
           <Door S={S} />
           <TanLine S={S} />
           <Mirror S={S} />
+          <ZoomInset S={S} />
           <Light S={S} />
           <Halves S={S} />
           <Ghost S={S} />
@@ -52,6 +53,8 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
       <Labels S={S} L={L} />
       <GraphLabels S={S} L={L} op={vis("graph")} />
       <CircleLabels S={S} L={L} />
+      <PartNumbers S={S} L={L} />
+      <ZoomLabels S={S} L={L} />
       <CalcScreen S={S} L={L} />
       <EquationView B={S.eq} time={S.time} opacity={vis("eq")} />
       <Cards S={S} L={L} op={vis("cards")} />
@@ -444,6 +447,98 @@ function Door({ S }: { S: Scene }) {
   )
 }
 
+// ── the ten parts, counted; and a magnifier on a height ──────────────────
+
+/** Numbers 1 to 10 beside the hypotenuse's parts, from the top corner; the ones the opposite covers light up. */
+function PartNumbers({ S, L }: { S: Scene; L: Layout }) {
+  const pr = S.parts
+  if (!pr || S.marks === null || S.triD.drop < 0.97) return null
+  const V = cornerS(S, "V"), F = cornerS(S, "F"), P = cornerS(S, "P")
+  const mid: Vec = [(V[0] + F[0] + P[0]) / 3, (V[1] + F[1] + P[1]) / 3]
+  const d = unitV(sub(V, P))
+  let n: Vec = [-d[1], d[0]]
+  if ((mid[0] - P[0]) * n[0] + (mid[1] - P[1]) * n[1] > 0) n = mul(n, -1)
+  const size = Math.max(12, L.labelSize - 4)
+  const covered = 10 * Math.sin(S.triD.th * RAD)
+  const out: React.ReactNode[] = []
+  for (let k = 1; k <= 10; k++) {
+    const op = clamp((S.time - S.marks - k * 0.1) / 0.3, 0, 1)
+    if (op <= 0) continue
+    let lit = 0
+    if (pr.count) {
+      const upTo = Math.min(pr.count.n, Math.floor((S.time - pr.count.since) / 0.45) + 1)
+      lit = S.time >= pr.count.since && k <= upTo ? 1 : 0
+    } else if (pr.live) lit = clamp(covered - (k - 1), 0, 1)
+    const p = add(lerpV(P, V, (k - 0.5) / 10), mul(n, size * 0.85 + 7))
+    const col = lit >= 1 ? ORANGE : lit > 0 ? `color-mix(in srgb, ${ORANGE} ${Math.round(lit * 100)}%, ${QUIET})` : QUIET
+    out.push(<div key={`pn${k}`} className={styles.label} style={{ ...place(p), color: col, fontSize: size, opacity: op, fontWeight: lit >= 1 ? 600 : 400 }}><Tex tex={String(k)} /></div>)
+  }
+  return <>{out}</>
+}
+
+/** Where the magnifier sits: in the waves' room, beside the circle or under it. */
+function zoomBox(S: Scene) {
+  const G = graphGeom(S)
+  const a = toScreen(S, [G.x0, G.y0 + 1.1]), b = toScreen(S, [G.x0 + G.w, G.y0 - 1.1])
+  const w = Math.min(b[0] - a[0], 250), h = b[1] - a[1]
+  return { x0: (a[0] + b[0]) / 2 - w / 2, y0: a[1], w, h }
+}
+const zoomRange = (v: number) => { const lo = Math.floor((v - 0.045) * 100) / 100; return { lo, hi: lo + 0.09 } }
+
+/** The magnifier: a lens on the point, and beside it the height against a scale in hundredths. */
+function ZoomInset({ S }: { S: Scene }) {
+  if (S.zoom === null || !S.fullTurn) return null
+  const t = S.time - S.zoom
+  const e = ease(t / 0.8), grow = ease((t - 0.7) / 0.9)
+  const th = S.triD.th * RAD, v = Math.sin(th)
+  const tip = toScreen(S, [Math.cos(th), Math.sin(th)])
+  const box = zoomBox(S)
+  const { lo, hi } = zoomRange(v)
+  const Y = (val: number) => box.y0 + box.h - ((val - lo) / (hi - lo)) * box.h
+  const sx = box.x0 + box.w * 0.34, bx = box.x0 + box.w * 0.62
+  const s = 0.25 + 0.75 * e
+  const out: React.ReactNode[] = []
+  out.push(<circle key="lens" cx={tip[0]} cy={tip[1]} r={26 * e} fill="none" stroke={CHALK} strokeWidth={1.6} strokeOpacity={0.8} />)
+  out.push(ln(add(tip, [0, -26]), [box.x0, box.y0 + 10], "c1", { stroke: CHALK, strokeWidth: 1, strokeOpacity: 0.3 * e, strokeDasharray: "3 5" }))
+  out.push(ln(add(tip, [0, 26]), [box.x0, box.y0 + box.h - 10], "c2", { stroke: CHALK, strokeWidth: 1, strokeOpacity: 0.3 * e, strokeDasharray: "3 5" }))
+  const inner: React.ReactNode[] = []
+  inner.push(<rect key="box" x={box.x0} y={box.y0} width={box.w} height={box.h} rx={14} fill="#0d1216" stroke={CHALK} strokeOpacity={0.25} strokeWidth={1.4} />)
+  inner.push(ln([sx, Y(lo) - 4], [sx, Y(hi) + 4], "scale", { stroke: QUIET, strokeWidth: 1.6 }))
+  for (let k = 0; k <= 18; k++) {
+    const val = lo + k * 0.005
+    const len = k % 2 === 0 ? 11 : 5
+    inner.push(ln([sx - len, Y(val)], [sx, Y(val)], `tk${k}`, { stroke: QUIET, strokeWidth: 1.4 }))
+  }
+  const top = Y(lo) + (Y(v) - Y(lo)) * grow
+  inner.push(ln([bx, Y(lo) + 2], [bx, top], "bar", { stroke: ORANGE, strokeWidth: 5, strokeLinecap: "butt" }))
+  if (grow >= 1) {
+    inner.push(ln([sx, Y(v)], [bx, Y(v)], "level", { stroke: ORANGE, strokeWidth: 1.4, strokeDasharray: "4 4" }))
+    inner.push(<circle key="topdot" cx={bx} cy={Y(v)} r={4.5} fill={ORANGE} />)
+  }
+  out.push(<g key="inset" opacity={e} transform={`translate(${tip[0]} ${tip[1]}) scale(${s}) translate(${-tip[0]} ${-tip[1]})`}>{inner}</g>)
+  return <>{out}</>
+}
+
+function ZoomLabels({ S, L }: { S: Scene; L: Layout }) {
+  if (S.zoom === null || !S.fullTurn) return null
+  const t = S.time - S.zoom
+  const e = ease(t / 0.8), grow = ease((t - 0.7) / 0.9)
+  if (e < 0.98) return null
+  const v = Math.sin(S.triD.th * RAD)
+  const box = zoomBox(S)
+  const { lo } = zoomRange(v)
+  const Y = (val: number) => box.y0 + box.h - ((val - lo) / 0.09) * box.h
+  const sx = box.x0 + box.w * 0.34, bx = box.x0 + box.w * 0.62
+  const size = Math.max(11, L.labelSize - 5)
+  const out: React.ReactNode[] = []
+  for (let k = 0; k <= 9; k++) {
+    const val = lo + k * 0.01
+    out.push(<div key={`zl${k}`} className={styles.label} style={{ ...place([sx - 16 - size * 1.1, Y(val)]), color: QUIET, fontSize: size }}><Tex tex={val.toFixed(2)} /></div>)
+  }
+  if (grow >= 1) out.push(<div key="zv" className={styles.label} style={{ ...place([bx + size * 2.4, Y(v)]), color: ORANGE, fontSize: size + 5, fontWeight: 600 }}><Tex tex={v.toFixed(3)} /></div>)
+  return <>{out}</>
+}
+
 // ── the tangent, and two angles at the same height ───────────────────────
 
 function TanLine({ S }: { S: Scene }) {
@@ -512,15 +607,15 @@ function CircleLabels({ S, L }: { S: Scene; L: Layout }) {
   const W = (p: Vec) => toScreen(S, p)
   const size = L.labelSize
   const out: React.ReactNode[] = []
-  const put = (p: Vec, tex: string, key: string, col: string) => out.push(<div key={key} className={styles.label} style={{ ...place(p), color: col, fontSize: size }}><Tex tex={tex} /></div>)
+  const put = (p: Vec, tex: string, key: string, col: string, pulse = false) => out.push(<div key={key} className={`${styles.label}${pulse ? ` ${styles.pulse}` : ""}`} style={{ ...place(p), color: col, fontSize: size }}><Tex tex={tex} /></div>)
   const tl = S.tanLine
   if (tl && tl.stretch !== null && S.time - tl.stretch > 1) {
     const th = S.triD.th * RAD
     if (Math.cos(th) > 1e-3) {
       const yTop = toWorld(S, [0, L.board.y0])[1]
       const top = Math.min(Math.tan(th), yTop - 0.2)
-      put(add(W([1, top / 2]), [size * 1.9, 0]), "\\tan\\theta", "lt", ORANGE)
-      put(add(W([0.5, 0]), [0, size * 0.95]), "1", "l1", BLUE)
+      put(add(W([1, top / 2]), [size * 1.9, 0]), tl.tex ?? "\\tan\\theta", "lt", ORANGE, S.pulseLabs.has("tan-side"))
+      put(add(W([0.5, 0]), [0, size * 0.95]), "1", "l1", BLUE, S.pulseLabs.has("tan-1"))
     }
   }
   if (S.mirror) {

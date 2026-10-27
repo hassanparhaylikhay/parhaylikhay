@@ -16,7 +16,7 @@ let seed = +(process.env.SEED || 5)
 const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
 const IDS = {
   "trigonometry": ["turn-30", "tap-1", "drag-30", "solve-40", "solve-55", "solve-35", "drag-x", "undo-65", "solve-u1", "u2-solve", "any1-solve", "any2-solve", "any3-solve", "any4-solve", "ex3-solve", "ex4-solve", "calc-65", "any3-calc", "make-slide", "end"],
-  "why-trig-works": ["open", "slide", "turn-family", "same-place", "else", "to-one", "round-sin", "round-cos", "to-35", "tan-90", "end"],
+  "why-trig-works": ["open", "slide", "turn-family", "set-30", "bigger", "turn-other", "to-one", "round-sin", "round-cos", "to-35", "tan-90", "end"],
 }[LESSON]
 const KEYS = ["1", "2", "5", "9", ".", "*", "/", "s", "c", "t", "Backspace"]
 

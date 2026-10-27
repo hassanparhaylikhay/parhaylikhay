@@ -534,7 +534,7 @@ export const BEATS: Beat[] = [
     done: inputRight,
     walk: typeWalk("sin", 30, "0.5"),
   },
-  watch("degrees", "Your own calculator must be in degrees.", S => {
+  watch("degrees", "Check that your own calculator is in degrees.", S => {
     rulesBoard(S)
     say(S, "Look for a small D at the top of its screen.", "calm", 600)
     look(S, TRI)
@@ -798,7 +798,7 @@ export const BEATS: Beat[] = [
   solveBeat("solve-35", "Get $x$ on its own.", Q35),
   calcBeat("calc-35", "Work it out.", Q35, { after: S => say(S, "The $0$ in $4.20$ counts as a figure.", "calm", 4) }),
 
-  watch("steps", "Every question follows these five steps.", S => {
+  watch("steps", "Questions like this all follow the same five steps.", S => {
     board(S, Q35)
     S.roleColours = new Set(["O", "A", "H"])
     S.stepsCard = S.time
@@ -871,7 +871,7 @@ export const BEATS: Beat[] = [
   },
   {
     id: "undo-65",
-    say: "Undo it.",
+    say: "Now undo it.",
     enter: S => {
       board(S, Q65)
       S.roleColours = new Set(["O", "A", "H"])
@@ -883,7 +883,7 @@ export const BEATS: Beat[] = [
     advanceAfter: 1500,
   },
   calcBeat("calc-65", "Work it out.", Q65),
-  watch("longest", "The hypotenuse must be the longest side.", S => {
+  watch("longest", "$9.93$ is longer than $9$, just as the hypotenuse should be.", S => {
     const prev = S.alg
     board(S, Q65)
     showAnswer(S, Q65)
@@ -1014,7 +1014,7 @@ export const BEATS: Beat[] = [
   calcBeat("ex4-calc", "Work it out.", EX4),
 
   // ── 8. Make the triangle ──
-  watch("make", "$\\theta$ is $40^\\circ$ and the opposite must be $6$ cm.", S => {
+  watch("make", "Say $\\theta$ is $40^\\circ$ and we want the opposite to be $6$ cm.", S => {
     makeBoard(S)
     look(S, ["arms", ...TRI])
   }, 2.2),

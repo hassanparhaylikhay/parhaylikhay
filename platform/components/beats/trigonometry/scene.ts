@@ -185,10 +185,19 @@ export interface Scene {
   marks: number | null
   /** the opposite swung down onto the hypotenuse about P (when it started) */
   door: number | null
+  /**
+   * The ten parts of the hypotenuse numbered 1 to 10 from the top corner.
+   * `count`: they light up one by one up to n (counting what the opposite
+   * covers); `live`: the ones the opposite covers now are lit.
+   */
+  parts: { count: { n: number; since: number } | null; live: boolean } | null
+  /** a magnifier on the point's height against a fine scale (when it opened) */
+  zoom: number | null
   /** a calculator screen: what was typed and what it gives (KaTeX), fixed or worked out every frame */
   calcScreen: CalcLine[] | ((S: Scene) => CalcLine[]) | null
   /** the tangent at the floor, and the radius stretched out to meet it (when) */
-  tanLine: { since: number; stretch: number | null } | null
+  /** `tex` names the side up the tangent (tan θ unless set) */
+  tanLine: { since: number; stretch: number | null; tex?: string } | null
   /** two angles whose points are at the same height */
   mirror: [number, number] | null
   /** one tenth of x, as a bar */
@@ -266,7 +275,7 @@ export function createScene(): Scene {
     roleLabels: {}, roleColours: new Set(), sideColour: {}, sideColD: { VF: [...c], FP: [...c], VP: [...c] }, angText: null, letters: {},
     extra: null, regions: [], onRegion: null, regionLit: null,
     light: null, glow: new Set(), pulseArc: false, pulseRt: false, pulseLabs: new Set(), halves: null, ghost: null, ticks: [], graph: null, tenth: null,
-    fullTurn: false, family: null, outline: null, marks: null, door: null, calcScreen: null, tanLine: null, mirror: null,
+    fullTurn: false, family: null, outline: null, marks: null, door: null, parts: null, zoom: null, calcScreen: null, tanLine: null, mirror: null,
     eq: createBoard(), eqFn: null, alg: null, solve: null, tick: null, choice: null, stepsCard: null,
     cards: [], cardPick: null, onCard: null, soh: null,
     chips: [], onChip: null, tapAtoms: [], onAtom: null, dragAtoms: [], onAtomDrop: null,
@@ -767,6 +776,8 @@ export function resetBeat(S: Scene) {
   S.outline = null
   S.marks = null
   S.door = null
+  S.parts = null
+  S.zoom = null
   S.calcScreen = null
   S.tanLine = null
   S.mirror = null
