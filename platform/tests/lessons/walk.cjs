@@ -35,6 +35,8 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
   for (const q of qs) {
     await open(q.n)
     const answer = await page.evaluate(() => window.__beatScene.input && window.__beatScene.input.answer)
+    // what answers it, when that is a calculation rather than the answer's digits
+    const typed = await page.evaluate(() => window.__beatScene.input && window.__beatScene.input.typed)
     if (answer == null) { bad.push(`${q.id}: no input`); continue }
     if (first) {
       // nothing typed at all: the button comes by itself after 30 seconds
@@ -65,9 +67,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
     if (endP !== "Now you type it in.") bad.push(`${q.id}: end phrase "${endP}"`)
     const keypad = await page.$('button[aria-label="Check"]')
     if (!keypad) bad.push(`${q.id}: no keypad after the walkthrough`)
-    await type(String(answer))
+    await type(typed || String(answer))
     const st = await page.evaluate(() => window.__beatScene.input && window.__beatScene.input.state)
-    if (st !== "right") bad.push(`${q.id}: answer not taken (${st})`)
+    if (st !== "right" && st !== "guessed") bad.push(`${q.id}: answer not taken (${st})`)
     const t = Date.now(); let moved = false
     while (Date.now() - t < 9000) { const p = await phrase(); if (p !== endP) { moved = true; break } await sleep(100) }
     if (!moved) bad.push(`${q.id}: did not move on after the right answer`)

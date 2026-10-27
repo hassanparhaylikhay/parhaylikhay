@@ -48,6 +48,8 @@ export interface BeatEngine<S extends RunnerScene, L extends { keypadTop: number
   keypadKeys?: (S: S) => string[][]
   /** the keypad key a keyboard key stands for (default: digits, Backspace, Enter) */
   keyOf?: (key: string) => string | null
+  /** keys shown pressed down (SHIFT) */
+  keypadLit?: (S: S) => string[]
 }
 
 /**
@@ -277,7 +279,7 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
         {S && L && <Stage S={S} L={L} />}
       </div>
       {S && L && S.input && S.vis.keypad.t > 0.5 && (
-        <Keypad top={L.keypadTop} rows={engine.keypadKeys?.(S)} onKey={k => engine.typeKey(sceneRef.current!, k)} />
+        <Keypad top={L.keypadTop} rows={engine.keypadKeys?.(S)} lit={engine.keypadLit?.(S)} onKey={k => engine.typeKey(sceneRef.current!, k)} />
       )}
       {S && L && engine.controls?.(S, L)}
     </Shell>

@@ -5,9 +5,11 @@ import { Tex, Phrase } from "../Tex"
 import EquationView from "../EquationView"
 import { type Vec, add, sub, mul, lerpV, clamp, ease, sectorPath, arcPath, turn } from "../geometry"
 import {
-  type Scene, type Layout, type SideId, type Corner, CHALK, GREEN, YELLOW, BLUE, ORANGE, PINK, QUIET, RAD, graphGeom,
+  type Scene, type Layout, type SideId, type Corner, type Machine, CHALK, GREEN, YELLOW, BLUE, ORANGE, PINK, QUIET, RAD, graphGeom,
   toScreen, toWorld, layout, cornerS, poseMap, rgbCss, cardRects, chipRects, CARD_TEX, RULE, ROLE_COL, turnHandle, slideHandle, dragAt,
+  angGeom, sightEnd, sightBaseEnd, sightDeg, MACHINE_LEG, MACHINE_HOLD,
 } from "./scene"
+import { measure } from "../equation"
 
 /**
  * Draws the trigonometry board. Pure: everything comes from the scene.
@@ -34,6 +36,8 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
         <g opacity={vis("board")}>
           <UnitCircle S={S} />
           <Extra S={S} op={vis("extra")} />
+          <ExtraAngles S={S} L={L} />
+          <Reach S={S} />
           <Arms S={S} op={vis("arms")} />
           <Family S={S} />
           <Outline S={S} />
@@ -46,9 +50,12 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
           <Light S={S} />
           <Halves S={S} />
           <Ghost S={S} />
+          <Sight S={S} />
+          <ZPath S={S} />
           <Handles S={S} />
         </g>
       </svg>
+      <Machines S={S} L={L} />
       <Tenth S={S} L={L} op={vis("tenth")} />
       <Labels S={S} L={L} />
       <GraphLabels S={S} L={L} op={vis("graph")} />
@@ -263,6 +270,16 @@ function Handles({ S }: { S: Scene }) {
   if (S.locked) return null
   const d = S.drag
   if (S.mode === "turn" || S.mode === "turnSlide") out.push(halo(turnHandle(S), "ht", d?.kind === "turn"))
+  if (S.mode === "sight") { const e = sightEnd(S); if (e) out.push(halo(e, "hsight", d?.kind === "sight")) }
+  if (S.mode === "tapPoint") for (const n of S.tapPts ?? []) {
+    const p = cornerS(S, n)
+    out.push(
+      <circle key={`tp${n}`} cx={p[0]} cy={p[1]} r={14} fill="none" stroke={YELLOW} strokeWidth={1.8}>
+        <animate attributeName="r" values="10;26;10" dur="2s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0.9;0.1;0.9" dur="2s" repeatCount="indefinite" />
+      </circle>,
+    )
+  }
   if (S.mode === "slide" || S.mode === "turnSlide" || S.mode === "drop") out.push(halo(slideHandle(S), "hs", d?.kind === "slide" || d?.kind === "drop"))
   // a faint finger showing which way to pull the line down
   if (S.mode === "drop" && !d && S.tri.drop < 1) {
@@ -294,7 +311,221 @@ function Extra({ S, op }: { S: Scene; op: number }) {
       {S.regionLit && S.regions.filter(r => r.id === S.regionLit).map(r => <polygon key={`r${r.id}`} points={poly(r.pts.map(at))} fill={GREEN} fillOpacity={0.14} stroke="none" />)}
       {e.segs.map(([a, b], k) => ln(at(a), at(b), `s${k}`, { strokeWidth: 2.2, strokeOpacity: 0.85 }))}
       {(e.dash ?? []).map(([a, b], k) => ln(at(a), at(b), `d${k}`, { strokeWidth: 1.6, strokeOpacity: 0.6, strokeDasharray: "5 6" }))}
+      {(e.arrows ?? []).map(([a, b], k) => <Chevron key={`a${k}`} a={at(a)} b={at(b)} />)}
     </g>
+  )
+}
+
+/** A parallel mark: an arrowhead at a line's middle, pointing from a to b. */
+function Chevron({ a, b, col = CHALK }: { a: Vec; b: Vec; col?: string }) {
+  const m = lerpV(a, b, 0.5), u = unitV(sub(b, a)), n: Vec = [-u[1], u[0]]
+  const tip = add(m, mul(u, 6)), p1 = add(sub(m, mul(u, 4)), mul(n, 6)), p2 = add(sub(m, mul(u, 4)), mul(n, -6))
+  return <path d={`M ${p1[0]} ${p1[1]} L ${tip[0]} ${tip[1]} L ${p2[0]} ${p2[1]}`} fill="none" stroke={col} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+}
+
+// ── angles on the figure, the line of sight, alternate angles ────────────
+
+function ExtraAngles({ S, L }: { S: Scene; L: Layout }) {
+  if (!S.angs.length) return null
+  const out: React.ReactNode[] = []
+  for (const g of S.angs) {
+    const G = angGeom(S, g, L.labelSize)
+    const col = g.col ?? CHALK
+    if (g.square) {
+      const r = Math.min(15, G.r * 0.7)
+      const u: Vec = [Math.cos(G.a1), Math.sin(G.a1)], v: Vec = [Math.cos(G.a1 + G.sweep), Math.sin(G.a1 + G.sweep)]
+      const p1 = add(G.C, mul(u, r)), p2 = add(add(G.C, mul(u, r)), mul(v, r)), p3 = add(G.C, mul(v, r))
+      out.push(<path key={g.id} d={`M ${p1[0]} ${p1[1]} L ${p2[0]} ${p2[1]} L ${p3[0]} ${p3[1]}`} fill="none" stroke={g.col ?? QUIET} strokeWidth={2} strokeLinejoin="round" />)
+      if (g.pulse) out.push(<polygon key={`${g.id}-p`} points={poly([G.C, p1, p2, p3])} fill={col} fillOpacity={0.3} filter="url(#pl-soft)"><animate attributeName="opacity" values="0.2;1;0.2" dur="1.4s" repeatCount="indefinite" /></polygon>)
+      continue
+    }
+    const tappable = S.mode === "tapAngle" && (!S.tapAngs || S.tapAngs.includes(g.id))
+    out.push(
+      <g key={g.id}>
+        <path d={sectorPath(G.C, G.a1, G.sweep, G.r, 40)} fill={col} fillOpacity={g.quiet ? 0.1 : 0.14} />
+        {tappable && <path d={sectorPath(G.C, G.a1, G.sweep, G.r + 6, 40)} fill={YELLOW} fillOpacity={0.12}><animate attributeName="fill-opacity" values="0.06;0.3;0.06" dur="2s" repeatCount="indefinite" /></path>}
+        {tappable && <path d={arcPath(G.C, G.a1, G.sweep, G.r + 6, 40)} fill="none" stroke={YELLOW} strokeWidth={2} strokeLinecap="round"><animate attributeName="stroke-opacity" values="0.35;1;0.35" dur="2s" repeatCount="indefinite" /></path>}
+        {!g.quiet && <path d={arcPath(G.C, G.a1, G.sweep, G.r, 40)} fill="none" stroke={col} strokeWidth={2.2} strokeLinecap="round" />}
+        {g.pulse && <path d={sectorPath(G.C, G.a1, G.sweep, G.r + 3, 40)} fill={YELLOW} fillOpacity={0.25} filter="url(#pl-soft)"><animate attributeName="opacity" values="0.2;1;0.2" dur="1.4s" repeatCount="indefinite" /></path>}
+      </g>,
+    )
+  }
+  return <>{out}</>
+}
+
+/** A little eye at a point, looking along a direction (screen radians). */
+function Eye({ at, dir }: { at: Vec; dir: number }) {
+  // an almond on the point itself, its pupil turned the way it looks
+  const u: Vec = [Math.cos(dir), Math.sin(dir)], n: Vec = [-u[1], u[0]]
+  const back = sub(at, mul(u, 13)), front = add(at, mul(u, 13))
+  const top = add(at, mul(n, 10)), bot = sub(at, mul(n, 10))
+  const d = `M ${back[0]} ${back[1]} Q ${top[0]} ${top[1]} ${front[0]} ${front[1]} Q ${bot[0]} ${bot[1]} ${back[0]} ${back[1]} Z`
+  const pupil = add(at, mul(u, 4))
+  return (
+    <g>
+      <path d={d} fill="#0d1216" stroke={YELLOW} strokeWidth={1.8} strokeLinejoin="round" />
+      <circle cx={pupil[0]} cy={pupil[1]} r={4} fill={YELLOW} />
+    </g>
+  )
+}
+
+function Sight({ S }: { S: Scene }) {
+  const g = S.sight
+  if (!g) return null
+  const C = cornerS(S, g.from)
+  const B = sightBaseEnd(S)!
+  const out: React.ReactNode[] = []
+  if (g.pulseBase) {
+    out.push(
+      <line key="bg" x1={C[0]} y1={C[1]} x2={B[0]} y2={B[1]} stroke={YELLOW} strokeWidth={8} strokeLinecap="round" filter="url(#pl-soft)">
+        <animate attributeName="stroke-opacity" values="0.1;0.7;0.1" dur="1.6s" repeatCount="indefinite" />
+      </line>,
+    )
+  }
+  out.push(ln(C, B, "base", { strokeWidth: 2, strokeOpacity: 0.8, strokeDasharray: "6 7" }))
+  if (g.arrows) out.push(<Chevron key="ch" a={C} b={B} />)
+  if (g.ray) {
+    const E = sightEnd(S)!
+    const a1 = -g.base * RAD, sweep = turn(a1, -sightDeg(g) * RAD)
+    out.push(<path key="sec" d={sectorPath(C, a1, sweep, 46, 40)} fill={CHALK} fillOpacity={0.12} />)
+    out.push(<path key="arc" d={arcPath(C, a1, sweep, 46, 40)} fill="none" stroke={CHALK} strokeWidth={2.2} strokeLinecap="round" />)
+    if (g.pulseArc) out.push(<path key="arcp" d={sectorPath(C, a1, sweep, 49, 40)} fill={YELLOW} fillOpacity={0.25} filter="url(#pl-soft)"><animate attributeName="opacity" values="0.2;1;0.2" dur="1.4s" repeatCount="indefinite" /></path>)
+    const lit = S.flashGood > 0 && S.touched?.kind === "tri"
+    out.push(ln(C, E, "ray", { stroke: lit ? GREEN : CHALK, strokeWidth: 2.8, strokeOpacity: lit ? flashOp(S) : 1 }))
+  }
+  if (g.eye) out.push(<Eye key="eye" at={C} dir={g.ray ? -sightDeg(g) * RAD : -g.base * RAD} />)
+  return <>{out}</>
+}
+
+/** An opposite that wants to be longer than the hypotenuse: the height it would need, dashed in pink. */
+function Reach({ S }: { S: Scene }) {
+  const r = S.reach
+  if (!r) return null
+  const t = S.triD
+  const op = clamp((S.time - r.since) / 0.5, 0, 1)
+  const a = toScreen(S, poseMap(t.pose, [-t.h * 0.15, r.want])), b = toScreen(S, poseMap(t.pose, [t.h * 1.1, r.want]))
+  return <g opacity={op}>{ln(a, b, "reach", { stroke: PINK, strokeWidth: 2.4, strokeDasharray: "7 7" })}</g>
+}
+
+/** A Z along three lines: two parallels and the line across them, drawn on and glowing. */
+function ZPath({ S }: { S: Scene }) {
+  const z = S.zpath
+  if (!z) return null
+  const P = z.pts.map(n => cornerS(S, n))
+  const lens = P.slice(1).map((p, i) => Math.hypot(p[0] - P[i][0], p[1] - P[i][1]))
+  const total = lens.reduce((a, b) => a + b, 0) || 1
+  const e = ease((S.time - z.since) / 1.6)
+  let left = e * total
+  let d = `M ${P[0][0]} ${P[0][1]}`
+  for (let i = 1; i < P.length && left > 0; i++) {
+    const f = Math.min(1, left / lens[i - 1])
+    const q = lerpV(P[i - 1], P[i], f)
+    d += ` L ${q[0]} ${q[1]}`
+    left -= lens[i - 1]
+  }
+  return (
+    <g>
+      <path d={d} fill="none" stroke={YELLOW} strokeWidth={9} strokeLinecap="round" strokeLinejoin="round" strokeOpacity={0.35} filter="url(#pl-soft)">
+        {e >= 1 && <animate attributeName="stroke-opacity" values="0.15;0.55;0.15" dur="1.6s" repeatCount="indefinite" />}
+      </path>
+      <path d={d} fill="none" stroke={YELLOW} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
+    </g>
+  )
+}
+
+// ── function machines ────────────────────────────────────────────────────
+
+const LEG = MACHINE_LEG
+const HOLD = MACHINE_HOLD
+const PER_BOX = 2 * LEG + HOLD
+
+/**
+ * Function machines: a value waits at one end, goes into a box, and comes
+ * out changed at the other end. Running backwards it starts at the right.
+ */
+function Machines({ S, L }: { S: Scene; L: Layout }) {
+  const ms = S.machines
+  if (!ms.length) return null
+  const size = L.eqSize * (S.machinesAt === "board" ? 1.15 : ms.length > 1 ? 0.85 : 1)
+  const rowH = size * (S.machinesAt === "board" ? 3.2 : 2.6)
+  const cy0 = S.machinesAt === "eq" ? L.eqY : (L.board.y0 + L.board.y1) / 2
+  const out: React.ReactNode[] = []
+  ms.forEach((m, mi) => {
+    const cy = cy0 + (mi - (ms.length - 1) / 2) * rowH
+    out.push(<MachineRow key={mi} S={S} m={m} cy={cy} size={size} k={mi} />)
+  })
+  return <>{out}</>
+}
+
+function MachineRow({ S, m, cy, size, k }: { S: Scene; m: Machine; cy: number; size: number; k: number }) {
+  const n = m.boxes.length
+  // the slots and boxes in travel order
+  const slotW = m.vals.map(v => Math.max(measure(v.tex, size).w + size * 0.6, size * 2.4))
+  const boxW = m.boxes.map(b => measure(b.tex, size).w + size * 1.5)
+  const gap = size * 1.5
+  let total = 0
+  for (let i = 0; i <= n; i++) { total += slotW[i]; if (i < n) total += boxW[i] + 2 * gap }
+  const sc = Math.min(1, (S.w - 24) / total)
+  const W = (x: number) => x * sc
+  // x centres, left to right for dir 1, right to left for dir -1
+  const slotX: number[] = [], boxX: number[] = []
+  let x = 0
+  for (let i = 0; i <= n; i++) {
+    slotX.push(x + slotW[i] / 2)
+    x += slotW[i]
+    if (i < n) { x += gap; boxX.push(x + boxW[i] / 2); x += boxW[i] + gap }
+  }
+  const left = S.w / 2 - W(total) / 2
+  const place1 = (cx: number) => (m.dir === 1 ? left + W(cx) : left + W(total - cx))
+  const sX = slotX.map(place1), bX = boxX.map(place1)
+  const t = m.since === null ? -1 : S.time - m.since
+  // where the value is: resting in a slot, on its way, or inside a box
+  let pos = sX[0], inside = -1, shown = 0
+  if (t >= 0) {
+    const kk = Math.min(n, Math.floor(t / PER_BOX))
+    const u = t - kk * PER_BOX
+    if (kk >= n) { pos = sX[n]; shown = n }
+    else if (u < LEG) { pos = sX[kk] + (bX[kk] - sX[kk]) * ease(u / LEG); shown = kk }
+    else if (u < LEG + HOLD) { pos = bX[kk]; inside = kk; shown = kk }
+    else { pos = bX[kk] + (sX[kk + 1] - bX[kk]) * ease((u - LEG - HOLD) / LEG); shown = kk + 1 }
+  }
+  const out: React.ReactNode[] = []
+  const svg: React.ReactNode[] = []
+  const bh = size * 1.7
+  for (let i = 0; i < n; i++) {
+    const lit = inside === i
+    const bx = bX[i], bw = W(boxW[i])
+    svg.push(<rect key={`b${i}`} x={bx - bw / 2} y={cy - bh / 2} width={bw} height={bh} rx={12} fill={lit ? "rgba(255,240,103,0.08)" : "rgba(240,238,234,0.04)"} stroke={lit ? YELLOW : "rgba(240,238,234,0.35)"} strokeWidth={1.6} />)
+    // arrows into and out of the box, the way the machine runs (or as asked)
+    const legs: [number, number, number, number][] = [[sX[i], bx, W(slotW[i]), bw], [bx, sX[i + 1], bw, W(slotW[i + 1])]]
+    legs.forEach(([a, b, wa, wb], j) => {
+      const d = Math.sign(b - a)
+      const s0 = a + d * (wa / 2 + 4), s1 = b - d * (wb / 2 + 4)
+      const [p, q] = (m.arrows ?? m.dir) === m.dir ? [s0, s1] : [s1, s0]
+      const dx = Math.sign(q - p)
+      svg.push(<line key={`l${i}${j}`} x1={p} y1={cy} x2={q} y2={cy} stroke={QUIET} strokeWidth={1.8} strokeLinecap="round" />)
+      svg.push(<path key={`h${i}${j}`} d={`M ${q - dx * 7} ${cy - 5} L ${q} ${cy} L ${q - dx * 7} ${cy + 5}`} fill="none" stroke={QUIET} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />)
+    })
+    const b = m.boxes[i]
+    out.push(<div key={`bt${i}`} className={styles.label} style={{ ...place([bx, cy]), fontSize: size * sc, color: b.col ?? CHALK }}><Tex tex={b.tex} /></div>)
+  }
+  // values resting in the slots they have been through
+  for (let i = 0; i <= n; i++) {
+    const waiting = i === 0 && t < 0
+    const v = m.vals[i]
+    if (waiting) out.push(<div key={`v${i}`} className={styles.label} style={{ ...place([sX[i], cy]), fontSize: size * sc, color: v.col ?? CHALK }}><Tex tex={v.tex} /></div>)
+    else if (t >= 0 && i < shown) out.push(<div key={`v${i}`} className={styles.label} style={{ ...place([sX[i], cy]), fontSize: size * sc, color: v.col ?? CHALK, opacity: 0.4 }}><Tex tex={v.tex} /></div>)
+    if (i === n && t < 0 && m.ask) out.push(<div key="ask" className={styles.label} style={{ ...place([sX[n], cy]), fontSize: size * sc, color: PINK }}><Tex tex="?" /></div>)
+  }
+  if (t >= 0) {
+    const v = m.vals[shown]
+    out.push(<div key={`tok${k}`} className={styles.label} style={{ ...place([pos, cy]), fontSize: size * sc * (inside >= 0 ? 0.8 : 1), color: v.col ?? CHALK, opacity: inside >= 0 ? 0.55 : 1 }}><Tex tex={v.tex} /></div>)
+  }
+  return (
+    <>
+      <svg className={styles.svg} viewBox={`0 0 ${S.w} ${S.h}`} width={S.w} height={S.h} style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }} aria-hidden>{svg}</svg>
+      {out}
+    </>
   )
 }
 
@@ -641,8 +872,8 @@ function CalcScreen({ S, L }: { S: Scene; L: Layout }) {
         <span style={{ position: "absolute", left: 10, top: 6, fontSize: 10, color: QUIET, fontWeight: 600 }}>D</span>
         {lines.map((l, k) => (
           <div key={k} style={{ display: "flex", alignSelf: "stretch", alignItems: "baseline", justifyContent: "space-between", gap: size * 1.2 }}>
-            <span style={{ fontSize: size * 0.8, color: "#c8c6be" }}><Tex tex={l.q} /></span>
-            <span><Tex tex={l.a} /></span>
+            <span style={{ fontSize: size * 0.8, color: "#c8c6be", whiteSpace: "nowrap" }}><Tex tex={l.q} /></span>
+            <span style={{ whiteSpace: "nowrap" }}><Tex tex={l.a} /></span>
           </div>
         ))}
       </div>
@@ -779,11 +1010,12 @@ export const STEPS = [
 /** The steps of the method, one line each, over the board. */
 function StepsCard({ S, L }: { S: Scene; L: Layout }) {
   if (S.stepsCard === null) return null
+  const steps = S.stepsList ?? STEPS
   const size = L.compact ? 19 : 25
-  const top = L.board.y0 + Math.max(10, (L.board.y1 - L.board.y0 - STEPS.length * size * 1.75) / 2)
+  const top = L.board.y0 + Math.max(10, (L.board.y1 - L.board.y0 - steps.length * size * 1.75) / 2)
   return (
     <div className={styles.stepsCard} style={{ top, fontSize: size }}>
-      {STEPS.map((t, k) => (
+      {steps.map((t, k) => (
         <div key={k} style={{ animationDelay: `${(k * 0.35).toFixed(2)}s`, display: "flex", gap: "0.7em", alignItems: "baseline" }}>
           <span style={{ color: GREEN, fontWeight: 600, minWidth: "1em" }}><Tex tex={String(k + 1)} /></span>
           <span style={{ color: CHALK, fontWeight: 500 }}><Phrase text={t} /></span>

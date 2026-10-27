@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { ArrowRight, Delete, Minus, Plus, X } from "lucide-react"
 import styles from "./beats.module.css"
-import { Phrase } from "./Tex"
+import { Phrase, Tex } from "./Tex"
 
 /**
  * Everything around the board: a hairline for progress, a quiet way out,
@@ -107,15 +107,20 @@ export const DIGIT_KEYS: string[][] = [
 ]
 
 /** The keypad: digits by default, or any rows of keys (a calculator: see calc.ts). */
-export function Keypad({ top, onKey, rows = DIGIT_KEYS }: { top: number; onKey: (k: string) => void; rows?: string[][] }) {
-  const calc = rows.some(r => r.includes("sin"))
+/** A calculator's function keys, as maths (sin⁻¹ reads as it does on paper). */
+const FN_KEY_TEX: Record<string, string> = { sin: "\\sin", cos: "\\cos", tan: "\\tan", "sin⁻¹": "\\sin^{-1}", "cos⁻¹": "\\cos^{-1}", "tan⁻¹": "\\tan^{-1}" }
+
+export function Keypad({ top, onKey, rows = DIGIT_KEYS, lit = [] }: { top: number; onKey: (k: string) => void; rows?: string[][]; lit?: string[] }) {
+  const calc = rows.some(r => r.some(k => k.startsWith("sin")))
+  // a keypad with SHIFT sets its function keys as maths, so they look the same shifted or not
+  const shiftPad = rows.some(r => r.includes("SHIFT"))
   const row = (keys: string[], i: number) => (
     <div key={i} className={styles.keyRow}>
-      {keys.map(k => (
-        <button key={k} type="button" className={`${styles.key} ${k === "go" ? styles.keyGo : ""} ${k.length > 1 && k !== "go" && k !== "back" ? styles.keyFn : ""}`}
+      {keys.map((k, j) => (
+        <button key={`${i}-${j}`} type="button" className={`${styles.key} ${k === "go" ? styles.keyGo : ""} ${k.length > 1 && k !== "go" && k !== "back" ? styles.keyFn : ""} ${k === "SHIFT" ? styles.keyShift : ""} ${lit.includes(k) ? styles.keyLit : ""}`}
           onPointerDown={e => { e.preventDefault(); onKey(k) }}
           aria-label={k === "go" ? "Check" : k === "back" ? "Delete" : k}>
-          {k === "back" ? <Delete size={19} strokeWidth={1.7} /> : k === "go" ? (calc ? "=" : <ArrowRight size={20} strokeWidth={2} />) : k}
+          {k === "back" ? <Delete size={19} strokeWidth={1.7} /> : k === "go" ? (calc ? "=" : <ArrowRight size={20} strokeWidth={2} />) : shiftPad && FN_KEY_TEX[k] ? <Tex tex={FN_KEY_TEX[k]} /> : k}
         </button>
       ))}
     </div>

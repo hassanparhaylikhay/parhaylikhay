@@ -17,8 +17,9 @@ const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
 const IDS = {
   "trigonometry": ["turn-30", "tap-1", "drag-30", "solve-40", "solve-55", "solve-35", "drag-x", "undo-65", "solve-u1", "u2-solve", "any1-solve", "any2-solve", "any3-solve", "any4-solve", "ex3-solve", "ex4-solve", "calc-65", "any3-calc", "make-slide", "end"],
   "why-trig-works": ["open", "slide", "turn-family", "set-30", "bigger", "turn-other", "to-one", "round-sin", "round-cos", "to-35", "tan-90", "end"],
+  "trigonometry-angles": ["open", "turn-4", "turn-5", "type-inv", "drag-11", "cancel-11", "calc-11", "solve-c", "solve-t", "p1-solve", "p2-calc", "try-upside", "look-up", "look-down", "ex1-tap", "ex2-dep", "ex2-solve", "ex3-m", "ex4-drop", "ex4-five", "ex5-drop", "ex5-total", "end"],
 }[LESSON]
-const KEYS = ["1", "2", "5", "9", ".", "*", "/", "s", "c", "t", "Backspace"]
+const KEYS = ["1", "2", "5", "9", ".", "*", "/", "s", "c", "t", "S", "C", "T", "Backspace"]
 
 ;(async () => {
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ["--no-sandbox"] })
@@ -34,7 +35,8 @@ const KEYS = ["1", "2", "5", "9", ".", "*", "/", "s", "c", "t", "Backspace"]
       const num = t => { const m = /-?\d+(\.\d+)?/.exec(t || ""); return m ? Number(m[0]) : null }
       // lengths agree: O and A are the shown hypotenuse times the ratio of the shown angle
       const lab = k => S.labs.find(l => l.key === k)
-      const ang = num(lab("ang")?.tex)
+      // only an angle written as a number (θ in a colour is not one: its colour code has digits)
+      const ang = /^\d/.test(lab("ang")?.tex || "") ? num(lab("ang").tex) : null
       const H = num(lab("role-H")?.tex), O = num(lab("role-O")?.tex), Ad = num(lab("role-A")?.tex)
       const live = S.roleLabels.H && /^\d/.test(lab("role-H")?.tex || "") && S.tri.at === "V" && S.tri.drop === 1 && S.thExact === null && !S.input
       if (live && ang !== null && H !== null) {
@@ -103,7 +105,7 @@ const KEYS = ["1", "2", "5", "9", ".", "*", "/", "s", "c", "t", "Backspace"]
           const L = A.layout(S)
           return {
             mode: S.mode, w: S.w, h: S.h, input: !!S.input && S.vis.keypad.t > 0.5,
-            turn: A.turnHandle(S), slide: A.slideHandle(S),
+            turn: A.turnHandle(S), slide: A.slideHandle(S), sight: S.sight ? A.sightEnd(S) : null,
             chips: A.chipRects(S, L).map(c => [(c.r.x0 + c.r.x1) / 2, (c.r.y0 + c.r.y1) / 2]),
             atoms: Object.keys(S.eq.atoms).map(i => A.atomAt(S, i)).filter(Boolean),
             eq: A.atomAt(S, "eq"),
@@ -121,6 +123,9 @@ const KEYS = ["1", "2", "5", "9", ".", "*", "/", "s", "c", "t", "Backspace"]
           const a = st.atoms[Math.floor(rnd() * st.atoms.length)]
           const b = st.atoms[Math.floor(rnd() * st.atoms.length)]
           if (rnd() < 0.5) { await page.mouse.click(a[0], a[1]); await sleep(900) } else { await drag(a, b, touch); await sleep(1400) }
+        } else if (st.mode === "sight" && st.sight) {
+          await drag(st.sight, R(), touch)
+          await sleep(350)
         } else if (st.mode === "turn" || st.mode === "turnSlide" || st.mode === "slide") {
           const h = st.mode === "slide" || (st.mode === "turnSlide" && rnd() < 0.5) ? st.slide : st.turn
           await drag(h, R(), touch)

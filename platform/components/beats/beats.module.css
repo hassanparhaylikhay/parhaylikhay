@@ -311,6 +311,18 @@
   font-style: normal;
   color: #c8c6be;
 }
+/* SHIFT: a word on a key, small; lit while it is down */
+.keyShift {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  color: #fff067;
+}
+.keyLit {
+  background: rgba(255, 240, 103, 0.16);
+  border-color: rgba(255, 240, 103, 0.6);
+  box-shadow: 0 0 16px rgba(255, 240, 103, 0.18);
+}
 .keyGo {
   background: rgba(15, 238, 137, 0.12);
   border-color: rgba(15, 238, 137, 0.4);

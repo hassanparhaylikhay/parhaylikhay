@@ -39,6 +39,7 @@ const LESSONS = [
   ["pythagoras", "pythagoras"],
   ["trig", "trigonometry"],
   ["trig-why", "why-trig-works"],
+  ["trig-angles", "trigonometry-angles"],
 ]
 
 const noPageErrors = out => !/PAGEERROR/.test(out)

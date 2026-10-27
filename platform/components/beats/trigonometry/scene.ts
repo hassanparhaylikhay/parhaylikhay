@@ -25,7 +25,8 @@
 import { type Vec, type Rect, add, sub, mul, dot, dist, lerpV, clamp, turn, DEG, RAD } from "../geometry"
 import { createBoard, eqSet, eqStep, eqHit, eqCentre, measure, extent, type EqBoard, type ENode, type Eqn, type Fac } from "../equation"
 import type { Solve } from "./solve"
-import { calcType, calcTex, judge } from "../calc"
+import type { AngleSolve } from "./solve-angle"
+import { calcType, calcTex, judge, isCalculation, INV_KEY } from "../calc"
 
 export const BLUE = "#00abfa"
 export const ORANGE = "#ff822c"
@@ -81,7 +82,77 @@ export interface Lab { key: string; tex: string; col: string; at: Vec; size: num
 export interface Card { fn: Fn; lit: boolean }
 /** One sum on a calculator's screen: what was typed (left) and its answer (right). */
 export interface CalcLine { q: string; a: string }
-export interface Chip { id: string; tex: string; kind: "mul" | "div"; fac: Fac }
+export interface Chip { id: string; tex: string; kind: "mul" | "div" | "inv"; fac: Fac }
+
+/**
+ * A function machine: what goes in, the boxes it goes through, what comes
+ * out. `vals[0]` waits at the left, `vals[k + 1]` comes out of box k. Running
+ * backwards (`dir` -1) the value starts at the right and travels left.
+ */
+export interface Machine {
+  boxes: { tex: string; col?: string }[]
+  vals: { tex: string; col?: string }[]
+  dir: 1 | -1
+  /** when it starts running (scene time); null: it waits */
+  since: number | null
+  /** a "?" waits where the answer will come out */
+  ask?: boolean
+  /** which way the arrows point, when not the way it runs */
+  arrows?: 1 | -1
+}
+
+export const MACHINE_LEG = 0.75
+export const MACHINE_HOLD = 0.5
+/** How long a machine takes to run, seconds. */
+export const machineTime = (m: Machine) => m.boxes.length * (2 * MACHINE_LEG + MACHINE_HOLD)
+
+/**
+ * An angle drawn on a figure, between two arms from a point. An arm is
+ * a point it runs toward, or a direction on the board in degrees (0 right,
+ * 90 up).
+ */
+export interface AngSpec {
+  id: string
+  at: string
+  a: string | number
+  b: string | number
+  tex?: string
+  col?: string
+  /** a right angle, drawn as a square */
+  square?: boolean
+  pulse?: boolean
+  /** a faint fill only, no label (an angle being pointed at) */
+  quiet?: boolean
+  r?: number
+}
+
+/**
+ * A line of sight from a point: the horizontal there (dashed), and the line
+ * the student turns up or down from it. Its direction on the board is
+ * `base + s × ang` degrees.
+ */
+export interface Sight {
+  from: string
+  base: number
+  s: 1 | -1
+  ang: number
+  /** the angle it clicks onto */
+  want: number | null
+  len: number
+  /** when the horizontal started growing */
+  since: number
+  /** the line of sight itself (not just the horizontal) */
+  ray: boolean
+  tex: ((S: Scene) => string) | null
+  pulseBase?: boolean
+  pulseArc?: boolean
+  /** parallel marks on the horizontal */
+  arrows?: boolean
+  /** the little eye that looks along it */
+  eye?: boolean
+  /** how long the line of sight is at an angle (it stops where it meets something) */
+  lenAt?: (ang: number) => number
+}
 
 export interface CalcInput {
   value: string
@@ -94,18 +165,29 @@ export interface CalcInput {
   hints: string[]
   /** known slips: a value a student may get, and what to say about it */
   slips?: { v: number; say: string }[]
+  /** SHIFT is down: the next sin, cos or tan is its inverse */
+  shift?: boolean
+  /** the point of this question is to see Math ERROR */
+  wantError?: boolean
+  /** shown in the box once right (Math ERROR) */
+  shows?: string
+  /** it must be typed as a calculation, not just its answer */
+  calcOnly?: string
+  /** the keys that answer it, when that is not just the answer's digits (for test scripts) */
+  typed?: string
   /** the next key starts a fresh answer (after "give it to 3 figures") */
   fresh?: boolean
   onRight?: (S: Scene) => void
   help?: (S: Scene, tries: number) => void
 }
 
-export type Mode = "none" | "turn" | "slide" | "turnSlide" | "drop" | "tapSide" | "tapCard" | "solve" | "tapRegion"
+export type Mode = "none" | "turn" | "slide" | "turnSlide" | "drop" | "tapSide" | "tapCard" | "solve" | "tapRegion" | "tapAngle" | "tapPoint" | "sight"
 
 export type Drag =
   | { kind: "turn" }
   | { kind: "slide" }
   | { kind: "drop" }
+  | { kind: "sight" }
   | { kind: "chip"; id: string; p: Vec }
   | { kind: "atom"; id: string; p: Vec; start: Vec }
 
@@ -155,7 +237,11 @@ export interface Scene {
     fills: { pts: string[]; col: string; op?: number }[]
     dash?: [string, string][]
     /** lengths written by lines that are not the triangle's */
-    labels?: { a: string; b: string; tex: string }[]
+    labels?: { a: string; b: string; tex: string; col?: string; inside?: boolean }[]
+    /** parallel marks (arrowheads) on lines */
+    arrows?: [string, string][]
+    /** words or numbers written at a point */
+    texts?: { at: string; tex: string; col?: string }[]
   } | null
   regions: { id: string; pts: string[] }[]
   onRegion: ((S: Scene, id: string) => void) | null
@@ -202,6 +288,21 @@ export interface Scene {
   mirror: [number, number] | null
   /** one tenth of x, as a bar */
   tenth: { since: number; ten: number | null } | null
+  /** function machines, stacked (in the equation's band, or in the board's middle) */
+  machines: Machine[]
+  machinesAt: "eq" | "board"
+  /** angles on the figure beyond the triangle's own */
+  angs: AngSpec[]
+  tapAngs: string[] | null
+  onAng: ((S: Scene, id: string) => void) | null
+  /** points that can be tapped */
+  tapPts: string[] | null
+  onPt: ((S: Scene, id: string) => void) | null
+  sight: Sight | null
+  /** an opposite that wants to be `want` long under a hypotenuse that is too short (when) */
+  reach: { want: number; since: number } | null
+  /** a Z drawn along lines through these points (alternate angles), from when */
+  zpath: { pts: string[]; since: number } | null
 
   eq: EqBoard
   eqFn: ((S: Scene) => ENode | null) | null
@@ -209,12 +310,16 @@ export interface Scene {
   alg: Eqn | null
   /** the moves being made on it (solve.ts) */
   solve: Solve | null
+  /** an angle being got on its own (solve-angle.ts) */
+  asolve: AngleSolve | null
   /** the beat's own logic, run every frame */
   tick: ((S: Scene) => void) | null
   /** a few words to pick from */
   choice: { options: string[]; answer: number; picked: number | null; state: "idle" | "wrong" | "right"; wrongAt: number; guess: boolean } | null
   /** the five steps, written over the board: when they came up */
   stepsCard: number | null
+  /** the steps it lists, when not finding a side */
+  stepsList: string[] | null
 
   cards: Card[]
   cardPick: { fn: Fn; state: "wrong" | "right"; at: number } | null
@@ -229,6 +334,8 @@ export interface Scene {
   onAtom: ((S: Scene, id: string) => void) | null
   /** pieces that can be dragged onto another piece */
   dragAtoms: string[]
+  /** where the last dragged piece was let go (screen) */
+  dropAt: Vec | null
   onAtomDrop: ((S: Scene, id: string, onto: string | null) => void) | null
 
   tapSides: SideId[] | null
@@ -276,9 +383,10 @@ export function createScene(): Scene {
     extra: null, regions: [], onRegion: null, regionLit: null,
     light: null, glow: new Set(), pulseArc: false, pulseRt: false, pulseLabs: new Set(), halves: null, ghost: null, ticks: [], graph: null, tenth: null,
     fullTurn: false, family: null, outline: null, marks: null, door: null, parts: null, zoom: null, calcScreen: null, tanLine: null, mirror: null,
-    eq: createBoard(), eqFn: null, alg: null, solve: null, tick: null, choice: null, stepsCard: null,
+    machines: [], machinesAt: "eq", angs: [], tapAngs: null, onAng: null, tapPts: null, onPt: null, sight: null, reach: null, zpath: null,
+    eq: createBoard(), eqFn: null, alg: null, solve: null, asolve: null, tick: null, choice: null, stepsCard: null,
     cards: [], cardPick: null, onCard: null, soh: null,
-    chips: [], onChip: null, tapAtoms: [], onAtom: null, dragAtoms: [], onAtomDrop: null,
+    chips: [], onChip: null, tapAtoms: [], onAtom: null, dragAtoms: [], dropAt: null, onAtomDrop: null, stepsList: null,
     tapSides: null, onSide: null, timers: [],
     vis, arcV: { v: 0, t: 0 }, arcP: { v: 0, t: 0 }, labs: [], labD: {}, walkTex: null,
     input: null, drag: null, touch: false, moved: 0, turned: 0, slid: 0, releases: 0, snapped: false, locked: false,
@@ -550,6 +658,12 @@ const inRect = (p: Vec, r: Rect, pad = 0) => p[0] >= r.x0 - pad && p[0] <= r.x1 
 
 // ── labels ───────────────────────────────────────────────────────────────
 
+/** The middle of the whole figure on screen (the triangle and any other points). */
+function figureMiddle(S: Scene): Vec {
+  const ps = ["V", "F", "P", ...Object.keys(S.extra?.pts ?? {})].map(n => cornerS(S, n))
+  return [ps.reduce((a, p) => a + p[0], 0) / ps.length, ps.reduce((a, p) => a + p[1], 0) / ps.length]
+}
+
 /** The middle of the triangle on screen. */
 function triMiddle(S: Scene): Vec {
   const a = cornerS(S, "V"), b = cornerS(S, "F"), c = cornerS(S, "P")
@@ -584,8 +698,76 @@ export function angleLabelAt(S: Scene, size: number): Vec {
   const a1 = Math.atan2(p[1] - c[1], p[0] - c[0]), a2 = Math.atan2(q[1] - c[1], q[0] - c[0])
   const half = Math.abs(turn(a1, a2)) / 2
   const bis = a1 + turn(a1, a2) / 2
-  const r = clamp(size * 0.95 / Math.max(0.2, Math.sin(half)), size * 1.9, size * 4.4)
+  // a wide label (38.7°) needs to sit further out to clear both arms
+  const need = Math.max(size * 0.95, labelWidth(S.angText?.(S) ?? "", size) * 0.55 + 4)
+  const r = clamp(need / Math.max(0.2, Math.sin(half)), size * 1.9, size * 4.4)
   return add(c, mul([Math.cos(bis), Math.sin(bis)], r))
+}
+
+/** Roughly how wide a short label is on screen (counting what is seen, not the TeX). */
+export function labelWidth(tex: string, size: number): number {
+  const seen = tex.replace(/\\textcolor\{[^}]*\}/g, "").replace(/\\text\{([^}]*)\}/g, "$1").replace(/\\circ/g, "o").replace(/\\[a-zA-Z]+/g, "x").replace(/[{}^_\\ ]/g, "")
+  return seen.length * size * 0.5
+}
+
+/** Whether the marked angle has room inside its arc for a label this wide. */
+export function angleRoom(S: Scene, tex: string, size: number): boolean {
+  const at = S.triD.at
+  const c = cornerS(S, at)
+  const p = cornerS(S, at === "V" ? "F" : "V"), q = cornerS(S, at === "V" ? "P" : "F")
+  const half = Math.abs(turn(Math.atan2(p[1] - c[1], p[0] - c[0]), Math.atan2(q[1] - c[1], q[0] - c[0]))) / 2
+  return (labelWidth(tex, size) * 0.55 + 4) / Math.max(0.05, Math.sin(half)) <= size * 4.4
+}
+
+// ── angles on the figure, and the line of sight ────────────────────────
+
+/** An arm's direction on screen (radians, y down): toward a point, or a board direction in degrees. */
+function armScreen(S: Scene, C: Vec, arm: string | number): number {
+  if (typeof arm === "number") return -arm * RAD
+  const q = cornerS(S, arm)
+  return Math.atan2(q[1] - C[1], q[0] - C[0])
+}
+
+/** Where an angle on the figure is drawn: its corner, start, sweep (the smaller way round), radius, label spot. */
+export function angGeom(S: Scene, g: AngSpec, size: number) {
+  const C = cornerS(S, g.at)
+  const a1 = armScreen(S, C, g.a), a2 = armScreen(S, C, g.b)
+  const sweep = turn(a1, a2)
+  const len = (arm: string | number) => (typeof arm === "number" ? 200 : dist(C, cornerS(S, arm)))
+  const r = g.r ?? Math.min(40, len(g.a) * 0.3, len(g.b) * 0.3)
+  const half = Math.abs(sweep) / 2
+  const bis = a1 + sweep / 2
+  const need = Math.max(size * 0.95, labelWidth(g.tex ?? "", size) * 0.55 + 4)
+  const lr = clamp(need / Math.max(0.2, Math.sin(half)), Math.max(size * 1.9, r + size * 0.9), size * 4.4)
+  return { C, a1, sweep, r, bis, labelAt: add(C, mul([Math.cos(bis), Math.sin(bis)], lr)) }
+}
+
+/** The line of sight's direction on the board, degrees. */
+export const sightDeg = (g: Sight) => g.base + g.s * g.ang
+
+/** The far end of the line of sight on screen (its handle). */
+export function sightEnd(S: Scene): Vec | null {
+  const g = S.sight
+  if (!g) return null
+  const F = cornerW(S, g.from), d = sightDeg(g) * RAD
+  const len = g.lenAt ? g.lenAt(g.ang) : g.len
+  return toScreen(S, [F[0] + Math.cos(d) * len, F[1] + Math.sin(d) * len])
+}
+
+/** The far end of the horizontal on screen, as far as it has grown. */
+export function sightBaseEnd(S: Scene): Vec | null {
+  const g = S.sight
+  if (!g) return null
+  const F = cornerW(S, g.from), d = g.base * RAD
+  const grow = clamp((S.time - g.since) / 0.8, 0, 1)
+  const e = grow * grow * (3 - 2 * grow)
+  return toScreen(S, [F[0] + Math.cos(d) * g.len * e, F[1] + Math.sin(d) * g.len * e])
+}
+
+/** The line of sight's angle as shown: whole degrees, or its target once it has clicked on. */
+export function sightShown(S: Scene): number {
+  const g = S.sight!
+  return Math.round(g.ang)
 }
 
 function computeLabels(S: Scene, L: Layout): Lab[] {
@@ -606,15 +788,36 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
     out.push({ key: "ang", tex: S.angText(S), col: CHALK, at: angleLabelAt(S, size), size, op: S.vis.arc.v, pulse: S.pulseArc })
   }
   if (S.extra?.labels && S.vis.extra.v > 0.01) {
-    const mid = triMiddle(S)
+    const mid = figureMiddle(S)
     for (const e of S.extra.labels) {
       const a = cornerS(S, e.a), b = cornerS(S, e.b)
       const m = lerpV(a, b, 0.5)
       const d = sub(b, a), l = Math.hypot(d[0], d[1]) || 1
       let n: Vec = [-d[1] / l, d[0] / l]
-      if (dot(n, sub(mid, m)) > 0) n = mul(n, -1)
-      out.push({ key: `X-${e.a}${e.b}`, tex: e.tex, col: CHALK, at: add(m, mul(n, size * 0.8 + 6)), size, op: S.vis.extra.v })
+      if ((dot(n, sub(mid, m)) > 0) !== !!e.inside) n = mul(n, -1)
+      const seen = e.tex.replace(/\\text\{([^}]*)\}/g, "$1").replace(/\\[a-zA-Z]+/g, "x").replace(/[{}^_\\ ]/g, "")
+      const off = size * (0.75 + 0.3 * Math.abs(n[0]) * Math.max(0, seen.length * 0.42 - 1)) + 6
+      out.push({ key: `X-${e.a}${e.b}`, tex: e.tex, col: e.col ?? CHALK, at: add(m, mul(n, off)), size, op: S.vis.extra.v, pulse: S.pulseLabs.has(`X-${e.a}${e.b}`) })
     }
+  }
+  if (S.extra?.texts && S.vis.extra.v > 0.01) {
+    for (const t of S.extra.texts) out.push({ key: `T-${t.at}`, tex: t.tex, col: t.col ?? QUIET, at: cornerS(S, t.at), size: size - 2, op: S.vis.extra.v })
+  }
+  for (const g of S.angs) {
+    if (!g.tex || g.quiet) continue
+    out.push({ key: `G-${g.id}`, tex: g.tex, col: g.col ?? CHALK, at: angGeom(S, g, size).labelAt, size, op: 1, pulse: g.pulse })
+  }
+  if (S.sight?.tex && S.sight.ray) {
+    const g = S.sight
+    const C = cornerS(S, g.from)
+    const a1 = -g.base * RAD, a2 = -sightDeg(g) * RAD
+    const half = Math.abs(turn(a1, a2)) / 2, bis = a1 + turn(a1, a2) / 2
+    const lr = clamp(size * 0.95 / Math.max(0.12, Math.sin(half)), size * 2.6, size * 5.2)
+    out.push({ key: "sight", tex: g.tex!(S), col: CHALK, at: add(C, mul([Math.cos(bis), Math.sin(bis)], lr)), size, op: 1, pulse: g.pulseArc })
+  }
+  if (S.reach) {
+    const top = toScreen(S, poseMap(S.triD.pose, [S.triD.h * 1.15, S.reach.want]))
+    out.push({ key: "reach", tex: String(S.reach.want), col: PINK, at: add(top, [size * 1.2, 0]), size: size + 2, op: clamp((S.time - S.reach.since) / 0.5, 0, 1) })
   }
   const lt = S.vis.letters.v
   if (lt > 0.01) {
@@ -781,12 +984,25 @@ export function resetBeat(S: Scene) {
   S.calcScreen = null
   S.tanLine = null
   S.mirror = null
+  S.machines = []
+  S.machinesAt = "eq"
+  S.angs = []
+  S.tapAngs = null
+  S.onAng = null
+  S.tapPts = null
+  S.onPt = null
+  S.sight = null
+  S.reach = null
+  S.zpath = null
   S.eqFn = null
   S.alg = null
   S.solve = null
+  S.asolve = null
   S.tick = null
   S.choice = null
   S.stepsCard = null
+  S.stepsList = null
+  S.dropAt = null
   S.eq.goneTo = {}
   S.eq.goneFade = {}
   S.eq.tilt.t = 0
@@ -823,7 +1039,7 @@ export function startInput(S: Scene, spec: Omit<CalcInput, "value" | "tries" | "
 /** The answer box, for an equation's tail. */
 export function boxNode(S: Scene): ENode {
   const inp = S.input
-  return { k: "box", id: "box", tex: inp ? calcTex(inp.value) : "", state: inp?.state ?? "idle", wrongAt: inp?.wrongAt ?? -9 }
+  return { k: "box", id: "box", tex: inp ? (inp.shows ?? calcTex(inp.value)) : "", state: inp?.state ?? "idle", wrongAt: inp?.wrongAt ?? -9 }
 }
 
 /** Set the triangle at once (no glide), e.g. when a beat opens cold onto it. */
@@ -891,6 +1107,40 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     for (const c of cardRects(S, L)) if (inRect(p, c.r, 6)) { S.onCard?.(S, c.fn); return false }
     return false
   }
+  if (S.mode === "sight") {
+    if (S.locked) return false
+    const e = sightEnd(S)
+    const g = S.sight
+    if (e && g) {
+      // the far end, or anywhere along the line of sight
+      const F = cornerS(S, g.from)
+      if (dist(p, e) < tol(S) + 14 || (distToSeg(p, F, e) < tol(S) && dist(p, F) > 40)) { S.drag = { kind: "sight" }; S.touched = { kind: "tri" }; return true }
+    }
+    return false
+  }
+  if (S.mode === "tapAngle") {
+    const size = L.labelSize
+    let best: string | null = null, bd = Infinity
+    for (const g of S.angs) {
+      if (S.tapAngs && !S.tapAngs.includes(g.id)) continue
+      const G = angGeom(S, g, size)
+      // near its label, or inside its arc
+      const inner = add(G.C, mul([Math.cos(G.bis), Math.sin(G.bis)], Math.max(G.r * 0.75, 14)))
+      const d = Math.min(dist(p, G.labelAt), dist(p, inner))
+      if (d < bd) { bd = d; best = g.id }
+    }
+    if (best && bd < tol(S) + 18) S.onAng?.(S, best)
+    return false
+  }
+  if (S.mode === "tapPoint") {
+    let best: string | null = null, bd = Infinity
+    for (const n of S.tapPts ?? []) {
+      const d = dist(p, cornerS(S, n))
+      if (d < bd) { bd = d; best = n }
+    }
+    if (best && bd < tol(S) + 16) S.onPt?.(S, best)
+    return false
+  }
   if (S.mode === "tapRegion") {
     for (const r of S.regions) if (inPoly(p, r.pts.map(n => cornerS(S, n)))) { S.onRegion?.(S, r.id); return false }
     return false
@@ -914,6 +1164,20 @@ export function pointerMove(S: Scene, p: Vec) {
   const d = S.drag
   if (!d) return
   if (d.kind === "chip" || d.kind === "atom") { S.moved += dist(p, d.p); d.p = p; return }
+  if (d.kind === "sight") {
+    const g = S.sight
+    if (!g) return
+    const F = cornerW(S, g.from), q = toWorld(S, p)
+    const dir = Math.atan2(q[1] - F[1], q[0] - F[0]) * DEG
+    let a = g.s * (turn(g.base * RAD, dir * RAD) * DEG)
+    a = clamp(a, 1, 89)
+    S.snapped = false
+    if (g.want !== null && Math.abs(a - g.want) < 2.5) { a = g.want; S.snapped = true }
+    S.turned += Math.abs(a - g.ang)
+    S.moved += Math.abs(a - g.ang) * RAD * g.len * (S.viewD?.u ?? 30)
+    g.ang = a
+    return
+  }
   const w = poseUnmap(S.tri.pose, toWorld(S, p))
   const T = S.tri
   if (d.kind === "turn") {
@@ -961,6 +1225,7 @@ export function pointerUp(S: Scene) {
   }
   if (d.kind === "atom") {
     const onto = eqHit(S.eq, d.p, undefined, 6)
+    S.dropAt = d.p
     S.onAtomDrop?.(S, d.id, onto && onto !== d.id ? onto : null)
     return
   }
@@ -987,9 +1252,13 @@ export function typeKey(S: Scene, key: string) {
   const inp = S.input
   if (!inp || inp.state === "right" || inp.state === "guessed") return
   if (key === "go") { check(S); return }
+  if (key === "SHIFT") { inp.shift = !inp.shift; return }
   if ((inp.state === "wrong" || inp.fresh) && key !== "back") inp.value = ""
   inp.fresh = false
-  inp.value = calcType(inp.value, key)
+  // SHIFT then sin is sin⁻¹; any other key lets SHIFT go
+  const k = inp.shift && INV_KEY[key] ? INV_KEY[key] : key
+  inp.shift = false
+  inp.value = calcType(inp.value, k)
   inp.state = "idle"
 }
 
@@ -997,7 +1266,26 @@ function check(S: Scene) {
   const inp = S.input!
   if (!inp.value) return
   const { verdict, v } = judge(inp.value, inp.answer, { sf: inp.sf, dp: inp.dp })
+  if (inp.wantError) {
+    // the point is to see the calculator refuse
+    if (verdict === "error") { inp.state = "guessed"; inp.shows = "\\text{Math ERROR}"; S.note = null; inp.onRight?.(S); return }
+    inp.tries++
+    inp.state = "wrong"
+    inp.wrongAt = S.time
+    inp.help?.(S, inp.tries)
+    return
+  }
+  if (verdict === "error") {
+    inp.tries++
+    inp.state = "wrong"
+    inp.wrongAt = S.time
+    say(S, "Math ERROR. Is the fraction the right way up?", "wrong", 4.5)
+    inp.help?.(S, inp.tries)
+    return
+  }
   if (verdict === "unfinished") { say(S, "That calculation is not finished.", "calm", 2.6); return }
+  // a bare answer where the calculation is the point: not taken, but it counts toward "Show me how"
+  if (inp.calcOnly && !isCalculation(inp.value)) { inp.fresh = true; inp.tries++; say(S, inp.calcOnly, "calm", 3.4); return }
   if (verdict === "rough") {
     inp.fresh = true
     say(S, inp.sf ? `Nearly. Give it to $${inp.sf}$ significant figures.` : `Nearly. Give it to $${inp.dp ?? 1}$ decimal place.`, "calm", 3.4)
@@ -1013,9 +1301,10 @@ function check(S: Scene) {
   inp.tries++
   inp.state = "wrong"
   inp.wrongAt = S.time
+  // the general help first, then a known slip's own note (it says more)
+  inp.help?.(S, inp.tries)
   const slip = v !== null ? inp.slips?.find(s => Math.abs(s.v - v) <= Math.max(0.006, Math.abs(s.v) * 0.002)) : undefined
   if (slip) say(S, slip.say, "wrong", 4.5)
-  inp.help?.(S, inp.tries)
 }
 
 export { dist, lerpV, clamp, turn, DEG, RAD, add, sub, mul }

@@ -8,6 +8,7 @@ import CircleTheorems3Lesson from "./circle-theorems-3/CircleTheorems3Lesson"
 import PythagorasLesson from "./pythagoras/PythagorasLesson"
 import TrigLesson from "./trigonometry/TrigLesson"
 import WhyTrigLesson from "./trigonometry/WhyTrigLesson"
+import AngleLesson from "./trigonometry/AngleLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -57,6 +58,12 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "From Pythagoras to trigonometry: name the sides, learn SOH CAH TOA, and find any missing side, with every step of the algebra done in front of you.",
     topicHref: "/dashboard/maths/06/02",
     Lesson: TrigLesson,
+  },
+  "trigonometry-angles": {
+    title: "Trigonometry: finding an angle",
+    description: "Find a missing angle with sin⁻¹, cos⁻¹ and tan⁻¹, see why they undo sin, cos and tan, and work out angles of elevation and depression.",
+    topicHref: "/dashboard/maths/06/02",
+    Lesson: AngleLesson,
   },
   "why-trig-works": {
     title: "Why trigonometry works",
