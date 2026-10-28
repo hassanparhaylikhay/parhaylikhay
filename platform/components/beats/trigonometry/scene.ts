@@ -358,6 +358,8 @@ export interface Scene {
   turned: number
   slid: number
   releases: number
+  /** what to say when the line from P is let go before it reaches (where it is going) */
+  dropNote: string | null
   /** the dragged value has met the beat's goal; letting go locks it */
   snapped: boolean
   locked: boolean
@@ -389,7 +391,7 @@ export function createScene(): Scene {
     chips: [], onChip: null, tapAtoms: [], onAtom: null, dragAtoms: [], dropAt: null, onAtomDrop: null, stepsList: null,
     tapSides: null, onSide: null, timers: [],
     vis, arcV: { v: 0, t: 0 }, arcP: { v: 0, t: 0 }, labs: [], labD: {}, walkTex: null,
-    input: null, drag: null, touch: false, moved: 0, turned: 0, slid: 0, releases: 0, snapped: false, locked: false,
+    input: null, drag: null, touch: false, moved: 0, turned: 0, slid: 0, releases: 0, dropNote: null, snapped: false, locked: false,
     magnet: null, lockWhen: null, releaseNote: null, got: new Set(), touched: null, flashGood: 0, note: null,
   }
 }
@@ -497,7 +499,14 @@ export const hText = (S: Scene) => numText(S.tri.h, 1)
 /** The opposite or adjacent as shown: the shown hypotenuse times the ratio of the shown angle. */
 export function legText(S: Scene, role: "O" | "A"): string {
   const fn: Fn = role === "O" ? "sin" : "cos"
-  return numText(hShown(S) * ratioOf(S, fn), 2)
+  const v = hShown(S) * ratioOf(S, fn)
+  // a side is always shorter than the hypotenuse: near 90° it keeps the figures that show it (9.299, not 9.3)
+  const h = hText(S)
+  for (let d = 2; d < 6; d++) {
+    const t = numText(v, d)
+    if (t !== h) return t
+  }
+  return numText(v, 6)
 }
 
 // ── layout ───────────────────────────────────────────────────────────────
@@ -947,6 +956,7 @@ export function resetBeat(S: Scene) {
   S.turned = 0
   S.slid = 0
   S.releases = 0
+  S.dropNote = null
   S.snapped = false
   S.locked = false
   S.magnet = null
@@ -1230,7 +1240,7 @@ export function pointerUp(S: Scene) {
     return
   }
   if (d.kind === "drop") {
-    if (S.tri.drop < 1) { S.tri.drop = 0; say(S, "Pull it all the way down to the floor.", "calm", 3) }
+    if (S.tri.drop < 1) { S.tri.drop = 0; say(S, S.dropNote ?? "Pull it all the way down to the floor.", "calm", 3) }
     return
   }
   if (S.snapped && (S.magnet || S.lockWhen)) { S.locked = true; S.flashGood = 1; S.note = null; return }

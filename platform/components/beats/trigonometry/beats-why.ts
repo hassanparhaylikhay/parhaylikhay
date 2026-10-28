@@ -80,9 +80,17 @@ function familyFrame(S: Scene) {
 
 // ── the tour ─────────────────────────────────────────────────────────────
 
-/** How many of the ten parts the opposite covers (to one place), and that as a fraction: from the angle as shown, so they agree. */
+/**
+ * How many of the ten parts the opposite covers (to one place), and that as
+ * a fraction: from the angle as shown, so they agree. Near 90° (or 0°) one
+ * place would round it to all ten parts (or none), which it never quite
+ * covers, so there it keeps the figures that show it.
+ */
 function partsOf(S: Scene): { parts: number; frac: number } {
-  const parts = Math.round(ratioOf(S, "sin") * 100) / 10
+  const p = ratioOf(S, "sin") * 10
+  const r = Math.round(p * 10) / 10
+  const exact = Math.abs(p - Math.round(p)) < 1e-6
+  const parts = (r >= 10 || r <= 0) && !exact ? p : r
   return { parts, frac: parts / 10 }
 }
 

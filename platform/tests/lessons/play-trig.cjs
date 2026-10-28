@@ -27,7 +27,7 @@ const { open, sleep } = require("./trig-lib.cjs")
   await want("But what if"); await next()
   await want("Pythagoras can't"); await next()
   await want("Trigonometry uses"); await next()
-  await want("Let's make one"); await turnTo(36); await expect(/Close/.test((await S()).note || ""), "no 'Close' at 36"); await turnTo(30.5)
+  await want("Let's make one"); await turnTo(85); await expect((await S()).tri.th > 84, "the arm stopped short of 85°"); await turnTo(36); await expect(/Close/.test((await S()).note || ""), "no 'Close' at 36"); await turnTo(30.5)
   await want("Pull a line"); await dropLine(1.2)
   // ── 2. naming the sides ──
   await want("The longest side"); await T.tapSide("VF"); await expect((await S()).note, "no note tapping a short side"); await sleep(300); await T.tapSide("VP")

@@ -51,11 +51,17 @@ export function madeTri(S: Scene, o: { th?: number; h?: number; keepPose?: boole
   t.h = clamp(t.h, S.hMin, S.hMax)
 }
 
-/** The angle and its arms, for building and for sliding (the view holds still so sizes show). */
+/**
+ * The angle and its arms, for building and for sliding (the view holds
+ * still so sizes show). The arm turns as far as the maths allows: almost
+ * flat, almost straight up. Past 90° a line straight down from P would fall
+ * outside the angle, so there is no triangle there; nothing stops it sooner
+ * (a stop at 78° just looked broken, Hassan, 28 Oct 2026).
+ */
 export function armsBoard(S: Scene, R = 10) {
   S.armR = R
-  S.thMin = 12
-  S.thMax = 78
+  S.thMin = 1
+  S.thMax = 89
   S.hMin = R * 0.25
   // short of the arm's end, so the corner and the turning handle never sit on top of each other
   S.hMax = R * 0.84

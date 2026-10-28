@@ -1080,7 +1080,7 @@ export const BEATS: Beat[] = [
       S.roleLabels = { O: s => ({ tex: legText(s, "O") }), A: s => ({ tex: legText(s, "A") }), H: s => ({ tex: hText(s) }) }
       S.roleColours = new Set(["O", "A", "H"])
       S.mode = "turnSlide"
-      S.eqFn = S2 => row([atom("fn", "\\sin"), atom("ang", thText(S2)), op("eq", "="), atom("v", String(Math.round(ratioOf(S2, "sin") * 100) / 100), { col: GREEN })])
+      S.eqFn = S2 => row([atom("fn", "\\sin"), atom("ang", thText(S2)), op("eq", "="), atom("v", numText(ratioOf(S2, "sin"), 2), { col: GREEN })])
       look(S, ["arms", ...TRI, "eq"])
     },
     cta: "Start again",

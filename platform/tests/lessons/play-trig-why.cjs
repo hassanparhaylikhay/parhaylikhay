@@ -9,7 +9,7 @@ const { open, sleep } = require("./trig-lib.cjs")
   await want("Your calculator says"); await shot("question"); await next()
   await want("Where does"); await next()
   // ── triangles in an angle ──
-  await want("Start with an angle"); await turnTo(55); await turnTo(30); await next()
+  await want("Start with an angle"); await turnTo(86); await expect((await S()).tri.th > 85, "the arm stopped short of 86°"); await turnTo(30); await next()
   await want("Now pull a line"); await dropLine(1.2)
   await want("Try sliding"); await slideTo(8); await slideTo(4); await next()
   await want("What if we drew"); await sleep(1600); await shot("family"); await next()

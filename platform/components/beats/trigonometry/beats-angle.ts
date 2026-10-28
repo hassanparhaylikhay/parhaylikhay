@@ -332,8 +332,8 @@ function sightUp(S: Scene, ang: number, o: { ray?: boolean; want?: number | null
   S.sight = {
     from: "V", base: 0, s: 1, ang, want: o.want ?? null, len: SIGHT_LEN, since: o.since ?? S.time - 10, ray: o.ray ?? true,
     tex: s => `${Math.round(s.sight!.ang)}^\\circ`, eye: true, pulseBase: o.pulseBase,
-    // below the top it stops at the tower's wall; above it, it goes on past
-    lenAt: a => (a < SIGHT_ANG - 1e-9 ? TOWER_D / Math.cos(a * RAD) : SIGHT_LEN),
+    // below the top it stops at the tower's wall; above it, it goes on past, but no higher than the board
+    lenAt: a => (a < SIGHT_ANG - 1e-9 ? TOWER_D / Math.cos(a * RAD) : Math.min(SIGHT_LEN, (TOWER_H + 1.2) / Math.sin(a * RAD))),
   }
 }
 
@@ -348,6 +348,21 @@ function sightDown(S: Scene, ang: number, o: { ray?: boolean; want?: number | nu
 }
 
 const ELEV: AngSpec = { id: "elev", at: "V", a: 0, b: "P", tex: SIGHT_SHOWN }
+
+/** Let go short of the target: close, or which way to go (the line of sight). */
+function sightNote(S: Scene, where: string): string {
+  const d = S.sight!.ang - SIGHT_ANG
+  if (Math.abs(d) < 9) return `Close. Look right at ${where}.`
+  // looking up from P: more angle is higher. Looking down from the top: more angle lands nearer the tower
+  if (S.sight!.base === 0) return d > 0 ? `That's above ${where}. Bring it down.` : `That's below ${where}. Lift it up.`
+  return d > 0 ? `That lands before ${where}. Raise it a little.` : `That goes past ${where}. Lower it.`
+}
+
+/** Let go short of the target angle: close, or whether the opposite is too long or too short. */
+function oppNote(S: Scene, want: number, len: string): string {
+  if (Math.abs(S.tri.th - want) < 9) return `Close. Make the opposite exactly $${len}$.`
+  return S.tri.th > want ? "The opposite is too long. Turn the arm down." : "The opposite is too short. Turn the arm up."
+}
 
 // ── the lesson ───────────────────────────────────────────────────────────
 
@@ -387,27 +402,29 @@ BEATS.push(
   // ── 1. Finding an angle ──
   {
     id: "open",
-    say: "Let's make a right-angled triangle again. Turn the arm.",
+    say: "Let's make a right-angled triangle again. Turn the arm to $30^\\circ$.",
     enter: S => {
-      angleOnly(S, 22, 8, 10)
+      angleOnly(S, 52, 8, 10)
       S.mode = "turn"
+      S.magnet = { th: 30, within: 2.5 }
+      S.releaseNote = S2 => (Math.abs(S2.tri.th - 30) < 9 ? "Close. Make it exactly $30^\\circ$." : null)
       look(S, ["arms", "arc", "labels"])
     },
-    done: S => S.turned > 25,
-    free: true,
-    minPlay: 2.5,
+    done: S => S.locked,
+    advanceAfter: 1200,
   },
   {
     id: "drop",
-    say: "Now pull a line straight down.",
+    say: "Pull a line straight down to make the right angle.",
     enter: S => {
-      const th = Math.min(60, Math.max(25, S.tri.th))
-      angleOnly(S, th, 8, 10)
+      angleOnly(S, 30, 8, 10)
       S.mode = "drop"
-      look(S, ["arms", "tri", "arc", "labels"])
+      // the right angle it makes lights up as the line lands
+      S.tick = S2 => { if (S2.tri.drop === 1 && !S2.got.has("rt")) { S2.got.add("rt"); S2.pulseRt = true } }
+      look(S, ["arms", "tri", "rt", "arc", "labels"])
     },
     done: S => S.tri.drop === 1,
-    advanceAfter: 1300,
+    advanceAfter: 1800,
   },
   watch("so-far", "So far we knew the angle and found a side.", S => {
     eightBoard(S, 30)
@@ -434,7 +451,7 @@ BEATS.push(
       S.roleLabels.O = s => ({ tex: legText(s, "O") })
       S.mode = "turn"
       S.magnet = { th: 30, within: 2.5 }
-      S.releaseNote = S2 => (Math.abs(S2.tri.th - 30) < 9 ? "Close. Make the opposite exactly $4$." : null)
+      S.releaseNote = S2 => oppNote(S2, 30, "4")
       look(S, ALL)
     },
     done: S => S.locked,
@@ -454,7 +471,7 @@ BEATS.push(
       S.roleLabels.O = s => ({ tex: legText(s, "O") })
       S.mode = "turn"
       S.magnet = { th: RATIO_5_8, within: 2.5 }
-      S.releaseNote = S2 => (Math.abs(S2.tri.th - RATIO_5_8) < 9 ? "Close. Make the opposite exactly $5$." : null)
+      S.releaseNote = S2 => oppNote(S2, RATIO_5_8, "5")
       S.tick = S2 => {
         // said on clicking in, and again once it is let go (letting go clears notes)
         if (!S2.locked || S2.got.has("said")) return
@@ -821,7 +838,7 @@ BEATS.push(
       sightUp(S, 4, { want: SIGHT_ANG })
       S.mode = "sight"
       S.magnet = { within: 2.5 }
-      S.releaseNote = S2 => (Math.abs(S2.sight!.ang - SIGHT_ANG) < 9 ? "Close. Look right at the top, $T$." : null)
+      S.releaseNote = S2 => sightNote(S2, "the top, $T$")
       look(S, ["extra", "letters"])
     },
     done: S => S.locked,
@@ -854,7 +871,7 @@ BEATS.push(
       sightDown(S, 4, { want: SIGHT_ANG })
       S.mode = "sight"
       S.magnet = { within: 2.5 }
-      S.releaseNote = S2 => (Math.abs(S2.sight!.ang - SIGHT_ANG) < 9 ? "Close. Look right at $P$." : null)
+      S.releaseNote = S2 => sightNote(S2, "$P$")
       look(S, ["extra", "letters"])
     },
     done: S => S.locked,
@@ -1047,6 +1064,7 @@ BEATS.push(
     enter: S => {
       ex4Board(S)
       S.mode = "drop"
+      S.dropNote = "Pull it all the way down to $AE$."
       look(S, ["tri", "fill", "rt", "arc", "labels", "letters", "extra"])
     },
     done: S => S.tri.drop === 1,
@@ -1096,6 +1114,7 @@ BEATS.push(
       ex5Board(S)
       S.angs.push({ id: "dcb", at: "P", a: "D", b: "V", tex: c(PINK, "?"), col: PINK })
       S.mode = "drop"
+      S.dropNote = "Pull it all the way up to $AB$."
       look(S, ["tri", "fill", "rt", "labels", "letters", "extra"])
     },
     done: S => S.tri.drop === 1,
