@@ -53,7 +53,7 @@ const { open, sleep } = require("./trig-lib.cjs")
     }
     await expect(await solved(), "θ not on its own")
     await want("Work it out")
-    if (o.slip) { await typeA(o.slip); await expect((await A()).input === "wrong", "a slip was accepted: " + o.slip); await expect((await A()).note, "no note for a slip " + o.slip) }
+    if (o.slip) { await typeA(o.slip); await expect((await A()).input === "wrong", "a slip was accepted: " + o.slip); await expect(o.slipNote ? o.slipNote.test((await A()).note || "") : (await A()).note, "no (right) note for a slip " + o.slip + ": " + (await A()).note) }
     await typeA(calc)
     await expect((await A()).input === "right", "answer not right: " + calc)
   }
@@ -145,7 +145,7 @@ const { open, sleep } = require("./trig-lib.cjs")
   await want("The cliff is"); await next()
   await want("These two lengths"); await next()
   await want("How many metres"); await typeA("200"); await expect((await A()).note, "no note for 200"); await typeA("2000"); await expect((await A()).input === "right", "2000 not right")
-  await question("tan", "3.0", { cross: true, slip: "88.9" })
+  await question("tan", "3.0", { cross: true, slip: "105/2000", slipNote: /fraction/ })
   await want("ABCDE is a pentagon"); await next()
   await want("We want angle BAE"); await next()
   await want("It isn't in a right-angled"); await next()

@@ -170,6 +170,17 @@ export function sigFigs(s: string): number {
 
 const decimals = (s: string) => (s.includes(".") ? s.split(".")[1].length : 0)
 
+/**
+ * Whether a typed answer is a known slip: as close to it as what was typed
+ * can say (0.0525 typed to 4 places matches to half a ten-thousandth). A
+ * calculation is exact, so it must match closely. Checking the slips in
+ * order, the first that matches is the one meant.
+ */
+export function slipMatches(value: string, v: number, slip: number): boolean {
+  const places = isCalculation(value) ? 9 : decimals(value)
+  return Math.abs(v - slip) <= Math.max(0.5 * 10 ** -places, Math.abs(slip) * 0.0005) + 1e-9
+}
+
 /** A value to `n` significant figures, as a number. */
 export function toSig(x: number, n: number): number {
   if (x === 0) return 0

@@ -26,7 +26,7 @@
  */
 
 import { applyParts } from "../chapter"
-import { type ENode, atom, op, row, frac } from "../equation"
+import { type ENode, atom, op, row, frac, paren } from "../equation"
 import type { Vec } from "../geometry"
 import {
   type Scene, type Role, type AngSpec,
@@ -568,7 +568,7 @@ BEATS.push(
     S.thExact = RATIO_5_8
     S.roleLabels.O = () => ({ tex: "5" })
     S.pulseArc = true
-    S.eqFn = () => row([atom("inv", "\\sin^{-1}"), atom("lp", "\\Bigg("), frac("bar", atom("kt", "5", { col: ORANGE }), atom("kb", "8", { col: GREEN })), atom("rp", "\\Bigg)"), op("eq", "="), atom("ans", "38.7^\\circ", { col: GREEN })], 0.08)
+    S.eqFn = () => row([atom("inv", "\\sin^{-1}"), paren("pR", frac("bar", atom("kt", "5", { col: ORANGE }), atom("kb", "8", { col: GREEN }))), op("eq", "="), atom("ans", "38.7^\\circ", { col: GREEN })], 0.06)
     look(S, [...ALL, "eq"])
   }, 2.4),
   watch("cos-tan", "$\\cos^{-1}$ and $\\tan^{-1}$ work the same way.", S => {
@@ -898,6 +898,8 @@ BEATS.push(
     S.sight!.arrows = true
     S.sight!.pulseBase = true
     S.extra!.arrows = [["G0", "GZ"]]
+    // both of them light up: the horizontal at the top and the ground
+    S.glowSegs = [["G0", "G1"]]
     look(S, ["extra", "letters"])
   }, 2.4),
   watch("alternate", "So these are alternate angles, and they're equal.", S => {

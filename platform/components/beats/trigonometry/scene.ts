@@ -26,7 +26,7 @@ import { type Vec, type Rect, add, sub, mul, dot, dist, lerpV, clamp, turn, DEG,
 import { createBoard, eqSet, eqStep, eqHit, eqCentre, measure, extent, type EqBoard, type ENode, type Eqn, type Fac } from "../equation"
 import type { Solve } from "./solve"
 import type { AngleSolve } from "./solve-angle"
-import { calcType, calcTex, judge, isCalculation, INV_KEY } from "../calc"
+import { calcType, calcTex, judge, isCalculation, slipMatches, INV_KEY } from "../calc"
 
 export const BLUE = "#00abfa"
 export const ORANGE = "#ff822c"
@@ -303,6 +303,8 @@ export interface Scene {
   reach: { want: number; since: number } | null
   /** a Z drawn along lines through these points (alternate angles), from when */
   zpath: { pts: string[]; since: number } | null
+  /** lines of the figure that glow, by their end points (two parallels being pointed at) */
+  glowSegs: [string, string][]
 
   eq: EqBoard
   eqFn: ((S: Scene) => ENode | null) | null
@@ -385,7 +387,7 @@ export function createScene(): Scene {
     extra: null, regions: [], onRegion: null, regionLit: null,
     light: null, glow: new Set(), pulseArc: false, pulseRt: false, pulseLabs: new Set(), halves: null, ghost: null, ticks: [], graph: null, tenth: null,
     fullTurn: false, family: null, outline: null, marks: null, door: null, parts: null, zoom: null, calcScreen: null, tanLine: null, mirror: null,
-    machines: [], machinesAt: "eq", angs: [], tapAngs: null, onAng: null, tapPts: null, onPt: null, sight: null, reach: null, zpath: null,
+    machines: [], machinesAt: "eq", angs: [], tapAngs: null, onAng: null, tapPts: null, onPt: null, sight: null, reach: null, zpath: null, glowSegs: [],
     eq: createBoard(), eqFn: null, alg: null, solve: null, asolve: null, tick: null, choice: null, stepsCard: null,
     cards: [], cardPick: null, onCard: null, soh: null,
     chips: [], onChip: null, tapAtoms: [], onAtom: null, dragAtoms: [], dropAt: null, onAtomDrop: null, stepsList: null,
@@ -687,10 +689,10 @@ export function sideLabelAt(S: Scene, side: SideId, size: number, text = "x", in
   let n: Vec = [-d[1] / l, d[0] / l]
   // outside the triangle, unless asked to sit inside it
   if ((dot(n, sub(triMiddle(S), m)) > 0) !== inside) n = mul(n, -1)
-  // wide labels need more room when the side is upright (counting what is seen, not the TeX)
-  const seen = text.replace(/\\text\{([^}]*)\}/g, "$1").replace(/\\[a-zA-Z]+/g, "x").replace(/[{}^_\\ ]/g, "")
-  const wide = Math.max(1, seen.length * 0.42)
-  const off = size * (0.75 + 0.35 * Math.abs(n[0]) * (wide - 1)) + 6
+  // clear of the side by the label's own half-size in that direction: half its width beside an upright
+  // side ("105 m" must not touch it), half its height above or below a flat one
+  const halfW = labelWidth(text, size) / 2, halfH = size * 0.55
+  const off = Math.max(size * 0.75 + 6, Math.abs(n[0]) * (halfW + 8) + Math.abs(n[1]) * (halfH + 7))
   return add(m, mul(n, off))
 }
 
@@ -709,8 +711,16 @@ export function angleLabelAt(S: Scene, size: number): Vec {
   const bis = a1 + turn(a1, a2) / 2
   // a wide label (38.7°) needs to sit further out to clear both arms
   const need = Math.max(size * 0.95, labelWidth(S.angText?.(S) ?? "", size) * 0.55 + 4)
-  const r = clamp(need / Math.max(0.2, Math.sin(half)), size * 1.9, size * 4.4)
+  // and always clear of the arc itself: on a big triangle the arc reaches out to where the label would sit
+  const r = Math.max(clamp(need / Math.max(0.2, Math.sin(half)), size * 1.9, size * 4.4), arcRadius(S, at) + size * 0.9)
   return add(c, mul([Math.cos(bis), Math.sin(bis)], r))
+}
+
+/** The marked angle's arc radius, as the Stage draws it. */
+export function arcRadius(S: Scene, at: Corner): number {
+  const C = cornerS(S, at)
+  const p = cornerS(S, at === "V" ? "F" : "V"), q = cornerS(S, at === "V" ? "P" : "F")
+  return Math.min(40, dist(C, p) * 0.3, dist(C, q) * 0.3)
 }
 
 /** Roughly how wide a short label is on screen (counting what is seen, not the TeX). */
@@ -821,7 +831,7 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
     const C = cornerS(S, g.from)
     const a1 = -g.base * RAD, a2 = -sightDeg(g) * RAD
     const half = Math.abs(turn(a1, a2)) / 2, bis = a1 + turn(a1, a2) / 2
-    const lr = clamp(size * 0.95 / Math.max(0.12, Math.sin(half)), size * 2.6, size * 5.2)
+    const lr = Math.max(clamp(size * 0.95 / Math.max(0.12, Math.sin(half)), size * 2.6, size * 5.2), 46 + size * 0.9)
     out.push({ key: "sight", tex: g.tex!(S), col: CHALK, at: add(C, mul([Math.cos(bis), Math.sin(bis)], lr)), size, op: 1, pulse: g.pulseArc })
   }
   if (S.reach) {
@@ -1004,6 +1014,7 @@ export function resetBeat(S: Scene) {
   S.sight = null
   S.reach = null
   S.zpath = null
+  S.glowSegs = []
   S.eqFn = null
   S.alg = null
   S.solve = null
@@ -1313,7 +1324,7 @@ function check(S: Scene) {
   inp.wrongAt = S.time
   // the general help first, then a known slip's own note (it says more)
   inp.help?.(S, inp.tries)
-  const slip = v !== null ? inp.slips?.find(s => Math.abs(s.v - v) <= Math.max(0.006, Math.abs(s.v) * 0.002)) : undefined
+  const slip = v !== null ? inp.slips?.find(s => slipMatches(inp.value, v, s.v)) : undefined
   if (slip) say(S, slip.say, "wrong", 4.5)
 }
 

@@ -23,6 +23,18 @@ export default function EquationView({ B, time, opacity = 1 }: { B: EqBoard; tim
     const th = Math.max(1.6, B.size * 0.055)
     out.push(<div key={`bar-${id}`} style={{ position: "absolute", left: 0, top: 0, width: b.w, height: th, background: b.col, opacity: b.op, borderRadius: th, transform: `translate(${b.x.toFixed(1)}px, ${(b.y - th / 2).toFixed(1)}px)` }} />)
   }
+  for (const [id, q] of Object.entries(B.parens)) {
+    // two curves, each bowing out from its ends, as tall as what they hold
+    const H = q.bot - q.top, sw = Math.max(1.6, B.size * 0.06)
+    const L = `M ${q.bw * 0.95} 0 Q ${-q.bw * 0.55} ${H / 2} ${q.bw * 0.95} ${H}`
+    const R = `M ${q.w - q.bw * 0.95} 0 Q ${q.w + q.bw * 0.55} ${H / 2} ${q.w - q.bw * 0.95} ${H}`
+    out.push(
+      <svg key={`paren-${id}`} width={q.w} height={H} style={{ position: "absolute", left: 0, top: 0, overflow: "visible", opacity: q.op, transform: `translate(${q.x.toFixed(1)}px, ${q.top.toFixed(1)}px)` }}>
+        <path d={L} fill="none" stroke={q.col} strokeWidth={sw} strokeLinecap="round" />
+        <path d={R} fill="none" stroke={q.col} strokeWidth={sw} strokeLinecap="round" />
+      </svg>,
+    )
+  }
   for (const [id, d] of Object.entries(B.atoms)) out.push(piece(id, d, d.op, time, B.size, tilted))
   B.gone.forEach((g, k) => out.push(piece(`gone-${k}-${g.d.node.id}`, g.d, Math.max(0, g.life) * g.d.op, time, B.size, false)))
   // a small stand under the equals sign, when the line is shown as a balance

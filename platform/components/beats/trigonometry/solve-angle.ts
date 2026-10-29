@@ -15,7 +15,7 @@
 
 import type { Vec } from "../geometry"
 import type { WalkStep } from "../walk"
-import { type ENode, type EAtom, atom, op, row, frac, eqCentre } from "../equation"
+import { type ENode, type EAtom, atom, op, row, frac, paren, eqCentre } from "../equation"
 import { sigText } from "../calc"
 import {
   type Scene, type Role, type Fn, type Pose, type Chip,
@@ -119,8 +119,6 @@ export interface ALook {
 
 const fnTex = (fn: Fn) => `\\${fn}`
 const invTex = (fn: Fn) => `\\${fn}^{-1}`
-/** Tall brackets round a fraction; ordinary ones round sin θ. */
-const BIG_L = "\\Bigg(", BIG_R = "\\Bigg)"
 
 function piece(id: string, tex: string, look: ALook, more: Partial<EAtom> = {}): EAtom {
   return atom(id, tex, {
@@ -145,12 +143,13 @@ export function startNode(q: AngleQ, look: ALook = {}): ENode {
 /** sin⁻¹(sin θ) = sin⁻¹(5 / 11), with `inv` the inverse dropped on. */
 export function wrappedNode(q: AngleQ, inv: Fn, look: ALook = {}, wrong = false): ENode {
   const col = wrong ? PINK : undefined
+  // the brackets are drawn to fit what they hold, so each side sits in the middle of its own
   return row([
-    piece("invL", invTex(inv), look, { col }), piece("lpL", "(", look, { col }), piece("fn", fnTex(fnA(q)), look), theta(q, look), piece("rpL", ")", look, { col }),
+    piece("invL", invTex(inv), look, { col }), paren("pL", row([piece("fn", fnTex(fnA(q)), look), theta(q, look)]), col),
     op("eq", "="),
-    piece("invR", invTex(inv), look, { col }), piece("lpR", BIG_L, look, { col }), numbersFrac(q, look), piece("rpR", BIG_R, look, { col }),
+    piece("invR", invTex(inv), look, { col }), paren("pR", numbersFrac(q, look), col),
     ...(look.tail ?? []),
-  ], 0.08)
+  ], 0.06)
 }
 
 /**
@@ -159,7 +158,7 @@ export function wrappedNode(q: AngleQ, inv: Fn, look: ALook = {}, wrong = false)
  */
 export function solvedNodeA(q: AngleQ, look: ALook = {}, invId: "invR" | "fn" = "invR", landing = false): ENode {
   const f = landing ? fnTex(fnA(q)) : invTex(fnA(q))
-  return row([theta(q, look), op("eq", "="), piece(invId, f, look), piece("lpR", BIG_L, look), numbersFrac(q, look), piece("rpR", BIG_R, look), ...(look.tail ?? [])], 0.08)
+  return row([theta(q, look), op("eq", "="), piece(invId, f, look), paren("pR", numbersFrac(q, look)), ...(look.tail ?? [])], 0.06)
 }
 
 /** The equation as the solve has it now. */
@@ -277,7 +276,7 @@ function chipHome(S: Scene, id: string): Vec {
   return r ? [(r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2] : [S.w / 2, S.h - 120]
 }
 
-const WRAP_IDS = ["invL", "lpL", "rpL", "invR", "lpR", "rpR"]
+const WRAP_IDS = ["invL", "invR"]
 
 function onChipA(S: Scene, id: string, at: Vec) {
   const v = S.asolve
@@ -372,6 +371,8 @@ export function slipsForA(q: AngleQ): { v: number; say: string }[] {
   const fwd = (g: Fn, x: number) => (g === "sin" ? Math.sin(x) : g === "cos" ? Math.cos(x) : Math.tan(x))
   const inv = (g: Fn, x: number) => (g === "sin" ? Math.asin(x) : g === "cos" ? Math.acos(x) : Math.atan(x))
   const out: { v: number; say: string }[] = []
+  // just the fraction, no inverse: first, because for a small angle it is almost the same number as the angle in radians
+  out.push({ v: r, say: `That's just the fraction. Now find the angle with $${invTex(fn)}$: SHIFT, then $${fnTex(fn)}$.` })
   // SHIFT missed: sin of the fraction (on a calculator, or on this keypad: sin 5, then ÷ 11)
   const noShift = `That is $${fnTex(fn)}$, not $${invTex(fn)}$. Press SHIFT first.`
   out.push({ v: fwd(fn, r * RAD), say: noShift })

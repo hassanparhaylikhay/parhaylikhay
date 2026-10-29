@@ -58,12 +58,15 @@ export interface EBox {
 
 export interface ERow { k: "row"; items: ENode[]; /** em between plain pieces (default 0.17) */ gap?: number }
 export interface EFrac { k: "frac"; id: string; num: ENode; den: ENode; col?: string }
-export type ENode = EAtom | EBox | ERow | EFrac
+/** Brackets round a piece, drawn to fit it: as tall as what is inside, with it in their middle. */
+export interface EParen { k: "paren"; id: string; child: ENode; col?: string }
+export type ENode = EAtom | EBox | ERow | EFrac | EParen
 
 export const atom = (id: string, tex: string, more: Partial<EAtom> = {}): EAtom => ({ k: "a", id, tex, ...more })
 export const op = (id: string, tex: string, more: Partial<EAtom> = {}): EAtom => ({ k: "a", id, tex, op: true, ...more })
 export const row = (items: ENode[], gap?: number): ERow => ({ k: "row", items, gap })
 export const frac = (id: string, num: ENode, den: ENode, col?: string): EFrac => ({ k: "frac", id, num, den, col })
+export const paren = (id: string, child: ENode, col?: string): EParen => ({ k: "paren", id, child, col })
 
 // ── measuring ────────────────────────────────────────────────────────────
 
@@ -128,7 +131,9 @@ export function measure(tex: string, size: number): Metric {
 /** One piece where it belongs: `x` its left edge, `y` its baseline, both from the line's origin. */
 export interface Placed { id: string; x: number; y: number; w: number; base: number; h: number; node: EAtom | EBox }
 export interface PBar { id: string; x: number; y: number; w: number; col: string }
-interface Laid { w: number; asc: number; desc: number; atoms: Placed[]; bars: PBar[] }
+/** A pair of brackets: `x` the left edge, `w` the whole width, `top`/`bot` from the baseline, `bw` one bracket's width. */
+export interface PParen { id: string; x: number; w: number; top: number; bot: number; bw: number; col: string }
+interface Laid { w: number; asc: number; desc: number; atoms: Placed[]; bars: PBar[]; parens: PParen[] }
 
 const BOX_H = 1.55
 
@@ -145,14 +150,31 @@ function lay(n: ENode, size: number): Laid {
   if (n.k === "a") {
     const s = size * (n.scale ?? 1)
     const m = measure(n.tex, s)
-    return { w: m.w, asc: m.base, desc: m.h - m.base, atoms: [{ id: n.id, x: 0, y: 0, w: m.w, base: m.base, h: m.h, node: n }], bars: [] }
+    return { w: m.w, asc: m.base, desc: m.h - m.base, atoms: [{ id: n.id, x: 0, y: 0, w: m.w, base: m.base, h: m.h, node: n }], bars: [], parens: [] }
   }
   if (n.k === "box") {
     const m = boxMetric(n, size)
-    return { w: m.w, asc: m.asc, desc: m.h - m.asc, atoms: [{ id: n.id, x: 0, y: 0, w: m.w, base: m.base, h: m.h, node: n }], bars: [] }
+    return { w: m.w, asc: m.asc, desc: m.h - m.asc, atoms: [{ id: n.id, x: 0, y: 0, w: m.w, base: m.base, h: m.h, node: n }], bars: [], parens: [] }
+  }
+  if (n.k === "paren") {
+    const C = lay(n.child, size)
+    const tall = C.asc + C.desc
+    // a bracket a little wider when it is taller, a small gap inside, and reaching a little past what it holds
+    const bw = size * (0.2 + 0.05 * Math.min(3, tall / size))
+    const pad = 0.08 * size
+    const ext = 0.08 * size
+    // a little room outside too, so a bracket never touches sin⁻¹ before it or = after it
+    const outer = 0.07 * size
+    const inner = outer + bw + pad
+    const w = inner + C.w + inner
+    const out: Laid = { w, asc: C.asc + ext, desc: C.desc + ext, atoms: [], bars: [], parens: [{ id: n.id, x: outer, w: w - 2 * outer, top: -(C.asc + ext), bot: C.desc + ext, bw, col: n.col ?? "#e8e6e0" }] }
+    for (const a of C.atoms) out.atoms.push({ ...a, x: a.x + inner })
+    for (const r of C.bars) out.bars.push({ ...r, x: r.x + inner })
+    for (const q of C.parens) out.parens.push({ ...q, x: q.x + inner })
+    return out
   }
   if (n.k === "row") {
-    const out: Laid = { w: 0, asc: 0, desc: 0, atoms: [], bars: [] }
+    const out: Laid = { w: 0, asc: 0, desc: 0, atoms: [], bars: [], parens: [] }
     let x = 0
     n.items.forEach((it, i) => {
       const b = lay(it, size)
@@ -163,6 +185,7 @@ function lay(n: ENode, size: number): Laid {
       }
       for (const a of b.atoms) out.atoms.push({ ...a, x: a.x + x })
       for (const r of b.bars) out.bars.push({ ...r, x: r.x + x })
+      for (const q of b.parens) out.parens.push({ ...q, x: q.x + x })
       x += b.w
       out.asc = Math.max(out.asc, b.asc)
       out.desc = Math.max(out.desc, b.desc)
@@ -175,12 +198,14 @@ function lay(n: ENode, size: number): Laid {
   const axis = -0.25 * size
   const nBase = axis - 0.17 * size - N.desc
   const dBase = axis + 0.2 * size + D.asc
-  const out: Laid = { w, asc: N.asc - nBase, desc: dBase + D.desc, atoms: [], bars: [{ id: n.id, x: 0, y: axis, w, col: n.col ?? "#e8e6e0" }] }
+  const out: Laid = { w, asc: N.asc - nBase, desc: dBase + D.desc, atoms: [], bars: [{ id: n.id, x: 0, y: axis, w, col: n.col ?? "#e8e6e0" }], parens: [] }
   const nx = (w - N.w) / 2, dx = (w - D.w) / 2
   for (const a of N.atoms) out.atoms.push({ ...a, x: a.x + nx, y: a.y + nBase })
   for (const r of N.bars) out.bars.push({ ...r, x: r.x + nx, y: r.y + nBase })
+  for (const q of N.parens) out.parens.push({ ...q, x: q.x + nx, top: q.top + nBase, bot: q.bot + nBase })
   for (const a of D.atoms) out.atoms.push({ ...a, x: a.x + dx, y: a.y + dBase })
   for (const r of D.bars) out.bars.push({ ...r, x: r.x + dx, y: r.y + dBase })
+  for (const q of D.parens) out.parens.push({ ...q, x: q.x + dx, top: q.top + dBase, bot: q.bot + dBase })
   return out
 }
 
@@ -198,6 +223,8 @@ export interface Drawn {
   flight?: { from: Vec; t0: number; dur: number }
 }
 export interface DBar { x: number; y: number; w: number; op: number; col: string }
+/** A pair of brackets as drawn (screen): eased toward where they belong. */
+export interface DParen { x: number; w: number; top: number; bot: number; bw: number; op: number; col: string }
 
 export interface EqBoard {
   node: ENode | null
@@ -207,6 +234,7 @@ export interface EqBoard {
   cy: number
   atoms: Record<string, Drawn>
   bars: Record<string, DBar>
+  parens: Record<string, DParen>
   /** pieces on their way out */
   gone: { d: Drawn; to: Vec | null; life: number }[]
   /** where pieces that leave should fly to, by id */
@@ -224,7 +252,7 @@ export interface EqBoard {
 }
 
 export function createBoard(): EqBoard {
-  return { node: null, size: 28, cx: 0, cy: 0, atoms: {}, bars: {}, gone: [], goneTo: {}, goneFade: {}, time: 0, tilt: { v: 0, t: 0 }, stand: { v: 0, t: 0 }, snap: false }
+  return { node: null, size: 28, cx: 0, cy: 0, atoms: {}, bars: {}, parens: {}, gone: [], goneTo: {}, goneFade: {}, time: 0, tilt: { v: 0, t: 0 }, stand: { v: 0, t: 0 }, snap: false }
 }
 
 /** Put a new equation on the board. Pieces with the same id glide; others come and go. */
@@ -238,6 +266,7 @@ export function eqClear(B: EqBoard) {
   B.node = null
   B.atoms = {}
   B.bars = {}
+  B.parens = {}
   B.gone = []
   B.tilt = { v: 0, t: 0 }
   B.stand = { v: 0, t: 0 }
@@ -261,6 +290,7 @@ export function eqStep(B: EqBoard, dt: number) {
   B.gone = B.gone.filter(g => g.life > 0)
   const seen = new Set<string>()
   const seenBars = new Set<string>()
+  const seenParens = new Set<string>()
   if (B.node) {
     const L = lay(B.node, B.size)
     const x0 = B.cx - L.w / 2
@@ -314,6 +344,19 @@ export function eqStep(B: EqBoard, dt: number) {
       d.op += (1 - d.op) * k(0.14)
       d.col = r.col
     }
+    for (const q of L.parens) {
+      seenParens.add(q.id)
+      const tx = x0 + q.x, top = y0 + q.top, bot = y0 + q.bot
+      const d = B.parens[q.id]
+      if (!d) { B.parens[q.id] = { x: tx, w: q.w, top, bot, bw: q.bw, op: B.snap ? 1 : 0, col: q.col }; continue }
+      d.x += (tx - d.x) * fp
+      d.w += (q.w - d.w) * fp
+      d.top += (top - d.top) * fp
+      d.bot += (bot - d.bot) * fp
+      d.bw += (q.bw - d.bw) * fp
+      d.op += (1 - d.op) * k(0.14)
+      d.col = q.col
+    }
   }
   for (const id of Object.keys(B.atoms)) {
     if (seen.has(id)) continue
@@ -328,6 +371,13 @@ export function eqStep(B: EqBoard, dt: number) {
     d.x += d.w * 0.5 * k(0.2)
     d.w -= d.w * k(0.2)
     if (d.op < 0.02) delete B.bars[id]
+  }
+  for (const id of Object.keys(B.parens)) {
+    if (seenParens.has(id)) continue
+    // brackets that are no longer needed fade where they are
+    const d = B.parens[id]
+    d.op += (0 - d.op) * k(0.2)
+    if (d.op < 0.02) delete B.parens[id]
   }
   B.snap = false
 }

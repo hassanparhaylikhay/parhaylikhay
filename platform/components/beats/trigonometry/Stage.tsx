@@ -7,7 +7,7 @@ import { type Vec, add, sub, mul, lerpV, clamp, ease, sectorPath, arcPath, turn 
 import {
   type Scene, type Layout, type SideId, type Corner, type Machine, CHALK, GREEN, YELLOW, BLUE, ORANGE, PINK, QUIET, RAD, graphGeom,
   toScreen, toWorld, layout, cornerS, poseMap, rgbCss, cardRects, chipRects, CARD_TEX, RULE, ROLE_COL, turnHandle, slideHandle, dragAt,
-  angGeom, sightEnd, sightBaseEnd, sightDeg, MACHINE_LEG, MACHINE_HOLD,
+  angGeom, sightEnd, sightBaseEnd, sightDeg, arcRadius, MACHINE_LEG, MACHINE_HOLD,
 } from "./scene"
 import { measure } from "../equation"
 
@@ -155,8 +155,8 @@ function Triangle({ S }: { S: Scene }) {
       // all the way round: measured from the floor, however far it has turned
       const a1 = full ? 0 : Math.atan2(p[1] - C[1], p[0] - C[0]), a2 = Math.atan2(q[1] - C[1], q[0] - C[0])
       const sweep = full ? -t.th * RAD : turn(a1, a2)
-      const lp = Math.hypot(p[0] - C[0], p[1] - C[1]), lq = Math.hypot(q[0] - C[0], q[1] - C[1])
-      const r = full ? 30 : Math.min(40, lp * 0.3, lq * 0.3) * (0.4 + 0.6 * sp)
+      // the same radius the label keeps clear of (scene.ts arcRadius)
+      const r = full ? 30 : arcRadius(S, c) * (0.4 + 0.6 * sp)
       out.push(
         <g key={`arc${c}`} opacity={av * sp}>
           <path d={sectorPath(C, a1, sweep, r, 40)} fill={CHALK} fillOpacity={0.12} />
@@ -309,6 +309,12 @@ function Extra({ S, op }: { S: Scene; op: number }) {
     <g opacity={op}>
       {e.fills.map((f, k) => <polygon key={`f${k}`} points={poly(f.pts.map(at))} fill={f.col} fillOpacity={f.op ?? 0.12} stroke="none" />)}
       {S.regionLit && S.regions.filter(r => r.id === S.regionLit).map(r => <polygon key={`r${r.id}`} points={poly(r.pts.map(at))} fill={GREEN} fillOpacity={0.14} stroke="none" />)}
+      {/* a line being pointed at glows under itself, in step with any other that glows */}
+      {S.glowSegs.map(([a, b], k) => (
+        <line key={`gl${k}`} x1={at(a)[0]} y1={at(a)[1]} x2={at(b)[0]} y2={at(b)[1]} stroke={YELLOW} strokeWidth={8} strokeLinecap="round" filter="url(#pl-soft)">
+          <animate attributeName="stroke-opacity" values="0.1;0.7;0.1" dur="1.6s" repeatCount="indefinite" />
+        </line>
+      ))}
       {e.segs.map(([a, b], k) => ln(at(a), at(b), `s${k}`, { strokeWidth: 2.2, strokeOpacity: 0.85 }))}
       {(e.dash ?? []).map(([a, b], k) => ln(at(a), at(b), `d${k}`, { strokeWidth: 1.6, strokeOpacity: 0.6, strokeDasharray: "5 6" }))}
       {(e.arrows ?? []).map(([a, b], k) => <Chevron key={`a${k}`} a={at(a)} b={at(b)} />)}
