@@ -57,13 +57,13 @@ function piece(key: string, d: Drawn, op: number, time: number, size: number, ti
   const n = d.node
   const top = d.y - d.base
   if (n.k === "box") {
-    const cls = [styles.box, n.state === "wrong" ? styles.boxWrong : "", n.state === "right" ? styles.boxRight : "", n.state === "guessed" ? styles.boxGuessed : ""].join(" ")
+    const cls = [styles.box, n.slot ? styles.boxSlot : "", n.state === "wrong" ? styles.boxWrong : "", n.state === "right" ? styles.boxRight : "", n.state === "guessed" ? styles.boxGuessed : ""].join(" ")
     return (
       <div key={`${key}-${n.wrongAt}`} style={{ position: "absolute", left: 0, top: 0, opacity: op, transform: `translate(${d.x.toFixed(1)}px, ${top.toFixed(1)}px)`, fontSize: size }}>
         <span className={cls} style={{ width: d.w, height: d.h, boxSizing: "border-box", minWidth: 0 }}>
           {n.tex
             ? <span className={ATOM_CLASS} style={{ position: "static", color: n.state === "right" ? GREEN : "#f0eeea" }} dangerouslySetInnerHTML={{ __html: texHtml(n.tex) }} />
-            : <span className={styles.boxCaret} />}
+            : n.slot ? null : <span className={styles.boxCaret} />}
         </span>
       </div>
     )

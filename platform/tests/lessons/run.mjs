@@ -40,6 +40,7 @@ const LESSONS = [
   ["trig", "trigonometry"],
   ["trig-why", "why-trig-works"],
   ["trig-angles", "trigonometry-angles"],
+  ["sine-rule", "sine-rule"],
 ]
 
 const noPageErrors = out => !/PAGEERROR/.test(out)

@@ -223,6 +223,15 @@
   justify-content: center;
   transition: border-color 260ms, background 260ms;
 }
+/* an empty place in a rule, for something to be dragged into: it breathes */
+.boxSlot {
+  border-color: rgba(255, 240, 103, 0.55);
+  animation: slotBreathe 2s ease-in-out infinite;
+}
+@keyframes slotBreathe {
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 240, 103, 0); }
+  50% { box-shadow: 0 0 16px rgba(255, 240, 103, 0.3); }
+}
 .boxCaret {
   width: 2px;
   height: 0.9em;

@@ -54,6 +54,8 @@ export interface EBox {
   tex: string
   state: "idle" | "wrong" | "right" | "guessed"
   wrongAt: number
+  /** an empty place in a rule for something to be dragged into (no caret; it breathes) */
+  slot?: boolean
 }
 
 export interface ERow { k: "row"; items: ENode[]; /** em between plain pieces (default 0.17) */ gap?: number }
@@ -220,7 +222,11 @@ export function extent(n: ENode, size: number): { w: number; up: number; down: n
 /** A piece as drawn: eased toward where it belongs, or on a timed flight there. */
 export interface Drawn {
   x: number; y: number; w: number; base: number; h: number; op: number; node: EAtom | EBox
-  flight?: { from: Vec; t0: number; dur: number }
+  /** a timed flight: in from a point (curving in over the line), or a slow glide to a new place */
+  flight?: { from: Vec; t0: number; dur: number; glide?: boolean }
+  /** where it belonged last frame, to notice it being given a new place */
+  tx?: number
+  ty?: number
 }
 export interface DBar { x: number; y: number; w: number; op: number; col: string }
 /** A pair of brackets as drawn (screen): eased toward where they belong. */
@@ -249,10 +255,22 @@ export interface EqBoard {
   stand: { v: number; t: number }
   /** lay out with no glide next frame (a beat opened cold) */
   snap: boolean
+  /** until when every move is a slow, timed glide (an algebra step the student should watch) */
+  slow: { until: number; dur: number } | null
+}
+
+/**
+ * The next changes are slow: every piece given a new place travels there on
+ * a timed, eased path, a little to one side so pieces swapping places pass
+ * round each other (a fraction turning over). Bars and brackets follow
+ * slowly too.
+ */
+export function eqSlow(B: EqBoard, dur = 1.2, window = 0.4) {
+  B.slow = { until: B.time + window + dur, dur }
 }
 
 export function createBoard(): EqBoard {
-  return { node: null, size: 28, cx: 0, cy: 0, atoms: {}, bars: {}, parens: {}, gone: [], goneTo: {}, goneFade: {}, time: 0, tilt: { v: 0, t: 0 }, stand: { v: 0, t: 0 }, snap: false }
+  return { node: null, size: 28, cx: 0, cy: 0, atoms: {}, bars: {}, parens: {}, gone: [], goneTo: {}, goneFade: {}, time: 0, tilt: { v: 0, t: 0 }, stand: { v: 0, t: 0 }, snap: false, slow: null }
 }
 
 /** Put a new equation on the board. Pieces with the same id glide; others come and go. */
@@ -295,7 +313,9 @@ export function eqStep(B: EqBoard, dt: number) {
     const L = lay(B.node, B.size)
     const x0 = B.cx - L.w / 2
     const y0 = B.cy + 0.25 * B.size
-    const fp = k(0.17)
+    const slow = B.slow && B.time < B.slow.until ? B.slow : null
+    if (B.slow && !slow) B.slow = null
+    const fp = k(slow ? 0.05 : 0.17)
     for (const a of L.atoms) {
       seen.add(a.id)
       const tx = x0 + a.x, ty = y0 + a.y
@@ -311,6 +331,24 @@ export function eqStep(B: EqBoard, dt: number) {
       }
       d.node = a.node
       d.w = a.w; d.base = a.base; d.h = a.h
+      // given a new place while moves are slow: a timed glide there
+      if (slow && !d.flight && d.tx !== undefined && d.ty !== undefined && Math.hypot(tx - d.tx, ty - d.ty) > 1.5) {
+        d.flight = { from: [d.x, d.y], t0: B.time, dur: slow.dur, glide: true }
+      }
+      d.tx = tx; d.ty = ty
+      if (d.flight?.glide) {
+        // eased, bowing a little to one side: down to the left, up to the right
+        const u = Math.min(1, (B.time - d.flight.t0) / d.flight.dur)
+        const e = u * u * (3 - 2 * u)
+        const [fx, fy] = d.flight.from
+        const dy = ty - fy
+        const bow = Math.sin(Math.PI * e) * Math.min(1.2 * B.size, Math.abs(dy) * 0.6) * (dy > 0 ? -1 : 1)
+        d.x = fx + (tx - fx) * e + (Math.abs(dy) > 4 ? bow : 0)
+        d.y = fy + dy * e
+        d.op += (1 - d.op) * k(0.14)
+        if (u >= 1) delete d.flight
+        continue
+      }
       if (d.flight) {
         // a slow flight, eased at both ends, toward wherever its place is now. It curves
         // in from above, or, for the bottom of a fraction, round the right-hand end and in

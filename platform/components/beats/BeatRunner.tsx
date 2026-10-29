@@ -86,6 +86,8 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
     if (advanceTimer.current) { clearTimeout(advanceTimer.current); advanceTimer.current = null }
     const next = Math.max(0, Math.min(beats.length - 1, n))
     idxRef.current = next
+    // for scripted play-throughs (with ?debug): which beat is on
+    if (typeof window !== "undefined" && (window as unknown as { __beatApi?: unknown }).__beatApi) (window as unknown as { __beatIdx?: number }).__beatIdx = next
     doneFired.current = false
     doneAt.current = null
     walkAt.current = -1

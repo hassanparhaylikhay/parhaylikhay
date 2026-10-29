@@ -9,6 +9,7 @@ import PythagorasLesson from "./pythagoras/PythagorasLesson"
 import TrigLesson from "./trigonometry/TrigLesson"
 import WhyTrigLesson from "./trigonometry/WhyTrigLesson"
 import AngleLesson from "./trigonometry/AngleLesson"
+import SineRuleLesson from "./sine-rule/SineRuleLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -64,6 +65,12 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Find a missing angle with sin⁻¹, cos⁻¹ and tan⁻¹, see why they undo sin, cos and tan, and work out angles of elevation and depression.",
     topicHref: "/dashboard/maths/06/02",
     Lesson: AngleLesson,
+  },
+  "sine-rule": {
+    title: "The sine rule",
+    description: "See why a bigger angle faces a longer side, find the sine rule yourself, and use it to find sides and angles, including when the angle could be obtuse.",
+    topicHref: "/dashboard/maths/06/03",
+    Lesson: SineRuleLesson,
   },
   "why-trig-works": {
     title: "Why trigonometry works",

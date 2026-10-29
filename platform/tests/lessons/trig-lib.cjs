@@ -11,7 +11,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
 async function open(slug, name) {
   const OUT = outDir(name)
   fs.mkdirSync(OUT, { recursive: true })
-  const URL = process.env.URL || `${HOST}/learn/${slug}?debug`
+  const URL = process.env.URL || `${HOST}/learn/${slug}?debug${process.env.FROM ? `&beat=${process.env.FROM}` : ""}`
   const W = +(process.env.W || 1440), H = +(process.env.H || 900)
   const TOUCH = !!process.env.TOUCH
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ["--no-sandbox"] })

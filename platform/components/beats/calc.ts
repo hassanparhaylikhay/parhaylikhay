@@ -32,6 +32,18 @@ export const INV_KEY: Record<string, string> = { sin: "sin⁻¹", cos: "cos⁻¹
 /** The angle keypad with SHIFT down: sin, cos and tan become their inverses. */
 export const ANGLE_KEYS_SHIFT = ANGLE_KEYS.map(r => r.map(k => INV_KEY[k] ?? k))
 
+/**
+ * For the sine rule: × and ÷ and SHIFT together, and Ans (the last answer),
+ * so an angle can be found in two steps the way it is on a calculator:
+ * work out the right side, then SHIFT sin Ans.
+ */
+export const SINE_KEYS: string[][] = [
+  ["1", "2", "3", "4", "5", "6", "back"],
+  ["7", "8", "9", "0", ".", "×", "÷"],
+  ["SHIFT", "sin", "cos", "tan", "Ans", "go"],
+]
+export const SINE_KEYS_SHIFT = SINE_KEYS.map(r => r.map(k => INV_KEY[k] ?? k))
+
 /** The keypad key for a key on a keyboard, or null. */
 export function calcKeyOf(key: string): string | null {
   if (/^\d$/.test(key) || key === ".") return key
@@ -49,6 +61,12 @@ const FN: Record<string, string> = { sin: "s", cos: "c", tan: "t", "sin⁻¹": "
 const FN_TEX: Record<string, string> = { s: "\\sin", c: "\\cos", t: "\\tan", S: "\\sin^{-1}", C: "\\cos^{-1}", T: "\\tan^{-1}" }
 const INV = new Set(["S", "C", "T"])
 
+/** The sine rule's calculator: the angle one's keys, and "a" for Ans. */
+export function sineKeyOf(key: string): string | null {
+  if (key === "a") return "Ans"
+  return angleKeyOf(key)
+}
+
 /** The same, for the angle calculator: capital S, C and T are sin⁻¹, cos⁻¹ and tan⁻¹. */
 export function angleKeyOf(key: string): string | null {
   if (key === "S") return "sin⁻¹"
@@ -64,6 +82,7 @@ export function calcType(value: string, key: string, max = 18): string {
   // no answer here needs more than two functions; more only runs off the screen
   if (FN[key]) return (value.match(/[sctSCT]/g) ?? []).length >= 2 ? value : value + FN[key]
   if (key === "×" || key === "÷") return value + key
+  if (key === "Ans") return value + "A"
   if (/^\d$/.test(key)) return value + key
   if (key === ".") {
     // one point per number
@@ -82,6 +101,7 @@ export function calcTex(value: string): string {
     // an inverse opens its bracket, as the calculator does
     if (INV.has(ch)) { out += `${FN_TEX[ch]}(`; open++ }
     else if (FN_TEX[ch]) out += `${FN_TEX[ch]} `
+    else if (ch === "A") out += "\\text{Ans}"
     else if (ch === "×") out += "\\times "
     else if (ch === "÷") out += "\\div "
     else out += ch
@@ -90,7 +110,12 @@ export function calcTex(value: string): string {
 }
 
 /** Whether the student typed a calculation (as opposed to just a number). */
-export const isCalculation = (value: string) => /[×÷sctSCT]/.test(value)
+export const isCalculation = (value: string) => /[×÷sctSCTA]/.test(value)
+
+/** What Ans stands for: the last answer the calculator gave (set when one is right). */
+let lastAns: number | null = null
+export const setAns = (v: number | null) => { lastAns = v }
+export const getAns = () => lastAns
 
 /** Work out what has been typed, in degrees; null if it is not finished or not sense. */
 export function calcValue(value: string): number | null {
@@ -104,6 +129,7 @@ function calcEval(value: string): { v: number | null; error: boolean } {
   let error = false
   let i = 0
   const num = (): number | null => {
+    if (value[i] === "A") { i++; return lastAns }
     const m = value.slice(i).match(/^\d+(\.\d*)?|^\.\d+/)
     if (!m) return null
     i += m[0].length
