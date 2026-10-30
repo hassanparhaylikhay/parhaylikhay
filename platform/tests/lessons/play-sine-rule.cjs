@@ -135,7 +135,7 @@ const { open, sleep } = require("./trig-lib.cjs")
       await toT(6.5); await expect(/small/.test((await st()).note || ""), "no 'too small' note"); await toT(8.66); await expect((await st()).locked, "B did not lock at 60°"); continue
     }
     if (id === "double") { await pick("No"); continue }
-    if (id === "what-c") { await tapSide("A"); await noted("side a for c"); await sleep(300); await tapSide("C"); await sleep(400); await tapAng("C"); continue }
+    if (id === "what-c") { await tapSide("A"); await noted("side a for c"); await sleep(300); await tapAng("C"); await sleep(400); await tapSide("C"); continue }
     if (id === "drag-any") { const b = await corner("B"); await dragTo(b, [b[0] - 60, b[1] - 50]); await sleep(600); await shot("ratios"); await next(); continue }
     // ── part 4 ──
     if (id === "drop-h") { const c = await corner("C"), f = await api("footAt"); await dragTo(c, [f[0], f[1] + 15]); continue }
@@ -151,7 +151,12 @@ const { open, sleep } = require("./trig-lib.cjs")
       else { await tapSide(Q.pair); await noted("a touching side"); await sleep(300); await tapSide(Q.want) }
       continue
     }
-    if (Q && /-pair$/.test(id) && !/fill/.test(id)) { await tapSide(Q.want); await noted("the unknown's side"); await sleep(300); await tapSide(Q.pair); await sleep(400); await tapAng(Q.pair); continue }
+    if (Q && /-pair$/.test(id) && !/fill/.test(id)) {
+      // either order: side first when a side is wanted, angle first when an angle is wanted
+      if (Q.find === "side") { await tapSide(Q.want); await noted("the unknown's side"); await sleep(300); await tapSide(Q.pair); await sleep(400); await tapAng(Q.pair) }
+      else { await tapAng(Q.want); await noted("the unknown angle"); await sleep(300); await tapAng(Q.pair); await sleep(400); await tapSide(Q.pair) }
+      continue
+    }
     if (Q && /fill/.test(id)) {
       const L = { s: `side-${Q.want}`, a: `ang-${Q.want}` }, R = { s: `side-${Q.pair}`, a: `ang-${Q.pair}` }
       const half = /fill-pair$/.test(id) ? "right" : /^(fill-x|b-fill-x|t-fill)$/.test(id) ? "left" : "both"

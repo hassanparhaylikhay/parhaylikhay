@@ -16,7 +16,7 @@ let seed = +(process.env.SEED || 7)
 const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
 const IDS = [
   "open", "tap-big", "move-big", "grow", "colour-A", "tap-side-B", "turn-30", "slide-60", "double", "drag-any",
-  "drop-h", "mul-b", "div-sinB", "fill-x", "fill-pair", "x-dividing", "x-mul", "x-calc", "find-B",
+  "what-c", "x-pair", "t-pair", "ex4-pair", "drop-h", "mul-b", "div-sinB", "fill-x", "fill-pair", "x-dividing", "x-mul", "x-calc", "find-B",
   "t-fill", "t-flip", "t-mul", "t-sin", "t-undo", "t-calc", "sin30", "swing-1", "swing-2",
   "ex1-fill", "ex2-mul", "ex4-obtuse", "ex5-swing-2", "ex5-fill", "ex5-other", "end",
 ]
@@ -158,6 +158,9 @@ const KEYS = ["1", "2", "5", "9", ".", "*", "/", "s", "S", "a", "Backspace"]
           await sleep(500)
         } else if (st.mode === "tapSide") {
           await tap(any(st.sides), touch)
+          await sleep(500)
+        } else if (st.mode === "tapPair") {
+          await tap(any(rnd() < 0.5 ? st.angs : st.sides), touch)
           await sleep(500)
         } else if (st.mode === "drag" || st.mode === "rule") {
           await drag(any(st.corners), R(), touch)

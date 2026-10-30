@@ -13,7 +13,7 @@ import {
 /** The sine rule board, for the shared runner (BeatRunner.tsx). */
 export const sineEngine: BeatEngine<Scene, Layout> = {
   createScene, layout, step, resize, pointerDown, pointerMove, pointerUp, typeKey, Stage,
-  cursor: S => (S.drag ? "grabbing" : S.mode === "tapAngle" || S.mode === "tapSide" || S.mode === "tapEq" ? "pointer" : S.mode === "solve" || S.mode === "fill" ? "grab" : "default"),
+  cursor: S => (S.drag ? "grabbing" : S.mode === "tapAngle" || S.mode === "tapSide" || S.mode === "tapPair" || S.mode === "tapEq" ? "pointer" : S.mode === "solve" || S.mode === "fill" ? "grab" : "default"),
   debug: {
     layout, ptS, toScreen, chipRects,
     atomAt: (S: Scene, id: string) => eqCentre(S.eq, id),

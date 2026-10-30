@@ -95,7 +95,7 @@ export interface CalcInput {
   help?: (S: Scene, tries: number) => void
 }
 
-export type Mode = "none" | "drag" | "rule" | "tapAngle" | "tapSide" | "tapEq" | "solve" | "drop" | "swing" | "fill"
+export type Mode = "none" | "drag" | "rule" | "tapAngle" | "tapSide" | "tapPair" | "tapEq" | "solve" | "drop" | "swing" | "fill"
 
 export type Drag =
   | { kind: "corner"; pt: string }
@@ -520,9 +520,18 @@ export function step(S: Scene, dt: number) {
   const V = S.view, W = S.viewD
   S.viewD = { cx: W.cx + (V.cx - W.cx) * f, cy: W.cy + (V.cy - W.cy) * f, wx: W.wx + (V.wx - W.wx) * f, wy: W.wy + (V.wy - W.wy) * f, u: W.u + (V.u - W.u) * f }
 
-  const node = S.eqFn ? S.eqFn(S) : null
+  let node = S.eqFn ? S.eqFn(S) : null
   let size = L.eqSize
-  if (node) while (size > 14 && extent(node, size).w > S.w - 32) size -= 1
+  const fits = (n: ENode, sz: number) => extent(n, sz).w <= S.w - 32
+  if (node) while (size > 14 && !fits(node, size)) size -= 1
+  // still too wide with a long calculation typed: the box scrolls like a calculator's display, showing the end
+  const typed = S.input?.value ?? ""
+  if (node && !fits(node, size) && typed.length > 1) {
+    for (let k = 1; k < typed.length; k++) {
+      const n2 = withBoxTex(node, `\\cdots ${calcTex(typed.slice(k))}`)
+      if (fits(n2, size)) { node = n2; break }
+    }
+  }
   S.eq.size = size
   S.eq.cx = S.w / 2
   S.eq.cy = L.eqY
@@ -625,6 +634,15 @@ export function startInput(S: Scene, spec: Omit<CalcInput, "value" | "tries" | "
   S.input = { ...spec, value: "", tries: 0, state: "idle", wrongAt: -9 }
 }
 
+/** The same equation with the answer box showing other text. */
+function withBoxTex(n: ENode, tex: string): ENode {
+  if (n.k === "box") return n.slot ? n : { ...n, tex }
+  if (n.k === "row") return { ...n, items: n.items.map(i => withBoxTex(i, tex)) }
+  if (n.k === "frac") return { ...n, num: withBoxTex(n.num, tex), den: withBoxTex(n.den, tex) }
+  if (n.k === "paren") return { ...n, child: withBoxTex(n.child, tex) }
+  return n
+}
+
 /** The answer box, for an equation's tail. */
 export function boxNode(S: Scene): ENode {
   const inp = S.input
@@ -666,6 +684,37 @@ function angleSpot(S: Scene, c: Corner): Vec {
   return add(C, mul(bis, Math.min(34, arcRadius(S, c) + 8)))
 }
 
+/** The angle nearest a tap (its arc or its label), and how far. */
+function nearestAngle(S: Scene, p: Vec): [Corner | null, number] {
+  let best: Corner | null = null, bd = Infinity
+  for (const c of S.tapAngles ?? CORNERS) {
+    const d = Math.min(dist(p, angleSpot(S, c)), S.labD[`ang-${c}`] ? dist(p, S.labD[`ang-${c}`]) : Infinity)
+    if (d < bd) { bd = d; best = c }
+  }
+  return [best, bd]
+}
+
+/** The side nearest a tap (the line or its label), and how far. */
+function nearestSide(S: Scene, p: Vec): [Corner | null, number] {
+  let best: Corner | null = null, bd = Infinity
+  for (const c of S.tapSides ?? CORNERS) {
+    const [a, b] = ENDS[c]
+    const d = Math.min(distToSeg(p, ptS(S, a), ptS(S, b)), S.labD[`side-${c}`] ? dist(p, S.labD[`side-${c}`]) : Infinity)
+    if (d < bd) { bd = d; best = c }
+  }
+  return [best, bd]
+}
+
+/** Is a tap inside a corner's arc (between its arms, a little past the arc)? */
+function inArc(S: Scene, c: Corner, p: Vec): boolean {
+  const [q1, q2] = ENDS[c]
+  const C = ptS(S, c), v = sub(p, C)
+  if (Math.hypot(v[0], v[1]) > arcRadius(S, c) + 14) return false
+  const ang = (w: Vec) => Math.atan2(w[1], w[0])
+  const a1 = ang(sub(ptS(S, q1), C)), sw = turn(a1, ang(sub(ptS(S, q2), C))), t = turn(a1, ang(v))
+  return sw > 0 ? t >= 0 && t <= sw : t <= 0 && t >= sw
+}
+
 export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
   S.touch = touch
   const L = layout(S)
@@ -691,22 +740,21 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     return false
   }
   if (S.mode === "tapAngle") {
-    let best: Corner | null = null, bd = Infinity
-    for (const c of S.tapAngles ?? CORNERS) {
-      const d = Math.min(dist(p, angleSpot(S, c)), S.labD[`ang-${c}`] ? dist(p, S.labD[`ang-${c}`]) : Infinity)
-      if (d < bd) { bd = d; best = c }
-    }
-    if (best && bd < tol(S) + 22) S.onAngle?.(S, best)
+    const [c, d] = nearestAngle(S, p)
+    if (c && d < tol(S) + 22) S.onAngle?.(S, c)
     return false
   }
   if (S.mode === "tapSide") {
-    let best: Corner | null = null, bd = Infinity
-    for (const c of S.tapSides ?? CORNERS) {
-      const [a, b] = ENDS[c]
-      const d = Math.min(distToSeg(p, ptS(S, a), ptS(S, b)), S.labD[`side-${c}`] ? dist(p, S.labD[`side-${c}`]) : Infinity)
-      if (d < bd) { bd = d; best = c }
-    }
-    if (best && bd < tol(S)) S.onSide?.(S, best)
+    const [c, d] = nearestSide(S, p)
+    if (c && d < tol(S)) S.onSide?.(S, c)
+    return false
+  }
+  // a side or an angle, in either order: inside a corner's arc it is the angle, elsewhere the nearer one
+  if (S.mode === "tapPair") {
+    const [ac, ad] = nearestAngle(S, p), [sc, sd] = nearestSide(S, p)
+    const angOk = !!ac && ad < tol(S) + 22, sideOk = !!sc && sd < tol(S)
+    if (ac && angOk && (!sideOk || inArc(S, ac, p) || ad <= sd)) S.onAngle?.(S, ac)
+    else if (sc && sideOk) S.onSide?.(S, sc)
     return false
   }
   if (S.mode === "fill" && S.fill) {

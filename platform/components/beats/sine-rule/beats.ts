@@ -483,21 +483,24 @@ const PART_A: Beat[] = [
   }, 2.0),
   {
     id: "what-c",
-    say: "What about $c$? Tap side $c$, then angle $C$.",
+    say: "What about $c$? Tap side $c$ and angle $C$.",
     enter: S => {
       base(S, { P: T306090 })
       allColoured(S)
       liveAngles(S)
       S.sideText.A = s => lenText(s, "A")
       S.sideText.B = s => lenText(s, "B")
-      S.mode = "tapSide"
+      // either order: side c shows its length when tapped
+      S.mode = "tapPair"
+      const both = (S2: Scene) => { if (S2.got.has("side") && S2.got.has("ang")) { S2.got.add("tap"); S2.flashGood = 1 } }
       S.onSide = (S2, s) => {
-        if (s === "C") { S2.sideText.C = s3 => lenText(s3, "C"); S2.glowSide = new Set(["C"]); S2.touched = { kind: "side", c: "C" }; S2.flashGood = 0.8; S2.note = null; S2.mode = "tapAngle"; return }
+        if (S2.got.has("tap") || S2.got.has("side")) return
+        if (s === "C") { S2.got.add("side"); S2.sideText.C = s3 => lenText(s3, "C"); S2.glowSide = new Set(["C"]); S2.touched = { kind: "side", c: "C" }; S2.flashGood = 0.8; S2.note = null; both(S2); return }
         say(S2, "Side $c$ is across from angle $C$.", "wrong", 3)
       }
       S.onAngle = (S2, k) => {
-        if (S2.got.has("tap")) return
-        if (k === "C") { S2.got.add("tap"); S2.glowAng = new Set(["C"]); S2.touched = { kind: "angle", c: "C" }; S2.flashGood = 1; S2.note = null; return }
+        if (S2.got.has("tap") || S2.got.has("ang")) return
+        if (k === "C") { S2.got.add("ang"); S2.glowAng = new Set(["C"]); S2.touched = { kind: "angle", c: "C" }; S2.flashGood = 0.8; S2.note = null; both(S2); return }
         say(S2, "Angle $C$ is the one across from side $c$.", "wrong", 3)
       }
       look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "letters"])
@@ -683,7 +686,7 @@ function tapUnknownPair(id: string, text: string, Q: QSpec, ex: Corner[] = []): 
   }
 }
 
-/** Find a full pair: tap a known side, then the angle across from it. */
+/** Find a full pair: tap a known side and the angle across from it, in either order. */
 function tapFullPair(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
   return {
     id, say: text,
@@ -691,27 +694,42 @@ function tapFullPair(id: string, text: string, Q: QSpec, ex: Corner[] = []): Bea
       qBoard(S, Q, { extraAngles: ex })
       S.glowAng = Q.find === "side" ? new Set([Q.want]) : new Set()
       S.glowSide = Q.find === "angle" ? new Set([Q.want]) : new Set()
-      S.mode = "tapSide"
+      S.mode = "tapPair"
+      const k = Q.pair
+      // the second tap: say which half of the pair is still to come
+      const half = (S2: Scene) => {
+        if (S2.got.has("side") && S2.got.has("ang")) { S2.got.add("tap"); S2.flashGood = 1; S2.note = null; S2.light = null; return }
+        say(S2, S2.got.has("side") ? "Now tap the angle across from it." : "Now tap the side across from it.", "calm", 600)
+      }
       S.onSide = (S2, sd) => {
-        if (S2.got.has("side")) return
-        if (sd === Q.pair) {
+        if (S2.got.has("tap") || S2.got.has("side")) return
+        if (sd === k) {
           S2.got.add("side")
           S2.glowSide = new Set([...S2.glowSide, sd])
           S2.touched = { kind: "side", c: sd }
           S2.flashGood = 0.8
-          say(S2, "Now tap the angle across from it.", "calm", 600)
-          S2.mode = "tapAngle"
+          half(S2)
           return
         }
+        if (S2.got.has("ang")) { say(S2, "Go across from the angle you tapped.", "wrong", 3.4); S2.light = { from: k, since: S2.time }; return }
         if (sd === Q.want) say(S2, Q.find === "side" ? `That's $${nameOf(Q)}$. We don't know it yet.` : `That side goes with $${nameOf(Q)}$, which we don't know.`, "wrong", 3.6)
         else if (!Q.knownSides.includes(sd)) say(S2, "We don't know that side's length.", "wrong", 3.4)
         else say(S2, "We know that side, but not the angle across from it.", "wrong", 3.6)
       }
       S.onAngle = (S2, a) => {
-        if (S2.got.has("tap")) return
-        if (a === Q.pair) { S2.got.add("tap"); S2.glowAng = new Set([...S2.glowAng, a]); S2.touched = { kind: "angle", c: a }; S2.flashGood = 1; S2.note = null; S2.light = null; return }
-        say(S2, "Go across from the side you tapped.", "wrong", 3.4)
-        S2.light = { from: Q.pair, since: S2.time }
+        if (S2.got.has("tap") || S2.got.has("ang")) return
+        if (a === k) {
+          S2.got.add("ang")
+          S2.glowAng = new Set([...S2.glowAng, a])
+          S2.touched = { kind: "angle", c: a }
+          S2.flashGood = 0.8
+          half(S2)
+          return
+        }
+        if (S2.got.has("side")) { say(S2, "Go across from the side you tapped.", "wrong", 3.4); S2.light = { from: k, since: S2.time }; return }
+        if (a === Q.want) say(S2, Q.find === "angle" ? `That's $${nameOf(Q)}$. We don't know it yet.` : `That angle goes with $${nameOf(Q)}$, which we don't know.`, "wrong", 3.6)
+        else if (!Q.knownAngles.includes(a)) say(S2, "We don't know that angle.", "wrong", 3.4)
+        else say(S2, "We know that angle, but not the side across from it.", "wrong", 3.6)
       }
       look(S, QLOOK)
     },

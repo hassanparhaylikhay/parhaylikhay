@@ -294,8 +294,9 @@
   gap: 8px;
 }
 .key {
-  width: 46px;
-  height: 46px;
+  /* seven keys a row must fit a 360px phone with a gutter each side */
+  width: min(46px, calc((100vw - 80px) / 7));
+  height: min(46px, calc((100vw - 80px) / 7));
   border-radius: 12px;
   background: rgba(240, 238, 234, 0.05);
   border: 1px solid rgba(240, 238, 234, 0.09);
