@@ -281,7 +281,7 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
         {S && L && <Stage S={S} L={L} />}
       </div>
       {S && L && S.input && S.vis.keypad.t > 0.5 && (
-        <Keypad top={L.keypadTop} rows={engine.keypadKeys?.(S)} lit={engine.keypadLit?.(S)} onKey={k => engine.typeKey(sceneRef.current!, k)} />
+        <Keypad top={L.keypadTop} cx={(L as { keypadCx?: number }).keypadCx} rows={engine.keypadKeys?.(S)} lit={engine.keypadLit?.(S)} onKey={k => engine.typeKey(sceneRef.current!, k)} />
       )}
       {S && L && engine.controls?.(S, L)}
     </Shell>

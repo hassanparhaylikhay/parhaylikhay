@@ -108,9 +108,9 @@ export const DIGIT_KEYS: string[][] = [
 
 /** The keypad: digits by default, or any rows of keys (a calculator: see calc.ts). */
 /** A calculator's function keys, as maths (sin⁻¹ reads as it does on paper). */
-const FN_KEY_TEX: Record<string, string> = { sin: "\\sin", cos: "\\cos", tan: "\\tan", "sin⁻¹": "\\sin^{-1}", "cos⁻¹": "\\cos^{-1}", "tan⁻¹": "\\tan^{-1}" }
+const FN_KEY_TEX: Record<string, string> = { sin: "\\sin", cos: "\\cos", tan: "\\tan", "sin⁻¹": "\\sin^{-1}", "cos⁻¹": "\\cos^{-1}", "tan⁻¹": "\\tan^{-1}", "x²": "x^{2}", "√": "\\sqrt{\\phantom{x}}" }
 
-export function Keypad({ top, onKey, rows = DIGIT_KEYS, lit = [] }: { top: number; onKey: (k: string) => void; rows?: string[][]; lit?: string[] }) {
+export function Keypad({ top, cx, onKey, rows = DIGIT_KEYS, lit = [] }: { top: number; cx?: number; onKey: (k: string) => void; rows?: string[][]; lit?: string[] }) {
   const calc = rows.some(r => r.some(k => k.startsWith("sin")))
   // a keypad with SHIFT sets its function keys as maths, so they look the same shifted or not
   const shiftPad = rows.some(r => r.includes("SHIFT"))
@@ -126,7 +126,9 @@ export function Keypad({ top, onKey, rows = DIGIT_KEYS, lit = [] }: { top: numbe
     </div>
   )
   return (
-    <div className={styles.keypad} style={{ top }}>
+    // centred under the board, or (beside the working on a wide screen) centred on `cx`
+    // (a zero-width column centred on cx: its rows overflow it evenly both ways; transform is the entry animation's)
+    <div className={styles.keypad} style={cx === undefined ? { top } : { top, left: cx, right: "auto", width: 0 }}>
       {rows.map(row)}
     </div>
   )

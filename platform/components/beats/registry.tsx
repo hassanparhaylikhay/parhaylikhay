@@ -10,6 +10,7 @@ import TrigLesson from "./trigonometry/TrigLesson"
 import WhyTrigLesson from "./trigonometry/WhyTrigLesson"
 import AngleLesson from "./trigonometry/AngleLesson"
 import SineRuleLesson from "./sine-rule/SineRuleLesson"
+import CosRuleLesson from "./sine-rule/CosRuleLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -71,6 +72,12 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "See why a bigger angle faces a longer side, find the sine rule yourself, and use it to find sides and angles, including when the angle could be obtuse.",
     topicHref: "/dashboard/maths/06/03",
     Lesson: SineRuleLesson,
+  },
+  "cosine-rule": {
+    title: "The cosine rule",
+    description: "See how Pythagoras changes when the angle isn't 90°, find the cosine rule from the gap, and use it to find sides and angles, obtuse ones too.",
+    topicHref: "/dashboard/maths/06/03",
+    Lesson: CosRuleLesson,
   },
   "why-trig-works": {
     title: "Why trigonometry works",

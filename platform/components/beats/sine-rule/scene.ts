@@ -18,7 +18,7 @@
  */
 
 import { type Vec, type Rect, add, sub, mul, dot, dist, lerpV, clamp, turn, DEG, RAD } from "../geometry"
-import { createBoard, eqSet, eqStep, eqHit, extent, measure, type EqBoard, type ENode, type Eqn, type Fac } from "../equation"
+import { createBoard, eqSet, eqStep, eqHit, extent, measure, row, frac, type EqBoard, type ENode, type Eqn, type Fac } from "../equation"
 import { calcType, calcTex, judge, isCalculation, slipMatches, setAns, calcValue, INV_KEY } from "../calc"
 
 export const YELLOW = "#fff067"
@@ -37,8 +37,8 @@ export const PAIR_COL: Record<Corner, string> = { A: YELLOW, B: BLUE, C: RED }
 /** The side across from a corner, by its two ends. */
 export const ENDS: Record<Corner, [Corner, Corner]> = { A: ["B", "C"], B: ["C", "A"], C: ["A", "B"] }
 
-export type VisKey = "board" | "tri" | "fill" | "arcs" | "angLabs" | "sideLabs" | "letters" | "extra" | "eq" | "keypad" | "chips" | "hint" | "line"
-const VIS_KEYS: VisKey[] = ["board", "tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "extra", "eq", "keypad", "chips", "hint", "line"]
+export type VisKey = "board" | "tri" | "fill" | "arcs" | "angLabs" | "sideLabs" | "letters" | "extra" | "eq" | "keypad" | "chips" | "hint" | "line" | "squares" | "bars"
+const VIS_KEYS: VisKey[] = ["board", "tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "extra", "eq", "keypad", "chips", "hint", "line", "squares", "bars"]
 type Spring = { v: number; t: number }
 
 /** A label laid over the board this frame. */
@@ -95,7 +95,33 @@ export interface CalcInput {
   help?: (S: Scene, tries: number) => void
 }
 
-export type Mode = "none" | "drag" | "rule" | "tapAngle" | "tapSide" | "tapPair" | "tapEq" | "solve" | "drop" | "swing" | "fill"
+export type Mode = "none" | "drag" | "rule" | "tapAngle" | "tapSide" | "tapPair" | "tapEq" | "solve" | "drop" | "swing" | "fill" | "tapSquare" | "tapRegion"
+
+/** A square grown out from a side, away from the triangle (the cosine rule's Pythagoras). */
+export interface Squares {
+  /** which sides have one, named by the corner across */
+  on: Corner[]
+  /** how far each has grown, 0 to 1 */
+  grow: Record<Corner, Spring>
+  /** its area as written inside it, once shown */
+  area: Partial<Record<Corner, (S: Scene) => string>>
+  /** unit squares drawn inside a side that is a whole number long */
+  grid: boolean
+}
+
+/** Bars for a² + b² and c², and the gap between them, as the board draws them. */
+export interface BarSpec {
+  top: { v: number; col: string; tex: string }[]
+  bottom: { v: number; col: string; tex: string }[]
+  /** the length the whole width stands for (fixed for a beat, so the bars move and the scale does not) */
+  max: number
+  /** the gap marked, with its label */
+  gap: string | null
+  /** a piece sliding into the gap (0 to 1), and what it says */
+  fill: { t: number; tex: string } | null
+  /** what each bar is called, at its left */
+  names: [string, string]
+}
 
 export type Drag =
   | { kind: "corner"; pt: string }
@@ -153,12 +179,37 @@ export interface Scene {
     rts?: { at: string; a: string; b: string }[]
     /** angle arcs at other points, with a label */
     arcs?: { at: string; a: string; b: string; tex?: string; col?: string; pulse?: boolean }[]
+    /** parallel marks (an arrowhead in the middle of a line, pointing from a to b) */
+    arrows?: [string, string][]
+    /** the figure's other lines faint (the student is looking at one triangle) */
+    quiet?: boolean
   } | null
   /** a faint second triangle, through these points */
   ghost: string[] | null
   /** the line from C straight down to AB: how far it has come (1: down) */
   height: { drop: number; since: number; glow: "left" | "right" | null } | null
   swing: Swing | null
+  squares: Squares | null
+  bars: ((S: Scene) => BarSpec) | null
+  /** parts of a figure the student can tap (a triangle inside it), by point names */
+  regions: { id: string; pts: string[] }[] | null
+  onRegion: ((S: Scene, id: string) => void) | null
+  /** the region tapped, lit */
+  regionLit: string | null
+  /** rows on the keypad (the cosine rule's has four) */
+  keyRows: number
+  /** on a wide screen, the keypad sits beside the working rather than under it */
+  sidePad: boolean
+  /** sides whose label sits inside the triangle (outside is taken: a square, another angle) */
+  sideInside: Set<Corner>
+  /** only these corners get an arc (null: all three) */
+  arcsOnly: Corner[] | null
+  /** a line of maths too long for the screen goes onto two lines (the cosine rule's long rows) */
+  wrapEq: boolean
+  /** room the equation takes (it grows for two lines) */
+  eqRoom: Spring
+  /** what a piece of the equation shows while carried (a whole term, not just the piece held) */
+  dragTex: Record<string, string>
 
   movable: string[]
   rule: DragRule | null
@@ -183,7 +234,7 @@ export interface Scene {
   onAngle: ((S: Scene, c: Corner) => void) | null
   tapSides: Corner[] | null
   onSide: ((S: Scene, c: Corner) => void) | null
-  choice: { options: string[]; answer: number; picked: number | null; state: "idle" | "wrong" | "right"; wrongAt: number; guess: boolean } | null
+  choice: { options: string[]; answer: number; picked: number | null; state: "idle" | "wrong" | "right"; wrongAt: number; guess: boolean; onPick?: (S: Scene, k: number, right: boolean) => void } | null
 
   tick: ((S: Scene) => void) | null
   timers: { at: number; fn: (S: Scene) => void }[]
@@ -213,6 +264,7 @@ export function createScene(): Scene {
     P, D: copyPts(P), names: {}, frame: { x0: -1, y0: -1, x1: 10, y1: 6 }, frameFn: null, view: null, viewD: null,
     coloured: new Set(), angColoured: new Set(), angText: {}, sideText: {}, pulseAng: new Set(), pulseSide: new Set(), glowSide: new Set(), glowAng: new Set(),
     light: null, biggest: null, angDp: 0, extra: null, ghost: null, height: null, swing: null,
+    squares: null, bars: null, regions: null, onRegion: null, regionLit: null, keyRows: 3, sidePad: false, sideInside: new Set(), arcsOnly: null, wrapEq: false, eqRoom: { v: 0, t: 0 }, dragTex: {},
     movable: [], rule: null, lockOnSnap: false, releaseNote: null,
     eq: createBoard(), eqFn: null, alg: null, solve: null, chips: [], onChip: null, tapAtoms: [], onAtom: null, dragAtoms: [], onAtomDrop: null, fill: null,
     tapAngles: null, onAngle: null, tapSides: null, onSide: null, choice: null,
@@ -292,20 +344,29 @@ export function goodTri(P: Record<string, Vec>): boolean {
 function wholeDegrees(S: Scene, k: Corner): Vec | null {
   const [p, q] = ENDS[k].map(n => S.P[n]) as [Vec, Vec]
   const K = S.P[k]
-  const ap = Math.round(angleAt(S, ENDS[k][0])), aq = Math.round(angleAt(S, ENDS[k][1]))
+  const tp = angleAt(S, ENDS[k][0]), tq = angleAt(S, ENDS[k][1])
   // which way round from p→q the corner sits
   const side = Math.sign((q[0] - p[0]) * (K[1] - p[1]) - (q[1] - p[1]) * (K[0] - p[0])) || 1
   const rot = (v: Vec, a: number): Vec => [v[0] * Math.cos(a) - v[1] * Math.sin(a), v[0] * Math.sin(a) + v[1] * Math.cos(a)]
-  const u = rot(sub(q, p), side * ap * RAD), v = rot(sub(p, q), -side * aq * RAD)
-  // p + s·u = q + t·v
-  const det = u[0] * -v[1] - u[1] * -v[0]
-  if (Math.abs(det) < 1e-9) return null
-  const d = sub(q, p)
-  const t0 = (d[0] * -v[1] - d[1] * -v[0]) / det
-  const np: Vec = [p[0] + t0 * u[0], p[1] + t0 * u[1]]
   const f = S.frame
-  if (dist(np, K) > 0.6 || np[0] < f.x0 + 0.3 || np[0] > f.x1 - 0.3 || np[1] < f.y0 + 0.3 || np[1] > f.y1 - 0.3) return null
-  return goodTri({ ...S.P, [k]: np }) ? np : null
+  // the whole degrees either side of each angle: the nearest that is a fair triangle on the board
+  // (a corner let go at the board's edge may only fit rounded the other way)
+  let best: Vec | null = null, bd = Infinity
+  for (const ap of [Math.floor(tp), Math.ceil(tp)]) for (const aq of [Math.floor(tq), Math.ceil(tq)]) {
+    const u = rot(sub(q, p), side * ap * RAD), v = rot(sub(p, q), -side * aq * RAD)
+    // p + s·u = q + t·v
+    const det = u[0] * -v[1] - u[1] * -v[0]
+    if (Math.abs(det) < 1e-9) continue
+    const d = sub(q, p)
+    const t0 = (d[0] * -v[1] - d[1] * -v[0]) / det
+    const np: Vec = [p[0] + t0 * u[0], p[1] + t0 * u[1]]
+    const dd = dist(np, K)
+    if (dd > 0.6 || dd >= bd || np[0] < f.x0 + 0.3 || np[0] > f.x1 - 0.3 || np[1] < f.y0 + 0.3 || np[1] > f.y1 - 0.3) continue
+    if (!goodTri({ ...S.P, [k]: np })) continue
+    best = np
+    bd = dd
+  }
+  return best
 }
 
 // ── layout ───────────────────────────────────────────────────────────────
@@ -321,6 +382,13 @@ export interface Layout {
   lineY: number
   lineSize: number
   labelSize: number
+  /** the top of the bars' band */
+  barsY: number
+  /** where the working is centred, and how wide it can be (narrower with the keypad beside it) */
+  midX: number
+  eqW: number
+  /** the keypad's centre, when it sits beside the working */
+  keypadCx?: number
 }
 
 const on = (S: Scene, k: VisKey) => S.vis[k].t > 0.5
@@ -333,16 +401,31 @@ export function layout(S: Scene): Layout {
   const lineSize = compact ? 20 : 24
   let y = h - (compact ? 80 : 94)
   let keypadTop = y
-  if (on(S, "keypad")) { y -= 3 * 46 + 2 * 8 + 14; keypadTop = y }
+  const padH = S.keyRows * 46 + (S.keyRows - 1) * 8
+  // a wide screen: the keypad beside the working, so the figure keeps its height
+  const beside = S.sidePad && on(S, "keypad") && w >= 960
+  const side = compact ? 16 : 28
+  let midX = w / 2, eqW = w, keypadCx: number | undefined
+  if (beside) {
+    const padW = 7 * 46 + 6 * 8
+    const x1 = w - side - 12, x0 = x1 - padW
+    keypadCx = (x0 + x1) / 2
+    keypadTop = y - padH - 4
+    midX = (side + x0 - 36) / 2
+    eqW = x0 - 36 - side
+  } else if (on(S, "keypad")) { y -= padH + 14; keypadTop = y }
   let lineY = y
   if (S.walkTex) { lineY = y - lineSize * 0.9; y -= lineSize * 2.2 }
   let chipsY = y
   if (on(S, "chips")) { chipsY = y - 26; y -= 62 }
   let eqY = y
-  if (on(S, "eq")) { const band = eqSize * 3.6; eqY = y - band / 2; y -= band }
-  const side = compact ? 16 : 28
-  const board: Rect = { x0: side, x1: w - side, y0: phraseBottom + 14, y1: Math.max(phraseBottom + 150, y - 8) }
-  return { compact, phraseBottom, board, eqY, eqSize, chipsY, keypadTop, lineY, lineSize, labelSize: compact ? 16 : 20 }
+  if (on(S, "eq")) { const band = Math.max(eqSize * 3.6, S.eqRoom.v); eqY = y - band / 2; y -= band }
+  let barsY = y
+  if (on(S, "bars")) { const band = compact ? 74 : 92; barsY = y - band; y -= band }
+  // a short phone with the keypad up keeps a smaller board rather than covering the equation
+  const least = on(S, "keypad") ? 100 : 150
+  const board: Rect = { x0: side, x1: beside ? side + eqW : w - side, y0: phraseBottom + 14, y1: Math.max(phraseBottom + least, y - 8) }
+  return { compact, phraseBottom, board, eqY, eqSize, chipsY, keypadTop, lineY, lineSize, labelSize: compact ? 16 : 20, barsY, midX, eqW, keypadCx }
 }
 
 export const screenScale = (S: Scene) => clamp(Math.min(S.w, S.h) / 800, 0.45, 1)
@@ -370,6 +453,28 @@ export function figFrame(S: Scene, names?: string[]): Rect {
   const size = Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys), 1)
   const m = size * 0.12
   return { x0: Math.min(...xs) - m, x1: Math.max(...xs) + m, y0: Math.min(...ys) - m, y1: Math.max(...ys) + m }
+}
+
+/** A side's square, world units: its two ends, then out away from the triangle as far as it has grown. */
+export function squarePts(S: Scene, c: Corner, drawn = true): Vec[] {
+  const [p, q] = ENDS[c].map(n => pt(S, n, drawn))
+  const k = pt(S, c, drawn)
+  const d = sub(q, p), l = Math.hypot(d[0], d[1]) || 1
+  let n: Vec = [-d[1] / l, d[0] / l]
+  if (dot(n, sub(k, lerpV(p, q, 0.5))) > 0) n = mul(n, -1)
+  const g = S.squares?.grow[c].v ?? 1
+  const out = mul(n, l * g)
+  return [p, q, add(q, out), add(p, out)]
+}
+
+/** Whether a screen point is inside a polygon of screen points. */
+export function inPoly(p: Vec, P: Vec[]): boolean {
+  let inside = false
+  for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
+    const [xi, yi] = P[i], [xj, yj] = P[j]
+    if ((yi > p[1]) !== (yj > p[1]) && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside
+  }
+  return inside
 }
 
 function fitView(S: Scene, L: Layout): View {
@@ -416,7 +521,7 @@ export function angleLabelAt(S: Scene, c: Corner, size: number, tex: string): Ve
 /** Where a side's label goes: outside the triangle by its middle, clear by half its own size. */
 export function sideLabelAt(S: Scene, c: Corner, size: number, tex: string): Vec {
   const [p, q] = ENDS[c]
-  return segLabelAt(S, ptS(S, p), ptS(S, q), size, tex, triMiddle(S), false)
+  return segLabelAt(S, ptS(S, p), ptS(S, q), size, tex, triMiddle(S), S.sideInside.has(c))
 }
 
 function segLabelAt(S: Scene, a: Vec, b: Vec, size: number, tex: string, mid: Vec, inside: boolean): Vec {
@@ -450,6 +555,16 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       const tex = S.sideText[c]?.(S)
       if (!tex) continue
       out.push({ key: `side-${c}`, tex, col: pairCol(S, c), at: sideLabelAt(S, c, size, tex), size: size + 1, op: S.vis.sideLabs.v, pulse: S.pulseSide.has(c) || big === c, drag: !!S.fill?.items[`side-${c}`] })
+    }
+  }
+  if (S.squares && S.vis.squares.v > 0.01) {
+    for (const c of S.squares.on) {
+      const tex = S.squares.area[c]?.(S)
+      const g = S.squares.grow[c].v
+      if (!tex || g < 0.6) continue
+      const P = squarePts(S, c).map(p => toScreen(S, p))
+      const m: Vec = [(P[0][0] + P[2][0]) / 2, (P[0][1] + P[2][1]) / 2]
+      out.push({ key: `sq-${c}`, tex, col: PAIR_COL[c], at: m, size: size + 3, op: S.vis.squares.v * clamp((g - 0.6) / 0.4, 0, 1) })
     }
   }
   if (S.extra?.labels && S.vis.extra.v > 0.01) {
@@ -503,6 +618,8 @@ export function step(S: Scene, dt: number) {
     s.v += (s.t - s.v) * k(0.12)
     if (Math.abs(s.t - s.v) < 0.002) s.v = s.t
   }
+  if (S.squares) for (const c of S.squares.on) { const g = S.squares.grow[c]; g.v += (g.t - g.v) * k(0.07); if (Math.abs(g.t - g.v) < 0.002) g.v = g.t }
+  S.eqRoom.v += (S.eqRoom.t - S.eqRoom.v) * k(0.12)
   const fp = k(S.drag ? 0.5 : 0.14)
   for (const [n, p] of Object.entries(S.P)) {
     const d = S.D[n]
@@ -522,7 +639,15 @@ export function step(S: Scene, dt: number) {
 
   let node = S.eqFn ? S.eqFn(S) : null
   let size = L.eqSize
-  const fits = (n: ENode, sz: number) => extent(n, sz).w <= S.w - 32
+  const fits = (n: ENode, sz: number) => extent(n, sz).w <= L.eqW - 32
+  if (node && S.wrapEq) {
+    // rather than going very small, a long line breaks onto two
+    while (size > 19 && !fits(node, size)) size -= 1
+    if (!fits(node, size)) {
+      const two = wrapRow(node, L.eqSize, L.eqW - 32)
+      if (two) { node = two; size = L.eqSize }
+    }
+  }
   if (node) while (size > 14 && !fits(node, size)) size -= 1
   // still too wide with a long calculation typed: the box scrolls like a calculator's display, showing the end
   const typed = S.input?.value ?? ""
@@ -532,8 +657,10 @@ export function step(S: Scene, dt: number) {
       if (fits(n2, size)) { node = n2; break }
     }
   }
+  // two lines of maths need more room than one
+  if (node) { const e = extent(node, size); S.eqRoom.t = e.up + e.down + size * 1.1 } else S.eqRoom.t = 0
   S.eq.size = size
-  S.eq.cx = S.w / 2
+  S.eq.cx = L.midX
   S.eq.cy = L.eqY
   eqSet(S.eq, node, S.eq.goneTo)
   eqStep(S.eq, dt)
@@ -594,6 +721,14 @@ export function resetBeat(S: Scene) {
   S.ghost = null
   S.height = null
   S.swing = null
+  S.squares = null
+  S.bars = null
+  S.regions = null
+  S.onRegion = null
+  S.regionLit = null
+  S.dragTex = {}
+  S.sideInside = new Set()
+  S.arcsOnly = null
   S.movable = []
   S.rule = null
   S.lockOnSnap = false
@@ -632,6 +767,25 @@ export const labAt = (S: Scene, key: string): Vec | undefined => (S.labD[key] ? 
 
 export function startInput(S: Scene, spec: Omit<CalcInput, "value" | "tries" | "state" | "wrongAt">) {
   S.input = { ...spec, value: "", tries: 0, state: "idle", wrongAt: -9 }
+}
+
+/**
+ * A row of maths on two lines, broken at a + or − (which starts the second
+ * line) or just after the =, wherever the longer line comes out shortest.
+ * Every piece keeps its id, so the line glides apart rather than jumping.
+ */
+function wrapRow(n: ENode, size0: number, maxW: number): ENode | null {
+  if (n.k !== "row" || n.items.length < 4) return null
+  let best: { cut: number; w: number } | null = null
+  for (let i = 2; i < n.items.length - 1; i++) {
+    const it = n.items[i]
+    if (it.k !== "a" || !it.op || !["+", "-", "="].includes(it.tex)) continue
+    const cut = it.tex === "=" ? i + 1 : i
+    const w = Math.max(extent(row(n.items.slice(0, cut), n.gap), size0).w, extent(row(n.items.slice(cut), n.gap), size0).w)
+    if (!best || w < best.w) best = { cut, w }
+  }
+  if (!best || best.w > maxW * 1.6) return null
+  return frac("wrap", row(n.items.slice(0, best.cut), n.gap), row(n.items.slice(best.cut), n.gap), "rgba(0,0,0,0)")
 }
 
 /** The same equation with the answer box showing other text. */
@@ -676,7 +830,7 @@ export function heightFoot(S: Scene, drawn = true): Vec {
 }
 
 /** The point the angle hit-test aims at: a little inside the corner, along its bisector. */
-function angleSpot(S: Scene, c: Corner): Vec {
+export function angleSpot(S: Scene, c: Corner): Vec {
   const [p, q] = ENDS[c]
   const C = ptS(S, c), a = ptS(S, p), b = ptS(S, q)
   const u = (v: Vec) => { const l = Math.hypot(v[0], v[1]) || 1; return [v[0] / l, v[1] / l] as Vec }
@@ -755,6 +909,14 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     const angOk = !!ac && ad < tol(S) + 22, sideOk = !!sc && sd < tol(S)
     if (ac && angOk && (!sideOk || inArc(S, ac, p) || ad <= sd)) S.onAngle?.(S, ac)
     else if (sc && sideOk) S.onSide?.(S, sc)
+    return false
+  }
+  if (S.mode === "tapSquare" && S.squares) {
+    for (const c of S.squares.on) if (inPoly(p, squarePts(S, c).map(q => toScreen(S, q)))) { S.onSide?.(S, c); return false }
+    return false
+  }
+  if (S.mode === "tapRegion" && S.regions) {
+    for (const r of S.regions) if (inPoly(p, r.pts.map(n => ptS(S, n)))) { S.onRegion?.(S, r.id); return false }
     return false
   }
   if (S.mode === "fill" && S.fill) {
@@ -884,7 +1046,7 @@ export function chipRects(S: Scene, L: Layout): { id: string; r: Rect }[] {
   const gap = 18
   const ws = S.chips.map(c => measure(c.tex, size).w + size * 1.3)
   const total = ws.reduce((a, b) => a + b, 0) + gap * (ws.length - 1)
-  let x = S.w / 2 - total / 2
+  let x = L.midX - total / 2
   const hgt = size * 1.9
   return S.chips.map((c, i) => {
     const r = { x0: x, x1: x + ws[i], y0: L.chipsY - hgt / 2, y1: L.chipsY + hgt / 2 }
@@ -948,18 +1110,24 @@ function check(S: Scene) {
 // ── word choices ─────────────────────────────────────────────────────────
 
 /** A few words to pick from. A guess is never wrong: "Spot on." or "Let's see." */
-export function choose(S: Scene, options: string[], answer: number, guess = true) {
-  S.choice = { options, answer, picked: null, state: "idle", wrongAt: -9, guess }
+export function choose(S: Scene, options: string[], answer: number, guess = true, onPick?: (S: Scene, k: number, right: boolean) => void) {
+  S.choice = { options, answer, picked: null, state: "idle", wrongAt: -9, guess, onPick }
 }
 
 export function pick(S: Scene, k: number) {
   const ch = S.choice
   if (!ch || ch.state === "right" || (ch.guess && ch.picked !== null)) return
   ch.picked = k
-  if (k === ch.answer) { ch.state = "right"; say(S, ch.guess ? "Spot on." : "Yes.", "calm", 2.4); return }
+  if (k === ch.answer) {
+    ch.state = "right"
+    if (ch.onPick) ch.onPick(S, k, true)
+    else say(S, ch.guess ? "Spot on." : "Yes.", "calm", 2.4)
+    return
+  }
   if (ch.guess) { ch.state = "wrong"; say(S, "Let's see.", "calm", 2.4); return }
   ch.state = "wrong"
   ch.wrongAt = S.time
+  ch.onPick?.(S, k, false)
 }
 
 export { dist, lerpV, clamp, turn, add, sub, mul, dot }
