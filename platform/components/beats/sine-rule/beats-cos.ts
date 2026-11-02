@@ -129,6 +129,13 @@ function turnB(S: Scene, want?: number) {
   }
 }
 
+/** Keep track of how far angle C has been turned from where the beat began (degrees, as shown). */
+function trackTurn(S: Scene) {
+  const start = shownC(S)
+  let far = 0
+  S.tick = S2 => { far = Math.max(far, Math.abs(shownC(S2) - start)); if (far >= 20) S2.got.add("turned") }
+}
+
 /** The bars: a² and b² end to end, c² under them, the gap marked; `fill` slides 2ab cos C into it. */
 function bars(fill?: (S: Scene) => { t: number; tex: string } | null) {
   return (S: Scene): BarSpec => {
@@ -636,7 +643,8 @@ const PART_A: Beat[] = [
       S.eqFn = compareLine
       look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "squares", "eq"])
     },
-    done: S => shownC(S) > 90 && S.moved > 60,
+    // exactly what the phrase asks: any angle past 90° (it starts at 90°)
+    done: S => shownC(S) > 90,
     free: true,
     minPlay: 3,
   },
@@ -685,11 +693,13 @@ const PART_A: Beat[] = [
     enter: S => {
       squaresBoard(S, "keep", { squares: true })
       turnB(S)
+      trackTurn(S)
       S.bars = bars()
       S.eqFn = gapLine
       look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "squares", "bars", "eq"])
     },
-    done: S => S.moved > 220,
+    // a little turning (20°), the same on any screen
+    done: S => S.got.has("turned"),
     free: true,
     minPlay: 4,
   },
@@ -742,11 +752,12 @@ const PART_A: Beat[] = [
     enter: S => {
       squaresBoard(S, 60, { squares: true })
       turnB(S)
+      trackTurn(S)
       S.bars = bars(() => ({ t: 1, tex: "2ab\\cos C" }))
       S.eqFn = twoAbLine
       look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "squares", "bars", "eq"])
     },
-    done: S => S.moved > 160 && shownC(S) !== 60,
+    done: S => S.got.has("turned"),
     free: true,
     minPlay: 4,
   },
