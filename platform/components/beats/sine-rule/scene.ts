@@ -183,11 +183,14 @@ export interface Scene {
     arrows?: [string, string][]
     /** the figure's other lines faint (the student is looking at one triangle) */
     quiet?: boolean
+    /** words or maths written at a point (world units), not on a line */
+    texts?: { at: Vec; tex: string; col?: string; pulse?: boolean }[]
   } | null
   /** a faint second triangle, through these points */
   ghost: string[] | null
   /** the line from C straight down to AB: how far it has come (1: down) */
-  height: { drop: number; since: number; glow: "left" | "right" | null } | null
+  /** a height from a corner (C if not said) straight down to the line through the other two; its foot may land past them */
+  height: { drop: number; since: number; glow: "left" | "right" | Corner | null; from?: Corner } | null
   swing: Swing | null
   squares: Squares | null
   bars: ((S: Scene) => BarSpec) | null
@@ -496,7 +499,8 @@ export function triMiddle(S: Scene): Vec {
 
 /** Roughly how wide a short label is (what is seen, not the TeX). */
 export function labelWidth(tex: string, size: number): number {
-  const seen = tex.replace(/\\textcolor\{[^}]*\}/g, "").replace(/\\text\{([^}]*)\}/g, "$1").replace(/\\circ/g, "o").replace(/\\[a-zA-Z]+/g, "x").replace(/[{}^_\\ ]/g, "")
+  // sin, cos and tan are three letters wide; other commands about one
+  const seen = tex.replace(/\\textcolor\{[^}]*\}/g, "").replace(/\\text\{([^}]*)\}/g, "$1").replace(/\\circ/g, "o").replace(/\\(sin|cos|tan)/g, "sin").replace(/\\[a-zA-Z]+/g, "x").replace(/[{}^_\\ ]/g, "")
   return seen.length * size * 0.5
 }
 
@@ -571,8 +575,11 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
     const mid = triMiddle(S)
     for (const e of S.extra.labels) {
       const tex = e.tex
-      out.push({ key: `X-${e.a}${e.b}`, tex, col: e.col ?? CHALK, at: segLabelAt(S, ptS(S, e.a), ptS(S, e.b), size, tex, mid, !!e.inside), size, op: S.vis.extra.v })
+      out.push({ key: `X-${e.a}${e.b}`, tex, col: e.col ?? CHALK, at: segLabelAt(S, ptS(S, e.a), ptS(S, e.b), size, tex, mid, !!e.inside), size, op: S.vis.extra.v, drag: !!S.fill?.items[`X-${e.a}${e.b}`] })
     }
+  }
+  if (S.extra?.texts && S.vis.extra.v > 0.01) {
+    S.extra.texts.forEach((t, i) => out.push({ key: `XT-${i}`, tex: t.tex, col: t.col ?? CHALK, at: toScreen(S, t.at), size: size + 1, op: S.vis.extra.v, pulse: t.pulse }))
   }
   if (S.extra?.arcs && S.vis.extra.v > 0.01) {
     for (const g of S.extra.arcs) {
@@ -821,12 +828,23 @@ export function swingEnd(S: Scene): Vec | null {
   return [p[0] + Math.cos(g.ang * RAD) * g.len, p[1] + Math.sin(g.ang * RAD) * g.len]
 }
 
-/** The foot of the height from C, on AB (world). */
-export function heightFoot(S: Scene, drawn = true): Vec {
-  const A = pt(S, "A", drawn), B = pt(S, "B", drawn), C = pt(S, "C", drawn)
+/** The corner the height comes down from. */
+export const heightFrom = (S: Scene): Corner => S.height?.from ?? "C"
+
+/** Where along its base the height lands: 0 and 1 are the base's ends, outside them it misses the side. */
+export function heightT(S: Scene, drawn = true): number {
+  const f = heightFrom(S)
+  const [p, q] = ENDS[f]
+  const A = pt(S, p, drawn), B = pt(S, q, drawn), C = pt(S, f, drawn)
   const ab = sub(B, A)
-  const t = dot(sub(C, A), ab) / Math.max(1e-9, dot(ab, ab))
-  return add(A, mul(ab, t))
+  return dot(sub(C, A), ab) / Math.max(1e-9, dot(ab, ab))
+}
+
+/** The foot of the height (world): on the line through the base, even past its ends. */
+export function heightFoot(S: Scene, drawn = true): Vec {
+  const [p, q] = ENDS[heightFrom(S)]
+  const A = pt(S, p, drawn), B = pt(S, q, drawn)
+  return add(A, mul(sub(B, A), heightT(S, drawn)))
 }
 
 /** The point the angle hit-test aims at: a little inside the corner, along its bisector. */
@@ -881,7 +899,7 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     return false
   }
   if (S.mode === "drop") {
-    const top = ptS(S, "C")
+    const top = ptS(S, heightFrom(S))
     if (dist(p, top) < tol(S) + 14) { S.drag = { kind: "drop" }; return true }
     return false
   }
@@ -968,7 +986,7 @@ export function pointerMove(S: Scene, p: Vec) {
     return
   }
   if (d.kind === "drop" && S.height) {
-    const C = pt(S, "C", false), H = heightFoot(S, false)
+    const C = pt(S, heightFrom(S), false), H = heightFoot(S, false)
     const total = dist(C, H)
     const along = dot(sub(w, C), sub(H, C)) / Math.max(1e-9, total * total)
     S.height.drop = clamp(along, 0, 1) > 0.9 ? 1 : clamp(along, 0, 1)
@@ -1011,7 +1029,11 @@ export function pointerUp(S: Scene) {
     return
   }
   if (d.kind === "drop") {
-    if (S.height && S.height.drop < 1) { S.height.drop = 0; say(S, "Pull it all the way down to $AB$.", "calm", 3) }
+    if (S.height && S.height.drop < 1) {
+      S.height.drop = 0
+      const [p, q] = ENDS[heightFrom(S)]
+      say(S, `Pull it all the way down to $${S.names[p] ?? p}${S.names[q] ?? q}$.`, "calm", 3)
+    }
     return
   }
   if (d.kind === "corner" && S.mode === "drag" && (CORNERS as string[]).includes(d.pt)) {

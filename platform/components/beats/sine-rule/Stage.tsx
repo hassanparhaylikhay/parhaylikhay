@@ -6,7 +6,7 @@ import EquationView from "../EquationView"
 import { type Vec, add, sub, mul, lerpV, clamp, ease, sectorPath, arcPath, turn } from "../geometry"
 import {
   type Scene, type Layout, CORNERS, ENDS, PAIR_COL, CHALK, GREEN, YELLOW, QUIET, RED,
-  toScreen, ptS, pt, pairCol, angCol, arcRadius, chipRects, dragAt, swingEnd, heightFoot, biggestCorner, extraArcGeom, layout, squarePts, sideLen,
+  toScreen, ptS, pt, pairCol, angCol, arcRadius, chipRects, dragAt, swingEnd, heightFoot, heightFrom, heightT, biggestCorner, extraArcGeom, layout, squarePts, sideLen,
 } from "./scene"
 
 /**
@@ -58,6 +58,7 @@ const ln = (a: Vec, b: Vec, key: string, extra: React.SVGProps<SVGLineElement> =
   <line key={key} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={CHALK} strokeWidth={2.4} strokeLinecap="round" {...extra} />
 )
 const unitV = (a: Vec): Vec => { const l = Math.hypot(a[0], a[1]) || 1; return [a[0] / l, a[1] / l] }
+const dist2 = (a: Vec, b: Vec) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2
 const flashOp = (S: Scene) => 0.5 + 0.5 * Math.min(1, S.flashGood * 1.5)
 
 /** A right-angle square at a point between two directions. */
@@ -134,15 +135,27 @@ function Light({ S }: { S: Scene }) {
   )
 }
 
-/** The line from C straight down to AB; once down, its right angle and the two triangles it makes. */
+/**
+ * The line from a corner straight down to the side across from it; once
+ * down, its right angle and the two triangles it makes. When the angle at
+ * one end of that side is obtuse, the height lands past it, and the side
+ * carries on to it as a dashed line.
+ */
 function Height({ S }: { S: Scene }) {
   const h = S.height
   if (!h) return null
-  const C = ptS(S, "C"), H = toScreen(S, heightFoot(S))
+  const f = heightFrom(S)
+  const [p, q] = ENDS[f]
+  const C = ptS(S, f), H = toScreen(S, heightFoot(S))
   const end = lerpV(C, H, h.drop)
   const out: React.ReactNode[] = []
+  const t = heightT(S)
+  if (t < -0.002 || t > 1.002) {
+    const near = ptS(S, t < 0 ? p : q)
+    out.push(ln(near, H, "ext", { strokeWidth: 1.8, strokeOpacity: 0.6, strokeDasharray: "5 6" }))
+  }
   if (h.drop >= 1 && h.glow) {
-    const other = h.glow === "left" ? ptS(S, "A") : ptS(S, "B")
+    const other = ptS(S, h.glow === "left" ? p : h.glow === "right" ? q : h.glow)
     out.push(
       <polygon key="half" points={poly([C, H, other])} fill={YELLOW} fillOpacity={0.12}>
         <animate attributeName="fill-opacity" values="0.06;0.2;0.06" dur="1.8s" repeatCount="indefinite" />
@@ -151,7 +164,9 @@ function Height({ S }: { S: Scene }) {
   }
   out.push(ln(C, end, "h", { strokeWidth: 2.6, strokeDasharray: h.drop >= 1 ? undefined : "1 7" }))
   if (h.drop >= 1) {
-    out.push(square(H, ptS(S, "B"), C, "hrt"))
+    // the square sits on the side, toward its far end
+    const far = dist2(H, ptS(S, p)) > dist2(H, ptS(S, q)) ? ptS(S, p) : ptS(S, q)
+    out.push(square(H, far, C, "hrt"))
     if (S.got.has("rtPulse")) out.push(<circle key="hp" cx={H[0]} cy={H[1]} r={10} fill="none" stroke={YELLOW} strokeWidth={2}><animate attributeName="r" values="6;20;6" dur="1.6s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.9;0.1;0.9" dur="1.6s" repeatCount="indefinite" /></circle>)
   }
   return <>{out}</>
@@ -234,7 +249,7 @@ function Handles({ S }: { S: Scene }) {
   if (S.mode === "rule" && S.rule) out.push(halo(ptS(S, S.rule.pt), "hr", d?.kind === "corner"))
   if (S.mode === "swing") { const e = swingEnd(S); if (e) out.push(halo(toScreen(S, e), "hsw", d?.kind === "swing")) }
   if (S.mode === "drop" && S.height && S.height.drop < 1) {
-    const C = ptS(S, "C")
+    const C = ptS(S, heightFrom(S))
     out.push(halo(C, "hd", d?.kind === "drop"))
     // a faint finger showing which way to pull
     const t = S.time - S.beatStart - 1

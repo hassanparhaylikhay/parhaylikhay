@@ -11,6 +11,7 @@ import WhyTrigLesson from "./trigonometry/WhyTrigLesson"
 import AngleLesson from "./trigonometry/AngleLesson"
 import SineRuleLesson from "./sine-rule/SineRuleLesson"
 import CosRuleLesson from "./sine-rule/CosRuleLesson"
+import AreaLesson from "./sine-rule/AreaLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -78,6 +79,12 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "See how Pythagoras changes when the angle isn't 90°, find the cosine rule from the gap, and use it to find sides and angles, obtuse ones too.",
     topicHref: "/dashboard/maths/06/03",
     Lesson: CosRuleLesson,
+  },
+  "triangle-area": {
+    title: "Area of a triangle",
+    description: "Find the area of any triangle from two sides and the angle between them, see where ½ab sin C comes from, work backwards to a side, and find the shortest distance to a line.",
+    topicHref: "/dashboard/maths/06/03",
+    Lesson: AreaLesson,
   },
   "why-trig-works": {
     title: "Why trigonometry works",
