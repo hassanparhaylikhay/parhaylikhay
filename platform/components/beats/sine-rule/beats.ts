@@ -1215,11 +1215,17 @@ const PART_B: Beat[] = [
     enter: S => {
       qBoard(S, Q2)
       S.angText.B = () => c(RED, "?")
+      S.pulseAng = new Set(["B"])
       askNumber(S, 70, {
-        lead: [atom("ab", "B"), op("eq", "="), atom("t180", "180^\\circ"), op("m1", "-"), atom("t50", "50^\\circ", { col: YELLOW }), op("m2", "-"), atom("t60", "60^\\circ", { col: RED }), op("eq2", "=")],
+        lead: [atom("ab", "B", { col: BLUE }), op("eq", "=")],
         unit: "^\\circ",
-        slips: [{ v: 110, say: "That's $50^\\circ + 60^\\circ$. Take it away from $180^\\circ$." }, { v: 290, say: "The three angles add up to $180^\\circ$." }],
-        onRight: S2 => { S2.angText.B = () => "70^\\circ"; S2.touched = { kind: "angle", c: "B" }; S2.flashGood = 1 },
+        slips: [
+          { v: 110, say: "That's $50^\\circ + 60^\\circ$. Take it away from $180^\\circ$." },
+          { v: 290, say: "The three angles add up to $180^\\circ$." },
+          { v: 130, say: "Take $60^\\circ$ away too." },
+          { v: 120, say: "Take $50^\\circ$ away too." },
+        ],
+        onRight: S2 => { S2.angText.B = () => "70^\\circ"; S2.pulseAng = new Set(); S2.touched = { kind: "angle", c: "B" }; S2.flashGood = 1 },
       })
       look(S, [...QLOOK, "eq", "keypad"])
     },
@@ -1451,15 +1457,16 @@ const PART_B: Beat[] = [
   }, 2.4),
   {
     id: "ex4-obtuse",
-    say: `Work out $180^\\circ - ${answerText(EX4)}^\\circ$.`,
+    say: `$\\sin^{-1}$ gave $${answerText(EX4)}^\\circ$. What is the obtuse $\\theta$?`,
     enter: S => {
       qBoard(S, EX4)
+      S.pulseAng = new Set(["C"])
       const ac = Number(answerText(EX4))
       askNumber(S, 180 - answerOf(EX4), {
         dp: 1, unit: "^\\circ",
-        lead: [atom("t", "180^\\circ"), op("m", "-"), atom("a", `${answerText(EX4)}^\\circ`), op("eq", "=")],
-        slips: [{ v: ac, say: "That's the acute one. Take it away from $180^\\circ$." }],
-        onRight: S2 => { S2.angText.C = () => `${(180 - answerOf(EX4)).toFixed(1)}^\\circ`; S2.touched = { kind: "angle", c: "C" }; S2.flashGood = 1.2 },
+        lead: [atom("t", "\\theta", { col: RED }), op("eq", "=")],
+        slips: [{ v: ac, say: "That's the acute one. The obtuse one is $180^\\circ$ minus it." }],
+        onRight: S2 => { S2.angText.C = () => `${(180 - answerOf(EX4)).toFixed(1)}^\\circ`; S2.pulseAng = new Set(); S2.touched = { kind: "angle", c: "C" }; S2.flashGood = 1.2 },
       })
       look(S, [...QLOOK, "eq", "keypad"])
     },
@@ -1483,10 +1490,11 @@ const PART_B: Beat[] = [
   }, 2.6),
   {
     id: "ex5-52",
-    say: "So angle $QRS$ is $90^\\circ - 38^\\circ$. Work it out.",
+    say: "Angle $PRS$ is $90^\\circ$. Work out angle $QRS$.",
     enter: S => {
       ex5Board(S, { lineR: true })
-      askNumber(S, 52, { unit: "^\\circ", lead: [atom("t", "90^\\circ"), op("m", "-"), atom("a", "38^\\circ"), op("eq", "=")], slips: [{ v: 128, say: "Take $38^\\circ$ away from $90^\\circ$." }] })
+      S.extra = { ...S.extra!, arcs: [...(S.extra!.arcs ?? []), { at: "A", a: "C", b: "X", tex: "?", pulse: true }] }
+      askNumber(S, 52, { unit: "^\\circ", lead: [atom("t", "\\angle QRS"), op("eq", "=")], slips: [{ v: 128, say: "Angle $QRS$ is part of the $90^\\circ$, so it's smaller." }] })
       look(S, ["extra", "letters", "eq", "keypad"])
       S.vis.tri.t = 0
     },
@@ -1559,28 +1567,30 @@ const PART_B: Beat[] = [
   angleCalc("ex5-calc", "Work it out. That's the acute one.", { ...EX5.Q }),
   {
     id: "ex5-other",
-    say: "Now the other one: $180^\\circ$ minus it.",
+    say: "Now the obtuse one. What is it?",
     enter: S => {
       ex5Board(S, { lineR: true, s: "near" })
       S.P.F = EX5.far
       S.ghost = ["A", "F", "C"]
       S.sideText.B = () => "12"
       S.sideText.A = () => "10"
-      S.angText.A = () => "52^\\circ"
+      // the 52° would sit on top of the "?": this step doesn't need it
       S.angText.B = () => c(RED, "?")
+      S.pulseAng = new Set(["B"])
       const ac = Number(answerText(EX5.Q))
+      S.extra = { ...S.extra!, arcs: [...(S.extra!.arcs ?? []), { at: "F", a: "C", b: "A", tex: `${ac.toFixed(1)}^\\circ`, scale: 1.4 }] }
       askNumber(S, 180 - ac, {
         dp: 1, unit: "^\\circ",
-        lead: [atom("t", "180^\\circ"), op("m", "-"), atom("a", `${ac.toFixed(1)}^\\circ`), op("eq", "=")],
-        slips: [{ v: ac, say: "That's the first one. Take it away from $180^\\circ$." }],
-        onRight: S2 => { S2.angText.B = () => `${(180 - ac).toFixed(1)}^\\circ`; S2.touched = { kind: "angle", c: "B" }; S2.flashGood = 1.2 },
+        lead: [atom("t", "\\theta", { col: BLUE }), op("eq", "=")],
+        slips: [{ v: ac, say: "That's the acute one. The obtuse one is $180^\\circ$ minus it." }],
+        onRight: S2 => { S2.angText.B = () => `${(180 - ac).toFixed(1)}^\\circ`; S2.pulseAng = new Set(); S2.touched = { kind: "angle", c: "B" }; S2.flashGood = 1.2 },
       })
       look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "extra", "letters", "eq", "keypad"])
     },
     done: inputRight,
     advanceAfter: 2400,
     walk: [
-      { say: "The two angles at $S$ add up to $180^\\circ$.", tex: `180^\\circ - ${answerText(EX5.Q)}^\\circ` },
+      { say: "The acute and the obtuse answer add up to $180^\\circ$.", tex: `180^\\circ - ${answerText(EX5.Q)}^\\circ` },
       { say: `So the other is $${(180 - Number(answerText(EX5.Q))).toFixed(1)}^\\circ$.`, tex: `= ${c(GREEN, `${(180 - Number(answerText(EX5.Q))).toFixed(1)}^\\circ`)}` },
     ],
   },

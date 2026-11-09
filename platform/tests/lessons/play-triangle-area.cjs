@@ -150,7 +150,10 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (/-bottom$/.test(id)) { if (id === "back-bottom") await slip("8*s40", /half/); await right(); continue }
     if (/-divide$/.test(id)) { if (id === "back-divide") await slip("a/30", /divided/); await right(); continue }
     if (id === "slide-P") { await slideTo(8.6); await noted("not the shortest"); const f = await page.evaluate(() => window.__beatApi.footAt(window.__beatScene)); const fw = await page.evaluate(f => { const S = window.__beatScene; const v = S.viewD; return [v.wx + (f[0] - v.cx) / v.u, 0] }, f); await slideTo(fw[0]); await expect((await st()).locked, "P did not click at the foot"); continue }
-    if (id === "ex1-ab" || id === "ex1-ac" || id === "ex2-trap" || id === "ex2-total" || id === "ex4-qsr" || id === "ex5-bottom") { await right(); continue }
+    if (id === "ex1-ab") { await slip("3.6", /only/); await right(); continue }
+    if (id === "ex2-trap") { await slip("10*14.97", /half/); await right(); continue }
+    if (id === "ex4-qsr") { await slip("96+39", /smaller/); await right(); continue }
+    if (id === "ex1-ac" || id === "ex2-total" || id === "ex5-bottom") { await right(); continue }
     if (id === "ex2-tri") { await tapRegion("EBCD"); await noted("the trapezium"); await tapRegion("EAB"); continue }
     if (id === "ex4-psq") { await slip("67+74", /away/); await right(); continue }
     if (id === "ex4-tri") { await tapRegion("PQS"); await noted("triangle PQS"); await tapRegion("QRS"); continue }

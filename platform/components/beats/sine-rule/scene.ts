@@ -73,6 +73,8 @@ export interface Fill {
   /** figure labels that can be dragged, by key, with what each stands for */
   items: Record<string, { id: string; kind: "side" | "angle"; tex: string; col: string }>
   onDrop: (S: Scene, item: string, slot: string | null, at: Vec) => void
+  /** when the filled rule may move on (it may first turn round) */
+  readyAt?: number
 }
 
 export interface CalcInput {
@@ -178,7 +180,7 @@ export interface Scene {
     /** right-angle squares: at a point, between two others */
     rts?: { at: string; a: string; b: string }[]
     /** angle arcs at other points, with a label */
-    arcs?: { at: string; a: string; b: string; tex?: string; col?: string; pulse?: boolean }[]
+    arcs?: ExtraArc[]
     /** parallel marks (an arrowhead in the middle of a line, pointing from a to b) */
     arrows?: [string, string][]
     /** the figure's other lines faint (the student is looking at one triangle) */
@@ -207,6 +209,12 @@ export interface Scene {
   sideInside: Set<Corner>
   /** only these corners get an arc (null: all three) */
   arcsOnly: Corner[] | null
+  /** which way a point's letter sits from it (screen directions), where the usual place is taken */
+  letterDir: Partial<Record<string, Vec>>
+  /** sides whose length slid along to keep clear of another label (for the tests) */
+  slid: Corner[]
+  /** where along a side its label sits, from its first end (0.5 the middle) */
+  sideAlong: Partial<Record<Corner, number>>
   /** a line of maths too long for the screen goes onto two lines (the cosine rule's long rows) */
   wrapEq: boolean
   /** room the equation takes (it grows for two lines) */
@@ -267,7 +275,7 @@ export function createScene(): Scene {
     P, D: copyPts(P), names: {}, frame: { x0: -1, y0: -1, x1: 10, y1: 6 }, frameFn: null, view: null, viewD: null,
     coloured: new Set(), angColoured: new Set(), angText: {}, sideText: {}, pulseAng: new Set(), pulseSide: new Set(), glowSide: new Set(), glowAng: new Set(),
     light: null, biggest: null, angDp: 0, extra: null, ghost: null, height: null, swing: null,
-    squares: null, bars: null, regions: null, onRegion: null, regionLit: null, keyRows: 3, sidePad: false, sideInside: new Set(), arcsOnly: null, wrapEq: false, eqRoom: { v: 0, t: 0 }, dragTex: {},
+    squares: null, bars: null, regions: null, onRegion: null, regionLit: null, keyRows: 3, sidePad: false, sideInside: new Set(), arcsOnly: null, sideAlong: {}, letterDir: {}, slid: [], wrapEq: false, eqRoom: { v: 0, t: 0 }, dragTex: {},
     movable: [], rule: null, lockOnSnap: false, releaseNote: null,
     eq: createBoard(), eqFn: null, alg: null, solve: null, chips: [], onChip: null, tapAtoms: [], onAtom: null, dragAtoms: [], onAtomDrop: null, fill: null,
     tapAngles: null, onAngle: null, tapSides: null, onSide: null, choice: null,
@@ -525,12 +533,12 @@ export function angleLabelAt(S: Scene, c: Corner, size: number, tex: string): Ve
 /** Where a side's label goes: outside the triangle by its middle, clear by half its own size. */
 export function sideLabelAt(S: Scene, c: Corner, size: number, tex: string): Vec {
   const [p, q] = ENDS[c]
-  return segLabelAt(S, ptS(S, p), ptS(S, q), size, tex, triMiddle(S), S.sideInside.has(c))
+  return segLabelAt(S, ptS(S, p), ptS(S, q), size, tex, triMiddle(S), S.sideInside.has(c), S.sideAlong[c] ?? 0.5)
 }
 
-function segLabelAt(S: Scene, a: Vec, b: Vec, size: number, tex: string, mid: Vec, inside: boolean): Vec {
+function segLabelAt(S: Scene, a: Vec, b: Vec, size: number, tex: string, mid: Vec, inside: boolean, along = 0.5): Vec {
   void S
-  const m = lerpV(a, b, 0.5)
+  const m = lerpV(a, b, along)
   const d = sub(b, a), l = Math.hypot(d[0], d[1]) || 1
   let n: Vec = [-d[1] / l, d[0] / l]
   if ((dot(n, sub(mid, m)) > 0) !== inside) n = mul(n, -1)
@@ -571,7 +579,8 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       out.push({ key: `sq-${c}`, tex, col: PAIR_COL[c], at: m, size: size + 3, op: S.vis.squares.v * clamp((g - 0.6) / 0.4, 0, 1) })
     }
   }
-  if (S.extra?.labels && S.vis.extra.v > 0.01) {
+  // a quiet figure's other parts keep their lines (faint) but not their numbers
+  if (S.extra?.labels && !S.extra.quiet && S.vis.extra.v > 0.01) {
     const mid = triMiddle(S)
     for (const e of S.extra.labels) {
       const tex = e.tex
@@ -581,7 +590,7 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
   if (S.extra?.texts && S.vis.extra.v > 0.01) {
     S.extra.texts.forEach((t, i) => out.push({ key: `XT-${i}`, tex: t.tex, col: t.col ?? CHALK, at: toScreen(S, t.at), size: size + 1, op: S.vis.extra.v, pulse: t.pulse }))
   }
-  if (S.extra?.arcs && S.vis.extra.v > 0.01) {
+  if (S.extra?.arcs && !S.extra.quiet && S.vis.extra.v > 0.01) {
     for (const g of S.extra.arcs) {
       if (!g.tex) continue
       out.push({ key: `XA-${g.at}${g.a}${g.b}`, tex: g.tex, col: g.col ?? CHALK, at: extraArcGeom(S, g, size).labelAt, size, op: S.vis.extra.v, pulse: g.pulse })
@@ -592,21 +601,88 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
     for (const [n, letter] of Object.entries(S.names)) {
       if (!letter || !S.P[n]) continue
       const p = ptS(S, n)
-      const d = sub(p, mid), l = Math.hypot(d[0], d[1]) || 1
+      const d = S.letterDir[n] ?? sub(p, mid), l = Math.hypot(d[0], d[1]) || 1
       out.push({ key: `L-${n}`, tex: letter, col: CORNERS.includes(n as Corner) && S.coloured.has(n as Corner) ? PAIR_COL[n as Corner] : CHALK, at: add(p, mul(d, (size * 0.95 + 4) / l)), size: size + 1, op: S.vis.letters.v })
     }
   }
+  unclash(S, out, size)
   return out
 }
 
+/**
+ * A side's length that lands on another label (an angle, a letter) slides
+ * along its side until it is clear. Labels that are clear stay in the middle.
+ */
+function unclash(S: Scene, out: Lab[], size: number) {
+  const box = (l: Lab, at = l.at) => {
+    const hw = labelWidth(l.tex, l.size) / 2 + 1, hh = l.size * 0.5
+    return [at[0] - hw, at[1] - hh, at[0] + hw, at[1] + hh]
+  }
+  // how much two boxes overlap (0: clear)
+  const hit = (a: number[], b: number[]) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]))
+  // the figure's lines and arcs: a label on one of them is as bad as on another label
+  const segs: [Vec, Vec][] = [...CORNERS.map(c => ENDS[c].map(n => ptS(S, n)) as [Vec, Vec]), ...[...(S.extra?.segs ?? []), ...(S.extra?.dash ?? [])].filter(([a, b]) => S.P[a] && S.P[b]).map(([a, b]) => [ptS(S, a), ptS(S, b)] as [Vec, Vec])]
+  const arcs: [Vec, number][] = [
+    ...CORNERS.filter(c => !S.arcsOnly || S.arcsOnly.includes(c)).map(c => [ptS(S, c), arcRadius(S, c)] as [Vec, number]),
+    ...(S.extra?.arcs ?? []).map(g => { const G = extraArcGeom(S, g, size); return [G.C, G.r] as [Vec, number] }),
+  ]
+  const onFigure = (b: number[]) => segs.filter(([p, q]) => segHitsBox(p, q, b)).length + arcs.filter(([C, r]) => Math.hypot(clamp(C[0], b[0], b[2]) - C[0], clamp(C[1], b[1], b[3]) - C[1]) < r).length
+  S.slid = []
+  for (const l of out) {
+    if (!l.key.startsWith("side-")) continue
+    const c = l.key.slice(5) as Corner
+    if (S.sideAlong[c] !== undefined) continue
+    const others = out.filter(o => o !== l && o.op > 0.01).map(o => box(o))
+    // only a label on another label moves; the lines and arcs then say where to
+    const onLabels = (at: Vec) => others.reduce((sum, b) => sum + hit(box(l, at), b), 0)
+    if (!onLabels(l.at)) continue
+    const clash = (at: Vec) => onLabels(at) + onFigure(box(l, at)) * size * size
+    // the least crowded place along the side wins (the middle if nothing is better)
+    const [p, q] = ENDS[c]
+    let best = { at: l.at, v: clash(l.at) }
+    for (const t of [0.62, 0.38, 0.72, 0.28, 0.82, 0.18]) {
+      const at = segLabelAt(S, ptS(S, p), ptS(S, q), size, l.tex, triMiddle(S), S.sideInside.has(c), t)
+      const v = clash(at)
+      if (v < best.v) best = { at, v }
+      if (!v) break
+    }
+    if (best.at !== l.at) { l.at = best.at; S.slid.push(c) }
+  }
+}
+
+/** Whether a line segment crosses a box [x0, y0, x1, y1] (Liang-Barsky). */
+function segHitsBox(p: Vec, q: Vec, b: number[]): boolean {
+  let t0 = 0, t1 = 1
+  const d = [q[0] - p[0], q[1] - p[1]]
+  const sides: [number, number][] = [[-d[0], p[0] - b[0]], [d[0], b[2] - p[0]], [-d[1], p[1] - b[1]], [d[1], b[3] - p[1]]]
+  for (const [k, m] of sides) {
+    if (k === 0) { if (m < 0) return false; continue }
+    const t = m / k
+    if (k < 0) { if (t > t1) return false; if (t > t0) t0 = t } else { if (t < t0) return false; if (t < t1) t1 = t }
+  }
+  return t0 <= t1
+}
+
+/** An angle arc at a point of a figure (not one of the triangle's own angles). */
+export interface ExtraArc {
+  at: string; a: string; b: string; tex?: string; col?: string; pulse?: boolean
+  /** a bigger arc (> 1) goes round a smaller one inside it */
+  scale?: number
+  /** where along the arc its label sits (0.5 the middle) */
+  along?: number
+  /** a narrow angle: its label may go as far out as the wedge needs */
+  far?: boolean
+}
+
 /** An arc at a point of a figure that is not one of the triangle's angles. */
-export function extraArcGeom(S: Scene, g: { at: string; a: string; b: string; tex?: string }, size: number) {
+export function extraArcGeom(S: Scene, g: ExtraArc, size: number) {
   const C = ptS(S, g.at), a = ptS(S, g.a), b = ptS(S, g.b)
   const a1 = Math.atan2(a[1] - C[1], a[0] - C[0]), a2 = Math.atan2(b[1] - C[1], b[0] - C[0])
-  const sw = turn(a1, a2), half = Math.abs(sw) / 2, bis = a1 + sw / 2
-  const r = Math.min(36, dist(C, a) * 0.28, dist(C, b) * 0.28)
+  const sw = turn(a1, a2), along = g.along ?? 0.5, room = Math.abs(sw) * Math.min(along, 1 - along), bis = a1 + sw * along
+  const r = Math.min(36, dist(C, a) * 0.28, dist(C, b) * 0.28) * (g.scale ?? 1)
   const need = Math.max(size * 0.95, labelWidth(g.tex ?? "", size) * 0.55 + 4)
-  const lr = Math.max(clamp(need / Math.max(0.2, Math.sin(half)), size * 1.9, size * 4.4), r + size * 0.9)
+  const most = g.far ? Math.max(size * 4.4, Math.min(dist(C, a), dist(C, b)) * 0.8) : size * 4.4
+  const lr = Math.max(clamp(need / Math.max(0.2, Math.sin(room)), size * 1.9, most), r + size * 0.9)
   return { C, a1, sweep: sw, r, labelAt: add(C, mul([Math.cos(bis), Math.sin(bis)], lr)) }
 }
 
@@ -735,6 +811,8 @@ export function resetBeat(S: Scene) {
   S.regionLit = null
   S.dragTex = {}
   S.sideInside = new Set()
+  S.sideAlong = {}
+  S.letterDir = {}
   S.arcsOnly = null
   S.movable = []
   S.rule = null
@@ -1118,6 +1196,8 @@ function check(S: Scene) {
     setAns(val ?? inp.answer)
     S.note = null
     S.touched = { kind: "eq" }
+    // a number typed where Ans was meant: right, and a word on why Ans is safer
+    if (inp.typed?.includes("a") && !inp.value.includes("A") && isCalculation(inp.value)) say(S, "Right. Ans keeps every digit, so it's safer than typing the number.", "calm", 4)
     inp.onRight?.(S)
     return
   }

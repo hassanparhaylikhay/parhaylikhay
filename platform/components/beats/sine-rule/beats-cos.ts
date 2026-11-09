@@ -188,6 +188,8 @@ function cqBoard(S: Scene, q: CRQ, o: { quiet?: boolean; hideX?: boolean } = {})
   if (!(q.find === "angle" && o.hideX)) S.angText.C = () => angTex(q)
   for (const [k, d] of Object.entries(q.shownAngles ?? {})) S.angText[k as Corner] = () => degT(d!)
   S.sideInside = new Set(q.inside ?? [])
+  S.sideAlong = { ...(q.along ?? {}) }
+  S.arcsOnly = q.arcsOnly ?? null
   if (o.quiet && q.regions && q.region) { S.regions = q.regions; S.regionLit = q.region }
   S.frameFn = () => figFrame(S)
 }
@@ -503,8 +505,8 @@ const E5 = (() => {
   return { bad, bac, abc, AC, A, D, B, C: Cpaper }
 })()
 const EX5 = (() => {
-  // AD's outside is the 32°, so its length goes inside
-  const q = angleQ("ex5", 12, 6, 7, { names: { C: "A", A: "D", B: "B", Cp: "C" }, inside: ["B"] })
+  // a busy figure: only the angle being found keeps its arc
+  const q = angleQ("ex5", 12, 6, 7, { names: { C: "A", A: "D", B: "B", Cp: "C" }, arcsOnly: ["C"] })
   q.P = { C: E5.A, A: E5.D, B: E5.B }
   q.pts = { Cp: E5.C }
   q.extra = {
@@ -1197,24 +1199,47 @@ const PART_C: Beat[] = [
   watch("ex5-b", "Now calculate $AC$.", S => { ex5bBoard(S); S.pulseSide = new Set(["B"]); look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "extra"]) }, 1.8),
   {
     id: "ex5-bac",
-    say: "Angle $BAC$ is $24.5^\\circ + 32^\\circ$.",
+    say: "What is angle $BAC$?",
     enter: S => {
       ex5bBoard(S)
-      startInput(S, { answer: 56.5, dp: 1, max: 12, typed: "24.5+32", onRight: S2 => { S2.angText.A = () => "56.5^\\circ"; S2.touched = { kind: "angle", c: "A" }; S2.flashGood = 1 } })
-      S.eqFn = S2 => row([pc("a1", "24.5^\\circ"), op("pl", "+"), pc("a2", "32^\\circ"), op("eq", "="), S2.input?.state === "right" ? pc("ans", "56.5^\\circ", GREEN) : boxNode(S2)])
+      // the two parts of angle BAC, on the figure: the student puts them together
+      S.arcsOnly = ["C"]
+      S.extra = { ...S.extra!, quiet: false, arcs: [{ at: "A", a: "B", b: "Dp", tex: "24.5^\\circ", pulse: true, far: true }, { at: "A", a: "Dp", b: "C", tex: "32^\\circ", pulse: true }] }
+      // the 24.5° goes far out in its narrow wedge, where D's letter would be
+      S.letterDir = { Dp: [0.9, 0.45] }
+      startInput(S, {
+        answer: 56.5, dp: 1, max: 12, typed: "24.5+32",
+        slips: [
+          { v: 24.5, say: "That's angle $BAD$. Angle $BAC$ goes all the way round to $AC$." },
+          { v: 32, say: "That's angle $DAC$. Angle $BAC$ goes all the way round to $AB$." },
+          { v: 7.5, say: "Angle $BAC$ is both parts together." },
+        ],
+        onRight: S2 => { S2.flashGood = 1 },
+      })
+      S.eqFn = S2 => row([pc("n", "\\angle BAC"), op("eq", "="), S2.input?.state === "right" ? pc("ans", "56.5^\\circ", GREEN) : boxNode(S2)])
       look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "extra", "eq", "keypad"])
     },
     done: inputRight,
     advanceAfter: 1700,
-    walk: [{ say: "Add them.", tex: "24.5 + 32" }, { say: "That gives angle $BAC$.", tex: `= ${c(GREEN, "56.5^\\circ")}` }],
+    walk: [{ say: "Angle $BAC$ is made of two parts. Add them.", tex: "24.5^\\circ + 32^\\circ" }, { say: "That gives angle $BAC$.", tex: `= ${c(GREEN, "56.5^\\circ")}` }],
   },
   {
     id: "ex5-abc",
-    say: "Angle $ABC$ is what's left of $180^\\circ$.",
+    say: "What is angle $ABC$?",
     enter: S => {
       ex5bBoard(S, { bac: true })
-      startInput(S, { answer: 75.5, dp: 1, max: 14, typed: "180-56.5-48", slips: [{ v: 180 - 56.5, say: "Take $48^\\circ$ away too." }], onRight: S2 => { S2.angText.B = () => "75.5^\\circ"; S2.touched = { kind: "angle", c: "B" }; S2.flashGood = 1 } })
-      S.eqFn = S2 => row([pc("t", "180^\\circ"), op("m1", "-"), pc("a1", "56.5^\\circ", YELLOW), op("m2", "-"), pc("a2", "48^\\circ", RED), op("eq", "="), S2.input?.state === "right" ? pc("ans", "75.5^\\circ", GREEN) : boxNode(S2)])
+      S.angText.B = () => "?"
+      S.pulseAng = new Set(["B"])
+      startInput(S, {
+        answer: 75.5, dp: 1, max: 14, typed: "180-56.5-48",
+        slips: [
+          { v: 180 - 56.5, say: "Take $48^\\circ$ away too." },
+          { v: 180 - 48, say: "Take $56.5^\\circ$ away too." },
+          { v: 56.5 + 48, say: "That's the two angles added. Take them away from $180^\\circ$." },
+        ],
+        onRight: S2 => { S2.angText.B = () => "75.5^\\circ"; S2.pulseAng = new Set(); S2.touched = { kind: "angle", c: "B" }; S2.flashGood = 1 },
+      })
+      S.eqFn = S2 => row([pc("n", "\\angle ABC"), op("eq", "="), S2.input?.state === "right" ? pc("ans", "75.5^\\circ", GREEN) : boxNode(S2)])
       look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "extra", "eq", "keypad"])
     },
     done: inputRight,

@@ -163,10 +163,11 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (id === "ex2-perimeter") { await slip("150+187", /AC/); await right(); continue }
     if (id === "ex2-divide") { await right(); continue }
     if (id === "ex2-buy") { await pickIdx(0); await noted("30 rolls"); await pickIdx(1); continue }
-    if (id === "ex5-bac") { await right(); continue }
+    if (id === "ex5-bac") { await slip("24.5", /BAD/); await right(); continue }
     if (id === "ex5-abc") { await slip("180-56.5", /48/); await right(); continue }
     if (id === "ex5-pair") { await tapSide("B"); await noted("AC"); await sleep(300); await tapAng("C"); await sleep(300); await tapSide("C"); continue }
-    if (id === "ex5-fill-sine") { await place("side-B", "sL"); await place("ang-B", "aL"); await place("side-C", "sR"); await place("ang-C", "aR"); continue }
+    // the full pair on the left first: the rule turns round so AC is on the left
+    if (id === "ex5-fill-sine") { await place("side-C", "sL"); await place("ang-B", "aL"); await noted("own angle"); await place("ang-C", "aL"); await place("side-B", "sR"); await place("ang-B", "aR"); await noted("turn it round"); continue }
     if (id === "ex5-move") { await cross("ang-B"); await pickIdx(1); await noted("÷ sin"); await pickIdx(0); await expect(await crossDone(), "sin did not land"); continue }
     if (id === "ex5-calc") { await right(); continue }
     if (id === "end") { await turnTo(110); await sleep(2500); await shot("end"); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Start again"); break }

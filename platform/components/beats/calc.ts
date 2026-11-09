@@ -297,9 +297,12 @@ export function judge(value: string, truth: number, { sf, dp }: { sf?: number; d
   const scale = Math.max(1, Math.abs(truth))
   if (Math.abs(v - truth) <= 1e-9 * scale) return { verdict: "right", v }
   if (isCalculation(value)) {
-    // a calculation with rounded numbers inside it: right if it lands on the same answer
+    // a calculation with rounded numbers inside it (cos⁻¹(−0.1314) for cos⁻¹ of Ans): right if it lands on
+    // the same answer, or within half a unit of the last figure asked (a rounded number can tip that figure)
     const same = sf ? toSig(v, sf) === toSig(truth, sf) : dp !== undefined ? v.toFixed(dp) === truth.toFixed(dp) : false
-    return { verdict: same ? "right" : "wrong", v }
+    const unit = sf ? 10 ** (Math.floor(Math.log10(Math.abs(truth) || 1)) + 1 - sf) : dp !== undefined ? 10 ** -dp : 0
+    const near = unit > 0 && Math.abs(v - truth) <= 0.5 * unit
+    return { verdict: same || near ? "right" : "wrong", v }
   }
   const tol = 0.5 * 10 ** -decimals(value) + 1e-9 * scale
   if (Math.abs(v - truth) > tol) return { verdict: "wrong", v }

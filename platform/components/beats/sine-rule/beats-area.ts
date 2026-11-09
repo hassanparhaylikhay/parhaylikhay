@@ -669,14 +669,20 @@ const PART_A: Beat[] = [
   watch("q3", "Here the angle between them isn't given.", S => { aBoard(S, Q3, { hideC: true }); S.pulseAng = new Set(["C"]); look(S, QLOOK) }, 2.2),
   {
     id: "q3-angle",
-    say: "Work it out first.",
+    say: "Work out angle $C$ first.",
     enter: S => {
       aBoard(S, Q3, { hideC: true })
       S.angText.C = () => c(RED, "?")
-      const v = 180 - Q3.angles!.A! - Q3.angles!.B!
-      askNumber(S, v, [pc("t", "180^\\circ"), op("m1", "-"), pc("a1", degT(Q3.angles!.A!), YELLOW), op("m2", "-"), pc("a2", degT(Q3.angles!.B!), BLUE), op("eq", "=")], {
-        unit: "^\\circ", typed: `180-${Q3.angles!.A}-${Q3.angles!.B}`, slips: [{ v: Q3.angles!.A! + Q3.angles!.B!, say: "That's the two angles added. Take them away from $180^\\circ$." }],
-        onRight: S2 => { S2.angText.C = () => degT(v); S2.touched = { kind: "angle", c: "C" }; S2.flashGood = 1 },
+      S.pulseAng = new Set(["C"])
+      const A = Q3.angles!.A!, B = Q3.angles!.B!, v = 180 - A - B
+      askNumber(S, v, [pc("n", `\\angle ${c(RED, "C")}`), op("eq", "=")], {
+        unit: "^\\circ", typed: `180-${A}-${B}`,
+        slips: [
+          { v: A + B, say: "That's the two angles added. Take them away from $180^\\circ$." },
+          { v: 180 - A, say: `Take $${B}^\\circ$ away too.` },
+          { v: 180 - B, say: `Take $${A}^\\circ$ away too.` },
+        ],
+        onRight: S2 => { S2.angText.C = () => degT(v); S2.pulseAng = new Set(); S2.touched = { kind: "angle", c: "C" }; S2.flashGood = 1 },
       })
       look(S, [...QLOOK, "eq", "keypad"])
     },
@@ -784,6 +790,9 @@ function ex1Board(S: Scene, o: { ab?: boolean; ac?: boolean } = {}) {
   aBoard(S, EX1, { sideC: "9.8" })
   S.sideText.A = () => (o.ab ? EX1_LABELS.B : "")
   S.sideText.B = () => (o.ac ? EX1_LABELS.A : "")
+  // once a side's total is found, its two parts have done their job
+  const gone = [...(o.ab ? ["C-Dp", "Dp-B"] : []), ...(o.ac ? ["C-Ep", "Ep-A"] : [])]
+  if (S.extra?.labels) S.extra = { ...S.extra, labels: S.extra.labels.filter(l => !gone.includes(`${l.a}-${l.b}`)) }
 }
 /** Once AB and AC are added up, the parts of them (and D and E) have done their job: only the totals stay. */
 function ex1Totals(S: Scene) {
@@ -797,11 +806,15 @@ const PART_C: Beat[] = [
   watch("ex1-q", "Now calculate the area of triangle $ABC$.", S => { ex1Board(S); S.regions = [{ id: "ABC", pts: ["A", "B", "C"] }]; S.regionLit = "ABC"; look(S, QLOOK) }, 2.0),
   {
     id: "ex1-ab",
-    say: "$AB$ is $3.6 + 2.7$.",
+    say: "What is $AB$?",
     enter: S => {
       ex1Board(S)
       S.glowSide = new Set(["A"])
-      askNumber(S, 6.3, [pc("a1", "3.6"), op("pl", "+"), pc("a2", "2.7"), op("eq", "=")], { typed: "3.6+2.7", onRight: S2 => { S2.sideText.A = () => "6.3"; S2.touched = { kind: "side", c: "A" }; S2.flashGood = 1 } })
+      askNumber(S, 6.3, [pc("n", "AB", YELLOW), op("eq", "=")], {
+        typed: "3.6+2.7",
+        slips: [{ v: 3.6, say: "That's only $AD$. $AB$ goes on to $B$." }, { v: 2.7, say: "That's only $DB$. $AB$ starts at $A$." }],
+        onRight: S2 => { S2.sideText.A = () => "6.3"; S2.touched = { kind: "side", c: "A" }; S2.flashGood = 1 },
+      })
       look(S, [...QLOOK, "eq", "keypad"])
     },
     done: inputRight,
@@ -810,11 +823,15 @@ const PART_C: Beat[] = [
   },
   {
     id: "ex1-ac",
-    say: "$AC$ is $5.2 + 3.9$.",
+    say: "What is $AC$?",
     enter: S => {
       ex1Board(S, { ab: true })
       S.glowSide = new Set(["B"])
-      askNumber(S, 9.1, [pc("a1", "5.2"), op("pl", "+"), pc("a2", "3.9"), op("eq", "=")], { typed: "5.2+3.9", onRight: S2 => { S2.sideText.B = () => "9.1"; S2.touched = { kind: "side", c: "B" }; S2.flashGood = 1 } })
+      askNumber(S, 9.1, [pc("n", "AC", BLUE), op("eq", "=")], {
+        typed: "5.2+3.9",
+        slips: [{ v: 5.2, say: "That's only $AE$. $AC$ goes on to $C$." }, { v: 3.9, say: "That's only $EC$. $AC$ starts at $A$." }],
+        onRight: S2 => { S2.sideText.B = () => "9.1"; S2.touched = { kind: "side", c: "B" }; S2.flashGood = 1 },
+      })
       look(S, [...QLOOK, "eq", "keypad"])
     },
     done: inputRight,
@@ -833,25 +850,31 @@ const PART_C: Beat[] = [
   calcArea("ex2-calc", "Work it out.", EX2, { quiet: true, sideC: "15.1" }),
   {
     id: "ex2-trap",
-    say: "Next is the trapezium. Its area is $\\tfrac{1}{2} \\times (6 + 4) \\times 14.97$.",
+    say: "Next is the trapezium. Work out its area.",
     enter: S => {
       aBoard(S, EX2, { sideC: "15.1" })
       S.regions = EX2.regions!
       S.regionLit = "EBCD"
-      askNumber(S, TRAP, [pc("half", HALF), op("t0", "\\times"), pc("sum", "(6 + 4)"), op("t1", "\\times"), pc("dc", "14.97"), op("eq", "=")], { sf: 3, typed: "0.5*10*14.97", unit: "\\text{ m}^{2}", slips: [{ v: 10 * 14.97, say: "Don't forget the half." }] })
+      askNumber(S, TRAP, [pc("n", "\\text{Area}"), op("eq", "=")], {
+        sf: 3, typed: "0.5*10*14.97", unit: "\\text{ m}^{2}",
+        slips: [{ v: 10 * 14.97, say: "Don't forget the half." }, { v: 6 * 14.97, say: "That's a rectangle as tall as $6\\text{ m}$. The trapezium's top slopes down to $4\\text{ m}$." }, { v: 4 * 14.97, say: "That's a rectangle as tall as $4\\text{ m}$. The trapezium's top slopes up to $6\\text{ m}$." }],
+      })
       look(S, [...QLOOK, "eq", "keypad"])
     },
     done: inputRight,
     advanceAfter: 1700,
-    walk: [{ say: "Half the two parallel sides added, times the distance between them.", tex: "\\tfrac{1}{2} \\times 10 \\times 14.97" }, { say: "So", tex: `= ${c(GREEN, `${sigText(TRAP, 3)}\\text{ m}^{2}`)}` }],
+    walk: [{ say: "Half the two parallel sides added, times the distance between them.", tex: "\\tfrac{1}{2} \\times (6 + 4) \\times 14.97" }, { say: "So", tex: `= ${c(GREEN, `${sigText(TRAP, 3)}\\text{ m}^{2}`)}` }],
   },
   {
     id: "ex2-total",
-    say: "Add the two areas.",
+    say: "What is the area of the whole cross-section?",
     enter: S => {
-      aBoard(S, EX2, { sideC: "15.1" })
+      aBoard(S, EX2)
+      // the two areas found, written on their parts
       const tri = areaOf(EX2)
-      askNumber(S, tri + TRAP, [pc("t1", sigText(tri, 3)), op("pl", "+"), pc("t2", sigText(TRAP, 3)), op("eq", "=")], {
+      const top = centroid(EX2), base = EX2.pts!.Cp
+      S.extra = { ...S.extra!, texts: [{ at: [top[0], top[1] - 0.2], tex: `${sigText(tri, 3)}\\text{ m}^{2}`, col: GREEN }, { at: [base[0] / 2, 2.1], tex: `${sigText(TRAP, 3)}\\text{ m}^{2}`, col: GREEN }] }
+      askNumber(S, tri + TRAP, [pc("n", "\\text{Area}"), op("eq", "=")], {
         sf: 3, typed: `${sigText(tri, 3)}+${sigText(TRAP, 3)}`, unit: "\\text{ m}^{2}",
       })
       look(S, [...QLOOK, "eq", "keypad"])
@@ -878,10 +901,14 @@ const PART_C: Beat[] = [
   watch("ex4-q", "Angle $PSR = 96^\\circ$ and the area of triangle $QRS$ is $63\\text{ cm}^2$. Show that $SR = 10.0\\text{ cm}$.", S => { aBoard(S, EX4, { hideC: true }); look(S, QLOOK) }, 3.0),
   {
     id: "ex4-psq",
-    say: "First, angle $PSQ$ is $180^\\circ - 67^\\circ - 74^\\circ$.",
+    say: "First, work out angle $PSQ$.",
     enter: S => {
       aBoard(S, EX4, { hideC: true })
-      askNumber(S, 39, [pc("t", "180^\\circ"), op("m1", "-"), pc("a1", "67^\\circ"), op("m2", "-"), pc("a2", "74^\\circ"), op("eq", "=")], { unit: "^\\circ", typed: "180-67-74", slips: [{ v: 141, say: "That's the two angles added. Take them away from $180^\\circ$." }] })
+      S.extra = { ...S.extra!, arcs: [...(S.extra!.arcs ?? []), { at: "C", a: "Pp", b: "B", tex: "?", pulse: true }] }
+      askNumber(S, 39, [pc("n", "\\angle PSQ"), op("eq", "=")], {
+        unit: "^\\circ", typed: "180-67-74",
+        slips: [{ v: 141, say: "That's the two angles added. Take them away from $180^\\circ$." }, { v: 113, say: "Take $74^\\circ$ away too." }, { v: 106, say: "Take $67^\\circ$ away too." }],
+      })
       look(S, [...QLOOK, "eq", "keypad"])
     },
     done: inputRight,
@@ -890,10 +917,18 @@ const PART_C: Beat[] = [
   },
   {
     id: "ex4-qsr",
-    say: "So angle $QSR$ is $96^\\circ - 39^\\circ$.",
+    say: "What is angle $QSR$?",
     enter: S => {
       aBoard(S, EX4, { hideC: true })
-      askNumber(S, 57, [pc("t", "96^\\circ"), op("m1", "-"), pc("a1", "39^\\circ"), op("eq", "=")], { unit: "^\\circ", typed: "96-39", onRight: S2 => { S2.angText.C = () => "57^\\circ"; S2.touched = { kind: "angle", c: "C" }; S2.flashGood = 1 } })
+      // angle PSR is split by SQ into the 39° just found and angle QSR
+      // the 96° is written round the outside, over the part that is angle QSR (lit red)
+      S.extra = { ...S.extra!, arcs: [...(S.extra!.arcs ?? []), { at: "C", a: "Pp", b: "B", tex: "39^\\circ" }, { at: "C", a: "Pp", b: "A", tex: "96^\\circ", scale: 1.9, along: 0.72 }] }
+      S.glowAng = new Set(["C"])
+      askNumber(S, 57, [pc("n", `\\angle QSR`), op("eq", "=")], {
+        unit: "^\\circ", typed: "96-39",
+        slips: [{ v: 135, say: "Angle $QSR$ is part of the $96^\\circ$, so it's smaller." }],
+        onRight: S2 => { S2.angText.C = () => "57^\\circ"; S2.glowAng = new Set(); S2.touched = { kind: "angle", c: "C" }; S2.flashGood = 1 },
+      })
       look(S, [...QLOOK, "eq", "keypad"])
     },
     done: inputRight,

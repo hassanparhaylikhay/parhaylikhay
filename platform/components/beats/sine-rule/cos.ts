@@ -55,6 +55,10 @@ export interface CRQ {
   shownAngles?: Partial<Record<Corner, number>>
   /** sides whose length is written inside the triangle (its outside is taken) */
   inside?: Corner[]
+  /** where along a side its length is written (0.5 the middle), when the middle is crowded */
+  along?: Partial<Record<Corner, number>>
+  /** only these corners get an arc (a busy figure drops the ones that say nothing) */
+  arcsOnly?: Corner[]
 }
 
 /** C at the origin, CA along the floor (b), CB at angle C (a). */

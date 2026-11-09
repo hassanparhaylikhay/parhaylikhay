@@ -185,7 +185,7 @@ const { open, sleep } = require("./trig-lib.cjs")
       await dropChip("inv-sin"); await tapCancel(); await expect(await solveDone(), id + " not undone"); continue
     }
     if (Q && /-calc$/.test(id)) { if (id === "t-calc") await slip("a", /SHIFT/); await right("Sa"); continue }
-    if (id === "find-B") { await slip("110", /180/); await right("70"); continue }
+    if (id === "find-B") { await slip("110", /180/); await slip("130", /60/); await right("70"); continue }
     // ── part 7 ──
     if (id === "sin30") { await right("s30"); continue }
     if (id === "sin150") { await right("s150"); continue }

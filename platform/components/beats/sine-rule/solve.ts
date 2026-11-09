@@ -110,10 +110,18 @@ export const flipBoth = (e: Eqn): Eqn => ({ L: { num: e.L.den, den: e.L.num }, R
 /** Which piece of the triangle goes in each place of the rule. */
 const WANTS = (q: SRQ): Record<string, string> => ({ sL: `side-${q.want}`, aL: `ang-${q.want}`, sR: `side-${q.pair}`, aR: `ang-${q.pair}` })
 
-/** The empty rule (or as filled so far): □ / sin □ = □ / sin □. */
+/** Whose pair is in a fraction of the rule, from what has been put there. */
+const cornerIn = (filled: Record<string, string>, side: "L" | "R"): Corner | null => {
+  const k = filled[`s${side}`] ?? filled[`a${side}`]
+  return k ? (k.slice(-1) as Corner) : null
+}
+
+/** The empty rule (or as filled so far): □ / sin □ = □ / sin □. Either pair may be in either fraction. */
 export function templateNode(S: Scene, q: SRQ, from: Record<string, Vec> = {}): ENode {
   const f = S.fill
   const filled = f?.filled ?? {}
+  const cL = cornerIn(filled, "L") ?? (cornerIn(filled, "R") === q.want ? q.pair : q.want)
+  const cR = cL === q.want ? q.pair : q.want
   const slot = (id: string, kind: "side" | "angle", c: Corner): ENode => {
     if (!filled[id]) return { k: "box", id, tex: "", state: "idle", wrongAt: -9, slot: true }
     const fl = from[id] ? { from: from[id], fly: 0.7 } : {}
@@ -123,7 +131,7 @@ export function templateNode(S: Scene, q: SRQ, from: Record<string, Vec> = {}): 
   }
   const half = (s: string, a: string, c: Corner, bar: string) =>
     frac(bar, slot(s, "side", c), row([atom(`fn-${c}`, "\\sin"), slot(a, "angle", c)]))
-  return row([half("sL", "aL", q.want, "bar-L"), op("eq", "="), half("sR", "aR", q.pair, "bar-R")])
+  return row([half("sL", "aL", cL, "bar-L"), op("eq", "="), half("sR", "aR", cR, "bar-R")])
 }
 
 /**
@@ -149,6 +157,23 @@ export function startFill(S: Scene, q: SRQ, half: "left" | "right" | "both", lab
     onDrop: (S2, item, slot, at) => {
       if (!slot) return
       const f = S2.fill!
+      if (half === "both") {
+        // either pair may go in either fraction, as long as a side and its own angle share one
+        const c = item.slice(-1) as Corner, isSide = item.startsWith("side")
+        const side = slot.endsWith("L") ? "L" : "R", here = cornerIn(f.filled, side), there = cornerIn(f.filled, side === "L" ? "R" : "L")
+        const inPairs = c === q.want || c === q.pair
+        if (inPairs && isSide === slot.startsWith("s") && (here ?? c) === c && there !== c) {
+          f.filled[slot] = item
+          from[slot] = at
+          S2.touched = { kind: "eq" }
+          S2.flashGood = 0.5
+          S2.note = null
+          if (slots.every(id => f.filled[id])) finishBoth(S2)
+          return
+        }
+        say(S2, !inPairs ? "That one isn't in these two pairs." : isSide !== slot.startsWith("s") ? (isSide ? "A side goes on top. Its angle goes with $\\sin$." : "An angle goes with $\\sin$, under its side.") : "Keep each side with its own angle, in the same fraction.", "wrong", 3.6)
+        return
+      }
       if (want[slot] === item) {
         f.filled[slot] = item
         from[slot] = at
@@ -169,12 +194,24 @@ export function startFill(S: Scene, q: SRQ, half: "left" | "right" | "both", lab
   }
   S.mode = "fill"
   S.eqFn = S2 => templateNode(S2, q, from)
+
+  /** All four in. If the unknown's pair went on the right, the rule turns round so it is on the left. */
+  function finishBoth(S2: Scene) {
+    const f = S2.fill!
+    if (cornerIn(f.filled, "L") === q.want) { f.readyAt = S2.time; return }
+    f.filled = { sL: want.sL, aL: want.aL, sR: want.sR, aR: want.aR }
+    for (const k of Object.keys(from)) delete from[k]
+    eqSlow(S2.eq, 1.3)
+    say(S2, `Right. Let's turn it round, so $${nameOf(q)}$ is on the left.`, "calm", 3.4)
+    f.readyAt = S2.time + 2.2
+  }
 }
 
 export const filledHalf = (S: Scene, half: "left" | "right" | "both") => {
   const f = S.fill
   if (!f) return false
-  return (half === "left" ? ["sL", "aL"] : half === "right" ? ["sR", "aR"] : ["sL", "aL", "sR", "aR"]).every(id => f.filled[id])
+  if (half === "both") return f.readyAt !== undefined && S.time >= f.readyAt
+  return (half === "left" ? ["sL", "aL"] : ["sR", "aR"]).every(id => f.filled[id])
 }
 
 // ── the moves ────────────────────────────────────────────────────────────

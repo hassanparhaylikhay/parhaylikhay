@@ -107,6 +107,7 @@ export function measure(tex: string, size: number): Metric {
   if (hit) return hit
   if (typeof document === "undefined") return { w: tex.length * size * 0.5, base: size * 0.8, h: size }
   ensureEqStyle()
+  hookFonts()
   if (!host) {
     host = document.createElement("div")
     host.style.cssText = "position:absolute;left:-10000px;top:0;visibility:hidden;pointer-events:none"
@@ -124,8 +125,17 @@ export function measure(tex: string, size: number): Metric {
   const m = { w, base: mark.getBoundingClientRect().top - r.top, h: r.height }
   host.removeChild(el)
   if (mcache.size > 4000) mcache.clear()
-  mcache.set(key, m)
+  // while KaTeX's fonts are still coming, the width is the fallback font's: measure again next time
+  if (document.fonts?.status !== "loading") mcache.set(key, m)
   return m
+}
+
+let fontsHooked = false
+/** A font that arrives after pieces were measured changes their widths: forget them all. */
+function hookFonts() {
+  if (fontsHooked || !document.fonts) return
+  fontsHooked = true
+  document.fonts.addEventListener("loadingdone", () => mcache.clear())
 }
 
 // ── laying out ───────────────────────────────────────────────────────────

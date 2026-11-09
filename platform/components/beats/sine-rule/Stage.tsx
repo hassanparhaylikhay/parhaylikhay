@@ -218,7 +218,7 @@ function Extra({ S, op, L }: { S: Scene; op: number; L: Layout }) {
         const G = extraArcGeom(S, g, L.labelSize)
         const col = g.col ?? CHALK
         return (
-          <g key={`xa${k}`}>
+          <g key={`xa${k}`} opacity={e.quiet ? 0.4 : 1}>
             <path d={sectorPath(G.C, G.a1, G.sweep, G.r, 40)} fill={col} fillOpacity={0.14} />
             <path d={arcPath(G.C, G.a1, G.sweep, G.r, 40)} fill="none" stroke={col} strokeWidth={2.2} strokeLinecap="round" />
             {g.pulse && <path d={sectorPath(G.C, G.a1, G.sweep, G.r + 3, 40)} fill={YELLOW} fillOpacity={0.25} filter="url(#pl-soft)"><animate attributeName="opacity" values="0.2;1;0.2" dur="1.4s" repeatCount="indefinite" /></path>}
