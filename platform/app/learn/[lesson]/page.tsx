@@ -4,7 +4,7 @@ import { BEAT_LESSONS } from "@/components/beats/registry"
 
 /**
  * Beat lessons with no login, so a link can be sent to anyone to try.
- * Same lesson as /dashboard/learn/<slug>; the X leads to the public site.
+ * Same lesson as /dashboard/learn/<slug>; the X leads back to the lesson list.
  */
 export async function generateMetadata({ params }: { params: Promise<{ lesson: string }> }): Promise<Metadata> {
   const { lesson } = await params
@@ -21,5 +21,5 @@ export default async function PublicLearnPage({ params }: { params: Promise<{ le
   const { lesson } = await params
   const entry = BEAT_LESSONS[lesson]
   if (!entry) notFound()
-  return <entry.Lesson closeHref="/" />
+  return <entry.Lesson closeHref="/learn" />
 }
