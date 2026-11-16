@@ -12,14 +12,14 @@
 
 import { applyParts } from "../chapter"
 import type { WalkStep } from "../walk"
-import { row } from "../equation"
+import { row, op } from "../equation"
 import {
   type Scene, type V3, type Arc3, CHALK, BLUE, ORANGE, PINK, YELLOW,
   segKey, addSeg, liftOut, later, say, choose, placeStick, stickTop, resetBeat, goodView, RAD, DEG,
 } from "./scene"
 import {
   type Beat, look, num, sig, c, pc, lens, boxBoard, boxLens, ecBoard, pyrBoard, solidBoard,
-  watch, rightBeat, liftBeat, askBeat, lightFlat,
+  watch, rightBeat, liftBeat, askBeat, lightFlat, given,
 } from "./kit"
 
 // ── the stick ────────────────────────────────────────────────────────────
@@ -186,7 +186,8 @@ function x3Board(S: Scene, o: { face?: boolean; em?: boolean } = {}) {
   pyrBoard(S, { l: 12, w: 12, h: 17, diags: true, height: true })
   S.lens[segKey("E", "X")] = lens("17", ORANGE)
   S.lens[segKey("E", "C")] = lens("19", PINK)
-  S.lens[segKey("B", "C")] = lens("12")
+  // the base is needed for MB, which is not on the lifted triangle: it stays on the figure
+  S.lens[segKey("B", "C")] = { ...given("12"), along: 0.27 }
   S.edgeCol[segKey("E", "C")] = PINK
   S.edgeCol[segKey("E", "B")] = PINK
   S.arcs = [{ at: "B", a: "C", b: "E", tex: "?" }]
@@ -577,6 +578,8 @@ const PART_C: Beat[] = [
     liftOut(S, "up", ["E", "M", "B"], "M", { [segKey("M", "B")]: lens("?", CHALK), [segKey("E", "B")]: lens("19", PINK) }, true).angle = { at: "B", tex: "?" }
   }, {
     name: "MB", col: CHALK, answer: 6, sf: 3, shown: "6", typed: "12/2",
+    // the base from the question, written where it can be read from any side
+    above: () => row([pc("bc", "BC"), op("bceq", "="), pc("b12", "12")]),
     slips: [{ v: 12, say: "That's all of $BC$. $M$ is halfway along it." }],
     writes: [["up", segKey("M", "B")]],
     walk: [

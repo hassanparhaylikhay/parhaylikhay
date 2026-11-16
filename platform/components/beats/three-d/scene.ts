@@ -195,7 +195,7 @@ export interface Scene {
   edgeCol: Record<string, string>
   segs: Record<string, Seg>
   /** what a line or edge says, by segKey (`along`: how far from its first point, when the middle is taken) */
-  lens: Record<string, { tex: string; col?: string; pulse?: boolean; along?: number }>
+  lens: Record<string, { tex: string; col?: string; pulse?: boolean; along?: number; keep?: boolean }>
   tris: Tri[]
   rights: Right[]
   arcs: Arc3[]
@@ -818,10 +818,12 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       out.push({ key: `L-${n}`, tex: letter, col: CHALK, at: add(p, mul(dd, (size * 0.95 + 5) / ll)), anchor: p, size: size + 1, op: S.vis.letters.v * back(n) })
     }
   }
-  // while a triangle is out, its numbers are on the flat copy: the figure (now small) keeps only its letters
+  // while a triangle is out, its numbers are on the flat copy: the figure (now small) keeps only its
+  // letters, and any number the question needs that is not on the flat (`keep`: BC = 12 when MB is asked)
   const flatsOut = S.flats.some(F => F.t.v > 0.5)
-  if (S.vis.lens.v > 0.01 && !flatsOut) {
+  if (S.vis.lens.v > 0.01) {
     for (const [key, lb] of Object.entries(S.lens)) {
+      if (flatsOut && !lb.keep) continue
       const [a, b] = key.split("-")
       if (!S.P3[a] || !S.P3[b]) continue
       const sg = S.segs[key]

@@ -20,7 +20,7 @@ import {
 } from "./scene"
 import {
   type Beat, look, num, sig, c, pc, sq, stack, lens, boxBoard, boxLens, ecBoard, pyrBoard, solidBoard,
-  turnBeat, watch, joinBeat, rightBeat, liftBeat, missingBeat, askBeat, crossBeat, pythWalk, lightFlat,
+  turnBeat, watch, joinBeat, rightBeat, liftBeat, missingBeat, askBeat, crossBeat, pythWalk, lightFlat, given,
 } from "./kit"
 
 // ── the discovery box: E G C lifted out, and E H G beside it ──────────────
@@ -783,7 +783,8 @@ function faceBoard(S: Scene, o: { xm?: boolean; right?: boolean } = {}) {
   addSeg(S, "X", "E", { grown: true })
   addSeg(S, "E", "M", { grown: true, col: PINK })
   S.lens[segKey("E", "X")] = lens("8", ORANGE)
-  S.lens[segKey("A", "B")] = lens("6")
+  // the base is needed for XM, which is not on the lifted triangle: it stays on the figure
+  S.lens[segKey("A", "B")] = given("6")
   if (o.xm) addSeg(S, "X", "M", { grown: true, col: BLUE })
   if (o.right) S.rights = [{ at: "X", a: "E", b: "M" }]
 }

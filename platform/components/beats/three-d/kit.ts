@@ -35,6 +35,8 @@ export const pc = (id: string, tex: string, col?: string, more: Partial<EAtom> =
 export const sq = (id: string, tex: string, col?: string, more: Partial<EAtom> = {}): ENode => row([pc(id, tex, col, more), pc(`${id}q`, "{}^{2}", col, more)], 0.02)
 export const stack = (id: string, top: ENode, under: ENode): ENode => frac(id, top, under, "rgba(0,0,0,0)")
 export const lens = (tex: string, col?: string, along?: number) => ({ tex, ...(col ? { col } : {}), ...(along !== undefined ? { along } : {}) })
+/** A length the question needs that is not on the lifted triangle: it stays on the figure while the triangle is out. */
+export const given = (tex: string, col?: string) => ({ ...lens(tex, col), keep: true })
 
 // ── boards ───────────────────────────────────────────────────────────────
 
