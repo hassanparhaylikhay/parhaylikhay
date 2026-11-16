@@ -39,6 +39,8 @@ const PICKS = {
   "sine-rule": "x",
   "cosine-rule": "bigger",
   "triangle-area": "make-30",
+  "pythagoras-3d": "stands",
+  "angles-3d": "box-shadow-line",
 }
 
 /** Figures whose lines run to the board's edges are cropped by hand (1280 × 800 page coordinates). */

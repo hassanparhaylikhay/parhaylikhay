@@ -18,7 +18,7 @@ async function open(slug, name) {
   const page = await browser.newPage()
   await page.setViewport({ width: W, height: H, isMobile: TOUCH, hasTouch: TOUCH, deviceScaleFactor: TOUCH ? 2 : 1 })
   const logs = []
-  page.on("pageerror", e => logs.push("PAGEERROR " + e.message))
+  page.on("pageerror", e => logs.push("PAGEERROR " + (e.stack || e.message).split("\n").slice(0, 4).join(" / ")))
   page.on("console", m => { if (m.type() === "error") logs.push(m.text()) })
   await page.goto(URL, { waitUntil: "load", timeout: 60000 })
   await page.waitForFunction(() => window.__beatScene && window.__beatScene.w > 0, { timeout: 60000 })

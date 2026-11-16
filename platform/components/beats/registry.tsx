@@ -12,6 +12,8 @@ import AngleLesson from "./trigonometry/AngleLesson"
 import SineRuleLesson from "./sine-rule/SineRuleLesson"
 import CosRuleLesson from "./sine-rule/CosRuleLesson"
 import AreaLesson from "./sine-rule/AreaLesson"
+import Pyth3dLesson from "./three-d/Pyth3dLesson"
+import Angles3dLesson from "./three-d/Angles3dLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -85,6 +87,18 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Find the area of any triangle from two sides and the angle between them, see where ½ab sin C comes from, work backwards to a side, and find the shortest distance to a line.",
     topicHref: "/dashboard/maths/06/03",
     Lesson: AreaLesson,
+  },
+  "pythagoras-3d": {
+    title: "Pythagoras in 3D",
+    description: "Build a box, find the right-angled triangle hiding inside it, lift it out, and find any length across a cuboid or a pyramid.",
+    topicHref: "/dashboard/maths/06/04",
+    Lesson: Pyth3dLesson,
+  },
+  "angles-3d": {
+    title: "Angles in 3D",
+    description: "Tilt a stick under a light from above, find the angle between a line and the floor from its shadow, and work out heights seen from two places.",
+    topicHref: "/dashboard/maths/06/04",
+    Lesson: Angles3dLesson,
   },
   "why-trig-works": {
     title: "Why trigonometry works",
