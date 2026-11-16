@@ -27,6 +27,8 @@ export interface BeatOf<S> {
   advanceAfter?: number
   /** The continue button goes back to the first beat. */
   restart?: boolean
+  /** The continue button ends the lesson (back to where it was opened from). */
+  close?: boolean
   /** "Show me how": the worked solution, one step at a time, for a student who is stuck. */
   walk?: WalkStep<S>[]
 }

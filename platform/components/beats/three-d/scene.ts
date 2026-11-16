@@ -22,7 +22,7 @@
 
 import { type Vec, type Rect, add, sub, mul, dot, dist, lerpV, clamp, turn, DEG, RAD } from "../geometry"
 import { createBoard, eqSet, eqStep, eqHit, eqCentre, eqSlow, extent, measure, row, frac, type EqBoard, type ENode } from "../equation"
-import { calcType, calcTex, judge, isCalculation, slipMatches, setAns, calcValue, INV_KEY } from "../calc"
+import { calcType, calcTex, judge, isCalculation, slipMatches, setAns, calcValue, roundedAns, ansReminder, INV_KEY } from "../calc"
 
 export const CHALK = "#e8e6e0"
 export const BLUE = "#00abfa"
@@ -123,9 +123,29 @@ export interface Flat {
   hand: number
   /** true lengths from the right angle to the other two corners, for a figure drawn not to scale */
   legs?: Record<string, number>
+  /** on its way out of the figure or back into it: where it set off from (screen), and how far it has got (0 to 1) */
+  fly?: { from: Record<string, Vec>; e: number; home: boolean } | null
+  /** put it straight at its place the first time it is placed (a board opened cold) */
+  snap?: boolean
 }
 
-export interface Lab { key: string; tex: string; col: string; at: Vec; size: number; op: number; pulse?: boolean }
+/**
+ * A timed piece of choreography (the view turns to face a triangle, the
+ * triangle comes out, the view turns back): acts play one after another. A
+ * locked act holds the view still under the student's finger; an unlocked one
+ * gives way the moment the student takes hold.
+ */
+export interface Act {
+  dur: number
+  lock?: boolean
+  begin?: (S: Scene) => void
+  /** e: eased progress, t: plain progress, both 0 to 1 */
+  run?: (S: Scene, e: number, t: number) => void
+  end?: (S: Scene) => void
+}
+
+/** A label: where it belongs (`at`) and the point on the figure it is attached to (`anchor`), which it follows exactly. */
+export interface Lab { key: string; tex: string; col: string; at: Vec; anchor: Vec; size: number; op: number; pulse?: boolean }
 
 export interface CalcInput {
   value: string
@@ -142,6 +162,8 @@ export interface CalcInput {
   max?: number
   /** the keys that answer it, for test scripts */
   typed?: string
+  /** what Ans holds (EG), when the answer is meant to use it */
+  ansName?: string
   onRight?: (S: Scene) => void
   help?: (S: Scene, tries: number) => void
 }
@@ -172,13 +194,17 @@ export interface Scene {
   /** edges of the solid in a colour, or lit, by segKey */
   edgeCol: Record<string, string>
   segs: Record<string, Seg>
-  /** what a line or edge says, by segKey */
-  lens: Record<string, { tex: string; col?: string; pulse?: boolean }>
+  /** what a line or edge says, by segKey (`along`: how far from its first point, when the middle is taken) */
+  lens: Record<string, { tex: string; col?: string; pulse?: boolean; along?: number }>
   tris: Tri[]
   rights: Right[]
   arcs: Arc3[]
   /** points shown as a dot (the middle of a base) */
   dots: string[]
+  /** small marks across a line, splitting it into equal parts (fractions of the way from a to b) */
+  ticks: { a: string; b: string; at: number[]; pulse?: boolean }[]
+  /** numbers a beat keeps on the board (how far a fold has turned, where a point sits on a line) */
+  vals: Record<string, number>
   /** points the phrase is about: they glow */
   glowPts: string[]
   /** a stick on the floor (its top is the point T, its shadow's end Tf) */
@@ -211,6 +237,20 @@ export interface Scene {
   fitD: { cx: number; cy: number; u: number; c: V3; R: number } | null
 
   flats: Flat[]
+  /** where each flat was last drawn, so the next beat's copy starts there (no slide between beats) */
+  flatMem: Record<string, Record<string, Vec>>
+  acts: Act[]
+  act: { a: Act; t0: number } | null
+  /** how far the board has made room for the flat triangles beside the solid (0 to 1) */
+  split: Spring
+  /** the solid fades back while a triangle is lifted out of it */
+  dim: Spring
+  /** how far it fades: back a little for a lift, right out when the rest of the solid goes */
+  dimMax: number
+  /** the triangle being lifted: lit in the solid while it turns to face the student */
+  liftLit: string[] | null
+  /** which of two triangles the student picked in a beat (by beat id), so later beats carry on with theirs */
+  picked: Record<string, string>
   /** which way each lifted triangle faces, kept from when it was first lifted (so it never flips between beats) */
   hands: Record<string, number>
   /** parts of the figure the student can tap (a triangle, a face), by point names */
@@ -246,6 +286,10 @@ export interface Scene {
   vis: Record<VisKey, Spring>
   labs: Lab[]
   labD: Record<string, Vec>
+  /** each label's offset from its anchor, eased (so a label sticks to its line, and only its side moves smoothly) */
+  labOff: Record<string, Vec>
+  /** which side of its line a length sits, and which way from its point a letter sits (screen), kept while the evidence is weak */
+  labSide: Record<string, Vec>
   /** labels that move slowly to their place (a number flying across) */
   labSlow: Record<string, number>
   walkTex: string | null
@@ -264,13 +308,13 @@ export function createScene(): Scene {
   for (const k of VIS_KEYS) vis[k] = { v: 0, t: 0 }
   return {
     w: 0, h: 0, time: 0, beatStart: 0, mode: "none",
-    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], glowPts: [],
+    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, glowPts: [],
     stick: null, light: [], box: null, pyr: null, handles: [], floorGrid: 1,
     yaw: -32, pitch: 22, yawD: -32, pitchD: 22, spin: 0, fling: { yaw: 0, pitch: 0 }, lastTouch: -9, turned: 0, fitPts: null, fit: null, fitD: null,
-    flats: [], hands: {}, regions: null, onRegion: null, regionLit: null, tapPoints: null, onPoint: null, joinFrom: null, onJoin: null,
+    flats: [], flatMem: {}, acts: [], act: null, split: { v: 0, t: 0 }, dim: { v: 0, t: 0 }, dimMax: 0.62, liftLit: null, picked: {}, hands: {}, regions: null, onRegion: null, regionLit: null, tapPoints: null, onPoint: null, joinFrom: null, onJoin: null,
     tapSegs: null, onSeg: null, tapArcs: null, onArc: null, tapFlat: null, onFlatSide: null,
     eq: createBoard(), eqFn: null, solve: null, dragAtoms: [], onAtomDrop: null, dragTex: {}, eqRoom: { v: 0, t: 0 }, keyRows: 4,
-    choice: null, chipsOn: null, tick: null, timers: [], vis, labs: [], labD: {}, labSlow: {}, walkTex: null, input: null, drag: null, touch: false,
+    choice: null, chipsOn: null, tick: null, timers: [], vis, labs: [], labD: {}, labOff: {}, labSide: {}, labSlow: {}, walkTex: null, input: null, drag: null, touch: false,
     got: new Set(), touched: null, flashGood: 0, note: null,
   }
 }
@@ -504,16 +548,18 @@ export function layout(S: Scene): Layout {
   const least = on(S, "keypad") ? 110 : 160
   const board: Rect = { x0: side, x1: beside ? side + eqW : w - side, y0: phraseBottom + 10, y1: Math.max(phraseBottom + least, y - 6) }
   // flat triangles beside the solid (a wide board) or under it (a tall one)
+  // the solid makes room for the flats (as far as `split` says: it slides over as a triangle comes out)
   let solidCell = board, flatCell: Rect | null = null
-  if (S.flats.length && on(S, "flats")) {
+  const sp = S.split.v
+  if ((S.flats.length && on(S, "flats")) || sp > 0.001) {
     const bw = board.x1 - board.x0, bh = board.y1 - board.y0
     if (bw > bh * 1.1) {
       const cut = board.x0 + bw * 0.42
-      solidCell = { ...board, x1: cut }
+      solidCell = { ...board, x1: board.x1 + (cut - board.x1) * sp }
       flatCell = { ...board, x0: cut }
     } else {
       const cut = board.y0 + bh * 0.4
-      solidCell = { ...board, y1: cut }
+      solidCell = { ...board, y1: board.y1 + (cut - board.y1) * sp }
       flatCell = { ...board, y0: cut }
     }
   }
@@ -543,8 +589,8 @@ function fitFor(S: Scene, L: Layout) {
 
 // ── flat triangles ───────────────────────────────────────────────────────
 
-/** The true shape of a flat triangle in its own plane: the right angle at the origin, legs along x and up y. */
-function flatShape(S: Scene, F: Flat): Record<string, Vec> {
+/** A flat's two legs: the one that lies along the bottom, and the one that stands up. */
+function flatLegs(S: Scene, F: { pts: string[]; right: string; legs?: Record<string, number> }) {
   const [a, b] = F.pts.filter(n => n !== F.right)
   const R = p3(S, F.right, false), A = p3(S, a, false), B = p3(S, b, false)
   const la = F.legs?.[a] ?? vdist(R, A), lb = F.legs?.[b] ?? vdist(R, B)
@@ -553,7 +599,12 @@ function flatShape(S: Scene, F: Flat): Record<string, Vec> {
   const upB = Math.abs(vsub(B, R)[2]) > 1e-6 && Math.abs(vunit(vsub(B, R))[2]) > 0.99
   let flatLeg = a, upLeg = b
   if (upA) { flatLeg = b; upLeg = a } else if (!upB && lb > la) { flatLeg = b; upLeg = a }
-  const lf = F.legs?.[flatLeg] ?? vdist(R, p3(S, flatLeg, false)), lu = F.legs?.[upLeg] ?? vdist(R, p3(S, upLeg, false))
+  return { flatLeg, upLeg, lf: F.legs?.[flatLeg] ?? vdist(R, p3(S, flatLeg, false)), lu: F.legs?.[upLeg] ?? vdist(R, p3(S, upLeg, false)) }
+}
+
+/** The true shape of a flat triangle in its own plane: the right angle at the origin, legs along x and up y. */
+function flatShape(S: Scene, F: Flat): Record<string, Vec> {
+  const { flatLeg, upLeg, lf, lu } = flatLegs(S, F)
   return { [F.right]: [0, 0], [flatLeg]: [-lf * F.hand, 0], [upLeg]: [0, lu] }
 }
 
@@ -590,22 +641,89 @@ function placeFlats(S: Scene, L: Layout) {
   })
 }
 
-/** Where a flat's corners are drawn: on their way from the figure to the flat place (lifting a little as they go). */
-function flatPos(S: Scene, F: Flat) {
-  const t = F.t.v, e = t * t * (3 - 2 * t)
-  for (const n of F.pts) {
-    const from = ptS(S, n), to = F.target[n] ?? from
-    const p = lerpV(from, to, e)
-    F.pos[n] = [p[0], p[1] - Math.sin(Math.PI * e) * 26]
-  }
+/**
+ * A triangle carried from one place to another without changing its shape:
+ * it turns, grows and slides as one piece (the best fit of the start onto the
+ * end), rising a little toward the eye on the way, then settles exactly.
+ */
+export function rigidAt(P0: Vec[], P1: Vec[], e: number): Vec[] {
+  const mid = (P: Vec[]): Vec => [P.reduce((s, p) => s + p[0], 0) / P.length, P.reduce((s, p) => s + p[1], 0) / P.length]
+  const c0 = mid(P0), c1 = mid(P1)
+  const a = P0.map(p => sub(p, c0)), b = P1.map(p => sub(p, c1))
+  let sd = 0, sc = 0, na = 0, nb = 0
+  a.forEach((v, i) => { sd += dot(v, b[i]); sc += v[0] * b[i][1] - v[1] * b[i][0]; na += dot(v, v); nb += dot(b[i], b[i]) })
+  const th = Math.atan2(sc, sd), k1 = Math.sqrt(nb / Math.max(1e-9, na))
+  const rot = (v: Vec, ang: number, k: number): Vec => [k * (v[0] * Math.cos(ang) - v[1] * Math.sin(ang)), k * (v[0] * Math.sin(ang) + v[1] * Math.cos(ang))]
+  // what the best fit leaves over (nothing when the start is the true shape, seen straight on)
+  const rest = P1.map((p, i) => sub(p, add(c1, rot(a[i], th, k1))))
+  const k = Math.exp(Math.log(k1) * e) * (1 + 0.07 * Math.sin(Math.PI * e))
+  const c = add(lerpV(c0, c1, e), [0, -Math.sin(Math.PI * e) * 22])
+  return a.map((v, i) => add(add(c, rot(v, th * e, k)), mul(rest[i], e)))
 }
 
-/** Pick the flat's facing so its right angle is on the same side as in the figure, as it is now seen. */
-export function flatHand(S: Scene, pts: [string, string, string], right: string): number {
-  const others = pts.filter(n => n !== right)
-  const R = ptS(S, right, false)
-  const mx = others.reduce((s, n) => s + ptS(S, n, false)[0], 0) / 2
-  return R[0] >= mx ? 1 : -1
+/** Where a flat's corners are drawn: in flight (out of the figure or back in), or at its place, gliding when the places change. */
+function flatPos(S: Scene, F: Flat, k: (f: number) => number) {
+  if (F.fly) {
+    const P0 = F.pts.map(n => F.fly!.from[n])
+    const P1 = F.pts.map(n => (F.fly!.home ? ptS(S, n) : F.target[n] ?? F.fly!.from[n]))
+    const P = rigidAt(P0, P1, F.fly.e)
+    F.pts.forEach((n, i) => { F.pos[n] = P[i] })
+    return
+  }
+  if (F.t.v >= 0.999) {
+    for (const n of F.pts) {
+      const to = F.target[n]
+      if (!to) continue
+      F.pos[n] = F.snap || !F.pos[n] ? [to[0], to[1]] : lerpV(F.pos[n], to, k(0.12))
+    }
+    F.snap = false
+    return
+  }
+  // a flat with no flight of its own (not used by the lessons now): straight from the figure
+  const t = F.t.v, e = t * t * (3 - 2 * t)
+  for (const n of F.pts) F.pos[n] = lerpV(ptS(S, n), F.target[n] ?? ptS(S, n), e)
+}
+
+/** Where the eye is, from the middle of the figure (a unit vector in the world), for a view. */
+function eyeDir(yaw: number, pitch: number): V3 {
+  const y = yaw * RAD, p = pitch * RAD
+  return [-Math.cos(p) * Math.sin(y), -Math.cos(p) * Math.cos(y), Math.sin(p)]
+}
+
+/**
+ * The view that looks straight at a triangle, from the side the eye is on
+ * now: seen like this it shows its true shape. An upright triangle is seen
+ * from level with the floor; one on the floor from straight above, turned so
+ * its flat leg runs across and the other points up the screen.
+ */
+export function facingView(S: Scene, F: { pts: string[]; right: string; legs?: Record<string, number> }): { yaw: number; pitch: number } {
+  const [A, B, C] = F.pts.map(n => p3(S, n, false))
+  let n = vunit(vcross(vsub(B, A), vsub(C, A)))
+  if (vdot(n, eyeDir(S.yawD, S.pitchD)) < 0) n = vmul(n, -1)
+  const pitch = clamp(Math.asin(clamp(n[2], -1, 1)) * DEG, -89, 89)
+  let yaw: number
+  if (Math.abs(n[2]) > 0.995) {
+    const { upLeg } = flatLegs(S, F)
+    const u = vsub(p3(S, upLeg, false), p3(S, F.right, false))
+    yaw = (n[2] > 0 ? Math.atan2(u[0], u[1]) : Math.atan2(-u[0], -u[1])) * DEG
+  } else yaw = Math.atan2(-n[0], -n[1]) * DEG
+  // the nearest equivalent, so it turns the short way round
+  return { yaw: S.yaw + ((((yaw - S.yaw) % 360) + 540) % 360) - 180, pitch }
+}
+
+/**
+ * Which way a flat faces: the way the triangle looks seen straight on (from
+ * the side the eye is on), so it comes out as it is and never flips over.
+ */
+export function flatHand(S: Scene, F: { pts: string[]; right: string; legs?: Record<string, number> }): number {
+  const v = facingView(S, F)
+  const y = v.yaw * RAD, p = v.pitch * RAD
+  // the eye's frame for that view (no perspective: only the turn matters)
+  const cam = (q: V3): Vec => { const x1 = q[0] * Math.cos(y) - q[1] * Math.sin(y), y1 = q[0] * Math.sin(y) + q[1] * Math.cos(y); return [x1, -(y1 * Math.sin(p) + q[2] * Math.cos(p))] }
+  const { flatLeg, upLeg } = flatLegs(S, F)
+  const R = cam(p3(S, F.right, false)), Fl = cam(p3(S, flatLeg, false)), U = cam(p3(S, upLeg, false))
+  const a = sub(Fl, R), b = sub(U, R)
+  return a[0] * b[1] - a[1] * b[0] >= 0 ? 1 : -1
 }
 
 // ── labels ───────────────────────────────────────────────────────────────
@@ -616,15 +734,43 @@ export function labelWidth(tex: string, size: number): number {
   return seen.length * size * 0.5
 }
 
-/** A label beside a line: at a point along it, out to the side away from `mid`, clear by half its own size. */
-export function besideLine(a: Vec, b: Vec, size: number, tex: string, mid: Vec, along = 0.5): Vec {
+/** A label beside a line: at a point along it, out to the side away from `mid` (or the side `side` points to), clear by half its own size. */
+export function besideLine(a: Vec, b: Vec, size: number, tex: string, mid: Vec, along = 0.5, side?: Vec): Vec {
   const m = lerpV(a, b, along)
   const d = sub(b, a), l = Math.hypot(d[0], d[1]) || 1
   let n: Vec = [-d[1] / l, d[0] / l]
-  if (dot(n, sub(mid, m)) > 0) n = mul(n, -1)
+  if (side ? dot(n, side) < 0 : dot(n, sub(mid, m)) > 0) n = mul(n, -1)
   const halfW = labelWidth(tex, size) / 2, halfH = size * 0.55
   const off = Math.max(size * 0.75 + 6, Math.abs(n[0]) * (halfW + 8) + Math.abs(n[1]) * (halfH + 7))
   return add(m, mul(n, off))
+}
+
+/**
+ * Which side of a line its length sits on: away from the figure's middle,
+ * but never decided by a near tie. A long diagonal runs right through the
+ * middle, so "away from the middle" flips every frame as the view eases (the
+ * 17 on EC jittered, Hassan 16 Nov 2026): when the evidence is weak the label
+ * keeps the side it had, or else sits above the line (right of an upright one).
+ */
+function lineSide(S: Scene, key: string, a: Vec, b: Vec, mid: Vec): Vec {
+  const m = lerpV(a, b, 0.5)
+  const d = sub(b, a), l = Math.hypot(d[0], d[1]) || 1
+  const n: Vec = [-d[1] / l, d[0] / l]
+  const prev = S.labSide[key]
+  const away = dot(n, sub(m, mid))
+  let pick: Vec
+  if (Math.abs(away) >= 12) pick = away > 0 ? n : mul(n, -1)
+  else if (prev) pick = dot(n, prev) >= 0 ? n : mul(n, -1)
+  else pick = Math.abs(n[1]) > 0.2 ? (n[1] < 0 ? n : mul(n, -1)) : n[0] > 0 ? n : mul(n, -1)
+  S.labSide[key] = pick
+  return pick
+}
+
+/** Which way a letter sits from its point: out from the middle, kept while the point is too near the middle to say. */
+function letterSide(S: Scene, key: string, p: Vec, mid: Vec): Vec {
+  const d = sub(p, mid), l = Math.hypot(d[0], d[1])
+  if (l >= 16) { const u: Vec = [d[0] / l, d[1] / l]; S.labSide[key] = u; return u }
+  return S.labSide[key] ?? [0.7071, 0.7071]
 }
 
 /** The middle of what is drawn of the solid, on screen. */
@@ -660,14 +806,16 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
   const out: Lab[] = []
   const size = L.labelSize
   const mid = screenMiddle(S)
+  // while a triangle is lifted out, what is not on it fades back with the rest of the solid
+  const lit = new Set(S.liftLit ?? [])
+  const back = (...pts: string[]) => (S.liftLit && !pts.every(n => lit.has(n)) ? 1 - S.dimMax * S.dim.v : 1)
   if (S.vis.letters.v > 0.01) {
     for (const [n, letter] of Object.entries(S.names)) {
       if (!letter || !S.P3[n]) continue
       const p = ptS(S, n)
-      const d = S.letterDir[n] ?? sub(p, mid), l = Math.hypot(d[0], d[1])
-      const dd: Vec = l < 1 ? [0.7, 0.7] : d
+      const dd = S.letterDir[n] ?? letterSide(S, `L-${n}`, p, mid)
       const ll = Math.hypot(dd[0], dd[1]) || 1
-      out.push({ key: `L-${n}`, tex: letter, col: CHALK, at: add(p, mul(dd, (size * 0.95 + 5) / ll)), size: size + 1, op: S.vis.letters.v })
+      out.push({ key: `L-${n}`, tex: letter, col: CHALK, at: add(p, mul(dd, (size * 0.95 + 5) / ll)), anchor: p, size: size + 1, op: S.vis.letters.v * back(n) })
     }
   }
   // while a triangle is out, its numbers are on the flat copy: the figure (now small) keeps only its letters
@@ -678,14 +826,15 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       if (!S.P3[a] || !S.P3[b]) continue
       const sg = S.segs[key]
       if (sg && sg.grow.v < 0.95) continue
-      out.push({ key: `N-${key}`, tex: lb.tex, col: lb.col ?? CHALK, at: besideLine(ptS(S, a), ptS(S, b), size, lb.tex, mid), size: size + 1, op: S.vis.lens.v, pulse: lb.pulse })
+      const A = ptS(S, a), B = ptS(S, b), along = lb.along ?? 0.5
+      out.push({ key: `N-${key}`, tex: lb.tex, col: lb.col ?? CHALK, at: besideLine(A, B, size, lb.tex, mid, along, lineSide(S, `N-${key}`, A, B, mid)), anchor: lerpV(A, B, along), size: size + 1, op: S.vis.lens.v * back(a, b), pulse: lb.pulse })
     }
   }
   if (S.vis.marks.v > 0.01 && !flatsOut) {
     S.arcs.forEach((g, i) => {
       if (!g.tex) return
       const G = arcGeom(S, g, arcPx(S), size, g.tex)
-      out.push({ key: `A-${i}-${g.at}`, tex: g.tex, col: g.col ?? CHALK, at: G.labelAt, size, op: S.vis.marks.v, pulse: g.pulse })
+      out.push({ key: `A-${i}-${g.at}`, tex: g.tex, col: g.col ?? CHALK, at: G.labelAt, anchor: G.C, size, op: S.vis.marks.v, pulse: g.pulse })
     })
   }
   if (S.vis.flats.v > 0.01) {
@@ -693,17 +842,19 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       if (F.t.v < 0.05 || F.pts.some(n => !F.pos[n])) continue
       const P = F.pts.map(n => F.pos[n])
       const m: Vec = [(P[0][0] + P[1][0] + P[2][0]) / 3, (P[0][1] + P[1][1] + P[2][1]) / 3]
+      // the letters ride along as it comes out; its numbers come once it has landed
       const op = S.vis.flats.v * clamp((F.t.v - 0.05) / 0.4, 0, 1)
+      const numOp = S.vis.flats.v * clamp((F.t.v - 0.8) / 0.2, 0, 1)
       for (const n of F.pts) {
         const letter = S.names[n]
         if (!letter) continue
         const p = F.pos[n], d = sub(p, m), l = Math.hypot(d[0], d[1]) || 1
-        out.push({ key: `FL-${F.id}-${n}`, tex: letter, col: CHALK, at: add(p, mul(d, (size * 0.95 + 5) / l)), size: size + 1, op })
+        out.push({ key: `FL-${F.id}-${n}`, tex: letter, col: CHALK, at: add(p, mul(d, (size * 0.95 + 5) / l)), anchor: p, size: size + 1, op })
       }
       for (const [key, lb] of Object.entries(F.lens)) {
         const [a, b] = key.split("-")
         if (!F.pos[a] || !F.pos[b]) continue
-        out.push({ key: `FN-${F.id}-${key}`, tex: lb.tex, col: lb.col ?? dirCol(S, a, b), at: besideLine(F.pos[a], F.pos[b], size, lb.tex, m), size: size + 2, op, pulse: lb.pulse })
+        out.push({ key: `FN-${F.id}-${key}`, tex: lb.tex, col: lb.col ?? dirCol(S, a, b), at: besideLine(F.pos[a], F.pos[b], size, lb.tex, m), anchor: lerpV(F.pos[a], F.pos[b], 0.5), size: size + 2, op: numOp, pulse: lb.pulse })
       }
       if (F.angle?.tex) {
         const others = F.pts.filter(n => n !== F.angle!.at)
@@ -711,7 +862,7 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
         const u1 = Math.atan2(a[1] - C[1], a[0] - C[0]), sw = turn(u1, Math.atan2(b[1] - C[1], b[0] - C[0]))
         const bis = u1 + sw / 2
         const r = Math.max(size * 2.4, (labelWidth(F.angle.tex, size) * 0.55 + 6) / Math.max(0.25, Math.sin(Math.abs(sw) / 2)))
-        out.push({ key: `FA-${F.id}`, tex: F.angle.tex, col: F.angle.col ?? CHALK, at: add(C, mul([Math.cos(bis), Math.sin(bis)], Math.min(r, size * 5))), size, op })
+        out.push({ key: `FA-${F.id}`, tex: F.angle.tex, col: F.angle.col ?? CHALK, at: add(C, mul([Math.cos(bis), Math.sin(bis)], Math.min(r, size * 5))), anchor: C, size, op: numOp })
       }
     }
   }
@@ -759,6 +910,14 @@ export function step(S: Scene, dt: number) {
   S.yawD += (S.yaw - S.yawD) * tv
   S.pitchD += (S.pitch - S.pitchD) * tv
 
+  // room for the flats, and the solid fading back while a triangle comes out of it (acts may hold these)
+  // (a triangle still waiting to come out does not count)
+  S.split.t = S.flats.some(F => F.t.t > 0 || F.fly) && S.vis.flats.t > 0.5 ? 1 : 0
+  S.split.v += (S.split.t - S.split.v) * k(0.05)
+  if (Math.abs(S.split.t - S.split.v) < 0.002) S.split.v = S.split.t
+  S.dim.v += (S.dim.t - S.dim.v) * k(0.06)
+  runActs(S)
+
   const L = layout(S)
   // the view holds still under a finger dragging a handle (else the box would grow away from it)
   if (S.drag?.kind !== "handle" || !S.fit) S.fit = fitFor(S, L)
@@ -769,9 +928,12 @@ export function step(S: Scene, dt: number) {
 
   placeFlats(S, L)
   for (const F of S.flats) {
-    F.t.v += (F.t.t - F.t.v) * k(0.05)
-    if (Math.abs(F.t.t - F.t.v) < 0.002) F.t.v = F.t.t
-    flatPos(S, F)
+    if (!F.fly) {
+      F.t.v += (F.t.t - F.t.v) * k(0.05)
+      if (Math.abs(F.t.t - F.t.v) < 0.002) F.t.v = F.t.t
+    }
+    flatPos(S, F, k)
+    if (F.t.v >= 0.999 && !F.fly) S.flatMem[`${F.id}:${F.pts.join("")}`] = { ...F.pos }
   }
 
   let node = S.eqFn ? S.eqFn(S) : null
@@ -802,11 +964,19 @@ export function step(S: Scene, dt: number) {
   for (const l of S.labs) {
     keep.add(l.key)
     const d = S.labD[l.key]
-    const slow = (S.labSlow[l.key] ?? 0) > S.time
-    const fl = k(slow ? 0.045 : S.drag ? 0.6 : 0.2)
-    S.labD[l.key] = d ? lerpV(d, l.at, fl) : [l.at[0], l.at[1]]
+    const want = sub(l.at, l.anchor)
+    if ((S.labSlow[l.key] ?? 0) > S.time && d) {
+      // a number flying to a new place: it travels slowly, on its own path
+      S.labD[l.key] = lerpV(d, l.at, k(0.045))
+      S.labOff[l.key] = sub(S.labD[l.key], l.anchor)
+      continue
+    }
+    // stuck to its anchor (no lag as the figure turns); only a change of side eases
+    const o = S.labOff[l.key]
+    S.labOff[l.key] = o ? lerpV(o, want, k(0.25)) : want
+    S.labD[l.key] = add(l.anchor, S.labOff[l.key])
   }
-  for (const key of Object.keys(S.labD)) if (!keep.has(key)) delete S.labD[key]
+  for (const key of Object.keys(S.labD)) if (!keep.has(key)) { delete S.labD[key]; delete S.labOff[key] }
 
   if (S.timers.length) {
     const due = S.timers.filter(t => S.time >= t.at)
@@ -816,6 +986,50 @@ export function step(S: Scene, dt: number) {
   S.flashGood = Math.max(0, S.flashGood - dt)
   if (S.note && S.time > S.note.until) S.note = null
 }
+
+/** Play the acts in turn: each runs for its time, then the next begins (in the same frame). */
+function runActs(S: Scene) {
+  for (let guard = 0; guard < 8; guard++) {
+    if (!S.act) {
+      const a = S.acts.shift()
+      if (!a) return
+      S.act = { a, t0: S.time }
+      a.begin?.(S)
+    }
+    const { a, t0 } = S.act
+    const t = clamp((S.time - t0) / Math.max(0.01, a.dur), 0, 1)
+    a.run?.(S, t * t * (3 - 2 * t), t)
+    if (t < 1) return
+    S.act = null
+    a.end?.(S)
+  }
+}
+
+/** Whether choreography is still playing. */
+export const acting = (S: Scene) => !!S.act || S.acts.length > 0
+
+/** An act that turns the view, slowly, to a yaw and pitch (worked out as it begins, from wherever the view is then). */
+export function turnAct(to: (S: Scene) => { yaw: number; pitch: number }, dur: number, lock = true): Act {
+  let from = { yaw: 0, pitch: 0 }, goal = { yaw: 0, pitch: 0 }
+  return {
+    dur, lock,
+    begin: S2 => {
+      S2.fling = { yaw: 0, pitch: 0 }
+      S2.spin = 0
+      from = { yaw: S2.yawD, pitch: S2.pitchD }
+      S2.yaw = S2.yawD
+      S2.pitch = S2.pitchD
+      goal = to(S2)
+    },
+    run: (S2, e) => {
+      S2.yaw = S2.yawD = from.yaw + (goal.yaw - from.yaw) * e
+      S2.pitch = S2.pitchD = from.pitch + (goal.pitch - from.pitch) * e
+    },
+  }
+}
+
+/** An act that only waits (something on the figure says its piece meanwhile). */
+export const holdAct = (dur: number, begin?: (S: Scene) => void, end?: (S: Scene) => void): Act => ({ dur, lock: true, begin, end })
 
 // ── beat helpers ─────────────────────────────────────────────────────────
 
@@ -842,6 +1056,8 @@ export function resetBeat(S: Scene) {
   S.rights = []
   S.arcs = []
   S.dots = []
+  S.ticks = []
+  S.vals = {}
   S.glowPts = []
   S.light = []
   S.handles = []
@@ -880,6 +1096,11 @@ export function resetBeat(S: Scene) {
   S.turned = 0
   S.fitPts = null
   S.labSlow = {}
+  S.acts = []
+  S.act = null
+  S.dim.t = 0
+  S.dimMax = 0.62
+  S.liftLit = null
 }
 
 /**
@@ -901,24 +1122,98 @@ export function addSeg(S: Scene, a: string, b: string, o: { col?: string; grown?
   return key
 }
 
-/** Lift a triangle out of the figure (it slides out over the next second), facing the way it is seen now. */
+/**
+ * A triangle lifted out of the figure, laid flat beside it at its true
+ * shape. `now`: already out (a board opened cold, or the beat after a lift);
+ * it starts where the last beat drew it, so nothing slides between beats.
+ */
 export function liftOut(S: Scene, id: string, pts: [string, string, string], right: string, lens: Flat["lens"] = {}, now = false): Flat {
   const old = S.flats.find(F => F.id === id)
   const hk = `${id}:${pts.join("")}`
-  const hand = S.hands[hk] ?? flatHand(S, pts, right)
+  const hand = S.hands[hk] ?? flatHand(S, { pts, right })
   S.hands[hk] = hand
-  // it starts where the triangle is (so it is never drawn before it has a place)
+  // it starts where the triangle is, or where it was last drawn (so it is never drawn before it has a place)
   const home = Object.fromEntries(pts.map(n => [n, ptS(S, n)])) as Record<string, Vec>
-  const F: Flat = { id, pts, right, t: { v: now ? 1 : old?.t.v ?? 0, t: 1 }, lens, pos: old ? { ...old.pos } : { ...home }, target: old ? { ...old.target } : { ...home }, hand }
+  const mem = S.flatMem[hk]
+  const start = old ? { ...old.pos } : mem ? { ...mem } : { ...home }
+  const F: Flat = { id, pts, right, t: { v: now ? 1 : old?.t.v ?? 0, t: now ? 1 : 0 }, lens, pos: start, target: old ? { ...old.target } : { ...start }, hand, snap: now && !old && !mem }
   S.flats = [...S.flats.filter(f => f.id !== id), F]
   S.vis.flats.t = 1
+  if (now) S.split.v = S.split.t = 1
   return F
 }
 
-/** Put the flats back into the figure. */
-export function putBack(S: Scene) {
-  for (const F of S.flats) F.t.t = 0
-  later(S, 1.6, S2 => { if (S2.flats.every(F => F.t.t === 0)) { S2.flats = []; S2.vis.flats.t = 0 } })
+/**
+ * Lift a triangle out, slowly, so the student sees what happens (Hassan, 16
+ * Nov 2026: "it should first slowly turn the 3d shape in such a position
+ * where that '2d shape' is being seen head on and then it should come out").
+ * The solid turns until the triangle faces the student and everything else
+ * fades back; its right angle shows square; the triangle comes away as one
+ * piece and lies down beside the solid, which moves over to make room; then
+ * the solid turns back to where the student had it.
+ */
+export function liftSlow(S: Scene, id: string, pts: [string, string, string], right: string, lens: Flat["lens"] = {}, then?: (F: Flat) => void): Flat {
+  const F = liftOut(S, id, pts, right, lens)
+  F.t = { v: 0, t: 0 }
+  const was = { yaw: S.yawD, pitch: S.pitchD }
+  let sp0 = 0
+  const others = pts.filter(n => n !== right)
+  const pulse = (S2: Scene, on: boolean) => {
+    const has = S2.rights.some(r => r.at === right)
+    S2.rights = has ? S2.rights.map(r => (r.at === right ? { ...r, pulse: on } : r)) : on ? [...S2.rights, { at: right, a: others[0], b: others[1], pulse: true }] : S2.rights
+  }
+  S.acts.push(
+    turnAct(S2 => { S2.dim.t = 1; S2.liftLit = [...pts]; return facingView(S2, F) }, 2.2),
+    holdAct(0.9, S2 => pulse(S2, true)),
+    {
+      dur: 2.6, lock: true,
+      begin: S2 => {
+        const hk = `${id}:${pts.join("")}`
+        F.hand = flatHand(S2, F)
+        S2.hands[hk] = F.hand
+        F.fly = { from: Object.fromEntries(pts.map(n => [n, ptS(S2, n)])), e: 0, home: false }
+        sp0 = S2.split.v
+      },
+      run: (S2, e) => {
+        if (F.fly) F.fly.e = e
+        F.t.v = F.t.t = e
+        S2.split.v = S2.split.t = sp0 + (1 - sp0) * e
+      },
+      end: S2 => { F.fly = null; F.t.v = F.t.t = 1; pulse(S2, false); S2.liftLit = null; then?.(F) },
+    },
+    { ...turnAct(() => was, 2.0, false), end: S2 => { S2.dim.t = 0 } },
+  )
+  return F
+}
+
+/**
+ * Put the flats back into the figure, one at a time and slowly: the solid
+ * turns to face each triangle's place, the flat flies back into it, then the
+ * solid takes its room back and turns to where it was.
+ */
+export function putBack(S: Scene, then?: (S: Scene) => void) {
+  const was = { yaw: S.yawD, pitch: S.pitchD }
+  for (const F of [...S.flats].reverse()) {
+    S.acts.push(
+      turnAct(S2 => { S2.dim.t = 1; S2.liftLit = [...F.pts]; return facingView(S2, F) }, 1.8),
+      {
+        dur: 2.2, lock: true,
+        begin: () => { F.fly = { from: { ...F.pos }, e: 0, home: true } },
+        run: (_S2, e) => { if (F.fly) F.fly.e = e; F.t.v = F.t.t = 1 - e },
+        // home: no longer drawn, but it keeps its place so the others do not move or grow
+        end: S2 => { F.fly = null; F.t.v = F.t.t = 0; S2.liftLit = null },
+      },
+    )
+  }
+  // the turn back and the solid taking its room back, together
+  const back = turnAct(() => was, 2.0)
+  let sp0 = 1
+  S.acts.push({
+    dur: 2.0, lock: true,
+    begin: S2 => { back.begin?.(S2); sp0 = S2.split.v },
+    run: (S2, e, t) => { back.run?.(S2, e, t); S2.split.v = S2.split.t = sp0 * (1 - e) },
+    end: S2 => { S2.dim.t = 0; S2.flats = []; S2.vis.flats.t = 0; then?.(S2) },
+  })
 }
 
 /** A number on one flat flies slowly to its place on another (or anywhere a label key is). */
@@ -1024,7 +1319,9 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     const n = pointAt(S, p, S.tapPoints)
     if (n) { S.drag = { kind: "join", from: n, start: p, p, moved: 0 }; return true }
   }
-  // anything else turns the figure; a tap without moving is a tap
+  // anything else turns the figure; a tap without moving is a tap. A turn the
+  // lesson is playing gives way to the student's hand, unless it is mid-lift.
+  if (S.act && !S.act.a.lock) { const a = S.act.a; S.act = null; a.end?.(S) }
   S.drag = { kind: "orbit", start: p, last: p, moved: 0 }
   return true
 }
@@ -1054,7 +1351,7 @@ export function pointerMove(S: Scene, p: Vec) {
   const dx = p[0] - d.last[0], dy = p[1] - d.last[1]
   d.moved += Math.hypot(dx, dy)
   d.last = p
-  if (d.moved < 6) return
+  if (d.moved < 6 || S.act?.a.lock) return
   const k = 0.42
   S.yaw += dx * k
   S.pitch = clamp(S.pitch + dy * k, -89, 89)
@@ -1121,11 +1418,19 @@ function tapAt(S: Scene, p: Vec) {
     return
   }
   if (S.mode === "tapRegion" && S.regions) {
-    // the smallest region under the finger (a triangle inside a face before the face)
+    // of the regions under the finger, the one it is most in the middle of (for its size): a
+    // triangle standing inside the solid and a face in front of it can overlap on screen, and
+    // tapping the middle of the one you mean must get it, whichever is smaller from this side
     const hits = S.regions.filter(r => inPoly(p, r.pts.map(n => ptS(S, n))))
     if (!hits.length) return
-    const area = (r: { pts: string[] }) => { const P = r.pts.map(n => ptS(S, n)); let a = 0; for (let i = 0; i < P.length; i++) { const q = P[(i + 1) % P.length]; a += P[i][0] * q[1] - q[0] * P[i][1] } return Math.abs(a) / 2 }
-    hits.sort((a, b) => area(a) - area(b))
+    const score = (r: { pts: string[] }) => {
+      const P = r.pts.map(n => ptS(S, n))
+      let a = 0
+      for (let i = 0; i < P.length; i++) { const q = P[(i + 1) % P.length]; a += P[i][0] * q[1] - q[0] * P[i][1] }
+      const c: Vec = [P.reduce((t, q) => t + q[0], 0) / P.length, P.reduce((t, q) => t + q[1], 0) / P.length]
+      return dist(p, c) / Math.sqrt(Math.max(1, Math.abs(a) / 2))
+    }
+    hits.sort((a, b) => score(a) - score(b))
     S.onRegion?.(S, hits[0].id)
     return
   }
@@ -1189,8 +1494,12 @@ function check(S: Scene) {
   inp.state = "wrong"
   inp.wrongAt = S.time
   inp.help?.(S, inp.tries)
+  // a known slip first; else a rounded copy of Ans typed inside a calculation where Ans was
+  // meant: the student cannot see its digits, so say so (never just "wrong")
   const slip = v !== null ? inp.slips?.find(s => slipMatches(inp.value, v, s.v)) : undefined
-  if (slip) say(S, slip.say, "wrong", 4.5)
+  if (slip) { say(S, slip.say, "wrong", 4.5); return }
+  const rounded = inp.typed?.includes("a") && !inp.value.includes("A") && isCalculation(inp.value) ? roundedAns(inp.value) : null
+  if (rounded) say(S, ansReminder(rounded, inp.ansName), "wrong", 6)
 }
 
 // ── word choices ─────────────────────────────────────────────────────────

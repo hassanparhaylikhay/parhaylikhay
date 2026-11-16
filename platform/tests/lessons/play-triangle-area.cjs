@@ -163,7 +163,7 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (id === "ex5-tap") { await tapAll(["half", "bc"], "h"); continue }
     if (id === "ex5-cross") { await cross("half"); await pickIdx(0); await expect(await crossDone(), "½ × 124.3 did not land"); continue }
     if (id === "ex5-divide") { await right(); continue }
-    if (id === "end") { await turnTo(110); await sleep(2500); await shot("end"); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Start again"); break }
+    if (id === "end") { await sleep(3500); await shot("end"); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Finish"); break }
     await next()
   }
   await T.finish()

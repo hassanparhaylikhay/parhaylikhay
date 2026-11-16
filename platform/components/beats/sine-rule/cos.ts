@@ -507,24 +507,29 @@ export function askAngle(S: Scene, q: CRQ, onRight?: (S: Scene) => void) {
 
 // ── "Show me how" ────────────────────────────────────────────────────────
 
+/** Light parts of the triangle for a walkthrough step: these sides glow, these angles breathe. */
+const lightTri = (sides: Corner[], angs: Corner[] = []) => (S: Scene) => { S.glowSide = new Set(sides); S.pulseAng = new Set(angs); S.pulseSide = new Set() }
+
+// Each walkthrough guides to what to press and stops there: the student works
+// out the number (Hassan, 16 Nov 2026: "Show me how should not just give
+// away the answer").
 export function squareWalk(q: CRQ): WalkStep<Scene>[] {
   const [p1, p2] = orderOf(q)
   const s1 = numText(sv(q, p1), 2), s2 = numText(sv(q, p2), 2), C = numText(av(q, "C"), 1)
   const n = nameOf(q)
   return [
-    { say: "Type the right side just as it's written.", tex: `${n}^2 = ${s1}^2 + ${s2}^2 - 2 \\times ${s1} \\times ${s2} \\times \\cos ${C}^\\circ` },
-    { say: `Press $${s1}$, $x^2$, $+$, $${s2}$, $x^2$, $-$, $2$, $\\times$, $${s1}$, $\\times$, $${s2}$, $\\times$, $\\cos$, $${C}$, then $=$.` },
-    { say: "The calculator does the multiplying before the taking away.", tex: `${n}^2 = \\textcolor{${GREEN}}{${dots(sqValue(q))}}` },
+    { say: "The two sides and the angle between them go in.", tex: `${n}^2 = ${s1}^2 + ${s2}^2 - 2 \\times ${s1} \\times ${s2} \\times \\cos ${C}^\\circ`, show: lightTri([p1, p2], ["C"]) },
+    { say: "Type the right side just as it's written. The calculator does the multiplying before the taking away.", show: lightTri([p1, p2], ["C"]) },
+    { say: `Press $${s1}$, $x^2$, $+$, $${s2}$, $x^2$, $-$, $2$, $\\times$, $${s1}$, $\\times$, $${s2}$, $\\times$, $\\cos$, $${C}$, then $=$.`, show: lightTri([]) },
   ]
 }
 
 export function rootWalk(q: CRQ): WalkStep<Scene>[] {
   const n = nameOf(q)
-  const ans = answerText(q)
   return [
-    { say: `$${n}$ is the square root of $${dots(sqValue(q))}$.`, tex: `${n} = \\sqrt{${dots(sqValue(q))}}` },
-    { say: "Press $\\sqrt{\\phantom{x}}$, Ans, then $=$." },
-    { say: `That gives $${sigText(answerOf(q), 6)}\\ldots$, which is $${ans}$${q.dp !== undefined ? ` to $${q.dp}$ decimal places` : " to $3$ significant figures"}.`, tex: `${n} = \\textcolor{${GREEN}}{${ans}}` },
+    { say: `$${n}$ is the square root of $${dots(sqValue(q))}$.`, tex: `${n} = \\sqrt{${dots(sqValue(q))}}`, show: S => { lightTri([])(S); S.pulseSide = new Set(["C"]) } },
+    { say: `Ans holds $${dots(sqValue(q))}$. Press $\\sqrt{\\phantom{x}}$, Ans, then $=$.`, tex: `${n} = \\sqrt{\\text{Ans}}` },
+    { say: q.dp !== undefined ? `Give $${q.dp}$ decimal places.` : "Give $3$ significant figures." },
   ]
 }
 
@@ -533,32 +538,31 @@ export function topWalk(q: CRQ): WalkStep<Scene>[] {
   const a = sv(q, p1), b = sv(q, p2), c = sv(q, "C")
   const sq2 = (x: number) => numText(x * x, 4)
   return [
-    { say: "Square each side, then add the first two and take the third away.", tex: `${numText(a, 2)}^2 + ${numText(b, 2)}^2 - ${numText(c, 2)}^2` },
-    { say: "Work out each square.", tex: `${sq2(a)} + ${sq2(b)} - ${sq2(c)}` },
-    { say: "That gives the top.", tex: `= \\textcolor{${GREEN}}{${dots(topValue(q))}}` },
+    { say: "The two sides next to the angle are added. The side across from it is taken away.", tex: `${numText(a, 2)}^2 + ${numText(b, 2)}^2 - ${numText(c, 2)}^2`, show: lightTri([p1, p2]) },
+    { say: "Square each one first.", tex: `${sq2(a)} + ${sq2(b)} - ${sq2(c)}`, show: lightTri([p1, p2, "C"]) },
   ]
 }
 
 export function bottomWalk(q: CRQ): WalkStep<Scene>[] {
   const [p1, p2] = orderOf(q)
   return [
-    { say: "Multiply $2$ by the two sides.", tex: `2 \\times ${numText(sv(q, p1), 2)} \\times ${numText(sv(q, p2), 2)}` },
-    { say: "That gives the bottom.", tex: `= \\textcolor{${GREEN}}{${dots(botValue(q))}}` },
+    { say: "The bottom is $2$ times the two sides next to the angle.", tex: `2 \\times ${numText(sv(q, p1), 2)} \\times ${numText(sv(q, p2), 2)}`, show: lightTri([p1, p2], ["C"]) },
+    { say: `Press $2$, $\\times$, $${numText(sv(q, p1), 2)}$, $\\times$, $${numText(sv(q, p2), 2)}$, then $=$.`, show: lightTri([]) },
   ]
 }
 
 export function divideWalk(q: CRQ): WalkStep<Scene>[] {
   return [
-    { say: "Divide the top by the bottom.", tex: `${dots(topValue(q))} \\div ${dots(botValue(q))}` },
-    { say: `That gives $\\cos ${nameOf(q)}$.`, tex: `\\cos ${nameOf(q)} = \\textcolor{${GREEN}}{${dots(cosValue(q))}}` },
+    { say: `$\\cos ${nameOf(q)}$ is the top divided by the bottom.`, tex: `\\cos ${nameOf(q)} = ${dots(topValue(q))} \\div ${dots(botValue(q))}`, show: S => { lightTri([])(S); S.pulseAng = new Set(["C"]) } },
+    { say: "Type the top, $\\div$, the bottom, then $=$." },
   ]
 }
 
 export function angleWalk(q: CRQ): WalkStep<Scene>[] {
   const n = nameOf(q)
   return [
-    { say: `$${n}$ is $\\cos^{-1}$ of $${dots(cosValue(q))}$.`, tex: `${n} = \\cos^{-1}(${dots(cosValue(q))})` },
-    { say: "Press SHIFT, $\\cos$, Ans, then $=$." },
-    { say: `That gives $${answerOf(q).toFixed(4)}\\ldots^\\circ$, which is $${answerText(q)}^\\circ$ to $1$ decimal place.`, tex: `${n} = \\textcolor{${GREEN}}{${answerText(q)}^\\circ}` },
+    { say: `$${n}$ is $\\cos^{-1}$ of $${dots(cosValue(q))}$.`, tex: `${n} = \\cos^{-1}(${dots(cosValue(q))})`, show: S => { lightTri([])(S); S.pulseAng = new Set(["C"]) } },
+    { say: "Ans holds it. Press SHIFT, $\\cos$, Ans, then $=$.", tex: `${n} = \\cos^{-1}(\\text{Ans})` },
+    { say: "Give it to $1$ decimal place." },
   ]
 }

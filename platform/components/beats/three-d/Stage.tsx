@@ -98,7 +98,9 @@ function Solid({ S, op }: { S: Scene; op: number }) {
   const depth = (f: string[]) => f.reduce((s, n) => s + toCam(S, p3(S, n))[2], 0) / f.length
   const front = faces.filter(f => faceFront(S, f)).sort((a, b) => depth(a) - depth(b))
   const back = faces.filter(f => !faceFront(S, f))
-  for (const [i, f] of back.entries()) out.push(<polygon key={`bf${i}`} points={poly(f.map(n => ptS(S, n)))} fill={CHALK} fillOpacity={0.025} stroke="none" />)
+  // while a triangle is lifted out, the rest of the solid fades back
+  const fade = 1 - S.dimMax * S.dim.v
+  for (const [i, f] of back.entries()) out.push(<polygon key={`bf${i}`} points={poly(f.map(n => ptS(S, n)))} fill={CHALK} fillOpacity={0.025 * fade} stroke="none" />)
 
   // edges at the back: dashed
   const edges = edgesOf(S)
@@ -106,7 +108,7 @@ function Solid({ S, op }: { S: Scene; op: number }) {
     if (!segHidden(S, a, b)) continue
     const key = segKey(a, b), A = ptS(S, a), B = ptS(S, b)
     const col = S.edgeCol[key]
-    out.push(<line key={`he${key}`} x1={A[0]} y1={A[1]} x2={B[0]} y2={B[1]} stroke={col ?? CHALK} strokeOpacity={col ? 0.9 : 0.45} strokeWidth={col ? 2.6 : 1.7} strokeDasharray="5 6" strokeLinecap="round" />)
+    out.push(<line key={`he${key}`} x1={A[0]} y1={A[1]} x2={B[0]} y2={B[1]} stroke={col ?? CHALK} strokeOpacity={(col ? 0.9 : 0.45) * fade} strokeWidth={col ? 2.6 : 1.7} strokeDasharray="5 6" strokeLinecap="round" />)
   }
 
   // lit triangles and lines through the inside, behind the front glass
@@ -117,6 +119,11 @@ function Solid({ S, op }: { S: Scene; op: number }) {
         {T.pulse && <animate attributeName="fill-opacity" values="0.06;0.26;0.06" dur="1.8s" repeatCount="indefinite" />}
       </polygon>,
     )
+  }
+  // the triangle being lifted, lit as the solid turns to face it
+  if (S.liftLit && S.dim.v > 0.01) {
+    const P = S.liftLit.map(n => ptS(S, n))
+    out.push(<polygon key="lift" points={poly(P)} fill={YELLOW} fillOpacity={0.2 * S.dim.v} stroke={YELLOW} strokeOpacity={0.75 * S.dim.v} strokeWidth={2} strokeLinejoin="round" />)
   }
   if (S.regions && S.regionLit) {
     const r = S.regions.find(x => x.id === S.regionLit)
@@ -137,14 +144,14 @@ function Solid({ S, op }: { S: Scene; op: number }) {
 
   for (const [i, f] of front.entries()) {
     const s = shade(S, f)
-    out.push(<polygon key={`ff${i}`} points={poly(f.map(n => ptS(S, n)))} fill={CHALK} fillOpacity={0.03 + 0.06 * s} stroke="none" />)
+    out.push(<polygon key={`ff${i}`} points={poly(f.map(n => ptS(S, n)))} fill={CHALK} fillOpacity={(0.03 + 0.06 * s) * fade} stroke="none" />)
   }
   // edges in front: solid
   for (const [a, b] of edges) {
     if (segHidden(S, a, b)) continue
     const key = segKey(a, b), A = ptS(S, a), B = ptS(S, b)
     const col = S.edgeCol[key]
-    out.push(<line key={`e${key}`} x1={A[0]} y1={A[1]} x2={B[0]} y2={B[1]} stroke={col ?? CHALK} strokeWidth={col ? 3 : 2.2} strokeLinecap="round" />)
+    out.push(<line key={`e${key}`} x1={A[0]} y1={A[1]} x2={B[0]} y2={B[1]} stroke={col ?? CHALK} strokeOpacity={col ? 1 : fade} strokeWidth={col ? 3 : 2.2} strokeLinecap="round" />)
   }
   for (const n of S.dots) {
     const P = ptS(S, n)
@@ -187,6 +194,17 @@ function Marks({ S, op }: { S: Scene; op: number }) {
     const d = rightPath(S, r.at, r.a, r.b)
     if (r.pulse) out.push(<path key={`rg${i}`} d={d} fill="none" stroke={YELLOW} strokeWidth={7} strokeLinejoin="round" filter="url(#pl-soft)">{breathe("1.4s")}</path>)
     out.push(<path key={`r${i}`} d={d} fill="none" stroke={r.col ?? CHALK} strokeWidth={2} strokeLinejoin="round" />)
+  }
+  // equal parts of a line: short marks across it
+  for (const [i, tk] of S.ticks.entries()) {
+    const A = p3(S, tk.a), B = p3(S, tk.b)
+    const a = ptS(S, tk.a), b = ptS(S, tk.b), d = sub(b, a), l = Math.hypot(d[0], d[1]) || 1
+    const n: Vec = [-d[1] / l, d[0] / l]
+    tk.at.forEach((f, j) => {
+      const P = proj(S, [A[0] + (B[0] - A[0]) * f, A[1] + (B[1] - A[1]) * f, A[2] + (B[2] - A[2]) * f])
+      const p1 = add(P, mul(n, 8)), p2 = sub(P, mul(n, 8))
+      out.push(<line key={`tk${i}-${j}`} x1={p1[0]} y1={p1[1]} x2={p2[0]} y2={p2[1]} stroke={tk.pulse ? YELLOW : CHALK} strokeWidth={2.4} strokeLinecap="round">{tk.pulse && breathe("1.4s")}</line>)
+    })
   }
   for (const [i, g] of S.arcs.entries()) {
     const G = arcGeom(S, g, arcPx(S))
@@ -291,6 +309,8 @@ function Flats({ S, op }: { S: Scene; op: number }) {
     const home = F.pts.map(n => ptS(S, n))
     out.push(<polygon key={`home${F.id}`} points={poly(home)} fill={CHALK} fillOpacity={0.06 * F.t.v} stroke={CHALK} strokeOpacity={0.35 * F.t.v} strokeWidth={1.4} strokeDasharray="4 5" strokeLinejoin="round" />)
     const P = F.pts.map(n => F.pos[n])
+    // in flight it glows a little, lifted toward the eye
+    if (F.fly) out.push(<polygon key={`glow${F.id}`} points={poly(P)} fill={YELLOW} fillOpacity={0.16 * Math.sin(Math.PI * F.fly.e)} stroke={YELLOW} strokeOpacity={0.5 * Math.sin(Math.PI * F.fly.e)} strokeWidth={8} strokeLinejoin="round" filter="url(#pl-soft)" />)
     out.push(<polygon key={`fill${F.id}`} points={poly(P)} fill={CHALK} fillOpacity={0.07} stroke="none" />)
     for (let i = 0; i < 3; i++) {
       const a = F.pts[i], b = F.pts[(i + 1) % 3], A = F.pos[a], B = F.pos[b]

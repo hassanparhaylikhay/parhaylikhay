@@ -37,6 +37,8 @@ export const solidEngine: BeatEngine<Scene, Layout> = {
     },
     arcAt: (S: Scene, i: number) => { const g = S.tapArcs?.[i]; return g ? arcGeom(S, g, arcPx(S)).spot : null },
     segKey,
+    /** a world point on the screen */
+    projAt: (S: Scene, p: [number, number, number]) => proj(S, p),
     /** where the stick's top would be, turned `phi` and tipped `th` (degrees) */
     stickAt: (S: Scene, phi: number, th: number) => (S.stick ? proj(S, stickTop({ ...S.stick, phi: phi * RAD, th: th * RAD })) : null),
     stickNow: (S: Scene) => (S.stick ? [S.stick.phi / RAD, S.stick.th / RAD] : null),

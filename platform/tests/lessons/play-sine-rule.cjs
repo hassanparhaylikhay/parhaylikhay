@@ -207,7 +207,7 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (id === "ex5-52") { await slip("128"); await right("52"); continue }
     if (id === "ex5-other") { await slip("71.0"); await right("109.0"); continue }
     if (id === "ex5-fill") { await place("side-B", "sL"); await place("ang-B", "aL"); await place("side-A", "sR"); await place("ang-A", "aR"); continue }
-    if (id === "end") { const c = await corner("C"); await dragTo(c, [c[0] + 50, c[1] + 20]); await sleep(4200); await shot("end"); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Start again"); break }
+    if (id === "end") { await sleep(3500); await shot("end"); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Finish"); break }
     // a watching beat
     await next()
   }

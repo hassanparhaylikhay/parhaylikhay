@@ -14,12 +14,12 @@ import { applyParts } from "../chapter"
 import type { WalkStep } from "../walk"
 import { row } from "../equation"
 import {
-  type Scene, type V3, type Arc3, CHALK, BLUE, ORANGE, PINK, GREEN,
+  type Scene, type V3, type Arc3, CHALK, BLUE, ORANGE, PINK, YELLOW,
   segKey, addSeg, liftOut, later, say, choose, placeStick, stickTop, resetBeat, goodView, RAD, DEG,
 } from "./scene"
 import {
   type Beat, look, num, sig, c, pc, lens, boxBoard, boxLens, ecBoard, pyrBoard, solidBoard,
-  watch, rightBeat, liftBeat, askBeat,
+  watch, rightBeat, liftBeat, askBeat, lightFlat,
 } from "./kit"
 
 // ── the stick ────────────────────────────────────────────────────────────
@@ -61,13 +61,32 @@ function tiltBeat(id: string, say0: string, o: Parameters<typeof stickBoard>[1],
 
 // ── angle walkthroughs ───────────────────────────────────────────────────
 
-/** Finding an angle from two sides of a right-angled triangle: which rule, then the inverse. */
-function angleWalk(rule: "tan" | "sin" | "cos", top: [string, string], bottom: [string, string], value: number, name = "\\theta"): WalkStep<Scene>[] {
+/**
+ * Finding an angle from two sides of a right-angled triangle, on the flat:
+ * the angle lights up, then the two sides we know, which pick the rule;
+ * then the inverse undoes it. It stops at what to press. `top`/`bottom`:
+ * what each side says, its colour, and its side on the flat (segKey).
+ */
+function angleWalk(rule: "tan" | "sin" | "cos", top: [string, string, string?], bottom: [string, string, string?], name = "\\theta", topIsAns = false, flat = "up"): WalkStep<Scene>[] {
   const roles = { tan: "the opposite and the adjacent", sin: "the opposite and the hypotenuse", cos: "the adjacent and the hypotenuse" }[rule]
-  const ans = c(GREEN, `${value.toFixed(1)}^\\circ`)
+  const keys = [top[2], bottom[2]].filter((k): k is string => !!k)
+  const t0 = topIsAns ? "\\text{Ans}" : top[0]
   return [
-    { say: `We know ${roles}. So we use $\\${rule}$.`, tex: `\\${rule}\\,${name} = \\dfrac{${c(top[1], top[0])}}{${c(bottom[1], bottom[0])}}` },
-    { say: `Undo the $\\${rule}$ with SHIFT $\\${rule}$.`, tex: `${name} = \\${rule}^{-1}\\!\\left(\\dfrac{${top[0]}}{${bottom[0]}}\\right) = ${ans}` },
+    { say: "This is the angle we want.", tex: `${name} = \\;?`, show: S => { lightFlat(S, flat, []); const F = S.flats.find(f => f.id === flat); if (F?.angle) F.angle = { ...F.angle, col: YELLOW } } },
+    { say: `We know ${roles}. So we use $\\${rule}$.`, tex: `\\${rule}\\,${name} = \\dfrac{${c(top[1], top[0])}}{${c(bottom[1], bottom[0])}}`, show: S => lightFlat(S, flat, keys) },
+    { say: `Undo the $\\${rule}$ with SHIFT $\\${rule}$.${topIsAns ? ` Ans holds $${top[0]}$ with every digit.` : ""}`, tex: `${name} = \\${rule}^{-1}\\!\\left(\\dfrac{${t0}}{${bottom[0]}}\\right)`, show: S => lightFlat(S, flat, []) },
+  ]
+}
+
+/**
+ * Finding a height from an angle and the side next to it, on the flat: the
+ * two sides light up and pick tan; then the side next to it moves across.
+ * It stops at what to press.
+ */
+function tanSideWalk(name: string, ang: string, next: string, key: string, nextKey: string): WalkStep<Scene>[] {
+  return [
+    { say: `$${name}$ is opposite the $${ang}$, and $${next}$ is next to it. So tan.`, tex: `\\tan ${ang} = \\dfrac{${c(ORANGE, name)}}{${next}}`, show: S => lightFlat(S, "up", [key, nextKey]) },
+    { say: `Move the $${next}$ across: it multiplies.`, tex: `${c(ORANGE, name)} = ${next} \\times \\tan ${ang}`, show: S => lightFlat(S, "up", [key]) },
   ]
 }
 
@@ -120,6 +139,12 @@ function hallBoard(S: Scene, o: { fromC?: boolean; fromA?: boolean; lb?: string 
   if (o.fromA) { addSeg(S, "A", "L", { grown: true }); S.rights = [...S.rights, { at: "B", a: "L", b: "A" }]; S.arcs = [...S.arcs, { at: "A", a: "B", b: "L", tex: "?" }] }
 }
 
+/** The hall's first triangle, still out with its height found, while the second is lifted beside it. */
+function hallC(S: Scene) {
+  S.tris = [{ id: "LBC", pts: ["L", "B", "C"], col: CHALK }]
+  liftOut(S, "up", ["L", "B", "C"], "B", { [segKey("B", "C")]: lens("20", BLUE), [segKey("B", "L")]: lens(sig(H_LB, 3), ORANGE) }, true).angle = { at: "C", tex: "25^\\circ" }
+}
+
 // ── exam figures ─────────────────────────────────────────────────────────
 
 /** 4024/21/O/N/25 Q25: the cuboid 12 by 10 by 7, CE = 17.1. */
@@ -146,12 +171,14 @@ function x2Board(S: Scene, o: { light?: boolean; shadow?: boolean } = {}) {
   const at = (deg: number): V3 => [X2_R * Math.cos(deg * RAD), X2_R * Math.sin(deg * RAD), 0]
   const A = at(210), C = at(330), B = at(90)
   solidBoard(S, { A, B, C, V: [0, 0, X2_DRAWN], O: [0, 0, 0] }, [["A", "C", "B"], ["V", "A", "C"], ["V", "C", "B"], ["V", "B", "A"]], { A: "A", B: "B", C: "C", V: "V", O: "O" })
-  S.lens[segKey("B", "C")] = lens("34")
-  S.lens[segKey("V", "B")] = lens("82", PINK)
-  S.edgeCol[segKey("V", "B")] = PINK
+  // what the question gives stays on the figure: the base's sides, the edges up, and OB
+  for (const [a, b] of [["A", "B"], ["B", "C"], ["C", "A"]]) S.lens[segKey(a, b)] = lens("34")
+  for (const n of ["A", "B", "C"]) { S.lens[segKey("V", n)] = lens("82", PINK); S.edgeCol[segKey("V", n)] = PINK }
   S.dots = ["O"]
+  addSeg(S, "O", "B", { grown: true })
+  S.lens[segKey("O", "B")] = lens("19.6", BLUE)
   if (o.light) S.light = ["V"]
-  if (o.shadow) { addSeg(S, "O", "B", { grown: true }); addSeg(S, "O", "V", { grown: true }); S.lens[segKey("O", "B")] = lens("19.6", BLUE); S.rights = [{ at: "O", a: "V", b: "B" }] }
+  if (o.shadow) { addSeg(S, "O", "V", { grown: true }); S.rights = [{ at: "O", a: "V", b: "B" }] }
 }
 
 /** 4024/21/O/N/21 Q10(b): square base 12, EX = 17, EC = 19. */
@@ -218,6 +245,17 @@ function x5Board(S: Scene, o: { fromC?: boolean; ak?: string } = {}) {
   S.arcs = [{ at: "B", a: "A", b: "K", tex: "24^\\circ" }]
   S.rights = [{ at: "A", a: "K", b: "B" }]
   if (o.fromC) { addSeg(S, "C", "K", { grown: true }); S.arcs = [...S.arcs, { at: "C", a: "A", b: "K", tex: "?" }]; S.rights = [...S.rights, { at: "A", a: "K", b: "C" }] }
+}
+
+/** The exam hall's first triangle, still out with LB found. */
+function x4C(S: Scene) {
+  S.tris = [{ id: "LBC", pts: ["L", "B", "C"], col: CHALK }]
+  liftOut(S, "up", ["L", "B", "C"], "B", { [segKey("B", "C")]: lens("107", BLUE), [segKey("B", "L")]: lens(sig(X4.LB, 3), ORANGE) }, true).angle = { at: "C", tex: "8.2^\\circ" }
+}
+/** The kite's first triangle, still out with AK found. */
+function x5B(S: Scene) {
+  S.tris = [{ id: "KAB", pts: ["K", "A", "B"], col: CHALK }]
+  liftOut(S, "up", ["K", "A", "B"], "A", { [segKey("A", "B")]: lens("72", BLUE), [segKey("A", "K")]: lens(sig(X5_AK, 3), ORANGE) }, true).angle = { at: "B", tex: "24^\\circ" }
 }
 
 // ── beat makers ──────────────────────────────────────────────────────────
@@ -347,20 +385,14 @@ const PART_A: Beat[] = [
     name: "\\theta", col: CHALK, answer: Math.atan(8 / 15) * DEG, dp: 1, shown: `${(Math.atan(8 / 15) * DEG).toFixed(1)}^\\circ`, typed: "T8/15",
     slips: angleSlips(Math.atan(8 / 15) * DEG, 8 / 15, "$C$, at the top"),
     angleOn: "up",
-    walk: angleWalk("tan", ["8", ORANGE], ["15", BLUE], Math.atan(8 / 15) * DEG),
+    walk: angleWalk("tan", ["8", ORANGE, segKey("G", "C")], ["15", BLUE, segKey("E", "G")]),
   }),
-  {
-    id: "box-turn",
-    say: "Turn the box. From every side, the angle is $28.1^\\circ$.",
-    enter: S => {
-      boxWithEC(S, { eg: true, right: true })
-      S.arcs = [{ at: "E", a: "C", b: "G", tex: "28.1^\\circ" }]
-      look(S)
-    },
-    done: S => S.turned >= 70,
-    free: true,
-    minPlay: 4,
-  },
+  watch("box-turn", "Seen from any side, the angle is still $28.1^\\circ$.", S => {
+    boxWithEC(S, { eg: true, right: true })
+    S.arcs = [{ at: "E", a: "C", b: "G", tex: "28.1^\\circ" }]
+    S.spin = 16
+    look(S)
+  }, 3.2),
 
   // ── 3. Find the shadow ──
   shadowBeat("ag-shadow", "Now the line $AG$. Where does $A$'s shadow land? Tap it.", S => { boxBoard(S); boxLens(S); addSeg(S, "A", "G", { grown: true }) }, "A", "E", ["E", "F", "G", "H"], "Look straight down from $A$."),
@@ -378,7 +410,11 @@ const PART_A: Beat[] = [
     name: "EG", col: BLUE, answer: 10, sf: 3, shown: "10", typed: "r8^+6^",
     slips: [{ v: 14, say: "That's $8 + 6$. Square them first." }, { v: 100, say: "That's $EG^2$. Now take the square root." }],
     onFigure: segKey("E", "G"),
-    walk: [{ say: "$EG$ is the long side of the floor triangle.", tex: `${c(BLUE, "EG")} = \\sqrt{8^2 + 6^2} = \\sqrt{100} = ${c(GREEN, "10")}` }],
+    walk: [
+      { say: "$EG$ goes across the floor, $8$ along and $6$ across.", tex: `${c(BLUE, "EG")}^2 = 8^2 + 6^2`, show: S => { S.edgeCol = { [segKey("E", "H")]: YELLOW, [segKey("H", "G")]: YELLOW } } },
+      { say: "Square them and add: that's $100$.", tex: `${c(BLUE, "EG")}^2 = 64 + 36 = 100` },
+      { say: "$EG$ is its square root.", tex: `${c(BLUE, "EG")} = \\sqrt{100}`, show: S => { S.edgeCol = {}; S.segs[segKey("E", "G")].glow = true } },
+    ],
   }),
   askBeat("q1-ang", "Now work out the angle.", S => {
     ecBoard(S, { l: 8, w: 6, h: 5, eg: true, right: true })
@@ -389,7 +425,7 @@ const PART_A: Beat[] = [
     name: "\\theta", col: CHALK, answer: Math.atan(0.5) * DEG, dp: 1, shown: `${(Math.atan(0.5) * DEG).toFixed(1)}^\\circ`, typed: "T5/10",
     slips: angleSlips(Math.atan(0.5) * DEG, 0.5, "$C$, at the top"),
     angleOn: "up",
-    walk: angleWalk("tan", ["5", ORANGE], ["10", BLUE], Math.atan(0.5) * DEG),
+    walk: angleWalk("tan", ["5", ORANGE, segKey("G", "C")], ["10", BLUE, segKey("E", "G")]),
   }),
   askBeat("q2", "What angle does the edge $EC$ make with the base?", S => {
     pyrWithEC(S, { shadow: true })
@@ -400,7 +436,7 @@ const PART_A: Beat[] = [
     name: "\\theta", col: CHALK, answer: Math.atan(8 / Math.sqrt(18)) * DEG, dp: 1, shown: `${(Math.atan(8 / Math.sqrt(18)) * DEG).toFixed(1)}^\\circ`, typed: "T8/4.243",
     slips: angleSlips(Math.atan(8 / Math.sqrt(18)) * DEG, 8 / Math.sqrt(18), "the top"),
     angleOn: "up",
-    walk: angleWalk("tan", ["8", ORANGE], ["4.24", BLUE], Math.atan(8 / Math.sqrt(18)) * DEG),
+    walk: angleWalk("tan", ["8", ORANGE, segKey("E", "X")], ["4.24", BLUE, segKey("X", "C")]),
   }),
 ]
 
@@ -445,26 +481,21 @@ const PART_B: Beat[] = [
     slips: [{ v: 20 * Math.sin(25 * RAD), say: "$LB$ is opposite the $25^\\circ$, and $20$ is next to it. That's tan, not sin." }, { v: 20 / Math.tan(25 * RAD), say: "Multiply: $LB = 20 \\times \\tan 25^\\circ$." }],
     writes: [["up", segKey("B", "L")]],
     onFigure: segKey("B", "L"),
-    walk: [
-      { say: "$LB$ is opposite the $25^\\circ$, and $20$ is next to it. So tan.", tex: `\\tan 25^\\circ = \\dfrac{${c(ORANGE, "LB")}}{20}` },
-      { say: "Move the $20$ across: it multiplies.", tex: `${c(ORANGE, "LB")} = 20 \\times \\tan 25^\\circ = ${c(GREEN, sig(H_LB, 3))}` },
-    ],
+    walk: tanSideWalk("LB", "25^\\circ", "20", segKey("B", "L"), segKey("B", "C")),
   }),
-  liftBeat("hall-lift-a", "Now tap triangle $LBA$ to lift it out.", S => {
-    hallBoard(S, { fromC: true, fromA: true, lb: sig(H_LB, 3) })
-    look(S)
-  }, {
+  liftBeat("hall-lift-a", "Now tap triangle $LBA$ to lift it out.", S => { hallBoard(S, { fromC: true, fromA: true, lb: sig(H_LB, 3) }); hallC(S); look(S) }, {
     regions: [{ id: "LBA", pts: ["L", "B", "A"] }],
-    makes: { LBA: { pts: ["L", "B", "A"], right: "B", lens: { [segKey("B", "A")]: lens("12", BLUE), [segKey("B", "L")]: lens(sig(H_LB, 3), ORANGE) }, angle: { at: "A", tex: "?" } } },
+    makes: { LBA: { flat: "a", pts: ["L", "B", "A"], right: "B", lens: { [segKey("B", "A")]: lens("12", BLUE), [segKey("B", "L")]: lens(sig(H_LB, 3), ORANGE) }, angle: { at: "A", tex: "?" } } },
   }),
   askBeat("hall-ang", "Work out the angle of elevation from $A$.", S => {
     hallBoard(S, { fromC: true, fromA: true, lb: sig(H_LB, 3) })
-    liftOut(S, "up", ["L", "B", "A"], "B", { [segKey("B", "A")]: lens("12", BLUE), [segKey("B", "L")]: lens(sig(H_LB, 3), ORANGE) }, true).angle = { at: "A", tex: "?" }
+    hallC(S)
+    liftOut(S, "a", ["L", "B", "A"], "B", { [segKey("B", "A")]: lens("12", BLUE), [segKey("B", "L")]: lens(sig(H_LB, 3), ORANGE) }, true).angle = { at: "A", tex: "?" }
   }, {
-    name: "\\theta", col: CHALK, answer: H_ANG, dp: 1, shown: `${H_ANG.toFixed(1)}^\\circ`, ans: H_LB, typed: "Ta/12",
+    name: "\\theta", col: CHALK, answer: H_ANG, dp: 1, shown: `${H_ANG.toFixed(1)}^\\circ`, ans: H_LB, ansName: "LB", typed: "Ta/12",
     slips: angleSlips(H_ANG, H_LB / 12, "$L$, at the top"),
-    angleOn: "up",
-    walk: angleWalk("tan", [sig(H_LB, 3), ORANGE], ["12", BLUE], H_ANG),
+    angleOn: "a",
+    walk: angleWalk("tan", [sig(H_LB, 3), ORANGE, segKey("B", "L")], ["12", BLUE, segKey("B", "A")], "\\theta", true, "a"),
   }),
 ]
 
@@ -490,7 +521,7 @@ const PART_C: Beat[] = [
     name: "\\theta", col: CHALK, answer: 24.15, dp: 1, shown: "24.2^\\circ", typed: "S7/17.1",
     slips: [...angleSlips(X1_ANG, 7 / 17.1, "$C$, at the top"), { v: Math.atan(7 / 17.1) * DEG, say: "$17.1$ is the hypotenuse here, opposite the right angle. That's sin, not tan." }],
     angleOn: "up",
-    walk: angleWalk("sin", ["7", ORANGE], ["17.1", PINK], Math.asin(7 / 17.1) * DEG),
+    walk: angleWalk("sin", ["7", ORANGE, segKey("G", "C")], ["17.1", PINK, segKey("E", "C")]),
   }),
 
   // 4024/23/M/J/25 Q22(b)(ii)
@@ -515,7 +546,7 @@ const PART_C: Beat[] = [
     name: "\\theta", col: CHALK, answer: 76.15, dp: 1, shown: "76.2^\\circ", typed: "C19.6/82",
     slips: [...angleSlips(Math.acos(19.6 / 82) * DEG, 19.6 / 82, "$V$, at the top"), { v: Math.atan(19.6 / 82) * DEG, say: "$82$ is the hypotenuse. We know the adjacent and the hypotenuse: cos." }],
     angleOn: "up",
-    walk: angleWalk("cos", ["19.6", BLUE], ["82", PINK], Math.acos(19.6 / 82) * DEG),
+    walk: angleWalk("cos", ["19.6", BLUE, segKey("O", "B")], ["82", PINK, segKey("V", "B")]),
   }),
 
   // 4024/21/O/N/21 Q10(b)(iii)
@@ -538,22 +569,40 @@ const PART_C: Beat[] = [
   watch("x3-em", "The face's height, $EM$, splits it into two right-angled triangles.", S => { x3Board(S, { face: true, em: true }); S.segs[segKey("E", "M")].glow = true; look(S) }, 2.6),
   liftBeat("x3-lift", "Tap triangle $EMB$ to lift it out.", S => { x3Board(S, { em: true }); look(S) }, {
     regions: [{ id: "EMB", pts: ["E", "M", "B"] }],
-    makes: { EMB: { pts: ["E", "M", "B"], right: "M", lens: { [segKey("M", "B")]: lens("6", CHALK), [segKey("E", "B")]: lens("19", PINK) }, angle: { at: "B", tex: "?" } } },
+    makes: { EMB: { pts: ["E", "M", "B"], right: "M", lens: { [segKey("M", "B")]: lens("?", CHALK), [segKey("E", "B")]: lens("19", PINK) }, angle: { at: "B", tex: "?" } } },
   }),
-  askBeat("x3-work", "$MB$ is half of $12$. Work out angle $CBE$.", S => {
+  askBeat("x3-mb", "$M$ is the middle of $BC$. How long is $MB$?", S => {
+    x3Board(S, { em: true })
+    S.glowPts = ["M"]
+    liftOut(S, "up", ["E", "M", "B"], "M", { [segKey("M", "B")]: lens("?", CHALK), [segKey("E", "B")]: lens("19", PINK) }, true).angle = { at: "B", tex: "?" }
+  }, {
+    name: "MB", col: CHALK, answer: 6, sf: 3, shown: "6", typed: "12/2",
+    slips: [{ v: 12, say: "That's all of $BC$. $M$ is halfway along it." }],
+    writes: [["up", segKey("M", "B")]],
+    walk: [
+      { say: "The base, $BC$, is $12$.", tex: "BC = 12", show: S => { S.edgeCol = { ...S.edgeCol, [segKey("B", "C")]: YELLOW } } },
+      { say: "$M$ is halfway along it, so $MB$ is half of $12$.", tex: "MB = 12 \\div 2", show: S => { S.glowPts = ["M", "B"] } },
+    ],
+  }),
+  askBeat("x3-work", "Now work out angle $CBE$.", S => {
     x3Board(S, { em: true })
     liftOut(S, "up", ["E", "M", "B"], "M", { [segKey("M", "B")]: lens("6", CHALK), [segKey("E", "B")]: lens("19", PINK) }, true).angle = { at: "B", tex: "?" }
   }, {
     name: "\\angle CBE", col: CHALK, answer: Math.acos(6 / 19) * DEG, dp: 1, shown: `${(Math.acos(6 / 19) * DEG).toFixed(1)}^\\circ`, typed: "C6/19",
     slips: [...angleSlips(Math.acos(6 / 19) * DEG, 6 / 19, "$E$, at the top"), { v: Math.acos(12 / 19) * DEG, say: "$MB$ is half of $12$: it's $6$." }],
     angleOn: "up",
-    walk: angleWalk("cos", ["6", CHALK], ["19", PINK], Math.acos(6 / 19) * DEG, "\\angle CBE"),
+    walk: angleWalk("cos", ["6", CHALK, segKey("M", "B")], ["19", PINK, segKey("E", "B")], "\\angle CBE"),
   }),
 
   // 4024/22/O/N/22 Q7(b)
   watch("x4", "$ABCD$ is the floor plan of a hall. A light is straight above $B$.", S => { x4Board(S); look(S) }, 2.6),
   watch("x4-q", "From $C$ the light is $8.2^\\circ$ up. Calculate its angle of elevation from $A$.", S => { x4Board(S, { fromA: true }); look(S) }, 3),
-  askBeat("x4-lb", "Find the height first. Work out $LB$.", S => {
+  liftBeat("x4-lift-c", "Find the height first. Tap triangle $LBC$ to lift it out.", S => { x4Board(S, { fromA: true }); look(S) }, {
+    regions: [{ id: "LBC", pts: ["L", "B", "C"] }, { id: "LBA", pts: ["L", "B", "A"] }],
+    makes: { LBC: { pts: ["L", "B", "C"], right: "B", lens: { [segKey("B", "C")]: lens("107", BLUE), [segKey("B", "L")]: lens("?", ORANGE) }, angle: { at: "C", tex: "8.2^\\circ" } } },
+    notes: { LBA: "That's the one with the angle we want. First find the height from $C$'s triangle, where we know an angle." },
+  }),
+  askBeat("x4-lb", "Work out the height, $LB$.", S => {
     x4Board(S, { fromA: true })
     S.tris = [{ id: "LBC", pts: ["L", "B", "C"], col: CHALK }]
     liftOut(S, "up", ["L", "B", "C"], "B", { [segKey("B", "C")]: lens("107", BLUE), [segKey("B", "L")]: lens("?", ORANGE) }, true).angle = { at: "C", tex: "8.2^\\circ" }
@@ -562,23 +611,33 @@ const PART_C: Beat[] = [
     slips: [{ v: 107 * Math.sin(8.2 * RAD), say: "$LB$ is opposite the $8.2^\\circ$, and $107$ is next to it. That's tan." }, { v: 107 / Math.tan(8.2 * RAD), say: "Multiply: $LB = 107 \\times \\tan 8.2^\\circ$." }],
     writes: [["up", segKey("B", "L")]],
     onFigure: segKey("B", "L"),
-    walk: [{ say: "$LB$ is opposite the $8.2^\\circ$, and $107$ is next to it. So tan.", tex: `${c(ORANGE, "LB")} = 107 \\times \\tan 8.2^\\circ = ${c(GREEN, sig(X4.LB, 3))}` }],
+    walk: tanSideWalk("LB", "8.2^\\circ", "107", segKey("B", "L"), segKey("B", "C")),
   }),
-  askBeat("x4-ang", "Now the angle of elevation from $A$.", S => {
+  liftBeat("x4-lift-a", "Now tap triangle $LBA$ to lift it out.", S => { x4Board(S, { fromA: true, lb: sig(X4.LB, 3) }); x4C(S); look(S) }, {
+    regions: [{ id: "LBA", pts: ["L", "B", "A"] }],
+    makes: { LBA: { flat: "a", pts: ["L", "B", "A"], right: "B", lens: { [segKey("B", "A")]: lens("95", BLUE), [segKey("B", "L")]: lens(sig(X4.LB, 3), ORANGE) }, angle: { at: "A", tex: "?" } } },
+  }),
+  askBeat("x4-ang", "Now work out the angle of elevation from $A$.", S => {
     x4Board(S, { fromA: true, lb: sig(X4.LB, 3) })
-    S.tris = [{ id: "LBA", pts: ["L", "B", "A"], col: CHALK }]
-    liftOut(S, "up", ["L", "B", "A"], "B", { [segKey("B", "A")]: lens("95", BLUE), [segKey("B", "L")]: lens(sig(X4.LB, 3), ORANGE) }, true).angle = { at: "A", tex: "?" }
+    x4C(S)
+    S.tris = [...S.tris, { id: "LBA", pts: ["L", "B", "A"], col: CHALK }]
+    liftOut(S, "a", ["L", "B", "A"], "B", { [segKey("B", "A")]: lens("95", BLUE), [segKey("B", "L")]: lens(sig(X4.LB, 3), ORANGE) }, true).angle = { at: "A", tex: "?" }
   }, {
-    name: "\\theta", col: CHALK, answer: X4.ang, dp: 1, shown: `${X4.ang.toFixed(1)}^\\circ`, ans: X4.LB, typed: "Ta/95",
+    name: "\\theta", col: CHALK, answer: X4.ang, dp: 1, shown: `${X4.ang.toFixed(1)}^\\circ`, ans: X4.LB, ansName: "LB", typed: "Ta/95",
     slips: angleSlips(X4.ang, X4.LB / 95, "$L$, at the top"),
-    angleOn: "up",
-    walk: angleWalk("tan", [sig(X4.LB, 3), ORANGE], ["95", BLUE], X4.ang),
+    angleOn: "a",
+    walk: angleWalk("tan", [sig(X4.LB, 3), ORANGE, segKey("B", "L")], ["95", BLUE, segKey("B", "A")], "\\theta", true, "a"),
   }),
 
   // 4024/02/O/N/05 Q8(b)
   watch("x5", "$A$, $B$ and $C$ are on a field. A kite is straight above $A$, flown from $B$.", S => { x5Board(S); look(S) }, 2.8),
   watch("x5-q", "The string $BK$ is at $24^\\circ$ to the ground. Calculate the angle of elevation of the kite from $C$.", S => { x5Board(S, { fromC: true }); look(S) }, 3.2),
-  askBeat("x5-ak", "Find the kite's height, $AK$, first.", S => {
+  liftBeat("x5-lift-b", "Find the kite's height first. Tap triangle $KAB$ to lift it out.", S => { x5Board(S, { fromC: true }); look(S) }, {
+    regions: [{ id: "KAB", pts: ["K", "A", "B"] }, { id: "KAC", pts: ["K", "A", "C"] }],
+    makes: { KAB: { pts: ["K", "A", "B"], right: "A", lens: { [segKey("A", "B")]: lens("72", BLUE), [segKey("A", "K")]: lens("?", ORANGE) }, angle: { at: "B", tex: "24^\\circ" } } },
+    notes: { KAC: "That's the one with the angle we want. First find the height from $B$'s triangle, where we know an angle." },
+  }),
+  askBeat("x5-ak", "Work out the kite's height, $AK$.", S => {
     x5Board(S, { fromC: true })
     S.tris = [{ id: "KAB", pts: ["K", "A", "B"], col: CHALK }]
     liftOut(S, "up", ["K", "A", "B"], "A", { [segKey("A", "B")]: lens("72", BLUE), [segKey("A", "K")]: lens("?", ORANGE) }, true).angle = { at: "B", tex: "24^\\circ" }
@@ -587,25 +646,40 @@ const PART_C: Beat[] = [
     slips: [{ v: 72 * Math.sin(24 * RAD), say: "$AK$ is opposite the $24^\\circ$, and $72$ is next to it. That's tan." }],
     writes: [["up", segKey("A", "K")]],
     onFigure: segKey("A", "K"),
-    walk: [{ say: "$AK$ is opposite the $24^\\circ$, and $72$ is next to it. So tan.", tex: `${c(ORANGE, "AK")} = 72 \\times \\tan 24^\\circ = ${c(GREEN, sig(X5_AK, 3))}` }],
+    walk: tanSideWalk("AK", "24^\\circ", "72", segKey("A", "K"), segKey("A", "B")),
   }),
-  askBeat("x5-ang", "Now the angle of elevation from $C$.", S => {
+  liftBeat("x5-lift-c", "Now tap triangle $KAC$ to lift it out.", S => { x5Board(S, { fromC: true, ak: sig(X5_AK, 3) }); x5B(S); look(S) }, {
+    regions: [{ id: "KAC", pts: ["K", "A", "C"] }],
+    makes: { KAC: { flat: "a", pts: ["K", "A", "C"], right: "A", lens: { [segKey("A", "C")]: lens("60", BLUE), [segKey("A", "K")]: lens(sig(X5_AK, 3), ORANGE) }, angle: { at: "C", tex: "?" } } },
+  }),
+  askBeat("x5-ang", "Now work out the angle of elevation from $C$.", S => {
     x5Board(S, { fromC: true, ak: sig(X5_AK, 3) })
-    S.tris = [{ id: "KAC", pts: ["K", "A", "C"], col: CHALK }]
-    liftOut(S, "up", ["K", "A", "C"], "A", { [segKey("A", "C")]: lens("60", BLUE), [segKey("A", "K")]: lens(sig(X5_AK, 3), ORANGE) }, true).angle = { at: "C", tex: "?" }
+    x5B(S)
+    S.tris = [...S.tris, { id: "KAC", pts: ["K", "A", "C"], col: CHALK }]
+    liftOut(S, "a", ["K", "A", "C"], "A", { [segKey("A", "C")]: lens("60", BLUE), [segKey("A", "K")]: lens(sig(X5_AK, 3), ORANGE) }, true).angle = { at: "C", tex: "?" }
   }, {
-    name: "\\theta", col: CHALK, answer: X5_ANG, dp: 1, shown: `${X5_ANG.toFixed(1)}^\\circ`, ans: X5_AK, typed: "Ta/60",
+    name: "\\theta", col: CHALK, answer: X5_ANG, dp: 1, shown: `${X5_ANG.toFixed(1)}^\\circ`, ans: X5_AK, ansName: "AK", typed: "Ta/60",
     slips: angleSlips(X5_ANG, X5_AK / 60, "$K$, at the top"),
-    angleOn: "up",
-    walk: angleWalk("tan", [sig(X5_AK, 3), ORANGE], ["60", BLUE], X5_ANG),
+    angleOn: "a",
+    walk: angleWalk("tan", [sig(X5_AK, 3), ORANGE, segKey("A", "K")], ["60", BLUE, segKey("A", "C")], "\\theta", true, "a"),
   }),
 
-  // ── free play ──
+  // ── the end ──
+  watch("end-shadow", "The angle between a line and the floor is the angle between the line and its shadow.", S => {
+    stickBoard(S, { th: 40, light: true, arc: true })
+    S.spin = 12
+    look(S)
+  }, 3),
   {
-    id: "free",
-    say: "Tilt the stick any way you like. Its angle with the floor stays live.",
-    enter: S => { stickBoard(S, { th: 40, light: true, handle: true, arc: true }); look(S) },
-    cta: "Start again", ctaAfter: 3, restart: true,
+    id: "end-lift",
+    say: "Lift out the triangle they make, and use $\\sin$, $\\cos$ or $\\tan$.",
+    enter: S => {
+      boxWithEC(S, { eg: true, right: true })
+      S.arcs = [{ at: "E", a: "C", b: "G" }]
+      liftOut(S, "up", ["E", "G", "C"], "G", { [segKey("E", "G")]: lens("15", BLUE), [segKey("G", "C")]: lens("8", ORANGE), [segKey("E", "C")]: lens("17", PINK) }, true).angle = { at: "E", tex: "28.1^\\circ" }
+      look(S)
+    },
+    cta: "Finish", ctaAfter: 2.4, close: true,
   },
 ]
 

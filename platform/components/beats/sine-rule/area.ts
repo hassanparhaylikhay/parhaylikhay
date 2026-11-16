@@ -253,29 +253,32 @@ export function crossBlock(S: Scene, q: AQ) {
 
 // ── "Show me how" ────────────────────────────────────────────────────────
 
+/** Light parts of the triangle for a walkthrough step: these sides glow, these angles breathe. */
+const lightTri = (sides: Corner[], angs: Corner[] = []) => (S: Scene) => { S.glowSide = new Set(sides); S.pulseAng = new Set(angs); S.pulseSide = new Set() }
+
+// Each walkthrough guides to what to press and stops there: the student works out the number.
 export function areaWalk(q: AQ): WalkStep<Scene>[] {
   const [p1, p2] = orderOf(q)
   const s1 = nt(q, p1), s2 = nt(q, p2), C = numText(av(q, "C"), 1)
   return [
-    { say: "Type the rule just as it's written. The half is $\\times\\,0.5$.", tex: `\\tfrac{1}{2} \\times ${s1} \\times ${s2} \\times \\sin ${C}^\\circ` },
-    { say: `Press $0.5$, $\\times$, $${s1}$, $\\times$, $${s2}$, $\\times$, $\\sin$, $${C}$, then $=$.` },
-    { say: `That gives $${sigText(areaOf(q), 6)}\\ldots$, which is $${answerText(q)}$ to $3$ significant figures.`, tex: `\\text{Area} = \\textcolor{${GREEN}}{${answerText(q)}${unit2Tex(q)}}` },
+    { say: "Two sides, and the angle between them.", tex: `\\text{Area} = \\tfrac{1}{2} \\times ${s1} \\times ${s2} \\times \\sin ${C}^\\circ`, show: lightTri([p1, p2], ["C"]) },
+    { say: "Type it just as it's written. The half is $\\times\\,0.5$.", show: lightTri([p1, p2], ["C"]) },
+    { say: `Press $0.5$, $\\times$, $${s1}$, $\\times$, $${s2}$, $\\times$, $\\sin$, $${C}$, then $=$. Give $3$ significant figures.`, show: lightTri([]) },
   ]
 }
 
 export function blockWalk(q: AQ): WalkStep<Scene>[] {
   const k = knownOf(q), C = numText(av(q, "C"), 1)
   return [
-    { say: "Work out the bottom on its own.", tex: `\\tfrac{1}{2} \\times ${nt(q, k)} \\times \\sin ${C}^\\circ` },
-    { say: `Press $0.5$, $\\times$, $${nt(q, k)}$, $\\times$, $\\sin$, $${C}$, then $=$.`, tex: `= \\textcolor{${GREEN}}{${dots(blockOf(q))}}` },
+    { say: "The bottom is everything multiplying the side we want.", tex: `\\tfrac{1}{2} \\times ${nt(q, k)} \\times \\sin ${C}^\\circ`, show: lightTri([k], ["C"]) },
+    { say: `Press $0.5$, $\\times$, $${nt(q, k)}$, $\\times$, $\\sin$, $${C}$, then $=$.`, show: lightTri([]) },
   ]
 }
 
 export function sideFromAreaWalk(q: AQ): WalkStep<Scene>[] {
   const A = numText(q.area!, 2)
   return [
-    { say: "Divide the area by the bottom. Ans holds the bottom.", tex: `${A} \\div ${dots(blockOf(q))}` },
-    { say: `Press $${A}$, $\\div$, Ans, then $=$.` },
-    { say: `That gives $${sigText(sideOf(q), 6)}\\ldots$`, tex: `${nameOf(q)} = \\textcolor{${GREEN}}{${answerText(q)}${unitTex(q)}}` },
+    { say: "Divide the area by the bottom.", tex: `${nameOf(q)} = ${A} \\div ${dots(blockOf(q))}`, show: S => { lightTri([])(S); S.pulseSide = new Set([q.unknown!]) } },
+    { say: `Ans holds the bottom. Press $${A}$, $\\div$, Ans, then $=$.`, tex: `${nameOf(q)} = ${A} \\div \\text{Ans}` },
   ]
 }

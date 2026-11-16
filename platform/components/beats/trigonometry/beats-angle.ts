@@ -31,7 +31,7 @@ import type { Vec } from "../geometry"
 import {
   type Scene, type Role, type AngSpec,
   GREEN, PINK, CHALK, ORANGE, YELLOW, ROLE_COL, RAD, DEG,
-  say, later, thText, legText, hText, triFrame, poseUnmap, startInput, boxNode, labAt, machineTime, layout,
+  say, later, thText, legText, triFrame, poseUnmap, startInput, boxNode, labAt, machineTime,
 } from "./scene"
 import {
   type Beat, watch, look, base, madeTri, armsBoard, triBoard, UPRIGHT, inputRight, c, TRI, ALL, cardsTap, angleOnly,
@@ -539,7 +539,7 @@ BEATS.push(
     advanceAfter: 2000,
     walk: [
       { say: "Press SHIFT, then $\\sin$. The screen shows $\\sin^{-1}($.", tex: "\\sin^{-1}(" },
-      { say: "Then press $0$, $.$, $5$ and $=$. It shows $30$.", tex: `\\sin^{-1}(0.5) = ${c(GREEN, "30")}` },
+      { say: "Then press $0$, $.$, $5$ and $=$.", tex: "\\sin^{-1}(0.5)" },
     ],
   },
   {
@@ -560,7 +560,7 @@ BEATS.push(
     advanceAfter: 2200,
     walk: [
       { say: "Press SHIFT, then $\\sin$.", tex: "\\sin^{-1}(" },
-      { say: "Then $5$, $\\div$, $8$ and $=$.", tex: `${sinInv("5", "8")} = ${c(GREEN, "38.68\\ldots")}` },
+      { say: "Then $5$, $\\div$, $8$ and $=$.", tex: sinInv("5", "8") },
     ],
   },
   watch("same-38", "That's the $38.7^\\circ$ we found by turning.", S => {
@@ -1042,7 +1042,7 @@ BEATS.push(
     advanceAfter: 1800,
     walk: [
       { say: "There are $1000$ m in $1$ km.", tex: "1\\text{ km} = 1000\\text{ m}" },
-      { say: "So $2$ km is $2 \\times 1000 = 2000$ m.", tex: `2\\text{ km} = ${c(GREEN, "2000")}\\text{ m}` },
+      { say: "So $2$ km is $2 \\times 1000$ m.", tex: "2\\text{ km} = 2 \\times 1000\\text{ m}" },
     ],
   },
   ...questionA("ex3", EX3M, "Which rule?", { shortcut: true, colours: false }),
@@ -1095,7 +1095,7 @@ BEATS.push(
     walk: [
       { say: "The whole of $AE$ is $21$.", show: S => { S.pulseLabs = new Set(["X-VE"]) } },
       { say: "The part under $BD$ is $16$, the same as $BD$.", show: S => { S.extra!.labels = [...(EX4.extra!.labels ?? []), { a: "F", b: "E", tex: "16" }] } },
-      { say: "So $AX = 21 - 16 = 5$.", tex: `AX = 21 - 16 = ${c(GREEN, "5")}` },
+      { say: "So $AX = 21 - 16$.", tex: "AX = 21 - 16" },
     ],
   },
   ...questionA("ex4", EX4, "Which rule?", { shortcut: true, boardFn: S => ex4Board(S, { dropped: true, eight: true, five: true, colours: true }) }),
@@ -1158,7 +1158,7 @@ BEATS.push(
     walk: [
       { say: "The whole of $AB$ is $28$.", show: S => { S.pulseLabs = new Set(["X-AV"]) } },
       { say: "$AX$ is $24$, the same as $DC$.", show: S => { S.extra!.labels = [...(EX5.extra!.labels ?? []), { a: "A", b: "F", tex: "24", inside: true }] } },
-      { say: "So $XB = 28 - 24 = 4$.", tex: `XB = 28 - 24 = ${c(GREEN, "4")}` },
+      { say: "So $XB = 28 - 24$.", tex: "XB = 28 - 24" },
     ],
   },
   ...questionA("ex5", EX5, "Find $\\theta$. Which rule?", {
@@ -1195,36 +1195,24 @@ BEATS.push(
     advanceAfter: 2400,
     walk: [
       { say: "The two parts are $90^\\circ$ and $14.0^\\circ$.", tex: "90^\\circ + 14.0^\\circ" },
-      { say: "Together they make $104.0^\\circ$.", tex: `90^\\circ + 14.0^\\circ = ${c(GREEN, "104.0^\\circ")}` },
     ],
   },
 
   // ── 8. Play ──
+  // a recap to finish: the steps they will use in every question
   {
     id: "end",
-    say: "Play with it as long as you like.",
+    say: "These five steps find any missing angle.",
     enter: S => {
-      base(S)
-      armsBoard(S, 10)
-      madeTri(S, { th: 38, h: 7 })
-      S.angText = thText
-      S.roleLabels = { O: s => ({ tex: legText(s, "O") }), A: s => ({ tex: legText(s, "A") }), H: s => ({ tex: hText(s) }) }
-      S.roleColours = new Set(["O", "A", "H"])
-      S.mode = "turnSlide"
-      S.calcScreen = s => {
-        const O = legText(s, "O"), A = legText(s, "A"), H = hText(s)
-        // one line on a small screen, so the button below stays clear
-        const lines = [
-          { q: `\\sin^{-1}\\left(\\dfrac{${c(ORANGE, O)}}{${c(GREEN, H)}}\\right)`, a: (Math.asin(Number(O) / Number(H)) * DEG).toFixed(1) },
-          { q: `\\tan^{-1}\\left(\\dfrac{${c(ORANGE, O)}}{${c(ROLE_COL.A, A)}}\\right)`, a: (Math.atan(Number(O) / Number(A)) * DEG).toFixed(1) },
-        ]
-        return layout(s).compact ? lines.slice(0, 1) : lines
-      }
-      look(S, [...ALL, "eq"])
+      boardA(S, QT)
+      S.stepsList = STEPS_A
+      S.stepsCard = S.time
+      look(S, [])
+      S.vis.board.t = 0
     },
-    cta: "Start again",
-    ctaAfter: 4,
-    restart: true,
+    cta: "Finish",
+    ctaAfter: 3,
+    close: true,
   },
 )
 

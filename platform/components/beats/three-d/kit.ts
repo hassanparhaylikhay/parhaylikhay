@@ -11,8 +11,8 @@ import { row, op, atom, frac, type ENode, type EAtom } from "../equation"
 import { setAns } from "../calc"
 import {
   type Scene, type VisKey, type V3, type Arc3, CHALK, GREEN, PINK, ORANGE,
-  BOX_FACES, PYRAMID_FACES, boxPts, pyramidPts, resetBeat, show, say, segKey, addSeg, liftOut, flyLabel,
-  startInput, boxNode, startCross, crossDone,
+  BOX_FACES, PYRAMID_FACES, boxPts, pyramidPts, resetBeat, show, say, segKey, addSeg, liftSlow, acting, flyLabel,
+  startInput, boxNode, startCross, crossDone, later,
 } from "./scene"
 
 export type Beat = BeatOf<Scene>
@@ -34,7 +34,7 @@ export const pc = (id: string, tex: string, col?: string, more: Partial<EAtom> =
 /** A piece and its square, close together (the square is its own piece, so it can move). */
 export const sq = (id: string, tex: string, col?: string, more: Partial<EAtom> = {}): ENode => row([pc(id, tex, col, more), pc(`${id}q`, "{}^{2}", col, more)], 0.02)
 export const stack = (id: string, top: ENode, under: ENode): ENode => frac(id, top, under, "rgba(0,0,0,0)")
-export const lens = (tex: string, col?: string) => ({ tex, ...(col ? { col } : {}) })
+export const lens = (tex: string, col?: string, along?: number) => ({ tex, ...(col ? { col } : {}), ...(along !== undefined ? { along } : {}) })
 
 // ── boards ───────────────────────────────────────────────────────────────
 
@@ -179,16 +179,18 @@ export function liftBeat(id: string, say0: string, enter: (S: Scene) => void, o:
         if (!m) { say(S2, o.notes?.[rid] ?? "That one has no right angle.", "wrong", 4); return }
         S2.got.add("tap")
         S2.got.add(`r:${rid}`)
+        S2.picked[id] = rid
         S2.mode = "none"
         S2.regions = null
         S2.tris = [...S2.tris.filter(t => t.id !== rid), { id: rid, pts: m.pts, col: CHALK }]
-        const F = liftOut(S2, m.flat ?? "up", m.pts, m.right, { ...m.lens })
+        const F = liftSlow(S2, m.flat ?? "up", m.pts, m.right, { ...m.lens })
         if (m.angle) F.angle = { ...m.angle }
         if (m.legs) F.legs = { ...m.legs }
         S2.note = null
       }
     },
-    done: S => S.got.has("tap") && S.flats.length > 0 && S.flats[S.flats.length - 1].t.v > 0.97,
+    // done once the whole lift has played (the solid has turned back too)
+    done: S => S.got.has("tap") && !acting(S) && S.flats.length > 0 && S.flats[S.flats.length - 1].t.v > 0.999,
     advanceAfter: 700,
   }
 }
@@ -238,6 +240,14 @@ export function askBeat(id: string, say0: string, enter: (S: Scene) => void, o: 
   angleOn?: string
   /** what Ans holds as the question opens (the step before's answer), so a cold open works too */
   ans?: number
+  /** the name of what Ans holds ($EG$), for the reminder when a rounded copy of it is typed */
+  ansName?: string
+  /** the working so far, kept above the box (the line the student just made, so they don't redo it) */
+  above?: (S: Scene) => ENode
+  /** a calm word once it is right (what it rounds to, for a show-that) */
+  rightNote?: string
+  /** anything else the right answer changes on the board */
+  then?: (S: Scene) => void
   walk: WalkStep<Scene>[]
 }): Beat {
   return {
@@ -248,7 +258,7 @@ export function askBeat(id: string, say0: string, enter: (S: Scene) => void, o: 
       const first = o.writes?.[0]
       if (first) { const F = S.flats.find(f => f.id === first[0]); if (F?.lens[first[1]]) F.lens[first[1]].pulse = true }
       startInput(S, {
-        answer: o.answer, sf: o.sf, dp: o.dp, max: 24, typed: o.typed, slips: o.slips,
+        answer: o.answer, sf: o.sf, dp: o.dp, max: 24, typed: o.typed, slips: o.slips, ansName: o.ansName,
         onRight: S2 => {
           ;(o.writes ?? []).forEach(([fid, key], i) => {
             const F = S2.flats.find(f => f.id === fid)
@@ -260,9 +270,15 @@ export function askBeat(id: string, say0: string, enter: (S: Scene) => void, o: 
           if (o.angleOn) { const F = S2.flats.find(f => f.id === o.angleOn); if (F?.angle) F.angle.tex = o.shown; S2.touched = "eq" }
           if (first) S2.touched = `${first[0]}:${first[1]}`
           S2.flashGood = 1
+          o.then?.(S2)
+          if (o.rightNote) later(S2, 0.5, S3 => { if (!S3.note) say(S3, o.rightNote!, "calm", 600) })
         },
       })
-      S.eqFn = S2 => row([pc("nm", o.name, o.col), op("eq", "="), S2.input?.state === "right" ? pc("ans", o.shown, GREEN) : boxNode(S2)])
+      S.eqFn = S2 => {
+        // its own names, so it never takes the place of a piece in the working above it
+        const line = row([pc("qnm", o.name, o.col), op("qeq", "="), S2.input?.state === "right" ? pc("ans", o.shown, GREEN) : boxNode(S2)])
+        return o.above ? stack("work", o.above(S2), line) : line
+      }
       look(S, ASK)
     },
     done: S => S.input?.state === "right",
@@ -281,21 +297,37 @@ export function crossBeat(id: string, say0: string, enter: (S: Scene) => void, o
   }
 }
 
-/** A Pythagoras walkthrough: the longest side squared, square and add (or take away), then the root. */
-export function pythWalk(name: string, col: string, a: [string, string, number], b: [string, string, number], minus = false): WalkStep<Scene>[] {
+/** Light some sides of a flat triangle (they breathe), and no others. */
+export function lightFlat(S: Scene, flat: string, keys: string[]) {
+  const F = S.flats.find(f => f.id === flat)
+  if (!F) return
+  for (const [k, lb] of Object.entries(F.lens)) lb.pulse = keys.includes(k)
+}
+
+/** A side for a walkthrough: what it says, its colour, its length, and its side on the flat (segKey). */
+export type WSide = [string, string, number, (string | string[])?]
+
+/**
+ * A Pythagoras walkthrough, on the flat: the longest side lights up and the
+ * equation is written; the other two light up and are squared; then the
+ * square root. It stops at what to press: the student works out the number.
+ */
+export function pythWalk(name: string, col: string, a: WSide, b: WSide, minus = false, o: { flat?: string; key?: string | string[] } = {}): WalkStep<Scene>[] {
   const A = a[2], B = b[2]
   const r = minus ? A * A - B * B : A * A + B * B
   const nm = c(col, name)
+  const flat = o.flat ?? "up"
+  const lit = (...keys: (string | string[] | undefined)[]) => (S: Scene) => lightFlat(S, flat, keys.flat().filter((k): k is string => !!k))
   return minus
     ? [
-      { say: `This time we know the longest side, $${a[0]}$.`, tex: `${c(a[1], a[0])}^2 = ${nm}^2 + ${c(b[1], b[0])}^2` },
-      { say: `So $${name}^2$ is the longest side squared, take away the other.`, tex: `${nm}^2 = ${c(a[1], a[0])}^2 - ${c(b[1], b[0])}^2 = ${num(r, 3)}` },
-      { say: "Now the square root.", tex: `${nm} = \\sqrt{${num(r, 3)}} = ${c(GREEN, sig(Math.sqrt(r), 3))}` },
+      { say: `This time we know the longest side, $${a[0]}$.`, tex: `${c(a[1], a[0])}^2 = ${nm}^2 + ${c(b[1], b[0])}^2`, show: lit(a[3]) },
+      { say: `So $${name}^2$ is $${a[0]}^2$ take away $${b[0]}^2$.`, tex: `${nm}^2 = ${c(a[1], a[0])}^2 - ${c(b[1], b[0])}^2`, show: lit(a[3], b[3]) },
+      { say: "Square them, then take away.", tex: `${nm}^2 = ${num(A * A, 3)} - ${num(B * B, 3)} = ${num(r, 3)}`, show: lit(o.key) },
+      { say: `$${name}$ is its square root.`, tex: `${nm} = \\sqrt{${num(r, 3)}}`, show: lit(o.key) },
     ]
     : [
-      { say: `$${name}$ is the longest side of this triangle.`, tex: `${nm}^2 = ${c(a[1], a[0])}^2 + ${c(b[1], b[0])}^2` },
-      { say: "Square each side, then add.", tex: `${nm}^2 = ${num(A * A, 3)} + ${num(B * B, 3)} = ${num(r, 3)}` },
-      { say: "Now the square root.", tex: `${nm} = \\sqrt{${num(r, 3)}} = ${c(GREEN, sig(Math.sqrt(r), 3))}` },
+      { say: `$${name}$ is the longest side of this triangle.`, tex: `${nm}^2 = ${c(a[1], a[0])}^2 + ${c(b[1], b[0])}^2`, show: lit(o.key) },
+      { say: "Square the other two sides, then add.", tex: `${nm}^2 = ${num(A * A, 3)} + ${num(B * B, 3)} = ${num(r, 3)}`, show: lit(a[3], b[3]) },
+      { say: `$${name}$ is its square root.`, tex: `${nm} = \\sqrt{${num(r, 3)}}`, show: lit(o.key) },
     ]
 }
-

@@ -29,7 +29,7 @@ import type { Vec } from "../geometry"
 import {
   type Scene, type Role, type Fn,
   GREEN, PINK, CHALK, ROLE_COL, RAD, DEG, RULE, sideOf,
-  say, later, thText, hText, legText, ratioOf, chipRects, layout, boxNode, triFrame, numText, cornerW,
+  say, later, thText, chipRects, layout, boxNode, triFrame, numText, cornerW,
 } from "./scene"
 import {
   type Beat, watch, look, base, madeTri, armsBoard, triBoard, UPRIGHT, inputRight, c, TRI, names,
@@ -1038,7 +1038,6 @@ export const BEATS: Beat[] = [
     walk: [
       { say: "The opposite and the hypotenuse: that is $\\sin$. So $\\sin 40^\\circ = \\frac{6}{x}$.", tex: `\\sin 40^\\circ = \\dfrac{${c(ROLE_COL.O, "6")}}{${c(PINK, "x")}}` },
       { say: "$x$ is underneath, so $x$ and $\\sin 40^\\circ$ swap.", tex: `${c(PINK, "x")} = \\dfrac{${c(ROLE_COL.O, "6")}}{\\sin 40^\\circ}` },
-      { say: `That gives $${answerText(MAKE)}$.`, tex: `${c(PINK, "x")} = ${c(GREEN, answerText(MAKE))}` },
     ],
   },
   {
@@ -1069,23 +1068,19 @@ export const BEATS: Beat[] = [
     done: S => S.locked,
     advanceAfter: 3200,
   },
+  // a recap to finish: the steps they will use in every question
   {
     id: "end",
-    say: "Play with it as long as you like.",
+    say: "These five steps find any missing side.",
     enter: S => {
-      base(S)
-      armsBoard(S, 12)
-      madeTri(S, { th: 40, h: 6 / Math.sin(40 * RAD) })
-      S.angText = thText
-      S.roleLabels = { O: s => ({ tex: legText(s, "O") }), A: s => ({ tex: legText(s, "A") }), H: s => ({ tex: hText(s) }) }
+      board(S, Q35)
       S.roleColours = new Set(["O", "A", "H"])
-      S.mode = "turnSlide"
-      S.eqFn = S2 => row([atom("fn", "\\sin"), atom("ang", thText(S2)), op("eq", "="), atom("v", numText(ratioOf(S2, "sin"), 2), { col: GREEN })])
-      look(S, ["arms", ...TRI, "eq"])
+      S.stepsCard = S.time
+      show(S, [])
     },
-    cta: "Start again",
-    ctaAfter: 4,
-    restart: true,
+    cta: "Finish",
+    ctaAfter: 3,
+    close: true,
   },
 ]
 

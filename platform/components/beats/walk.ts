@@ -20,6 +20,8 @@ export interface WalkStep<S> {
 
 export const SHOW_ME_AFTER = 30
 export const SHOW_ME_TRIES = 3
+/** after a walkthrough, wrong answers before it is offered again (Hassan: a student must never be left stuck) */
+export const SHOW_AGAIN_TRIES = 2
 export const SHOW_ME_LABEL = "Show me how"
 export const TYPE_IT_IN = "Now you type it in."
 /** seconds a step stays before its arrow appears */
@@ -34,11 +36,18 @@ export interface WalkScene {
   note: unknown
 }
 
-/** Whether to offer the walkthrough now. `at` is the step the student is on (-1 before it starts). */
-export function offerShowMe(S: WalkScene, steps: unknown[] | undefined, at: number): boolean {
-  if (!steps?.length || at >= 0 || !S.input) return false
+/**
+ * Whether to offer the walkthrough now. `at` is the step the student is on
+ * (-1 before it starts, the number of steps once it is over) and `since`
+ * when it ended. After a walkthrough it is offered again if the answer still
+ * does not come: two more wrong answers, or 30 seconds.
+ */
+export function offerShowMe(S: WalkScene, steps: unknown[] | undefined, at: number, since = 0): boolean {
+  if (!steps?.length || !S.input) return false
   if (S.input.state === "right" || S.input.state === "guessed") return false
-  return S.time - S.beatStart >= SHOW_ME_AFTER || S.input.tries >= SHOW_ME_TRIES
+  if (at < 0) return S.time - S.beatStart >= SHOW_ME_AFTER || S.input.tries >= SHOW_ME_TRIES
+  if (at < steps.length) return false
+  return S.time - since >= SHOW_ME_AFTER || S.input.tries >= SHOW_AGAIN_TRIES
 }
 
 /** Put one step on the board: its picture, its line of working; keypad away. */
@@ -60,5 +69,7 @@ export function endWalk(S: WalkScene) {
   if (S.input) {
     S.input.value = ""
     S.input.state = "idle"
+    // wrong answers count again from here, toward offering it once more
+    S.input.tries = 0
   }
 }

@@ -15,11 +15,12 @@ import { applyParts } from "../chapter"
 import { row, op, type ENode } from "../equation"
 import {
   type Scene, type V3, CHALK, BLUE, ORANGE, PINK, GREEN, YELLOW,
-  later, say, segKey, addSeg, liftOut, putBack, clamp, choose, goodView, type CrossState,
+  later, say, segKey, addSeg, liftOut, putBack, clamp, choose, goodView, acting, turnAct, holdAct, proj, dist,
+  vsub, vadd, vmul, vunit, vcross, vlerp, type CrossState,
 } from "./scene"
 import {
   type Beat, look, num, sig, c, pc, sq, stack, lens, boxBoard, boxLens, ecBoard, pyrBoard, solidBoard,
-  turnBeat, watch, joinBeat, rightBeat, liftBeat, missingBeat, askBeat, crossBeat, pythWalk,
+  turnBeat, watch, joinBeat, rightBeat, liftBeat, missingBeat, askBeat, crossBeat, pythWalk, lightFlat,
 } from "./kit"
 
 // ── the discovery box: E G C lifted out, and E H G beside it ──────────────
@@ -34,14 +35,18 @@ function upFlat(S: Scene, o: { eg?: string; ec?: string } = {}) {
     [segKey("E", "C")]: lens(o.ec ?? "?", PINK),
   }, true)
 }
+/** The floor triangle the student lifted (E H G, or E F G: the same shape turned over). */
 function floorFlat(S: Scene, o: { eg?: string } = {}) {
-  liftOut(S, "floor", ["E", "H", "G"], "H", {
-    [segKey("E", "H")]: lens("12", CHALK),
-    [segKey("H", "G")]: lens("9", CHALK),
+  const mid = S.picked["floor-tri"] === "EFG" ? "F" : "H"
+  liftOut(S, "floor", ["E", mid, "G"], mid, {
+    [segKey("E", mid)]: lens(mid === "H" ? "12" : "9", CHALK),
+    [segKey(mid, "G")]: lens(mid === "H" ? "9" : "12", CHALK),
     [segKey("E", "G")]: lens(o.eg ?? "?", BLUE),
   }, true)
-  S.tris = [...S.tris, { id: "EHG", pts: ["E", "H", "G"], col: BLUE }]
+  S.tris = [...S.tris, { id: `E${mid}G`, pts: ["E", mid, "G"], col: BLUE }]
 }
+/** The sides of either floor triangle, for lighting them up in a walkthrough. */
+const BOX_FLOOR_SIDES = [segKey("E", "H"), segKey("H", "G"), segKey("E", "F"), segKey("F", "G")]
 function liftedBoard(S: Scene, o: { floor?: boolean; eg?: string; ec?: string } = {}) {
   ecBoard(S, { eg: true, tri: true, right: true })
   upFlat(S, o)
@@ -63,13 +68,15 @@ function pyUpFlat(S: Scene, o: { xc?: string; ec?: string } = {}) {
   }, true)
 }
 function pyFloorFlat(S: Scene, o: { ac?: string } = {}) {
-  liftOut(S, "floor", ["A", "B", "C"], "B", {
-    [segKey("A", "B")]: lens("6", CHALK),
-    [segKey("B", "C")]: lens("6", CHALK),
+  const mid = S.picked["pyr-floor"] === "ADC" ? "D" : "B"
+  liftOut(S, "floor", ["A", mid, "C"], mid, {
+    [segKey("A", mid)]: lens("6", CHALK),
+    [segKey(mid, "C")]: lens("6", CHALK),
     [segKey("A", "C")]: lens(o.ac ?? "?", BLUE),
   }, true)
-  S.tris = [...S.tris, { id: "ABC", pts: ["A", "B", "C"], col: BLUE }]
+  S.tris = [...S.tris, { id: `A${mid}C`, pts: ["A", mid, "C"], col: BLUE }]
 }
+const BASE_SIDES = [segKey("A", "B"), segKey("B", "C"), segKey("A", "D"), segKey("D", "C")]
 function pyLiftedBoard(S: Scene, o: { floor?: boolean; ac?: string; xc?: string; ec?: string } = {}) {
   pyrBoard(S, { diags: true, height: true })
   S.edgeCol[segKey("E", "C")] = PINK
@@ -92,8 +99,9 @@ function x1Board(S: Scene, o: { eg?: boolean; tri?: boolean } = {}) {
 function x1Flats(S: Scene, o: { eg?: string; ce?: string; floor?: boolean } = {}) {
   liftOut(S, "up", ["E", "G", "C"], "G", { [segKey("E", "G")]: lens(o.eg ?? "?", BLUE), [segKey("G", "C")]: lens("7", ORANGE), [segKey("E", "C")]: lens(o.ce ?? "?", PINK) }, true)
   if (o.floor) {
-    liftOut(S, "floor", ["E", "H", "G"], "H", { [segKey("E", "H")]: lens("12", CHALK), [segKey("H", "G")]: lens("10", CHALK), [segKey("E", "G")]: lens(o.eg ?? "?", BLUE) }, true)
-    S.tris = [...S.tris, { id: "EHG", pts: ["E", "H", "G"], col: BLUE }]
+    const mid = S.picked["x1-floor"] === "EFG" ? "F" : "H"
+    liftOut(S, "floor", ["E", mid, "G"], mid, { [segKey("E", mid)]: lens(mid === "H" ? "12" : "10", CHALK), [segKey(mid, "G")]: lens(mid === "H" ? "10" : "12", CHALK), [segKey("E", "G")]: lens(o.eg ?? "?", BLUE) }, true)
+    S.tris = [...S.tris, { id: `E${mid}G`, pts: ["E", mid, "G"], col: BLUE }]
   }
 }
 
@@ -132,26 +140,117 @@ function x3Up(S: Scene, o: { ec?: string; h?: string } = {}) {
   S.tris = [{ id: "EXC", pts: ["E", "X", "C"], col: CHALK }]
 }
 function x3Floor(S: Scene, o: { ac?: string } = {}) {
-  liftOut(S, "floor", ["A", "B", "C"], "B", { [segKey("A", "B")]: lens("6.2", CHALK), [segKey("B", "C")]: lens("4.3", CHALK), [segKey("A", "C")]: lens(o.ac ?? "?", BLUE) }, true)
-  S.tris = [...S.tris, { id: "ABC", pts: ["A", "B", "C"], col: BLUE }]
+  const mid = S.picked["x3-floor"] === "ADC" ? "D" : "B"
+  liftOut(S, "floor", ["A", mid, "C"], mid, { [segKey("A", mid)]: lens(mid === "B" ? "6.2" : "4.3", CHALK), [segKey(mid, "C")]: lens(mid === "B" ? "4.3" : "6.2", CHALK), [segKey("A", "C")]: lens(o.ac ?? "?", BLUE) }, true)
+  S.tris = [...S.tris, { id: `A${mid}C`, pts: ["A", mid, "C"], col: BLUE }]
 }
 
-/** 4024/23/M/J/25 Q22: a pyramid on an equilateral triangle, sides 34; the edges up are 82 (drawn not to scale). */
+/**
+ * 4024/23/M/J/25 Q22: a pyramid ABCV on an equilateral triangle with sides
+ * 34; VA = VB = VC = 82 (drawn not to scale, as in the paper); M the middle
+ * of AC, O on MB with MO : OB = 1 : 2, straight under V. Part (b)(i): show
+ * that OB = 19.6 cm.
+ */
 const X4_R = 34 / Math.sqrt(3)
 const X4_MB = Math.sqrt(34 * 34 - 17 * 17)
 const X4_OB = (2 / 3) * X4_MB
-function x4Board(S: Scene) {
-  const at = (deg: number): V3 => [X4_R * Math.cos(deg * Math.PI / 180), X4_R * Math.sin(deg * Math.PI / 180), 0]
-  const A = at(210), C = at(330), B = at(90)
-  const M: V3 = [(A[0] + C[0]) / 2, (A[1] + C[1]) / 2, 0]
-  solidBoard(S, { A, B, C, V: [0, 0, 44], O: [0, 0, 0], M }, [["A", "C", "B"], ["V", "A", "C"], ["V", "C", "B"], ["V", "B", "A"]], { A: "A", B: "B", C: "C", V: "V", O: "O", M: "M" })
+const x4At = (deg: number): V3 => [X4_R * Math.cos(deg * Math.PI / 180), X4_R * Math.sin(deg * Math.PI / 180), 0]
+const X4_A = x4At(210), X4_C = x4At(330), X4_B = x4At(90)
+const X4_M: V3 = [(X4_A[0] + X4_C[0]) / 2, (X4_A[1] + X4_C[1]) / 2, 0]
+const X4_BASE: [string, string][] = [["A", "B"], ["B", "C"], ["C", "A"]]
+
+/** The paper's figure: the whole pyramid, every side of the base 34 and every sloping edge 82 (as the question says). */
+function x4Board(S: Scene, o: { mo?: boolean } = {}) {
+  solidBoard(S, { A: X4_A, B: X4_B, C: X4_C, V: [0, 0, 44], O: [0, 0, 0], M: X4_M },
+    [["A", "C", "B"], ["V", "A", "C"], ["V", "C", "B"], ["V", "B", "A"]], { A: "A", B: "B", C: "C", V: "V" })
   S.fitPts = ["A", "B", "C", "V"]
-  S.lens[segKey("B", "C")] = lens("34")
-  S.lens[segKey("V", "B")] = lens("82", PINK)
-  S.dots = ["O", "M"]
-  addSeg(S, "M", "B", { grown: true })
-  addSeg(S, "O", "V", { grown: true, faint: true })
+  for (const [a, b] of X4_BASE) S.lens[segKey(a, b)] = lens("34")
+  for (const n of ["A", "B", "C"]) { S.lens[segKey("V", n)] = lens("82", PINK); S.edgeCol[segKey("V", n)] = PINK }
+  if (o.mo) {
+    // M is the middle of AC: its 34 moves along, out of M's way
+    S.lens[segKey("C", "A")] = lens("34", undefined, 0.27)
+    S.names = { ...S.names, M: "M", O: "O" }
+    S.dots = ["M", "O"]
+    addSeg(S, "M", "B", { grown: true })
+    addSeg(S, "O", "V", { grown: true, col: ORANGE })
+    S.rights = [{ at: "O", a: "V", b: "B" }]
+    S.lens[segKey("O", "B")] = lens("?", BLUE)
+  }
 }
+
+/**
+ * Just the base, for part (b)(i), with what the student has found on it:
+ * `am` AM and MC are 17; `mb` MB is drawn (its length when known);
+ * `right` the right angles at M; `o` where O sits along MB (0 at M, 1 at B),
+ * with MO and OB drawn as two parts and the thirds marked.
+ */
+function x4Base(S: Scene, o: { am?: boolean; mb?: boolean | string; right?: boolean; o?: number; view?: boolean } = {}) {
+  const O = vlerp(X4_M, X4_B, o.o ?? 1 / 3)
+  solidBoard(S, { A: X4_A, B: X4_B, C: X4_C, M: X4_M, O }, [["A", "C", "B"]], { A: "A", B: "B", C: "C", M: "M" })
+  S.fitPts = ["A", "B", "C"]
+  S.dots = ["M"]
+  S.lens[segKey("A", "B")] = lens("34")
+  S.lens[segKey("B", "C")] = lens("34")
+  if (o.am) { S.lens[segKey("A", "M")] = lens("17"); S.lens[segKey("M", "C")] = lens("17") } else S.lens[segKey("C", "A")] = lens("34", undefined, 0.27)
+  if (o.mb) {
+    if (o.o === undefined) addSeg(S, "M", "B", { grown: true, col: BLUE })
+    // with O on MB, its length goes up near B, out of O's way
+    if (typeof o.mb === "string") S.lens[segKey("M", "B")] = lens(o.mb, BLUE, o.o === undefined ? undefined : 0.86)
+  }
+  if (o.o !== undefined) {
+    S.names = { ...S.names, O: "O" }
+    S.dots = ["M", "O"]
+    addSeg(S, "M", "O", { grown: true, col: CHALK })
+    addSeg(S, "O", "B", { grown: true, col: BLUE })
+    S.ticks = [{ a: "M", b: "B", at: [1 / 3, 2 / 3] }]
+  }
+  if (o.right) S.rights = [{ at: "M", a: "B", b: "C" }, { at: "M", a: "B", b: "A" }]
+  // a flat triangle seen from low down is a sliver: look down at it (the student can turn it any way after)
+  if (o.view !== false && S.pitch < 45) S.acts.push(turnAct(S2 => ({ yaw: nearYaw(S2, 0), pitch: 80 }), 1.4, false))
+}
+
+/** The nearest yaw to the view's own that is this one (so a turn goes the short way round). */
+const nearYaw = (S: Scene, yaw: number) => S.yaw + ((((yaw - S.yaw) % 360) + 540) % 360) - 180
+
+/** Where A goes as the half ABM of the base is folded over along MB: turned `phi` about MB, rising up off the floor. */
+function x4Fold(phi: number): V3 {
+  const k = vunit(vsub(X4_B, X4_M)), v = vsub(X4_A, X4_M)
+  let kv = vcross(k, v)
+  if (kv[2] < 0) kv = vmul(kv, -1)
+  return vadd(X4_M, vadd(vmul(v, Math.cos(phi)), vmul(kv, Math.sin(phi))))
+}
+/** The folding half: a copy of triangle ABM turned `S.vals.phi` about MB (A2 is where A has got to). */
+function x4Folding(S: Scene, phi: number) {
+  S.vals.phi = phi
+  S.tick = S2 => { S2.P3.A2 = x4Fold(S2.vals.phi ?? 0) }
+  S.tick(S)
+  S.tris = [{ id: "fold", pts: ["A2", "M", "B"], col: YELLOW, sheet: true }]
+}
+
+/** MO : OB as it is now, when O sits on one of the marks (else just the names). */
+function x4Ratio(t: number): ENode {
+  const at = (f: number) => Math.abs(t - f) < 1e-9
+  const head = [pc("mo", "MO"), op("r", ":"), pc("ob", "OB", BLUE)]
+  const tail = (a: string, b: string, col: string) => [op("eq", "="), pc("ra", a, col), op("r2", ":"), pc("rb", b, col)]
+  if (at(1 / 3)) return row([...head, ...tail("1", "2", GREEN)])
+  if (at(2 / 3)) return row([...head, ...tail("2", "1", PINK)])
+  if (at(1 / 2)) return row([...head, ...tail("1", "1", CHALK)])
+  return row(head)
+}
+
+/** The right-angled triangle on the base the student lifted (C M B, or A M B: the same shape turned over). */
+function x4Lifted(S: Scene, o: { mb?: string } = {}) {
+  x4Base(S, { am: true, mb: true, right: true })
+  const end = S.picked["x4-tri"] === "AMB" ? "A" : "C"
+  S.tris = [{ id: `${end}MB`, pts: [end, "M", "B"], col: CHALK }]
+  liftOut(S, "up", [end, "M", "B"], "M", { [segKey(end, "B")]: lens("34", CHALK), [segKey(end, "M")]: lens("17", CHALK), [segKey("M", "B")]: lens(o.mb ?? "?", BLUE) }, true)
+}
+const X4_SIDES = { hyp: [segKey("C", "B"), segKey("A", "B")], half: [segKey("C", "M"), segKey("A", "M")] }
+function x4Line(st?: CrossState): ENode {
+  const g = (id: string) => ({ grab: st?.grab.has(id) || undefined, pulse: st?.pulse.has(id) || undefined })
+  return row([sq("t34", "34"), op("eq", "="), sq("mb", "MB", BLUE), op("p", "+"), sq("t17", "17", undefined, g("t17"))])
+}
+const x4Crossed = () => row([sq("t34", "34"), op("m", "-"), sq("t17", "17"), op("eq", "="), sq("mb", "MB", BLUE)])
 
 // ── the beats ────────────────────────────────────────────────────────────
 
@@ -215,7 +314,7 @@ const PART_A: Beat[] = [
   // ── 2. Corner to corner ──
   watch("how-far", "How far is it from $E$ to $C$?", S => { boxBoard(S, { keep: true }); boxLens(S); S.glowPts = ["E", "C"]; look(S) }),
   joinBeat("join-EC", "Join $E$ and $C$.", "E", "C", S => { boxBoard(S, { keep: true }); boxLens(S); look(S) }, (x, y) => `That joins $${x}$ and $${y}$. Join $E$ to $C$.`),
-  turnBeat("inside", "Turn it. This line goes through the inside.", S => { ecBoard(S); look(S) }, 70, 4),
+  turnBeat("inside", "Turn it. This line goes through the inside.", S => { ecBoard(S); look(S) }, 60, 3),
   watch("need-right", "Pythagoras finds a length in a right-angled triangle.", S => {
     ecBoard(S)
     S.eqFn = () => row([pc("a", "a^2"), op("p", "+"), pc("b", "b^2"), op("eq", "="), pc("c", "c^2")])
@@ -282,7 +381,7 @@ const PART_A: Beat[] = [
       { v: 108, say: "That's $12 \\times 9$. Square each side, then add." },
     ],
     writes: [["floor", segKey("E", "G")], ["up", segKey("E", "G")]],
-    walk: pythWalk("EG", BLUE, ["12", CHALK, 12], ["9", CHALK, 9]),
+    walk: pythWalk("EG", BLUE, ["12", CHALK, 12, BOX_FLOOR_SIDES], ["9", CHALK, 9], false, { flat: "floor", key: segKey("E", "G") }),
   }),
   askBeat("ec", "Now work out $EC$.", S => liftedBoard(S, { floor: true, eg: "15" }), {
     name: "EC", col: PINK, answer: EC, sf: 3, shown: "17", typed: "r15^+8^",
@@ -292,22 +391,12 @@ const PART_A: Beat[] = [
       { v: Math.hypot(12, 8), say: "Use $EG = 15$, the side of this triangle on the floor." },
     ],
     writes: [["up", segKey("E", "C")]],
-    walk: pythWalk("EC", PINK, ["15", BLUE, 15], ["8", ORANGE, 8]),
+    walk: pythWalk("EC", PINK, ["15", BLUE, 15, segKey("E", "G")], ["8", ORANGE, 8, segKey("G", "C")], false, { key: segKey("E", "C") }),
   }),
-  {
-    id: "back",
-    say: "Let's put them back.",
-    enter: S => {
-      liftedBoard(S, { floor: true, eg: "15", ec: "17" })
-      later(S, 0.4, S2 => {
-        putBack(S2)
-        S2.lens[segKey("E", "C")] = lens("17", PINK)
-        S2.lens[segKey("E", "G")] = lens("15", BLUE)
-      })
-      look(S)
-    },
-    cta: "", ctaAfter: 2.4,
-  },
+  backBeat("back", S => liftedBoard(S, { floor: true, eg: "15", ec: "17" }), S => {
+    S.lens[segKey("E", "C")] = lens("17", PINK)
+    S.lens[segKey("E", "G")] = lens("15", BLUE)
+  }),
   watch("so", "So it's $17$ from $E$ to $C$, right through the box.", S => {
     ecBoard(S, { eg: true, ecTex: "17" })
     S.segs[segKey("E", "C")].glow = true
@@ -428,20 +517,13 @@ const PART_A: Beat[] = [
     name: "EC", col: PINK, answer: 7, sf: 3, shown: "7", typed: "r6^+2^+3^",
     slips: [{ v: 11, say: "That's $6 + 2 + 3$. Square them first." }, { v: 49, say: "That's $EC^2$. Now take the square root." }],
     onFigure: segKey("E", "C"),
-    walk: [
-      { say: "Square all three edges and add.", tex: `${c(PINK, "EC")}^2 = 6^2 + 2^2 + 3^2` },
-      { say: "That makes $49$.", tex: `${c(PINK, "EC")}^2 = 36 + 4 + 9 = 49` },
-      { say: "Now the square root.", tex: `${c(PINK, "EC")} = \\sqrt{49} = ${c(GREEN, "7")}` },
-    ],
+    walk: boxWalk(6, 2, 3),
   }),
   askBeat("q2", "Now this one, to $3$ significant figures.", S => { ecBoard(S, { l: 8, w: 5, h: 4, ecTex: "?" }); look(S) }, {
     name: "EC", col: PINK, answer: Math.sqrt(105), sf: 3, shown: "10.2", typed: "r8^+5^+4^",
     slips: [{ v: 17, say: "That's $8 + 5 + 4$. Square them first." }, { v: 105, say: "That's $EC^2$. Now take the square root." }],
     onFigure: segKey("E", "C"),
-    walk: [
-      { say: "Square all three edges and add.", tex: `${c(PINK, "EC")}^2 = 8^2 + 5^2 + 4^2 = 105` },
-      { say: "Now the square root, to $3$ significant figures.", tex: `${c(PINK, "EC")} = \\sqrt{105} = 10.24\\ldots = ${c(GREEN, "10.2")}` },
-    ],
+    walk: boxWalk(8, 5, 4),
   }),
   watch("q3", "This box's long diagonal is $13$. How tall is it?", S => {
     ecBoard(S, { l: 12, w: 4, h: 3, ecTex: "13" })
@@ -468,9 +550,12 @@ const PART_A: Beat[] = [
     name: "h", col: ORANGE, answer: 3, sf: 3, shown: "3", typed: "r13^-12^-4^",
     slips: [{ v: 9, say: "That's $h^2$. Now take the square root." }, { v: Math.sqrt(169 + 144 + 16), say: "Take $12^2$ and $4^2$ away from $13^2$." }],
     onFigure: segKey("G", "C"),
+    // the line the student made by moving both across, so the working carries on from it
+    above: () => q3Crossed(),
     walk: [
-      { say: "$h^2$ is what's left of $13^2$.", tex: `h^2 = 13^2 - 12^2 - 4^2 = 169 - 144 - 16 = 9` },
-      { say: "Now the square root.", tex: `h = \\sqrt{9} = ${c(GREEN, "3")}` },
+      { say: "We moved $12^2$ and $4^2$ across. They take away from $13^2$.", tex: `${c(ORANGE, "h")}^2 = 13^2 - 12^2 - 4^2`, show: S => { if (S.segs[segKey("E", "C")]) S.segs[segKey("E", "C")].glow = true } },
+      { say: "Square each one, then take away.", tex: `${c(ORANGE, "h")}^2 = 169 - 144 - 16 = 9`, show: S => { S.edgeCol = { [segKey("E", "H")]: YELLOW, [segKey("H", "G")]: YELLOW } } },
+      { say: "$h$ is its square root.", tex: `${c(ORANGE, "h")} = \\sqrt{9}`, show: S => { S.edgeCol = { [segKey("G", "C")]: ORANGE } } },
     ],
   }),
 ]
@@ -479,6 +564,37 @@ function backLine(st?: CrossState): ENode {
   const g = (id: string) => ({ grab: st?.grab.has(id) || undefined, pulse: st?.pulse.has(id) || undefined })
   return row([sq("t13", "13", PINK), op("eq", "="), sq("t12", "12", undefined, g("t12")), op("p1", "+"), sq("t4", "4"), op("p2", "+"), sq("h", "h", ORANGE)])
 }
+const q3Crossed = () => row([sq("t13", "13", PINK), op("m1", "-"), sq("t12", "12"), op("m2", "-"), sq("t4", "4"), op("eq", "="), sq("h", "h", ORANGE)])
+
+/**
+ * The long diagonal of a box, walked through on the figure: the three
+ * edges light up and are squared and added, then the square root. It stops
+ * at what to press.
+ */
+function boxWalk(l: number, w: number, h: number) {
+  const ec = c(PINK, "EC")
+  const edges = { [segKey("E", "H")]: YELLOW, [segKey("H", "G")]: YELLOW, [segKey("G", "C")]: YELLOW }
+  return [
+    { say: "$EC$ goes across all three: the length, the width and the height.", tex: `${ec}^2 = ${l}^2 + ${w}^2 + ${h}^2`, show: (S: Scene) => { S.edgeCol = { ...edges } } },
+    { say: "Square each edge, then add.", tex: `${ec}^2 = ${l * l} + ${w * w} + ${h * h} = ${l * l + w * w + h * h}`, show: (S: Scene) => { S.edgeCol = { ...edges } } },
+    { say: "$EC$ is its square root.", tex: `${ec} = \\sqrt{${l * l + w * w + h * h}}`, show: (S: Scene) => { S.edgeCol = {}; if (S.segs[segKey("E", "C")]) S.segs[segKey("E", "C")].glow = true } },
+  ]
+}
+
+/**
+ * Put the flats back into the figure, slowly (the solid turns to face each
+ * one's place, it flies in, then the solid turns back); the lengths found are
+ * written on the figure once they are home. Moves on by itself.
+ */
+function backBeat(id: string, board: (S: Scene) => void, home: (S: Scene) => void, say0 = "Let's put them back."): Beat {
+  return {
+    id, say: say0,
+    enter: S => { board(S); later(S, 0.5, S2 => putBack(S2, home)); look(S) },
+    done: S => S.time - S.beatStart > 1 && !acting(S) && S.flats.length === 0,
+    advanceAfter: 900,
+  }
+}
+
 function q3Board(S: Scene) {
   ecBoard(S, { l: 12, w: 4, h: 3, ecTex: "13" })
   S.lens[segKey("G", "C")] = lens("h", ORANGE)
@@ -506,7 +622,6 @@ const PART_B: Beat[] = [
     done: S => S.pyr?.h === 8 && S.drag === null,
     advanceAfter: 1400,
   },
-  turnBeat("pyr-turn", "Try turning it.", S => { pyrBoard(S); look(S) }, 70, 4),
   {
     id: "diags",
     say: "Where exactly is the middle? Draw both diagonals of the base.",
@@ -591,16 +706,14 @@ const PART_B: Beat[] = [
     name: "AC", col: BLUE, answer: PY_AC, sf: 3, shown: sig(PY_AC, 3), typed: "r6^+6^",
     slips: [{ v: 12, say: "That's $6 + 6$. Square them first." }, { v: 72, say: "That's $AC^2$. Now take the square root." }],
     writes: [["floor", segKey("A", "C")]],
-    walk: pythWalk("AC", BLUE, ["6", CHALK, 6], ["6", CHALK, 6]),
+    walk: pythWalk("AC", BLUE, ["6", CHALK, 6, BASE_SIDES], ["6", CHALK, 6], false, { flat: "floor", key: segKey("A", "C") }),
   }),
   askBeat("pyr-xc", "So what is $XC$?", S => { pyLiftedBoard(S, { floor: true, ac: sig(PY_AC, 3) }); look(S) }, {
     name: "XC", col: BLUE, answer: PY_XC, sf: 3, shown: sig(PY_XC, 3), ans: PY_AC, typed: "a/2",
     slips: [{ v: PY_AC, say: "That's all of $AC$. $X$ is halfway along it." }],
     writes: [["up", segKey("X", "C")]],
-    walk: [
-      { say: "$X$ is halfway along $AC$.", tex: `${c(BLUE, "XC")} = ${c(BLUE, "AC")} \\div 2` },
-      { say: "Use Ans, so no digits are lost.", tex: `${c(BLUE, "XC")} = ${sig(PY_AC, 4)}\\ldots \\div 2 = ${c(GREEN, sig(PY_XC, 3))}` },
-    ],
+    ansName: "AC",
+    walk: halfWalk("XC", "X", "AC", "the floor"),
   }),
   askBeat("pyr-ec", "Now work out $EC$.", S => { pyLiftedBoard(S, { floor: true, ac: sig(PY_AC, 3), xc: sig(PY_XC, 3) }); look(S) }, {
     name: "EC", col: PINK, answer: PY_EC, sf: 3, shown: sig(PY_EC, 3), ans: PY_XC, typed: "ra^+8^",
@@ -610,18 +723,10 @@ const PART_B: Beat[] = [
       { v: Math.hypot(PY_AC, 8), say: "That used all of $AC$. Use $XC$, half of it." },
     ],
     writes: [["up", segKey("E", "C")]],
-    walk: pythWalk("EC", PINK, [sig(PY_XC, 3), BLUE, PY_XC], ["8", ORANGE, 8]),
+    ansName: "XC",
+    walk: pythWalk("EC", PINK, [sig(PY_XC, 3), BLUE, PY_XC, segKey("X", "C")], ["8", ORANGE, 8, segKey("E", "X")], false, { key: segKey("E", "C") }),
   }),
-  {
-    id: "pyr-back",
-    say: "Let's put them back.",
-    enter: S => {
-      pyLiftedBoard(S, { floor: true, ac: sig(PY_AC, 3), xc: sig(PY_XC, 3), ec: sig(PY_EC, 3) })
-      later(S, 0.4, S2 => { putBack(S2); S2.lens[segKey("E", "C")] = lens(sig(PY_EC, 3), PINK) })
-      look(S)
-    },
-    cta: "", ctaAfter: 2.4,
-  },
+  backBeat("pyr-back", S => pyLiftedBoard(S, { floor: true, ac: sig(PY_AC, 3), xc: sig(PY_XC, 3), ec: sig(PY_EC, 3) }), S => { S.lens[segKey("E", "C")] = lens(sig(PY_EC, 3), PINK) }),
   watch("face", "This face has a height too, from $E$ to $M$, the middle of $BC$.", S => { faceBoard(S); S.segs[segKey("E", "M")].glow = true; look(S) }, 2.4),
   joinBeat("join-XM", "Join $X$ and $M$.", "X", "M", S => { faceBoard(S); look(S) }, (x, y) => `That joins $${x}$ and $${y}$. Join $X$ to $M$.`, { col: BLUE }),
   rightBeat("face-right", "Tap the right angle in triangle $EXM$.", S => { faceBoard(S, { xm: true }); look(S) },
@@ -635,15 +740,30 @@ const PART_B: Beat[] = [
     name: "XM", col: BLUE, answer: 3, sf: 3, shown: "3", typed: "3",
     slips: [{ v: 6, say: "That's the whole side. $X$ is in the middle." }],
     writes: [["up", segKey("X", "M")]],
-    walk: [{ say: "$X$ is in the middle, halfway across the base.", tex: `${c(BLUE, "XM")} = 6 \\div 2 = ${c(GREEN, "3")}` }],
+    walk: [
+      { say: "The base is $6$ across.", tex: `${c(CHALK, "AB")} = 6`, show: S => { S.edgeCol = { [segKey("A", "B")]: YELLOW } } },
+      { say: "$X$ is in the middle, so $XM$ is half of it.", tex: `${c(BLUE, "XM")} = 6 \\div 2`, show: S => { S.edgeCol = {}; S.glowPts = ["X", "M"] } },
+    ],
   }),
   askBeat("face-em", "Now work out $EM$.", S => { faceLifted(S, { xm: "3" }); look(S) }, {
     name: "EM", col: PINK, answer: PY_EM, sf: 3, shown: sig(PY_EM, 3), typed: "r3^+8^",
     slips: [{ v: 11, say: "That's $3 + 8$. Square them first." }, { v: 73, say: "That's $EM^2$. Now take the square root." }],
     writes: [["up", segKey("E", "M")]],
-    walk: pythWalk("EM", PINK, ["3", BLUE, 3], ["8", ORANGE, 8]),
+    walk: pythWalk("EM", PINK, ["3", BLUE, 3, segKey("X", "M")], ["8", ORANGE, 8, segKey("E", "X")], false, { key: segKey("E", "M") }),
   }),
 ]
+
+/**
+ * Half of a diagonal, walked through: the middle lights up on the figure,
+ * then Ans (which holds the diagonal) is halved. It stops at what to press.
+ */
+function halfWalk(name: string, mid: string, whole: string, where: string, twice = false, midPt = mid) {
+  const [w0, w1] = whole.split("")
+  return [
+    { say: `$${mid}$ is the middle of $${whole}$, on ${where}.`, tex: twice ? `${c(BLUE, whole)} = 2 \\times ${c(BLUE, name)}` : `${c(BLUE, name)} = ${c(BLUE, whole)} \\div 2`, show: (S: Scene) => { S.glowPts = [midPt]; if (S.segs[segKey(w0, w1)]) S.segs[segKey(w0, w1)].glow = true } },
+    { say: `Ans still holds $${twice ? name : whole}$, with every digit.`, tex: twice ? `${c(BLUE, whole)} = 2 \\times \\text{Ans}` : `${c(BLUE, name)} = \\text{Ans} \\div 2`, show: (S: Scene) => { S.glowPts = [midPt] } },
+  ]
+}
 
 /** The pyramid with its diagonals, height, and EC marked. */
 function pyBase(S: Scene) {
@@ -694,23 +814,19 @@ const PART_C: Beat[] = [
     name: "EG", col: BLUE, answer: X1_EG, sf: 3, shown: sig(X1_EG, 3), typed: "r12^+10^",
     slips: [{ v: 22, say: "That's $12 + 10$. Square them first." }, { v: 244, say: "That's $EG^2$. Now take the square root." }],
     writes: [["floor", segKey("E", "G")], ["up", segKey("E", "G")]],
-    walk: pythWalk("EG", BLUE, ["12", CHALK, 12], ["10", CHALK, 10]),
+    walk: pythWalk("EG", BLUE, ["12", CHALK, 12, BOX_FLOOR_SIDES], ["10", CHALK, 10], false, { flat: "floor", key: segKey("E", "G") }),
   }),
-  askBeat("x1-ce", "Now $CE$. Give $4$ significant figures, to show it.", S => { x1Board(S, { eg: true, tri: true }); x1Flats(S, { floor: true, eg: sig(X1_EG, 3) }); look(S) }, {
-    name: "CE", col: PINK, answer: X1_CE, sf: 4, shown: sig(X1_CE, 4), ans: X1_EG, typed: "ra^+7^",
+  askBeat("x1-ce", "Now work out $CE$ to $4$ significant figures, one more than $17.1$ has.", S => { x1Board(S, { eg: true, tri: true }); x1Flats(S, { floor: true, eg: sig(X1_EG, 3) }); look(S) }, {
+    name: "CE", col: PINK, answer: X1_CE, sf: 4, shown: sig(X1_CE, 4), ans: X1_EG, ansName: "EG", typed: "ra^+7^",
     slips: [{ v: X1_CE * X1_CE, say: "That's $CE^2$. Now take the square root." }, { v: X1_EG + 7, say: "Square them first." }],
     writes: [["up", segKey("E", "C")]],
+    rightNote: `$${sig(X1_CE, 4)}$ is $17.1$ to $1$ decimal place.`,
     walk: [
-      { say: "$CE$ is the longest side of this triangle.", tex: `${c(PINK, "CE")}^2 = ${c(BLUE, "EG")}^2 + ${c(ORANGE, "7")}^2` },
-      { say: "Use Ans for $EG$, so no digits are lost.", tex: `${c(PINK, "CE")} = \\sqrt{${sig(X1_EG, 4)}\\ldots^2 + 7^2} = ${c(GREEN, sig(X1_CE, 4))}` },
+      { say: "$CE$ is the longest side of this triangle.", tex: `${c(PINK, "CE")}^2 = ${c(BLUE, "EG")}^2 + ${c(ORANGE, "7")}^2`, show: S => lightFlat(S, "up", [segKey("E", "C")]) },
+      { say: "$EG$ is $15.6$ rounded. Ans holds it with every digit.", tex: `${c(PINK, "CE")}^2 = \\text{Ans}^2 + 7^2`, show: S => lightFlat(S, "up", [segKey("E", "G")]) },
+      { say: "$CE$ is the square root of that.", tex: `${c(PINK, "CE")} = \\sqrt{\\text{Ans}^2 + 7^2}`, show: S => lightFlat(S, "up", [segKey("E", "C")]) },
     ],
   }),
-  watch("x1-shown", "$17.12$ is $17.1$ to $1$ decimal place. That shows it.", S => {
-    x1Board(S, { eg: true })
-    S.lens[segKey("E", "C")] = lens("17.12", PINK)
-    S.eqFn = () => row([pc("ce", "CE", PINK), op("e1", "="), pc("v", "17.12", GREEN), op("e2", "="), pc("r", "17.1\\text{ cm}", GREEN)])
-    look(S, ["eq"])
-  }, 2.6),
 
   // 4024/21/O/N/21 Q10(b)(i)
   watch("x2", "Here is another. This pyramid has a square base, and $E$ is above its middle, $X$.", S => { x2Board(S); look(S) }, 2.8),
@@ -730,19 +846,20 @@ const PART_C: Beat[] = [
     options: ["$-\\,17^2$", "$\\div\\,17^2$"], answer: 0,
     notes: { 1: "It was added, so it comes across as a take-away." },
     before: st => x2Line(st),
-    after: () => row([sq("t19", "19", PINK), op("m", "-"), sq("t17", "17", ORANGE), op("eq", "="), sq("xc", "XC", BLUE)]),
+    after: () => x2Crossed(),
   }),
   askBeat("x2-xc", "Work out $XC$.", S => { x2Board(S); x2Up(S); look(S) }, {
     name: "XC", col: BLUE, answer: X2_XC, sf: 3, shown: sig(X2_XC, 3), typed: "r19^-17^",
     slips: [{ v: 72, say: "That's $XC^2$. Now take the square root." }, { v: Math.hypot(19, 17), say: "$19$ is the longest side. Take $17^2$ away." }, { v: 2, say: "Square them first." }],
     writes: [["up", segKey("X", "C")]],
-    walk: pythWalk("XC", BLUE, ["19", PINK, 19], ["17", ORANGE, 17], true),
+    above: () => x2Crossed(),
+    walk: pythWalk("XC", BLUE, ["19", PINK, 19, segKey("E", "C")], ["17", ORANGE, 17, segKey("E", "X")], true, { key: segKey("X", "C") }),
   }),
   askBeat("x2-ac", "$XC$ is half of the diagonal. So how long is $AC$?", S => { x2Board(S); x2Up(S, { xc: sig(X2_XC, 3) }); S.segs[segKey("A", "C")].glow = true; look(S) }, {
-    name: "AC", col: BLUE, answer: X2_AC, sf: 3, shown: sig(X2_AC, 3), ans: X2_XC, typed: "a*2",
+    name: "AC", col: BLUE, answer: X2_AC, sf: 3, shown: sig(X2_AC, 3), ans: X2_XC, ansName: "XC", typed: "a*2",
     slips: [{ v: X2_XC / 2, say: "$AC$ is the whole diagonal. It's twice $XC$." }],
     onFigure: segKey("A", "C"),
-    walk: [{ say: "$X$ is halfway along $AC$, so $AC$ is twice $XC$.", tex: `${c(BLUE, "AC")} = 2 \\times ${sig(X2_XC, 4)}\\ldots = ${c(GREEN, sig(X2_AC, 3))}` }],
+    walk: halfWalk("XC", "X", "AC", "the base", true),
   }),
   liftBeat("x2-floor", "Tap triangle $ABC$ to lift it out.", S => { x2Board(S); x2Up(S, { xc: sig(X2_XC, 3) }); look(S) }, {
     regions: [{ id: "ABC", pts: ["A", "B", "C"] }],
@@ -750,20 +867,20 @@ const PART_C: Beat[] = [
   }),
   watch("x2-s", "Its two short sides are the same. Let's call them $s$.", S => {
     x2Floor(S)
-    S.eqFn = () => row([sq("s1", "s"), op("p", "+"), sq("s2", "s"), op("eq", "="), sq("ac", sig(X2_AC, 4), BLUE)])
+    S.eqFn = () => x2Sides()
     look(S, ["eq"])
   }, 2.6),
   askBeat("x2-side", "Work out $s$.", S => { x2Floor(S); look(S) }, {
-    name: "s", col: CHALK, answer: 12, dp: 0, shown: "12", ans: X2_AC, typed: "ra^/2",
+    name: "s", col: CHALK, answer: 12, dp: 0, shown: "12", ans: X2_AC, ansName: "AC", typed: "ra^/2",
     slips: [{ v: X2_AC / 2, say: "Halving $AC$ gives $XC$. For the side, use $s^2 + s^2 = AC^2$." }, { v: 144, say: "That's $s^2$. Now take the square root." }],
     writes: [["floor", segKey("A", "B")], ["floor", segKey("B", "C")]],
+    above: () => x2Sides(),
     walk: [
-      { say: "Two $s^2$ make $AC^2$.", tex: `2s^2 = ${c(BLUE, sig(X2_AC, 4))}\\ldots^2 = 288` },
-      { say: "So $s^2$ is half of that.", tex: `s^2 = 288 \\div 2 = 144` },
-      { say: "Now the square root.", tex: `s = \\sqrt{144} = ${c(GREEN, "12")}` },
+      { say: "Two $s^2$ make $AC^2$.", tex: `2s^2 = ${c(BLUE, "AC")}^2`, show: S => lightFlat(S, "floor", [segKey("A", "B"), segKey("B", "C")]) },
+      { say: "So $s^2$ is half of $AC^2$. Ans holds $AC$.", tex: `s^2 = \\text{Ans}^2 \\div 2`, show: S => lightFlat(S, "floor", [segKey("A", "C")]) },
+      { say: "$s$ is its square root.", tex: `s = \\sqrt{\\text{Ans}^2 \\div 2}`, show: S => lightFlat(S, "floor", [segKey("A", "B"), segKey("B", "C")]) },
     ],
   }),
-  watch("x2-shown", "The base is $12$ cm long. That shows it.", S => { x2Board(S); S.lens[segKey("A", "B")] = lens("12", GREEN); look(S) }, 2.2),
 
   // 4024/22/O/N/18 Q9(a)
   watch("x3", "This pyramid's base is a rectangle, $6.2$ by $4.3$ cm. Each sloping edge is $9.5$ cm.", S => { x3Board(S); look(S) }, 3),
@@ -784,13 +901,14 @@ const PART_C: Beat[] = [
     name: "AC", col: BLUE, answer: X3_AC, sf: 3, shown: sig(X3_AC, 3), typed: "r6.2^+4.3^",
     slips: [{ v: 10.5, say: "That's $6.2 + 4.3$. Square them first." }, { v: X3_AC * X3_AC, say: "That's $AC^2$. Now take the square root." }],
     writes: [["floor", segKey("A", "C")]],
-    walk: pythWalk("AC", BLUE, ["6.2", CHALK, 6.2], ["4.3", CHALK, 4.3]),
+    walk: pythWalk("AC", BLUE, ["6.2", CHALK, 6.2, BASE_SIDES], ["4.3", CHALK, 4.3], false, { flat: "floor", key: segKey("A", "C") }),
   }),
   askBeat("x3-ec", "So what is $EC$?", S => { x3Board(S); x3Up(S); x3Floor(S, { ac: sig(X3_AC, 3) }); look(S) }, {
-    name: "EC", col: BLUE, answer: X3_EC, sf: 3, shown: sig(X3_EC, 3), ans: X3_AC, typed: "a/2",
+    name: "EC", col: BLUE, answer: X3_EC, sf: 3, shown: sig(X3_EC, 3), ans: X3_AC, ansName: "AC", typed: "a/2",
     slips: [{ v: X3_AC, say: "That's all of $AC$. $E$ is halfway along it." }],
     writes: [["up", segKey("X", "C")]],
-    walk: [{ say: "$E$ is halfway along $AC$.", tex: `${c(BLUE, "EC")} = ${sig(X3_AC, 4)}\\ldots \\div 2 = ${c(GREEN, sig(X3_EC, 3))}` }],
+    // the middle is called E in this question (the point X of the board)
+    walk: halfWalk("EC", "E", "AC", "the base", false, "X"),
   }),
   watch("x3-long", "We know the longest side, $9.5$.", S => {
     x3Board(S); x3Up(S, { ec: sig(X3_EC, 3) })
@@ -802,95 +920,201 @@ const PART_C: Beat[] = [
     options: ["$-\\,EC^2$", "$\\div\\,EC^2$"], answer: 0,
     notes: { 1: "It was added, so it comes across as a take-away." },
     before: st => x3Line(st),
-    after: () => row([sq("t95", "9.5", PINK), op("m", "-"), sq("ec", "EC", BLUE), op("eq", "="), sq("h", "EF", ORANGE)]),
+    after: () => x3Crossed(),
   }),
-  askBeat("x3-ef", "Work out $EF$. Give $4$ significant figures.", S => { x3Board(S); x3Up(S, { ec: sig(X3_EC, 3) }); look(S) }, {
-    name: "EF", col: ORANGE, answer: X3_H, sf: 4, shown: sig(X3_H, 4), ans: X3_EC, typed: "r9.5^-a^",
+  askBeat("x3-ef", "Work out $EF$ to $4$ significant figures, one more than $8.72$ has.", S => { x3Board(S); x3Up(S, { ec: sig(X3_EC, 3) }); look(S) }, {
+    name: "EF", col: ORANGE, answer: X3_H, sf: 4, shown: sig(X3_H, 4), ans: X3_EC, ansName: "EC", typed: "r9.5^-a^",
     slips: [{ v: X3_H * X3_H, say: "That's $EF^2$. Now take the square root." }, { v: Math.hypot(9.5, X3_EC), say: "$9.5$ is the longest side. Take $EC^2$ away." }],
     writes: [["up", segKey("E", "X")]],
+    above: () => x3Crossed(),
+    rightNote: `$${sig(X3_H, 4)}$ is $8.72$ to $3$ significant figures.`,
     walk: [
-      { say: "$EF^2$ is $9.5^2$ take away $EC^2$.", tex: `${c(ORANGE, "EF")}^2 = 9.5^2 - ${c(BLUE, sig(X3_EC, 4))}\\ldots^2` },
-      { say: "Use Ans for $EC$, then the square root.", tex: `${c(ORANGE, "EF")} = ${c(GREEN, sig(X3_H, 4))}` },
+      { say: "We moved $EC^2$ across. It takes away from $9.5^2$.", tex: `${c(ORANGE, "EF")}^2 = 9.5^2 - ${c(BLUE, "EC")}^2`, show: S => lightFlat(S, "up", [segKey("E", "C"), segKey("X", "C")]) },
+      { say: "$EC$ is $3.77$ rounded. Ans holds it with every digit.", tex: `${c(ORANGE, "EF")}^2 = 9.5^2 - \\text{Ans}^2`, show: S => lightFlat(S, "up", [segKey("X", "C")]) },
+      { say: "$EF$ is the square root of that.", tex: `${c(ORANGE, "EF")} = \\sqrt{9.5^2 - \\text{Ans}^2}`, show: S => lightFlat(S, "up", [segKey("E", "X")]) },
     ],
   }),
-  watch("x3-shown", "$8.719$ is $8.72$ to $3$ significant figures. That shows it.", S => {
-    x3Board(S)
-    S.lens[segKey("E", "X")] = lens("8.719", ORANGE)
-    S.eqFn = () => row([pc("ef", "EF", ORANGE), op("e1", "="), pc("v", sig(X3_H, 4), GREEN), op("e2", "="), pc("r", "8.72\\text{ cm}", GREEN)])
-    look(S, ["eq"])
-  }, 2.6),
 
   // 4024/23/M/J/25 Q22(b)(i)
-  watch("x4", "This pyramid stands on a triangle with sides $34$ cm. Each sloping edge is $82$ cm.", S => { x4Board(S); look(S) }, 3),
-  watch("x4-q", "$M$ is the middle of $AC$, and $MO : OB = 1 : 2$. Show that $OB = 19.6$ cm.", S => { x4Board(S); S.glowPts = ["O", "M"]; look(S) }, 3),
-  liftBeat("x4-tri", "Tap a right-angled triangle on the floor with $MB$ in it.", S => { x4Board(S); S.rights = [{ at: "M", a: "B", b: "C" }]; look(S) }, {
+  watch("x4", "This pyramid stands on a triangle with sides $34$ cm. Its sloping edges are $82$ cm.", S => { x4Board(S); look(S) }, 3),
+  watch("x4-q", "$M$ is the middle of $AC$, and $MO : OB = 1 : 2$. Show that $OB = 19.6$ cm.", S => { x4Board(S, { mo: true }); S.glowPts = ["M", "O"]; look(S) }, 3),
+  {
+    id: "x4-base",
+    say: "$OB$ is on the base, so that's all we need. Let's look at it from above.",
+    enter: S => {
+      x4Board(S, { mo: true })
+      // the rest of the pyramid fades right out, then the base turns to face us
+      S.names = { A: "A", B: "B", C: "C", M: "M", O: "O" }
+      for (const n of ["A", "B", "C"]) delete S.lens[segKey("V", n)]
+      for (const [a, b] of X4_BASE) S.edgeCol[segKey(a, b)] = CHALK
+      S.dimMax = 1
+      S.dim.t = 1
+      S.acts.push(holdAct(1.3, undefined, S2 => {
+        x4Base(S2, { mb: true, view: false })
+        S2.names = { ...S2.names, O: "O" }
+        S2.dots = ["M", "O"]
+        S2.lens[segKey("O", "B")] = lens("?", BLUE)
+        S2.acts.push(turnAct(S3 => ({ yaw: nearYaw(S3, 0), pitch: 89 }), 2.4, false))
+      }))
+      look(S)
+    },
+    cta: "", ctaAfter: 4.4,
+  },
+  askBeat("x4-am", "$M$ is the middle of $AC$. How long is $AM$?", S => { x4Base(S); S.glowPts = ["M"]; look(S) }, {
+    name: "AM", col: CHALK, answer: 17, sf: 3, shown: "17", typed: "34/2",
+    slips: [{ v: 34, say: "That's all of $AC$. $M$ is halfway along it." }, { v: 68, say: "$AM$ is shorter than $AC$. It's half of it." }],
+    then: S => { S.lens[segKey("A", "M")] = lens("17", GREEN); S.lens[segKey("M", "C")] = lens("17", GREEN); delete S.lens[segKey("C", "A")] },
+    walk: [
+      { say: "$AC$ is $34$.", tex: "AC = 34", show: S => { S.edgeCol = { [segKey("A", "C")]: YELLOW } } },
+      { say: "$M$ is halfway along it, so $AM$ is half of $34$.", tex: "AM = 34 \\div 2", show: S => { S.edgeCol = {}; S.glowPts = ["A", "M"] } },
+    ],
+  }),
+  joinBeat("x4-join", "Join $M$ to $B$.", "M", "B", S => { x4Base(S, { am: true }); look(S) }, (x, y) => `That joins $${x}$ and $${y}$. Join $M$ to $B$.`, { col: BLUE }),
+  watch("x4-right-q", "Is the angle at $M$ a right angle? Let's check.", S => { x4Base(S, { am: true, mb: true }); S.glowPts = ["M"]; look(S) }, 2),
+  {
+    id: "x4-fold",
+    say: "Fold the triangle over along $MB$. Drag $A$ across.",
+    enter: S => {
+      x4Base(S, { am: true, mb: true, view: false })
+      x4Folding(S, 0)
+      // tipped, so the fold is seen rising off the floor
+      S.acts.push(turnAct(S2 => ({ yaw: nearYaw(S2, -18), pitch: 52 }), 1.6, false))
+      S.handles = [{
+        id: "fold", at: S2 => S2.P3.A2, axis: vunit(vsub(X4_C, X4_A)), move: () => {},
+        place: (S2, f) => {
+          let best = 0, bd = Infinity
+          for (let i = 0; i <= 120; i++) { const ph = (Math.PI * i) / 120, d = dist(proj(S2, x4Fold(ph)), f); if (d < bd) { bd = d; best = ph } }
+          // it clicks flat onto the other half, and back onto its own
+          S2.vals.phi = best > Math.PI - 0.16 ? Math.PI : best < 0.06 ? 0 : best
+        },
+      }]
+      look(S)
+    },
+    done: S => S.vals.phi === Math.PI && S.drag === null,
+    advanceAfter: 1200,
+  },
+  {
+    id: "x4-equal",
+    say: "$A$ lands exactly on $C$. So the two angles at $M$ are equal.",
+    enter: S => {
+      x4Base(S, { am: true, mb: true })
+      x4Folding(S, Math.PI)
+      // it unfolds slowly, and the two angles it laid on each other light up
+      S.acts.push(holdAct(0.9), {
+        dur: 2.0, lock: true,
+        run: (S2, e) => { S2.vals.phi = Math.PI * (1 - e) },
+        end: S2 => { S2.tris = []; S2.tick = null; S2.arcs = [{ at: "M", a: "A", b: "B", pulse: true }, { at: "M", a: "C", b: "B", pulse: true }] },
+      })
+      look(S)
+    },
+    cta: "", ctaAfter: 3.6,
+  },
+  askBeat("x4-ninety", "Together they make a straight line. How big is each one?", S => {
+    x4Base(S, { am: true, mb: true })
+    S.arcs = [{ at: "M", a: "A", b: "B" }, { at: "M", a: "C", b: "B" }]
+    S.segs[segKey("A", "C")] = { a: "A", b: "C", col: CHALK, grow: { v: 1, t: 1 }, glow: true }
+    look(S)
+  }, {
+    name: "\\angle AMB", col: CHALK, answer: 90, dp: 0, shown: "90^\\circ", typed: "180/2",
+    slips: [{ v: 180, say: "$180^\\circ$ is the two together. Each is half of it." }, { v: 45, say: "The two together make $180^\\circ$, a straight line." }],
+    above: () => row([pc("a1", "\\angle AMB"), op("p", "+"), pc("a2", "\\angle CMB"), op("eq", "="), pc("t", "180^\\circ")]),
+    then: S => { S.arcs = []; S.segs = { ...S.segs }; delete S.segs[segKey("A", "C")]; S.rights = [{ at: "M", a: "B", b: "C", pulse: true }, { at: "M", a: "B", b: "A", pulse: true }] },
+    walk: [
+      { say: "$AMC$ is a straight line, so the two angles make $180^\\circ$.", tex: "\\angle AMB + \\angle CMB = 180^\\circ", show: S => { S.arcs = S.arcs.map(a => ({ ...a, pulse: true })) } },
+      { say: "They are equal, so each one is half of $180^\\circ$.", tex: "\\angle AMB = 180^\\circ \\div 2" },
+    ],
+  }),
+  liftBeat("x4-tri", "Tap a right-angled triangle with $MB$ in it.", S => { x4Base(S, { am: true, mb: true, right: true }); look(S) }, {
     regions: [{ id: "AMB", pts: ["A", "M", "B"] }, { id: "CMB", pts: ["C", "M", "B"] }],
     makes: {
-      AMB: { flat: "up", pts: ["A", "M", "B"], right: "M", lens: { [segKey("A", "B")]: lens("34", CHALK), [segKey("A", "M")]: lens("17", CHALK), [segKey("M", "B")]: lens("?", BLUE) } },
-      CMB: { flat: "up", pts: ["C", "M", "B"], right: "M", lens: { [segKey("C", "B")]: lens("34", CHALK), [segKey("C", "M")]: lens("17", CHALK), [segKey("M", "B")]: lens("?", BLUE) } },
+      AMB: { pts: ["A", "M", "B"], right: "M", lens: { [segKey("A", "B")]: lens("34", CHALK), [segKey("A", "M")]: lens("17", CHALK), [segKey("M", "B")]: lens("?", BLUE) } },
+      CMB: { pts: ["C", "M", "B"], right: "M", lens: { [segKey("C", "B")]: lens("34", CHALK), [segKey("C", "M")]: lens("17", CHALK), [segKey("M", "B")]: lens("?", BLUE) } },
     },
+  }),
+  watch("x4-long", "We know its longest side, $34$.", S => { x4Lifted(S); S.eqFn = () => x4Line(); look(S, ["eq"]) }, 2.4),
+  crossBeat("x4-cross", "Move $17^2$ across the $=$.", S => { x4Lifted(S); look(S) }, {
+    ids: ["t17", "t17q"], label: "17^2", from: "right",
+    options: ["$-\\,17^2$", "$\\div\\,17^2$"], answer: 0,
+    notes: { 1: "It was added, so it comes across as a take-away." },
+    before: st => x4Line(st),
+    after: () => x4Crossed(),
   }),
   askBeat("x4-mb", "Work out $MB$.", S => { x4Lifted(S); look(S) }, {
     name: "MB", col: BLUE, answer: X4_MB, sf: 3, shown: sig(X4_MB, 3), typed: "r34^-17^",
     slips: [{ v: Math.hypot(34, 17), say: "$34$ is the longest side here. Take $17^2$ away." }, { v: 867, say: "That's $MB^2$. Now take the square root." }, { v: 17, say: "Square them first." }],
     writes: [["up", segKey("M", "B")]],
-    walk: pythWalk("MB", BLUE, ["34", CHALK, 34], ["17", CHALK, 17], true),
+    above: () => x4Crossed(),
+    walk: pythWalk("MB", BLUE, ["34", CHALK, 34, X4_SIDES.hyp], ["17", CHALK, 17, X4_SIDES.half], true, { key: segKey("M", "B") }),
   }),
+  backBeat("x4-back", S => x4Lifted(S, { mb: sig(X4_MB, 3) }), S => { S.lens[segKey("M", "B")] = lens(sig(X4_MB, 3), BLUE) }, "Let's put it back."),
+  {
+    id: "x4-slide",
+    say: "Slide $O$ along $MB$ until $MO : OB = 1 : 2$.",
+    enter: S => {
+      x4Base(S, { am: true, mb: sig(X4_MB, 3), right: true, o: 0.5 })
+      S.vals.t = 0.5
+      S.tick = S2 => { S2.P3.O = vlerp(X4_M, X4_B, S2.vals.t) }
+      S.handles = [{
+        id: "O", at: S2 => S2.P3.O, axis: vunit(vsub(X4_B, X4_M)), move: () => {},
+        place: (S2, f) => {
+          let best = 0.5, bd = Infinity
+          for (let i = 0; i <= 120; i++) { const t = 0.05 + (0.9 * i) / 120, d = dist(proj(S2, vlerp(X4_M, X4_B, t)), f); if (d < bd) { bd = d; best = t } }
+          // it clicks onto the marks (and the middle), from far enough away for a finger on a phone
+          const snap = [1 / 3, 1 / 2, 2 / 3].find(m => Math.abs(best - m) < 0.065)
+          const was = S2.vals.t
+          S2.vals.t = snap ?? best
+          if (snap === 2 / 3 && was !== snap) say(S2, "That makes $MO$ twice as long as $OB$. We want $OB$ twice $MO$.", "wrong", 4.2)
+          if (snap === 1 / 3 && was !== snap) S2.note = null
+        },
+      }]
+      S.eqFn = S2 => x4Ratio(S2.vals.t)
+      look(S, ["eq"])
+    },
+    done: S => S.drag === null && S.vals.t === 1 / 3,
+    advanceAfter: 1500,
+  },
   {
     id: "x4-frac",
-    say: "$MO : OB$ is $1 : 2$. What fraction of $MB$ is $OB$?",
+    say: "So what fraction of $MB$ is $OB$?",
     enter: S => {
-      x4Board(S)
-      S.lens[segKey("M", "B")] = lens(sig(X4_MB, 3), BLUE)
-      // MB in three equal parts: MO one of them, OB two
-      S.P3.T = [S.P3.O[0] + (S.P3.B[0] - S.P3.O[0]) / 2, S.P3.O[1] + (S.P3.B[1] - S.P3.O[1]) / 2, 0]
-      S.dots = ["O", "M", "T"]
-      choose(S, ["$\\tfrac{1}{2}$", "$\\tfrac{1}{3}$", "$\\tfrac{2}{3}$"], 2, false, (S2, k, right) => {
-        if (right) { say(S2, "Yes. $MB$ is $3$ equal parts, and $OB$ is $2$ of them.", "calm", 3.6); return }
-        say(S2, k === 1 ? "That's $MO$, the short part." : "$MB$ is split into $1 + 2 = 3$ equal parts. $OB$ is $2$ of them.", "wrong", 4)
+      x4Base(S, { am: true, mb: sig(X4_MB, 3), right: true, o: 1 / 3 })
+      S.eqFn = () => x4Ratio(1 / 3)
+      choose(S, ["$\\dfrac{1}{3}$", "$\\dfrac{1}{2}$", "$\\dfrac{2}{3}$"], 2, false, (S2, k, right) => {
+        if (right) { say(S2, "Yes. $MB$ is $3$ equal parts, and $OB$ is $2$ of them.", "calm", 3.6); S2.segs[segKey("O", "B")].glow = true; return }
+        say(S2, k === 0 ? "That's $MO$, the short part." : "$MB$ is $3$ equal parts. How many of them are $OB$?", "wrong", 4)
+        S2.ticks = S2.ticks.map(t => ({ ...t, pulse: true }))
       })
-      look(S, ["chips"])
+      look(S, ["eq", "chips"])
     },
     done: S => S.choice?.state === "right",
     advanceAfter: 2400,
   },
-  askBeat("x4-ob", "Work out $OB$. Give $4$ significant figures.", S => { x4Board(S); S.lens[segKey("M", "B")] = lens(sig(X4_MB, 3), BLUE); look(S) }, {
-    name: "OB", col: BLUE, answer: X4_OB, sf: 4, shown: sig(X4_OB, 4), ans: X4_MB, typed: "a*2/3",
-    slips: [{ v: X4_MB / 3, say: "That's $MO$, one part. $OB$ is two parts." }, { v: X4_MB / 2, say: "$OB$ is $\\tfrac{2}{3}$ of $MB$, not half." }],
+  askBeat("x4-ob", "Work out $OB$ to $4$ significant figures, one more than $19.6$ has.", S => { x4Base(S, { am: true, mb: sig(X4_MB, 3), right: true, o: 1 / 3 }); S.lens[segKey("O", "B")] = lens("?", BLUE); look(S) }, {
+    name: "OB", col: BLUE, answer: X4_OB, sf: 4, shown: sig(X4_OB, 4), ans: X4_MB, ansName: "MB", typed: "a*2/3",
+    slips: [{ v: X4_MB / 3, say: "That's $MO$, one part. $OB$ is two parts." }, { v: X4_MB / 2, say: "$OB$ is $\\tfrac{2}{3}$ of $MB$, not half." }, { v: X4_MB * 3 / 2, say: "$OB$ is shorter than $MB$: $\\tfrac{2}{3}$ of it." }],
     onFigure: segKey("O", "B"),
-    walk: [{ say: "$OB$ is two thirds of $MB$.", tex: `${c(BLUE, "OB")} = ${sig(X4_MB, 4)}\\ldots \\times \\tfrac{2}{3} = ${c(GREEN, sig(X4_OB, 4))}` }],
+    above: () => row([pc("ob", "OB", BLUE), op("eq", "="), pc("f", "\\tfrac{2}{3}"), op("x", "\\times"), pc("mb", "MB", BLUE)]),
+    rightNote: `$${sig(X4_OB, 4)}$ is $19.6$ to $1$ decimal place.`,
+    walk: [
+      { say: "$MB$ is split into $3$ equal parts.", tex: "MO : OB = 1 : 2", show: S => { S.ticks = S.ticks.map(t => ({ ...t, pulse: true })) } },
+      { say: "$OB$ is $2$ of those parts.", tex: `${c(BLUE, "OB")} = \\tfrac{2}{3} \\times ${c(BLUE, "MB")}`, show: S => { S.ticks = S.ticks.map(t => ({ ...t, pulse: false })); S.segs[segKey("O", "B")].glow = true } },
+      { say: "Ans still holds $MB$, with every digit.", tex: `${c(BLUE, "OB")} = \\tfrac{2}{3} \\times \\text{Ans}`, show: S => { S.segs[segKey("O", "B")].glow = false; S.lens[segKey("M", "B")] = { ...S.lens[segKey("M", "B")], pulse: true } } },
+      { say: "On the calculator, that's Ans, times $2$, divided by $3$.", tex: "\\text{Ans} \\times 2 \\div 3" },
+    ],
   }),
-  watch("x4-shown", "$19.63$ is $19.6$ to $1$ decimal place. That shows it.", S => {
-    x4Board(S)
-    S.eqFn = () => row([pc("ob", "OB", BLUE), op("e1", "="), pc("v", sig(X4_OB, 4), GREEN), op("e2", "="), pc("r", "19.6\\text{ cm}", GREEN)])
-    look(S, ["eq"])
-  }, 2.6),
 
-  // ── free play ──
+  // ── the end ──
+  watch("end-find", "In 3D, find a right-angled triangle with the length you want in it.", S => {
+    ecBoard(S, { eg: true, right: true, ecTex: "?" })
+    S.tris = [{ id: "EGC", pts: ["E", "G", "C"], col: YELLOW, sheet: true }]
+    S.spin = 12
+    look(S)
+  }, 2.6),
   {
-    id: "free",
-    say: "Make any box you like. Turn it and change it.",
-    enter: S => {
-      boxBoard(S, { l: 12, w: 9, h: 8 })
-      addSeg(S, "E", "C", { grown: true })
-      const b = S.box!
-      let l0 = b.l, w0 = b.w, h0 = b.h
-      const start = (S2: Scene) => { l0 = S2.box!.l; w0 = S2.box!.w; h0 = S2.box!.h }
-      goodView(S)
-      S.handles = [
-        { id: "len", at: S2 => [S2.box!.l / 2, 0, S2.box!.h / 2], axis: [1, 0, 0], start, move: (S2, a) => { S2.box!.l = clamp(Math.round(l0 + 2 * a), 1, 14) } },
-        { id: "wid", at: S2 => [0, -S2.box!.w / 2, S2.box!.h / 2], axis: [0, -1, 0], start, move: (S2, a) => { S2.box!.w = clamp(Math.round(w0 + 2 * a), 1, 14) } },
-        { id: "hgt", at: S2 => [0, 0, S2.box!.h], axis: [0, 0, 1], start, move: (S2, a) => { S2.box!.h = clamp(Math.round(h0 + a), 1, 14) } },
-      ]
-      S.tick = S2 => {
-        boxLens(S2)
-        const bx = S2.box!
-        S2.lens[segKey("E", "C")] = lens(num(Math.sqrt(bx.l ** 2 + bx.w ** 2 + bx.h ** 2), 2), PINK)
-      }
-      S.tick(S)
-      look(S)
-    },
-    cta: "Start again", ctaAfter: 3, restart: true,
+    id: "end-lift",
+    say: "Then lift it out and use Pythagoras. Some lengths need it twice.",
+    enter: S => { liftedBoard(S, { floor: true, eg: "15", ec: "17" }); look(S) },
+    cta: "Finish", ctaAfter: 2.4, close: true,
   },
 ]
 
@@ -898,23 +1122,19 @@ function x2Line(st?: CrossState): ENode {
   const g = (id: string) => ({ grab: st?.grab.has(id) || undefined, pulse: st?.pulse.has(id) || undefined })
   return row([sq("t19", "19", PINK), op("eq", "="), sq("xc", "XC", BLUE), op("p", "+"), sq("t17", "17", ORANGE, g("t17"))])
 }
+const x2Crossed = () => row([sq("t19", "19", PINK), op("m", "-"), sq("t17", "17", ORANGE), op("eq", "="), sq("xc", "XC", BLUE)])
+const x2Sides = () => row([sq("s1", "s"), op("p", "+"), sq("s2", "s"), op("eq", "="), sq("ac", "AC", BLUE)])
 function x2Floor(S: Scene) {
   x2Board(S)
   x2Up(S, { xc: sig(X2_XC, 3) })
   liftOut(S, "floor", ["A", "B", "C"], "B", { [segKey("A", "B")]: lens("s", CHALK), [segKey("B", "C")]: lens("s", CHALK), [segKey("A", "C")]: lens(sig(X2_AC, 3), BLUE) }, true)
   S.tris = [...S.tris, { id: "ABC", pts: ["A", "B", "C"], col: BLUE }]
 }
+const x3Crossed = () => row([sq("t95", "9.5", PINK), op("m", "-"), sq("ec", "EC", BLUE), op("eq", "="), sq("h", "EF", ORANGE)])
 function x3Line(st?: CrossState): ENode {
   const g = (id: string) => ({ grab: st?.grab.has(id) || undefined, pulse: st?.pulse.has(id) || undefined })
   return row([sq("t95", "9.5", PINK), op("eq", "="), sq("h", "EF", ORANGE), op("p", "+"), sq("ec", "EC", BLUE, g("ec"))])
 }
-function x4Lifted(S: Scene) {
-  x4Board(S)
-  S.rights = [{ at: "M", a: "B", b: "C" }]
-  S.tris = [{ id: "CMB", pts: ["C", "M", "B"], col: CHALK }]
-  liftOut(S, "up", ["C", "M", "B"], "M", { [segKey("C", "B")]: lens("34", CHALK), [segKey("C", "M")]: lens("17", CHALK), [segKey("M", "B")]: lens("?", BLUE) }, true)
-}
-
 export const BEATS: Beat[] = [...PART_A, ...PART_B, ...PART_C]
 
 applyParts(BEATS, [

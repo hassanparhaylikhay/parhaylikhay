@@ -234,8 +234,8 @@ function tapBlock(id: string, text: string, q: AQ, o: { quiet?: boolean } = {}):
 }
 
 /** The working-backwards steps after the fill. */
-function backSteps(p: string, q: AQ, o: { quiet?: boolean; rootSay?: string } = {}): Beat[] {
-  const board = (S: Scene) => aBoard(S, q, o)
+function backSteps(p: string, q: AQ, o: { quiet?: boolean; rootSay?: string; rightNote?: string; board?: (S: Scene) => void } = {}): Beat[] {
+  const board = o.board ?? ((S: Scene) => aBoard(S, q, o))
   return [
     tapBlock(`${p}-tap`, `What is multiplying $${nameOf(q)}$? Tap all of it.`, q, o),
     { id: `${p}-cross`, say: "Move it all across the $=$.", enter: S => { board(S); crossBlock(S, q); look(S, [...QLOOK, "eq", "chips"]) }, done: crossDone, advanceAfter: 900 },
@@ -244,7 +244,11 @@ function backSteps(p: string, q: AQ, o: { quiet?: boolean; rootSay?: string } = 
       id: `${p}-divide`, say: o.rootSay ?? "Now divide.",
       enter: S => {
         board(S)
-        askSideFromArea(S, q, S2 => { S2.sideText[q.unknown!] = () => `${answerText(q)}${unitTex(q)}`; S2.touched = { kind: "side", c: q.unknown! }; S2.flashGood = 1.2 })
+        askSideFromArea(S, q, S2 => {
+          S2.sideText[q.unknown!] = () => `${answerText(q)}${unitTex(q)}`; S2.touched = { kind: "side", c: q.unknown! }; S2.flashGood = 1.2
+          // a show-that: what the answer rounds to
+          if (o.rightNote) later(S2, 0.5, S3 => { if (!S3.note) say(S3, o.rightNote!, "calm", 600) })
+        })
         look(S, [...QLOOK, "eq", "keypad"])
       },
       done: inputRight, advanceAfter: 2200, walk: sideFromAreaWalk(q),
@@ -345,7 +349,8 @@ const ex4Look = {
   pts: { Pp: EX4G.P },
   extra: {
     segs: [["Pp", "B"], ["Pp", "C"]] as [string, string][],
-    arcs: [{ at: "Pp", a: "C", b: "B", tex: "67^\\circ" }, { at: "B", a: "Pp", b: "C", tex: "74^\\circ" }],
+    // angle PSR = 96° is given in the question, so it stays on the figure (round the outside of the angle at S)
+    arcs: [{ at: "Pp", a: "C", b: "B", tex: "67^\\circ" }, { at: "B", a: "Pp", b: "C", tex: "74^\\circ" }, { at: "C", a: "Pp", b: "A", tex: "96^\\circ", scale: 1.9, along: 0.72 }],
   },
   regions: [{ id: "QRS", pts: ["B", "A", "C"] }, { id: "PQS", pts: ["Pp", "B", "C"] }],
   region: "QRS",
@@ -406,7 +411,7 @@ const PART_A: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1700,
-    walk: [{ say: "Half of $8 \\times 5$.", tex: "\\tfrac{1}{2} \\times 8 \\times 5" }, { say: "That's $20$.", tex: `= ${c(GREEN, "20")}` }],
+    walk: [{ say: "Half of $8 \\times 5$.", tex: "\\tfrac{1}{2} \\times 8 \\times 5" }],
   },
   watch("no-height", "What if we don't know the height?", S => {
     turnBoard(S, 40, { fit: true })
@@ -688,7 +693,10 @@ const PART_A: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1700,
-    walk: [{ say: "The three angles add up to $180^\\circ$.", tex: `180 - ${Q3.angles!.A} - ${Q3.angles!.B}` }, { say: "That leaves the angle between them.", tex: `= ${c(GREEN, `${180 - Q3.angles!.A! - Q3.angles!.B!}^\\circ`)}` }],
+    walk: [
+      { say: "The three angles add up to $180^\\circ$.", tex: `${Q3.angles!.A} + ${Q3.angles!.B} + C = 180`, show: S => { S.pulseAng = new Set(["A", "B"]) } },
+      { say: "So take the two we know away from $180^\\circ$.", tex: `C = 180 - ${Q3.angles!.A} - ${Q3.angles!.B}`, show: S => { S.pulseAng = new Set(["C"]) } },
+    ],
   },
   fillArea("q3-fill", "Fill the rule.", Q3, { more: { "ang-A": degT(Q3.angles!.A!), "ang-B": degT(Q3.angles!.B!) } }),
   calcArea("q3-calc", "Work it out.", Q3),
@@ -819,7 +827,7 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1500,
-    walk: [{ say: "$AB$ is $AD$ and $DB$ together.", tex: "3.6 + 2.7" }, { say: "So", tex: `AB = ${c(GREEN, "6.3")}` }],
+    walk: [{ say: "$AB$ is $AD$ and $DB$ together.", tex: "3.6 + 2.7" }],
   },
   {
     id: "ex1-ac",
@@ -836,7 +844,7 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1500,
-    walk: [{ say: "$AC$ is $AE$ and $EC$ together.", tex: "5.2 + 3.9" }, { say: "So", tex: `AC = ${c(GREEN, "9.1")}` }],
+    walk: [{ say: "$AC$ is $AE$ and $EC$ together.", tex: "5.2 + 3.9" }],
   },
   withTotals(tapBetween("ex1-angle", "Tap the angle between $AB$ and $AC$.", EX1, { sideC: "9.8" })),
   withTotals(fillArea("ex1-fill", "Fill the rule.", EX1, { sideC: "9.8", more: { "side-C": "9.8" } })),
@@ -863,7 +871,7 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1700,
-    walk: [{ say: "Half the two parallel sides added, times the distance between them.", tex: "\\tfrac{1}{2} \\times (6 + 4) \\times 14.97" }, { say: "So", tex: `= ${c(GREEN, `${sigText(TRAP, 3)}\\text{ m}^{2}`)}` }],
+    walk: [{ say: "Half the two parallel sides added, times the distance between them.", tex: "\\tfrac{1}{2} \\times (6 + 4) \\times 14.97" }],
   },
   {
     id: "ex2-total",
@@ -881,23 +889,23 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 2000,
-    walk: [{ say: "The triangle and the trapezium together.", tex: `${sigText(areaOf(EX2), 3)} + ${sigText(TRAP, 3)}` }, { say: "So the cross-section is", tex: `${c(GREEN, `${sigText(areaOf(EX2) + TRAP, 3)}\\text{ m}^{2}`)}` }],
+    walk: [{ say: "The triangle and the trapezium together.", tex: `${sigText(areaOf(EX2), 3)} + ${sigText(TRAP, 3)}` }],
   },
 
   // 4024/21/O/N/23 Q9(a)(ii)
   watch("ex3", "The diagram shows a triangular prism. $AB = 6\\text{ cm}$ and angle $BAC = 55^\\circ$.", S => { aBoard(S, EX3); look(S, QLOOK) }, 2.6),
   watch("ex3-q", "The area of triangle $ABC$ is $34.4\\text{ cm}^2$. Show that $AC = 14.0\\text{ cm}$.", S => { aBoard(S, EX3); S.pulseSide = new Set(["B"]); look(S, QLOOK) }, 2.8),
   fillArea("ex3-fill", "Fill the rule.", EX3),
-  ...backSteps("ex3", EX3, { rootSay: "A *show that* needs more figures than the answer it gives. Give $4$ significant figures." }),
-  watch("ex3-shown", "$14.00$ is $14.0$ to $3$ significant figures. That shows it.", S => {
-    aBoard(S, EX3)
-    S.sideText.B = () => "14.00\\text{ cm}"
-    S.eqFn = () => row([pc("x", "AC", BLUE), op("eq", "="), pc("ans", "14.00", GREEN), op("ap", "="), pc("r", "14.0\\text{ cm}", GREEN)])
-    look(S, [...QLOOK, "eq"])
-  }, 2.6),
+  ...backSteps("ex3", EX3, { rootSay: "A *show that* needs more figures than the answer it gives. Give $4$ significant figures.", rightNote: "$14.00$ is $14.0$ to $3$ significant figures." }),
 
   // 4024/21/M/J/23 Q7(b)(ii)
-  watch("ex4", "This is the quadrilateral from the sine rule lesson.", S => { aBoard(S, EX4, { hideC: true }); S.sideText.B = () => ""; look(S, QLOOK) }, 2.2),
+  watch("ex4", "This is the quadrilateral from the sine rule lesson.", S => {
+    aBoard(S, EX4, { hideC: true })
+    S.sideText.B = () => ""
+    // the 96° and the area come with the question, next
+    S.extra = { ...S.extra!, arcs: (S.extra!.arcs ?? []).filter(a => a.tex !== "96^\\circ"), texts: [] }
+    look(S, QLOOK)
+  }, 2.2),
   watch("ex4-q", "Angle $PSR = 96^\\circ$ and the area of triangle $QRS$ is $63\\text{ cm}^2$. Show that $SR = 10.0\\text{ cm}$.", S => { aBoard(S, EX4, { hideC: true }); look(S, QLOOK) }, 3.0),
   {
     id: "ex4-psq",
@@ -913,7 +921,10 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1500,
-    walk: [{ say: "Triangle $PQS$'s angles add up to $180^\\circ$.", tex: "180 - 67 - 74" }, { say: "So", tex: `= ${c(GREEN, "39^\\circ")}` }],
+    walk: [
+      { say: "Triangle $PQS$'s angles add up to $180^\\circ$.", tex: "67 + 74 + \\angle PSQ = 180", show: S => { S.extra = { ...S.extra!, arcs: (S.extra!.arcs ?? []).map(a => (a.tex === "67^\\circ" || a.tex === "74^\\circ" ? { ...a, pulse: true } : a)) } } },
+      { say: "So take $67^\\circ$ and $74^\\circ$ away from $180^\\circ$.", tex: "\\angle PSQ = 180 - 67 - 74", show: S => { S.extra = { ...S.extra!, arcs: (S.extra!.arcs ?? []).map(a => ({ ...a, pulse: a.tex === "?" })) } } },
+    ],
   },
   {
     id: "ex4-qsr",
@@ -922,7 +933,7 @@ const PART_C: Beat[] = [
       aBoard(S, EX4, { hideC: true })
       // angle PSR is split by SQ into the 39° just found and angle QSR
       // the 96° is written round the outside, over the part that is angle QSR (lit red)
-      S.extra = { ...S.extra!, arcs: [...(S.extra!.arcs ?? []), { at: "C", a: "Pp", b: "B", tex: "39^\\circ" }, { at: "C", a: "Pp", b: "A", tex: "96^\\circ", scale: 1.9, along: 0.72 }] }
+      S.extra = { ...S.extra!, arcs: [...(S.extra!.arcs ?? []), { at: "C", a: "Pp", b: "B", tex: "39^\\circ" }] }
       S.glowAng = new Set(["C"])
       askNumber(S, 57, [pc("n", `\\angle QSR`), op("eq", "=")], {
         unit: "^\\circ", typed: "96-39",
@@ -933,7 +944,10 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1500,
-    walk: [{ say: "Angle $PSR$ is split into $39^\\circ$ and angle $QSR$.", tex: "96 - 39" }, { say: "So", tex: `= ${c(GREEN, "57^\\circ")}` }],
+    walk: [
+      { say: "$SQ$ splits angle $PSR$ into $39^\\circ$ and angle $QSR$.", tex: "39 + \\angle QSR = 96", show: S => { S.extra = { ...S.extra!, arcs: (S.extra!.arcs ?? []).map(a => ({ ...a, pulse: a.tex === "96^\\circ" || a.tex === "39^\\circ" })) } } },
+      { say: "So take $39^\\circ$ away from $96^\\circ$.", tex: "\\angle QSR = 96 - 39", show: S => { S.extra = { ...S.extra!, arcs: (S.extra!.arcs ?? []).map(a => ({ ...a, pulse: false })) }; S.glowAng = new Set(["C"]) } },
+    ],
   },
   tapPart("ex4-tri", "Tap triangle $QRS$.", EX4, "QRS", "That's triangle $PQS$. Tap $QRS$."),
   fillArea("ex4-fill", "Fill the rule.", EX4, { quiet: true }),
@@ -1041,7 +1055,7 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1500,
-    walk: [{ say: "Half of $124.3$.", tex: "\\tfrac{1}{2} \\times 124.3" }, { say: "So", tex: `= ${c(GREEN, "62.15")}` }],
+    walk: [{ say: "Half of $124.3$.", tex: "\\tfrac{1}{2} \\times 124.3" }],
   },
   {
     id: "ex5-divide",
@@ -1056,22 +1070,24 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 2200,
-    walk: [{ say: "Divide the area by the bottom.", tex: `${dots(EX5_AREA)} \\div 62.15` }, { say: "So the shortest distance is", tex: `h = ${c(GREEN, `${sigText(EX5_AREA / 62.15, 3)}\\text{ m}`)}` }],
+    walk: [{ say: "Divide the area by the bottom.", tex: `${dots(EX5_AREA)} \\div 62.15` }],
   },
 
   // ── 8. The end ──
+  // a recap to finish: the rule, and which angle goes in it
   {
     id: "end",
-    say: "Play with it as long as you like.",
+    say: "The area is $\\tfrac{1}{2}ab\\sin C$, with $C$ the angle between $a$ and $b$.",
     enter: S => {
-      turnBoard(S, 70, { h: true })
-      turnB(S)
-      S.eqFn = liveArea
+      turnBoard(S, 40, { fit: true })
+      S.glowSide = new Set(["A", "B"])
+      S.pulseAng = new Set(["C"])
+      S.eqFn = () => row([pc("ar", "\\text{Area}"), op("eq", "="), row([pc("half", HALF), pc("a", "a", YELLOW), pc("b", "b", BLUE), pc("sin", "\\sin"), pc("angC", "C", RED)], 0.1)])
       look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "eq"])
     },
-    cta: "Start again",
-    ctaAfter: 4,
-    restart: true,
+    cta: "Finish",
+    ctaAfter: 3,
+    close: true,
   },
 ]
 

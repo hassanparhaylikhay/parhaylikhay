@@ -148,6 +148,25 @@ let lastAns: number | null = null
 export const setAns = (v: number | null) => { lastAns = v }
 export const getAns = () => lastAns
 
+/**
+ * A number typed in a calculation that is Ans rounded (15.6 for 15.62…), or
+ * null. The student cannot see every digit of Ans, so a rounded copy of it is
+ * an honest slip: they get told to press Ans, not just "wrong".
+ */
+export function roundedAns(value: string): string | null {
+  const ans = lastAns
+  if (ans === null || !ans) return null
+  for (const tok of value.match(/\d+(\.\d+)?/g) ?? []) {
+    const x = Number(tok), gap = Math.abs(x - ans)
+    if (gap > 1e-9 * Math.abs(ans) && gap <= 0.5 * 10 ** -decimals(tok) + 1e-9 && gap <= Math.abs(ans) * 0.05) return tok
+  }
+  return null
+}
+
+/** What to say when a rounded copy of Ans was typed where Ans was meant. */
+export const ansReminder = (tok: string, name?: string) =>
+  `That used $${tok}$, which is rounded. Press Ans instead: it holds every digit of ${name ? `$${name}$` : "the last answer"}.`
+
 /** Work out what has been typed, in degrees; null if it is not finished or not sense. */
 export function calcValue(value: string): number | null {
   return calcEval(value).v

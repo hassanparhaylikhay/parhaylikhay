@@ -1,7 +1,8 @@
 // "Show me how" on every question that has it: three wrong answers bring
 // the button; each step changes the phrase and shows its picture; at the
 // end the keypad comes back and the right answer moves the lesson on.
-// One question also waits out the 30 seconds with no answer at all.
+// One question also waits out the 30 seconds with no answer at all, and one
+// is got wrong twice more after its walkthrough, which must offer it again.
 const puppeteer = require("puppeteer-core")
 const { CHROME, HOST, outDir } = require("./lib.cjs")
 const fs = require("fs")
@@ -67,6 +68,11 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
     if (endP !== "Now you type it in.") bad.push(`${q.id}: end phrase "${endP}"`)
     const keypad = await page.$('button[aria-label="Check"]')
     if (!keypad) bad.push(`${q.id}: no keypad after the walkthrough`)
+    // still stuck after the walkthrough: two more wrong answers bring it back (never left stuck)
+    if (q === qs[1]) {
+      for (const k of [1, 2]) await type(String(answer + k))
+      if (!(await waitBtn("Show me how", 3000))) bad.push(`${q.id}: "Show me how" not offered again after the walkthrough`)
+    }
     await type(typed || String(answer))
     const st = await page.evaluate(() => window.__beatScene.input && window.__beatScene.input.state)
     if (st !== "right" && st !== "guessed") bad.push(`${q.id}: answer not taken (${st})`)

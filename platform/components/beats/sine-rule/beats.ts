@@ -1233,7 +1233,7 @@ const PART_B: Beat[] = [
     advanceAfter: 1600,
     walk: [
       { say: "The angles of a triangle add up to $180^\\circ$.", tex: "50^\\circ + 60^\\circ + B = 180^\\circ" },
-      { say: "So $B = 180^\\circ - 50^\\circ - 60^\\circ = 70^\\circ$.", tex: `B = ${c(GREEN, "70^\\circ")}` },
+      { say: "So take $50^\\circ$ and $60^\\circ$ away from $180^\\circ$.", tex: "B = 180^\\circ - 50^\\circ - 60^\\circ" },
     ],
   },
   tapFullPair("b-pair", "Find a full pair.", Q2, ["B"]),
@@ -1474,7 +1474,6 @@ const PART_B: Beat[] = [
     advanceAfter: 2200,
     walk: [
       { say: "The obtuse angle and the acute one add up to $180^\\circ$.", tex: `180^\\circ - ${answerText(EX4)}^\\circ` },
-      { say: `So it is $${(180 - answerOf(EX4)).toFixed(1)}^\\circ$.`, tex: `= \\textcolor{${GREEN}}{${(180 - answerOf(EX4)).toFixed(1)}^\\circ}` },
     ],
   },
 
@@ -1500,7 +1499,7 @@ const PART_B: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1600,
-    walk: [{ say: "Angle $PRS$ is $90^\\circ$, and $38^\\circ$ of it is angle $PRQ$.", tex: "90^\\circ - 38^\\circ" }, { say: "That leaves $52^\\circ$.", tex: `= ${c(GREEN, "52^\\circ")}` }],
+    walk: [{ say: "Angle $PRS$ is $90^\\circ$, and $38^\\circ$ of it is angle $PRQ$.", tex: "90^\\circ - 38^\\circ" }],
   },
   {
     id: "ex5-swing",
@@ -1591,25 +1590,24 @@ const PART_B: Beat[] = [
     advanceAfter: 2400,
     walk: [
       { say: "The acute and the obtuse answer add up to $180^\\circ$.", tex: `180^\\circ - ${answerText(EX5.Q)}^\\circ` },
-      { say: `So the other is $${(180 - Number(answerText(EX5.Q))).toFixed(1)}^\\circ$.`, tex: `= ${c(GREEN, `${(180 - Number(answerText(EX5.Q))).toFixed(1)}^\\circ`)}` },
     ],
   },
 
   // ── 9. Play ──
+  // a recap to finish: the rule, and when it works
   {
     id: "end",
-    say: "Play with it as long as you like.",
+    say: "When you know a full pair, the sine rule finds the rest.",
     enter: S => {
-      base(S, { free: true, P: START })
+      base(S)
       allColoured(S)
-      liveAngles(S)
-      liveSides(S)
-      S.eqFn = S2 => ratiosLive(S2)
-      look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "eq"])
+      letterNames(S)
+      S.eqFn = () => ruleLetters()
+      look(S, ["tri", "fill", "arcs", "sideLabs", "letters", "eq"])
     },
-    cta: "Start again",
-    ctaAfter: 4,
-    restart: true,
+    cta: "Finish",
+    ctaAfter: 3,
+    close: true,
   },
 ]
 

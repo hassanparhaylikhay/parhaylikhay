@@ -129,7 +129,7 @@ const { open, sleep } = require("./trig-lib.cjs")
   await want("Say θ is 40"); await next()
   await want("Work out the hypotenuse"); await type("6*s40"); await expect((await S()).input === "wrong", "6 × sin 40 accepted"); await type("6/s40")
   await want("Now slide"); await slideTo(9.4); await expect((await S()).locked, "the opposite did not lock at 6"); await shot("made")
-  await want("Play with it"); await turnTo(55); await shot("end")
+  await want("These five steps"); await sleep(3500); await shot("end"); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Finish")
   void page
   await T.finish()
 })().catch(e => { console.error(e); process.exit(1) })

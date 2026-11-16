@@ -294,8 +294,8 @@ export function calcWalk(q: Question): WalkStep<Scene>[] {
   const ans = answerText(q)
   return [
     { say: `The line says $${n} = ${rhs}$.`, tex: `${c(PINK, n)} = ${rhs}` },
-    { say: `On the calculator, press ${keys}, then $=$.` },
-    { say: Math.abs(full - Number(ans)) < 1e-9 ? `That gives $${ans}$.` : `That gives $${sigText(full, 7)}\\ldots$, which is $${ans}$ to $3$ significant figures.`, tex: `${c(PINK, n)} = ${c(GREEN, ans)}` },
+    // it stops at what to press: the student works out the number
+    { say: Math.abs(full - Number(ans)) < 1e-9 ? `On the calculator, press ${keys}, then $=$.` : `On the calculator, press ${keys}, then $=$. Give $3$ significant figures.` },
   ]
 }
 

@@ -3,7 +3,7 @@ const { open, sleep } = require("./trig-lib.cjs")
 
 ;(async () => {
   const T = await open("why-trig-works", "play-trig-why")
-  const { want, next, shot, expect, S, turnTo, slideTo, dropLine } = T
+  const { page, want, next, shot, expect, S, turnTo, slideTo, dropLine } = T
 
   // ── the question ──
   await want("Your calculator says"); await shot("question"); await next()
@@ -51,6 +51,6 @@ const { open, sleep } = require("./trig-lib.cjs")
   // ── round the whole circle ──
   await want("Look at 30"); await shot("mirror"); await next()
   await want("So"); await next()
-  await want("Play with it"); await turnTo(200); await shot("end")
+  await want("And that's how"); await sleep(3500); await shot("end"); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Finish")
   await T.finish()
 })().catch(e => { console.error(e); process.exit(1) })

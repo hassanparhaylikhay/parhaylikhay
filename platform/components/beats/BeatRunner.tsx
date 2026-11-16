@@ -206,8 +206,9 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
       else endWalk(S)
       return
     }
+    if (b.close && c?.act === "next") { window.location.assign(closeHref); return }
     go(b.restart ? 0 : idxRef.current + 1, true)
-  }, [go, ctaNow, beats])
+  }, [go, ctaNow, beats, closeHref])
 
   // Keyboard: digits for answers, Enter or the right arrow to continue,
   // the left arrow to step back.
@@ -292,7 +293,7 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
 function ctaFor<S extends RunnerScene>(b: BeatOf<S>, S: S, doneAt: number | null, w: number, walkSince: number, fallback: number | null): { label: string; act: "next" | "showMe" | "step" } | null {
   const steps = b.walk
   if (steps && w >= 0 && w < steps.length) return S.time - walkSince >= STEP_READ ? { label: "", act: "step" } : null
-  if (offerShowMe(S, steps, w)) return { label: SHOW_ME_LABEL, act: "showMe" }
+  if (offerShowMe(S, steps, w, walkSince)) return { label: SHOW_ME_LABEL, act: "showMe" }
   return showsCta(b, S, doneAt, fallback) ? { label: b.free ? "" : b.cta ?? "", act: "next" } : null
 }
 

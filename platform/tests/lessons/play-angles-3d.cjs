@@ -88,7 +88,6 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (id === "flat") { await tipTo(0); await expect(Math.abs((await st()).stick.th) < 1e-6, "the stick is not flat"); continue }
     if (id === "up") { await tipTo(90); await expect(Math.abs((await st()).stick.th - 90) < 1e-6, "the stick is not upright"); continue }
     if (id === "stick-right") { await tapArc(0); await noted("the angle at the foot"); await sleep(300); await tapArc(1); continue }
-    if (id === "box-turn") { await turn(220); await turn(160); await next(); continue }
     // ── shadows ──
     if (id === "box-shadow" || id === "x1-shadow") { await tapPt("H"); await noted("a wrong corner"); await sleep(300); await tapPt("G"); continue }
     if (id === "ag-shadow") { await tapPt("F"); await noted("a wrong corner"); await sleep(300); await tapPt("E"); continue }
@@ -103,6 +102,10 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (id === "hall-lift-a") { await tapRegion("LBA"); continue }
     if (id === "x2-lift") { await tapRegion("VOB"); continue }
     if (id === "x3-lift") { await tapRegion("EMB"); continue }
+    if (id === "x4-lift-c") { await tapRegion("LBA"); await noted("the other triangle"); await sleep(300); await tapRegion("LBC"); continue }
+    if (id === "x4-lift-a") { await tapRegion("LBA"); continue }
+    if (id === "x5-lift-b") { await tapRegion("KAC"); await noted("the other triangle"); await sleep(300); await tapRegion("KAB"); continue }
+    if (id === "x5-lift-c") { await tapRegion("KAC"); continue }
     if (id === "hall-share") { await tapSeg("B", "C"); await noted("a line in one triangle"); await sleep(300); await tapSeg("B", "L"); continue }
     if (id === "x3-q") { await pickIdx(0); await noted("yes"); await sleep(300); await pickIdx(1); continue }
     // ── typing ──
@@ -110,8 +113,10 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (id === "hall-lb") { await slip("20*s25", /tan/); await right(); continue }
     if (id === "x1-work") { await right("24.1"); continue }
     if (id === "x2-work") { await right("76.2"); continue }
-    if (["q1-eg", "q1-ang", "q2", "hall-ang", "x3-work", "x4-lb", "x4-ang", "x5-ak", "x5-ang"].includes(id)) { await right(); continue }
-    if (id === "free") { await sleep(3500); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Start again"); break }
+    if (["q1-eg", "q1-ang", "q2", "x3-mb", "x3-work", "x4-lb", "x4-ang", "x5-ak", "x5-ang"].includes(id)) { await right(); continue }
+    // the rounded LB typed in place of Ans: taken, with a word on why Ans is safer
+    if (id === "hall-ang") { await right("T9.33/12"); await expect(/Ans/.test((await st()).note || ""), "no word about Ans"); continue }
+    if (id === "end-lift") { await sleep(3500); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Finish"); break }
     await next()
   }
   await T.finish()

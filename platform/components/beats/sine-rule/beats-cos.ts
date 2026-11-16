@@ -282,7 +282,7 @@ function fillCos(id: string, text: string, q: CRQ, slots: string[], quiet = fals
 const ALL = ["sx", "ang", "s1", "s2"]
 
 /** The side questions' steps after the fill: type the right side, move the square, √ Ans. */
-function sideSteps(p: string, q: CRQ, say1: string, quiet = false): Beat[] {
+function sideSteps(p: string, q: CRQ, say1: string, quiet = false, rightNote?: string): Beat[] {
   const onBoard = (S: Scene) => cqBoard(S, q, { quiet })
   return [
     {
@@ -299,7 +299,11 @@ function sideSteps(p: string, q: CRQ, say1: string, quiet = false): Beat[] {
       id: `${p}-root`, say: q.dp !== undefined ? `A *show that* needs more figures than the answer it gives. Give $${q.dp}$ decimal places.` : "Work it out.",
       enter: S => {
         onBoard(S)
-        askRoot(S, q, S2 => { S2.sideText.C = () => `${answerText(q)}${unitTex(q)}`; S2.touched = { kind: "side", c: "C" }; S2.flashGood = 1.2 })
+        askRoot(S, q, S2 => {
+          S2.sideText.C = () => `${answerText(q)}${unitTex(q)}`; S2.touched = { kind: "side", c: "C" }; S2.flashGood = 1.2
+          // a show-that: what the answer rounds to
+          if (rightNote) later(S2, 0.5, S3 => { if (!S3.note) say(S3, rightNote, "calm", 600) })
+        })
         if (q.dp !== undefined) S.input!.help = (S2, t) => { if (t === 1) say(S2, `Press $\\sqrt{\\phantom{x}}$, then Ans. Give $${q.dp}$ decimal places.`, "calm", 3.6) }
         look(S, [...QLOOK, "eq", "keypad"])
       },
@@ -746,7 +750,7 @@ const PART_A: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 2400,
-    walk: [{ say: "Press $2$, $\\times$, $3$, $\\times$, $4$, $\\times$, $\\cos$, $60$, then $=$.", tex: "2 \\times 3 \\times 4 \\times \\cos 60" }, { say: "It gives $12$.", tex: `= ${c(GREEN, "12")}` }],
+    walk: [{ say: "Press $2$, $\\times$, $3$, $\\times$, $4$, $\\times$, $\\cos$, $60$, then $=$.", tex: "2 \\times 3 \\times 4 \\times \\cos 60" }],
   },
   {
     id: "fits",
@@ -847,7 +851,7 @@ const PART_A: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1800,
-    walk: [{ say: "Press $\\cos$, $120$, then $=$.", tex: "\\cos 120" }, { say: "It's negative.", tex: `= ${c(GREEN, "-0.5")}` }],
+    walk: [{ say: "Press $\\cos$, $120$, then $=$.", tex: "\\cos 120" }],
   },
   watch("y-adds", "Taking away a negative adds.", S => {
     cqBoard(S, Q2)
@@ -1107,13 +1111,7 @@ const PART_C: Beat[] = [
   tapAngleAcross("ex1-angle", "Tap the angle across from $BC$.", EX1),
   tapTwoSides("ex1-sides", "Tap the two sides that make it.", EX1),
   fillCos("ex1-fill", "Fill the rule.", EX1, ALL),
-  ...sideSteps("ex1", EX1, "Work out the right side."),
-  watch("ex1-shown", "$124.27$ is $124.3$ to $1$ decimal place. That shows it.", S => {
-    cqBoard(S, EX1)
-    S.sideText.C = () => "124.27\\text{ m}"
-    S.eqFn = () => row([pc("x", "BC", RED), op("eq", "="), pc("ans", "124.27", GREEN), op("ap", "="), pc("r", "124.3\\text{ m}", GREEN)])
-    look(S, [...QLOOK, "eq"])
-  }, 2.6),
+  ...sideSteps("ex1", EX1, "Work out the right side.", false, "$124.27$ is $124.3$ to $1$ decimal place."),
 
   watch("ex2", "The diagram shows a triangular field $ABC$. $AB = 150\\text{ m}$, $BC = 187\\text{ m}$ and angle $ABC = 112^\\circ$.", S => { cqBoard(S, EX2, { hideX: true }); look(S, QLOOK) }, 3.0),
   watch("ex2-rolls", "Fencing comes in rolls of $20\\text{ m}$. How many rolls go round the field?", S => { cqBoard(S, EX2, { hideX: true }); look(S, QLOOK) }, 2.6),
@@ -1136,7 +1134,7 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1800,
-    walk: [{ say: "Use Ans for $AC$, so no digits are lost.", tex: "150 + 187 + \\text{Ans}" }, { say: "That's the perimeter.", tex: `= ${c(GREEN, `${(150 + 187 + answerOf(EX2)).toFixed(2)}\\text{ m}`)}` }],
+    walk: [{ say: "Use Ans for $AC$, so no digits are lost.", tex: "150 + 187 + \\text{Ans}" }],
   },
   {
     id: "ex2-divide",
@@ -1152,7 +1150,7 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1800,
-    walk: [{ say: "Press Ans, $\\div$, $20$, then $=$.", tex: "\\text{Ans} \\div 20" }, { say: "That's how many rolls of $20$ m.", tex: `= ${c(GREEN, ((150 + 187 + answerOf(EX2)) / 20).toFixed(2))}` }],
+    walk: [{ say: "Press Ans, $\\div$, $20$, then $=$.", tex: "\\text{Ans} \\div 20" }],
   },
   {
     id: "ex2-buy",
@@ -1221,7 +1219,7 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1700,
-    walk: [{ say: "Angle $BAC$ is made of two parts. Add them.", tex: "24.5^\\circ + 32^\\circ" }, { say: "That gives angle $BAC$.", tex: `= ${c(GREEN, "56.5^\\circ")}` }],
+    walk: [{ say: "Angle $BAC$ is made of two parts. Add them.", tex: "24.5^\\circ + 32^\\circ" }],
   },
   {
     id: "ex5-abc",
@@ -1244,7 +1242,7 @@ const PART_C: Beat[] = [
     },
     done: inputRight,
     advanceAfter: 1700,
-    walk: [{ say: "The three angles add up to $180^\\circ$.", tex: "180 - 56.5 - 48" }, { say: "That gives angle $ABC$.", tex: `= ${c(GREEN, "75.5^\\circ")}` }],
+    walk: [{ say: "The three angles add up to $180^\\circ$.", tex: "180 - 56.5 - 48" }],
   },
   pairBeatOn("ex5-pair", "Is there a full pair in triangle $ABC$? Tap it."),
   {
@@ -1298,18 +1296,18 @@ const PART_C: Beat[] = [
   }, 2.4),
 
   // ── 8. The end ──
+  // a recap to finish: the rule, and when it is the one to use
   {
     id: "end",
-    say: "Play with it as long as you like.",
+    say: "Without a full pair, use the cosine rule.",
     enter: S => {
-      squaresBoard(S, 75, { squares: true })
-      turnB(S)
-      S.eqFn = S2 => row([pc("c2", "c^{2}", RED), op("eq", "="), pc("a2", "3^{2}", YELLOW), op("pl", "+"), pc("b2", "4^{2}", BLUE), op("mi", "-"), pc("two", "2 \\times 3 \\times 4"), pc("tcos", "\\cos"), pc("tC", `${shownC(S2)}^\\circ`, RED), op("eq2", "="), pc("res", c2Text(S2), RED)])
+      squaresBoard(S, 120, { squares: true })
+      S.eqFn = () => ruleLetters()
       look(S, ["tri", "fill", "arcs", "angLabs", "sideLabs", "letters", "squares", "eq"])
     },
-    cta: "Start again",
-    ctaAfter: 4,
-    restart: true,
+    cta: "Finish",
+    ctaAfter: 3,
+    close: true,
   },
 ]
 

@@ -16,7 +16,6 @@
 import type { Vec } from "../geometry"
 import type { WalkStep } from "../walk"
 import { type ENode, type EAtom, atom, op, row, frac, paren, eqCentre } from "../equation"
-import { sigText } from "../calc"
 import {
   type Scene, type Role, type Fn, type Pose, type Chip,
   RULE, ROLE_COL, PINK, GREEN, CHALK, RAD,
@@ -425,11 +424,10 @@ export function calcWalkA(q: AngleQ): WalkStep<Scene>[] {
   const [[tr, t], [br, b]] = topBot(q)
   const rhs = `${invTex(fnA(q))}\\left(\\dfrac{\\textcolor{${ROLE_COL[tr]}}{${t}}}{\\textcolor{${ROLE_COL[br]}}{${b}}}\\right)`
   const n = nameA(q)
-  const full = truthA(q)
   return [
     { say: `The line says $${n} = ${invTex(fnA(q))}$ of $\\frac{${t}}{${b}}$.`, tex: `\\textcolor{${PINK}}{${n}} = ${rhs}` },
-    { say: `On the calculator, press ${keysOf(q)}, then $=$.` },
-    { say: `That gives $${sigText(full, 6)}\\ldots$, which is $${answerTextA(q)}^\\circ$ to $1$ decimal place.`, tex: `\\textcolor{${PINK}}{${n}} = \\textcolor{${GREEN}}{${answerTextA(q)}^\\circ}` },
+    // it stops at what to press: the student works out the number
+    { say: `On the calculator, press ${keysOf(q)}, then $=$. Give $1$ decimal place.` },
   ]
 }
 

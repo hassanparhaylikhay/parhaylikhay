@@ -461,18 +461,19 @@ export const BEATS: Beat[] = [
     S.calcScreen = [sinLine(150), sinLine(30)]
     look(S, ["eq"])
   }, 2.6),
+  // back to the question the tour opened on
   {
     id: "end",
-    say: "Play with it as long as you like.",
+    say: "And that's how your calculator knows $\\sin 35^\\circ$.",
     enter: S => {
-      circleBoard(S, { th: 50, graph: fullGraph("sin", true, true) })
-      S.roleLabels = { H: () => ({ tex: "1" }), O: () => ({ tex: "\\sin\\theta" }), A: () => ({ tex: "\\cos\\theta" }) }
-      S.mode = "turn"
-      look(S, [...CIRCLE, "graph"])
+      const g = S.graph ?? fullGraph("sin", true, true)
+      circleBoard(S, { th: 35, graph: { ...g, fn: "sin" } })
+      S.calcScreen = [sinLine(35)]
+      look(S, [...CIRCLE, "eq"])
     },
-    cta: "Start again",
-    ctaAfter: 4,
-    restart: true,
+    cta: "Finish",
+    ctaAfter: 3,
+    close: true,
   },
 ]
 

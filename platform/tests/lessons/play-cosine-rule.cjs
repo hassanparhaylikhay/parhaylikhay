@@ -170,7 +170,7 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (id === "ex5-fill-sine") { await place("side-C", "sL"); await place("ang-B", "aL"); await noted("own angle"); await place("ang-C", "aL"); await place("side-B", "sR"); await place("ang-B", "aR"); await noted("turn it round"); continue }
     if (id === "ex5-move") { await cross("ang-B"); await pickIdx(1); await noted("÷ sin"); await pickIdx(0); await expect(await crossDone(), "sin did not land"); continue }
     if (id === "ex5-calc") { await right(); continue }
-    if (id === "end") { await turnTo(110); await sleep(2500); await shot("end"); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Start again"); break }
+    if (id === "end") { await sleep(3500); await shot("end"); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Finish"); break }
     // a watching beat
     await next()
   }

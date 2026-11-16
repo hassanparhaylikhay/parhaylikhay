@@ -556,28 +556,32 @@ export function askAngle(S: Scene, q: SRQ, onRight?: (S: Scene) => void) {
 
 // ── "Show me how" ────────────────────────────────────────────────────────
 
+/** Light parts of the triangle for a walkthrough step: these sides glow, these angles breathe. */
+const lightTri = (sides: Corner[], angs: Corner[] = []) => (S: Scene) => { S.glowSide = new Set(sides); S.pulseAng = new Set(angs); S.pulseSide = new Set() }
+
+// Each walkthrough guides to what to press and stops there: the student works out the number.
 export function sideWalk(q: SRQ): WalkStep<Scene>[] {
   const k = numText(sideVal(q, q.pair), 2), W = numText(angVal(q, q.want), 1), K = numText(angVal(q, q.pair), 1)
   const n = nameOf(q)
   return [
-    { say: `The line says $${n} = ${k} \\times \\sin ${W}^\\circ \\div \\sin ${K}^\\circ$.`, tex: `${n} = \\dfrac{${k} \\times \\sin ${W}^\\circ}{\\sin ${K}^\\circ}` },
-    { say: `Press $${k}$, $\\times$, $\\sin$, $${W}$, $\\div$, $\\sin$, $${K}$, then $=$.` },
-    { say: `That gives $${sigText(answerOf(q), 6)}\\ldots$, which is $${answerText(q)}$ to $3$ significant figures.`, tex: `${n} = \\textcolor{${GREEN}}{${answerText(q)}}` },
+    { say: "The full pair, and the angle across from the side we want.", tex: `${n} = \\dfrac{${k} \\times \\sin ${W}^\\circ}{\\sin ${K}^\\circ}`, show: lightTri([q.pair], [q.pair, q.want]) },
+    { say: `Press $${k}$, $\\times$, $\\sin$, $${W}$, $\\div$, $\\sin$, $${K}$, then $=$.`, show: lightTri([]) },
+    { say: "Give $3$ significant figures." },
   ]
 }
 
 export function sinValueWalk(q: SRQ): WalkStep<Scene>[] {
   const kw = numText(sideVal(q, q.want), 2), K = numText(angVal(q, q.pair), 1), k = numText(sideVal(q, q.pair), 2)
   return [
-    { say: `The right side is $${kw} \\times \\sin ${K}^\\circ \\div ${k}$.`, tex: `\\dfrac{${kw} \\times \\sin ${K}^\\circ}{${k}}` },
-    { say: `Press $${kw}$, $\\times$, $\\sin$, $${K}$, $\\div$, $${k}$, then $=$.`, tex: `= \\textcolor{${GREEN}}{${sigText(sinValue(q), 4)}\\ldots}` },
+    { say: `The right side is $${kw} \\times \\sin ${K}^\\circ \\div ${k}$.`, tex: `\\dfrac{${kw} \\times \\sin ${K}^\\circ}{${k}}`, show: lightTri([q.want, q.pair], [q.pair]) },
+    { say: `Press $${kw}$, $\\times$, $\\sin$, $${K}$, $\\div$, $${k}$, then $=$.`, show: lightTri([]) },
   ]
 }
 
 export function angleWalk(q: SRQ): WalkStep<Scene>[] {
   return [
-    { say: "Ans is the answer the calculator just gave.", tex: `\\text{Ans} = ${sigText(sinValue(q), 4)}\\ldots` },
-    { say: "Press SHIFT, then $\\sin$, then Ans, then $=$.", tex: `\\sin^{-1}(\\text{Ans}) = \\textcolor{${GREEN}}{${answerText(q)}^\\circ}` },
+    { say: "Ans is the answer the calculator just gave.", tex: `\\text{Ans} = ${sigText(sinValue(q), 4)}\\ldots`, show: lightTri([], [q.want]) },
+    { say: "Press SHIFT, then $\\sin$, then Ans, then $=$. Give $1$ decimal place.", tex: `${nameOf(q)} = \\sin^{-1}(\\text{Ans})` },
   ]
 }
 

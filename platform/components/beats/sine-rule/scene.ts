@@ -19,7 +19,7 @@
 
 import { type Vec, type Rect, add, sub, mul, dot, dist, lerpV, clamp, turn, DEG, RAD } from "../geometry"
 import { createBoard, eqSet, eqStep, eqHit, extent, measure, row, frac, type EqBoard, type ENode, type Eqn, type Fac } from "../equation"
-import { calcType, calcTex, judge, isCalculation, slipMatches, setAns, calcValue, INV_KEY } from "../calc"
+import { calcType, calcTex, judge, isCalculation, slipMatches, setAns, calcValue, roundedAns, ansReminder, INV_KEY } from "../calc"
 
 export const YELLOW = "#fff067"
 export const BLUE = "#00abfa"
@@ -1205,8 +1205,12 @@ function check(S: Scene) {
   inp.state = "wrong"
   inp.wrongAt = S.time
   inp.help?.(S, inp.tries)
+  // a known slip first; else a rounded copy of Ans typed inside a calculation where Ans was
+  // meant: the student cannot see its digits, so say so (never just "wrong")
   const slip = v !== null ? inp.slips?.find(s => slipMatches(inp.value, v, s.v)) : undefined
-  if (slip) say(S, slip.say, "wrong", 4.5)
+  if (slip) { say(S, slip.say, "wrong", 4.5); return }
+  const rounded = inp.typed?.includes("a") && !inp.value.includes("A") && isCalculation(inp.value) ? roundedAns(inp.value) : null
+  if (rounded) say(S, ansReminder(rounded), "wrong", 6)
 }
 
 // ── word choices ─────────────────────────────────────────────────────────
