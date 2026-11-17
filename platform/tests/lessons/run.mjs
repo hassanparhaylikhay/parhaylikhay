@@ -45,6 +45,7 @@ const LESSONS = [
   ["triangle-area", "triangle-area"],
   ["pythagoras-3d", "pythagoras-3d"],
   ["angles-3d", "angles-3d"],
+  ["bearings", "bearings"],
 ]
 
 const noPageErrors = out => !/PAGEERROR/.test(out)
