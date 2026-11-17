@@ -107,7 +107,17 @@ export interface Ruler { zero: Vec; dir: number; len: number; on: string | null;
  * centre has clicked onto; `pen` a pencil mark on its edge (a bearing);
  * `lit` the scale to read (the one that starts at 0 on North).
  */
-export interface Prot { c: Vec; rot: number; on: string | null; pen: number | null; lit: "outer" | "inner" | null; turn: boolean; move: boolean; magnets: number[]; penAt?: number }
+export interface Prot {
+  c: Vec; rot: number; on: string | null; pen: number | null; lit: "outer" | "inner" | null; turn: boolean; move: boolean; magnets: number[]; penAt?: number
+  /** the place its centre should go on (a ring shows where) */
+  goal?: string
+  /** the turn the beat wants: the end that sits on North then glows while it is turned */
+  want?: number
+  /** where a line crosses its edge (a bearing): that part of the edge glows, to read there */
+  spot?: number
+  /** a number on the row being read that breathes (the one to find) */
+  find?: number
+}
 
 /** Marks along a line at every `step` (world units), each piece labelled; `lit` pieces glow. */
 export interface Along { a: string; b: string; step: number; tex?: string; under?: string; lit: number }
@@ -141,7 +151,9 @@ export type Mode = "none" | "tapPoint" | "tapArc" | "tapAny"
 export type Drag =
   | { kind: "ray"; id: string; last: number; moved: number }
   | { kind: "ruler" | "prot"; off: Vec; moved: number }
-  | { kind: "rulerTurn" | "rulerPen" | "protTurn" | "protPen"; moved: number }
+  | { kind: "rulerTurn" | "rulerPen" | "protPen"; moved: number }
+  /** `off`: where on the protractor it was held, from its 0 end (its handle is at 0) */
+  | { kind: "protTurn"; moved: number; off: number }
   | { kind: "point"; n: string; off: Vec; moved: number }
   | { kind: "pan"; start: Vec; moved: number }
 
@@ -158,6 +170,8 @@ export interface Scene {
   D: Record<string, Vec>
   /** what each place is called (TeX: a letter, or \text{Foxby}) */
   names: Partial<Record<string, string>>
+  /** a place's colour, if not chalk (a place not found yet is pink) */
+  nameCol: Record<string, string>
   dots: string[]
   /** places with a North arrow */
   norths: string[]
@@ -243,7 +257,7 @@ export function createScene(): Scene {
   for (const k of VIS_KEYS) vis[k] = { v: 0, t: 0 }
   return {
     w: 0, h: 0, time: 0, beatStart: 0, mode: "none",
-    P: {}, D: {}, names: {}, dots: [], norths: [], souths: [], northGlow: [], parallel: false, northLen: null,
+    P: {}, D: {}, names: {}, nameCol: {}, dots: [], norths: [], souths: [], northGlow: [], parallel: false, northLen: null,
     segs: [], rays: [], arcs: [], markers: [], curls: [], clock: null, rose: null, readout: null,
     magnets: [], dragPts: [], dragRing: null, turned: 0,
     fitPts: [], fitPad: 1, fit: null, fitD: null,
@@ -331,13 +345,27 @@ function fitFor(S: Scene, L: Layout) {
   if (!names.length) return { cx: (b.x0 + b.x1) / 2, cy: (b.y0 + b.y1) / 2, u: 30, c: [0, 0] as Vec }
   const P = names.map(n => S.P[n])
   const pad = S.fitPad
-  const x0 = Math.min(...P.map(p => p[0])) - pad, x1 = Math.max(...P.map(p => p[0])) + pad
-  const y0 = Math.min(...P.map(p => p[1])) - pad, y1 = Math.max(...P.map(p => p[1])) + pad
+  let x0 = Math.min(...P.map(p => p[0])) - pad, x1 = Math.max(...P.map(p => p[0])) + pad
+  let y0 = Math.min(...P.map(p => p[1])) - pad, y1 = Math.max(...P.map(p => p[1])) + pad
   // room above for a North arrow drawn on the screen, and for labels round the edge
   const top = S.northLen === null && S.norths.length ? L.northPx + L.labelSize * 1.6 : L.labelSize
   const edge = L.labelSize * 1.6
   const W = b.x1 - b.x0 - 2 * edge, H = b.y1 - b.y0 - top - edge
-  const u = Math.max(0.02, Math.min(W / Math.max(1e-6, x1 - x0), H / Math.max(1e-6, y1 - y0)))
+  const scale = () => Math.max(0.02, Math.min(W / Math.max(1e-6, x1 - x0), H / Math.max(1e-6, y1 - y0)))
+  let u = scale()
+  // an angle at a place, with its label outside it, needs that much room round the place
+  let grew = false
+  for (const a of S.arcs) {
+    const p = S.P[a.at]
+    if (!p) continue
+    const m = (L.arcPx * (a.r ?? 1) + L.labelSize * 2.2 - edge) / u
+    if (m <= 0) continue
+    if (p[0] - m < x0) { x0 = p[0] - m; grew = true }
+    if (p[0] + m > x1) { x1 = p[0] + m; grew = true }
+    if (p[1] - m < y0) { y0 = p[1] - m; grew = true }
+    if (p[1] + m > y1) { y1 = p[1] + m; grew = true }
+  }
+  if (grew) u = scale()
   const c: Vec = [(x0 + x1) / 2, (y0 + y1) / 2]
   return { cx: (b.x0 + b.x1) / 2, cy: (b.y0 + top + b.y1 - edge) / 2, u, c }
 }
@@ -451,8 +479,10 @@ function arcLabelSpot(S: Scene, at: string, from: number, sweep: number, r: numb
 
 function nameDir(S: Scene, n: string): number {
   const dirs = lineDirs(S, n)
-  // an angle's whole span is taken (a name inside its wedge reads as part of it)
-  for (const a of S.arcs) if (a.at === n) for (let k = 0; k <= Math.ceil(a.sweep / 24); k++) dirs.push(norm(a.from + Math.min(a.sweep, k * 24)))
+  // an angle's whole span is taken (a name inside its wedge reads as part of it); angles all the way
+  // round leave no gap, so then only the lines count and the name goes outside the angles
+  const here = S.arcs.filter(a => a.at === n)
+  if (here.reduce((t, a) => t + a.sweep, 0) < 270) for (const a of here) for (let k = 0; k <= Math.ceil(a.sweep / 24); k++) dirs.push(norm(a.from + Math.min(a.sweep, k * 24)))
   for (const r of S.rays) if (r.at === n && r.arc) for (let k = 0; k <= Math.ceil(norm(r.d) / 24); k++) dirs.push(norm(Math.min(norm(r.d), k * 24)))
   const key = `L-${n}`
   if (!dirs.length) { const d = S.labSide[key] ?? 225; S.labSide[key] = d; return d }
@@ -478,8 +508,14 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       const p = ptS(S, n)
       const d = nameDir(S, n)
       const word = tex.startsWith("\\text")
-      const off = word ? labelWidth(tex, size) * 0.5 * Math.abs(dirS(d)[0]) + size * 0.95 : size * 0.95 + 4
-      out.push({ key: `L-${n}`, tex, col: CHALK, at: add(p, mul(dirS(d), off)), anchor: p, size: size + 1, op: S.vis.letters.v })
+      let off = word ? labelWidth(tex, size) * 0.5 * Math.abs(dirS(d)[0]) + size * 0.95 : size * 0.95 + 4
+      // a name on an angle, or squeezed beside one, goes out past its arc
+      for (const a of S.arcs) {
+        if (a.at !== n) continue
+        const rel = norm(d - a.from)
+        if (rel <= a.sweep + 25 || rel >= 335) off = Math.max(off, L.arcPx * (a.r ?? 1) + size * 0.8)
+      }
+      out.push({ key: `L-${n}`, tex, col: S.nameCol[n] ?? CHALK, at: add(p, mul(dirS(d), off)), anchor: p, size: size + 1, op: S.vis.letters.v })
     }
   }
   if (S.vis.fig.v > 0.01) {
@@ -544,7 +580,7 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
   // the word North under the protractor is covered by it (its line still shows through)
   if (S.prot) {
     const G = protGeom(S, L)
-    for (let i = out.length - 1; i >= 0; i--) if (out[i].key.startsWith("NW-") && dist(out[i].at, G.C) < G.R + out[i].size) out.splice(i, 1)
+    for (let i = out.length - 1; i >= 0; i--) if ((out[i].key.startsWith("NW-") || out[i].key === "PG") && dist(out[i].at, G.C) < G.R + out[i].size) out.splice(i, 1)
   }
   const lens = S.ruler ? lensGeom(S, L) : null
   return unclash(lens ? out.filter(l => l.key.startsWith("RL-") || dist(l.at, lens.c) > lens.r + l.size * 0.4) : out)
@@ -579,8 +615,8 @@ function toolLabels(S: Scene, L: Layout, all: Lab[]) {
     for (let k = 0; k <= 180; k += 10) {
       const d = dirS(P.rot + k)
       const qo = add(G.C, mul(d, G.R - small * 1.55)), qi = add(G.C, mul(d, G.R - small * 3.0))
-      out.push({ key: `PO-${k}`, tex: String(k), col: col("outer"), at: qo, anchor: qo, size: small - 1, op: P.lit === "inner" ? 0.55 : 1 })
-      out.push({ key: `PI-${k}`, tex: String(180 - k), col: col("inner"), at: qi, anchor: qi, size: small - 2, op: P.lit === "outer" ? 0.55 : 0.9 })
+      out.push({ key: `PO-${k}`, tex: String(k), col: col("outer"), at: qo, anchor: qo, size: small - 1, op: P.lit === "inner" ? 0.55 : 1, pulse: P.lit === "outer" && P.find === k })
+      out.push({ key: `PI-${k}`, tex: String(180 - k), col: col("inner"), at: qi, anchor: qi, size: small - 2, op: P.lit === "outer" ? 0.55 : 0.9, pulse: P.lit === "inner" && P.find === 180 - k })
     }
   }
   const pr = pageRect(S, L)
@@ -595,7 +631,8 @@ function toolLabels(S: Scene, L: Layout, all: Lab[]) {
     const f = S.fitD ?? S.fit, stepPx = A.step * (f?.u ?? 30)
     let nrm: Vec = [e[1], -e[0]]
     if (nrm[1] > 0) nrm = mul(nrm, -1)
-    for (let k = 0; k < A.lit; k++) {
+    const count = Math.floor(l / stepPx + 0.05)
+    for (let k = 0; k < A.lit && k < count; k++) {
       const m = add(a, mul(e, stepPx * (k + 0.5)))
       const q = add(m, mul(nrm, small * 1.5))
       out.push({ key: `AL-${k}`, tex: A.tex, col: BLUE, at: q, anchor: q, size: small, op: 1 })
@@ -729,6 +766,7 @@ export function resetBeat(S: Scene) {
   S.mode = "none"
   S.drag = null
   S.names = {}
+  S.nameCol = {}
   S.dots = []
   S.norths = []
   S.souths = []
@@ -916,6 +954,16 @@ export function protGeom(S: Scene, L = layout(S)) {
 /** Whether a bearing is on the protractor's half circle (clockwise from its 0 end through 180°). */
 const onArc = (P: Prot, b: number) => norm(b - P.rot) <= 180
 
+/** One job at a time: a protractor that is to be moved turns only once its centre is on a place. */
+export const protCanTurn = (P: Prot) => P.turn && (P.on !== null || !P.move)
+
+/** The place whose North line the protractor is being turned onto (it glows), if it is still to be turned. */
+export function protCue(S: Scene): string | null {
+  const P = S.prot
+  if (!P || P.want === undefined || !P.on || !protCanTurn(P) || P.rot === norm(P.want)) return null
+  return P.on
+}
+
 /** The named place under a screen point, if it is close enough to click onto. */
 function placeNear(S: Scene, q: Vec, px = 18): string | null {
   let best: string | null = null, bd = Infinity
@@ -941,7 +989,8 @@ function settleRuler(S: Scene) {
 /** After the protractor moves or turns: what its centre is on, and its 0 clicking onto North (either way round). */
 function settleProt(S: Scene) {
   const P = S.prot!
-  const on = placeNear(S, toScreen(S, P.c), S.touch ? 26 : 18)
+  // a protractor's centre is aimed by eye under a big tool: it clicks on from further than a ruler's 0
+  const on = placeNear(S, toScreen(S, P.c), S.touch ? 40 : 30)
   P.on = on
   if (on) P.c = [...S.P[on]] as Vec
   for (const m of P.magnets) if (Math.abs(diff(P.rot, m)) < 4) { P.rot = norm(m); break }
@@ -993,14 +1042,16 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
   S.touch = touch
   const t = tol(S)
   if (S.prot) {
-    const G = protGeom(S)
-    if (S.prot.pen !== null && G.penAt && dist(p, G.penAt) < t + 14) { S.drag = { kind: "protPen", moved: 0 }; return true }
-    if (S.prot.turn && dist(p, G.turnAt) < t + 12) { S.drag = { kind: "protTurn", moved: 0 }; return true }
-    if (S.prot.move) {
-      const v = sub(p, G.C), d = Math.hypot(v[0], v[1])
-      const b = norm((Math.atan2(v[0], -v[1]) * 180) / Math.PI)
-      if (d < G.R && (d < 24 || onArc(S.prot, b))) { S.drag = { kind: "prot", off: sub(G.C, p), moved: 0 }; return true }
-    }
+    const P = S.prot, G = protGeom(S)
+    const v = sub(p, G.C), d = Math.hypot(v[0], v[1])
+    const b = norm((Math.atan2(v[0], -v[1]) * 180) / Math.PI)
+    const centre = touch ? 40 : 30
+    const onBody = d < G.R && (d < centre || onArc(P, b))
+    if (P.pen !== null && G.penAt && dist(p, G.penAt) < t + 14) { S.drag = { kind: "protPen", moved: 0 }; return true }
+    if (protCanTurn(P) && dist(p, G.turnAt) < t + 12) { S.drag = { kind: "protTurn", moved: 0, off: 0 }; return true }
+    if (P.move && onBody) { S.drag = { kind: "prot", off: sub(G.C, p), moved: 0 }; return true }
+    // one that stays put turns from wherever it is held, as a protractor on paper is turned by hand
+    if (!P.move && protCanTurn(P) && onBody && d > centre) { S.drag = { kind: "protTurn", moved: 0, off: norm(b - P.rot) }; return true }
   }
   if (S.ruler) {
     const G = rulerGeom(S)
@@ -1047,7 +1098,7 @@ export function pointerMove(S: Scene, p: Vec) {
   if (d.kind === "protTurn" && S.prot) {
     d.moved += 1
     const C = toScreen(S, S.prot.c)
-    S.prot.rot = Math.round(norm((Math.atan2(p[0] - C[0], C[1] - p[1]) * 180) / Math.PI))
+    S.prot.rot = Math.round(norm((Math.atan2(p[0] - C[0], C[1] - p[1]) * 180) / Math.PI - d.off))
     settleProt(S)
     return
   }

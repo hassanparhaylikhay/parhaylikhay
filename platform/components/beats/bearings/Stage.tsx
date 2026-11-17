@@ -7,7 +7,7 @@ import { type Vec, add, sub, mul } from "../geometry"
 import {
   type Scene, type Layout, CHALK, GREEN, YELLOW, BLUE, QUIET,
   ptS, toScreen, dirS, arcPts, rayEnd, northPx, norm, brgText, layout, arcSpot,
-  rulerGeom, protGeom, lensGeom, inLens, pageRect,
+  rulerGeom, protGeom, lensGeom, inLens, pageRect, protCanTurn, protCue,
 } from "./scene"
 
 /**
@@ -84,7 +84,8 @@ function Along({ S }: { S: Scene }) {
   const a = ptS(S, A.a), b = ptS(S, A.b), l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1
   const e: Vec = [(b[0] - a[0]) / l, (b[1] - a[1]) / l], n: Vec = [-e[1], e[0]]
   const f = S.fitD ?? S.fit, step = A.step * (f?.u ?? 30)
-  const count = Math.round(l / step)
+  // whole pieces only (a 4.5 cm line has four, and a half left over)
+  const count = Math.floor(l / step + 0.05)
   const out: React.ReactNode[] = []
   for (let k = 0; k < A.lit && k < count; k++) {
     const p = add(a, mul(e, step * k)), q = add(a, mul(e, step * (k + 1)))
@@ -143,14 +144,30 @@ function ProtTool({ S, L }: { S: Scene; L: Layout }) {
     const a = add(G.C, mul(d, G.R)), b = add(G.C, mul(d, G.R - t))
     out.push(<line key={`pt${k}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={CHALK} strokeOpacity={k % 10 === 0 ? 0.9 : 0.6} strokeWidth={k % 10 === 0 ? 1.3 : 0.9} />)
   }
+  // where the line crosses the edge: read the number there
+  if (P.spot !== undefined) {
+    const glow = arcPts(G.C, P.spot - 5, 10, G.R - 3)
+    out.push(<path key="spot" d={path(glow)} fill="none" stroke={YELLOW} strokeWidth={9} strokeLinecap="round" filter="url(#pl-soft)">{breathe()}</path>)
+  }
+  // the end that goes on North, while it is being turned there (green once it is on)
+  if (P.want !== undefined && P.on && protCanTurn(P)) {
+    const tip = add(G.C, mul(dirS(P.rot + norm(-P.want)), G.R)), done = P.rot === norm(P.want)
+    if (!done) out.push(<line key="endglow" x1={G.C[0]} y1={G.C[1]} x2={tip[0]} y2={tip[1]} stroke={YELLOW} strokeWidth={7} strokeLinecap="round" filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.1;0.5;0.1" dur="1.8s" repeatCount="indefinite" /></line>)
+    out.push(<line key="end" x1={G.C[0]} y1={G.C[1]} x2={tip[0]} y2={tip[1]} stroke={done ? GREEN : YELLOW} strokeWidth={2.2} strokeLinecap="round" />)
+  }
   // the centre: a small cross where the two ends' line crosses the middle
-  out.push(<path key="cross" d={`M ${G.C[0] - 7} ${G.C[1]} L ${G.C[0] + 7} ${G.C[1]} M ${G.C[0]} ${G.C[1] - 7} L ${G.C[0]} ${G.C[1] + 7}`} stroke={CHALK} strokeWidth={1.4} transform={`rotate(${P.rot} ${G.C[0]} ${G.C[1]})`} />)
+  out.push(<path key="cross" d={`M ${G.C[0] - 7} ${G.C[1]} L ${G.C[0] + 7} ${G.C[1]} M ${G.C[0]} ${G.C[1] - 7} L ${G.C[0]} ${G.C[1] + 7}`} stroke={P.move && !P.on ? YELLOW : CHALK} strokeWidth={P.move && !P.on ? 2 : 1.4} transform={`rotate(${P.rot} ${G.C[0]} ${G.C[1]})`} />)
+  // to be moved: the centre is what the student holds, and a ring waits where it goes
+  if (P.move && !P.on) {
+    if (S.drag?.kind !== "prot") out.push(<circle key="cring" cx={G.C[0]} cy={G.C[1]} r={12} fill="none" stroke={YELLOW} strokeWidth={1.6}><animate attributeName="r" values="9;24;9" dur="2s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.9;0;0.9" dur="2s" repeatCount="indefinite" /></circle>)
+    if (P.goal && S.P[P.goal]) { const g = ptS(S, P.goal); out.push(<circle key="goal" cx={g[0]} cy={g[1]} r={17} fill="none" stroke={YELLOW} strokeWidth={2.2} strokeDasharray="5 4">{breathe("1.4s")}</circle>) }
+  }
   if (P.pen !== null && G.penAt) {
     const m = add(G.C, mul(dirS(P.pen), G.R - 2))
     out.push(<line key="penline" x1={G.C[0]} y1={G.C[1]} x2={m[0]} y2={m[1]} stroke={YELLOW} strokeOpacity={0.35} strokeWidth={1.4} strokeDasharray="3 5" />)
     out.push(handle(G.penAt, "ppen", S.drag?.kind === "protPen"))
   }
-  if (P.turn) out.push(handle(G.turnAt, "pturn", S.drag?.kind === "protTurn"))
+  if (protCanTurn(P)) out.push(handle(G.turnAt, "pturn", S.drag?.kind === "protTurn"))
   return <g>{out}</g>
 }
 
@@ -215,7 +232,7 @@ function Norths({ S, L }: { S: Scene; L: Layout }) {
   for (const n of S.norths) {
     if (!S.P[n]) continue
     const p = ptS(S, n), tip: Vec = [p[0], p[1] - len]
-    const lit = S.northGlow.includes(n)
+    const lit = S.northGlow.includes(n) || protCue(S) === n
     if (lit) out.push(<line key={`ng${n}`} x1={p[0]} y1={p[1]} x2={tip[0]} y2={tip[1]} stroke={YELLOW} strokeWidth={6} strokeLinecap="round" filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.05;0.35;0.05" dur="1.8s" repeatCount="indefinite" /></line>)
     out.push(<line key={`n${n}`} x1={p[0]} y1={p[1]} x2={tip[0]} y2={tip[1] + 6} stroke={CHALK} strokeWidth={2.2} strokeLinecap="round" />)
     out.push(<path key={`nh${n}`} d={head(tip, [0, -1], 11)} fill={CHALK} />)
@@ -332,7 +349,7 @@ function Dots({ S }: { S: Scene }) {
     <>
       {Object.keys(S.names).concat(S.dots).filter((n, i, all) => all.indexOf(n) === i && S.P[n]).map(n => {
         const p = ptS(S, n)
-        return <circle key={`d${n}`} cx={p[0]} cy={p[1]} r={3.6} fill={CHALK} />
+        return <circle key={`d${n}`} cx={p[0]} cy={p[1]} r={3.6} fill={S.nameCol[n] ?? CHALK} />
       })}
     </>
   )

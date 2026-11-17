@@ -61,19 +61,24 @@ const { open, sleep } = require("./trig-lib.cjs")
     await expect(s2.ruler.along === to, `ruler not along ${on}${to} (dir ${s2.ruler.dir})`)
   }
   // ── the protractor ──
-  const placeProt = async (on, rot) => {
+  /** Carry the protractor by its centre onto a place (dropped a little off it: it clicks on). */
+  const putProt = async (on, miss = 14) => {
     await sleep(600)
-    let p = await api("protAt")
+    const p = await api("protAt")
     const target = await api("ptS", on)
-    await path([[p.c[0] + 4, p.c[1] + 4], [(p.c[0] + target[0]) / 2 + 4, (p.c[1] + target[1]) / 2 + 4], [target[0] + 4, target[1] + 4]])
+    await path([[p.c[0] + 4, p.c[1] + 4], [(p.c[0] + target[0]) / 2 + 4, (p.c[1] + target[1]) / 2 + 4], [target[0] + miss, target[1] + 4]])
     await sleep(300)
-    const s = await st()
-    await expect(s.prot.on === on, `protractor not on ${on}`)
-    p = await api("protAt")
+    await expect((await st()).prot.on === on, `protractor not on ${on}`)
+  }
+  /** Turn it by its handle (which only comes once it is on a place). */
+  const turnProt = async rot => {
+    await sleep(500)
+    const p = await api("protAt"), s = await st()
     await path(arc(p.c, p.R + 14, s.prot.rot, rot))
     await sleep(400)
     await expect((await st()).prot.rot === rot, `protractor not turned to ${rot} (is ${(await st()).prot.rot})`)
   }
+  const placeProt = async (on, rot) => { await putProt(on); await turnProt(rot) }
   const markProt = async b => {
     await sleep(600)
     const p = await api("protAt"), s = await st()
@@ -106,7 +111,11 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (id === "lay" || id === "x1-lay" || id === "x2-lay") { await layRuler("A", "B"); continue }
     if (id === "read") { await slip("6.2", /Close/); await right("6"); continue }
     if (id === "real-ab") { await slip("11", /multiply|lots/); await right(); continue }
-    if (id === "path") { await slip("75", /divide/); await right(); continue }
+    if (id === "path-map") { await slip("75", /just/); await right(); continue }
+    if (id === "road2") { await slip("40", /divide/); await right(); continue }
+    if (id === "cm-m") { await slip("10", /mm/); await right(); continue }
+    if (id === "m-500") { await slip("5000000", /fewer/); await right(); continue }
+    if (id === "lm-cm") { await slip("20000", /100/); await right(); continue }
     if (id === "draw") {
       const r = await api("rulerAt")
       await path([r.pen, [r.zero[0] + r.e[0] * r.u * 1.6, r.zero[1] + r.e[1] * r.u * 1.6], [r.zero[0] + r.e[0] * r.u * 3, r.zero[1] + r.e[1] * r.u * 3]])
@@ -114,26 +123,8 @@ const { open, sleep } = require("./trig-lib.cjs")
       await expect((await st()).ruler?.pen === 3 || (await st()).got.includes("drawn"), `pencil not at 3 cm (${(await st()).ruler?.pen})`)
       continue
     }
-    if (id === "km-cm") { await slip("1000", /metres/); await right(); continue }
-    if (id === "lm-n") { await slip("2", /same units/); await right(); continue }
-    if (id === "prot-on") { const p = await api("protAt"), t = await api("ptS", "A"); await path([[p.c[0] + 4, p.c[1] + 4], [t[0] + 4, t[1] + 4]]); continue }
-    if (id === "prot-turn") { const p = await api("protAt"); await path(arc(p.c, p.R + 14, 40, 0)); continue }
-    if (id === "read-110") { await slip("070", /other scale/); await right(); continue }
-    if (id === "left-turn") { const p = await api("protAt"); await path(arc(p.c, p.R + 14, 0, 180)); continue }
-    if (id === "left-read" || id === "x2-read") { await slip("60", /other scale/); await right(); continue }
-    if (id === "left-brg") { await slip("120", /360/); await right(); continue }
-    if (id === "mark-60") { await markProt(60); continue }
-    if (id === "b-turn") { await placeProt("B", 180); continue }
-    if (id === "mark-40") { await markProt(320); continue }
-    if (id === "c-tap") { const c = await crossAt("A", 60, "B", 320); await tap(c[0] - 80, c[1] + 70); await noted("a tap away from the crossing"); await sleep(300); await tap(...c); continue }
-    if (id === "x1-prot" || id === "x3-prot") { await placeProt(id === "x3-prot" ? "B" : "A", 0); continue }
-    if (id === "x1-164") { await markProt(164); continue }
-    if (id === "x1-bprot") { await placeProt("B", 180); continue }
-    if (id === "x1-252") { await markProt(252); continue }
-    if (id === "x1-c") { await tap(...(await crossAt("A", 164, "B", 252))); continue }
-    if (id === "x2-prot") { await placeProt("A", 180); continue }
-    if (["road", "lm-1", "left-40", "x1-cm", "x1-m", "x1-brg", "x1-left", "x2-cm", "x2-km", "x2-brg", "x3-brg"].includes(id)) { await right(); continue }
-    if (id === "end-brg") { await sleep(3200); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Finish"); break }
+    if (["road", "lm-1", "lm-m", "x1-cm", "x1-m", "x2-cm", "x2-km"].includes(id)) { await right(); continue }
+    if (id === "end-scale") { await sleep(3200); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Finish"); break }
     // a watching beat
     await next()
   }

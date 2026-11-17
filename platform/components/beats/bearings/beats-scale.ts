@@ -1,299 +1,18 @@
 /**
- * Scale drawings (4.3, lesson 2 of 2). A map is the real place drawn smaller
+ * Scale drawings (4.3, lesson 2 of 3). A map is the real place drawn smaller
  * by the same amount: its scale says what 1 cm stands for. The student lays
  * a ruler along a line and reads it (a lens shows the end close up), turns
- * map lengths into real ones and back, writes a scale as 1 : n, measures a
- * bearing with a two-scale protractor (and past 180°, the angle to the left
- * of North taken from 360°), marks a bearing and rules the line, and finds
- * a place from two bearings. Exam questions from the papers: 4024/12/M/J/25
- * Q6, 4024/11/O/N/22 Q4, 4024/12/M/J/23 Q6(a), 4024/12/M/J/24 Q10(a),
- * 4024/11/M/J/23 Q13(b).
- *
- * The drawing is in cm: one world unit is one centimetre of the map, so the
- * ruler measures it exactly at any screen size.
+ * a map length into a real one (multiply) and a real one onto the map
+ * (divide), and writes a scale as 1 : n one small step at a time. Exam
+ * questions from the papers: 4024/12/M/J/25 Q6(a), 4024/11/O/N/22 Q4(a),
+ * 4024/12/M/J/23 Q6(a), 4024/11/M/J/23 Q13(b).
  */
 
 import { applyParts } from "../chapter"
-import type { BeatOf } from "../beat"
-import type { WalkStep } from "../walk"
-import { row, op, atom, frac, type ENode } from "../equation"
+import { row, op, atom, frac } from "../equation"
 import type { Vec } from "../geometry"
-import {
-  type Scene, type VisKey, BLUE, GREEN, ORANGE,
-  resetBeat, show, later, say, places, along, addSeg, startInput, boxNode, dirW, brgText, dist, ptS,
-} from "./scene"
-
-type Beat = BeatOf<Scene>
-
-const LOOK: VisKey[] = ["board", "fig", "letters", "marks"]
-const look = (S: Scene, more: VisKey[] = []) => show(S, [...LOOK, ...more])
-const DEC_KEYS = [["1", "2", "3", "4", "5", "6", "back"], ["7", "8", "9", "0", ".", "go"]]
-
-/** Where a line from p on bearing b1 crosses a line from q on bearing b2. */
-function cross(p: Vec, b1: number, q: Vec, b2: number): Vec {
-  const d1 = dirW(b1), d2 = dirW(b2)
-  const det = d1[0] * -d2[1] - d1[1] * -d2[0]
-  const r: Vec = [q[0] - p[0], q[1] - p[1]]
-  const t = (r[0] * -d2[1] - r[1] * -d2[0]) / det
-  return [p[0] + d1[0] * t, p[1] + d1[1] * t]
-}
-
-// ── the maps (one world unit is a centimetre of the drawing) ─────────────
-
-interface MapSpec {
-  pts: Record<string, Vec>
-  names: Record<string, string>
-  norths: string[]
-  segs: [string, string][]
-  scale: string
-  ruler: { zero: Vec; len: number }
-  /** where the protractor lies before it is picked up (inside the page) */
-  prot: Vec
-  /** more room on the page: where lines the student will rule end */
-  room?: Vec[]
-}
-
-/** 4024/12/M/J/25 Q6: villages A and B, 6.0 cm apart on a bearing of 110°; scale 1 cm to 5 km. */
-const S25_B = along([0, 0], 110, 6)
-const S25_C = cross([0, 0], 60, S25_B, 320)
-const S25: MapSpec = {
-  pts: { A: [0, 0], B: S25_B }, names: { A: "A", B: "B" }, norths: ["A", "B"], segs: [["A", "B"]],
-  scale: "\\text{Scale: }1\\text{ cm to }5\\text{ km}",
-  ruler: { zero: [-1, -3.9], len: 8 },
-  prot: [3.2, -1.0],
-  room: [along([0, 0], 60, 4.2), along(S25_B, 320, 5.4)],
-}
-/** 4024/11/O/N/22 Q4: ships A and B, 5.6 cm apart on a bearing of 125°; scale 1 cm to 30 m. */
-const W22_B = along([0, 0], 125, 5.6)
-const W22_C = cross([0, 0], 164, W22_B, 252)
-const W22: MapSpec = {
-  pts: { A: [0, 0], B: W22_B }, names: { A: "A", B: "B" }, norths: ["A", "B"], segs: [["A", "B"]],
-  scale: "\\text{Scale: }1\\text{ cm to }30\\text{ m}",
-  ruler: { zero: [-1.6, -5.1], len: 8 },
-  prot: [2.0, -2.4],
-  room: [along([0, 0], 164, 5.2), along(W22_B, 252, 4.6)],
-}
-/** 4024/12/M/J/23 Q6: villages A and B; B is 9.5 cm from A on a bearing of 240°; scale 1 cm to 2 km. */
-const S23_B = along([0, 0], 240, 9.5)
-const S23: MapSpec = {
-  pts: { A: [0, 0], B: S23_B }, names: { A: "A", B: "B" }, norths: ["A", "B"], segs: [["A", "B"]],
-  scale: "\\text{Scale: }1\\text{ cm to }2\\text{ km}",
-  ruler: { zero: [-9.0, -6.0], len: 11 },
-  prot: [-3.6, -1.2],
-}
-/** 4024/12/M/J/24 Q10: A due South of B (4 cm), C 7.07 cm from B on a bearing of 070°; scale 1 cm to 50 m. */
-const S24: MapSpec = {
-  pts: { A: [0, -4], B: [0, 0], C: along([0, 0], 70, 7.07) }, names: { A: "A", B: "B", C: "C" }, norths: ["B"], segs: [["A", "B"], ["B", "C"]],
-  scale: "\\text{Scale: }1\\text{ cm to }50\\text{ m}",
-  ruler: { zero: [1.0, -4.6], len: 8 },
-  prot: [3.4, -1.8],
-}
-
-/**
- * Put a map on the board: its places, North arrows, lines, and the page
- * wrapped round them (with room where the ruler starts), its scale written
- * on it. `prot`: room round a place for the protractor to sit there.
- */
-function mapBoard(S: Scene, M: MapSpec, o: { prot?: string } = {}) {
-  resetBeat(S)
-  const z = M.ruler.zero
-  const pts: Record<string, Vec> = { ...M.pts, r0: z, r1: [z[0] + M.ruler.len, z[1]] }
-  ;(M.room ?? []).forEach((q, i) => { pts[`m${i}`] = q })
-  if (o.prot) {
-    // a phone draws the protractor bigger for the map, so it needs more room
-    const c = M.pts[o.prot], k = S.w < 560 ? 3.8 : 2.9
-    Object.assign(pts, { q0: [c[0], c[1] + k], q1: [c[0] + k, c[1]], q2: [c[0], c[1] - k], q3: [c[0] - k, c[1]] })
-  }
-  places(S, pts)
-  S.names = { ...M.names }
-  S.norths = [...M.norths]
-  S.fitPts = Object.keys(pts)
-  S.fitPad = 0.25
-  S.page = { caption: M.scale }
-  for (const [a, b] of M.segs) addSeg(S, a, b)
-}
-
-/** The ruler, ready to be laid along a line (it starts off the figure). */
-function withRuler(S: Scene, M: MapSpec, o: { on?: string; along?: string; fixed?: boolean } = {}) {
-  if (o.on && o.along) {
-    const z = S.P[o.on], t = S.P[o.along]
-    const b = (Math.atan2(t[0] - z[0], t[1] - z[1]) * 180) / Math.PI
-    S.ruler = { zero: [...z] as Vec, dir: ((b % 360) + 360) % 360, len: M.ruler.len, on: o.on, along: o.along, pen: null, turn: !o.fixed, move: !o.fixed }
-    return
-  }
-  S.ruler = { zero: [...M.ruler.zero] as Vec, dir: 90, len: M.ruler.len, on: null, along: null, pen: null, turn: true, move: true }
-}
-
-/** The protractor: placed on a place with its 0 along a bearing, or lying off the figure. */
-function withProt(S: Scene, M: MapSpec, o: { on?: string; rot?: number; fixed?: boolean; pen?: number; lit?: boolean } = {}) {
-  const on = o.on ?? null
-  const rot = o.rot ?? 40
-  S.prot = {
-    c: on ? ([...S.P[on]] as Vec) : ([...M.prot] as Vec), rot, on, pen: o.pen ?? null,
-    lit: o.lit ? (rot === 0 ? "outer" : "inner") : null, turn: !o.fixed, move: !o.fixed, magnets: [0, 180],
-  }
-}
-
-// ── beat makers ──────────────────────────────────────────────────────────
-
-function watch(id: string, say0: string, enter: (S: Scene) => void, after = 1.8): Beat {
-  return { id, say: say0, enter, cta: "", ctaAfter: after }
-}
-
-/** A number typed: a length (a decimal, right to the nearest tenth) or a bearing (three figures). */
-function askNum(id: string, say0: string, enter: (S: Scene) => void, o: {
-  name: string
-  answer: number
-  unit?: string
-  dec?: boolean
-  three?: boolean
-  measured?: boolean
-  nearSay?: string
-  max?: number
-  slips?: { v: number; say: string }[]
-  above?: () => ENode
-  walk: WalkStep<Scene>[]
-  then?: (S: Scene) => void
-}): Beat {
-  const shown = o.three ? `${brgText(o.answer)}^\\circ` : `${o.answer}${o.unit ? `\\text{ ${o.unit}}` : ""}`
-  const lead = () => [atom("qn", o.name), op("qe", "=")]
-  const tail = o.three ? [atom("qd", "{}^\\circ")] : o.unit ? [atom("qu", `\\text{${o.unit}}`)] : []
-  return {
-    id, say: say0,
-    enter: S => {
-      enter(S)
-      if (o.dec) S.keyRows = DEC_KEYS
-      startInput(S, {
-        answer: o.answer, three: o.three, dec: o.dec, max: o.max ?? (o.three ? 3 : 7), typed: o.three ? brgText(o.answer) : String(o.answer), slips: o.slips,
-        tol: o.measured ? 0.05 : undefined, near: o.measured ? (o.three ? 2.5 : 0.25) : undefined, nearSay: o.nearSay,
-        onRight: S2 => o.then?.(S2),
-      })
-      S.eqFn = S2 => {
-        const line = row(S2.input?.state === "right" ? [...lead(), atom("ans", shown, { col: GREEN })] : [...lead(), boxNode(S2), ...tail])
-        return o.above ? frac("work", o.above(), line, "rgba(0,0,0,0)") : line
-      }
-      look(S, ["eq", "keypad"])
-    },
-    done: S => S.input?.state === "right",
-    advanceAfter: 2000,
-    walk: o.walk,
-  }
-}
-
-/** Lay the ruler along a line, its 0 on one end. */
-function layBeat(id: string, say0: string, M: MapSpec, on: string, to: string, more?: (S: Scene) => void): Beat {
-  return {
-    id, say: say0,
-    enter: S => { mapBoard(S, M); more?.(S); withRuler(S, M); look(S) },
-    done: S => S.ruler?.on === on && S.ruler?.along === to && S.drag === null,
-    advanceAfter: 1400,
-  }
-}
-
-/** Put the protractor on a place with its 0 along North (rot 0: on the right of North; 180: turned round to the left). */
-function protBeat(id: string, say0: string, M: MapSpec, on: string, rot: 0 | 180, o: { start?: "off" | "on"; startRot?: number; more?: (S: Scene) => void } = {}): Beat {
-  return {
-    id, say: say0,
-    enter: S => {
-      mapBoard(S, M, { prot: on })
-      o.more?.(S)
-      withProt(S, M, o.start === "on" ? { on, rot: o.startRot ?? 40 } : { rot: o.startRot ?? 40 })
-      const start = { rot: S.prot!.rot, c: [...S.prot!.c] }
-      // the side the place is on says which way round the protractor goes
-      S.tick = S2 => {
-        const P = S2.prot
-        if (!P || S2.drag || S2.got.has("said")) return
-        // only once the student has moved it (it may start the wrong way round)
-        if (P.rot === start.rot && P.c[0] === start.c[0] && P.c[1] === start.c[1]) return
-        if (P.on === on && P.rot === (rot === 0 ? 180 : 0)) {
-          S2.got.add("said")
-          say(S2, rot === 0 ? "That's on the left of North. The line goes off to the right: turn it back." : "The line goes off to the left of North. Turn the protractor round to that side.", "wrong", 4)
-          later(S2, 4, S3 => S3.got.delete("said"))
-        }
-      }
-      look(S)
-    },
-    done: S => S.prot?.on === on && S.prot.rot === rot && S.drag === null,
-    advanceAfter: 1400,
-  }
-}
-
-/** Mark a bearing on the placed protractor with the pencil; then the line is ruled through the mark. */
-function markBeat(id: string, say0: string, M: MapSpec, at: string, rot: 0 | 180, target: number, far: number, extra: (S: Scene) => void = () => {}): Beat {
-  return {
-    id, say: say0,
-    enter: S => {
-      mapBoard(S, M, { prot: at })
-      extra(S)
-      withProt(S, M, { on: at, rot, fixed: true, pen: rot + 15, lit: true })
-      S.prot!.penAt = target
-      S.tick = S2 => {
-        if (S2.got.has("marked") || S2.drag || S2.prot?.pen !== target) return
-        // marked: the protractor lifts away and the line is ruled from the place through the mark
-        S2.got.add("marked")
-        const end = `${at}${target}`
-        S2.P[end] = along(S2.P[at], target, far)
-        later(S2, 0.5, S3 => { S3.prot = null; addSeg(S3, at, end, { col: BLUE, grown: false }) })
-      }
-      look(S)
-    },
-    // done once the line through the mark has been ruled all the way
-    done: S => S.got.has("marked") && (S.segs.find(sg => sg.b === `${at}${target}` && sg.grow.v > 0.97) !== undefined),
-    advanceAfter: 1200,
-  }
-}
-
-/** The lines from both places, ruled. */
-function ruled(S: Scene, a: string, b1: number, l1: number, b: string, b2: number, l2: number) {
-  S.P[`${a}${b1}`] = along(S.P[a], b1, l1)
-  S.P[`${b}${b2}`] = along(S.P[b], b2, l2)
-  addSeg(S, a, `${a}${b1}`, { col: BLUE })
-  addSeg(S, b, `${b}${b2}`, { col: BLUE })
-}
-
-/** Tap where the two lines cross: that's the place. */
-function crossBeat(id: string, say0: string, board: (S: Scene) => void, at: Vec, name = "C"): Beat {
-  return {
-    id, say: say0,
-    enter: S => {
-      board(S)
-      S.mode = "tapAny"
-      S.onTap = (S2, p) => {
-        if (S2.got.has("tap")) return
-        S2.P[`${name}x`] = at
-        const near = dist(p, ptS(S2, `${name}x`)) < (S2.touch ? 40 : 28)
-        delete S2.P[`${name}x`]
-        if (!near) { say(S2, `$${name}$ is on both lines. Where do they cross?`, "wrong", 3.4); return }
-        S2.got.add("tap")
-        S2.mode = "none"
-        S2.P[name] = at
-        S2.names = { ...S2.names, [name]: name }
-        S2.note = null
-      }
-      look(S)
-    },
-    done: S => S.got.has("tap"),
-    advanceAfter: 1600,
-  }
-}
-
-// ── walkthroughs ─────────────────────────────────────────────────────────
-
-/** Reading the ruler: its 0 is on one end; read the other end in the lens. */
-const readWalk = (on: string, to: string): WalkStep<Scene>[] => [
-  { say: `The ruler's $0$ is on $${on}$.`, tex: `${on} \\to 0\\text{ cm}` },
-  { say: `Read the number at $${to}$ in the lens. Each small mark is a millimetre, $0.1$ cm.`, tex: `${to} \\to \\;?` },
-]
-/** Map to real: each cm stands for so much. */
-const realWalk = (cm: string, per: string, unit: string): WalkStep<Scene>[] => [
-  { say: `Each cm on the map stands for $${per}$ ${unit}.`, tex: `1\\text{ cm} \\to ${per}\\text{ ${unit}}` },
-  { say: `So $${cm}$ cm stands for $${cm}$ lots of $${per}$.`, tex: `${cm} \\times ${per}` },
-]
-/** Reading the protractor: the scale that starts at 0 on North, up to where the line crosses. */
-const protWalk = (line: string): WalkStep<Scene>[] => [
-  { say: "Find the scale that starts at $0$ on the North line.", tex: "\\text{Start at } 0 \\text{ on North}" },
-  { say: `Count up that scale to where $${line}$ crosses the edge.`, tex: `\\text{Read where } ${line} \\text{ crosses}` },
-]
+import { type Scene, BLUE, GREEN, resetBeat, later, places, addSeg } from "./scene"
+import { type Beat, look, mapBoard, withRuler, watch, askNum, layBeat, readWalk, realWalk, S25, W22, S23 } from "./scale-kit"
 
 // ── the beats ────────────────────────────────────────────────────────────
 
@@ -393,22 +112,54 @@ const PART_A: Beat[] = [
     above: () => row([atom("ab", "AB"), op("e", "="), atom("six", "6\\text{ cm}")]),
     walk: realWalk("6", "5", "km"),
   }),
-  askNum("road", "A road is $3.4$ cm long on this map. How long is it really?", S => plainPage(S, { R: [-1.7, -0.4], T: [1.7, -0.4] }, [["R", "T"]], {}), {
+  watch("times", "So to get the real length, multiply by $5$.", S => {
+    mapBoard(S, S25)
+    S.along = { a: "A", b: "B", step: 1, tex: "5\\text{ km}", lit: 6 }
+    S.eqFn = () => frac("card", atom("rule", MAP_REAL), atom("ex", "6\\text{ cm} \\times 5 = 30\\text{ km}"), "rgba(0,0,0,0)")
+    look(S, ["eq"])
+  }, 2.6),
+  askNum("road", "A road is $3.4$ cm long on this map. How long is it really?", S => roadPage(S), {
     name: "\\text{Real}", answer: 17, unit: "km", dec: true,
     slips: [{ v: 8.4, say: "That's $3.4 + 5$. Each cm stands for $5$ km: multiply." }, { v: 0.68, say: "That's $3.4 \\div 5$. The real road is longer: multiply." }],
+    above: () => atom("rule", MAP_REAL),
     walk: realWalk("3.4", "5", "km"),
   }),
-  askNum("path", "A path is $15$ km long. How long is it on this map?", S => plainPage(S, {}, [], {}), {
+
+  // ── 3. From real life to the map ──
+  watch("path", "Now the other way. A path is really $15$ km long.", S => { pathReal(S, 0); look(S) }, 2.4),
+  {
+    id: "path-cut",
+    say: "On the map, each $5$ km of it becomes $1$ cm.",
+    enter: S => {
+      pathReal(S, 0)
+      for (let k = 0; k < 3; k++) later(S, 0.5 + k * 0.6, S2 => { if (S2.along) S2.along.lit = k + 1 })
+      look(S)
+    },
+    cta: "", ctaAfter: 2.8,
+  },
+  askNum("path-map", "So how long is the path on the map?", S => pathReal(S, 3), {
     name: "\\text{Map}", answer: 3, unit: "cm", dec: true,
-    slips: [{ v: 75, say: "That's $15 \\times 5$. The map is smaller than real life: divide." }, { v: 20, say: "That's $15 + 5$. Each $5$ km is $1$ cm: how many fives in $15$?" }],
-    walk: [
-      { say: "Each $5$ km on the ground is $1$ cm on the map.", tex: "5\\text{ km} \\to 1\\text{ cm}" },
-      { say: "So count the fives in $15$.", tex: "15 \\div 5" },
+    slips: [
+      { v: 75, say: "That's $15 \\times 5$. Each $5$ km becomes just $1$ cm." },
+      { v: 20, say: "That's $15 + 5$. Count the $5$ km pieces: each one is $1$ cm." },
+      { v: 10, say: "That's $15 - 5$. Count the $5$ km pieces: each one is $1$ cm." },
     ],
+    walk: [
+      { say: "Each $5$ km piece becomes $1$ cm.", tex: "5\\text{ km} \\to 1\\text{ cm}" },
+      { say: "So count the $5$ km pieces in $15$ km.", tex: "15 \\div 5" },
+    ],
+    // the path shrinks onto the map: each piece is a centimetre now
+    then: S => shrinkPath(S),
+    after: 4600,
   }),
+  watch("path-div", "So from real life to the map, divide by $5$.", S => {
+    pathMap(S)
+    S.eqFn = () => frac("card", atom("rule", BOTH_WAYS), atom("ex", "15\\text{ km} \\div 5 = 3\\text{ cm}"), "rgba(0,0,0,0)")
+    look(S, ["eq"])
+  }, 2.8),
   {
     id: "draw",
-    say: "Draw it: slide the pencil along the ruler to $3$ cm.",
+    say: "Draw the path: slide the pencil along the ruler to $3$ cm.",
     enter: S => {
       plainPage(S, { P: [-2.5, -0.6] }, [], { P: "P" })
       S.ruler = { zero: [-2.5, -0.6], dir: 90, len: 7, on: "P", along: null, pen: 0.6, turn: false, move: false, penAt: 3 }
@@ -423,205 +174,222 @@ const PART_A: Beat[] = [
     done: S => S.got.has("drawn") && !S.ruler,
     advanceAfter: 1600,
   },
-
-  // ── 3. The scale as a ratio ──
-  watch("ratio", "A scale can also be written as a ratio, like $1 : 50\\,000$.", S => {
-    plainPage(S, { U: [-2, 0], V: [-1, 0] }, [["U", "V"]], {}, "\\text{Scale: }1 : 50\\,000")
-    S.along = { a: "U", b: "V", step: 1, tex: "1\\text{ cm}", lit: 1 }
-    look(S)
-  }, 2.6),
-  watch("ratio-means", "It means $1$ cm on the map is $50\\,000$ cm in real life.", S => {
-    plainPage(S, { U: [-2, 0], V: [-1, 0] }, [["U", "V"]], {}, "\\text{Scale: }1 : 50\\,000")
-    S.along = { a: "U", b: "V", step: 1, tex: "50\\,000\\text{ cm}", under: "1\\text{ cm}", lit: 1 }
-    look(S)
-  }, 2.8),
-  askNum("km-cm", "How many cm are in $1$ km?", S => plainPage(S, {}, [], {}, "\\text{Scale: }1 : 50\\,000"), {
-    name: "1\\text{ km}", answer: 100000, unit: "cm", max: 7,
-    slips: [{ v: 1000, say: "That's the metres in $1$ km. Each metre is $100$ cm." }, { v: 100, say: "That's the cm in $1$ metre. A km is $1000$ metres." }, { v: 10000, say: "Count the zeros: $1000$ metres, each $100$ cm." }],
-    above: () => frac("units", row([atom("u1", "1\\text{ km} = 1000\\text{ m}")]), row([atom("u2", "1\\text{ m} = 100\\text{ cm}")]), "rgba(0,0,0,0)"),
+  askNum("road2", "A road is really $8$ km long. How long is it on this map?", S => plainPage(S, {}, [], {}), {
+    name: "\\text{Map}", answer: 1.6, unit: "cm", dec: true,
+    slips: [
+      { v: 40, say: "That's $8 \\times 5$. From real life to the map: divide." },
+      { v: 13, say: "That's $8 + 5$. From real life to the map: divide by $5$." },
+      { v: 3, say: "That's $8 - 5$. From real life to the map: divide by $5$." },
+    ],
+    above: () => atom("rule", BOTH_WAYS),
     walk: [
-      { say: "$1$ km is $1000$ m, and each metre is $100$ cm.", tex: "1000 \\times 100" },
-      { say: "Count the zeros: three from $1000$ and two from $100$.", tex: "1000 \\times 100" },
+      { say: "Each $5$ km on the ground is $1$ cm on the map.", tex: "5\\text{ km} \\to 1\\text{ cm}" },
+      { say: "So how many fives are in $8$?", tex: "8 \\div 5" },
     ],
   }),
-  watch("lm", "On a map, Lenton and Mingfield are $4.5$ cm apart. Really, they are $9$ km apart.", S => {
-    plainPage(S, { L: [-2.25, -0.4], M: [2.25, -0.4] }, [["L", "M"]], { L: "\\text{Lenton}", M: "\\text{Mingfield}" }, "\\text{Scale: }1 : n")
-    S.segs = S.segs.map(sg => ({ ...sg, lab: { tex: "4.5\\text{ cm}" } }))
-    look(S)
-  }, 3),
-  askNum("lm-1", "How many km does $1$ cm stand for?", S => {
-    plainPage(S, { L: [-2.25, -0.4], M: [2.25, -0.4] }, [["L", "M"]], { L: "\\text{Lenton}", M: "\\text{Mingfield}" }, "\\text{Scale: }1 : n")
-    S.segs = S.segs.map(sg => ({ ...sg, lab: { tex: "4.5\\text{ cm} \\to 9\\text{ km}" } }))
-  }, {
+
+  // ── 4. The scale as a ratio ──
+  watch("ratio", "A scale can also be written as a ratio, like $1 : 50\\,000$.", S => { ratioPage(S, "1\\text{ cm}", false); look(S) }, 2.6),
+  watch("ratio-means", "It means $1$ cm on the map is $50\\,000$ cm in real life.", S => { ratioPage(S, "50\\,000\\text{ cm}"); look(S) }, 2.8),
+  askNum("cm-m", "Let's turn it into metres. How many cm are in $1$ m?", S => ratioPage(S, "50\\,000\\text{ cm}"), {
+    name: "1\\text{ m}", answer: 100, unit: "cm", max: 7,
+    slips: [{ v: 10, say: "That's the mm in $1$ cm. Count the cm in a metre." }, { v: 1000, say: "That's the mm in a metre. Count the cm." }],
+    walk: [{ say: "Think of a metre ruler. What is the last number on it?", tex: "1\\text{ m} \\to \\;?\\text{ cm}" }],
+  }),
+  askNum("m-500", "So how many metres is $50\\,000$ cm?", S => ratioPage(S, "50\\,000\\text{ cm}"), {
+    name: "50\\,000\\text{ cm}", answer: 500, unit: "m", max: 7,
+    slips: [
+      { v: 5000000, say: "That's $50\\,000 \\times 100$. A metre is bigger than a cm, so there are fewer metres: divide." },
+      { v: 5000, say: "That's dividing by $10$. There are $100$ cm in a metre." },
+      { v: 50, say: "That's dividing by $1000$. There are $100$ cm in a metre." },
+    ],
+    above: () => atom("fact", "100\\text{ cm} = 1\\text{ m}"),
+    walk: [
+      { say: "Every $100$ cm makes $1$ m.", tex: "100\\text{ cm} \\to 1\\text{ m}" },
+      { say: "So count the hundreds in $50\\,000$.", tex: "50\\,000 \\div 100" },
+    ],
+    then: S => { if (S.along) S.along = { ...S.along, tex: "500\\text{ m}" } },
+  }),
+  watch("m-500-says", "So $1$ cm on this map stands for $500$ m.", S => { ratioPage(S, "500\\text{ m}"); look(S) }, 2.4),
+
+  // 4024/11/M/J/23 Q13(b)
+  watch("lm", "On a map, Lenton and Mingfield are $4.5$ cm apart. Really, they are $9$ km apart.", S => { lmPage(S); look(S) }, 3),
+  askNum("lm-1", "We want $1 : n$. First, how many km does $1$ cm stand for?", S => lmPage(S, "?"), {
     name: "1\\text{ cm}", answer: 2, unit: "km", dec: true,
-    slips: [{ v: 40.5, say: "That's $4.5 \\times 9$. Share the $9$ km between the $4.5$ cm." }, { v: 0.5, say: "That's $4.5 \\div 9$. It's the km shared between the cm: $9 \\div 4.5$." }],
+    slips: [
+      { v: 40.5, say: "That's $4.5 \\times 9$. Share the $9$ km between the $4.5$ cm." },
+      { v: 0.5, say: "That's $4.5 \\div 9$. Share the km between the cm: $9 \\div 4.5$." },
+      { v: 4.5, say: "That's $9 - 4.5$. Share the $9$ km between the $4.5$ cm." },
+    ],
     walk: [
       { say: "$4.5$ cm stands for $9$ km.", tex: "4.5\\text{ cm} \\to 9\\text{ km}" },
       { say: "Share the $9$ km between the $4.5$ cm.", tex: "9 \\div 4.5" },
     ],
+    then: S => { if (S.along) S.along = { ...S.along, tex: "2\\text{ km}" } },
   }),
-  askNum("lm-n", "So write the scale as $1 : n$.", S => plainPage(S, { L: [-2.25, -0.4], M: [2.25, -0.4] }, [["L", "M"]], { L: "\\text{Lenton}", M: "\\text{Mingfield}" }, "\\text{Scale: }1 : n"), {
-    name: "1 : n", answer: 200000, max: 7,
-    slips: [{ v: 2, say: "That's in km. A ratio needs the same units both sides: $2$ km in cm." }, { v: 2000, say: "That's in metres. Both sides in cm: $2$ km in cm." }, { v: 20000, say: "Count the zeros: $2$ lots of $100\\,000$ cm." }],
-    above: () => row([atom("q1", "1\\text{ cm}"), op("r", ":"), atom("q2", "2\\text{ km}")]),
+  watch("lm-2km", "So the scale is $1$ cm to $2$ km.", S => { lmPage(S, "2\\text{ km}"); S.eqFn = () => lmRatio("2\\text{ km}"); look(S, ["eq"]) }, 2.4),
+  watch("lm-same", "A ratio needs the same units on both sides. Let's write $2$ km in cm.", S => { lmPage(S, "2\\text{ km}"); S.eqFn = () => lmRatio("2\\text{ km}", true); look(S, ["eq"]) }, 3),
+  askNum("lm-m", "First, how many metres is $2$ km?", S => lmPage(S, "2\\text{ km}"), {
+    name: "2\\text{ km}", answer: 2000, unit: "m", max: 7,
+    slips: [{ v: 200, say: "$1$ km is $1000$ m. So $2$ km is two lots of $1000$ m." }, { v: 1000, say: "That's $1$ km. We have $2$ km." }, { v: 20, say: "$1$ km is $1000$ m. So $2$ km is two lots of $1000$ m." }],
     walk: [
-      { say: "Both sides must be in cm. $1$ km is $100\\,000$ cm.", tex: "2\\text{ km} = 2 \\times 100\\,000\\text{ cm}" },
-      { say: "So $1$ cm stands for that many cm.", tex: "1 : 2 \\times 100\\,000" },
+      { say: "$1$ km is $1000$ m.", tex: "1\\text{ km} = 1000\\text{ m}" },
+      { say: "$2$ km is two lots of that.", tex: "2 \\times 1000" },
     ],
   }),
+  askNum("lm-cm", "And how many cm is $2000$ m?", S => lmPage(S, "2\\text{ km}"), {
+    name: "2000\\text{ m}", answer: 200000, unit: "cm", max: 7,
+    slips: [
+      { v: 20000, say: "That's $2000 \\times 10$. There are $100$ cm in a metre." },
+      { v: 20, say: "That's $2000 \\div 100$. A cm is smaller than a metre, so there are more of them: multiply." },
+      { v: 2000000, say: "That's $2000 \\times 1000$. There are $100$ cm in a metre." },
+    ],
+    above: () => atom("km-m", "2\\text{ km} = 2000\\text{ m}"),
+    walk: [
+      { say: "Each metre is $100$ cm.", tex: "1\\text{ m} = 100\\text{ cm}" },
+      { say: "So $2000$ m is $2000$ lots of $100$ cm.", tex: "2000 \\times 100" },
+    ],
+  }),
+  {
+    id: "lm-n",
+    say: "Both sides are in cm now, so the units can go. The scale is $1 : 200\\,000$.",
+    enter: S => {
+      lmPage(S, "2\\text{ km}")
+      // the two units fade out and the numbers close up
+      S.eqFn = S2 => (S2.vals.drop
+        ? row([atom("one", "1"), op("r", ":"), atom("n", "200\\,000", { col: GREEN })])
+        : row([atom("one", "1"), atom("u1", "\\text{ cm}"), op("r", ":"), atom("n", "200\\,000"), atom("u2", "\\text{ cm}")]))
+      later(S, 1.6, S2 => { S2.vals.drop = 1 })
+      look(S, ["eq"])
+    },
+    cta: "", ctaAfter: 3.6,
+  },
 ]
 
-const PART_B: Beat[] = [
-  // ── 4. Measuring a bearing ──
-  watch("brg-q", "Now let's measure the bearing of $B$ from $A$.", S => { mapBoard(S, S25); look(S) }),
-  protBeat("prot-on", "Put the protractor's centre on $A$.", S25, "A", 0, { startRot: 0 }),
-  protBeat("prot-turn", "Turn it so its $0$ lies along the North line.", S25, "A", 0, { start: "on", startRot: 40 }),
-  watch("two-scales", "A protractor has two scales. Read the one that starts at $0$ on North.", S => { mapBoard(S, S25, { prot: "A" }); withProt(S, S25, { on: "A", rot: 0, fixed: true, lit: true }); look(S) }, 3),
-  askNum("read-110", "Read the bearing of $B$ from $A$.", S => { mapBoard(S, S25, { prot: "A" }); withProt(S, S25, { on: "A", rot: 0, fixed: true, lit: true }) }, {
-    name: "\\text{Bearing}", answer: 110, three: true, measured: true, nearSay: "Close. Look again where $AB$ crosses the edge.",
-    slips: [{ v: 70, say: "That's the other scale. Count up from $0$ on the North line." }],
-    walk: protWalk("AB"),
-  }),
-  watch("left-q", "Here $B$ is to the left of North.", S => { mapBoard(S, S23); look(S) }, 2.2),
-  protBeat("left-turn", "Turn the protractor round to the left of North.", S23, "A", 180, { start: "on", startRot: 0 }),
-  askNum("left-read", "Read the angle from North round to $AB$.", S => { mapBoard(S, S23, { prot: "A" }); withProt(S, S23, { on: "A", rot: 180, fixed: true, lit: true }) }, {
-    name: "\\text{Angle}", answer: 120, measured: true, nearSay: "Close. Look again where $AB$ crosses the edge.",
-    slips: [{ v: 60, say: "That's the other scale. Start from $0$ on the North line." }],
-    walk: protWalk("AB"),
-  }),
-  askNum("left-brg", "A bearing turns clockwise, the long way round. So what is the bearing?", S => {
-    mapBoard(S, S23)
-    S.arcs = [{ id: "l120", at: "A", from: 240, sweep: 120, col: ORANGE, tex: "120^\\circ" }, { id: "long", at: "A", from: 0, sweep: 240, col: BLUE, r: 1.5 }]
-  }, {
-    name: "\\text{Bearing}", answer: 240, three: true,
-    slips: [{ v: 120, say: "That's the angle on the left. A bearing goes clockwise: take it from $360^\\circ$." }, { v: 300, say: "That's $180^\\circ + 120^\\circ$. The whole turn is $360^\\circ$." }],
-    walk: [
-      { say: "All the way round is $360^\\circ$.", tex: "360^\\circ" },
-      { say: "The $120^\\circ$ on the left is the part the bearing does not turn through.", tex: "360 - 120" },
-    ],
-  }),
+/** Map to real (and back), as a card. */
+const MAP_REAL = "\\text{Map} \\xrightarrow{\\;\\textcolor{#00abfa}{\\times 5}\\;} \\text{Real}"
+const BOTH_WAYS = "\\begin{array}{l}\\text{Map} \\xrightarrow{\\;\\textcolor{#00abfa}{\\times 5}\\;} \\text{Real} \\\\[4pt] \\text{Real} \\xrightarrow{\\;\\textcolor{#ff822c}{\\div 5}\\;} \\text{Map}\\end{array}"
 
-  // ── 5. Drawing a bearing ──
-  watch("c-q", "Village $C$ is on a bearing of $060^\\circ$ from $A$, and on $320^\\circ$ from $B$.", S => { mapBoard(S, S25); look(S) }, 3),
-  markBeat("mark-60", "With the protractor on $A$, mark $60^\\circ$ with the pencil.", S25, "A", 0, 60, 4.2),
-  askNum("left-40", "$320^\\circ$ is past $180^\\circ$. How far to the left of North is it?", S => { mapBoard(S, S25); ruled1(S) }, {
-    name: "\\text{Angle}", answer: 40,
-    slips: [{ v: 140, say: "That's $320^\\circ - 180^\\circ$. From North going left: $360^\\circ - 320^\\circ$." }, { v: 320, say: "That's the bearing, all the way round clockwise. How much is left to $360^\\circ$?" }],
-    walk: [
-      { say: "A whole turn is $360^\\circ$.", tex: "360^\\circ" },
-      { say: "The bearing turns $320^\\circ$ of it. The rest is on the left of North.", tex: "360 - 320" },
-    ],
-  }),
-  protBeat("b-turn", "Put the protractor on $B$, turned round to the left of North.", S25, "B", 180, { startRot: 0, more: S => ruled1(S) }),
-  markBeat("mark-40", "Mark $40^\\circ$ on the scale that starts at $0$ on North.", S25, "B", 180, 320, 5.4, S => ruled1(S)),
-  crossBeat("c-tap", "Where is $C$? Tap it.", S => { mapBoard(S, S25); ruled(S, "A", 60, 4.2, "B", 320, 5.4) }, S25_C),
-]
-
-/** The first ruled line: from A on 060°. */
-function ruled1(S: Scene) {
-  S.P.A60 = along(S.P.A, 60, 4.2)
-  addSeg(S, "A", "A60", { col: BLUE })
+/** The road on the map: 3.4 cm, its whole centimetres marked. */
+function roadPage(S: Scene) {
+  plainPage(S, { R: [-1.7, -0.4], T: [1.7, -0.4] }, [["R", "T"]], {})
+  S.segs = S.segs.map(sg => ({ ...sg, lab: { tex: "3.4\\text{ cm}" } }))
+  S.along = { a: "R", b: "T", step: 1, tex: "5\\text{ km}", lit: 3 }
 }
 
-// ── 6. Exam questions ──
-const PART_C: Beat[] = [
-  // 4024/11/O/N/22 Q4
-  watch("x1", "The diagram shows two ships, $A$ and $B$. $1$ cm represents $30$ m.", S => { mapBoard(S, W22); look(S) }, 2.6),
-  layBeat("x1-lay", "Find the distance of $B$ from $A$. Lay the ruler along $AB$.", W22, "A", "B"),
+/** The path as it really is: 15 km, cut into 5 km pieces (`lit` of them marked). World units are km here. */
+function pathReal(S: Scene, lit: number) {
+  resetBeat(S)
+  places(S, { P: [-7.5, 0], Q: [7.5, 0] })
+  S.fitPts = ["P", "Q"]
+  S.fitPad = 3
+  addSeg(S, "P", "Q", { lab: { tex: "15\\text{ km}" } })
+  S.along = { a: "P", b: "Q", step: 5, tex: "5\\text{ km}", lit }
+}
+/** The path on the map: 3 cm on the page, each centimetre a 5 km piece. */
+function pathMap(S: Scene) {
+  resetBeat(S)
+  places(S, { P: [-1.5, 0], Q: [1.5, 0], p0: [-4.6, -2.2], p1: [4.6, 2.2] })
+  S.fitPts = ["p0", "p1"]
+  S.fitPad = 0.15
+  S.page = { x0: -4.6, y0: -2.2, x1: 4.6, y1: 2.2, caption: "\\text{Scale: }1\\text{ cm to }5\\text{ km}" }
+  addSeg(S, "P", "Q", { lab: { tex: "3\\text{ cm}" } })
+  S.along = { a: "P", b: "Q", step: 1, tex: "5\\text{ km}", lit: 3 }
+}
+/** The real path shrinks by the scale onto a page; the view then moves in on the page. */
+function shrinkPath(S: Scene) {
+  S.holdFit = true
+  S.acts.push({ dur: 0.4 }, {
+    dur: 2.2,
+    begin: S2 => { S2.segs = S2.segs.map(sg => ({ ...sg, lab: undefined })) },
+    run: (S2, e) => {
+      const k = 1 + (0.2 - 1) * e
+      S2.P.P = [-7.5 * k, 0]; S2.P.Q = [7.5 * k, 0]
+      if (S2.along) S2.along.step = 5 * k
+    },
+  }, {
+    dur: 0.9,
+    begin: S2 => { S2.page = { x0: -4.6, y0: -2.2, x1: 4.6, y1: 2.2, caption: "\\text{Scale: }1\\text{ cm to }5\\text{ km}" }; S2.vals.pageOp = 0 },
+    run: (S2, e) => { S2.vals.pageOp = e },
+  }, {
+    dur: 0.1,
+    end: S2 => {
+      places(S2, { P: [-1.5, 0], Q: [1.5, 0], p0: [-4.6, -2.2], p1: [4.6, 2.2] })
+      S2.fitPts = ["p0", "p1"]
+      S2.fitPad = 0.15
+      S2.holdFit = false
+      if (S2.along) S2.along = { ...S2.along, step: 1 }
+      S2.segs = S2.segs.map(sg => ({ ...sg, lab: { tex: "3\\text{ cm}" } }))
+    },
+  })
+}
+
+/** A page with a 1 : 50 000 scale and one centimetre on it, saying what it stands for (or, `means` false, just "1 cm"). */
+function ratioPage(S: Scene, tex: string, means = true) {
+  plainPage(S, { U: [-2, 0], V: [-1, 0] }, [["U", "V"]], {}, "\\text{Scale: }1 : 50\\,000")
+  S.along = means ? { a: "U", b: "V", step: 1, tex, under: "1\\text{ cm}", lit: 1 } : { a: "U", b: "V", step: 1, tex, lit: 1 }
+}
+
+/** Lenton and Mingfield, 4.5 cm apart on the map and 9 km apart really; `each`: what each centimetre says. */
+function lmPage(S: Scene, each?: string) {
+  plainPage(S, { L: [-2.25, -0.4], M: [2.25, -0.4] }, [["L", "M"]], { L: "\\text{Lenton}", M: "\\text{Mingfield}" }, "\\text{Scale: }1 : n")
+  S.segs = S.segs.map(sg => ({ ...sg, lab: { tex: "4.5\\text{ cm} \\to 9\\text{ km}" } }))
+  if (each) S.along = { a: "L", b: "M", step: 1, tex: each, lit: 4 }
+}
+/** The scale as it stands: 1 cm : what it stands for (`pulse`: the side still to change). */
+const lmRatio = (right: string, pulse = false) => row([atom("one", "1"), atom("u1", "\\text{ cm}"), op("r", ":"), atom("n", right, { pulse })])
+
+// ── 5. Exam questions: measuring a distance ──
+const PART_X: Beat[] = [
+  // 4024/11/O/N/22 Q4(a)
+  watch("x1", "The diagram shows two ships, $A$ and $B$. $1$ cm stands for $30$ m.", S => { mapBoard(S, W22); look(S) }, 2.6),
+  layBeat("x1-lay", "Find how far $B$ really is from $A$. Lay the ruler along $AB$.", W22, "A", "B"),
   askNum("x1-cm", "How long is $AB$ on the drawing?", S => { mapBoard(S, W22); withRuler(S, W22, { on: "A", along: "B", fixed: true }) }, {
     name: "AB", answer: 5.6, unit: "cm", dec: true, measured: true,
     slips: [{ v: 56, say: "That's in millimetres. $10$ mm make $1$ cm." }],
     walk: readWalk("A", "B"),
   }),
-  askNum("x1-m", "So what is the actual distance of $B$ from $A$?", S => { mapBoard(S, W22) }, {
-    name: "\\text{Actual}", answer: 168, unit: "m", dec: true,
-    slips: [{ v: 35.6, say: "That's $5.6 + 30$. Each cm is $30$ m: multiply." }, { v: 0.19, say: "The actual distance is bigger: $5.6$ lots of $30$ m." }],
+  askNum("x1-m", "Each cm stands for $30$ m. So how far is $B$ from $A$ really?", S => { mapBoard(S, W22) }, {
+    name: "\\text{Real}", answer: 168, unit: "m", dec: true,
+    slips: [{ v: 35.6, say: "That's $5.6 + 30$. Map to real: multiply." }, { v: 0.19, say: "The real distance is bigger: $5.6$ lots of $30$ m." }],
     above: () => row([atom("ab", "AB"), op("e", "="), atom("v", "5.6\\text{ cm}")]),
     walk: realWalk("5.6", "30", "m"),
   }),
-  protBeat("x1-prot", "Now the bearing of $B$ from $A$. Put the protractor on $A$, with $0$ on North.", W22, "A", 0),
-  askNum("x1-brg", "Measure the bearing of $B$ from $A$.", S => { mapBoard(S, W22, { prot: "A" }); withProt(S, W22, { on: "A", rot: 0, fixed: true, lit: true }) }, {
-    name: "\\text{Bearing}", answer: 125, three: true, measured: true, nearSay: "Close. Look again where $AB$ crosses the edge.",
-    slips: [{ v: 55, say: "That's the other scale. Count up from $0$ on the North line." }],
-    walk: protWalk("AB"),
-  }),
-  markBeat("x1-164", "$C$ is on a bearing of $164^\\circ$ from $A$. Mark it with the pencil.", W22, "A", 0, 164, 5.2),
-  askNum("x1-left", "$C$ is also on a bearing of $252^\\circ$ from $B$. How far to the left of North is that?", S => { mapBoard(S, W22); w22Ruled1(S) }, {
-    name: "\\text{Angle}", answer: 108,
-    slips: [{ v: 72, say: "That's $252^\\circ - 180^\\circ$. From North going left: $360^\\circ - 252^\\circ$." }],
-    walk: [{ say: "A whole turn is $360^\\circ$; the bearing turns $252^\\circ$ of it.", tex: "360^\\circ" }, { say: "The rest is on the left of North.", tex: "360 - 252" }],
-  }),
-  protBeat("x1-bprot", "Put the protractor on $B$, turned round to the left of North.", W22, "B", 180, { startRot: 0, more: S => w22Ruled1(S) }),
-  markBeat("x1-252", "Mark $108^\\circ$ on the scale that starts at $0$ on North.", W22, "B", 180, 252, 4.6, S => w22Ruled1(S)),
-  crossBeat("x1-c", "Find and label $C$. Tap where the lines cross.", S => { mapBoard(S, W22); ruled(S, "A", 164, 5.2, "B", 252, 4.6) }, W22_C),
 
   // 4024/12/M/J/23 Q6(a)
-  watch("x2", "Villages $A$ and $B$. The scale is $1$ cm to $2$ km.", S => { mapBoard(S, S23); look(S) }, 2.2),
-  layBeat("x2-lay", "Find the actual distance $AB$. Lay the ruler along it.", S23, "A", "B"),
+  watch("x2", "Villages $A$ and $B$ on a map. The scale is $1$ cm to $2$ km.", S => { mapBoard(S, S23); look(S) }, 2.4),
+  layBeat("x2-lay", "Find the real distance $AB$. Lay the ruler along it.", S23, "A", "B"),
   askNum("x2-cm", "How long is $AB$ on the map?", S => { mapBoard(S, S23); withRuler(S, S23, { on: "A", along: "B", fixed: true }) }, {
     name: "AB", answer: 9.5, unit: "cm", dec: true, measured: true,
     slips: [{ v: 95, say: "That's in millimetres. $10$ mm make $1$ cm." }],
     walk: readWalk("A", "B"),
   }),
-  askNum("x2-km", "So what is the actual distance $AB$?", S => mapBoard(S, S23), {
-    name: "\\text{Actual}", answer: 19, unit: "km", dec: true,
-    slips: [{ v: 11.5, say: "That's $9.5 + 2$. Each cm is $2$ km: multiply." }, { v: 4.75, say: "The actual distance is bigger: $9.5$ lots of $2$ km." }],
+  askNum("x2-km", "Each cm stands for $2$ km. So what is the real distance?", S => mapBoard(S, S23), {
+    name: "\\text{Real}", answer: 19, unit: "km", dec: true,
+    slips: [{ v: 11.5, say: "That's $9.5 + 2$. Map to real: multiply." }, { v: 4.75, say: "The real distance is bigger: $9.5$ lots of $2$ km." }],
     above: () => row([atom("ab", "AB"), op("e", "="), atom("v", "9.5\\text{ cm}")]),
     walk: realWalk("9.5", "2", "km"),
   }),
-  protBeat("x2-prot", "Find the bearing of $B$ from $A$. Put the protractor on $A$, on the side $B$ is.", S23, "A", 180),
-  askNum("x2-read", "Read the angle from North round to $AB$.", S => { mapBoard(S, S23, { prot: "A" }); withProt(S, S23, { on: "A", rot: 180, fixed: true, lit: true }) }, {
-    name: "\\text{Angle}", answer: 120, measured: true, nearSay: "Close. Look again where $AB$ crosses the edge.",
-    slips: [{ v: 60, say: "That's the other scale. Start from $0$ on the North line." }],
-    walk: protWalk("AB"),
-  }),
-  askNum("x2-brg", "So what is the bearing of $B$ from $A$?", S => { mapBoard(S, S23); S.arcs = [{ id: "l120", at: "A", from: 240, sweep: 120, col: ORANGE, tex: "120^\\circ" }] }, {
-    name: "\\text{Bearing}", answer: 240, three: true,
-    slips: [{ v: 120, say: "That's the angle on the left. A bearing goes clockwise: take it from $360^\\circ$." }],
-    walk: [{ say: "All the way round is $360^\\circ$.", tex: "360^\\circ" }, { say: "Take away the $120^\\circ$ on the left.", tex: "360 - 120" }],
-  }),
 
-  // 4024/12/M/J/24 Q10(a)
-  watch("x3", "Part of a field, $ABCD$. Measure the bearing of $C$ from $B$.", S => { mapBoard(S, S24); look(S) }, 2.6),
-  protBeat("x3-prot", "Put the protractor on $B$, with $0$ on North.", S24, "B", 0),
-  askNum("x3-brg", "Read the bearing of $C$ from $B$.", S => { mapBoard(S, S24, { prot: "B" }); withProt(S, S24, { on: "B", rot: 0, fixed: true, lit: true }) }, {
-    name: "\\text{Bearing}", answer: 70, three: true, measured: true, nearSay: "Close. Look again where $BC$ crosses the edge.",
-    slips: [{ v: 110, say: "That's the other scale. Count up from $0$ on the North line." }],
-    walk: protWalk("BC"),
-  }),
-
-  // ── the end ──
-  watch("end-scale", "To get the real length, multiply by the scale. To go back to the map, divide.", S => {
-    mapBoard(S, S25)
-    S.along = { a: "A", b: "B", step: 1, tex: "5\\text{ km}", lit: 6 }
-    look(S)
-  }, 2.6),
   {
-    id: "end-brg",
-    say: "Measure a bearing from North, clockwise. Past $180^\\circ$, measure on the left and take it from $360^\\circ$.",
+    id: "end-scale",
+    say: "Map to real: multiply by what $1$ cm stands for. Real to map: divide by it.",
     enter: S => {
-      mapBoard(S, S23)
-      S.arcs = [{ id: "l120", at: "A", from: 240, sweep: 120, col: ORANGE, tex: "120^\\circ" }, { id: "long", at: "A", from: 0, sweep: 240, col: BLUE, tex: "240^\\circ", r: 1.5 }]
-      look(S)
+      mapBoard(S, S25)
+      S.along = { a: "A", b: "B", step: 1, tex: "5\\text{ km}", lit: 6 }
+      S.eqFn = () => atom("rule", BOTH_WAYS)
+      look(S, ["eq"])
     },
     cta: "Finish", ctaAfter: 3, close: true,
   },
 ]
 
-/** The first ruled line of the ships question: from A on 164°. */
-function w22Ruled1(S: Scene) {
-  S.P.A164 = along(S.P.A, 164, 5.2)
-  addSeg(S, "A", "A164", { col: BLUE })
-}
-
-export const BEATS: Beat[] = [...PART_A, ...PART_B, ...PART_C]
+export const BEATS: Beat[] = [...PART_A, ...PART_X]
 
 applyParts(BEATS, [
   ["real", "Maps and scale"],
   ["lay", "Measuring on a map"],
+  ["path", "From real life to the map"],
   ["ratio", "The scale as a ratio"],
-  ["brg-q", "Measuring a bearing"],
-  ["c-q", "Drawing a bearing"],
   ["x1", "Exam questions"],
 ])
-

@@ -16,6 +16,7 @@ import Pyth3dLesson from "./three-d/Pyth3dLesson"
 import Angles3dLesson from "./three-d/Angles3dLesson"
 import BearingsLesson from "./bearings/BearingsLesson"
 import ScaleLesson from "./bearings/ScaleLesson"
+import DrawingBearingsLesson from "./bearings/DrawingBearingsLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -110,9 +111,15 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
   },
   "scale-drawings": {
     title: "Scale drawings",
-    description: "Lay a ruler on a map and turn its length into the real one, write a scale as a ratio, and measure and draw bearings with a protractor.",
+    description: "Lay a ruler on a map and turn its length into the real one, put a real length onto the map, and write a scale as a ratio.",
     topicHref: "/dashboard/maths/04/03",
     Lesson: ScaleLesson,
+  },
+  "drawing-bearings": {
+    title: "Measuring and drawing bearings",
+    description: "Put a protractor on a map to measure a bearing, deal with bearings past 180°, and find a place from two bearings by drawing both lines.",
+    topicHref: "/dashboard/maths/04/03",
+    Lesson: DrawingBearingsLesson,
   },
   "why-trig-works": {
     title: "Why trigonometry works",
