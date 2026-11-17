@@ -7,6 +7,7 @@ import { type Vec, add, sub, mul } from "../geometry"
 import {
   type Scene, type Layout, CHALK, GREEN, YELLOW, BLUE, QUIET,
   ptS, toScreen, dirS, arcPts, rayEnd, northPx, norm, brgText, layout, arcSpot,
+  rulerGeom, protGeom, lensGeom, inLens, pageRect,
 } from "./scene"
 
 /**
@@ -27,6 +28,7 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
           </filter>
         </defs>
         <g opacity={vis("board")}>
+          <Page S={S} L={L} />
           <Clock S={S} />
           <g opacity={vis("fig")}>
             <Norths S={S} L={L} />
@@ -41,6 +43,10 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
             <Dots S={S} />
           </g>
           <Targets S={S} L={L} />
+          <Along S={S} />
+          <RulerTool S={S} />
+          <ProtTool S={S} L={L} />
+          <Lens S={S} L={L} />
         </g>
       </svg>
       <Labels S={S} />
@@ -62,6 +68,125 @@ function head(tip: Vec, d: Vec, size = 9): string {
   const b = sub(tip, mul(d, size))
   const l = add(b, mul(n, size * 0.55)), r = sub(b, mul(n, size * 0.55))
   return `M ${l[0]} ${l[1]} L ${tip[0]} ${tip[1]} L ${r[0]} ${r[1]} Z`
+}
+
+/** A sheet of paper under the drawing: the map is drawn on it. */
+function Page({ S, L }: { S: Scene; L: Layout }) {
+  const r = pageRect(S, L)
+  if (!r) return null
+  return <rect x={r.x0} y={r.y0} width={r.x1 - r.x0} height={r.y1 - r.y0} rx={6} fill={CHALK} fillOpacity={0.035} stroke={CHALK} strokeOpacity={0.3} strokeWidth={1.4} opacity={S.vals.pageOp ?? 1} />
+}
+
+/** Marks across a line at every step, the lit pieces glowing. */
+function Along({ S }: { S: Scene }) {
+  const A = S.along
+  if (!A || !S.P[A.a] || !S.P[A.b]) return null
+  const a = ptS(S, A.a), b = ptS(S, A.b), l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1
+  const e: Vec = [(b[0] - a[0]) / l, (b[1] - a[1]) / l], n: Vec = [-e[1], e[0]]
+  const f = S.fitD ?? S.fit, step = A.step * (f?.u ?? 30)
+  const count = Math.round(l / step)
+  const out: React.ReactNode[] = []
+  for (let k = 0; k < A.lit && k < count; k++) {
+    const p = add(a, mul(e, step * k)), q = add(a, mul(e, step * (k + 1)))
+    out.push(<line key={`ag${k}`} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={BLUE} strokeWidth={5} strokeLinecap="round" strokeOpacity={0.55} />)
+  }
+  for (let k = 0; k <= count; k++) {
+    const p = add(a, mul(e, step * k))
+    out.push(<line key={`at${k}`} x1={p[0] - n[0] * 7} y1={p[1] - n[1] * 7} x2={p[0] + n[0] * 7} y2={p[1] + n[1] * 7} stroke={CHALK} strokeWidth={1.8} strokeLinecap="round" />)
+  }
+  return <g>{out}</g>
+}
+
+/** The ruler's ticks along its edge: a long one each cm, a middle one each half, a short one each mm. */
+function rulerTicks(S: Scene, key: string, scale = 1): React.ReactNode[] {
+  const G = rulerGeom(S), R = S.ruler!
+  const out: React.ReactNode[] = []
+  for (let i = 0; i <= R.len * 10; i++) {
+    const p = add(G.Z, mul(G.e, (i / 10) * G.u))
+    const t = i % 10 === 0 ? 14 : i % 5 === 0 ? 10 : 6
+    const q = add(p, mul(G.n, t))
+    out.push(<line key={`${key}${i}`} x1={p[0]} y1={p[1]} x2={q[0]} y2={q[1]} stroke={CHALK} strokeOpacity={i % 10 === 0 ? 0.95 : 0.7} strokeWidth={(i % 10 === 0 ? 1.4 : 1) / scale} />)
+  }
+  return out
+}
+
+/** The ruler: a see-through strip, its ticks on the measuring edge; its end turns it; a pencil slides along it. */
+function RulerTool({ S }: { S: Scene }) {
+  const R = S.ruler
+  if (!R) return null
+  const G = rulerGeom(S)
+  const out: React.ReactNode[] = []
+  out.push(<polygon key="body" points={G.body.map(p => p.join(",")).join(" ")} fill={CHALK} fillOpacity={0.08} stroke={CHALK} strokeOpacity={0.4} strokeWidth={1.2} strokeLinejoin="round" />)
+  out.push(...rulerTicks(S, "t"))
+  if (R.pen !== null && G.penAt) {
+    out.push(<line key="drawn" x1={G.Z[0]} y1={G.Z[1]} x2={G.penAt[0]} y2={G.penAt[1]} stroke={BLUE} strokeWidth={3} strokeLinecap="round" />)
+    out.push(handle(G.penAt, "pen", S.drag?.kind === "rulerPen"))
+  }
+  if (R.turn) out.push(handle(G.turnAt, "turn", S.drag?.kind === "rulerTurn"))
+  return <g>{out}</g>
+}
+
+/**
+ * The protractor: a see-through half circle with a tick at every degree; its
+ * two rings of numbers are labels (the one to read lights up). Its 0 end
+ * turns it; a pencil marks a point on its edge.
+ */
+function ProtTool({ S, L }: { S: Scene; L: Layout }) {
+  const P = S.prot
+  if (!P) return null
+  const G = protGeom(S, L)
+  const out: React.ReactNode[] = []
+  const rim = arcPts(G.C, P.rot, 180, G.R)
+  out.push(<path key="body" d={path(rim) + " Z"} fill={CHALK} fillOpacity={0.07} stroke={CHALK} strokeOpacity={0.45} strokeWidth={1.3} strokeLinejoin="round" />)
+  for (let k = 0; k <= 180; k++) {
+    const d = dirS(P.rot + k), t = k % 10 === 0 ? 11 : k % 5 === 0 ? 8 : 4
+    const a = add(G.C, mul(d, G.R)), b = add(G.C, mul(d, G.R - t))
+    out.push(<line key={`pt${k}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={CHALK} strokeOpacity={k % 10 === 0 ? 0.9 : 0.6} strokeWidth={k % 10 === 0 ? 1.3 : 0.9} />)
+  }
+  // the centre: a small cross where the two ends' line crosses the middle
+  out.push(<path key="cross" d={`M ${G.C[0] - 7} ${G.C[1]} L ${G.C[0] + 7} ${G.C[1]} M ${G.C[0]} ${G.C[1] - 7} L ${G.C[0]} ${G.C[1] + 7}`} stroke={CHALK} strokeWidth={1.4} transform={`rotate(${P.rot} ${G.C[0]} ${G.C[1]})`} />)
+  if (P.pen !== null && G.penAt) {
+    const m = add(G.C, mul(dirS(P.pen), G.R - 2))
+    out.push(<line key="penline" x1={G.C[0]} y1={G.C[1]} x2={m[0]} y2={m[1]} stroke={YELLOW} strokeOpacity={0.35} strokeWidth={1.4} strokeDasharray="3 5" />)
+    out.push(handle(G.penAt, "ppen", S.drag?.kind === "protPen"))
+  }
+  if (P.turn) out.push(handle(G.turnAt, "pturn", S.drag?.kind === "protTurn"))
+  return <g>{out}</g>
+}
+
+/** A yellow handle with its breathing ring (the ring stops while it is held). */
+function handle(p: Vec, key: string, held: boolean) {
+  return (
+    <g key={key}>
+      {!held && <circle cx={p[0]} cy={p[1]} r={12} fill="none" stroke={YELLOW} strokeWidth={1.6}><animate attributeName="r" values="7;20;7" dur="2s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.8;0;0.8" dur="2s" repeatCount="indefinite" /></circle>}
+      <circle cx={p[0]} cy={p[1]} r={held ? 9 : 7} fill={YELLOW} filter="url(#pl-soft)" />
+    </g>
+  )
+}
+
+/** The reading lens: the far end of the line and the ruler there, close up. */
+function Lens({ S, L }: { S: Scene; L: Layout }) {
+  const lens = lensGeom(S, L)
+  if (!lens) return null
+  const t = `translate(${lens.c[0]} ${lens.c[1]}) scale(${lens.x}) translate(${-lens.at[0]} ${-lens.at[1]})`
+  const toEdge = add(lens.c, mul([(lens.end[0] - lens.c[0]), (lens.end[1] - lens.c[1])], lens.r / (Math.hypot(lens.end[0] - lens.c[0], lens.end[1] - lens.c[1]) || 1)))
+  const segs = S.segs.filter(sg => S.P[sg.a] && S.P[sg.b]).map(sg => { const A = ptS(S, sg.a), B = ptS(S, sg.b); return <line key={`ls${sg.a}${sg.b}`} x1={A[0]} y1={A[1]} x2={B[0]} y2={B[1]} stroke={sg.col ?? CHALK} strokeWidth={2.4 / lens.x} /> })
+  void inLens
+  return (
+    <g>
+      <line x1={lens.end[0]} y1={lens.end[1]} x2={toEdge[0]} y2={toEdge[1]} stroke={CHALK} strokeOpacity={0.35} strokeWidth={1.2} strokeDasharray="3 4" />
+      <defs><clipPath id="pl-lens"><circle cx={lens.c[0]} cy={lens.c[1]} r={lens.r} /></clipPath></defs>
+      <circle cx={lens.c[0]} cy={lens.c[1]} r={lens.r} fill="#0d1216" />
+      <g clipPath="url(#pl-lens)">
+        <g transform={t}>
+          {segs}
+          {rulerTicks(S, "lt", lens.x)}
+          <circle cx={lens.end[0]} cy={lens.end[1]} r={4 / lens.x} fill={YELLOW} />
+        </g>
+      </g>
+      <circle cx={lens.c[0]} cy={lens.c[1]} r={lens.r} fill="none" stroke={CHALK} strokeOpacity={0.7} strokeWidth={1.6} />
+    </g>
+  )
 }
 
 /** A faint clock face round a place, its hand going round the way a clock's does. */
@@ -248,7 +373,7 @@ function Labels({ S }: { S: Scene }) {
       {S.labs.map(l => {
         const p = S.labD[l.key] ?? l.at
         return (
-          <div key={l.key} className={`${styles.label} ${l.pulse ? styles.pulse : ""}`} style={{ ...place(p), color: l.col, fontSize: l.size, opacity: l.op }}>
+          <div key={l.key} data-k={l.key} className={`${styles.label} ${l.pulse ? styles.pulse : ""}`} style={{ ...place(p), color: l.col, fontSize: l.size, opacity: l.op }}>
             {l.word ? <span style={{ fontFamily: "inherit", letterSpacing: 0.2 }}>{l.tex}</span> : <Tex tex={l.tex} />}
           </div>
         )

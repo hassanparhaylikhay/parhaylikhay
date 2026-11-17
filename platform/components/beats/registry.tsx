@@ -15,6 +15,7 @@ import AreaLesson from "./sine-rule/AreaLesson"
 import Pyth3dLesson from "./three-d/Pyth3dLesson"
 import Angles3dLesson from "./three-d/Angles3dLesson"
 import BearingsLesson from "./bearings/BearingsLesson"
+import ScaleLesson from "./bearings/ScaleLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -106,6 +107,12 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Turn a line from North to see what a bearing is, write it with three figures, and find the bearing back by turning round.",
     topicHref: "/dashboard/maths/04/03",
     Lesson: BearingsLesson,
+  },
+  "scale-drawings": {
+    title: "Scale drawings",
+    description: "Lay a ruler on a map and turn its length into the real one, write a scale as a ratio, and measure and draw bearings with a protractor.",
+    topicHref: "/dashboard/maths/04/03",
+    Lesson: ScaleLesson,
   },
   "why-trig-works": {
     title: "Why trigonometry works",

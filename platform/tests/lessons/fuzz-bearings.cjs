@@ -5,13 +5,14 @@
 // and nothing on screen says NaN.
 const puppeteer = require("puppeteer-core")
 const { CHROME, HOST } = require("./lib.cjs")
-const BASE = process.env.BASE || `${HOST}/learn/bearings`
+const LESSON = process.env.LESSON || "bearings"
+const BASE = process.env.BASE || `${HOST}/learn/${LESSON}`
 const ROUNDS = +(process.env.ROUNDS || 1)
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 const SIZES = [[1440, 900], [1280, 720], [390, 844], [360, 640], [820, 1180], [1024, 600]]
 let seed = +(process.env.SEED || 7)
 const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647)
-const KEYS = ["0", "1", "2", "5", "7", "9", "Backspace"]
+const KEYS = ["0", "1", "2", "5", "7", "9", ".", "Backspace"]
 
 ;(async () => {
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ["--no-sandbox"] })
@@ -25,10 +26,12 @@ const KEYS = ["0", "1", "2", "5", "7", "9", "Backspace"]
       const S = window.__beatScene
       const out = []
       const els = [...document.querySelectorAll("[class*=label]")].filter(el => +(el.style.opacity || 1) > 0.5 && el.textContent.trim())
-      const boxes = els.map(el => ({ t: el.textContent.trim(), b: el.getBoundingClientRect() }))
+      const boxes = els.map(el => ({ t: el.textContent.trim(), b: el.getBoundingClientRect(), tool: /^(RU|PO|PI|RL)-/.test(el.dataset.k || "") }))
       for (const { t, b } of boxes) if (b.width && (b.left < -4 || b.right > S.w + 4 || b.top < 0 || b.bottom > S.h)) out.push("label off screen: " + t)
       // two labels on top of each other (more than a third of the smaller one covered)
       for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+        // a ruler or protractor laid on the drawing covers what is under it, as on paper
+        if (boxes[i].tool !== boxes[j].tool) continue
         const a = boxes[i].b, c = boxes[j].b
         const w = Math.min(a.right, c.right) - Math.max(a.left, c.left), h = Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top)
         if (w > 0 && h > 0 && w * h > 0.34 * Math.min(a.width * a.height, c.width * c.height)) out.push(`labels overlap: ${boxes[i].t} / ${boxes[j].t}`)
@@ -95,6 +98,7 @@ const KEYS = ["0", "1", "2", "5", "7", "9", "Backspace"]
             drags: S.dragPts.map(n => A.ptS(S, n)),
             arcs: (S.tapArcs || []).map(a => A.arcAt(S, a)).filter(Boolean),
             choices: !!document.querySelector("[class*=choices] button"),
+            ruler: A.rulerAt(S), prot: A.protAt(S), rulerMove: !!S.ruler && S.ruler.move, protMove: !!S.prot && S.prot.move,
           }
         })
         const R = () => [st.w * (0.1 + 0.8 * rnd()), st.h * (0.2 + 0.55 * rnd())]
@@ -106,6 +110,19 @@ const KEYS = ["0", "1", "2", "5", "7", "9", "Backspace"]
           const bs = await page.$$("[class*=choices] button")
           const b = await any(bs).boundingBox()
           await tap([b.x + b.width / 2, b.y + b.height / 2], touch)
+        } else if (st.ruler && rnd() < 0.8) {
+          // the ruler: carry it, turn it by its end, or slide its pencil
+          const r = st.ruler
+          const pick = rnd()
+          if (r.pen && pick < 0.4) await drag(r.pen, R(), touch)
+          else if (st.rulerMove && pick < 0.7) await drag(r.body, R(), touch)
+          else await drag(r.turn, R(), touch)
+        } else if (st.prot && rnd() < 0.8) {
+          const p = st.prot
+          const pick = rnd()
+          if (p.pen && pick < 0.4) await drag(p.pen, R(), touch)
+          else if (st.protMove && pick < 0.7) await drag([p.c[0] + 4, p.c[1] + 4], R(), touch)
+          else await drag(p.turn, R(), touch)
         } else if (st.rays.length && rnd() < 0.8) {
           // turn a line round its place
           const r = any(st.rays), R0 = Math.hypot(r.end[0] - r.c[0], r.end[1] - r.c[1]), b = rnd() * Math.PI * 2
@@ -125,7 +142,7 @@ const KEYS = ["0", "1", "2", "5", "7", "9", "Backspace"]
       }
     }
   }
-  console.log(`bearings: ${checks} checks, ${bad.length} problems`)
+  console.log(`${LESSON}: ${checks} checks, ${bad.length} problems`)
   for (const b of bad.slice(0, 40)) console.log("  " + b)
   console.log("errors:", errs.length ? errs.slice(0, 5).join(" | ") : "none")
   await browser.close()

@@ -92,6 +92,26 @@ export interface Marker { id: string; at: Vec; heading: number; col?: string; gh
 /** A curved arrow round a marker: it turned from one heading to another. */
 export interface Curl { at: string; from: number; to: number; col: string; r?: number }
 
+/**
+ * A ruler lying on the drawing: its 0 at `zero` (world, drawing cm), its
+ * measuring edge running along a bearing, `len` cm long. `on` is the place
+ * its 0 has clicked onto, `along` the place its edge points at; `pen` a
+ * pencil point slid along its edge (cm), for drawing a length.
+ */
+export interface Ruler { zero: Vec; dir: number; len: number; on: string | null; along: string | null; pen: number | null; turn: boolean; move: boolean; penAt?: number }
+
+/**
+ * A protractor: its centre at `c` (world), the 0 end of its outer scale
+ * pointing along bearing `rot`, its half circle running clockwise from there
+ * through 180°. The inner scale reads the other way. `on` is the place its
+ * centre has clicked onto; `pen` a pencil mark on its edge (a bearing);
+ * `lit` the scale to read (the one that starts at 0 on North).
+ */
+export interface Prot { c: Vec; rot: number; on: string | null; pen: number | null; lit: "outer" | "inner" | null; turn: boolean; move: boolean; magnets: number[]; penAt?: number }
+
+/** Marks along a line at every `step` (world units), each piece labelled; `lit` pieces glow. */
+export interface Along { a: string; b: string; step: number; tex?: string; under?: string; lit: number }
+
 /** A timed piece of choreography; acts play one after another. */
 export interface Act { dur: number; begin?: (S: Scene) => void; run?: (S: Scene, e: number, t: number) => void; end?: (S: Scene) => void }
 
@@ -107,13 +127,21 @@ export interface CalcInput {
   slips?: { v: number; say: string }[]
   typed?: string
   fresh?: boolean
+  /** a decimal number may be typed */
+  dec?: boolean
+  /** a measured answer: right within this much; "Close" within `near` */
+  tol?: number
+  near?: number
+  nearSay?: string
   onRight?: (S: Scene) => void
 }
 
-export type Mode = "none" | "tapPoint" | "tapArc"
+export type Mode = "none" | "tapPoint" | "tapArc" | "tapAny"
 
 export type Drag =
   | { kind: "ray"; id: string; last: number; moved: number }
+  | { kind: "ruler" | "prot"; off: Vec; moved: number }
+  | { kind: "rulerTurn" | "rulerPen" | "protTurn" | "protPen"; moved: number }
   | { kind: "point"; n: string; off: Vec; moved: number }
   | { kind: "pan"; start: Vec; moved: number }
 
@@ -170,6 +198,8 @@ export interface Scene {
   onPoint: ((S: Scene, n: string) => void) | null
   tapArcs: string[] | null
   onArc: ((S: Scene, id: string) => void) | null
+  /** a tap anywhere (where two lines cross, with no ring to give it away) */
+  onTap: ((S: Scene, p: Vec) => void) | null
 
   eq: EqBoard
   eqFn: ((S: Scene) => ENode | null) | null
@@ -194,6 +224,15 @@ export interface Scene {
   vals: Record<string, number>
   /** numbers carried from beat to beat (where the student left the line) */
   keep: Record<string, number>
+  ruler: Ruler | null
+  prot: Prot | null
+  /** a sheet of paper under the drawing (world rect), and what is written at its corner */
+  page: { x0?: number; y0?: number; x1?: number; y1?: number; caption?: string } | null
+  along: Along | null
+  /** the view holds where it is (so a drawing can be seen to shrink) */
+  holdFit: boolean
+  /** the keypad's keys (null: digits only) */
+  keyRows: string[][] | null
   touched: string | null
   flashGood: number
   note: { text: string; until: number; tone: "wrong" | "calm" } | null
@@ -208,10 +247,11 @@ export function createScene(): Scene {
     segs: [], rays: [], arcs: [], markers: [], curls: [], clock: null, rose: null, readout: null,
     magnets: [], dragPts: [], dragRing: null, turned: 0,
     fitPts: [], fitPad: 1, fit: null, fitD: null,
-    tapPoints: null, onPoint: null, tapArcs: null, onArc: null,
+    tapPoints: null, onPoint: null, tapArcs: null, onArc: null, onTap: null,
     eq: createBoard(), eqFn: null, eqRoom: { v: 0, t: 0 }, input: null, choice: null,
     acts: [], act: null, tick: null, timers: [], vis, labs: [], labD: {}, labOff: {}, labSide: {}, walkTex: null,
     drag: null, touch: false, got: new Set(), vals: {}, keep: {}, touched: null, flashGood: 0, note: null,
+    ruler: null, prot: null, page: null, along: null, holdFit: false, keyRows: null,
   }
 }
 
@@ -249,13 +289,14 @@ export function layout(S: Scene): Layout {
   const readSize = compact ? 30 : 38
   let y = h - (compact ? 80 : 94)
   let keypadTop = y
-  const rows = 2
+  const rows = S.keyRows?.length ?? 2
+  const cols = S.keyRows ? Math.max(...S.keyRows.map(r => r.length)) : 6
   const padH = rows * 46 + (rows - 1) * 8
   const beside = on(S, "keypad") && w >= 960
   const side = compact ? 16 : 28
   let midX = w / 2, eqW = w, keypadCx: number | undefined
   if (beside) {
-    const padW = 6 * 46 + 5 * 8
+    const padW = cols * 46 + (cols - 1) * 8
     const x1 = w - side - 12, x0 = x1 - padW
     keypadCx = (x0 + x1) / 2
     keypadTop = y - padH - 4
@@ -499,7 +540,68 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       out.push({ key: `RA-${r.id}`, tex, col: BLUE, at: arcLabelAt(c, 0, sw, L.arcPx * 1.15, size, tex), anchor: c, size, op: S.vis.marks.v })
     }
   }
-  return unclash(out)
+  toolLabels(S, L, out)
+  // the word North under the protractor is covered by it (its line still shows through)
+  if (S.prot) {
+    const G = protGeom(S, L)
+    for (let i = out.length - 1; i >= 0; i--) if (out[i].key.startsWith("NW-") && dist(out[i].at, G.C) < G.R + out[i].size) out.splice(i, 1)
+  }
+  const lens = S.ruler ? lensGeom(S, L) : null
+  return unclash(lens ? out.filter(l => l.key.startsWith("RL-") || dist(l.at, lens.c) > lens.r + l.size * 0.4) : out)
+}
+
+/** The numbers on the ruler and the protractor, in the lens, on the page, and along a line. */
+function toolLabels(S: Scene, L: Layout, all: Lab[]) {
+  const small = L.compact ? 11 : 13
+  // a tool can reach past the edge of the screen: its numbers there are not drawn
+  const out = { push: (l: Lab) => { if (l.at[0] > 6 && l.at[0] < S.w - 6 && l.at[1] > 6 && l.at[1] < S.h - 6) all.push(l) } }
+  if (S.ruler) {
+    const G = rulerGeom(S)
+    for (let k = 0; k <= S.ruler.len; k++) {
+      const q = add(add(G.Z, mul(G.e, k * G.u)), mul(G.n, 15 + small * 0.6))
+      out.push({ key: `RU-${k}`, tex: String(k), col: CHALK, at: q, anchor: q, size: small, op: 0.9 })
+    }
+    const lens = lensGeom(S, L)
+    if (lens) {
+      // the cm numbers the lens shows, bigger
+      for (let k = Math.floor(lens.read - 0.6); k <= Math.ceil(lens.read + 0.6); k++) {
+        if (k < 0 || k > S.ruler.len) continue
+        const q = inLens(lens, add(add(G.Z, mul(G.e, k * G.u)), mul(G.n, 15 + small * 0.6)))
+        if (dist(q, lens.c) > lens.r - small * 0.9) continue
+        out.push({ key: `RL-${k}`, tex: String(k), col: CHALK, at: q, anchor: q, size: small + 6, op: 1 })
+      }
+    }
+  }
+  if (S.prot) {
+    const G = protGeom(S, L)
+    const P = S.prot
+    const col = (scale: "outer" | "inner") => (P.lit === null ? CHALK : P.lit === scale ? BLUE : QUIET)
+    for (let k = 0; k <= 180; k += 10) {
+      const d = dirS(P.rot + k)
+      const qo = add(G.C, mul(d, G.R - small * 1.55)), qi = add(G.C, mul(d, G.R - small * 3.0))
+      out.push({ key: `PO-${k}`, tex: String(k), col: col("outer"), at: qo, anchor: qo, size: small - 1, op: P.lit === "inner" ? 0.55 : 1 })
+      out.push({ key: `PI-${k}`, tex: String(180 - k), col: col("inner"), at: qi, anchor: qi, size: small - 2, op: P.lit === "outer" ? 0.55 : 0.9 })
+    }
+  }
+  const pr = pageRect(S, L)
+  if (S.page?.caption && pr) {
+    const at: Vec = [pr.x1 - labelWidth(S.page.caption, small + 1) * 0.55 - 10, pr.y1 - small * 1.2]
+    out.push({ key: "PG", tex: S.page.caption, col: CHALK, at, anchor: at, size: small + 1, op: 0.85 })
+  }
+  const A = S.along
+  if (A && S.P[A.a] && S.P[A.b] && A.tex) {
+    const a = ptS(S, A.a), b = ptS(S, A.b)
+    const l = dist(a, b), e = mul(sub(b, a), 1 / (l || 1))
+    const f = S.fitD ?? S.fit, stepPx = A.step * (f?.u ?? 30)
+    let nrm: Vec = [e[1], -e[0]]
+    if (nrm[1] > 0) nrm = mul(nrm, -1)
+    for (let k = 0; k < A.lit; k++) {
+      const m = add(a, mul(e, stepPx * (k + 0.5)))
+      const q = add(m, mul(nrm, small * 1.5))
+      out.push({ key: `AL-${k}`, tex: A.tex, col: BLUE, at: q, anchor: q, size: small, op: 1 })
+      if (A.under) { const q2 = sub(m, mul(nrm, small * 1.5)); out.push({ key: `AU-${k}`, tex: A.under, col: CHALK, at: q2, anchor: q2, size: small, op: 1 }) }
+    }
+  }
 }
 
 /**
@@ -513,7 +615,7 @@ function unclash(labs: Lab[]): Lab[] {
     return { x0: l.at[0] - w / 2, x1: l.at[0] + w / 2, y0: l.at[1] - l.size * 0.62, y1: l.at[1] + l.size * 0.62 }
   }
   const hit = (a: ReturnType<typeof box>, b: ReturnType<typeof box>) => a.x0 < b.x1 && b.x0 < a.x1 && a.y0 < b.y1 && b.y0 < a.y1
-  const fixed = labs.filter(l => l.key.startsWith("L-") || l.key.startsWith("NW-"))
+  const fixed = labs.filter(l => !l.key.startsWith("A-") && !l.key.startsWith("RA-") && !l.key.startsWith("S-"))
   const placed = [...fixed]
   for (const l of labs) {
     if (fixed.includes(l)) continue
@@ -572,7 +674,7 @@ export function step(S: Scene, dt: number) {
 
   const L = layout(S)
   // the view holds still while a place is being dragged (else it would slide away under the finger)
-  if (S.drag?.kind !== "point" || !S.fit) S.fit = fitFor(S, L)
+  if ((S.drag?.kind !== "point" && !S.holdFit) || !S.fit) S.fit = fitFor(S, L)
   if (!S.fitD) S.fitD = { ...S.fit, c: [...S.fit.c] as Vec }
   const ff = k(0.1)
   const A = S.fitD, B = S.fit
@@ -650,6 +752,7 @@ export function resetBeat(S: Scene) {
   S.onPoint = null
   S.tapArcs = null
   S.onArc = null
+  S.onTap = null
   S.eqFn = null
   S.eq.goneTo = {}
   S.eq.goneFade = {}
@@ -665,6 +768,12 @@ export function resetBeat(S: Scene) {
   S.vals = {}
   S.touched = null
   S.note = null
+  S.ruler = null
+  S.prot = null
+  S.page = null
+  S.along = null
+  S.holdFit = false
+  S.keyRows = null
 }
 
 /** Set the places for a board (old ones not named go). */
@@ -710,9 +819,146 @@ export function pick(S: Scene, k: number) {
   ch.onPick?.(S, k, false)
 }
 
+// ── the ruler and the protractor ─────────────────────────────────────────
+
+/**
+ * The sheet of paper on the screen: a set rectangle (world), or wrapped round
+ * the fitted places with room for their North arrows and names.
+ */
+export function pageRect(S: Scene, L = layout(S)): { x0: number; y0: number; x1: number; y1: number } | null {
+  const pg = S.page
+  if (!pg) return null
+  if (pg.x0 !== undefined && pg.y0 !== undefined && pg.x1 !== undefined && pg.y1 !== undefined) {
+    const a = toScreen(S, [pg.x0, pg.y1]), b = toScreen(S, [pg.x1, pg.y0])
+    return { x0: a[0], y0: a[1], x1: b[0], y1: b[1] }
+  }
+  const P = S.fitPts.filter(n => S.P[n]).map(n => toScreen(S, S.P[n]))
+  if (!P.length) return null
+  const f = S.fitD ?? S.fit, pad = S.fitPad * (f?.u ?? 30)
+  const m = L.labelSize * 1.4
+  const top = S.norths.length && S.northLen === null ? northPx(S, L) + L.labelSize * 1.3 : m
+  const xs = P.map(p => p[0]), ys = P.map(p => p[1])
+  return { x0: Math.min(...xs) - pad - m, y0: Math.min(...ys) - pad - top, x1: Math.max(...xs) + pad + m, y1: Math.max(...ys) + pad + m + L.labelSize }
+}
+
+/** How much the reading lens magnifies. */
+export const LENS_X = 2.4
+
+/**
+ * The reading lens: when the ruler lies along a line with its 0 on one end,
+ * a round window shows the other end close up, so the reading is easy on a
+ * phone. It sits off to the side of the ruler, inside the board.
+ */
+export function lensGeom(S: Scene, L = layout(S)) {
+  const R = S.ruler
+  if (!R || !R.on || !R.along || S.drag?.kind === "ruler" || S.drag?.kind === "rulerTurn") return null
+  const G = rulerGeom(S)
+  const end = ptS(S, R.along)
+  const r = L.compact ? 46 : 58
+  const small = L.compact ? 11 : 13
+  // what the lens shows: the end and the nearest cm number, both in view, as big as they fit
+  const read = dist(G.Z, end) / G.u
+  const k = clamp(Math.round(read), 0, R.len)
+  const num = add(add(G.Z, mul(G.e, k * G.u)), mul(G.n, 15 + small * 0.6))
+  const at = lerpV(end, num, 0.5)
+  const x = clamp((r - small * 1.2) / Math.max(1, dist(end, num) / 2), 1.5, LENS_X)
+  const b = L.board
+  const np = northPx(S, L)
+  // nothing it would hide: a North arrow, a place, the end itself
+  const clear = (c: Vec) =>
+    S.norths.every(n => { const p = ptS(S, n); return Math.abs(c[0] - p[0]) > r + 18 || c[1] > p[1] + r + 6 || c[1] < p[1] - np - r - 24 }) &&
+    Object.keys(S.names).every(n => !S.P[n] || dist(c, ptS(S, n)) > r + 16)
+  const fits = (c: Vec) => c[0] - r > b.x0 - 4 && c[0] + r < b.x1 + 4 && c[1] - r > b.y0 - 4 && c[1] + r < b.y1 + 4
+  const tries: Vec[] = []
+  for (const ang of [135, 225, 45, 315, 180, 90, 270, 0]) for (const k of [1.9, 2.5]) tries.push(add(end, mul(dirS(ang), r * k)))
+  const c = tries.find(q => fits(q) && clear(q)) ?? tries.find(fits) ?? tries[0]
+  return { c, r, at, end, read, x }
+}
+
+/** A screen point as the lens shows it. */
+export const inLens = (lens: { c: Vec; at: Vec; x: number }, q: Vec): Vec => add(lens.c, mul(sub(q, lens.at), lens.x))
+
+/** The ruler on the screen: its 0, the way its edge runs, its body's side, its size. */
+export function rulerGeom(S: Scene) {
+  const R = S.ruler!
+  const f = S.fitD ?? S.fit
+  const u = f?.u ?? 30
+  const Z = toScreen(S, R.zero)
+  const e = dirS(R.dir)
+  // the body lies to the left of the edge, as you look along it
+  const n: Vec = [e[1], -e[0]]
+  const W = clamp(u * 1.15, 40, 62)
+  const pad = 12
+  const end = add(Z, mul(e, R.len * u))
+  const body = [sub(Z, mul(e, pad)), add(end, mul(e, pad)), add(add(end, mul(e, pad)), mul(n, W)), add(sub(Z, mul(e, pad)), mul(n, W))]
+  // the turning handle sits at the far end, or as far along as is still on the screen (always in reach)
+  const m = 26
+  let t = R.len
+  for (const [lo, hi, z, d] of [[m, S.w - m, Z[0], e[0]], [m + 100, S.h - m, Z[1], e[1]]] as const) {
+    if (d > 1e-6) t = Math.min(t, (hi - z) / (d * u))
+    if (d < -1e-6) t = Math.min(t, (lo - z) / (d * u))
+  }
+  t = clamp(t, Math.min(1.5, R.len), R.len)
+  const turnT = t
+  return { Z, e, n, W, u, end, body, turnT, turnAt: add(add(Z, mul(e, turnT * u)), mul(n, W * 0.5)), penAt: R.pen === null ? null : add(Z, mul(e, R.pen * u)) }
+}
+
+/** The protractor on the screen: its centre, radius, and where a bearing meets its edge. */
+export function protGeom(S: Scene, L = layout(S)) {
+  const P = S.prot!
+  const C = toScreen(S, P.c)
+  // big enough on a phone for its two rings of numbers to stay apart
+  const R = clamp(Math.min(S.w, S.h) * (S.w < 560 ? 0.33 : 0.2), 110, 150)
+  void L
+  return { C, R, turnAt: add(C, mul(dirS(P.rot), R + 14)), penAt: P.pen === null ? null : add(C, mul(dirS(P.pen), R + 2)) }
+}
+
+/** Whether a bearing is on the protractor's half circle (clockwise from its 0 end through 180°). */
+const onArc = (P: Prot, b: number) => norm(b - P.rot) <= 180
+
+/** The named place under a screen point, if it is close enough to click onto. */
+function placeNear(S: Scene, q: Vec, px = 18): string | null {
+  let best: string | null = null, bd = Infinity
+  for (const n of Object.keys(S.names)) { if (!S.P[n]) continue; const d = dist(q, ptS(S, n)); if (d < bd) { bd = d; best = n } }
+  return best && bd < px ? best : null
+}
+
+/** After the ruler moves or turns: what its 0 is on, and what its edge points at (clicking onto them). */
+function settleRuler(S: Scene) {
+  const R = S.ruler!
+  const on = placeNear(S, toScreen(S, R.zero), S.touch ? 26 : 18)
+  R.on = on
+  if (on) R.zero = [...S.P[on]] as Vec
+  R.along = null
+  if (!on) return
+  for (const n of Object.keys(S.names)) {
+    if (n === on || !S.P[n]) continue
+    const b = brgOf(S.P[on], S.P[n])
+    if (Math.abs(diff(R.dir, b)) < 3.5) { R.dir = b; R.along = n; return }
+  }
+}
+
+/** After the protractor moves or turns: what its centre is on, and its 0 clicking onto North (either way round). */
+function settleProt(S: Scene) {
+  const P = S.prot!
+  const on = placeNear(S, toScreen(S, P.c), S.touch ? 26 : 18)
+  P.on = on
+  if (on) P.c = [...S.P[on]] as Vec
+  for (const m of P.magnets) if (Math.abs(diff(P.rot, m)) < 4) { P.rot = norm(m); break }
+}
+
 // ── input ────────────────────────────────────────────────────────────────
 
 const tol = (S: Scene) => (S.touch ? 34 : 22)
+
+export function inPoly(p: Vec, P: Vec[]): boolean {
+  let inside = false
+  for (let i = 0, j = P.length - 1; i < P.length; j = i++) {
+    const [xi, yi] = P[i], [xj, yj] = P[j]
+    if ((yi > p[1]) !== (yj > p[1]) && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) inside = !inside
+  }
+  return inside
+}
 
 function pointAt(S: Scene, p: Vec, names: string[]): string | null {
   let best: string | null = null, bd = Infinity
@@ -745,6 +991,23 @@ function turnRay(S: Scene, r: Ray, p: Vec) {
 
 export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
   S.touch = touch
+  const t = tol(S)
+  if (S.prot) {
+    const G = protGeom(S)
+    if (S.prot.pen !== null && G.penAt && dist(p, G.penAt) < t + 14) { S.drag = { kind: "protPen", moved: 0 }; return true }
+    if (S.prot.turn && dist(p, G.turnAt) < t + 12) { S.drag = { kind: "protTurn", moved: 0 }; return true }
+    if (S.prot.move) {
+      const v = sub(p, G.C), d = Math.hypot(v[0], v[1])
+      const b = norm((Math.atan2(v[0], -v[1]) * 180) / Math.PI)
+      if (d < G.R && (d < 24 || onArc(S.prot, b))) { S.drag = { kind: "prot", off: sub(G.C, p), moved: 0 }; return true }
+    }
+  }
+  if (S.ruler) {
+    const G = rulerGeom(S)
+    if (S.ruler.pen !== null && G.penAt && dist(p, G.penAt) < t + 14) { S.drag = { kind: "rulerPen", moved: 0 }; return true }
+    if (S.ruler.turn && dist(p, G.turnAt) < t + 12) { S.drag = { kind: "rulerTurn", moved: 0 }; return true }
+    if (S.ruler.move && inPoly(p, G.body)) { S.drag = { kind: "ruler", off: sub(G.Z, p), moved: 0 }; return true }
+  }
   // the end of a line that turns
   for (const r of S.rays) {
     if (!r.handle) continue
@@ -761,6 +1024,44 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
 export function pointerMove(S: Scene, p: Vec) {
   const d = S.drag
   if (!d) return
+  const L0 = layout(S), keep = (q: Vec): Vec => [clamp(q[0], L0.board.x0, L0.board.x1), clamp(q[1], L0.board.y0, L0.board.y1)]
+  if (d.kind === "ruler" && S.ruler) { d.moved += 1; S.ruler.zero = toWorld(S, keep(add(p, d.off))); settleRuler(S); return }
+  if (d.kind === "rulerTurn" && S.ruler) {
+    d.moved += 1
+    const Z = toScreen(S, S.ruler.zero), G = rulerGeom(S)
+    // the finger holds the end's middle: turn the edge so that point is under it
+    const back = sub(p, mul(G.n, G.W * 0.5))
+    S.ruler.dir = Math.round(norm((Math.atan2(back[0] - Z[0], Z[1] - back[1]) * 180) / Math.PI) * 2) / 2
+    settleRuler(S)
+    return
+  }
+  if (d.kind === "rulerPen" && S.ruler) {
+    d.moved += 1
+    const G = rulerGeom(S)
+    S.ruler.pen = clamp(Math.round((dot(sub(p, G.Z), G.e) / G.u) * 10) / 10, 0, S.ruler.len)
+    // the length asked for clicks on from close by (a finger cannot place a millimetre exactly)
+    if (S.ruler.penAt !== undefined && Math.abs(S.ruler.pen - S.ruler.penAt) <= 0.15) S.ruler.pen = S.ruler.penAt
+    return
+  }
+  if (d.kind === "prot" && S.prot) { d.moved += 1; S.prot.c = toWorld(S, keep(add(p, d.off))); settleProt(S); return }
+  if (d.kind === "protTurn" && S.prot) {
+    d.moved += 1
+    const C = toScreen(S, S.prot.c)
+    S.prot.rot = Math.round(norm((Math.atan2(p[0] - C[0], C[1] - p[1]) * 180) / Math.PI))
+    settleProt(S)
+    return
+  }
+  if (d.kind === "protPen" && S.prot) {
+    d.moved += 1
+    const C = toScreen(S, S.prot.c)
+    const b = Math.round(norm((Math.atan2(p[0] - C[0], C[1] - p[1]) * 180) / Math.PI))
+    // it stays on the half circle
+    if (onArc(S.prot, b)) S.prot.pen = b
+    else S.prot.pen = Math.abs(diff(b, S.prot.rot)) < Math.abs(diff(b, S.prot.rot + 180)) ? norm(S.prot.rot) : norm(S.prot.rot + 180)
+    // the angle asked for clicks on from close by (a degree is a hair's width on a phone)
+    if (S.prot.penAt !== undefined && Math.abs(diff(S.prot.pen, S.prot.penAt)) <= 2.5) S.prot.pen = norm(S.prot.penAt)
+    return
+  }
   if (d.kind === "ray") {
     const r = S.rays.find(x => x.id === d.id)
     if (!r) return
@@ -779,7 +1080,7 @@ export function pointerMove(S: Scene, p: Vec) {
     S.P[d.n] = w
     return
   }
-  d.moved = Math.max(d.moved, dist(p, d.start))
+  if (d.kind === "pan") d.moved = Math.max(d.moved, dist(p, d.start))
 }
 
 export function pointerUp(S: Scene) {
@@ -791,6 +1092,7 @@ export function pointerUp(S: Scene) {
 }
 
 function tapAt(S: Scene, p: Vec) {
+  if (S.mode === "tapAny") { S.onTap?.(S, p); return }
   if (S.mode === "tapPoint" && S.tapPoints) {
     const n = pointAt(S, p, S.tapPoints)
     if (n) S.onPoint?.(S, n)
@@ -818,6 +1120,7 @@ export function typeKey(S: Scene, key: string) {
   if ((inp.state === "wrong" || inp.fresh) && key !== "back") inp.value = ""
   inp.fresh = false
   if (key === "back") inp.value = inp.value.slice(0, -1)
+  else if (key === "." && inp.dec && !inp.value.includes(".") && inp.value.length < (inp.max ?? 3)) inp.value += inp.value ? "." : "0."
   else if (/^\d$/.test(key) && inp.value.length < (inp.max ?? 3)) inp.value += key
   inp.state = "idle"
 }
@@ -826,6 +1129,16 @@ function check(S: Scene) {
   const inp = S.input!
   if (!inp.value) return
   const v = Number(inp.value)
+  if (!Number.isFinite(v)) return
+  // a measured answer: right to the nearest tenth (the drawing is exact), close a little further off
+  if (inp.tol !== undefined && v !== inp.answer && Math.abs(v - inp.answer) <= inp.tol + 1e-9) {
+    inp.state = "right"; S.note = null; S.touched = "eq"; S.flashGood = 1; inp.onRight?.(S); return
+  }
+  if (inp.near !== undefined && Math.abs(v - inp.answer) <= inp.near + 1e-9 && v !== inp.answer) {
+    inp.tries++; inp.state = "wrong"; inp.wrongAt = S.time
+    say(S, inp.nearSay ?? "Close. Look again at where it ends.", "calm", 4)
+    return
+  }
   if (v === inp.answer) {
     // a bearing has three figures: 70 is right, but must be written 070
     if (inp.three && inp.value.length < 3) {

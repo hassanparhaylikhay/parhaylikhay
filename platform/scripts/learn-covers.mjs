@@ -42,6 +42,7 @@ const PICKS = {
   "pythagoras-3d": "stands",
   "angles-3d": "box-shadow-line",
   bearings: "both",
+  "scale-drawings": "read",
 }
 
 /** Figures whose lines run to the board's edges are cropped by hand (1280 × 800 page coordinates). */
