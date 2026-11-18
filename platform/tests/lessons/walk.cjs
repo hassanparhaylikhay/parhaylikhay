@@ -22,7 +22,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
   const btn = () => page.evaluate(() => { const b = document.querySelector("[class*=ctaWrap] button"); return b ? b.textContent.trim() : null })
   const click = async () => { const el = await page.$("[class*=ctaWrap] button"); const b = await el.boundingBox(); await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2) }
   const waitBtn = async (want, ms = 8000) => { const t = Date.now(); while (Date.now() - t < ms) { const b = await btn(); if (b !== null && (want === undefined || b === want)) return true; await sleep(100) } return false }
-  const type = async str => { for (const ch of str) { await page.keyboard.press(ch); await sleep(50) } await page.keyboard.press("Enter"); await sleep(500) }
+  // keypad signs typed on a keyboard: ÷ is /, × is *, √ is r, − is -
+  const KB = { "÷": "/", "×": "*", "√": "r", "−": "-" }
+  const type = async str => { for (const ch of str) { await page.keyboard.press(KB[ch] || ch); await sleep(50) } await page.keyboard.press("Enter"); await sleep(500) }
   const open = async n => {
     await page.goto(`${BASE}?debug&beat=${n}`, { waitUntil: "load" })
     await page.waitForFunction(() => window.__beatScene && window.__beatScene.w > 0 && window.__beatApi)

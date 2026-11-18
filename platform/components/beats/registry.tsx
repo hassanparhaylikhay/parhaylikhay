@@ -18,6 +18,8 @@ import Angles3dLesson from "./three-d/Angles3dLesson"
 import BearingsLesson from "./bearings/BearingsLesson"
 import ScaleLesson from "./bearings/ScaleLesson"
 import DrawingBearingsLesson from "./bearings/DrawingBearingsLesson"
+import SimilarLesson from "./similar/SimilarLesson"
+import SimilarVolLesson from "./similar/SimilarVolLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -127,6 +129,18 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Put a protractor on a map to measure a bearing, deal with bearings past 180°, and find a place from two bearings by drawing both lines.",
     topicHref: "/dashboard/maths/04/03",
     Lesson: DrawingBearingsLesson,
+  },
+  "similar-shapes": {
+    title: "Similar shapes",
+    description: "Grow a triangle to find the scale factor, use it to find a missing length, line up the matching corners, and show two triangles are similar.",
+    topicHref: "/dashboard/maths/04/04",
+    Lesson: SimilarLesson,
+  },
+  "similar-areas-volumes": {
+    title: "Areas and volumes of similar shapes",
+    description: "Grow a square and a cube and count what fits inside, then use the scale factor squared for areas and cubed for volumes, both ways.",
+    topicHref: "/dashboard/maths/04/04",
+    Lesson: SimilarVolLesson,
   },
   "why-trig-works": {
     title: "Why trigonometry works",

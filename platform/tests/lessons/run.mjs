@@ -49,6 +49,8 @@ const LESSONS = [
   ["scale-drawings", "scale-drawings"],
   ["drawing-bearings", "drawing-bearings"],
   ["bearings-triangles", "bearings-triangles"],
+  ["similar", "similar-shapes"],
+  ["similar-vol", "similar-areas-volumes"],
 ]
 
 const noPageErrors = out => !/PAGEERROR/.test(out)
@@ -69,7 +71,7 @@ for (const [short, slug] of LESSONS) {
   JOBS.push({ name: `play-phone:${short}`, script: `play-${short}.cjs`, env: { TOUCH: "1", W: "390", H: "844" }, pass: PASS.play })
   // the trig lessons share one fuzz script, told which lesson by LESSON
   // the 3D lessons share one too
-  const fuzz = short.startsWith("trig") ? { script: "fuzz-trig.cjs", env: { LESSON: slug } } : short.endsWith("-3d") ? { script: "fuzz-3d.cjs", env: { LESSON: slug } } : ["bearings", "scale-drawings", "drawing-bearings"].includes(short) ? { script: "fuzz-bearings.cjs", env: { LESSON: slug } } : { script: `fuzz-${short}.cjs`, env: {} }
+  const fuzz = short.startsWith("trig") ? { script: "fuzz-trig.cjs", env: { LESSON: slug } } : short.endsWith("-3d") ? { script: "fuzz-3d.cjs", env: { LESSON: slug } } : ["bearings", "scale-drawings", "drawing-bearings"].includes(short) ? { script: "fuzz-bearings.cjs", env: { LESSON: slug } } : short.startsWith("similar") ? { script: "fuzz-similar.cjs", env: { LESSON: slug } } : { script: `fuzz-${short}.cjs`, env: {} }
   JOBS.push({ name: `fuzz:${short}`, ...fuzz, pass: short === "triangle" || short === "polygons" ? PASS.fuzzOld : PASS.fuzz })
 }
 JOBS.push({ name: "cards", script: "cards.cjs", env: {}, pass: out => /all good/.test(out) })

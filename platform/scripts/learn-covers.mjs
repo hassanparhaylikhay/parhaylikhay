@@ -45,6 +45,8 @@ const PICKS = {
   "scale-drawings": "read",
   "drawing-bearings": "c-found",
   "bearings-triangles": "b1-diff",
+  "similar-shapes": "times",
+  "similar-areas-volumes": "cube-x27",
 }
 
 /** Figures whose lines run to the board's edges are cropped by hand (1280 × 800 page coordinates). */
@@ -86,7 +88,9 @@ function cover([x0, y0, x1, y1]) {
   h = Math.min(h, H * SCALE)
   const left = Math.max(0, Math.min(W * SCALE - w, (x0 + x1) / 2 - w / 2))
   const top = Math.max(0, Math.min(H * SCALE - h, (y0 + y1) / 2 - h / 2))
-  return { left: Math.round(left), top: Math.round(top), width: Math.round(w), height: Math.round(h) }
+  // rounded down, so the box never runs a pixel past the page
+  const L = Math.floor(left), T = Math.floor(top)
+  return { left: L, top: T, width: Math.min(Math.round(w), W * SCALE - L), height: Math.min(Math.round(h), H * SCALE - T) }
 }
 
 const only = process.argv.slice(2)
