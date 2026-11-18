@@ -607,7 +607,7 @@ function hMove(S: Scene, k: "A" | "B"): Move[] {
 
 // ── parts 5 and 6: questions on a triangle ───────────────────────────────
 
-interface QSpec extends SRQ {
+export interface QSpec extends SRQ {
   P: Record<Corner, Vec>
   names?: Partial<Record<string, string>>
   knownSides: Corner[]
@@ -628,7 +628,7 @@ function q(id: string, o: { A: number; B: number; side: [Corner, number] }, want
 const degTex = (d: number) => `${numText(d, 1)}^\\circ`
 
 /** A question's triangle: what it gives, the unknown in its pair's colour, nothing else. */
-function qBoard(S: Scene, Q: QSpec, o: { extraAngles?: Corner[] } = {}) {
+export function qBoard(S: Scene, Q: QSpec, o: { extraAngles?: Corner[] } = {}) {
   base(S, { P: Q.P })
   allColoured(S)
   if (Q.names) S.names = { ...Q.names }
@@ -656,7 +656,7 @@ function dragLabels(Q: QSpec, extraAngles: Corner[] = []): Record<string, string
 }
 
 /** Tap the angle across from the unknown side (or the side across from the unknown angle). */
-function tapUnknownPair(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
+export function tapUnknownPair(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -687,7 +687,7 @@ function tapUnknownPair(id: string, text: string, Q: QSpec, ex: Corner[] = []): 
 }
 
 /** Find a full pair: tap a known side and the angle across from it, in either order. */
-function tapFullPair(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
+export function tapFullPair(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -739,7 +739,7 @@ function tapFullPair(id: string, text: string, Q: QSpec, ex: Corner[] = []): Bea
 }
 
 /** Drag the numbers off the triangle into the empty rule. */
-function fillBeat(id: string, text: string, Q: QSpec, half: "left" | "right" | "both", ex: Corner[] = []): Beat {
+export function fillBeat(id: string, text: string, Q: QSpec, half: "left" | "right" | "both", ex: Corner[] = []): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -786,7 +786,7 @@ function tapDividing(id: string, text: string, Q: QSpec, ex: Corner[] = []): Bea
 }
 
 /** Make the move (and tap the cancel): x on its own, or sin θ on its own. */
-function moveBeat(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
+export function moveBeat(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -801,7 +801,7 @@ function moveBeat(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
 }
 
 /** Flip the rule: tap the = and both fractions turn over. */
-function flipBeat(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
+export function flipBeat(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -834,7 +834,7 @@ function sideCalc(id: string, text: string, Q: QSpec, ex: Corner[] = [], then?: 
 }
 
 /** An angle, step one: the right side. */
-function sinCalc(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
+export function sinCalc(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -850,7 +850,7 @@ function sinCalc(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
 }
 
 /** An angle, step two: undo the sin (both sides, then the cancel). */
-function undoBeat(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
+export function undoBeat(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -864,7 +864,7 @@ function undoBeat(id: string, text: string, Q: QSpec, ex: Corner[] = []): Beat {
 }
 
 /** An angle, step three: SHIFT sin Ans. */
-function angleCalc(id: string, text: string, Q: QSpec, ex: Corner[] = [], then?: (S: Scene) => void): Beat {
+export function angleCalc(id: string, text: string, Q: QSpec, ex: Corner[] = [], then?: (S: Scene) => void): Beat {
   return {
     id, say: text,
     enter: S => {

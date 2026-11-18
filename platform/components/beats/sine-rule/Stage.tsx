@@ -7,6 +7,7 @@ import { type Vec, add, sub, mul, lerpV, clamp, ease, sectorPath, arcPath, turn 
 import {
   type Scene, type Layout, CORNERS, ENDS, PAIR_COL, CHALK, GREEN, YELLOW, QUIET, RED,
   toScreen, ptS, pt, pairCol, angCol, arcRadius, chipRects, dragAt, swingEnd, heightFoot, heightFrom, heightT, biggestCorner, extraArcGeom, layout, squarePts, sideLen,
+  dirScr, northPx, brgRadius,
 } from "./scene"
 
 /**
@@ -214,6 +215,36 @@ function Extra({ S, op, L }: { S: Scene; op: number; L: Layout }) {
       })}
       {(e.dash ?? []).map(([a, b], k) => ln(at(a), at(b), `d${k}`, { strokeWidth: 1.8, strokeOpacity: 0.6, strokeDasharray: "5 6" }))}
       {(e.rts ?? []).map((r, k) => square(at(r.at), at(r.a), at(r.b), `rt${k}`))}
+      {e.ring && S.P[e.ring.at] && (() => {
+        const C = at(e.ring.at), r = e.ring.r * (S.viewD?.u ?? 1)
+        return <circle key="ring" cx={C[0]} cy={C[1]} r={r} fill="none" stroke={CHALK} strokeOpacity={0.55} strokeWidth={1.8} strokeDasharray="6 7" />
+      })()}
+      {(e.souths ?? []).filter(n => S.P[n]).map(n => { const p = at(n); return ln(p, [p[0], p[1] + northPx(S)], `so${n}`, { strokeWidth: 1.8, strokeOpacity: 0.6, strokeDasharray: "5 6" }) })}
+      {(e.brgs ?? []).filter(a => S.P[a.at]).map(a => {
+        // sampled, so any size (past 180° too) draws right
+        const C = at(a.at), r = brgRadius(S, a), sw = a.sweep * (a.grow ? a.grow.v : 1)
+        const n = Math.max(6, Math.ceil(Math.abs(sw) / 5))
+        const pts: Vec[] = []
+        for (let k = 0; k <= n; k++) pts.push(add(C, mul(dirScr(a.from + (sw * k) / n), r)))
+        const arc = pts.map((p, k) => `${k ? "L" : "M"} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ")
+        const wedge = `M ${C[0]} ${C[1]} ` + pts.map(p => `L ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ") + " Z"
+        return (
+          <g key={`br${a.id}`}>
+            {!a.dash && <path d={wedge} fill={a.col} fillOpacity={Math.abs(a.sweep) > 180 ? 0.05 : 0.09} />}
+            <path d={arc} fill="none" stroke={a.col} strokeWidth={2.2} strokeLinecap="round" strokeDasharray={a.dash ? "4 5" : undefined} />
+            {a.pulse && <path d={wedge} fill={a.col} fillOpacity={0.25} filter="url(#pl-soft)"><animate attributeName="opacity" values="0.15;0.9;0.15" dur="1.4s" repeatCount="indefinite" /></path>}
+          </g>
+        )
+      })}
+      {(e.norths ?? []).filter(n => S.P[n]).map(n => {
+        const p = at(n), tip: Vec = [p[0], p[1] - northPx(S)]
+        return (
+          <g key={`no${n}`}>
+            {ln(p, [tip[0], tip[1] + 6], `nl${n}`, { strokeWidth: 2.2 })}
+            <path d={`M ${tip[0] - 6} ${tip[1] + 10} L ${tip[0]} ${tip[1]} L ${tip[0] + 6} ${tip[1] + 10} Z`} fill={CHALK} />
+          </g>
+        )
+      })}
       {(e.arcs ?? []).map((g, k) => {
         const G = extraArcGeom(S, g, L.labelSize)
         const col = g.col ?? CHALK
@@ -380,8 +411,8 @@ function Labels({ S }: { S: Scene }) {
         const placed = !!S.fill && Object.values(S.fill.filled).includes(l.key)
         const cls = `${styles.label} ${l.pulse ? styles.pulse : ""} ${breathe && l.drag && !placed ? styles.chipBreathe : ""}`
         return (
-          <div key={l.key} className={cls} style={{ ...place(p), color: l.col, fontSize: l.size, opacity: l.op * (placed ? 0.45 : 1), borderRadius: 8, padding: breathe && l.drag && !placed ? "0 4px" : undefined }}>
-            <Tex tex={l.tex} />
+          <div key={l.key} data-k={l.key} className={cls} style={{ ...place(p), color: l.col, fontSize: l.size, opacity: l.op * (placed ? 0.45 : 1), borderRadius: 8, padding: breathe && l.drag && !placed ? "0 4px" : undefined }}>
+            {l.word ? <span style={{ fontFamily: "inherit", letterSpacing: 0.2 }}>{l.tex}</span> : <Tex tex={l.tex} />}
           </div>
         )
       })}

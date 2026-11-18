@@ -177,7 +177,7 @@ const TERM_TEX = `2${c(YELLOW, "a")}${c(BLUE, "b")}\\cos ${c(RED, "C")}`
 // ── questions ────────────────────────────────────────────────────────────
 
 /** A question's board: what it gives, the unknown in its pair's colour. */
-function cqBoard(S: Scene, q: CRQ, o: { quiet?: boolean; hideX?: boolean } = {}) {
+export function cqBoard(S: Scene, q: CRQ, o: { quiet?: boolean; hideX?: boolean } = {}) {
   resetBeat(S)
   setTri(S, q.P)
   S.coloured = new Set(CORNERS)
@@ -200,7 +200,7 @@ function cosLabels(q: CRQ): Record<string, string> {
 }
 
 /** Tap the angle across from the unknown side (it is the one between the two known sides). */
-function tapAngleAcross(id: string, text: string, q: CRQ, quiet = false): Beat {
+export function tapAngleAcross(id: string, text: string, q: CRQ, quiet = false): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -220,7 +220,7 @@ function tapAngleAcross(id: string, text: string, q: CRQ, quiet = false): Beat {
 }
 
 /** Tap the two sides that make angle C, in either order. */
-function tapTwoSides(id: string, text: string, q: CRQ, quiet = false): Beat {
+export function tapTwoSides(id: string, text: string, q: CRQ, quiet = false): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -245,7 +245,7 @@ function tapTwoSides(id: string, text: string, q: CRQ, quiet = false): Beat {
 }
 
 /** Tap the side across from the unknown angle. */
-function tapSideAcross(id: string, text: string, q: CRQ, quiet = false): Beat {
+export function tapSideAcross(id: string, text: string, q: CRQ, quiet = false): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -265,7 +265,7 @@ function tapSideAcross(id: string, text: string, q: CRQ, quiet = false): Beat {
 }
 
 /** Drag labels off the triangle into some places of the rule. */
-function fillCos(id: string, text: string, q: CRQ, slots: string[], quiet = false, pre: string[] = []): Beat {
+export function fillCos(id: string, text: string, q: CRQ, slots: string[], quiet = false, pre: string[] = []): Beat {
   return {
     id, say: text,
     enter: S => {
@@ -279,10 +279,10 @@ function fillCos(id: string, text: string, q: CRQ, slots: string[], quiet = fals
   }
 }
 
-const ALL = ["sx", "ang", "s1", "s2"]
+export const ALL = ["sx", "ang", "s1", "s2"]
 
 /** The side questions' steps after the fill: type the right side, move the square, √ Ans. */
-function sideSteps(p: string, q: CRQ, say1: string, quiet = false, rightNote?: string): Beat[] {
+export function sideSteps(p: string, q: CRQ, say1: string, quiet = false, rightNote?: string): Beat[] {
   const onBoard = (S: Scene) => cqBoard(S, q, { quiet })
   return [
     {
@@ -313,7 +313,7 @@ function sideSteps(p: string, q: CRQ, say1: string, quiet = false, rightNote?: s
 }
 
 /** The angle questions' steps after the fill: the top, the bottom, divide, cos across, SHIFT cos Ans. */
-function angleSteps(p: string, q: CRQ, quiet = false, o: { negNote?: string } = {}): Beat[] {
+export function angleSteps(p: string, q: CRQ, quiet = false, o: { negNote?: string } = {}): Beat[] {
   const onBoard = (S: Scene) => cqBoard(S, q, { quiet })
   const out: Beat[] = [
     { id: `${p}-top`, say: "Work out the top.", enter: S => { onBoard(S); askTop(S, q); look(S, [...QLOOK, "eq", "keypad"]) }, done: inputRight, advanceAfter: 1700, walk: topWalk(q) },
@@ -1082,7 +1082,7 @@ function pairBoardOnly(S: Scene, F: Fig) {
 // ── 7. Exam questions ────────────────────────────────────────────────────
 
 /** Tap the triangle (inside a bigger figure) the question is about; then the rest of the figure goes faint. */
-function tapTriangle(id: string, text: string, q: CRQ, wrong: string): Beat {
+export function tapTriangle(id: string, text: string, q: CRQ, wrong: string): Beat {
   return {
     id, say: text,
     enter: S => {

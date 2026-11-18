@@ -12,6 +12,7 @@ import AngleLesson from "./trigonometry/AngleLesson"
 import SineRuleLesson from "./sine-rule/SineRuleLesson"
 import CosRuleLesson from "./sine-rule/CosRuleLesson"
 import AreaLesson from "./sine-rule/AreaLesson"
+import BearingsTrigLesson from "./sine-rule/BearingsTrigLesson"
 import Pyth3dLesson from "./three-d/Pyth3dLesson"
 import Angles3dLesson from "./three-d/Angles3dLesson"
 import BearingsLesson from "./bearings/BearingsLesson"
@@ -90,6 +91,12 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Find the area of any triangle from two sides and the angle between them, see where ½ab sin C comes from, work backwards to a side, and find the shortest distance to a line.",
     topicHref: "/dashboard/maths/06/03",
     Lesson: AreaLesson,
+  },
+  "bearings-triangles": {
+    title: "Bearings in triangles",
+    description: "Turn two bearings into the angle inside a triangle, and an angle inside a triangle back into a bearing, with the sine and cosine rules.",
+    topicHref: "/dashboard/maths/06/03",
+    Lesson: BearingsTrigLesson,
   },
   "pythagoras-3d": {
     title: "Pythagoras in 3D",

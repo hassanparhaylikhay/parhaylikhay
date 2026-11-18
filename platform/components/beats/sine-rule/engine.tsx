@@ -7,7 +7,7 @@ import { eqCentre } from "../equation"
 import Stage from "./Stage"
 import {
   type Scene, type Layout, createScene, layout, step, resize, pointerDown, pointerMove, pointerUp, typeKey, pick,
-  ptS, toScreen, chipRects, swingEnd, angleLabelAt, sideLabelAt, heightFoot, squarePts, angleSpot,
+  ptS, toScreen, chipRects, swingEnd, angleLabelAt, sideLabelAt, heightFoot, squarePts, angleSpot, dirScr, brgRadius,
 } from "./scene"
 
 /** The sine rule board, for the shared runner (BeatRunner.tsx). */
@@ -23,6 +23,13 @@ export const sineEngine: BeatEngine<Scene, Layout> = {
     sideAt: (S: Scene, c: "A" | "B" | "C") => sideLabelAt(S, c, layout(S).labelSize, "x"),
     footAt: (S: Scene) => toScreen(S, heightFoot(S)),
     arcAt: (S: Scene, c: "A" | "B" | "C") => angleSpot(S, c),
+    /** a bearing arc's middle, a little inside it (for tapping it) */
+    brgAt: (S: Scene, id: string) => {
+      const a = S.extra?.brgs?.find(x => x.id === id)
+      if (!a) return null
+      const C = ptS(S, a.at), d = dirScr(a.from + a.sweep / 2), r = brgRadius(S, a) * 0.8
+      return [C[0] + d[0] * r, C[1] + d[1] * r]
+    },
     squareAt: (S: Scene, c: "A" | "B" | "C") => { const P = squarePts(S, c).map(p => toScreen(S, p)); return [(P[0][0] + P[2][0]) / 2, (P[0][1] + P[2][1]) / 2] },
     regionAt: (S: Scene, id: string) => {
       const r = S.regions?.find(x => x.id === id)

@@ -48,6 +48,7 @@ const LESSONS = [
   ["bearings", "bearings"],
   ["scale-drawings", "scale-drawings"],
   ["drawing-bearings", "drawing-bearings"],
+  ["bearings-triangles", "bearings-triangles"],
 ]
 
 const noPageErrors = out => !/PAGEERROR/.test(out)

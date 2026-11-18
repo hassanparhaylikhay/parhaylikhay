@@ -42,7 +42,14 @@ const VIS_KEYS: VisKey[] = ["board", "tri", "fill", "arcs", "angLabs", "sideLabs
 type Spring = { v: number; t: number }
 
 /** A label laid over the board this frame. */
-export interface Lab { key: string; tex: string; col: string; at: Vec; size: number; op: number; pulse?: boolean; drag?: boolean }
+export interface Lab { key: string; tex: string; col: string; at: Vec; size: number; op: number; pulse?: boolean; drag?: boolean; word?: boolean }
+
+/**
+ * A bearing at a point (or any angle measured clockwise from a bearing):
+ * from bearing `from`, turning clockwise through `sweep` degrees, drawn as
+ * the papers draw it, past 180° too. `r` scales its radius; `grow` sweeps it in.
+ */
+export interface BrgArc { id: string; at: string; from: number; sweep: number; col: string; tex?: string; r?: number; pulse?: boolean; dash?: boolean; grow?: Spring; noTap?: boolean; /** its label inside its own wedge (another arc goes round it) */ inside?: boolean }
 
 export interface Chip { id: string; tex: string; kind: "mul" | "div" | "inv"; fac: Fac }
 
@@ -187,6 +194,14 @@ export interface Scene {
     quiet?: boolean
     /** words or maths written at a point (world units), not on a line */
     texts?: { at: Vec; tex: string; col?: string; pulse?: boolean }[]
+    /** North arrows at these points, printed like the papers' (the word North over the arrowhead) */
+    norths?: string[]
+    /** the North line carried on down past these points, dashed (to South) */
+    souths?: string[]
+    /** bearings and angles turned clockwise from them, at points */
+    brgs?: BrgArc[]
+    /** a dashed circle round a point (world radius): everywhere this far from it */
+    ring?: { at: string; r: number }
   } | null
   /** a faint second triangle, through these points */
   ghost: string[] | null
@@ -243,6 +258,8 @@ export interface Scene {
 
   tapAngles: Corner[] | null
   onAngle: ((S: Scene, c: Corner) => void) | null
+  /** a bearing arc tapped (in tapAngle mode, outside the corner's own angle) */
+  onBrg: ((S: Scene, id: string) => void) | null
   tapSides: Corner[] | null
   onSide: ((S: Scene, c: Corner) => void) | null
   choice: { options: string[]; answer: number; picked: number | null; state: "idle" | "wrong" | "right"; wrongAt: number; guess: boolean; onPick?: (S: Scene, k: number, right: boolean) => void } | null
@@ -278,7 +295,7 @@ export function createScene(): Scene {
     squares: null, bars: null, regions: null, onRegion: null, regionLit: null, keyRows: 3, sidePad: false, sideInside: new Set(), arcsOnly: null, sideAlong: {}, letterDir: {}, slid: [], wrapEq: false, eqRoom: { v: 0, t: 0 }, dragTex: {},
     movable: [], rule: null, lockOnSnap: false, releaseNote: null,
     eq: createBoard(), eqFn: null, alg: null, solve: null, chips: [], onChip: null, tapAtoms: [], onAtom: null, dragAtoms: [], onAtomDrop: null, fill: null,
-    tapAngles: null, onAngle: null, tapSides: null, onSide: null, choice: null,
+    tapAngles: null, onAngle: null, onBrg: null, tapSides: null, onSide: null, choice: null,
     tick: null, timers: [], vis, labs: [], labD: {}, walkTex: null, input: null, drag: null, touch: false, moved: 0, releases: 0,
     snapped: false, locked: false, got: new Set(), touched: null, flashGood: 0, note: null,
   }
@@ -491,10 +508,25 @@ export function inPoly(p: Vec, P: Vec[]): boolean {
 function fitView(S: Scene, L: Layout): View {
   const f = S.frame
   const pad = Math.min(L.compact ? 30 : 46, (L.board.y1 - L.board.y0) * 0.12)
-  const bw = L.board.x1 - L.board.x0 - 2 * pad, bh = L.board.y1 - L.board.y0 - 2 * pad
-  const fw = Math.max(0.05, f.x1 - f.x0), fh = Math.max(0.05, f.y1 - f.y0)
-  const u = Math.max(0.05, Math.min(bw / fw, bh / fh, 420))
-  return { cx: (L.board.x0 + L.board.x1) / 2, cy: (L.board.y0 + L.board.y1) / 2, wx: (f.x0 + f.x1) / 2, wy: (f.y0 + f.y1) / 2, u }
+  // North arrows stand up from their points on the screen: room above for them and the word North
+  const top = S.extra?.norths?.length ? northPx(S) + L.labelSize * 1.2 : 0
+  const bw = L.board.x1 - L.board.x0 - 2 * pad, bh = L.board.y1 - L.board.y0 - 2 * pad - top
+  const fit = (g: Rect) => Math.max(0.05, Math.min(bw / Math.max(0.05, g.x1 - g.x0), bh / Math.max(0.05, g.y1 - g.y0), 420))
+  let g = f
+  let u = fit(g)
+  // a bearing's arc (and its label outside it) needs that much room round its point
+  const arcs = S.extra?.brgs ?? []
+  if (arcs.length) {
+    g = { ...f }
+    for (const a of arcs) {
+      const p = S.P[a.at]
+      if (!p) continue
+      const m = Math.max(0, brgRadius(S, a) + L.labelSize * (a.inside ? 0.6 : 2.0) - pad) / u
+      g = { x0: Math.min(g.x0, p[0] - m), x1: Math.max(g.x1, p[0] + m), y0: Math.min(g.y0, p[1] - m), y1: Math.max(g.y1, p[1] + m) }
+    }
+    u = fit(g)
+  }
+  return { cx: (L.board.x0 + L.board.x1) / 2, cy: (L.board.y0 + L.board.y1 + top) / 2, wx: (g.x0 + g.x1) / 2, wy: (g.y0 + g.y1) / 2, u }
 }
 
 // ── labels ───────────────────────────────────────────────────────────────
@@ -601,12 +633,103 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
     for (const [n, letter] of Object.entries(S.names)) {
       if (!letter || !S.P[n]) continue
       const p = ptS(S, n)
-      const d = S.letterDir[n] ?? sub(p, mid), l = Math.hypot(d[0], d[1]) || 1
+      let d = S.letterDir[n] ?? sub(p, mid)
+      let far = 0
+      // a point with a North arrow or bearings: its letter keeps clear of the arrow, the lines and the bearings' labels
+      if (!S.letterDir[n] && (S.extra?.norths?.includes(n) || S.extra?.brgs?.some(a => a.at === n))) {
+        const lines = linesAt(S, n)
+        const arcs = (S.extra?.brgs ?? []).filter(a => a.at === n && S.P[a.at])
+        const inArcs = (b: number) => arcs.filter(a => normB(b - a.from) <= a.sweep)
+        const gapTo = (b: number) => Math.min(180, ...lines.map(x => Math.abs(((b - x) % 360 + 540) % 360 - 180)))
+        const want = brgOfScr(d)
+        let best = want, score = -Infinity
+        for (let b = 0; b < 360; b += 5) {
+          // clear of every line, not inside a bearing's wedge (its label lives there), near where it would be anyway
+          const v = Math.min(gapTo(b), 60) - (inArcs(b).length ? 40 : 0) - Math.abs(((b - want) % 360 + 540) % 360 - 180) * 0.15
+          if (v > score) { score = v; best = b }
+        }
+        d = dirScr(best)
+        // inside a wedge after all (bearings all the way round): out past the arcs
+        if (inArcs(best).length) far = Math.max(...inArcs(best).map(a => brgRadius(S, a))) + size * 0.8
+      }
+      const l = Math.hypot(d[0], d[1]) || 1
+      if (far) { out.push({ key: `L-${n}`, tex: letter, col: CORNERS.includes(n as Corner) && S.coloured.has(n as Corner) ? PAIR_COL[n as Corner] : CHALK, at: add(p, mul(d, far / l)), size: size + 1, op: S.vis.letters.v }); continue }
       out.push({ key: `L-${n}`, tex: letter, col: CORNERS.includes(n as Corner) && S.coloured.has(n as Corner) ? PAIR_COL[n as Corner] : CHALK, at: add(p, mul(d, (size * 0.95 + 4) / l)), size: size + 1, op: S.vis.letters.v })
+    }
+  }
+  if (S.extra && S.vis.extra.v > 0.01) {
+    // the word North at the top of each North arrow
+    for (const n of S.extra.norths ?? []) {
+      if (!S.P[n]) continue
+      const p = ptS(S, n)
+      out.push({ key: `NW-${n}`, tex: "North", col: CHALK, at: [p[0], p[1] - northPx(S) - size * 0.72], size: size - 3, op: S.vis.extra.v * 0.85, word: true })
+    }
+    const used: Record<string, number[]> = {}
+    for (const a of S.extra.brgs ?? []) {
+      if (!a.tex || !S.P[a.at]) continue
+      const g = a.grow ? a.grow.v : 1
+      if (g < 0.6) continue
+      out.push({ key: `XB-${a.id}`, tex: a.tex, col: a.col, at: brgLabelAt(S, a, size, (used[a.at] ??= [])), size, op: S.vis.extra.v * clamp((g - 0.6) / 0.4, 0, 1), pulse: a.pulse })
     }
   }
   unclash(S, out, size)
   return out
+}
+
+// ── bearings on the figure ───────────────────────────────────────────────
+
+/** The way a bearing points on the screen (North up, clockwise). */
+export const dirScr = (b: number): Vec => [Math.sin(b * RAD), -Math.cos(b * RAD)]
+const normB = (b: number) => ((b % 360) + 360) % 360
+/** The bearing of a screen direction. */
+const brgOfScr = (v: Vec) => normB(Math.atan2(v[0], -v[1]) * DEG)
+/** How long a North arrow is on the screen. */
+export const northPx = (S: Scene) => clamp(Math.min(S.w, S.h) * 0.09, 40, 70)
+/** A bearing arc's radius on the screen. */
+/** (it scales with the screen, so a small figure on a short screen is not swamped by its arcs) */
+export const brgRadius = (S: Scene, a: BrgArc) => clamp(Math.min(S.w, S.h) * 0.048, 17, 40) * (a.r ?? 1)
+
+/** The bearings of the lines that leave a point: its North (and South) line, the triangle's sides, the figure's lines. */
+function linesAt(S: Scene, n: string): number[] {
+  const p = ptS(S, n)
+  const out: number[] = []
+  if (S.extra?.norths?.includes(n)) out.push(0)
+  if (S.extra?.souths?.includes(n)) out.push(180)
+  const pairs: [string, string][] = [...CORNERS.map(c => ENDS[c] as [string, string]), ...(S.extra?.segs ?? []), ...(S.extra?.dash ?? [])]
+  for (const [a, b] of pairs) {
+    if (!S.P[a] || !S.P[b]) continue
+    if (a === n) out.push(brgOfScr(sub(ptS(S, b), p)))
+    if (b === n) out.push(brgOfScr(sub(ptS(S, a), p)))
+  }
+  return out
+}
+
+/**
+ * Where a bearing's label goes: in the widest gap between the lines inside
+ * its sweep, skipping a gap another label at that point has taken, and out
+ * past its arc by as much as the gap's width needs.
+ */
+export function brgLabelAt(S: Scene, a: BrgArc, size: number, used: number[]): Vec {
+  const C = ptS(S, a.at), r = brgRadius(S, a)
+  const inside = linesAt(S, a.at).map(d => normB(d - a.from)).filter(d => d > 1 && d < a.sweep - 1).sort((x, y) => x - y)
+  const cuts = [0, ...inside, a.sweep]
+  const gaps = cuts.slice(1).map((y, i) => ({ mid: a.from + (cuts[i] + y) / 2, w: y - cuts[i] })).sort((x, y) => y.w - x.w)
+  const free = gaps.find(g => used.every(u => Math.abs(((g.mid - u) % 360 + 540) % 360 - 180) > 24)) ?? gaps[0]
+  used.push(free.mid)
+  if (a.inside) return add(C, mul(dirScr(free.mid), Math.max(r * 0.62, r - size * 1.15)))
+  const need = (labelWidth(a.tex ?? "", size) * 0.5 + 5) / Math.max(0.2, Math.sin((Math.min(90, free.w / 2) * Math.PI) / 180))
+  return add(C, mul(dirScr(free.mid), Math.min(r + Math.max(size * 0.95, need), r + size * 2.4)))
+}
+
+/** The bearing arc under a tap, if any (only within its sweep, out to a little past its arc). */
+function brgHit(S: Scene, p: Vec): string | null {
+  for (const a of S.extra?.brgs ?? []) {
+    if (!S.P[a.at] || a.noTap) continue
+    const v = sub(p, ptS(S, a.at)), d = Math.hypot(v[0], v[1])
+    if (d < 8 || d > brgRadius(S, a) + 18) continue
+    if (normB(brgOfScr(v) - a.from) <= a.sweep) return a.id
+  }
+  return null
 }
 
 /**
@@ -702,6 +825,7 @@ export function step(S: Scene, dt: number) {
     if (Math.abs(s.t - s.v) < 0.002) s.v = s.t
   }
   if (S.squares) for (const c of S.squares.on) { const g = S.squares.grow[c]; g.v += (g.t - g.v) * k(0.07); if (Math.abs(g.t - g.v) < 0.002) g.v = g.t }
+  for (const a of S.extra?.brgs ?? []) if (a.grow) { a.grow.v += (a.grow.t - a.grow.v) * k(0.06); if (Math.abs(a.grow.t - a.grow.v) < 0.002) a.grow.v = a.grow.t }
   S.eqRoom.v += (S.eqRoom.t - S.eqRoom.v) * k(0.12)
   const fp = k(S.drag ? 0.5 : 0.14)
   for (const [n, p] of Object.entries(S.P)) {
@@ -833,6 +957,7 @@ export function resetBeat(S: Scene) {
   S.fill = null
   S.tapAngles = null
   S.onAngle = null
+  S.onBrg = null
   S.tapSides = null
   S.onSide = null
   S.choice = null
@@ -991,6 +1116,9 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
   }
   if (S.mode === "tapAngle") {
     const [c, d] = nearestAngle(S, p)
+    // a bearing's arc, unless the tap is inside a corner's own angle
+    const b = S.onBrg ? brgHit(S, p) : null
+    if (b && !(c && inArc(S, c, p))) { S.onBrg!(S, b); return false }
     if (c && d < tol(S) + 22) S.onAngle?.(S, c)
     return false
   }

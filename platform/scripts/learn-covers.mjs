@@ -44,6 +44,7 @@ const PICKS = {
   bearings: "both",
   "scale-drawings": "read",
   "drawing-bearings": "c-found",
+  "bearings-triangles": "b1-diff",
 }
 
 /** Figures whose lines run to the board's edges are cropped by hand (1280 × 800 page coordinates). */
