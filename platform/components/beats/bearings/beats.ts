@@ -643,7 +643,7 @@ const PART_D: Beat[] = [
   }),
 
   // ── the end ──
-  watch("end-brg", "A bearing is measured from North, clockwise, with three figures.", S => {
+  watch("end-brg", "In summary, a bearing is measured clockwise from North and written with three figures.", S => {
     dialBoard(S, { brg: 72, handle: false, three: true })
     look(S, ["readout"])
   }, 2.6),

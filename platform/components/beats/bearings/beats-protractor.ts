@@ -221,7 +221,7 @@ const PART_X: Beat[] = [
 
   {
     id: "end-brg",
-    say: "Measure a bearing from North, clockwise. Past $180^\\circ$, measure the angle on the left and take it from $360^\\circ$.",
+    say: "In summary, a bearing is measured clockwise from North. When it's more than $180^\\circ$, we measure the angle on the left of North and take it away from $360^\\circ$.",
     enter: S => {
       mapBoard(S, S23)
       brgArc(S, "A", 240, "240^\\circ")

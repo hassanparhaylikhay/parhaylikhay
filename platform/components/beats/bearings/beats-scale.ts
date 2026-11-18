@@ -373,7 +373,7 @@ const PART_X: Beat[] = [
 
   {
     id: "end-scale",
-    say: "Map to real: multiply by what $1$ cm stands for. Real to map: divide by it.",
+    say: "In summary, we multiply to get a real length, and divide to go back onto the map.",
     enter: S => {
       mapBoard(S, S25)
       S.along = { a: "A", b: "B", step: 1, tex: "5\\text{ km}", lit: 6 }

@@ -688,7 +688,7 @@ const PART_X: Beat[] = [
 
   {
     id: "end",
-    say: "Two bearings from one place: take one from the other. To get a bearing, add or take away the angle inside.",
+    say: "In summary, the angle between two bearings is one take away the other. To get a bearing, we add or take away the angle inside.",
     enter: S => {
       q1Plain({ arcs: ["C"], ang: { C: "85^\\circ" }, side: { C: null }, brgs: [...q1Brgs(), arc("C", 107, 85, { col: PAIR_COL.C, r: R1 })] })(S)
       look(S)
