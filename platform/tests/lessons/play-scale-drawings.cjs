@@ -108,7 +108,9 @@ const { open, sleep } = require("./trig-lib.cjs")
   const FROM = +(process.env.FROM || 1)
   for (const id of beats.slice(FROM - 1)) {
     if (!(await at(id))) break
-    if (id === "lay" || id === "x1-lay" || id === "x2-lay") { await layRuler("A", "B"); continue }
+    if (id === "lay" || id === "x1-lay") { await layRuler("A", "B"); continue }
+    // a line measures the same from either end: this one is laid from B
+    if (id === "x2-lay") { await layRuler("B", "A"); continue }
     if (id === "read") { await slip("6.2", /Close/); await right("6"); continue }
     if (id === "real-ab") { await slip("11", /multiply|lots/); await right(); continue }
     if (id === "path-map") { await slip("75", /just/); await right(); continue }

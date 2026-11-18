@@ -104,12 +104,19 @@ export function mapBoard(S: Scene, M: MapSpec, o: { prot?: string } = {}) {
   for (const [a, b] of M.segs) addSeg(S, a, b)
 }
 
-/** The ruler, ready to be laid along a line (it starts off the figure). */
-export function withRuler(S: Scene, M: MapSpec, o: { on?: string; along?: string; fixed?: boolean } = {}) {
+/**
+ * The ruler, ready to be laid along a line (it starts off the figure), or
+ * lying along one. A line measures the same from either end: `follow` lays
+ * it the way the student laid it in the beat before (its 0 on B, if that is
+ * where they put it).
+ */
+export function withRuler(S: Scene, M: MapSpec, o: { on?: string; along?: string; fixed?: boolean; follow?: boolean } = {}) {
   if (o.on && o.along) {
-    const z = S.P[o.on], t = S.P[o.along]
+    const flip = o.follow && S.keep.rulerFrom === 1
+    const from = flip ? o.along : o.on, to = flip ? o.on : o.along
+    const z = S.P[from], t = S.P[to]
     const b = (Math.atan2(t[0] - z[0], t[1] - z[1]) * 180) / Math.PI
-    S.ruler = { zero: [...z] as Vec, dir: ((b % 360) + 360) % 360, len: M.ruler.len, on: o.on, along: o.along, pen: null, turn: !o.fixed, move: !o.fixed }
+    S.ruler = { zero: [...z] as Vec, dir: ((b % 360) + 360) % 360, len: M.ruler.len, on: from, along: to, pen: null, turn: !o.fixed, move: !o.fixed }
     return
   }
   S.ruler = { zero: [...M.ruler.zero] as Vec, dir: 90, len: M.ruler.len, on: null, along: null, pen: null, turn: true, move: true }
@@ -179,12 +186,20 @@ export function askNum(id: string, say0: string, enter: (S: Scene) => void, o: {
   }
 }
 
-/** Lay the ruler along a line, its 0 on one end. */
-export function layBeat(id: string, say0: string, M: MapSpec, on: string, to: string, more?: (S: Scene) => void): Beat {
+/**
+ * Lay the ruler along a line, its 0 on either end (the line is as long
+ * either way). Which end the student chose is kept for the reading after.
+ */
+export function layBeat(id: string, say0: string, M: MapSpec, a: string, b: string, more?: (S: Scene) => void): Beat {
+  const laid = (S: Scene) => !!S.ruler && S.drag === null && ((S.ruler.on === a && S.ruler.along === b) || (S.ruler.on === b && S.ruler.along === a))
   return {
     id, say: say0,
-    enter: S => { mapBoard(S, M); more?.(S); withRuler(S, M); look(S) },
-    done: S => S.ruler?.on === on && S.ruler?.along === to && S.drag === null,
+    enter: S => {
+      mapBoard(S, M); more?.(S); withRuler(S, M)
+      S.tick = S2 => { if (laid(S2)) S2.keep.rulerFrom = S2.ruler!.on === b ? 1 : 0 }
+      look(S)
+    },
+    done: laid,
     advanceAfter: 1400,
   }
 }
@@ -304,9 +319,9 @@ export function crossBeat(id: string, say0: string, board: (S: Scene) => void, a
 // ── walkthroughs ─────────────────────────────────────────────────────────
 
 /** Reading the ruler: its 0 is on one end; read the other end in the lens. */
-export const readWalk = (on: string, to: string): WalkStep<Scene>[] => [
-  { say: `The ruler's $0$ is on $${on}$.`, tex: `${on} \\to 0\\text{ cm}` },
-  { say: `Read the number at $${to}$ in the lens. Each small mark is a millimetre, $0.1$ cm.`, tex: `${to} \\to \\;?` },
+export const readWalk = (): WalkStep<Scene>[] => [
+  { say: "The ruler's $0$ is on one end of the line.", tex: "0\\text{ cm}" },
+  { say: "Read the number at the other end, in the lens. Each small mark is a millimetre, $0.1$ cm.", tex: "\\;?\\text{ cm}" },
 ]
 /** Map to real: each cm stands for so much. */
 export const realWalk = (cm: string, per: string, unit: string): WalkStep<Scene>[] => [

@@ -89,11 +89,11 @@ const PART_A: Beat[] = [
   watch("scale", "This is the map's *scale*.", S => { pageBoard(S); S.along = { a: "A", b: "B", step: 1, tex: "5\\text{ km}", under: "1\\text{ cm}", lit: 1 }; look(S) }, 2),
 
   // ── 2. Measuring on a map ──
-  layBeat("lay", "Lay the ruler along $AB$, with its $0$ on $A$.", S25, "A", "B"),
-  askNum("read", "How long is $AB$ on the map?", S => { mapBoard(S, S25); withRuler(S, S25, { on: "A", along: "B", fixed: true }) }, {
+  layBeat("lay", "Lay the ruler along $AB$, with its $0$ on one end.", S25, "A", "B"),
+  askNum("read", "How long is $AB$ on the map?", S => { mapBoard(S, S25); withRuler(S, S25, { on: "A", along: "B", fixed: true, follow: true }) }, {
     name: "AB", answer: 6, unit: "cm", dec: true, measured: true,
     slips: [{ v: 60, say: "That's in millimetres. $10$ mm make $1$ cm." }],
-    walk: readWalk("A", "B"),
+    walk: readWalk(),
   }),
   {
     id: "pieces",
@@ -344,10 +344,10 @@ const PART_X: Beat[] = [
   // 4024/11/O/N/22 Q4(a)
   watch("x1", "The diagram shows two ships, $A$ and $B$. $1$ cm stands for $30$ m.", S => { mapBoard(S, W22); look(S) }, 2.6),
   layBeat("x1-lay", "Find how far $B$ really is from $A$. Lay the ruler along $AB$.", W22, "A", "B"),
-  askNum("x1-cm", "How long is $AB$ on the drawing?", S => { mapBoard(S, W22); withRuler(S, W22, { on: "A", along: "B", fixed: true }) }, {
+  askNum("x1-cm", "How long is $AB$ on the drawing?", S => { mapBoard(S, W22); withRuler(S, W22, { on: "A", along: "B", fixed: true, follow: true }) }, {
     name: "AB", answer: 5.6, unit: "cm", dec: true, measured: true,
     slips: [{ v: 56, say: "That's in millimetres. $10$ mm make $1$ cm." }],
-    walk: readWalk("A", "B"),
+    walk: readWalk(),
   }),
   askNum("x1-m", "Each cm stands for $30$ m. So how far is $B$ from $A$ really?", S => { mapBoard(S, W22) }, {
     name: "\\text{Real}", answer: 168, unit: "m", dec: true,
@@ -359,10 +359,10 @@ const PART_X: Beat[] = [
   // 4024/12/M/J/23 Q6(a)
   watch("x2", "Villages $A$ and $B$ on a map. The scale is $1$ cm to $2$ km.", S => { mapBoard(S, S23); look(S) }, 2.4),
   layBeat("x2-lay", "Find the real distance $AB$. Lay the ruler along it.", S23, "A", "B"),
-  askNum("x2-cm", "How long is $AB$ on the map?", S => { mapBoard(S, S23); withRuler(S, S23, { on: "A", along: "B", fixed: true }) }, {
+  askNum("x2-cm", "How long is $AB$ on the map?", S => { mapBoard(S, S23); withRuler(S, S23, { on: "A", along: "B", fixed: true, follow: true }) }, {
     name: "AB", answer: 9.5, unit: "cm", dec: true, measured: true,
     slips: [{ v: 95, say: "That's in millimetres. $10$ mm make $1$ cm." }],
-    walk: readWalk("A", "B"),
+    walk: readWalk(),
   }),
   askNum("x2-km", "Each cm stands for $2$ km. So what is the real distance?", S => mapBoard(S, S23), {
     name: "\\text{Real}", answer: 19, unit: "km", dec: true,
