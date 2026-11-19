@@ -7,8 +7,9 @@ import { eqCentre } from "../equation"
 import Stage from "./Stage"
 import {
   type Scene, type Layout, createScene, layout, step, resize, pointerDown, pointerMove, pointerUp, typeKey, pick,
-  ptS, proj, arcGeom, arcPx, segKey, stickTop, RAD,
+  ptS, proj, arcGeom, arcPx, segKey, stickTop, RAD, vadd, vmul,
 } from "./scene"
+import { sideOf, upOf } from "./sheet"
 
 /** The 3D board, for the shared runner (BeatRunner.tsx). The calculator has + − x² √ and SHIFT. */
 export const solidEngine: BeatEngine<Scene, Layout> = {
@@ -42,6 +43,13 @@ export const solidEngine: BeatEngine<Scene, Layout> = {
     /** where the stick's top would be, turned `phi` and tipped `th` (degrees) */
     stickAt: (S: Scene, phi: number, th: number) => (S.stick ? proj(S, stickTop({ ...S.stick, phi: phi * RAD, th: th * RAD })) : null),
     stickNow: (S: Scene) => (S.stick ? [S.stick.phi / RAD, S.stick.th / RAD] : null),
+    /** where a sheet's knob would be with the sheet turned `phi` and tipped `tau` (degrees) */
+    knobAt: (S: Scene, which: "turn" | "tip", phi: number, tau: number) => {
+      const sh = S.sheet
+      if (!sh) return null
+      return proj(S, which === "turn" ? vadd(sh.c, vmul(sideOf(phi), sh.r)) : vadd(sh.c, vmul(upOf(phi, tau), sh.r)))
+    },
+    sheetNow: (S: Scene) => (S.sheet ? { phi: S.sheet.phi, tau: S.sheet.tau, at: S.sheet.at, e: S.sheet.e, found: S.sheet.found.length } : null),
   },
   onDone: S => { if (S.touched) S.flashGood = Math.max(S.flashGood, 0.8) },
   // a count needs only digits; the rest of the 3D lessons use the calculator

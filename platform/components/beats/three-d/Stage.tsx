@@ -5,11 +5,12 @@ import { Tex } from "../Tex"
 import EquationView from "../EquationView"
 import { type Vec, add, sub, mul, clamp, lerpV, sectorPath, arcPath, turn } from "../geometry"
 import {
-  type Scene, type Layout, type V3, CHALK, GREEN, YELLOW, QUIET, PINK, ORANGE,
+  type Scene, type Layout, type V3, CHALK, GREEN, YELLOW, QUIET, PINK, ORANGE, BLUE,
   ptS, proj, p3, toCam, faceFront, segHidden, edgesOf, segKey, dirCol, arcGeom, arcPx, chipRects, dragAt,
-  vsub, vadd, vmul, vunit, vdot, vcross, facesEye,
+  vsub, vadd, vmul, vunit, vdot, vcross, vlerp, facesEye,
 } from "./scene"
 import { curvedCloud, curvedRings, hull, foldNet } from "./solids"
+import { normalOf, sideOf, upOf, cutOf, curvedMesh, mirror3 } from "./sheet"
 
 /**
  * Draws the 3D board. Pure: everything comes from the scene. The solid is
@@ -33,7 +34,9 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
           <Floor S={S} op={vis("floor")} />
           <NetView S={S} op={vis("solid")} />
           <CurvedView S={S} op={vis("solid")} />
+          <SheetView S={S} op={vis("solid")} />
           <Solid S={S} op={vis("solid")} />
+          <SheetCopy S={S} op={vis("solid")} />
           <Light S={S} />
           <Marks S={S} op={vis("marks")} />
           <Targets S={S} />
@@ -220,6 +223,57 @@ function NetView({ S, op }: { S: Scene; op: number }) {
   )
 }
 
+/** The solid as corners and edges (as drawn), for where a sheet cuts it. */
+function solidMesh(S: Scene): { P: V3[]; edges: [number, number][] } | null {
+  if (S.curved) return curvedMesh(S.curved)
+  if (!S.faces) return null
+  const names = [...new Set(S.faces.flat())], at = Object.fromEntries(names.map((n, i) => [n, i]))
+  return { P: names.map(n => p3(S, n)), edges: edgesOf(S).map(([a, b]) => [at[a], at[b]] as [number, number]) }
+}
+
+/**
+ * A sheet through the solid: the planes of symmetry found so far (their
+ * cuts, dashed blue), then the sheet itself, a round pane, with the outline
+ * of its cut. Chalk while it is free; green where the halves match, pink
+ * where they do not.
+ */
+function SheetView({ S, op }: { S: Scene; op: number }) {
+  const sh = S.sheet, mesh = solidMesh(S)
+  if (!sh || !mesh) return null
+  const out: React.ReactNode[] = []
+  // with more than three: while the sheet is going through them the older ones step back so the newest
+  // can be seen; once it stops they all stay, a little faint
+  const many = sh.found.length > 3, going = !!S.act || S.acts.length > 0
+  sh.found.forEach((m, i) => {
+    const cut = cutOf(mesh.P, mesh.edges, sh.c, m)
+    const back = many && (!going || i < sh.found.length - 1)
+    if (cut.length) out.push(<polygon key={`found${i}`} points={poly(cut.map(p => proj(S, p)))} fill={BLUE} fillOpacity={back ? 0.03 : 0.1} stroke={BLUE} strokeOpacity={back ? 0.4 : 1} strokeWidth={back ? 1.6 : 2} strokeDasharray="7 5" strokeLinejoin="round" />)
+  })
+  if (!sh.hidden) {
+    const n = normalOf(sh.phiD, sh.tauD), side = sideOf(sh.phiD), up = upOf(sh.phiD, sh.tauD)
+    const match = sh.live ? sh.fits(n) : sh.at ? sh.fits(sh.at) : null
+    const col = match === null ? CHALK : match ? GREEN : PINK
+    const disc = Array.from({ length: 72 }, (_, i) => { const t = (2 * Math.PI * i) / 72; return proj(S, vadd(sh.c, vadd(vmul(side, sh.r * Math.cos(t)), vmul(up, sh.r * Math.sin(t))))) })
+    out.push(<polygon key="disc" points={poly(disc)} fill={col} fillOpacity={match === null ? 0.07 : 0.12} stroke={col} strokeOpacity={0.5} strokeWidth={1.4} strokeLinejoin="round" />)
+    const cut = cutOf(mesh.P, mesh.edges, sh.c, n)
+    if (cut.length) out.push(<polygon key="cut" points={poly(cut.map(p => proj(S, p)))} fill={col} fillOpacity={0.12} stroke={col} strokeOpacity={0.95} strokeWidth={2.4} strokeLinejoin="round" />)
+  }
+  return <g opacity={op}>{out}</g>
+}
+
+/** The solid's mirror image in the sheet, going through it while the sheet stays clicked in: green if it lands on the solid, pink if it sticks out. */
+function SheetCopy({ S, op }: { S: Scene; op: number }) {
+  const sh = S.sheet
+  if (!sh || !sh.at || sh.e < 0.02 || !S.faces) return null
+  const m = sh.at, col = sh.fits(m) ? GREEN : PINK
+  const at = (n: string) => proj(S, vlerp(p3(S, n), mirror3(p3(S, n), sh.c, m), sh.e))
+  return (
+    <g opacity={op * Math.min(1, sh.e * 4)}>
+      {edgesOf(S).map(([a, b]) => { const A = at(a), B = at(b); return <line key={`mc${a}${b}`} x1={A[0]} y1={A[1]} x2={B[0]} y2={B[1]} stroke={col} strokeWidth={2.4} strokeLinecap="round" /> })}
+    </g>
+  )
+}
+
 /** A light straight above: a soft beam down to each lit point, and a dashed drop from it to the floor. */
 function Light({ S }: { S: Scene }) {
   if (!S.light.length) return null
@@ -342,7 +396,7 @@ function Handles({ S }: { S: Scene }) {
     const at = h.at(S)
     const P = proj(S, at)
     const held = S.drag?.kind === "handle" && S.drag.id === h.id
-    const ax = sub(proj(S, vadd(at, h.axis)), P), l = Math.hypot(ax[0], ax[1])
+    const ax = sub(proj(S, vadd(at, h.axisAt ? h.axisAt(S) : h.axis)), P), l = Math.hypot(ax[0], ax[1])
     if (l > 2) {
       const u: Vec = [ax[0] / l, ax[1] / l], n: Vec = [-u[1], u[0]]
       for (const s of [1, -1]) {

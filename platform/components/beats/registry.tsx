@@ -23,6 +23,7 @@ import SimilarVolLesson from "./similar/SimilarVolLesson"
 import TermsLesson from "./terms/TermsLesson"
 import SolidsLesson from "./three-d/SolidsLesson"
 import SymmetryLesson from "./terms/SymmetryLesson"
+import PlanesLesson from "./three-d/PlanesLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -138,6 +139,12 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Fold a shape along its line of symmetry, turn a line until the halves match, and turn a shape to count how many times it fits.",
     topicHref: "/dashboard/maths/04/05",
     Lesson: SymmetryLesson,
+  },
+  "symmetry-of-solids": {
+    title: "Symmetry of solids",
+    description: "Turn and tip a sheet of glass through a solid until its mirror image lands on it, and count the planes of symmetry of cuboids, cubes, prisms and pyramids.",
+    topicHref: "/dashboard/maths/04/05",
+    Lesson: PlanesLesson,
   },
   "scale-drawings": {
     title: "Scale drawings",

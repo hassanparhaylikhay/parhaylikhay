@@ -24,6 +24,7 @@ import { type Vec, type Rect, add, sub, mul, dot, dist, lerpV, clamp, turn, DEG,
 import { createBoard, eqSet, eqStep, eqHit, eqCentre, eqSlow, extent, measure, row, frac, type EqBoard, type ENode } from "../equation"
 import { calcType, calcTex, judge, isCalculation, slipMatches, setAns, calcValue, roundedAns, ansReminder, INV_KEY } from "../calc"
 import type { Curved, Net } from "./solids"
+import type { Sheet } from "./sheet"
 
 export const CHALK = "#e8e6e0"
 export const BLUE = "#00abfa"
@@ -96,6 +97,8 @@ export interface Handle {
   start?: (S: Scene) => void
   /** a handle that goes anywhere (not along one axis): put it where the finger is */
   place?: (S: Scene, finger: Vec) => void
+  /** the way its arrows point, when that changes as it moves (a knob going round a circle) */
+  axisAt?: (S: Scene) => V3
 }
 
 /** A stick standing on the floor at `base`: `r` long, turned `phi` round, tipped `th` up from the floor (radians). */
@@ -198,6 +201,8 @@ export interface Scene {
   curved: Curved | null
   /** a net, and how far it is folded: `t` where it is going, `tD` as drawn (0 flat, 1 closed) */
   net: { def: Net; t: number; tD: number } | null
+  /** a sheet through the solid, for its planes of symmetry (null: none) */
+  sheet: Sheet | null
   /** edges of the solid in a colour, or lit, by segKey */
   edgeCol: Record<string, string>
   segs: Record<string, Seg>
@@ -315,7 +320,7 @@ export function createScene(): Scene {
   for (const k of VIS_KEYS) vis[k] = { v: 0, t: 0 }
   return {
     w: 0, h: 0, time: 0, beatStart: 0, mode: "none",
-    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, net: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, glowPts: [],
+    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, net: null, sheet: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, glowPts: [],
     stick: null, light: [], box: null, pyr: null, handles: [], floorGrid: 1,
     yaw: -32, pitch: 22, yawD: -32, pitchD: 22, spin: 0, fling: { yaw: 0, pitch: 0 }, lastTouch: -9, turned: 0, fitPts: null, fit: null, fitD: null,
     flats: [], flatMem: {}, acts: [], act: null, split: { v: 0, t: 0 }, dim: { v: 0, t: 0 }, dimMax: 0.62, liftLit: null, picked: {}, hands: {}, regions: null, onRegion: null, regionLit: null, tapPoints: null, onPoint: null, joinFrom: null, onJoin: null,
@@ -906,7 +911,21 @@ export function step(S: Scene, dt: number) {
   if (S.stick) { const T = stickTop(S.stick); S.P3.P = [...S.stick.base] as V3; S.P3.T = T; S.P3.Tf = [T[0], T[1], 0] }
   // a net folds smoothly to where it is going (at once under a finger)
   if (S.net) S.net.tD += (S.net.t - S.net.tD) * (S.drag?.kind === "handle" ? 1 : k(0.1))
-  const fp = k(S.drag?.kind === "handle" ? 0.35 : 0.14)
+  // a sheet through the solid: which plane it is clicked into; it follows the finger, glides into a
+  // click and everywhere else; while it stays clicked the solid's mirror copy goes through it
+  const sh = S.sheet
+  if (sh) {
+    const r = RAD, n: V3 = [Math.cos(sh.tau * r) * Math.cos(sh.phi * r), Math.cos(sh.tau * r) * Math.sin(sh.phi * r), -Math.sin(sh.tau * r)]
+    sh.at = sh.snaps.find(m => Math.abs(vdot(vunit(m), n)) > Math.cos(0.5 * r)) ?? null
+    const held = S.drag?.kind === "handle" && S.drag.id.startsWith("sheet")
+    const f = held && !sh.at ? 1 : k(0.24)
+    const gap = ((((sh.phi - sh.phiD) % 360) + 540) % 360) - 180
+    sh.phiD += gap * f
+    sh.tauD += (sh.tau - sh.tauD) * f
+    const settled = !!sh.at && Math.abs(gap) < 0.6 && Math.abs(sh.tau - sh.tauD) < 0.6
+    sh.e = settled ? Math.min(1, sh.e + dt * 1.5) : Math.max(0, sh.e - dt * 5)
+  }
+  const fp =k(S.drag?.kind === "handle" ? 0.35 : 0.14)
   for (const [n, p] of Object.entries(S.P3)) {
     const d = S.D3[n]
     S.D3[n] = d ? vlerp(d, p, fp) : [p[0], p[1], p[2]]
@@ -1069,6 +1088,7 @@ export function resetBeat(S: Scene) {
   S.faceLit = {}
   S.curved = null
   S.net = null
+  S.sheet = null
   S.drag = null
   S.names = {}
   S.letterDir = {}
