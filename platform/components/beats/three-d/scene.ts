@@ -23,6 +23,7 @@
 import { type Vec, type Rect, add, sub, mul, dot, dist, lerpV, clamp, turn, DEG, RAD } from "../geometry"
 import { createBoard, eqSet, eqStep, eqHit, eqCentre, eqSlow, extent, measure, row, frac, type EqBoard, type ENode } from "../equation"
 import { calcType, calcTex, judge, isCalculation, slipMatches, setAns, calcValue, roundedAns, ansReminder, INV_KEY } from "../calc"
+import type { Curved, Net } from "./solids"
 
 export const CHALK = "#e8e6e0"
 export const BLUE = "#00abfa"
@@ -191,6 +192,12 @@ export interface Scene {
   letterDir: Partial<Record<string, Vec>>
   /** the solid's faces, by point names (a convex solid; null: no solid) */
   faces: string[][] | null
+  /** faces lit in a colour, by their place in `faces` (counted by tapping) */
+  faceLit: Record<number, string>
+  /** a solid with a curved surface, drawn smooth (null: none) */
+  curved: Curved | null
+  /** a net, and how far it is folded: `t` where it is going, `tD` as drawn (0 flat, 1 closed) */
+  net: { def: Net; t: number; tD: number } | null
   /** edges of the solid in a colour, or lit, by segKey */
   edgeCol: Record<string, string>
   segs: Record<string, Seg>
@@ -308,7 +315,7 @@ export function createScene(): Scene {
   for (const k of VIS_KEYS) vis[k] = { v: 0, t: 0 }
   return {
     w: 0, h: 0, time: 0, beatStart: 0, mode: "none",
-    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, glowPts: [],
+    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, net: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, glowPts: [],
     stick: null, light: [], box: null, pyr: null, handles: [], floorGrid: 1,
     yaw: -32, pitch: 22, yawD: -32, pitchD: 22, spin: 0, fling: { yaw: 0, pitch: 0 }, lastTouch: -9, turned: 0, fitPts: null, fit: null, fitD: null,
     flats: [], flatMem: {}, acts: [], act: null, split: { v: 0, t: 0 }, dim: { v: 0, t: 0 }, dimMax: 0.62, liftLit: null, picked: {}, hands: {}, regions: null, onRegion: null, regionLit: null, tapPoints: null, onPoint: null, joinFrom: null, onJoin: null,
@@ -405,6 +412,14 @@ export function toCam(S: Scene, p: V3, drawn = true): V3 {
 
 /** How far the eye is from the middle, in units of the solid's size: a mild perspective. */
 const EYE = 6
+
+/** Whether a surface at a world point, with an outward normal there, looks toward the eye. */
+export function facesEye(S: Scene, p: V3, n: V3): boolean {
+  const f = S.fitD ?? S.fit
+  const a = toCam(S, p), b = toCam(S, vadd(p, n))
+  const eye: V3 = [0, 0, EYE * (f?.R ?? 1)]
+  return vdot(vsub(b, a), vsub(eye, a)) > 0
+}
 
 /** A world point on the screen. */
 export function proj(S: Scene, p: V3, drawn = true): Vec {
@@ -889,6 +904,8 @@ export function step(S: Scene, dt: number) {
   if (S.box) { Object.assign(S.P3, boxPts(S.box.l, S.box.w, S.box.h)); S.faces = S.box.h < 0.05 ? [BOX_FACES[0]] : BOX_FACES }
   if (S.pyr) { Object.assign(S.P3, pyramidPts(S.pyr.l, S.pyr.w, S.pyr.h)); S.faces = S.pyr.h < 0.05 ? [PYRAMID_FACES[0]] : PYRAMID_FACES }
   if (S.stick) { const T = stickTop(S.stick); S.P3.P = [...S.stick.base] as V3; S.P3.T = T; S.P3.Tf = [T[0], T[1], 0] }
+  // a net folds smoothly to where it is going (at once under a finger)
+  if (S.net) S.net.tD += (S.net.t - S.net.tD) * (S.drag?.kind === "handle" ? 1 : k(0.1))
   const fp = k(S.drag?.kind === "handle" ? 0.35 : 0.14)
   for (const [n, p] of Object.entries(S.P3)) {
     const d = S.D3[n]
@@ -1048,6 +1065,10 @@ export function say(S: Scene, text: string, tone: "wrong" | "calm" = "wrong", se
 /** Clear everything a beat sets. The view keeps its turn (the student's own), and the solid keeps its points. */
 export function resetBeat(S: Scene) {
   S.mode = "none"
+  S.keyRows = 4
+  S.faceLit = {}
+  S.curved = null
+  S.net = null
   S.drag = null
   S.names = {}
   S.letterDir = {}

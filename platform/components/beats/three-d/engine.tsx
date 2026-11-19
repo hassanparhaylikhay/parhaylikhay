@@ -1,7 +1,7 @@
 "use client"
 
 import type { BeatEngine } from "../BeatRunner"
-import { Choices } from "../Shell"
+import { Choices, DIGIT_KEYS } from "../Shell"
 import { COS_KEYS, COS_KEYS_SHIFT, cosKeyOf } from "../calc"
 import { eqCentre } from "../equation"
 import Stage from "./Stage"
@@ -44,7 +44,8 @@ export const solidEngine: BeatEngine<Scene, Layout> = {
     stickNow: (S: Scene) => (S.stick ? [S.stick.phi / RAD, S.stick.th / RAD] : null),
   },
   onDone: S => { if (S.touched) S.flashGood = Math.max(S.flashGood, 0.8) },
-  keypadKeys: S => (S.input?.shift ? COS_KEYS_SHIFT : COS_KEYS),
+  // a count needs only digits; the rest of the 3D lessons use the calculator
+  keypadKeys: S => (S.keyRows === 2 ? DIGIT_KEYS : S.input?.shift ? COS_KEYS_SHIFT : COS_KEYS),
   keypadLit: S => (S.input?.shift ? ["SHIFT"] : []),
   keyOf: cosKeyOf,
   controls: (S, L) => (S.choice && S.vis.chips.t > 0.5 ? (

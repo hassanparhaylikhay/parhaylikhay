@@ -47,6 +47,8 @@ const PICKS = {
   "bearings-triangles": "b1-diff",
   "similar-shapes": "times",
   "similar-areas-volumes": "cube-x27",
+  "naming-shapes": "q-sq-rect",
+  "solids-and-nets": "faces-6",
 }
 
 /** Figures whose lines run to the board's edges are cropped by hand (1280 × 800 page coordinates). */

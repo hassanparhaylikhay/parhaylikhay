@@ -20,6 +20,8 @@ import ScaleLesson from "./bearings/ScaleLesson"
 import DrawingBearingsLesson from "./bearings/DrawingBearingsLesson"
 import SimilarLesson from "./similar/SimilarLesson"
 import SimilarVolLesson from "./similar/SimilarVolLesson"
+import TermsLesson from "./terms/TermsLesson"
+import SolidsLesson from "./three-d/SolidsLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -117,6 +119,18 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Turn a line from North to see what a bearing is, write it with three figures, and find the bearing back by turning round.",
     topicHref: "/dashboard/maths/04/03",
     Lesson: BearingsLesson,
+  },
+  "naming-shapes": {
+    title: "Naming shapes",
+    description: "Turn and slide lines, drag triangles and quadrilaterals into each special shape, add sides to a polygon, and draw the parts of a circle.",
+    topicHref: "/dashboard/maths/04/01",
+    Lesson: TermsLesson,
+  },
+  "solids-and-nets": {
+    title: "Solids and nets",
+    description: "Turn a cube and tap its faces, edges and vertices to count them, name the solids, and fold nets up into solids.",
+    topicHref: "/dashboard/maths/04/01",
+    Lesson: SolidsLesson,
   },
   "scale-drawings": {
     title: "Scale drawings",

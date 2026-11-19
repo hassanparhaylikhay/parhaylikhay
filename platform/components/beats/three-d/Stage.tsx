@@ -7,8 +7,9 @@ import { type Vec, add, sub, mul, clamp, lerpV, sectorPath, arcPath, turn } from
 import {
   type Scene, type Layout, type V3, CHALK, GREEN, YELLOW, QUIET, PINK, ORANGE,
   ptS, proj, p3, toCam, faceFront, segHidden, edgesOf, segKey, dirCol, arcGeom, arcPx, chipRects, dragAt,
-  vsub, vadd, vmul, vunit, vdot, vcross,
+  vsub, vadd, vmul, vunit, vdot, vcross, facesEye,
 } from "./scene"
+import { curvedCloud, curvedRings, hull, foldNet } from "./solids"
 
 /**
  * Draws the 3D board. Pure: everything comes from the scene. The solid is
@@ -30,6 +31,8 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
         </defs>
         <g opacity={vis("board")}>
           <Floor S={S} op={vis("floor")} />
+          <NetView S={S} op={vis("solid")} />
+          <CurvedView S={S} op={vis("solid")} />
           <Solid S={S} op={vis("solid")} />
           <Light S={S} />
           <Marks S={S} op={vis("marks")} />
@@ -142,6 +145,12 @@ function Solid({ S, op }: { S: Scene; op: number }) {
     )
   }
 
+  // faces the student has counted, lit in their colour (fainter round the back)
+  for (const [k, col] of Object.entries(S.faceLit)) {
+    const f = faces[+k]
+    if (!f) continue
+    out.push(<polygon key={`lit${k}`} points={poly(f.map(n => ptS(S, n)))} fill={col} fillOpacity={(faceFront(S, f) ? 0.3 : 0.12) * fade} stroke="none" />)
+  }
   for (const [i, f] of front.entries()) {
     const s = shade(S, f)
     out.push(<polygon key={`ff${i}`} points={poly(f.map(n => ptS(S, n)))} fill={CHALK} fillOpacity={(0.03 + 0.06 * s) * fade} stroke="none" />)
@@ -158,6 +167,57 @@ function Solid({ S, op }: { S: Scene; op: number }) {
     out.push(<circle key={`dot${n}`} cx={P[0]} cy={P[1]} r={3.6} fill={CHALK} />)
   }
   return <g opacity={op}>{out}</g>
+}
+
+/**
+ * A solid with a curved surface: its outline (the shape round points all
+ * over it), and its rings, solid where they can be seen and dashed round the back.
+ */
+function CurvedView({ S, op }: { S: Scene; op: number }) {
+  const c = S.curved
+  if (!c) return null
+  const out: React.ReactNode[] = []
+  const H = hull(curvedCloud(c).map(p => proj(S, p)))
+  out.push(<polygon key="body" points={poly(H)} fill={CHALK} fillOpacity={0.07} stroke={CHALK} strokeWidth={2.4} strokeLinejoin="round" />)
+  curvedRings(c).forEach((rg, i) => {
+    const mid: V3 = [0, 0, rg.pts[0][2]]
+    const capSeen = rg.cap ? facesEye(S, mid, rg.cap) : false
+    const seen = rg.pts.map((p, j) => capSeen || facesEye(S, p, rg.side[j]))
+    const P = rg.pts.map(p => proj(S, p))
+    // runs of seen and unseen points, each drawn as one path
+    const n = P.length
+    let start = 0
+    while (start < n && seen[start] === seen[(start + n - 1) % n]) start++
+    if (start === n) start = 0
+    let run: Vec[] = [], kind = seen[start]
+    const flush = (key: string) => {
+      if (run.length < 2) return
+      const d = run.map((q, k) => `${k ? "L" : "M"} ${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join(" ")
+      out.push(<path key={key} d={d} fill="none" stroke={CHALK} strokeOpacity={kind ? 1 : 0.45} strokeWidth={kind ? 2.2 : 1.6} strokeDasharray={kind ? undefined : "5 6"} strokeLinecap="round" />)
+    }
+    for (let k = 0; k <= n; k++) {
+      const j = (start + k) % n
+      if (seen[j] !== kind) { run.push(P[j]); flush(`r${i}-${k}`); run = [P[j]]; kind = seen[j] } else run.push(P[j])
+    }
+    flush(`r${i}-end`)
+  })
+  return <g opacity={op}>{out}</g>
+}
+
+/** A net, folded as far as it has got: its faces drawn from the back forward. */
+function NetView({ S, op }: { S: Scene; op: number }) {
+  const n = S.net
+  if (!n) return null
+  const F = foldNet(n.def, n.tD)
+  const depth = (P: V3[]) => P.reduce((s, p) => s + toCam(S, p)[2], 0) / P.length
+  const order = Object.entries(F).sort((a, b) => depth(a[1]) - depth(b[1]))
+  return (
+    <g opacity={op}>
+      {order.map(([id, P]) => (
+        <polygon key={id} points={poly(P.map(p => proj(S, p)))} fill={CHALK} fillOpacity={0.1} stroke={CHALK} strokeWidth={2} strokeLinejoin="round" />
+      ))}
+    </g>
+  )
 }
 
 /** A light straight above: a soft beam down to each lit point, and a dashed drop from it to the floor. */

@@ -1,0 +1,201 @@
+/**
+ * Solids with curved surfaces, and nets that fold up into solids, for the
+ * 3D board (4.1 Solids and nets).
+ *
+ * A curved solid stands on the floor with its axis straight up: a cylinder,
+ * cone, frustum, sphere or hemisphere. It is drawn from rings of points:
+ * its outline is the shape round all of them, and each ring is solid where
+ * it can be seen and dashed where it is round the back.
+ *
+ * A net is a set of flat faces, each hinged to one other along a shared
+ * edge. Unfolded (t = 0) they lie flat on the floor; folded (t = 1) each has
+ * turned up about its hinge by its own angle, carried along by the faces it
+ * hangs from, so they close into the solid.
+ */
+
+import type { Vec } from "../geometry"
+import { type V3, vadd, vsub, vmul, vdot, vcross, vunit } from "./scene"
+
+// ── curved solids ────────────────────────────────────────────────────────
+
+export type CurvedKind = "cylinder" | "cone" | "frustum" | "sphere" | "hemisphere"
+export interface Curved { kind: CurvedKind; r: number; h: number; r2?: number }
+
+const N = 64
+
+/** A ring round the up axis at a height, radius r. */
+export const ring = (r: number, z: number, n = N): V3[] => Array.from({ length: n }, (_, i) => { const a = (2 * Math.PI * i) / n; return [r * Math.cos(a), r * Math.sin(a), z] as V3 })
+
+/** The points that bound a curved solid (for fitting the view round it). */
+export function curvedBounds(c: Curved): V3[] {
+  if (c.kind === "sphere") return [[c.r, 0, c.r], [-c.r, 0, c.r], [0, c.r, c.r], [0, -c.r, c.r], [0, 0, 0], [0, 0, 2 * c.r]]
+  if (c.kind === "hemisphere") return [[c.r, 0, 0], [-c.r, 0, 0], [0, c.r, 0], [0, -c.r, 0], [0, 0, c.r]]
+  const top = c.kind === "cone" ? 0 : c.kind === "frustum" ? c.r2 ?? c.r / 2 : c.r
+  return [[c.r, 0, 0], [-c.r, 0, 0], [0, c.r, 0], [0, -c.r, 0], [top, 0, c.h], [-top, 0, c.h], [0, top, c.h], [0, -top, c.h], [0, 0, c.h]]
+}
+
+/**
+ * The rings a curved solid is drawn from, each with the outward normal of
+ * the surface it bounds at each point (to tell the front of a ring from the
+ * back) and the normal of its flat face (null: none).
+ */
+export function curvedRings(c: Curved): { pts: V3[]; side: V3[]; cap: V3 | null }[] {
+  const side = (r: number, z: number, slope: number) => ring(r, z).map(p => vunit([p[0], p[1], slope * Math.hypot(p[0], p[1])] as V3))
+  if (c.kind === "cylinder") return [{ pts: ring(c.r, 0), side: side(c.r, 0, 0), cap: [0, 0, -1] }, { pts: ring(c.r, c.h), side: side(c.r, c.h, 0), cap: [0, 0, 1] }]
+  if (c.kind === "cone") return [{ pts: ring(c.r, 0), side: side(c.r, 0, c.r / c.h), cap: [0, 0, -1] }]
+  if (c.kind === "frustum") {
+    const r2 = c.r2 ?? c.r / 2, s = (c.r - r2) / c.h
+    return [{ pts: ring(c.r, 0), side: side(c.r, 0, s), cap: [0, 0, -1] }, { pts: ring(r2, c.h), side: side(r2, c.h, s), cap: [0, 0, 1] }]
+  }
+  if (c.kind === "hemisphere") return [{ pts: ring(c.r, 0), side: side(c.r, 0, 0), cap: [0, 0, -1] }]
+  // a sphere: its middle ring, on the sphere all round
+  return [{ pts: ring(c.r, c.r), side: side(c.r, c.r, 0), cap: null }]
+}
+
+/** Points spread over a curved solid's surface: the shape round them on screen is its outline. */
+export function curvedCloud(c: Curved): V3[] {
+  const out: V3[] = []
+  if (c.kind === "sphere" || c.kind === "hemisphere") {
+    const z0 = c.kind === "sphere" ? c.r : 0
+    for (let i = 0; i <= 16; i++) {
+      const th = c.kind === "sphere" ? -Math.PI / 2 + (Math.PI * i) / 16 : (Math.PI / 2 * i) / 16
+      out.push(...ring(c.r * Math.cos(th), z0 + c.r * Math.sin(th), 48))
+    }
+    return out
+  }
+  out.push(...ring(c.r, 0))
+  if (c.kind === "cone") out.push([0, 0, c.h])
+  else out.push(...ring(c.kind === "frustum" ? c.r2 ?? c.r / 2 : c.r, c.h))
+  return out
+}
+
+/** The shape round a set of screen points (convex hull, anticlockwise). */
+export function hull(P: Vec[]): Vec[] {
+  const pts = [...P].sort((a, b) => a[0] - b[0] || a[1] - b[1])
+  if (pts.length < 3) return pts
+  const crossZ = (o: Vec, a: Vec, b: Vec) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+  const lower: Vec[] = [], upper: Vec[] = []
+  for (const p of pts) { while (lower.length >= 2 && crossZ(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop(); lower.push(p) }
+  for (const p of [...pts].reverse()) { while (upper.length >= 2 && crossZ(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop(); upper.push(p) }
+  return [...lower.slice(0, -1), ...upper.slice(0, -1)]
+}
+
+// ── nets ─────────────────────────────────────────────────────────────────
+
+/**
+ * A face of a net: its corners where it lies flat (x, y on the floor), the
+ * face it is hinged to and the two of its corners on that hinge, and how far
+ * it turns up when folded (degrees).
+ */
+export interface NetFace { id: string; flat: Vec[]; parent?: string; hinge?: [number, number]; angle?: number }
+export interface Net { faces: NetFace[] }
+
+/** A turn about a line, then a move: where a point goes. */
+type Xf = (p: V3) => V3
+const rotateAbout = (a: V3, axis: V3, th: number): Xf => p => {
+  // Rodrigues' formula about the line through a along axis
+  const k = vunit(axis), v = vsub(p, a), c = Math.cos(th), s = Math.sin(th)
+  return vadd(a, vadd(vadd(vmul(v, c), vmul(vcross(k, v), s)), vmul(k, vdot(k, v) * (1 - c))))
+}
+
+/**
+ * Each face's corners in the world with the net folded a fraction t of the
+ * way. A face turns about its hinge (where it lies flat), the way that takes
+ * it up off its parent, then goes wherever its parent went.
+ */
+export function foldNet(net: Net, t: number): Record<string, V3[]> {
+  const byId = Object.fromEntries(net.faces.map(f => [f.id, f]))
+  const xf: Record<string, Xf> = {}
+  const get = (id: string): Xf => {
+    if (xf[id]) return xf[id]
+    const f = byId[id]
+    if (!f.parent || !f.hinge) return (xf[id] = p => p)
+    const a: V3 = [...f.flat[f.hinge[0]], 0] as V3, b: V3 = [...f.flat[f.hinge[1]], 0] as V3
+    const axis = vsub(b, a)
+    const mid: V3 = [f.flat.reduce((s, p) => s + p[0], 0) / f.flat.length, f.flat.reduce((s, p) => s + p[1], 0) / f.flat.length, 0]
+    // the way round that lifts the face up off the floor
+    const up = rotateAbout(a, axis, 0.1)(mid)[2] > 0 ? 1 : -1
+    const turn = rotateAbout(a, axis, up * ((f.angle ?? 90) * Math.PI / 180) * t)
+    const parent = get(f.parent)
+    return (xf[id] = p => parent(turn(p)))
+  }
+  const out: Record<string, V3[]> = {}
+  for (const f of net.faces) { const T = get(f.id); out[f.id] = f.flat.map(p => T([p[0], p[1], 0])) }
+  return out
+}
+
+/** Every corner a net reaches flat and folded (the folded solid sits on the flat net, so the view fits round both). */
+export function netBounds(net: Net): V3[] {
+  return [0, 1].flatMap(t => Object.values(foldNet(net, t)).flat())
+}
+
+// ── the nets in the lesson ───────────────────────────────────────────────
+
+const rect = (x: number, y: number, w: number, h: number): Vec[] => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]]
+
+/** A cube's net: a cross of six squares. */
+export function cubeNet(s = 2): Net {
+  return {
+    faces: [
+      { id: "base", flat: rect(0, 0, s, s) },
+      { id: "front", flat: rect(0, -s, s, s), parent: "base", hinge: [3, 2] },
+      { id: "back", flat: rect(0, s, s, s), parent: "base", hinge: [0, 1] },
+      { id: "left", flat: rect(-s, 0, s, s), parent: "base", hinge: [1, 2] },
+      { id: "right", flat: rect(s, 0, s, s), parent: "base", hinge: [0, 3] },
+      { id: "top", flat: rect(0, 2 * s, s, s), parent: "back", hinge: [0, 1] },
+    ],
+  }
+}
+
+/**
+ * The cuboid's net from 4024/12/O/N/21 Q4: four long faces in a column (l by
+ * w, l by h, l by w, l by h), one end off the top face's left side and the
+ * other off the bottom face's right side.
+ */
+export function cuboidNet(l = 3, w = 1.6, h = 1): Net {
+  return {
+    faces: [
+      { id: "f1", flat: rect(0, -w, l, w) },
+      { id: "f2", flat: rect(0, -w - h, l, h), parent: "f1", hinge: [3, 2] },
+      { id: "f3", flat: rect(0, -2 * w - h, l, w), parent: "f2", hinge: [3, 2] },
+      { id: "f4", flat: rect(0, -2 * w - 2 * h, l, h), parent: "f3", hinge: [3, 2] },
+      { id: "e1", flat: rect(-h, -w, h, w), parent: "f1", hinge: [1, 2] },
+      { id: "e2", flat: rect(l, -2 * w - 2 * h, w, h), parent: "f4", hinge: [0, 3] },
+    ],
+  }
+}
+
+/** A square-based pyramid's net: a square with a triangle on each side. Its triangles meet at the top when folded. */
+export function pyramidNet(s = 2, slant = 2.4): Net {
+  const h2 = s / 2
+  // each triangle turns up until its tip is over the middle of the square
+  const ang = 180 - Math.acos(Math.min(1, h2 / slant)) * 180 / Math.PI
+  return {
+    faces: [
+      { id: "base", flat: rect(0, 0, s, s) },
+      { id: "t1", flat: [[0, 0], [s, 0], [h2, -slant]], parent: "base", hinge: [0, 1], angle: ang },
+      { id: "t2", flat: [[s, 0], [s, s], [s + slant, h2]], parent: "base", hinge: [0, 1], angle: ang },
+      { id: "t3", flat: [[s, s], [0, s], [h2, s + slant]], parent: "base", hinge: [0, 1], angle: ang },
+      { id: "t4", flat: [[0, s], [0, 0], [-slant, h2]], parent: "base", hinge: [0, 1], angle: ang },
+    ],
+  }
+}
+
+/**
+ * A triangular prism's net from 4024/12/O/N/21 Q4: three rectangles in a row
+ * with a right-angled triangle on the middle one's top and bottom. The middle
+ * one is the floor, the right one stands up and the left one leans over to
+ * meet it.
+ */
+export function prismNet(a = 1.6, b = 1.4, len = 2.2): Net {
+  const c = Math.hypot(a, b), lean = 180 - Math.atan2(b, a) * 180 / Math.PI
+  return {
+    faces: [
+      { id: "mid", flat: rect(0, 0, a, len) },
+      { id: "right", flat: rect(a, 0, b, len), parent: "mid", hinge: [0, 3], angle: 90 },
+      { id: "left", flat: rect(-c, 0, c, len), parent: "mid", hinge: [1, 2], angle: lean },
+      { id: "top", flat: [[0, len], [a, len], [a, len + b]], parent: "mid", hinge: [0, 1], angle: 90 },
+      { id: "bottom", flat: [[a, 0], [0, 0], [a, -b]], parent: "mid", hinge: [0, 1], angle: 90 },
+    ],
+  }
+}
