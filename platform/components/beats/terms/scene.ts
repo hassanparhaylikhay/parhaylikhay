@@ -62,6 +62,8 @@ export type Handle =
 export interface Tap { id: string; hit: (S: Scene, p: Vec) => number; spot: (S: Scene) => Vec }
 
 export interface Lab { key: string; tex: string; col: string; at: Vec; size: number; op: number; pulse?: boolean }
+/** A whole number typed on the keypad. */
+export interface TermsInput { value: string; answer: number; state: "idle" | "wrong" | "right"; tries: number; wrongAt: number; slips?: { v: number; say: string }[]; typed?: string; onRight?: (S: Scene) => void }
 export interface Act { dur: number; begin?: (S: Scene) => void; run?: (S: Scene, e: number, t: number) => void; end?: (S: Scene) => void }
 
 export type Drag =
@@ -105,7 +107,7 @@ export interface Scene {
   choice: { options: string[]; answer: number; picked: number | null; state: "idle" | "wrong" | "right"; wrongAt: number; onPick?: (S: Scene, k: number, right: boolean) => void } | null
   /** the − / + sides stepper */
   stepper: { n: number; min: number; max: number; onStep: (S: Scene, n: number) => void } | null
-  input: { state: string; tries: number; value: string } | null
+  input: TermsInput | null
 
   acts: Act[]
   act: { a: Act; t0: number } | null
@@ -120,6 +122,8 @@ export interface Scene {
   moved: number
   got: Set<string>
   vals: Record<string, number>
+  /** kept from beat to beat (what the student made or found), unlike vals */
+  mem: Record<string, number>
   touched: string | null
   flashGood: number
   note: { text: string; until: number; tone: "wrong" | "calm" } | null
@@ -135,7 +139,7 @@ export function createScene(): Scene {
     handles: [], snapped: null, locked: new Set(), taps: null, onTap: null,
     eq: createBoard(), eqFn: null, eqRoom: { v: 0, t: 0 }, choice: null, stepper: null, input: null,
     acts: [], act: null, tick: null, timers: [], vis, labs: [], labD: {}, walkTex: null,
-    drag: null, touch: false, moved: 0, got: new Set(), vals: {}, touched: null, flashGood: 0, note: null,
+    drag: null, touch: false, moved: 0, got: new Set(), vals: {}, mem: {}, touched: null, flashGood: 0, note: null,
   }
 }
 
@@ -644,6 +648,33 @@ function tapAt(S: Scene, p: Vec) {
   if (best !== null && bd < tol(S)) S.onTap(S, best)
 }
 
-export function typeKey(S: Scene, key: string) { void S; void key }
+// ── typed answers ────────────────────────────────────────────────────────
+
+export function startInput(S: Scene, spec: Omit<TermsInput, "value" | "state" | "tries" | "wrongAt">) {
+  S.input = { ...spec, value: "", state: "idle", tries: 0, wrongAt: -9 }
+}
+/** The answer box, for an equation's tail. */
+export const boxNode = (S: Scene): ENode => ({ k: "box", id: "box", tex: S.input?.value ?? "", state: S.input?.state ?? "idle", wrongAt: S.input?.wrongAt ?? -9 })
+
+export function typeKey(S: Scene, key: string) {
+  const inp = S.input
+  if (!inp || inp.state === "right") return
+  if (key === "go") {
+    if (!inp.value) return
+    const v = Number(inp.value)
+    if (v === inp.answer) { inp.state = "right"; S.note = null; S.flashGood = 1; S.touched = "eq"; inp.onRight?.(S); return }
+    inp.tries++
+    inp.state = "wrong"
+    inp.wrongAt = S.time
+    const slip = inp.slips?.find(s => s.v === v)
+    if (slip) say(S, slip.say, "wrong", 4.5)
+    return
+  }
+  if (key === "back") { inp.value = inp.value.slice(0, -1); inp.state = "idle"; return }
+  if (!/^\d$/.test(key)) return
+  if (inp.state === "wrong") inp.value = ""
+  inp.state = "idle"
+  if (inp.value.length < 3) inp.value += key
+}
 
 export { dist, lerpV, clamp, add, sub, mul, dot, cross, len, unit, RAD, DEG }

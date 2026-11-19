@@ -22,6 +22,7 @@ import SimilarLesson from "./similar/SimilarLesson"
 import SimilarVolLesson from "./similar/SimilarVolLesson"
 import TermsLesson from "./terms/TermsLesson"
 import SolidsLesson from "./three-d/SolidsLesson"
+import SymmetryLesson from "./terms/SymmetryLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -131,6 +132,12 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Turn a cube and tap its faces, edges and vertices to count them, name the solids, and fold nets up into solids.",
     topicHref: "/dashboard/maths/04/01",
     Lesson: SolidsLesson,
+  },
+  symmetry: {
+    title: "Line and rotational symmetry",
+    description: "Fold a shape along its line of symmetry, turn a line until the halves match, and turn a shape to count how many times it fits.",
+    topicHref: "/dashboard/maths/04/05",
+    Lesson: SymmetryLesson,
   },
   "scale-drawings": {
     title: "Scale drawings",

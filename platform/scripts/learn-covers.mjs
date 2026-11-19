@@ -49,6 +49,7 @@ const PICKS = {
   "similar-areas-volumes": "cube-x27",
   "naming-shapes": "q-sq-rect",
   "solids-and-nets": "faces-6",
+  symmetry: "rect-2-lines",
 }
 
 /** Figures whose lines run to the board's edges are cropped by hand (1280 × 800 page coordinates). */
