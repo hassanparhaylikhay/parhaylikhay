@@ -402,32 +402,45 @@ const SIDE_ENDS: Record<string, [string, string]> = { PQ: ["Pp", "Qp"], QR: ["Qp
 
 /** The four special shapes for 4024/12/M/J/20 Q2(b), each with its lines of symmetry (blue, dashed) and diagonals (orange). */
 const SYM: Record<string, { pts: Vec[]; lines: [Vec, Vec][]; right: boolean }> = {
-  rhombus: { pts: [[0, 3], [2, 0], [0, -3], [-2, 0]], lines: [[[0, 3.8], [0, -3.8]], [[2.8, 0], [-2.8, 0]]], right: true },
-  kite: { pts: [[0, 3], [1.6, 1.4], [0, -3], [-1.6, 1.4]], lines: [[[0, 3.8], [0, -3.8]]], right: true },
-  rectangle: { pts: [[-3, -2], [3, -2], [3, 2], [-3, 2]], lines: [[[0, 2.8], [0, -2.8]], [[3.8, 0], [-3.8, 0]]], right: false },
-  square: { pts: [[-2.4, -2.4], [2.4, -2.4], [2.4, 2.4], [-2.4, 2.4]], lines: [[[0, 3.2], [0, -3.2]], [[3.2, 0], [-3.2, 0]], [[3.1, 3.1], [-3.1, -3.1]], [[-3.1, 3.1], [3.1, -3.1]]], right: true },
+  square: { pts: [[-1.6, -1.6], [1.6, -1.6], [1.6, 1.6], [-1.6, 1.6]], lines: [[[0, 2.2], [0, -2.2]], [[2.2, 0], [-2.2, 0]], [[2.1, 2.1], [-2.1, -2.1]], [[-2.1, 2.1], [2.1, -2.1]]], right: true },
+  rectangle: { pts: [[-2, -1.3], [2, -1.3], [2, 1.3], [-2, 1.3]], lines: [[[0, 1.9], [0, -1.9]], [[2.6, 0], [-2.6, 0]]], right: false },
+  rhombus: { pts: [[0, 2], [1.4, 0], [0, -2], [-1.4, 0]], lines: [[[0, 2.6], [0, -2.6]], [[2, 0], [-2, 0]]], right: true },
+  kite: { pts: [[0, 2], [1.2, 0.9], [0, -2], [-1.2, 0.9]], lines: [[[0, 2.6], [0, -2.6]]], right: true },
 }
-function symBoard(S: Scene, which: string | null) {
-  S.polys = []
-  S.segs = []
-  S.squares = []
-  if (!which) return
-  const sh = SYM[which]
-  const pts: Record<string, Vec> = {}
-  sh.pts.forEach((p, i) => { pts[`k${i}`] = p })
-  sh.lines.forEach(([a, b], i) => { pts[`s${i}a`] = a; pts[`s${i}b`] = b })
-  // the diagonals cross where corner 0 to 2 meets corner 1 to 3
+const SYM_ORDER = ["square", "rectangle", "rhombus", "kite"]
+
+/** One of the shapes at a place, with its lines of symmetry and its diagonals (crossing marked when at right angles). */
+function symShape(S: Scene, key: string, at: Vec, o: { lines?: boolean; diags?: boolean } = {}) {
+  const sh = SYM[key], pts: Record<string, Vec> = {}
+  sh.pts.forEach((p, i) => { pts[`${key}${i}`] = add(at, p) })
+  sh.lines.forEach(([a, b], i) => { pts[`${key}s${i}a`] = add(at, a); pts[`${key}s${i}b`] = add(at, b) })
   const [a, b, c, d] = sh.pts, u = sub(c, a), v = sub(d, b)
-  const t = cross(sub(b, a), v) / cross(u, v)
-  pts.dx = add(a, mul(u, t))
+  pts[`${key}x`] = add(at, add(a, mul(u, cross(sub(b, a), v) / cross(u, v))))
   place(S, pts)
-  S.polys = [{ id: "sym", pts: ["k0", "k1", "k2", "k3"] }]
-  S.segs = [
-    { id: "d1", a: "k0", b: "k2", col: ORANGE, w: 2 },
-    { id: "d2", a: "k1", b: "k3", col: ORANGE, w: 2 },
-    ...sh.lines.map((_, i) => ({ id: `sym${i}`, a: `s${i}a`, b: `s${i}b`, col: BLUE, w: 2, dash: true })),
-  ]
-  if (sh.right) S.squares = [{ at: "dx", a: "k1", b: "k2", col: ORANGE }]
+  S.polys.push({ id: key, pts: [0, 1, 2, 3].map(i => `${key}${i}`) })
+  if (o.diags !== false) {
+    S.segs.push({ id: `${key}d1`, a: `${key}0`, b: `${key}2`, col: ORANGE, w: 2 }, { id: `${key}d2`, a: `${key}1`, b: `${key}3`, col: ORANGE, w: 2 })
+    if (sh.right) S.squares.push({ at: `${key}x`, a: `${key}1`, b: `${key}2`, col: ORANGE })
+  }
+  if (o.lines !== false) sh.lines.forEach((_, i) => S.segs.push({ id: `${key}l${i}`, a: `${key}s${i}a`, b: `${key}s${i}b`, col: BLUE, w: 2, dash: true }))
+}
+
+/** A trapezium with its one line of symmetry: one half folds over onto the other, and they match. */
+function symIdea(S: Scene) {
+  resetBeat(S)
+  place(S, { u0: [-3, -1.8], u1: [3, -1.8], u2: [1.6, 1.8], u3: [-1.6, 1.8], ua: [0, 2.8], ub: [0, -2.8], m0: [0, -1.8], m1: [0, 1.8] })
+  // the copy of the left half that folds over
+  place(S, { f0: [-3, -1.8], f1: [0, -1.8], f2: [0, 1.8], f3: [-1.6, 1.8] })
+  S.frame = { x0: -4, y0: -3.2, x1: 4, y1: 3.2 }
+  S.polys = [{ id: "idea", pts: ["u0", "u1", "u2", "u3"] }]
+  S.shades = [{ id: "left", kind: "poly", pts: ["u0", "m0", "m1", "u3"], col: BLUE, op: 0.22 }, { id: "fold", kind: "poly", pts: ["f0", "f1", "f2", "f3"], col: BLUE, op: 0.22 }]
+  S.segs = [{ id: "line", a: "ua", b: "ub", col: BLUE, w: 2.4, dash: true }]
+  const left: Vec[] = [[-3, -1.8], [0, -1.8], [0, 1.8], [-1.6, 1.8]]
+  // folded over the line, it lands on the other half
+  S.acts.push({ dur: 0.9 }, {
+    dur: 1.6,
+    run: (S2, e) => left.forEach((p, i) => { const q: Vec = [p[0] * (1 - 2 * e), p[1]]; S2.pts[`f${i}`].p = q; S2.pts[`f${i}`].D = q }),
+  })
 }
 
 const PART_3: Beat[] = [
@@ -497,31 +510,51 @@ const PART_3: Beat[] = [
   {
     id: "s20b",
     say: "A quadrilateral has only one line of symmetry.",
-    enter: S => { resetBeat(S); S.frame = { x0: -4, y0: -4, x1: 4, y1: 4 }; say(S, "A line of symmetry cuts a shape into two halves that match.", "calm", 600); look(S) },
-    cta: "", ctaAfter: 2.6,
+    enter: S => { symIdea(S); say(S, "A line of symmetry cuts a shape into two halves that match.", "calm", 600); look(S) },
+    cta: "", ctaAfter: 3.0,
   },
   {
     id: "s20b-diag",
     say: "Its diagonals cross at right angles.",
-    enter: S => { resetBeat(S); S.frame = { x0: -4, y0: -4, x1: 4, y1: 4 }; say(S, "A diagonal joins two opposite corners.", "calm", 600); look(S) },
-    cta: "", ctaAfter: 2.4,
+    enter: S => {
+      resetBeat(S)
+      S.frame = { x0: -3, y0: -2.8, x1: 3, y1: 2.8 }
+      symShape(S, "rhombus", [0, 0], { lines: false })
+      say(S, "A diagonal joins two opposite corners.", "calm", 600)
+      look(S)
+    },
+    cta: "", ctaAfter: 2.6,
   },
-  pickBeat("s20b-pick", "Which quadrilateral is it?", S => { resetBeat(S); S.frame = { x0: -4, y0: -4, x1: 4, y1: 4 } }, {
-    options: ["Rhombus", "Rectangle", "Kite", "Square"], answer: 2,
+  tapBeat("s20b-pick", "Which of these has both? Tap it.", S => {
+    resetBeat(S)
+    const at = (i: number): Vec => (tall(S) ? [(i % 2) * 5, -Math.floor(i / 2) * 5.6] : [i * 5.4, 0])
+    SYM_ORDER.forEach((k, i) => symShape(S, k, at(i)))
+    S.frame = tall(S) ? { x0: -2.8, y0: -8.4, x1: 7.8, y1: 2.8 } : { x0: -2.8, y0: -2.8, x1: 19, y1: 2.8 }
+    S.taps = polyTaps(S, SYM_ORDER)
+  }, {
+    want: "kite",
     notes: {
-      0: "A rhombus has two lines of symmetry.",
-      1: "A rectangle has two lines of symmetry, and its diagonals don't cross at right angles.",
-      3: "A square has four lines of symmetry.",
+      square: "A square has four lines of symmetry.",
+      rectangle: "A rectangle has two lines of symmetry, and its diagonals don't cross at right angles.",
+      rhombus: "A rhombus has two lines of symmetry.",
+    },
+    wrong: "Count the blue lines of symmetry on each.",
+    then: S => { S.polys = S.polys.map(p => (p.id === "kite" ? { ...p, col: GREEN, fill: GREEN, fillOp: 0.12 } : p)); S.touched = "kite" },
+  }),
+  pickBeat("s20b-name", "What is this quadrilateral called?", S => { resetBeat(S); S.frame = { x0: -3, y0: -2.8, x1: 3, y1: 2.8 }; symShape(S, "kite", [0, 0]) }, {
+    options: ["Rhombus", "Trapezium", "Kite", "Square"], answer: 2,
+    notes: {
+      0: "A rhombus has four equal sides.",
+      1: "A trapezium has one pair of parallel sides.",
+      3: "A square has four equal sides and four right angles.",
     },
     right: "Yes. A kite has one line of symmetry, and its diagonals cross at right angles.",
-    // each pick draws that shape with its lines of symmetry and diagonals
-    onPick: (S, k) => symBoard(S, ["rhombus", "rectangle", "kite", "square"][k]),
   }),
 ]
 
 // ── 4. Polygons ──────────────────────────────────────────────────────────
 
-const POLY_NAME: Record<number, string> = { 3: "Triangle", 4: "Quadrilateral", 5: "Pentagon", 6: "Hexagon", 8: "Octagon", 10: "Decagon" }
+const POLY_NAME: Record<number, string> = { 3: "Triangle", 4: "Quadrilateral", 5: "Pentagon", 6: "Hexagon", 7: "Heptagon", 8: "Octagon", 9: "Nonagon", 10: "Decagon" }
 const vName = (i: number) => `V${i}`
 const regular = (n: number, r = 3): Record<string, Vec> => Object.fromEntries(Array.from({ length: n }, (_, i) => [vName(i), dirOf(90 + (360 * i) / n).map(x => x * r) as Vec]))
 

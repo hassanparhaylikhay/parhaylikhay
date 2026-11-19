@@ -61,12 +61,12 @@ function Grid({ S }: { S: Scene }) {
   for (let x = Math.ceil(g.x0); x <= g.x1; x++) {
     const a = toScreen(S, [x, g.y0]), c = toScreen(S, [x, g.y1])
     const axis = g.axes && x === 0
-    out.push(<line key={`gx${x}`} x1={a[0]} y1={a[1]} x2={c[0]} y2={c[1]} stroke={axis ? QUIET : "#2a4a6a"} strokeWidth={axis ? 1.6 : 1.2} strokeDasharray={axis || !g.dotted ? undefined : "2 3"} />)
+    out.push(<line key={`gx${x}`} x1={a[0]} y1={a[1]} x2={c[0]} y2={c[1]} stroke={axis ? QUIET : "#2a2e31"} strokeWidth={axis ? 1.6 : 1} />)
   }
   for (let y = Math.ceil(g.y0); y <= g.y1; y++) {
     const a = toScreen(S, [g.x0, y]), c = toScreen(S, [g.x1, y])
     const axis = g.axes && y === 0
-    out.push(<line key={`gy${y}`} x1={a[0]} y1={a[1]} x2={c[0]} y2={c[1]} stroke={axis ? QUIET : "#2a4a6a"} strokeWidth={axis ? 1.6 : 1.2} strokeDasharray={axis || !g.dotted ? undefined : "2 3"} />)
+    out.push(<line key={`gy${y}`} x1={a[0]} y1={a[1]} x2={c[0]} y2={c[1]} stroke={axis ? QUIET : "#2a2e31"} strokeWidth={axis ? 1.6 : 1} />)
   }
   return <>{out}</>
 }

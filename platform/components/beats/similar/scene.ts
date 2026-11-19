@@ -486,7 +486,8 @@ export function step(S: Scene, dt: number) {
   // each shape eases to where it is going (at once under a finger)
   const held = S.drag?.kind === "handle" ? S.handles.find(h => h.id === (S.drag as { id: string }).id)?.sh : null
   for (const sh of S.shapes) {
-    const f = sh.id === held ? 1 : k(0.12)
+    // under a finger it follows at once, but eases into a value it clicks onto
+    const f = sh.id === held ? (S.snapped ? k(0.35) : 1) : k(0.12)
     const A = sh.D, B = sh.pose
     A.x += (B.x - A.x) * f; A.y += (B.y - A.y) * f
     A.rot += turnDiff(A.rot, B.rot) * f

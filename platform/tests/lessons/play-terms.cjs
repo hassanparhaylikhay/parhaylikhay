@@ -109,7 +109,8 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (id === "q-kite") { await corners(id, [["Q1", [0, -3]], ["Q2", [2, 1]], ["Q3", [0, 3]], ["Q4", [-2, 1]]]); continue }
     if (id === "s20-par") { await tapId("QR"); await noted("tapping QR"); await sleep(400); await tapId("RS"); await tapId("PQ"); continue }
     if (id === "s20-name") { await reason(0, 2); continue }
-    if (id === "s20b-pick") { await reason(0, 2); continue }
+    if (id === "s20b-pick") { await tapId("square"); await noted("tapping the square"); await sleep(400); await tapId("kite"); continue }
+    if (id === "s20b-name") { await reason(0, 2); continue }
     if (id === "poly-add") { await plus(3); await next(); continue }
     if (id === "poly-8" || id === "poly-10") { await plus(2); continue }
     if (id === "poly-pull") { const v = (await st()).pts.V0; await dragTo("V0", [v[0] + 1, v[1] + 1.2]); continue }

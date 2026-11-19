@@ -389,15 +389,16 @@ export function step(S: Scene, dt: number) {
   S.tick?.(S)
 
   // points ease to where they are going (at once under a finger)
-  const held = new Set<string>()
+  const held = new Set<string>(), gliding = new Set<string>()
   const d = S.drag
   if (d?.kind === "handle") {
     const h = S.handles.find(x => x.id === d.id)
-    if (h?.kind === "point") held.add(h.pt)
+    // a free corner follows the finger; one on the grid glides into each grid point it reaches
+    if (h?.kind === "point") (h.grid || S.snapped === h.id ? gliding : held).add(h.pt)
     if (h?.kind === "turn" || h?.kind === "slide") for (const n of h.pts) held.add(n)
   }
   for (const [n, pt] of Object.entries(S.pts)) {
-    const f = held.has(n) ? 1 : k(0.16)
+    const f = held.has(n) ? 1 : gliding.has(n) ? k(0.32) : k(0.16)
     pt.D = [pt.D[0] + (pt.p[0] - pt.D[0]) * f, pt.D[1] + (pt.p[1] - pt.D[1]) * f]
   }
 
