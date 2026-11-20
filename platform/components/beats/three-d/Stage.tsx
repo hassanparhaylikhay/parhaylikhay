@@ -214,11 +214,22 @@ function NetView({ S, op }: { S: Scene; op: number }) {
   const F = foldNet(n.def, n.tD)
   const depth = (P: V3[]) => P.reduce((s, p) => s + toCam(S, p)[2], 0) / P.length
   const order = Object.entries(F).sort((a, b) => depth(a[1]) - depth(b[1]))
+  const E = S.netEdit
   return (
     <g opacity={op}>
-      {order.map(([id, P]) => (
-        <polygon key={id} points={poly(P.map(p => proj(S, p)))} fill={CHALK} fillOpacity={0.1} stroke={CHALK} strokeWidth={2} strokeLinejoin="round" />
-      ))}
+      {order.map(([id, P]) => {
+        const col = n.cols?.[id]
+        return <polygon key={id} points={poly(P.map(p => proj(S, p)))} fill={col ?? CHALK} fillOpacity={col ? 0.28 : 0.1} stroke={col ?? CHALK} strokeWidth={2} strokeLinejoin="round" />
+      })}
+      {/* where a face can be added: breathing yellow squares */}
+      {E && n.tD < 0.02 && E.cand.map(([i, j]) => {
+        const k = E.k, P: V3[] = [[i * k, j * k, 0], [(i + 1) * k, j * k, 0], [(i + 1) * k, (j + 1) * k, 0], [i * k, (j + 1) * k, 0]]
+        return (
+          <polygon key={`cand${i}_${j}`} points={poly(P.map(p => proj(S, p)))} fill={YELLOW} fillOpacity={0.06} stroke={YELLOW} strokeWidth={1.6} strokeDasharray="5 5" strokeLinejoin="round">
+            <animate attributeName="stroke-opacity" values="0.25;0.9;0.25" dur="1.8s" repeatCount="indefinite" />
+          </polygon>
+        )
+      })}
     </g>
   )
 }

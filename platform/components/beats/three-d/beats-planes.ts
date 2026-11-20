@@ -18,9 +18,8 @@ import { atom, row, op } from "../equation"
 import { applyParts } from "../chapter"
 import { type Scene, type V3, BLUE, GREEN, BOX_FACES, boxPts, resetBeat, say, startInput, boxNode, segKey, goodView, vadd, vmul } from "./scene"
 import { type Beat, look, watch, solidBoard, lens } from "./kit"
-import { type Curved, type Net, curvedBounds, netBounds } from "./solids"
+import { type Curved, type Net, curvedBounds, netBounds, w25Net } from "./solids"
 import { type Sheet, makeSheet, sheetHandles, anglesOf, angGap, samePlane, curvedFits } from "./sheet"
-import type { Vec } from "../geometry"
 
 // ── the solids ───────────────────────────────────────────────────────────
 
@@ -214,26 +213,6 @@ function planeStep(text: string, n: V3, count: number, first = false): WalkStep<
 }
 
 // ── a net folding up (4024/21/O/N/25 Q3) ─────────────────────────────────
-
-const rect = (x: number, y: number, w: number, h: number): Vec[] => [[x, y], [x + w, y], [x + w, y + h], [x, y + h]]
-/**
- * The net from 4024/21/O/N/25 Q3: a row of four faces (3, 5.2, 3 and 5.2
- * wide, 4.7 tall) with a 3 by 5.2 face above and below the third. Folded on
- * that third face, it is the cuboid W25 (3 by 4.7, 5.2 high).
- */
-function w25Net(a = 3, b = 5.2, h = 4.7): Net {
-  const R = (x: number, y: number, w: number, hh: number) => rect(x - a / 2, y - h / 2, w, hh)
-  return {
-    faces: [
-      { id: "mid", flat: R(0, 0, a, h) },
-      { id: "right", flat: R(a, 0, b, h), parent: "mid", hinge: [0, 3] },
-      { id: "left", flat: R(-b, 0, b, h), parent: "mid", hinge: [1, 2] },
-      { id: "end", flat: R(-b - a, 0, a, h), parent: "left", hinge: [1, 2] },
-      { id: "top", flat: R(0, h, a, b), parent: "mid", hinge: [0, 1] },
-      { id: "bottom", flat: R(0, -b, a, b), parent: "mid", hinge: [3, 2] },
-    ],
-  }
-}
 
 function netBoard(S: Scene, net: Net) {
   resetBeat(S)

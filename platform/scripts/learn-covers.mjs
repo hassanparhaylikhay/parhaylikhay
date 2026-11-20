@@ -51,12 +51,17 @@ const PICKS = {
   "solids-and-nets": "faces-6",
   symmetry: "rect-2-lines",
   "symmetry-of-solids": "mirror",
+  "measuring-angles": "other-a",
+  "constructing-triangles": "rh-done",
+  "drawing-nets": "eleven",
 }
 
 /** Figures whose lines run to the board's edges are cropped by hand (1280 × 800 page coordinates). */
 const BY_HAND = {
   angles: [290, 215, 990, 653],
   "circle-theorems-2": [200, 150, 1080, 700],
+  "measuring-angles": [330, 140, 960, 420],
+  "constructing-triangles": [360, 90, 920, 560],
 }
 
 const W = 1280, H = 800, SCALE = 2

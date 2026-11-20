@@ -127,7 +127,8 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
     // ?debug in production.
     if (process.env.NODE_ENV !== "production" || new URLSearchParams(window.location.search).has("debug")) {
       (window as unknown as { __beatScene?: S }).__beatScene = S;
-      (window as unknown as { __beatApi?: unknown }).__beatApi = { ...engine.debug, beats: beats.map(b => ({ id: b.id, walk: b.walk?.length ?? 0 })) }
+      // what the test scripts need of each beat: an arrow beat (`cta`, no `done`) must show something (cold.cjs)
+      (window as unknown as { __beatApi?: unknown }).__beatApi = { ...engine.debug, beats: beats.map(b => ({ id: b.id, walk: b.walk?.length ?? 0, cta: b.cta, done: !!b.done })) }
     }
     let raf = 0
     let last = performance.now()

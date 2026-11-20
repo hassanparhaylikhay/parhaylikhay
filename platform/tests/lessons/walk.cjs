@@ -48,7 +48,9 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
       if (early !== null) bad.push(`${q.id}: a button before 30s (${early})`)
       if (!(await waitBtn("Show me how", 33000))) bad.push(`${q.id}: no "Show me how" after 30s`)
     } else {
-      for (const k of [1, 2, 3]) await type(String(answer + k))
+      // a measured answer is right within its tolerance: a wrong one must be further off
+      const tolv = await page.evaluate(() => window.__beatScene.input && window.__beatScene.input.tol) || 0
+      for (const k of [1, 2, 3]) await type(String(answer + k + Math.ceil(tolv)))
       if (!(await waitBtn("Show me how", 3000))) { bad.push(`${q.id}: no "Show me how" after 3 wrong answers`); continue }
     }
     const asked = await phrase()
@@ -72,7 +74,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
     if (!keypad) bad.push(`${q.id}: no keypad after the walkthrough`)
     // still stuck after the walkthrough: two more wrong answers bring it back (never left stuck)
     if (q === qs[1]) {
-      for (const k of [1, 2]) await type(String(answer + k))
+      for (const k of [1, 2]) await type(String(answer + k + 5))
       if (!(await waitBtn("Show me how", 3000))) bad.push(`${q.id}: "Show me how" not offered again after the walkthrough`)
     }
     await type(typed || String(answer))

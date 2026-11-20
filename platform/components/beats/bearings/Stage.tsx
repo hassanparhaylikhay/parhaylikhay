@@ -7,7 +7,7 @@ import { type Vec, add, sub, mul } from "../geometry"
 import {
   type Scene, type Layout, CHALK, GREEN, YELLOW, BLUE, QUIET,
   ptS, toScreen, dirS, arcPts, rayEnd, northPx, norm, brgText, layout, arcSpot,
-  rulerGeom, protGeom, lensGeom, inLens, pageRect, protCanTurn, protCue,
+  rulerGeom, protGeom, lensGeom, inLens, pageRect, protCanTurn, protCue, protLensGeom, compGeom,
 } from "./scene"
 
 /**
@@ -36,9 +36,11 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
           </g>
           <g opacity={vis("marks")}>
             <Arcs S={S} L={L} />
+            <Squares S={S} L={L} />
           </g>
           <g opacity={vis("fig")}>
             <Rays S={S} L={L} />
+            <PenArcs S={S} />
             <Markers S={S} />
             <Dots S={S} />
           </g>
@@ -46,7 +48,9 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
           <Along S={S} />
           <RulerTool S={S} />
           <ProtTool S={S} L={L} />
+          <CompTool S={S} />
           <Lens S={S} L={L} />
+          <ProtLens S={S} L={L} />
         </g>
       </svg>
       <Labels S={S} />
@@ -151,7 +155,8 @@ function ProtTool({ S, L }: { S: Scene; L: Layout }) {
   }
   // the end that goes on North, while it is being turned there (green once it is on)
   if (P.want !== undefined && P.on && protCanTurn(P)) {
-    const tip = add(G.C, mul(dirS(P.rot + norm(-P.want)), G.R)), done = P.rot === norm(P.want)
+    // the end that goes onto North (or onto the arm it is to lie along)
+    const tip = add(G.C, mul(dirS(P.rot + norm((P.aim ?? 0) - P.want)), G.R)), done = P.rot === norm(P.want)
     if (!done) out.push(<line key="endglow" x1={G.C[0]} y1={G.C[1]} x2={tip[0]} y2={tip[1]} stroke={YELLOW} strokeWidth={7} strokeLinecap="round" filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.1;0.5;0.1" dur="1.8s" repeatCount="indefinite" /></line>)
     out.push(<line key="end" x1={G.C[0]} y1={G.C[1]} x2={tip[0]} y2={tip[1]} stroke={done ? GREEN : YELLOW} strokeWidth={2.2} strokeLinecap="round" />)
   }
@@ -168,6 +173,60 @@ function ProtTool({ S, L }: { S: Scene; L: Layout }) {
     out.push(handle(G.penAt, "ppen", S.drag?.kind === "protPen"))
   }
   if (protCanTurn(P)) out.push(handle(G.turnAt, "pturn", S.drag?.kind === "protTurn"))
+  return <g>{out}</g>
+}
+
+/** The arcs the compasses drew, in pencil blue (and the one being drawn now). */
+function PenArcs({ S }: { S: Scene }) {
+  const f = S.fitD ?? S.fit
+  const u = f?.u ?? 30
+  const arcs = [...S.penArcs]
+  const C = S.comp
+  if (C?.drawing && Math.abs(C.drawing.to - C.drawing.from) > 0.5) arcs.push({ id: "live", at: C.point, r: C.open, from: C.drawing.from, sweep: C.drawing.to - C.drawing.from })
+  return (
+    <>
+      {arcs.map(a => {
+        const c = toScreen(S, a.at), sw = Math.max(-360, Math.min(360, a.sweep))
+        // fine steps: a big arc must not show its corners
+        const n = Math.max(8, Math.ceil(Math.abs(sw) / 1.5))
+        const P = Array.from({ length: n + 1 }, (_, k) => add(c, mul(dirS(a.from + (sw * k) / n), a.r * u)))
+        return (
+          <g key={a.id}>
+            {a.pulse && <path d={path(P)} fill="none" stroke={a.col ?? BLUE} strokeWidth={9} strokeLinecap="round" filter="url(#pl-soft)">{breathe("1.4s")}</path>}
+            <path d={path(P)} fill="none" stroke={a.col ?? BLUE} strokeWidth={2.2} strokeLinecap="round" />
+          </g>
+        )
+      })}
+    </>
+  )
+}
+
+/**
+ * The compasses: two legs from a hinge, the point on the page and a pencil at
+ * the other end; a knob on top. What can be done with them glows yellow: the
+ * pencil (to open them, or to draw), the knob (to carry them), and a ring
+ * where the point is to go.
+ */
+function CompTool({ S }: { S: Scene }) {
+  const C = S.comp
+  if (!C) return null
+  const G = compGeom(S)
+  const out: React.ReactNode[] = []
+  const held = (k: string) => S.drag?.kind === k
+  // the legs: a needle to the point, a pencil to the other end
+  out.push(<line key="needle" x1={G.H[0]} y1={G.H[1]} x2={G.P[0]} y2={G.P[1]} stroke={CHALK} strokeOpacity={0.85} strokeWidth={3.2} strokeLinecap="round" />)
+  out.push(<line key="pleg" x1={G.H[0]} y1={G.H[1]} x2={G.Q[0]} y2={G.Q[1]} stroke={CHALK} strokeOpacity={0.85} strokeWidth={3.2} strokeLinecap="round" />)
+  // the pencil: its lead near the tip
+  const back = sub(G.Q, mul(sub(G.Q, G.H), 18 / (Math.hypot(G.Q[0] - G.H[0], G.Q[1] - G.H[1]) || 1)))
+  out.push(<line key="lead" x1={back[0]} y1={back[1]} x2={G.Q[0]} y2={G.Q[1]} stroke={BLUE} strokeWidth={4} strokeLinecap="round" />)
+  out.push(<circle key="pt" cx={G.P[0]} cy={G.P[1]} r={2.6} fill={CHALK} />)
+  out.push(<circle key="hinge" cx={G.H[0]} cy={G.H[1]} r={6} fill="#0d1216" stroke={CHALK} strokeWidth={2} />)
+  out.push(<line key="stem" x1={G.H[0]} y1={G.H[1]} x2={G.knob[0]} y2={G.knob[1]} stroke={CHALK} strokeWidth={3} strokeLinecap="round" />)
+  out.push(<circle key="knob" cx={G.knob[0]} cy={G.knob[1]} r={5} fill={CHALK} />)
+  // carried by the point: it lands exactly where the finger puts it (opened wide, the top can be off a phone's screen)
+  if (C.move) out.push(handle(G.P, "cpoint", held("compMove")))
+  if (C.canOpen || C.draw) out.push(handle(G.Q, "cpen", held("compOpen") || held("compDraw")))
+  if (C.move && !C.on && C.goal && S.P[C.goal]) { const g = ptS(S, C.goal); out.push(<circle key="cgoal" cx={g[0]} cy={g[1]} r={17} fill="none" stroke={YELLOW} strokeWidth={2.2} strokeDasharray="5 4">{breathe("1.4s")}</circle>) }
   return <g>{out}</g>
 }
 
@@ -203,6 +262,60 @@ function Lens({ S, L }: { S: Scene; L: Layout }) {
       </g>
       <circle cx={lens.c[0]} cy={lens.c[1]} r={lens.r} fill="none" stroke={CHALK} strokeOpacity={0.7} strokeWidth={1.6} />
     </g>
+  )
+}
+
+/** The protractor's ticks round its edge (all of them, or near one bearing), as `Lens` draws them bigger. */
+function protTicks(S: Scene, L: Layout, key: string, scale = 1, near?: number): React.ReactNode[] {
+  const P = S.prot!, G = protGeom(S, L)
+  const out: React.ReactNode[] = []
+  for (let k = 0; k <= 180; k++) {
+    if (near !== undefined && Math.abs(((((P.rot + k - near) % 360) + 540) % 360) - 180) > 20) continue
+    const d = dirS(P.rot + k), t = k % 10 === 0 ? 11 : k % 5 === 0 ? 8 : 4
+    const a = add(G.C, mul(d, G.R)), b = add(G.C, mul(d, G.R - t))
+    out.push(<line key={`${key}${k}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={CHALK} strokeOpacity={k % 10 === 0 ? 0.95 : 0.75} strokeWidth={(k % 10 === 0 ? 1.3 : 0.9) / scale} />)
+  }
+  return out
+}
+
+/** The protractor's reading lens: where the line crosses its edge, close up, with the line and the ticks. */
+function ProtLens({ S, L }: { S: Scene; L: Layout }) {
+  const pl = protLensGeom(S, L)
+  if (!pl || !S.prot) return null
+  const G = protGeom(S, L)
+  const t = `translate(${pl.c[0]} ${pl.c[1]}) scale(${pl.x}) translate(${-pl.at[0]} ${-pl.at[1]})`
+  const toEdge = add(pl.c, mul(sub(pl.cross, pl.c), pl.r / (Math.hypot(pl.cross[0] - pl.c[0], pl.cross[1] - pl.c[1]) || 1)))
+  const rim = arcPts(G.C, S.prot.spot! - 25, 50, G.R)
+  const segs = S.segs.filter(sg => S.P[sg.a] && S.P[sg.b]).map(sg => { const A = ptS(S, sg.a), B = ptS(S, sg.b); return <line key={`pls${sg.a}${sg.b}`} x1={A[0]} y1={A[1]} x2={B[0]} y2={B[1]} stroke={sg.col ?? CHALK} strokeWidth={2.4 / pl.x} /> })
+  return (
+    <g>
+      <line x1={pl.cross[0]} y1={pl.cross[1]} x2={toEdge[0]} y2={toEdge[1]} stroke={CHALK} strokeOpacity={0.35} strokeWidth={1.2} strokeDasharray="3 4" />
+      <defs><clipPath id="pl-plens"><circle cx={pl.c[0]} cy={pl.c[1]} r={pl.r} /></clipPath></defs>
+      <circle cx={pl.c[0]} cy={pl.c[1]} r={pl.r} fill="#0d1216" />
+      <g clipPath="url(#pl-plens)">
+        <g transform={t}>
+          <path d={path(rim)} fill="none" stroke={CHALK} strokeOpacity={0.5} strokeWidth={1.3 / pl.x} />
+          {protTicks(S, L, "plt", pl.x, S.prot.spot)}
+          {segs}
+          <circle cx={pl.cross[0]} cy={pl.cross[1]} r={4 / pl.x} fill={YELLOW} />
+        </g>
+      </g>
+      <circle cx={pl.c[0]} cy={pl.c[1]} r={pl.r} fill="none" stroke={CHALK} strokeOpacity={0.7} strokeWidth={1.6} />
+    </g>
+  )
+}
+
+/** Right-angle squares at a place (an angle is compared with $90^\circ$ by laying one on it). */
+function Squares({ S, L }: { S: Scene; L: Layout }) {
+  return (
+    <>
+      {S.squares.map((q, i) => {
+        if (!S.P[q.at]) return null
+        const c = ptS(S, q.at), s = L.arcPx * 1.25
+        const a = add(c, mul(dirS(q.from), s)), b = add(c, mul(dirS(q.from + 90), s)), m = add(a, mul(dirS(q.from + 90), s))
+        return <path key={`sq${i}`} d={`M ${c[0]} ${c[1]} L ${a[0]} ${a[1]} L ${m[0]} ${m[1]} L ${b[0]} ${b[1]} Z`} fill={q.col} fillOpacity={0.12} stroke={q.col} strokeWidth={2} strokeDasharray="5 4" strokeLinejoin="round" />
+      })}
+    </>
   )
 }
 

@@ -36,9 +36,13 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
         }
         return op > 0.15
       }).length
-      // anything else on the board: a working line, labels, a keypad
+      // anything else on the board: a working line, labels, a keypad, a card or display of the lesson's own
+      // (any visible text below the phrase that is not the phrase, a note, a button or the words to pick from)
       const shown = el => { let op = 1; for (let e = el; e && e.tagName.toLowerCase() !== "body"; e = e.parentElement) { const o = e.style.opacity; if (o !== "") op *= +o } return op > 0.15 && el.textContent.trim() }
-      const other = [...document.querySelectorAll(".pl-eq-atom, [data-k]")].some(shown) || !!document.querySelector("[class*=keypad] button")
+      const phraseBottom = Math.max(0, ...[...document.querySelectorAll("[class*=phrase]")].map(e => e.getBoundingClientRect().bottom))
+      const own = [...document.querySelectorAll("body *")].filter(el => !el.children.length && el.textContent.trim() && !el.closest("[class*=phrase], [class*=note], [class*=ctaWrap], [class*=choices], button, svg, script, style"))
+        .some(el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.left < innerWidth && r.right > 0 && r.top > phraseBottom && r.bottom < innerHeight && getComputedStyle(el).visibility !== "hidden" && shown(el) })
+      const other = own || [...document.querySelectorAll(".pl-eq-atom, [data-k]")].some(shown) || !!document.querySelector("[class*=keypad] button")
       // a beat to look at (an arrow) or to answer by picking a word must have something on the board;
       // a beat where the student draws the first shape may open on an empty board
       const b = window.__beatApi.beats[window.__beatIdx ?? 0]

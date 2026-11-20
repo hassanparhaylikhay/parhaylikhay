@@ -199,3 +199,71 @@ export function prismNet(a = 1.6, b = 1.4, len = 2.2): Net {
     ],
   }
 }
+
+// ── nets made on a grid ──────────────────────────────────────────────────
+
+/**
+ * A net from squares on a grid (`cells` in face units, each `k` cm): every
+ * face is hinged to one next to it that is nearer the first (a tree, found
+ * outwards from `base`), and folds up 90°. Faces are named by their cell.
+ */
+export function netFromCells(cells: [number, number][], k: number, base = 0): Net {
+  const key = (c: [number, number]) => `c${c[0]}_${c[1]}`
+  const has = new Map(cells.map(c => [key(c), c] as const))
+  const faces: NetFace[] = []
+  const seen = new Set<string>()
+  const queue: { c: [number, number]; parent?: [number, number] }[] = cells.length ? [{ c: cells[base] }] : []
+  while (queue.length) {
+    const { c, parent } = queue.shift()!
+    if (seen.has(key(c))) continue
+    seen.add(key(c))
+    const [i, j] = c, x0 = i * k, y0 = j * k
+    const flat: Vec[] = [[x0, y0], [x0 + k, y0], [x0 + k, y0 + k], [x0, y0 + k]]
+    let hinge: [number, number] | undefined
+    if (parent) {
+      // the edge it shares with the face it hangs from
+      if (parent[0] === i - 1) hinge = [0, 3]
+      else if (parent[0] === i + 1) hinge = [1, 2]
+      else if (parent[1] === j - 1) hinge = [0, 1]
+      else hinge = [3, 2]
+    }
+    faces.push({ id: key(c), flat, parent: parent ? key(parent) : undefined, hinge, angle: 90 })
+    for (const d of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+      const n: [number, number] = [i + d[0], j + d[1]]
+      if (has.has(key(n)) && !seen.has(key(n))) queue.push({ c: n, parent: c })
+    }
+  }
+  return { faces }
+}
+
+/** Faces of a folded net that land on the same place as another (the middles of their corners agree). */
+export function clashes(net: Net): string[] {
+  const F = foldNet(net, 1)
+  const mid = (P: V3[]): V3 => [P.reduce((s, p) => s + p[0], 0) / P.length, P.reduce((s, p) => s + p[1], 0) / P.length, P.reduce((s, p) => s + p[2], 0) / P.length]
+  const ids = Object.keys(F), out = new Set<string>()
+  for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) {
+    const p = mid(F[ids[a]]), q = mid(F[ids[b]])
+    if (Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) < 1e-6) { out.add(ids[a]); out.add(ids[b]) }
+  }
+  return [...out]
+}
+
+/**
+ * The net from 4024/21/O/N/25 Q3: a row of four faces (3, 5.2, 3 and 5.2
+ * wide, 4.7 tall) with a 3 by 5.2 face above and below the third. Folded on
+ * that third face, it is the cuboid W25 (3 by 4.7, 5.2 high).
+ */
+export function w25Net(a = 3, b = 5.2, h = 4.7): Net {
+  const R = (x: number, y: number, w: number, hh: number) => rect(x - a / 2, y - h / 2, w, hh)
+  return {
+    faces: [
+      { id: "mid", flat: R(0, 0, a, h) },
+      { id: "right", flat: R(a, 0, b, h), parent: "mid", hinge: [0, 3] },
+      { id: "left", flat: R(-b, 0, b, h), parent: "mid", hinge: [1, 2] },
+      { id: "end", flat: R(-b - a, 0, a, h), parent: "left", hinge: [1, 2] },
+      { id: "top", flat: R(0, h, a, b), parent: "mid", hinge: [0, 1] },
+      { id: "bottom", flat: R(0, -b, a, b), parent: "mid", hinge: [3, 2] },
+    ],
+  }
+}
+

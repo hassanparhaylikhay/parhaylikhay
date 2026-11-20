@@ -117,7 +117,39 @@ export interface Prot {
   spot?: number
   /** a number on the row being read that breathes (the one to find) */
   find?: number
+  /** the line its glowing end goes onto, as a bearing (North when not set: an arm of an angle otherwise) */
+  aim?: number
+  /** a reading lens over where the line crosses its edge (`spot`), on the row being read */
+  lens?: boolean
+  /** a number on the row NOT being read, shown pink (the wrong reading) */
+  warn?: number
 }
+
+/**
+ * Compasses on the page: the point at `point` (world), clicked onto a place
+ * (`on`); the pencil `open` cm away on bearing `dir`. One job at a time:
+ * `canOpen` (they lie on the ruler, the point on its 0, and the pencil leg
+ * slides along it), `move` (carried by the top onto a place), `draw` (the
+ * pencil turned round the point, drawing an arc as it goes).
+ */
+export interface Comp {
+  point: Vec
+  on: string | null
+  open: number
+  dir: number
+  canOpen: boolean
+  move: boolean
+  draw: boolean
+  /** the opening asked for: it clicks there from close by */
+  openAt?: number
+  /** the place a ring waits at for the point */
+  goal?: string
+  /** the arc being drawn now, as bearings carried on past 360 (from where the pencil started to where it is) */
+  drawing: { from: number; to: number } | null
+}
+
+/** An arc the compasses drew on the page: round `at` (world), radius `r` (cm), from a bearing, clockwise `sweep` degrees (or back, negative). */
+export interface PenArc { id: string; at: Vec; r: number; from: number; sweep: number; col?: string; pulse?: boolean }
 
 /** Marks along a line at every `step` (world units), each piece labelled; `lit` pieces glow. */
 export interface Along { a: string; b: string; step: number; tex?: string; under?: string; lit: number }
@@ -155,6 +187,8 @@ export type Drag =
   /** `off`: where on the protractor it was held, from its 0 end (its handle is at 0) */
   | { kind: "protTurn"; moved: number; off: number }
   | { kind: "point"; n: string; off: Vec; moved: number }
+  | { kind: "compOpen" | "compDraw"; moved: number }
+  | { kind: "compMove"; off: Vec; moved: number }
   | { kind: "pan"; start: Vec; moved: number }
 
 export interface Lab { key: string; tex: string; col: string; at: Vec; anchor: Vec; size: number; op: number; pulse?: boolean; word?: boolean }
@@ -240,6 +274,13 @@ export interface Scene {
   keep: Record<string, number>
   ruler: Ruler | null
   prot: Prot | null
+  /** compasses on the page, and the arcs they have drawn */
+  comp: Comp | null
+  penArcs: PenArc[]
+  /** the arcs the student drew, carried from beat to beat (not cleared between beats) */
+  arcMem: PenArc[]
+  /** right-angle squares at places, from a bearing turning clockwise (to compare an angle with $90^\circ$) */
+  squares: { at: string; from: number; col: string }[]
   /** a sheet of paper under the drawing (world rect), and what is written at its corner */
   page: { x0?: number; y0?: number; x1?: number; y1?: number; caption?: string } | null
   along: Along | null
@@ -265,7 +306,7 @@ export function createScene(): Scene {
     eq: createBoard(), eqFn: null, eqRoom: { v: 0, t: 0 }, input: null, choice: null,
     acts: [], act: null, tick: null, timers: [], vis, labs: [], labD: {}, labOff: {}, labSide: {}, walkTex: null,
     drag: null, touch: false, got: new Set(), vals: {}, keep: {}, touched: null, flashGood: 0, note: null,
-    ruler: null, prot: null, page: null, along: null, holdFit: false, keyRows: null,
+    ruler: null, prot: null, page: null, along: null, holdFit: false, keyRows: null, squares: [], comp: null, penArcs: [], arcMem: [],
   }
 }
 
@@ -583,7 +624,9 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
     for (let i = out.length - 1; i >= 0; i--) if ((out[i].key.startsWith("NW-") || out[i].key === "PG") && dist(out[i].at, G.C) < G.R + out[i].size) out.splice(i, 1)
   }
   const lens = S.ruler ? lensGeom(S, L) : null
-  return unclash(lens ? out.filter(l => l.key.startsWith("RL-") || dist(l.at, lens.c) > lens.r + l.size * 0.4) : out)
+  const pl = S.prot ? protLensGeom(S, L) : null
+  const seen = (l: Lab) => (!lens || l.key.startsWith("RL-") || dist(l.at, lens.c) > lens.r + l.size * 0.4) && (!pl || l.key.startsWith("PL-") || dist(l.at, pl.c) > pl.r + l.size * 0.4)
+  return unclash(lens || pl ? out.filter(seen) : out)
 }
 
 /** The numbers on the ruler and the protractor, in the lens, on the page, and along a line. */
@@ -615,9 +658,26 @@ function toolLabels(S: Scene, L: Layout, all: Lab[]) {
     for (let k = 0; k <= 180; k += 10) {
       const d = dirS(P.rot + k)
       const qo = add(G.C, mul(d, G.R - small * 1.55)), qi = add(G.C, mul(d, G.R - small * 3.0))
-      out.push({ key: `PO-${k}`, tex: String(k), col: col("outer"), at: qo, anchor: qo, size: small - 1, op: P.lit === "inner" ? 0.55 : 1, pulse: P.lit === "outer" && P.find === k })
-      out.push({ key: `PI-${k}`, tex: String(180 - k), col: col("inner"), at: qi, anchor: qi, size: small - 2, op: P.lit === "outer" ? 0.55 : 0.9, pulse: P.lit === "inner" && P.find === 180 - k })
+      const wo = P.lit === "inner" && P.warn === k, wi = P.lit === "outer" && P.warn === 180 - k
+      out.push({ key: `PO-${k}`, tex: String(k), col: wo ? PINK : col("outer"), at: qo, anchor: qo, size: small - 1, op: P.lit === "inner" && !wo ? 0.55 : 1, pulse: (P.lit === "outer" && P.find === k) || wo })
+      out.push({ key: `PI-${k}`, tex: String(180 - k), col: wi ? PINK : col("inner"), at: qi, anchor: qi, size: small - 2, op: P.lit === "outer" && !wi ? 0.55 : 0.9, pulse: (P.lit === "inner" && P.find === 180 - k) || wi })
     }
+    // the reading lens: the numbers of the row being read near where the line crosses, bigger
+    const pl = protLensGeom(S, L)
+    if (pl) {
+      for (let k = 0; k <= 180; k += 10) {
+        if (Math.abs(diff(P.rot + k, P.spot!)) > 16) continue
+        const d = dirS(P.rot + k), outer = P.lit === "outer"
+        const q = inLens(pl, add(G.C, mul(d, G.R - small * (outer ? 1.55 : 3.0))))
+        if (dist(q, pl.c) > pl.r - small * 0.9) continue
+        out.push({ key: `PL-${k}`, tex: String(outer ? k : 180 - k), col: BLUE, at: q, anchor: q, size: small + 6, op: 1 })
+      }
+    }
+  }
+  if (S.comp && S.comp.canOpen) {
+    const G = compGeom(S)
+    const q = add(G.Q, mul(G.n, -(small + 14)))
+    out.push({ key: "CO", tex: `${S.comp.open.toFixed(1)}\\text{ cm}`, col: YELLOW, at: q, anchor: q, size: small + 4, op: 1 })
   }
   const pr = pageRect(S, L)
   if (S.page?.caption && pr) {
@@ -812,6 +872,9 @@ export function resetBeat(S: Scene) {
   S.along = null
   S.holdFit = false
   S.keyRows = null
+  S.squares = []
+  S.comp = null
+  S.penArcs = []
 }
 
 /** Set the places for a board (old ones not named go). */
@@ -948,7 +1011,79 @@ export function protGeom(S: Scene, L = layout(S)) {
   // big enough on a phone for its two rings of numbers to stay apart
   const R = clamp(Math.min(S.w, S.h) * (S.w < 560 ? 0.33 : 0.2), 110, 150)
   void L
-  return { C, R, turnAt: add(C, mul(dirS(P.rot), R + 14)), penAt: P.pen === null ? null : add(C, mul(dirS(P.pen), R + 2)) }
+  // its turning handle is at its 0 end, or the other end, or the top of its rim: whichever is on the screen (always in reach)
+  const m = 24
+  const seen = (q: Vec) => q[0] > m && q[0] < S.w - m && q[1] > m + 90 && q[1] < S.h - m
+  const turnOff = [0, 180, 90].find(k => seen(add(C, mul(dirS(P.rot + k), R + 14)))) ?? 0
+  return { C, R, turnOff, turnAt: add(C, mul(dirS(P.rot + turnOff), R + 14)), penAt: P.pen === null ? null : add(C, mul(dirS(P.pen), R + 2)) }
+}
+
+/**
+ * The protractor's reading lens: once it lies still with a row lit and a line
+ * crossing its edge (`spot`), a round window shows that crossing and the
+ * nearest number of the row close up (a degree is a hair's width on a
+ * phone). It sits outside the protractor, beyond the crossing if there is room.
+ */
+export function protLensGeom(S: Scene, L = layout(S)) {
+  const P = S.prot
+  if (!P || !P.lens || P.spot === undefined || !P.lit || !P.on) return null
+  if (S.drag?.kind === "prot" || S.drag?.kind === "protTurn") return null
+  const G = protGeom(S, L)
+  const r = L.compact ? 46 : 58
+  const small = L.compact ? 11 : 13
+  const cross = add(G.C, mul(dirS(P.spot), G.R))
+  // the nearest number on the row being read
+  const k = Math.round(norm(P.spot - P.rot) / 10) * 10
+  const num = add(G.C, mul(dirS(P.rot + clamp(k, 0, 180)), G.R - small * (P.lit === "outer" ? 1.55 : 3.0)))
+  const at = lerpV(cross, num, 0.5)
+  const x = clamp((r - small * 1.4) / Math.max(1, dist(cross, num) / 2), 1.6, 3.2)
+  const b = L.board
+  const fits = (c: Vec) => c[0] - r > b.x0 - 4 && c[0] + r < b.x1 + 4 && c[1] - r > b.y0 - 4 && c[1] + r < b.y1 + 4
+  // outside the protractor, clear of the places' letters, and off the lines of the figure if it can be
+  const offLines = (c: Vec) => S.segs.every(sg => { if (!S.P[sg.a] || !S.P[sg.b]) return true; const A = ptS(S, sg.a), B = ptS(S, sg.b), d = sub(B, A), l2 = dot(d, d) || 1, t = clamp(dot(sub(c, A), d) / l2, 0, 1); return dist(c, add(A, mul(d, t))) > r + 6 })
+  const clear = (c: Vec) => dist(c, G.C) > G.R + r * 0.75 && Object.keys(S.names).every(n => !S.P[n] || dist(c, ptS(S, n)) > r + 14)
+  const tries: Vec[] = []
+  for (const kk of [1.7, 2.3, 3.0]) for (const dd of [0, 25, -25, 50, -50, 80, -80, 120, -120, 180]) tries.push(add(cross, mul(dirS(P.spot + dd), r * kk)))
+  const c = tries.find(q => fits(q) && clear(q) && offLines(q)) ?? tries.find(q => fits(q) && clear(q)) ?? tries.find(fits) ?? tries[0]
+  return { c, r, at, cross, x }
+}
+
+/**
+ * The compasses on the screen: the point, the pencil's tip, the hinge (above
+ * the middle of the legs, lower as they open), the knob on top.
+ */
+export function compGeom(S: Scene) {
+  const C = S.comp!
+  const f = S.fitD ?? S.fit
+  const u = f?.u ?? 30
+  const P = toScreen(S, C.point)
+  const e = dirS(C.dir)
+  const Q = add(P, mul(e, C.open * u))
+  // the hinge stands to the left of the legs, as you look from the point to the pencil
+  const n: Vec = [e[1], -e[0]]
+  const spread = C.open * u
+  const H = add(lerpV(P, Q, 0.5), mul(n, clamp(spread * 0.55, 34, 90)))
+  const knob = add(H, mul(n, 15))
+  return { P, Q, H, knob, e, n, u }
+}
+
+/** Whether an arc the compasses drew round `at` with radius `r` passes through the bearing `b` (within `slack` degrees). */
+export const arcCovers = (S: Scene, at: Vec, r: number, b: number, slack = 6) => arcsCover(S.penArcs, at, r, b, slack)
+export function arcsCover(arcs: PenArc[], at: Vec, r: number, b: number, slack = 6): boolean {
+  return arcs.some(a => {
+    if (Math.abs(a.r - r) > 1e-6 || Math.hypot(a.at[0] - at[0], a.at[1] - at[1]) > 1e-6) return false
+    if (Math.abs(a.sweep) >= 360 - slack) return true
+    const lo = a.sweep >= 0 ? a.from : a.from + a.sweep, span = Math.abs(a.sweep)
+    return norm(b - lo + slack) <= span + 2 * slack
+  })
+}
+
+/** After the compasses are carried: their point clicks onto a place. */
+function settleComp(S: Scene) {
+  const C = S.comp!
+  const on = placeNear(S, toScreen(S, C.point), S.touch ? 40 : 30)
+  C.on = on
+  if (on) C.point = [...S.P[on]] as Vec
 }
 
 /** Whether a bearing is on the protractor's half circle (clockwise from its 0 end through 180°). */
@@ -960,7 +1095,7 @@ export const protCanTurn = (P: Prot) => P.turn && (P.on !== null || !P.move)
 /** The place whose North line the protractor is being turned onto (it glows), if it is still to be turned. */
 export function protCue(S: Scene): string | null {
   const P = S.prot
-  if (!P || P.want === undefined || !P.on || !protCanTurn(P) || P.rot === norm(P.want)) return null
+  if (!P || P.want === undefined || P.aim !== undefined || !P.on || !protCanTurn(P) || P.rot === norm(P.want)) return null
   return P.on
 }
 
@@ -999,6 +1134,12 @@ function settleProt(S: Scene) {
 // ── input ────────────────────────────────────────────────────────────────
 
 const tol = (S: Scene) => (S.touch ? 34 : 22)
+
+export function distToSeg(p: Vec, a: Vec, b: Vec) {
+  const ab = sub(b, a)
+  const t = clamp(dot(sub(p, a), ab) / Math.max(1e-9, dot(ab, ab)), 0, 1)
+  return dist(p, add(a, mul(ab, t)))
+}
 
 export function inPoly(p: Vec, P: Vec[]): boolean {
   let inside = false
@@ -1041,6 +1182,17 @@ function turnRay(S: Scene, r: Ray, p: Vec) {
 export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
   S.touch = touch
   const t = tol(S)
+  if (S.comp) {
+    const C = S.comp, G = compGeom(S)
+    if ((C.draw || C.canOpen) && dist(p, G.Q) < t + 16) {
+      if (C.draw) { C.drawing = { from: C.dir, to: C.dir }; S.drag = { kind: "compDraw", moved: 0 } } else S.drag = { kind: "compOpen", moved: 0 }
+      return true
+    }
+    // carried by the point (it goes where the finger is), the top, or a leg
+    if (C.move && (dist(p, G.P) < t + 18 || dist(p, G.knob) < t + 18 || dist(p, G.H) < t + 12 || distToSeg(p, G.H, G.P) < t || distToSeg(p, G.H, G.Q) < t)) { S.drag = { kind: "compMove", off: sub(G.P, p), moved: 0 }; return true }
+    // drawing can start from the top too (it turns round the point)
+    if (C.draw && dist(p, G.knob) < t + 18) { C.drawing = { from: C.dir, to: C.dir }; S.drag = { kind: "compDraw", moved: 0 }; return true }
+  }
   if (S.prot) {
     const P = S.prot, G = protGeom(S)
     const v = sub(p, G.C), d = Math.hypot(v[0], v[1])
@@ -1048,7 +1200,7 @@ export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
     const centre = touch ? 40 : 30
     const onBody = d < G.R && (d < centre || onArc(P, b))
     if (P.pen !== null && G.penAt && dist(p, G.penAt) < t + 14) { S.drag = { kind: "protPen", moved: 0 }; return true }
-    if (protCanTurn(P) && dist(p, G.turnAt) < t + 12) { S.drag = { kind: "protTurn", moved: 0, off: 0 }; return true }
+    if (protCanTurn(P) && dist(p, G.turnAt) < t + 12) { S.drag = { kind: "protTurn", moved: 0, off: G.turnOff }; return true }
     if (P.move && onBody) { S.drag = { kind: "prot", off: sub(G.C, p), moved: 0 }; return true }
     // one that stays put turns from wherever it is held, as a protractor on paper is turned by hand
     if (!P.move && protCanTurn(P) && onBody && d > centre) { S.drag = { kind: "protTurn", moved: 0, off: norm(b - P.rot) }; return true }
@@ -1092,6 +1244,24 @@ export function pointerMove(S: Scene, p: Vec) {
     S.ruler.pen = clamp(Math.round((dot(sub(p, G.Z), G.e) / G.u) * 10) / 10, 0, S.ruler.len)
     // the length asked for clicks on from close by (a finger cannot place a millimetre exactly)
     if (S.ruler.penAt !== undefined && Math.abs(S.ruler.pen - S.ruler.penAt) <= 0.15) S.ruler.pen = S.ruler.penAt
+    return
+  }
+  if (d.kind === "compOpen" && S.comp) {
+    d.moved += 1
+    const C = S.comp, G = compGeom(S)
+    C.open = clamp(Math.round((dot(sub(p, G.P), G.e) / G.u) * 10) / 10, 0.5, S.ruler ? S.ruler.len : 12)
+    // the opening asked for clicks on from close by (a millimetre is a hair's width under a finger)
+    if (C.openAt !== undefined && Math.abs(C.open - C.openAt) <= (S.touch ? 0.3 : 0.2)) C.open = C.openAt
+    return
+  }
+  if (d.kind === "compMove" && S.comp) { d.moved += 1; S.comp.point = toWorld(S, keep(add(p, d.off))); settleComp(S); return }
+  if (d.kind === "compDraw" && S.comp?.drawing) {
+    d.moved += 1
+    const C = S.comp, P = toScreen(S, C.point), w = S.comp.drawing
+    const b = norm((Math.atan2(p[0] - P[0], P[1] - p[1]) * 180) / Math.PI)
+    // the arc carries on past a full turn without jumping back
+    w.to += diff(w.to, b)
+    C.dir = b
     return
   }
   if (d.kind === "prot" && S.prot) { d.moved += 1; S.prot.c = toWorld(S, keep(add(p, d.off))); settleProt(S); return }
@@ -1138,6 +1308,13 @@ export function pointerUp(S: Scene) {
   const d = S.drag
   if (!d) return
   S.drag = null
+  if (d.kind === "compDraw" && S.comp?.drawing) {
+    const C = S.comp, w = C.drawing!
+    C.drawing = null
+    const sweep = clamp(w.to - w.from, -360, 360)
+    if (Math.abs(sweep) > 1.5) S.penArcs = [...S.penArcs, { id: `pa${S.penArcs.length}`, at: [...C.point] as Vec, r: C.open, from: norm(w.from), sweep }]
+    return
+  }
   if (d.kind !== "pan" || d.moved > 10) return
   tapAt(S, d.start)
 }

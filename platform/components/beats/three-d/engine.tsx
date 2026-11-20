@@ -49,6 +49,9 @@ export const solidEngine: BeatEngine<Scene, Layout> = {
       if (!sh) return null
       return proj(S, which === "turn" ? vadd(sh.c, vmul(sideOf(phi), sh.r)) : vadd(sh.c, vmul(upOf(phi, tau), sh.r)))
     },
+    /** the middle of a floor square (cells of k cm) on the screen */
+    cellAt: (S: Scene, i: number, j: number, k: number) => proj(S, [(i + 0.5) * k, (j + 0.5) * k, 0]),
+    netNow: (S: Scene) => (S.net ? { t: S.net.t, tD: S.net.tD, faces: S.net.def.faces.map(f => f.id), cols: S.net.cols ?? {} } : null),
     sheetNow: (S: Scene) => (S.sheet ? { phi: S.sheet.phi, tau: S.sheet.tau, at: S.sheet.at, e: S.sheet.e, found: S.sheet.found.length } : null),
   },
   onDone: S => { if (S.touched) S.flashGood = Math.max(S.flashGood, 0.8) },

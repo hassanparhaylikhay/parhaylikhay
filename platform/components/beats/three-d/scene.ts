@@ -172,7 +172,7 @@ export interface CalcInput {
   help?: (S: Scene, tries: number) => void
 }
 
-export type Mode = "none" | "tapPoint" | "join" | "tapSeg" | "tapArc" | "tapRegion" | "tapFlatSide" | "solve"
+export type Mode = "none" | "tapPoint" | "join" | "tapSeg" | "tapArc" | "tapRegion" | "tapFlatSide" | "tapFloor" | "solve"
 
 export type Drag =
   | { kind: "orbit"; start: Vec; last: Vec; moved: number }
@@ -199,8 +199,12 @@ export interface Scene {
   faceLit: Record<number, string>
   /** a solid with a curved surface, drawn smooth (null: none) */
   curved: Curved | null
-  /** a net, and how far it is folded: `t` where it is going, `tD` as drawn (0 flat, 1 closed) */
-  net: { def: Net; t: number; tD: number } | null
+  /** a net, and how far it is folded: `t` where it is going, `tD` as drawn (0 flat, 1 closed); faces in a colour of their own */
+  net: { def: Net; t: number; tD: number; cols?: Record<string, string> } | null
+  /** a net being made on the floor's grid: faces `k` cm square, and the squares where one can be added (they breathe) */
+  netEdit: { k: number; cand: [number, number][] } | null
+  /** a tap on the floor (world x, y), in tapFloor mode */
+  onFloor: ((S: Scene, w: [number, number]) => void) | null
   /** a sheet through the solid, for its planes of symmetry (null: none) */
   sheet: Sheet | null
   /** edges of the solid in a colour, or lit, by segKey */
@@ -217,6 +221,8 @@ export interface Scene {
   ticks: { a: string; b: string; at: number[]; pulse?: boolean }[]
   /** numbers a beat keeps on the board (how far a fold has turned, where a point sits on a line) */
   vals: Record<string, number>
+  /** numbers carried from beat to beat (not cleared between beats: the net the student made) */
+  keep: Record<string, number>
   /** points the phrase is about: they glow */
   glowPts: string[]
   /** a stick on the floor (its top is the point T, its shadow's end Tf) */
@@ -320,7 +326,7 @@ export function createScene(): Scene {
   for (const k of VIS_KEYS) vis[k] = { v: 0, t: 0 }
   return {
     w: 0, h: 0, time: 0, beatStart: 0, mode: "none",
-    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, net: null, sheet: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, glowPts: [],
+    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, net: null, netEdit: null, onFloor: null, sheet: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, keep: {}, glowPts: [],
     stick: null, light: [], box: null, pyr: null, handles: [], floorGrid: 1,
     yaw: -32, pitch: 22, yawD: -32, pitchD: 22, spin: 0, fling: { yaw: 0, pitch: 0 }, lastTouch: -9, turned: 0, fitPts: null, fit: null, fitD: null,
     flats: [], flatMem: {}, acts: [], act: null, split: { v: 0, t: 0 }, dim: { v: 0, t: 0 }, dimMax: 0.62, liftLit: null, picked: {}, hands: {}, regions: null, onRegion: null, regionLit: null, tapPoints: null, onPoint: null, joinFrom: null, onJoin: null,
@@ -384,6 +390,23 @@ export function placeStick(S: Scene, k: Stick, finger: Vec) {
   k.moved += Math.abs(turn(before[0], phi)) * DEG * Math.cos(th) + Math.abs(th - before[1]) * DEG
   k.phi = phi
   k.th = th
+}
+
+/** The point on the floor under a screen point (the view's perspective undone, a few Newton steps). */
+export function floorAt(S: Scene, p: Vec): [number, number] | null {
+  const f = S.fitD ?? S.fit
+  if (!f) return null
+  let x = f.c[0], y = f.c[1]
+  for (let i = 0; i < 8; i++) {
+    const e = 1e-3, q = proj(S, [x, y, 0]), qx = proj(S, [x + e, y, 0]), qy = proj(S, [x, y + e, 0])
+    const a = (qx[0] - q[0]) / e, b = (qy[0] - q[0]) / e, c = (qx[1] - q[1]) / e, d = (qy[1] - q[1]) / e
+    const det = a * d - b * c
+    if (Math.abs(det) < 1e-9) return null
+    const rx = p[0] - q[0], ry = p[1] - q[1]
+    x += (d * rx - b * ry) / det
+    y += (a * ry - c * rx) / det
+  }
+  return [x, y]
 }
 
 /** A point, true or as drawn. */
@@ -1088,6 +1111,8 @@ export function resetBeat(S: Scene) {
   S.faceLit = {}
   S.curved = null
   S.net = null
+  S.netEdit = null
+  S.onFloor = null
   S.sheet = null
   S.drag = null
   S.names = {}
@@ -1428,6 +1453,7 @@ export function pointerUp(S: Scene) {
 
 /** A tap (not a turn): what the beat is listening for. */
 function tapAt(S: Scene, p: Vec) {
+  if (S.mode === "tapFloor") { const w = floorAt(S, p); if (w) S.onFloor?.(S, w); return }
   if (S.mode === "tapPoint" && S.tapPoints) {
     const n = pointAt(S, p, S.tapPoints)
     if (n) S.onPoint?.(S, n)

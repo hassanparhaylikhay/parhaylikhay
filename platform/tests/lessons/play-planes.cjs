@@ -73,7 +73,8 @@ const { open, sleep } = require("./trig-lib.cjs")
     if (id === "prism-1") { await knobTo("turn", 180, 0); await mismatch("along the length"); await knobTo("turn", 90, 0); await doneOrOn(id); continue }
     if (id === "prism-2") { await knobTo("tip", 0, -45); await mismatch("tipped the wrong way"); await knobTo("tip", 0, 45); await doneOrOn(id); continue }
     if (id === "pyr-q") { await slip("4", /level/); await right(); continue }
-    if (id === "cyl") { const p0 = (await st()).sheet.phi; await knobTo("turn", p0 + 90, 0); await knobTo("turn", p0 + 180, 0); await doneOrOn(id); await next(); continue }
+    // turned round in quarter turns until it counts (a slow frame under load can drop a little of a drag)
+    if (id === "cyl") { for (let k = 0; k < 4 && !(await st()).got.includes("done") && (await idNow()) === id; k++) await knobTo("turn", (await st()).sheet.phi + 90, 0); await doneOrOn(id); await next(); continue }
     if (id === "end") { await sleep(3400); await expect(!!(await page.$("[class*=ctaWrap] button")), "no Finish"); break }
     // a watching beat
     await next()

@@ -151,7 +151,12 @@ export function askNum(id: string, say0: string, enter: (S: Scene) => void, o: {
   unit?: string
   dec?: boolean
   three?: boolean
+  /** an angle: a degree sign after the box (not a bearing's three figures) */
+  deg?: boolean
   measured?: boolean
+  /** a measured answer's own tolerance and "Close" band (an angle: within a degree) */
+  tol?: number
+  near?: number
   nearSay?: string
   max?: number
   slips?: { v: number; say: string }[]
@@ -161,9 +166,9 @@ export function askNum(id: string, say0: string, enter: (S: Scene) => void, o: {
   /** how long to stay after the right answer (ms), for what it sets going */
   after?: number
 }): Beat {
-  const shown = o.three ? `${brgText(o.answer)}^\\circ` : `${o.answer}${o.unit ? `\\text{ ${o.unit}}` : ""}`
+  const shown = o.three ? `${brgText(o.answer)}^\\circ` : o.deg ? `${o.answer}^\\circ` : `${o.answer}${o.unit ? `\\text{ ${o.unit}}` : ""}`
   const lead = () => [atom("qn", o.name), op("qe", "=")]
-  const tail = o.three ? [atom("qd", "{}^\\circ")] : o.unit ? [atom("qu", `\\text{${o.unit}}`)] : []
+  const tail = o.three || o.deg ? [atom("qd", "{}^\\circ")] : o.unit ? [atom("qu", `\\text{${o.unit}}`)] : []
   return {
     id, say: say0,
     enter: S => {
@@ -171,11 +176,13 @@ export function askNum(id: string, say0: string, enter: (S: Scene) => void, o: {
       if (o.dec) S.keyRows = DEC_KEYS
       startInput(S, {
         answer: o.answer, three: o.three, dec: o.dec, max: o.max ?? (o.three ? 3 : 7), typed: o.three ? brgText(o.answer) : String(o.answer), slips: o.slips,
-        tol: o.measured ? 0.05 : undefined, near: o.measured ? (o.three ? 2.5 : 0.25) : undefined, nearSay: o.nearSay,
+        tol: o.tol ?? (o.measured ? 0.05 : undefined), near: o.near ?? (o.measured ? (o.three ? 2.5 : 0.25) : undefined), nearSay: o.nearSay,
         onRight: S2 => o.then?.(S2),
       })
       S.eqFn = S2 => {
-        const line = row(S2.input?.state === "right" ? [...lead(), atom("ans", shown, { col: GREEN })] : [...lead(), boxNode(S2), ...tail])
+        // a measured answer shows the student's own reading once it is right
+        const got = o.tol !== undefined && S2.input ? `${S2.input.value}${o.deg ? "^\\circ" : o.unit ? `\\text{ ${o.unit}}` : ""}` : shown
+        const line = row(S2.input?.state === "right" ? [...lead(), atom("ans", got, { col: GREEN })] : [...lead(), boxNode(S2), ...tail])
         return o.above ? frac("work", o.above(), line, "rgba(0,0,0,0)") : line
       }
       look(S, ["eq", "keypad"])

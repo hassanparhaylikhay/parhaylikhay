@@ -24,6 +24,9 @@ import TermsLesson from "./terms/TermsLesson"
 import SolidsLesson from "./three-d/SolidsLesson"
 import SymmetryLesson from "./terms/SymmetryLesson"
 import PlanesLesson from "./three-d/PlanesLesson"
+import MeasureAnglesLesson from "./bearings/MeasureAnglesLesson"
+import ConstructLesson from "./bearings/ConstructLesson"
+import NetsLesson from "./three-d/NetsLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -139,6 +142,24 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Fold a shape along its line of symmetry, turn a line until the halves match, and turn a shape to count how many times it fits.",
     topicHref: "/dashboard/maths/04/05",
     Lesson: SymmetryLesson,
+  },
+  "measuring-angles": {
+    title: "Measuring and drawing angles",
+    description: "Put a protractor on a corner and read the right row, draw an angle with its pencil, and draw triangles from a side and two angles.",
+    topicHref: "/dashboard/maths/04/02",
+    Lesson: MeasureAnglesLesson,
+  },
+  "constructing-triangles": {
+    title: "Constructing triangles",
+    description: "Open compasses on a ruler and draw arcs from each end of a side; the third corner is where they cross. Then a triangle that can't be made, a rhombus, and shapes from two triangles.",
+    topicHref: "/dashboard/maths/04/02",
+    Lesson: ConstructLesson,
+  },
+  "drawing-nets": {
+    title: "Drawing nets",
+    description: "Make a cube's net on squared paper by tapping squares, fold it to check, draw one to size, and find a cuboid's surface area from its net.",
+    topicHref: "/dashboard/maths/04/02",
+    Lesson: NetsLesson,
   },
   "symmetry-of-solids": {
     title: "Symmetry of solids",
