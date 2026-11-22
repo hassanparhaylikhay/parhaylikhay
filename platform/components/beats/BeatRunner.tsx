@@ -45,7 +45,7 @@ export interface BeatEngine<S extends RunnerScene, L extends { keypadTop: number
   /** seconds past `minPlay` after which a playing beat offers the arrow anyway (null: never) */
   freeFallback?: number | null
   /** the keypad's keys, when not just digits (a calculator) */
-  keypadKeys?: (S: S) => string[][]
+  keypadKeys?: (S: S) => string[][] | undefined
   /** the keypad key a keyboard key stands for (default: digits, Backspace, Enter) */
   keyOf?: (key: string) => string | null
   /** keys shown pressed down (SHIFT) */

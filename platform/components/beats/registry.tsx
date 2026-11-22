@@ -27,6 +27,8 @@ import PlanesLesson from "./three-d/PlanesLesson"
 import MeasureAnglesLesson from "./bearings/MeasureAnglesLesson"
 import ConstructLesson from "./bearings/ConstructLesson"
 import NetsLesson from "./three-d/NetsLesson"
+import UnitsLesson from "./three-d/UnitsLesson"
+import PerimeterAreaLesson from "./terms/PerimeterAreaLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -160,6 +162,18 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Make a cube's net on squared paper by tapping squares, fold it to check, draw one to size, and find a cuboid's surface area from its net.",
     topicHref: "/dashboard/maths/04/02",
     Lesson: NetsLesson,
+  },
+  "units-of-measure": {
+    title: "Units of measure",
+    description: "Count the cm on a metre stick and the mm in a cm, split a square cm into mm squares, fill a litre with cm cubes, and convert length, mass, area and capacity.",
+    topicHref: "/dashboard/maths/05/01",
+    Lesson: UnitsLesson,
+  },
+  "perimeter-and-area": {
+    title: "Perimeter and area",
+    description: "Walk round a shape for its perimeter, count the squares in a rectangle, cut and turn triangles, parallelograms and trapeziums into rectangles, and use the four area formulas on exam questions.",
+    topicHref: "/dashboard/maths/05/02",
+    Lesson: PerimeterAreaLesson,
   },
   "symmetry-of-solids": {
     title: "Symmetry of solids",

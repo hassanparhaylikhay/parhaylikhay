@@ -54,6 +54,8 @@ const PICKS = {
   "measuring-angles": "other-a",
   "constructing-triangles": "rh-done",
   "drawing-nets": "eleven",
+  "units-of-measure": "thousand",
+  "perimeter-and-area": "pg-rect",
 }
 
 /** Figures whose lines run to the board's edges are cropped by hand (1280 × 800 page coordinates). */

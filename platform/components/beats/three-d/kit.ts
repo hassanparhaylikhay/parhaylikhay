@@ -250,6 +250,12 @@ export function askBeat(id: string, say0: string, enter: (S: Scene) => void, o: 
   rightNote?: string
   /** anything else the right answer changes on the board */
   then?: (S: Scene) => void
+  /** right only exactly (a conversion), and kept in terms of π */
+  exact?: boolean
+  piForm?: boolean
+  /** what stands between the name and the box (else =), and what follows the box until it is right (a unit) */
+  sep?: string
+  after?: string
   walk: WalkStep<Scene>[]
 }): Beat {
   return {
@@ -260,7 +266,7 @@ export function askBeat(id: string, say0: string, enter: (S: Scene) => void, o: 
       const first = o.writes?.[0]
       if (first) { const F = S.flats.find(f => f.id === first[0]); if (F?.lens[first[1]]) F.lens[first[1]].pulse = true }
       startInput(S, {
-        answer: o.answer, sf: o.sf, dp: o.dp, max: 24, typed: o.typed, slips: o.slips, ansName: o.ansName,
+        answer: o.answer, sf: o.sf, dp: o.dp, max: 24, typed: o.typed, slips: o.slips, ansName: o.ansName, exact: o.exact, piForm: o.piForm,
         onRight: S2 => {
           ;(o.writes ?? []).forEach(([fid, key], i) => {
             const F = S2.flats.find(f => f.id === fid)
@@ -278,7 +284,8 @@ export function askBeat(id: string, say0: string, enter: (S: Scene) => void, o: 
       })
       S.eqFn = S2 => {
         // its own names, so it never takes the place of a piece in the working above it
-        const line = row([pc("qnm", o.name, o.col), op("qeq", "="), S2.input?.state === "right" ? pc("ans", o.shown, GREEN) : boxNode(S2)])
+        const right = S2.input?.state === "right"
+        const line = row([pc("qnm", o.name, o.col), op("qeq", o.sep ?? "="), right ? pc("ans", o.shown, GREEN) : boxNode(S2), ...(o.after && !right ? [pc("qaf", o.after)] : [])])
         return o.above ? stack("work", o.above(S2), line) : line
       }
       look(S, ASK)

@@ -6,7 +6,7 @@ import EquationView from "../EquationView"
 import { type Vec, add, sub, mul, lerpV, unit } from "../geometry"
 import {
   type Scene, type Layout, type Poly, CHALK, GREEN, YELLOW, QUIET,
-  PD, ptS, toScreen, marksOf, handleAt, polyPts, RAD,
+  PD, ptS, toScreen, marksOf, handleAt, polyPts, dragAt, RAD,
 } from "./scene"
 
 /**
@@ -31,6 +31,7 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
         <g opacity={v("board")}>
           <g opacity={v("grid")}><Grid S={S} /></g>
           <g opacity={v("shapes")}>
+            <CellsView S={S} />
             <Shades S={S} />
             {S.polys.map(pl => <PolyView key={pl.id} S={S} pl={pl} />)}
             <g clipPath="url(#tl-board)">{S.segs.map(sg => <SegView key={sg.id} S={S} id={sg.id} />)}</g>
@@ -44,6 +45,7 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
       </svg>
       <Labels S={S} />
       <EquationView B={S.eq} time={S.time} opacity={v("eq")} />
+      <Carried S={S} />
       {S.walkTex ? <div key={S.walkTex} className={`${styles.line} ${styles.walkLine}`} style={{ top: L.lineY - L.lineSize * 0.85, height: L.lineSize * 1.7, ["--line-size" as string]: `${L.lineSize}px` }}><Tex tex={S.walkTex} /></div> : null}
     </>
   )
@@ -67,6 +69,22 @@ function Grid({ S }: { S: Scene }) {
     const a = toScreen(S, [g.x0, y]), c = toScreen(S, [g.x1, y])
     const axis = g.axes && y === 0
     out.push(<line key={`gy${y}`} x1={a[0]} y1={a[1]} x2={c[0]} y2={c[1]} stroke={axis ? QUIET : "#2a2e31"} strokeWidth={axis ? 1.6 : 1} />)
+  }
+  return <>{out}</>
+}
+
+/** Unit squares counted: whole rows as one strip, then the start of the next, each square's edges faint. */
+function CellsView({ S }: { S: Scene }) {
+  const out: React.ReactNode[] = []
+  for (const c of S.cells) {
+    const n = Math.max(0, Math.min(c.lit, c.nx * c.ny)), rows = Math.floor(n / c.nx), rest = n - rows * c.nx
+    const top = c.y0 + c.ny
+    const rect = (x0: number, y0: number, x1: number, y1: number, key: string) => {
+      const a = toScreen(S, [x0, y1]), b = toScreen(S, [x1, y0])
+      out.push(<rect key={key} x={a[0]} y={a[1]} width={b[0] - a[0]} height={b[1] - a[1]} fill={c.col} fillOpacity={c.op ?? 0.3} stroke="none" />)
+    }
+    if (rows) rect(c.x0, top - rows, c.x0 + c.nx, top, `${c.id}r`)
+    if (rest) rect(c.x0, top - rows - 1, c.x0 + rest, top - rows, `${c.id}s`)
   }
   return <>{out}</>
 }
@@ -255,6 +273,17 @@ function Handles({ S }: { S: Scene }) {
     )
   }
   return <>{out}</>
+}
+
+/** A piece of the equation carried by the finger. */
+function Carried({ S }: { S: Scene }) {
+  const p = dragAt(S)
+  const d = S.drag
+  if (!p || d?.kind !== "atom") return null
+  const a = S.eq.atoms[d.id]
+  if (!a || a.node.k !== "a") return null
+  const tex = S.dragTex[d.id] ?? a.node.tex
+  return <div className={`${styles.label} pl-eq-grab`} style={{ ...place(p), color: a.node.col ?? CHALK, fontSize: S.eq.size * 1.08, zIndex: 7 }}><Tex tex={tex} /></div>
 }
 
 function Labels({ S }: { S: Scene }) {

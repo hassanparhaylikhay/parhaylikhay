@@ -56,6 +56,21 @@ export const COS_KEYS: string[][] = [
 ]
 export const COS_KEYS_SHIFT = COS_KEYS.map(r => r.map(k => INV_KEY[k] ?? k))
 
+/**
+ * For mensuration: no sin, cos or tan; + and −, x², √, and π (an area left
+ * in terms of π is typed 25π, as on paper).
+ */
+export const MENS_KEYS: string[][] = [
+  ["1", "2", "3", "4", "5", "6", "back"],
+  ["7", "8", "9", "0", ".", "×", "÷"],
+  ["+", "−", "x²", "√", "π", "go"],
+]
+/** The mensuration calculator on a keyboard: p for π, and the cosine rule's keys. */
+export function mensKeyOf(key: string): string | null {
+  if (key === "p" || key === "P") return "π"
+  return cosKeyOf(key)
+}
+
 /** The cosine rule's calculator on a keyboard: + and -, ^ for x², r for √, and the sine rule's keys. */
 export function cosKeyOf(key: string): string | null {
   if (key === "+") return "+"
@@ -108,6 +123,7 @@ export function calcType(value: string, key: string, max = 18): string {
   if (key === "x²") return /[\dA]$/.test(value) ? value + "²" : value
   if (key === "√") return value + "√"
   if (key === "Ans") return value + "A"
+  if (key === "π") return value + "π"
   if (/^\d$/.test(key)) return value + key
   if (key === ".") {
     // one point per number
@@ -129,6 +145,7 @@ export function calcTex(value: string): string {
     else if (ch === "√") { out += "\\sqrt{"; close.push("}") }
     else if (FN_TEX[ch]) out += `${FN_TEX[ch]} `
     else if (ch === "A") out += "\\text{Ans}"
+    else if (ch === "π") out += "\\pi "
     else if (ch === "×") out += "\\times "
     else if (ch === "÷") out += "\\div "
     else if (ch === "²") out += "^{2}"
@@ -141,7 +158,7 @@ export function calcTex(value: string): string {
 }
 
 /** Whether the student typed a calculation (as opposed to just a number). */
-export const isCalculation = (value: string) => /[×÷sctSCTA+²√]/.test(value) || /.-/.test(value)
+export const isCalculation = (value: string) => /[×÷sctSCTA+²√π]/.test(value) || /.-/.test(value)
 
 /** What Ans stands for: the last answer the calculator gave (set when one is right). */
 let lastAns: number | null = null
@@ -182,12 +199,15 @@ function calcEval(value: string): { v: number | null; error: boolean } {
   const num = (): number | null => {
     let x: number | null
     if (value[i] === "A") { i++; x = lastAns }
+    else if (value[i] === "π") { i++; x = Math.PI }
     else {
       const m = value.slice(i).match(/^\d+(\.\d*)?|^\.\d+/)
       if (!m) return null
       i += m[0].length
       x = Number(m[0])
     }
+    // a number then π (25π, 2π): times π, as written on paper
+    while (x !== null && value[i] === "π") { x = x * Math.PI; i++ }
     // squares on a number: 5² is 25
     while (x !== null && value[i] === "²") { x = x * x; i++ }
     return x

@@ -108,10 +108,10 @@ export const DIGIT_KEYS: string[][] = [
 
 /** The keypad: digits by default, or any rows of keys (a calculator: see calc.ts). */
 /** A calculator's function keys, as maths (sin⁻¹ reads as it does on paper). */
-const FN_KEY_TEX: Record<string, string> = { sin: "\\sin", cos: "\\cos", tan: "\\tan", "sin⁻¹": "\\sin^{-1}", "cos⁻¹": "\\cos^{-1}", "tan⁻¹": "\\tan^{-1}", "x²": "x^{2}", "√": "\\sqrt{\\phantom{x}}" }
+const FN_KEY_TEX: Record<string, string> = { "π": "\\pi", sin: "\\sin", cos: "\\cos", tan: "\\tan", "sin⁻¹": "\\sin^{-1}", "cos⁻¹": "\\cos^{-1}", "tan⁻¹": "\\tan^{-1}", "x²": "x^{2}", "√": "\\sqrt{\\phantom{x}}" }
 
 export function Keypad({ top, cx, onKey, rows = DIGIT_KEYS, lit = [] }: { top: number; cx?: number; onKey: (k: string) => void; rows?: string[][]; lit?: string[] }) {
-  const calc = rows.some(r => r.some(k => k.startsWith("sin")))
+  const calc = rows.some(r => r.some(k => k.startsWith("sin") || k === "×"))
   // a keypad with SHIFT sets its function keys as maths, so they look the same shifted or not
   const shiftPad = rows.some(r => r.includes("SHIFT"))
   const row = (keys: string[], i: number) => (
@@ -120,7 +120,7 @@ export function Keypad({ top, cx, onKey, rows = DIGIT_KEYS, lit = [] }: { top: n
         <button key={`${i}-${j}`} type="button" className={`${styles.key} ${k === "go" ? styles.keyGo : ""} ${k.length > 1 && k !== "go" && k !== "back" ? styles.keyFn : ""} ${k === "SHIFT" ? styles.keyShift : ""} ${lit.includes(k) ? styles.keyLit : ""}`}
           onPointerDown={e => { e.preventDefault(); onKey(k) }}
           aria-label={k === "go" ? "Check" : k === "back" ? "Delete" : k}>
-          {k === "back" ? <Delete size={19} strokeWidth={1.7} /> : k === "go" ? (calc ? "=" : <ArrowRight size={20} strokeWidth={2} />) : shiftPad && FN_KEY_TEX[k] ? <Tex tex={FN_KEY_TEX[k]} /> : k}
+          {k === "back" ? <Delete size={19} strokeWidth={1.7} /> : k === "go" ? (calc ? "=" : <ArrowRight size={20} strokeWidth={2} />) : (shiftPad || ["x²", "√", "π"].includes(k)) && FN_KEY_TEX[k] ? <Tex tex={FN_KEY_TEX[k]} /> : k}
         </button>
       ))}
     </div>

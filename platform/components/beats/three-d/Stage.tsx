@@ -3,7 +3,7 @@
 import styles from "../beats.module.css"
 import { Tex } from "../Tex"
 import EquationView from "../EquationView"
-import { type Vec, add, sub, mul, clamp, lerpV, sectorPath, arcPath, turn } from "../geometry"
+import { type Vec, type Rect, add, sub, mul, clamp, lerpV, sectorPath, arcPath, turn } from "../geometry"
 import {
   type Scene, type Layout, type V3, CHALK, GREEN, YELLOW, QUIET, PINK, ORANGE, BLUE,
   ptS, proj, p3, toCam, faceFront, segHidden, edgesOf, segKey, dirCol, arcGeom, arcPx, chipRects, dragAt,
@@ -11,6 +11,7 @@ import {
 } from "./scene"
 import { curvedCloud, curvedRings, hull, foldNet } from "./solids"
 import { normalOf, sideOf, upOf, cutOf, curvedMesh, mirror3 } from "./sheet"
+import { cubeBoxes, boxFaces, type Box, type Ladder } from "./mens"
 
 /**
  * Draws the 3D board. Pure: everything comes from the scene. The solid is
@@ -32,9 +33,12 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
         </defs>
         <g opacity={vis("board")}>
           <Floor S={S} op={vis("floor")} />
+          <MensFloor S={S} L={L} op={vis("solid")} />
           <NetView S={S} op={vis("solid")} />
           <CurvedView S={S} op={vis("solid")} />
           <SheetView S={S} op={vis("solid")} />
+          <WaterView S={S} op={vis("solid")} />
+          <CubesView S={S} op={vis("solid")} />
           <Solid S={S} op={vis("solid")} />
           <SheetCopy S={S} op={vis("solid")} />
           <Light S={S} />
@@ -45,6 +49,7 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
         </g>
       </svg>
       <Labels S={S} />
+      <LadderView S={S} L={L} />
       <EquationView B={S.eq} time={S.time} opacity={vis("eq")} />
       <Chips S={S} L={L} op={vis("chips")} />
       <Carried S={S} />
@@ -282,6 +287,166 @@ function SheetCopy({ S, op }: { S: Scene; op: number }) {
     <g opacity={op * Math.min(1, sh.e * 4)}>
       {edgesOf(S).map(([a, b]) => { const A = at(a), B = at(b); return <line key={`mc${a}${b}`} x1={A[0]} y1={A[1]} x2={B[0]} y2={B[1]} stroke={col} strokeWidth={2.4} strokeLinecap="round" /> })}
     </g>
+  )
+}
+
+/**
+ * On the floor: the metre stick (its marks thin out as the view draws back,
+ * so they never smear into a grey bar) and squares split into grids, the
+ * counted ones shaded.
+ */
+function MensFloor({ S, L, op }: { S: Scene; L: Layout; op: number }) {
+  if (op < 0.01) return null
+  const M = S.meter
+  if (!M && !S.sqGrids.length) return null
+  const out: React.ReactNode[] = []
+  const f = S.fitD ?? S.fit, u = f?.u ?? 1
+  const P = (x: number, y: number) => proj(S, [x, y, 0])
+  const quad = (x0: number, y0: number, x1: number, y1: number) => poly([P(x0, y0), P(x1, y0), P(x1, y1), P(x0, y1)])
+  if (M) {
+    out.push(<polygon key="body" points={quad(M.x0, M.y0, M.x0 + M.len, M.y0 + M.w)} fill={CHALK} fillOpacity={0.06} stroke={CHALK} strokeOpacity={0.55} strokeWidth={1.4} strokeLinejoin="round" />)
+    if (M.lit) out.push(<polygon key="lit" points={quad(M.x0, M.y0 + M.w * 0.72, M.x0 + M.lit, M.y0 + M.w)} fill={BLUE} fillOpacity={0.35} stroke="none" />)
+    const top = M.y0 + M.w
+    // every mark that has room on the screen: mm (when a mm is 4 px or more), cm, every 5 and every 10
+    const subPx = (u / M.sub)
+    for (let i = 0; i <= M.len * M.sub; i++) {
+      const cm = i / M.sub, whole = i % M.sub === 0
+      if (!whole && subPx < 4) continue
+      if (whole && !(cm % 10 === 0) && u < 3) continue
+      const len = cm % 10 === 0 && whole ? 0.25 : whole ? (cm % 5 === 0 ? 0.2 : 0.16) : i % (M.sub / 2) === 0 && M.sub % 2 === 0 ? 0.11 : 0.075
+      const a = P(M.x0 + cm, top), b = P(M.x0 + cm, top - M.w * len)
+      out.push(<line key={`t${i}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={CHALK} strokeOpacity={whole ? 0.9 : 0.65} strokeWidth={whole ? 1.4 : 1} />)
+    }
+    for (const [i, mk] of (M.marks ?? []).entries()) {
+      const a = P(M.x0 + mk.at, top + Math.max(0.15, 10 / u)), b = P(M.x0 + mk.at, M.y0)
+      out.push(<line key={`mk${i}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={mk.col} strokeWidth={2.6} strokeLinecap="round" />)
+    }
+  }
+  for (const [gi, g] of S.sqGrids.entries()) {
+    const c = g.size / g.n, x1 = g.x0 + g.size, y1 = g.y0 + g.size
+    // counted squares, row by row from the top: whole rows as one strip, then the start of the next
+    const rows = Math.floor(g.lit / g.n), rest = g.lit - rows * g.n
+    if (rows) out.push(<polygon key={`gl${gi}`} points={quad(g.x0, y1 - rows * c, x1, y1)} fill={g.col} fillOpacity={0.3} stroke="none" />)
+    if (rest) out.push(<polygon key={`gr${gi}`} points={quad(g.x0, y1 - (rows + 1) * c, g.x0 + rest * c, y1 - rows * c)} fill={g.col} fillOpacity={0.3} stroke="none" />)
+    if (g.lines) {
+      // lines too close to tell apart fade out (a hundred to a side, from far off)
+      const px = c * u, lineOp = Math.max(0, Math.min(1, (px - 1.5) / 4))
+      if (lineOp > 0.02) for (let k = 1; k < g.n; k++) {
+        const a = P(g.x0 + k * c, g.y0), b = P(g.x0 + k * c, y1), d = P(g.x0, g.y0 + k * c), e = P(x1, g.y0 + k * c)
+        out.push(<line key={`gx${gi}-${k}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={CHALK} strokeOpacity={0.4 * lineOp} strokeWidth={1} />)
+        out.push(<line key={`gy${gi}-${k}`} x1={d[0]} y1={d[1]} x2={e[0]} y2={e[1]} stroke={CHALK} strokeOpacity={0.4 * lineOp} strokeWidth={1} />)
+      }
+    }
+    out.push(<polygon key={`go${gi}`} points={quad(g.x0, g.y0, x1, y1)} fill="none" stroke={g.col} strokeWidth={2.2} strokeLinejoin="round" />)
+  }
+  // a close-up stick beside a ladder is cut off at the edge of its room, fading out
+  if (M && S.ladderOn) {
+    const c = L.solidCell, fade = 40
+    return (
+      <g opacity={op}>
+        <defs>
+          <linearGradient id="pl-mens-fade" gradientUnits="userSpaceOnUse" x1={c.x0} y1={0} x2={c.x1} y2={0}>
+            <stop offset={0} stopColor="#fff" />
+            <stop offset={Math.max(0, 1 - fade / Math.max(1, c.x1 - c.x0))} stopColor="#fff" />
+            <stop offset={1} stopColor="#fff" stopOpacity={0} />
+          </linearGradient>
+          <mask id="pl-mens-mask" maskUnits="userSpaceOnUse" x={0} y={0} width={S.w} height={S.h}>
+            <rect x={0} y={0} width={c.x1} height={c.y1} fill="url(#pl-mens-fade)" />
+          </mask>
+        </defs>
+        <g mask="url(#pl-mens-mask)">{out}</g>
+      </g>
+    )
+  }
+  return <g opacity={op}>{out}</g>
+}
+
+/** A box's faces that look toward the eye, back ones first, each with lines every `s` across it (the cubes it is made of). */
+function boxView(S: Scene, b: Box, key: string, col: string, s?: number, fillOp = 0.2): React.ReactNode[] {
+  const out: React.ReactNode[] = []
+  const faces = boxFaces(b).filter(F => facesEye(S, F.P.reduce((a, p) => vadd(a, vmul(p, 0.25)), [0, 0, 0] as V3), F.n))
+  for (const [i, F] of faces.entries()) {
+    out.push(<polygon key={`${key}f${i}`} points={poly(F.P.map(p => proj(S, p)))} fill={col} fillOpacity={fillOp} stroke={col} strokeWidth={1.6} strokeLinejoin="round" />)
+    if (!s) continue
+    // lines across the face at every cube
+    const la = vdot(vsub(F.P[1], F.P[0]), F.u) || vdot(vsub(F.P[3], F.P[0]), F.u), lb = vdot(vsub(F.P[3], F.P[0]), F.v) || vdot(vsub(F.P[1], F.P[0]), F.v)
+    const o = F.P[0]
+    for (let k = 1; k < Math.round(Math.abs(la) / s); k++) {
+      const a = vadd(o, vmul(F.u, k * s)), e = vadd(a, vmul(F.v, lb))
+      const A = proj(S, a), E = proj(S, e)
+      out.push(<line key={`${key}u${i}-${k}`} x1={A[0]} y1={A[1]} x2={E[0]} y2={E[1]} stroke={col} strokeOpacity={0.55} strokeWidth={1} />)
+    }
+    for (let k = 1; k < Math.round(Math.abs(lb) / s); k++) {
+      const a = vadd(o, vmul(F.v, k * s)), e = vadd(a, vmul(F.u, la))
+      const A = proj(S, a), E = proj(S, e)
+      out.push(<line key={`${key}v${i}-${k}`} x1={A[0]} y1={A[1]} x2={E[0]} y2={E[1]} stroke={col} strokeOpacity={0.55} strokeWidth={1} />)
+    }
+  }
+  return out
+}
+
+/** Unit cubes filling a box, layer by layer: drawn as the few boxes they make, with the lines between the cubes. */
+function CubesView({ S, op }: { S: Scene; op: number }) {
+  if (op < 0.01 || !S.cubes.length) return null
+  const out: React.ReactNode[] = []
+  for (const [ci, c] of S.cubes.entries()) {
+    // nearer boxes last
+    const boxes = cubeBoxes(c).map(b => ({ b, d: toCam(S, vmul(vadd(b[0], b[1]), 0.5))[2] })).sort((a, b2) => a.d - b2.d)
+    boxes.forEach((x, i) => out.push(...boxView(S, x.b, `c${ci}-${i}`, c.col, c.s, 0.22)))
+  }
+  return <g opacity={op}>{out}</g>
+}
+
+/** Water in a box, up to its level: see-through blue, its top a little brighter. */
+function WaterView({ S, op }: { S: Scene; op: number }) {
+  const W = S.water
+  if (op < 0.01 || !W || W.level < 0.002) return null
+  const z = W.z0 + (W.z1 - W.z0) * Math.min(1, W.level)
+  return <g opacity={op}>{boxView(S, [[W.x0, W.y0, W.z0], [W.x1, W.y1, z]], "w", W.col, undefined, 0.28)}</g>
+}
+
+/** One ladder of units, biggest at the top: going down a step multiplies, going up divides; the steps asked for light up. */
+function Rungs({ D, size }: { D: Ladder; size: number }) {
+  const lit = D.lit, down = lit ? lit.to > lit.from : false
+  const on = (i: number) => !!lit && i >= Math.min(lit.from, lit.to) && i < Math.max(lit.from, lit.to)
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+      {D.title && <div style={{ color: QUIET, fontSize: Math.max(13, size * 0.55), marginBottom: size * 0.3 }}>{D.title}</div>}
+      {D.units.map((unit, i) => (
+        <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div style={{ color: lit && (i === lit.from || i === lit.to) ? (i === lit.to ? GREEN : CHALK) : CHALK, fontSize: size, opacity: lit && !(i >= Math.min(lit.from, lit.to) && i <= Math.max(lit.from, lit.to)) ? 0.45 : 1 }}><Tex tex={unit} /></div>
+          {i < D.units.length - 1 && (
+            <div style={{ display: "flex", gap: size * 0.9, alignItems: "center", margin: `${size * 0.12}px 0`, fontSize: size * 0.62 }}>
+              <span style={{ color: BLUE, opacity: !lit ? 0.9 : on(i) && down ? 1 : 0.25, display: "flex", alignItems: "center", gap: 6 }}><Tex tex={`\\times ${D.factors[i]} \\;\\downarrow`} /></span>
+              <span style={{ color: ORANGE, opacity: !lit ? 0.9 : on(i) && !down ? 1 : 0.25, display: "flex", alignItems: "center", gap: 6 }}><Tex tex={`\\uparrow\\; \\div ${D.factors[i]}`} /></span>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** The ladder of units in the side of the board (or all of it, when it is all there is); several side by side for a summary. */
+function LadderView({ S, L }: { S: Scene; L: Layout }) {
+  const box = (cell: Rect, op: number): React.CSSProperties => ({ position: "absolute", left: cell.x0, top: cell.y0, width: cell.x1 - cell.x0, height: cell.y1 - cell.y0, display: "flex", alignItems: "center", justifyContent: "center", opacity: op, pointerEvents: "none" })
+  if (S.ladders.length) {
+    // four across on a wide board, two by two on a phone
+    const cell = L.board, size = L.compact ? 20 : Math.max(18, Math.min(28, (cell.x1 - cell.x0) / 34))
+    return (
+      <div style={{ ...box(cell, S.vis.solid.v), flexWrap: "wrap", gap: `${size * 1.2}px ${size * (L.compact ? 1.4 : 2.2)}px`, alignContent: "center" }}>
+        {S.ladders.map((D, i) => <Rungs key={i} D={D} size={size} />)}
+      </div>
+    )
+  }
+  const D = S.ladder
+  // beside the figure, or the whole board when it is all there is
+  const alone = !!D && !S.ladderOn, cell = alone ? L.board : L.flatCell
+  if (!D || !cell || (!alone && S.split.v < 0.3)) return null
+  return (
+    <div style={box(cell, alone ? S.vis.solid.v : Math.min(1, S.split.v * 1.4))}>
+      <Rungs D={D} size={(L.compact ? 24 : 30) * (alone ? 1.25 : 1)} />
+    </div>
   )
 }
 

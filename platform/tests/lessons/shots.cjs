@@ -21,5 +21,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms))
     await sleep(+(process.env.WAIT || 2600))
     await page.screenshot({ path: `${OUT}/${String(n).padStart(3, "0")}-${beats[n - 1]}.png` })
   }
-  await browser.close()
+  // closing the browser can hang after many pages: give it a moment, then go
+  await Promise.race([browser.close(), sleep(3000)])
+  process.exit(0)
 })().catch(e => { console.error(e); process.exit(1) })

@@ -16,7 +16,8 @@
  */
 
 import { type Vec, type Rect, add, sub, mul, dot, cross, dist, lerpV, clamp, unit, len } from "../geometry"
-import { createBoard, eqSet, eqStep, extent, row, type EqBoard, type ENode } from "../equation"
+import { createBoard, eqSet, eqStep, eqHit, eqCentre, eqSlow, extent, row, type EqBoard, type ENode } from "../equation"
+import { calcType, calcTex, judge, slipMatches } from "../calc"
 
 export const CHALK = "#e8e6e0"
 export const BLUE = "#00abfa"
@@ -62,14 +63,39 @@ export type Handle =
 export interface Tap { id: string; hit: (S: Scene, p: Vec) => number; spot: (S: Scene) => Vec }
 
 export interface Lab { key: string; tex: string; col: string; at: Vec; size: number; op: number; pulse?: boolean }
-/** A whole number typed on the keypad. */
-export interface TermsInput { value: string; answer: number; state: "idle" | "wrong" | "right"; tries: number; wrongAt: number; slips?: { v: number; say: string }[]; typed?: string; onRight?: (S: Scene) => void }
+/**
+ * A number typed on the keypad: a whole number (up to three digits), or with
+ * `calc` anything the calculator keys make (a decimal, a sum, a square root),
+ * judged as the calculator lessons judge it.
+ */
+export interface TermsInput {
+  value: string
+  answer: number
+  state: "idle" | "wrong" | "right"
+  tries: number
+  wrongAt: number
+  slips?: { v: number; say: string }[]
+  typed?: string
+  onRight?: (S: Scene) => void
+  calc?: boolean
+  sf?: number
+  dp?: number
+  /** right only exactly (a length on a grid, a conversion) */
+  exact?: boolean
+  /** the answer must keep π in it */
+  piForm?: boolean
+  /** the next key clears the box (after a calm note) */
+  fresh?: boolean
+}
+/** Unit squares on the grid from (x0, y0), nx across and ny up; the first `lit` of them shaded, row by row from the top, left to right. */
+export interface Cells { id: string; x0: number; y0: number; nx: number; ny: number; lit: number; col: string; op?: number }
 export interface Act { dur: number; begin?: (S: Scene) => void; run?: (S: Scene, e: number, t: number) => void; end?: (S: Scene) => void }
 
 export type Drag =
   | { kind: "handle"; id: string; off: Vec; start: Vec; base?: Record<string, Vec>; t0?: number; moved: number }
   | { kind: "draw"; id: string; end: Vec; moved: number }
   | { kind: "pan"; start: Vec; moved: number }
+  | { kind: "atom"; id: string; p: Vec }
 
 export interface Scene {
   w: number
@@ -87,6 +113,8 @@ export interface Scene {
   arcs: ArcEl[]
   shades: Shade[]
   dots: Dot[]
+  /** unit squares lit as they are counted */
+  cells: Cells[]
   squares: Sq[]
   freeLabs: FreeLab[]
   grid: { x0: number; x1: number; y0: number; y1: number; axes?: boolean; dotted?: boolean } | null
@@ -108,6 +136,13 @@ export interface Scene {
   /** the − / + sides stepper */
   stepper: { n: number; min: number; max: number; onStep: (S: Scene, n: number) => void } | null
   input: TermsInput | null
+  /** rows of keys: 2 digits only, 3 the calculator (decimal point, + − × ÷, x², √, π) */
+  keyRows: number
+  /** moving a piece of the equation across the = (see startCross) */
+  solve: CrossState | null
+  dragAtoms: string[]
+  onAtomDrop: ((S: Scene, id: string, onto: string | null, at: Vec) => void) | null
+  dragTex: Record<string, string>
 
   acts: Act[]
   act: { a: Act; t0: number } | null
@@ -134,10 +169,11 @@ export function createScene(): Scene {
   for (const k of VIS_KEYS) vis[k] = { v: 0, t: 0 }
   return {
     w: 0, h: 0, time: 0, beatStart: 0,
-    pts: {}, names: {}, nameFrom: {}, polys: [], segs: [], circle: null, arcs: [], shades: [], dots: [], squares: [], freeLabs: [], grid: null,
+    pts: {}, names: {}, nameFrom: {}, polys: [], segs: [], circle: null, arcs: [], shades: [], dots: [], cells: [], squares: [], freeLabs: [], grid: null,
     frame: { x0: -5, y0: -4, x1: 5, y1: 4 }, fit: null, fitD: null,
     handles: [], snapped: null, locked: new Set(), taps: null, onTap: null,
     eq: createBoard(), eqFn: null, eqRoom: { v: 0, t: 0 }, choice: null, stepper: null, input: null,
+    keyRows: 2, solve: null, dragAtoms: [], onAtomDrop: null, dragTex: {},
     acts: [], act: null, tick: null, timers: [], vis, labs: [], labD: {}, walkTex: null,
     drag: null, touch: false, moved: 0, got: new Set(), vals: {}, mem: {}, touched: null, flashGood: 0, note: null,
   }
@@ -176,6 +212,8 @@ export interface Layout {
   labelSize: number
   midX: number
   eqW: number
+  /** the calculator beside the figure (a wide screen): its middle */
+  keypadCx?: number
 }
 
 const on = (S: Scene, k: VisKey) => S.vis[k].t > 0.5
@@ -188,7 +226,17 @@ export function layout(S: Scene): Layout {
   const lineSize = compact ? 20 : 24
   let y = h - (compact ? 80 : 94)
   let keypadTop = y
-  if (on(S, "keypad")) { y -= 2 * 46 + 8 + 14; keypadTop = y }
+  const side = compact ? 16 : 28
+  // on a wide screen the calculator sits beside the figure, so a tall figure keeps its height
+  const beside = on(S, "keypad") && S.keyRows === 3 && w >= 960
+  let midX = w / 2, eqW = w - 2 * side, keypadCx: number | undefined
+  if (beside) {
+    const padW = 7 * 46 + 6 * 8, x1 = w - side - 12, x0 = x1 - padW
+    keypadCx = (x0 + x1) / 2
+    keypadTop = y - (S.keyRows * 46 + (S.keyRows - 1) * 8) - 4
+    midX = (side + x0 - 36) / 2
+    eqW = x0 - 36 - side
+  } else if (on(S, "keypad")) { y -= S.keyRows * 46 + 8 + 14; keypadTop = y }
   let stepperY = y
   if (on(S, "stepper")) { stepperY = y - 56; y -= 70 }
   const lineY = y
@@ -196,9 +244,8 @@ export function layout(S: Scene): Layout {
   if (on(S, "chips")) { chipsY = y - 26; y -= 62 }
   let eqY = y
   if (on(S, "eq")) { const band = Math.max(eqSize * 2.4, S.eqRoom.v); eqY = y - band / 2; y -= band }
-  const side = compact ? 16 : 28
-  const board: Rect = { x0: side, x1: w - side, y0: phraseBottom + 10, y1: Math.max(phraseBottom + 160, y - 6) }
-  return { compact, phraseBottom, board, eqY, eqSize, chipsY, stepperY, keypadTop, lineY, lineSize, labelSize: compact ? 16 : 20, midX: w / 2, eqW: w - 2 * side }
+  const board: Rect = { x0: side, x1: beside ? side + eqW : w - side, y0: phraseBottom + 10, y1: Math.max(phraseBottom + 160, y - 6) }
+  return { compact, phraseBottom, board, eqY, eqSize, chipsY, stepperY, keypadTop, lineY, lineSize, labelSize: compact ? 16 : 20, midX, eqW, keypadCx }
 }
 
 export function resize(S: Scene, w: number, h: number) { S.w = w; S.h = h }
@@ -461,6 +508,7 @@ export function resetBeat(S: Scene) {
   S.arcs = []
   S.shades = []
   S.dots = []
+  S.cells = []
   S.squares = []
   S.freeLabs = []
   S.grid = null
@@ -474,6 +522,11 @@ export function resetBeat(S: Scene) {
   S.choice = null
   S.stepper = null
   S.input = null
+  S.keyRows = 2
+  S.solve = null
+  S.dragAtoms = []
+  S.onAtomDrop = null
+  S.dragTex = {}
   S.acts = []
   S.act = null
   S.tick = null
@@ -555,6 +608,11 @@ export function handleAt(S: Scene, h: Handle): Vec {
 
 export function pointerDown(S: Scene, p: Vec, touch: boolean): boolean {
   S.touch = touch
+  // a piece of the equation to carry across the =
+  if (S.dragAtoms.length) {
+    const id = eqHit(S.eq, p, S.dragAtoms)
+    if (id) { S.drag = { kind: "atom", id, p }; return true }
+  }
   let best: Handle | null = null, bd = Infinity
   for (const h of S.handles) {
     if (S.locked.has(h.id)) continue
@@ -578,6 +636,7 @@ export function pointerMove(S: Scene, p: Vec) {
   const d = S.drag
   if (!d) return
   if (d.kind === "pan") { d.moved = Math.max(d.moved, dist(p, d.start)); return }
+  if (d.kind === "atom") { d.p = p; return }
   const w = toWorld(S, p)
   if (d.kind === "draw") { d.end = w; d.moved += 1; return }
   const h = S.handles.find(x => x.id === d.id)
@@ -626,6 +685,11 @@ export function pointerUp(S: Scene) {
   if (!d) return
   S.drag = null
   if (d.kind === "pan") { if (d.moved <= 10) tapAt(S, d.start); return }
+  if (d.kind === "atom") {
+    const onto = eqHit(S.eq, d.p, undefined, 6)
+    S.onAtomDrop?.(S, d.id, onto && onto !== d.id ? onto : null, d.p)
+    return
+  }
   if (d.kind === "draw") {
     const h = S.handles.find(x => x.id === d.id)
     if (!h || h.kind !== "draw") return
@@ -654,11 +718,19 @@ export function startInput(S: Scene, spec: Omit<TermsInput, "value" | "state" | 
   S.input = { ...spec, value: "", state: "idle", tries: 0, wrongAt: -9 }
 }
 /** The answer box, for an equation's tail. */
-export const boxNode = (S: Scene): ENode => ({ k: "box", id: "box", tex: S.input?.value ?? "", state: S.input?.state ?? "idle", wrongAt: S.input?.wrongAt ?? -9 })
+export const boxNode = (S: Scene): ENode => ({ k: "box", id: "box", tex: S.input?.calc ? calcTex(S.input.value) : S.input?.value ?? "", state: S.input?.state ?? "idle", wrongAt: S.input?.wrongAt ?? -9 })
 
 export function typeKey(S: Scene, key: string) {
   const inp = S.input
   if (!inp || inp.state === "right") return
+  if (inp.calc) {
+    if (key === "go") { checkCalc(S, inp); return }
+    if ((inp.state === "wrong" || inp.fresh) && key !== "back") inp.value = ""
+    inp.fresh = false
+    inp.value = calcType(inp.value, key, 14)
+    inp.state = "idle"
+    return
+  }
   if (key === "go") {
     if (!inp.value) return
     const v = Number(inp.value)
@@ -675,6 +747,93 @@ export function typeKey(S: Scene, key: string) {
   if (inp.state === "wrong") inp.value = ""
   inp.state = "idle"
   if (inp.value.length < 3) inp.value += key
+}
+
+/** A calculator answer: as the calculator lessons judge it (a calculation, or a number to the accuracy asked). */
+function checkCalc(S: Scene, inp: TermsInput) {
+  if (!inp.value) return
+  const judged = judge(inp.value, inp.answer, { sf: inp.sf, dp: inp.dp }), v = judged.v
+  let verdict = judged.verdict
+  if (inp.exact && (verdict === "right" || verdict === "rough")) verdict = v !== null && Math.abs(v - inp.answer) <= 1e-9 * Math.max(1, Math.abs(inp.answer)) ? "right" : "wrong"
+  if (inp.piForm && verdict === "right" && !inp.value.includes("π")) {
+    inp.fresh = true
+    say(S, "That's the right size. Now give it in terms of $\\pi$: keep $\\pi$ in your answer.", "calm", 4.5)
+    return
+  }
+  if (verdict === "error") { inp.tries++; inp.state = "wrong"; inp.wrongAt = S.time; say(S, "Math ERROR. Is something the wrong way round?", "wrong", 4.5); return }
+  if (verdict === "unfinished") { say(S, "That calculation is not finished.", "calm", 2.6); return }
+  if (verdict === "rough") {
+    inp.fresh = true
+    say(S, inp.sf ? `Nearly. Give it to $${inp.sf}$ significant figures.` : `Nearly. Give it to $${inp.dp ?? 1}$ decimal place.`, "calm", 3.4)
+    return
+  }
+  if (verdict === "right") { inp.state = "right"; S.note = null; S.flashGood = 1; S.touched = "eq"; inp.onRight?.(S); return }
+  inp.tries++
+  inp.state = "wrong"
+  inp.wrongAt = S.time
+  const slip = v !== null ? inp.slips?.find(s => slipMatches(inp.value, v, s.v)) : undefined
+  if (slip) say(S, slip.say, "wrong", 4.5)
+}
+
+// ── moving a piece across the = ──────────────────────────────────────────
+
+export interface CrossState { stage: 0 | 1; pulse: Set<string>; grab: Set<string>; crossed: boolean; done: boolean }
+
+/**
+ * The student drags a piece (any of `ids`, all one term) over the =, then
+ * picks what it becomes on the other side. Wrong picks get their own note.
+ */
+export function startCross(S: Scene, o: {
+  ids: string[]
+  label: string
+  from: "left" | "right"
+  options: string[]
+  answer: number
+  notes?: Record<number, string>
+  before: (st: CrossState) => ENode
+  after: () => ENode
+  ask?: string
+  landed?: string
+}) {
+  const st: CrossState = { stage: 0, pulse: new Set(), grab: new Set(o.ids), crossed: false, done: false }
+  S.solve = st
+  S.dragAtoms = [...o.ids]
+  for (const id of o.ids) S.dragTex[id] = o.label
+  S.eqFn = () => (st.stage === 0 ? o.before(st) : o.after())
+  S.onAtomDrop = (S2, _id, _onto, at) => {
+    if (st.crossed) return
+    const eq = eqCentre(S2.eq, "eq")
+    if (!eq) return
+    const over = o.from === "left" ? at[0] > eq[0] + 6 : at[0] < eq[0] - 6
+    const near = Math.abs(at[1] - eq[1]) < S2.eq.size * 3.2
+    if (!over || !near) { say(S2, "Drag it over the $=$, to the other side.", "calm", 3); return }
+    st.crossed = true
+    st.grab = new Set()
+    st.pulse = new Set(o.ids)
+    S2.dragAtoms = []
+    say(S2, o.ask ?? "What does it become over there?", "calm", 600)
+    choose(S2, o.options, o.answer, (S3, k, right) => {
+      if (!right) { say(S3, o.notes?.[k] ?? "Moving across does the opposite.", "wrong", 4.2); return }
+      S3.note = null
+      later(S3, 0.5, S4 => {
+        S4.choice = null
+        eqSlow(S4.eq, 1.4)
+        st.stage = 1
+        st.pulse = new Set()
+        S4.touched = "eq"
+        S4.flashGood = 0.6
+        if (o.landed) say(S4, o.landed, "calm", 600)
+        later(S4, 1.7, () => { st.done = true })
+      })
+    })
+  }
+}
+export const crossDone = (S: Scene) => !!S.solve?.done
+
+/** Where a piece being carried is (for drawing it under the finger). */
+export function dragAt(S: Scene): Vec | null {
+  const d = S.drag
+  return d && d.kind === "atom" ? d.p : null
 }
 
 export { dist, lerpV, clamp, add, sub, mul, dot, cross, len, unit, RAD, DEG }

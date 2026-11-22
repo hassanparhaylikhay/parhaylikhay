@@ -25,6 +25,7 @@ import { createBoard, eqSet, eqStep, eqHit, eqCentre, eqSlow, extent, measure, r
 import { calcType, calcTex, judge, isCalculation, slipMatches, setAns, calcValue, roundedAns, ansReminder, INV_KEY } from "../calc"
 import type { Curved, Net } from "./solids"
 import type { Sheet } from "./sheet"
+import type { Meter, SqGrid, Cubes, Water, Ladder } from "./mens"
 
 export const CHALK = "#e8e6e0"
 export const BLUE = "#00abfa"
@@ -168,6 +169,10 @@ export interface CalcInput {
   typed?: string
   /** what Ans holds (EG), when the answer is meant to use it */
   ansName?: string
+  /** right only exactly (a conversion: 7.8 cm is not "about 8") */
+  exact?: boolean
+  /** the answer must keep π in it (an answer in terms of π) */
+  piForm?: boolean
   onRight?: (S: Scene) => void
   help?: (S: Scene, tries: number) => void
 }
@@ -205,6 +210,18 @@ export interface Scene {
   netEdit: { k: number; cand: [number, number][] } | null
   /** a tap on the floor (world x, y), in tapFloor mode */
   onFloor: ((S: Scene, w: [number, number]) => void) | null
+  /** mensuration: a metre stick, squares split into grids, unit cubes, water in a box, a ladder of units */
+  meter: Meter | null
+  sqGrids: SqGrid[]
+  cubes: Cubes[]
+  water: Water | null
+  ladder: Ladder | null
+  /** several ladders side by side, the whole board (a summary) */
+  ladders: Ladder[]
+  /** what the board gives the figure: the side (null: by the board's shape) or the top, the rest under it */
+  splitBelow: boolean
+  /** the ladder had the side of the board (so its room is given back when it goes) */
+  ladderOn: boolean
   /** a sheet through the solid, for its planes of symmetry (null: none) */
   sheet: Sheet | null
   /** edges of the solid in a colour, or lit, by segKey */
@@ -251,6 +268,10 @@ export interface Scene {
   turned: number
   /** the points the view keeps in room (null: every point) */
   fitPts: string[] | null
+  /** the view fits the points' outline as seen from this view, not the sphere round them (a long stick fills a wide board); the size holds while the student turns it */
+  fitRect: [number, number] | null
+  /** with fitRect: the points start at the left of their room (a close-up of a stick that runs on off the screen) */
+  fitLeft: boolean
   fit: { cx: number; cy: number; u: number; c: V3; R: number } | null
   fitD: { cx: number; cy: number; u: number; c: V3; R: number } | null
 
@@ -326,9 +347,9 @@ export function createScene(): Scene {
   for (const k of VIS_KEYS) vis[k] = { v: 0, t: 0 }
   return {
     w: 0, h: 0, time: 0, beatStart: 0, mode: "none",
-    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, net: null, netEdit: null, onFloor: null, sheet: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, keep: {}, glowPts: [],
+    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, net: null, netEdit: null, onFloor: null, meter: null, sqGrids: [], cubes: [], water: null, ladder: null, ladders: [], splitBelow: false, ladderOn: false, sheet: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, keep: {}, glowPts: [],
     stick: null, light: [], box: null, pyr: null, handles: [], floorGrid: 1,
-    yaw: -32, pitch: 22, yawD: -32, pitchD: 22, spin: 0, fling: { yaw: 0, pitch: 0 }, lastTouch: -9, turned: 0, fitPts: null, fit: null, fitD: null,
+    yaw: -32, pitch: 22, yawD: -32, pitchD: 22, spin: 0, fling: { yaw: 0, pitch: 0 }, lastTouch: -9, turned: 0, fitPts: null, fitRect: null, fitLeft: false, fit: null, fitD: null,
     flats: [], flatMem: {}, acts: [], act: null, split: { v: 0, t: 0 }, dim: { v: 0, t: 0 }, dimMax: 0.62, liftLit: null, picked: {}, hands: {}, regions: null, onRegion: null, regionLit: null, tapPoints: null, onPoint: null, joinFrom: null, onJoin: null,
     tapSegs: null, onSeg: null, tapArcs: null, onArc: null, tapFlat: null, onFlatSide: null,
     eq: createBoard(), eqFn: null, solve: null, dragAtoms: [], onAtomDrop: null, dragTex: {}, eqRoom: { v: 0, t: 0 }, keyRows: 4,
@@ -596,7 +617,7 @@ export function layout(S: Scene): Layout {
   const sp = S.split.v
   if ((S.flats.length && on(S, "flats")) || sp > 0.001) {
     const bw = board.x1 - board.x0, bh = board.y1 - board.y0
-    if (bw > bh * 1.1) {
+    if (bw > bh * 1.1 && !S.splitBelow) {
       const cut = board.x0 + bw * 0.42
       solidCell = { ...board, x1: board.x1 + (cut - board.x1) * sp }
       flatCell = { ...board, x0: cut }
@@ -624,6 +645,20 @@ function fitFor(S: Scene, L: Layout) {
   const cell = L.solidCell
   const pad = L.compact ? 22 : 36
   const room = Math.min(cell.x1 - cell.x0, cell.y1 - cell.y0) - 2 * pad
+  if (S.fitRect) {
+    // the points as they will sit on the screen (the view it is turning to), each as big as perspective draws it
+    const yaw = S.fitRect[0] * RAD, pitch = S.fitRect[1] * RAD, F = EYE * R
+    const Q = P.map(p => {
+      const q = vsub(p, c)
+      const x1 = q[0] * Math.cos(yaw) - q[1] * Math.sin(yaw), y1 = q[0] * Math.sin(yaw) + q[1] * Math.cos(yaw)
+      const z = -y1 * Math.cos(pitch) + q[2] * Math.sin(pitch), s = F / Math.max(F * 0.2, F - z)
+      return [x1 * s, (y1 * Math.sin(pitch) + q[2] * Math.cos(pitch)) * s]
+    })
+    const xs = Q.map(q => q[0]), ys = Q.map(q => q[1])
+    const lx = Math.min(...xs), hx = Math.max(...xs), ly = Math.min(...ys), hy = Math.max(...ys)
+    const u = Math.max(0.02, Math.min((cell.x1 - cell.x0 - 2 * pad) / Math.max(1e-6, hx - lx), (cell.y1 - cell.y0 - 2 * pad) / Math.max(1e-6, hy - ly)))
+    return { cx: S.fitLeft ? cell.x0 + pad - lx * u : (cell.x0 + cell.x1) / 2 - ((lx + hx) / 2) * u, cy: (cell.y0 + cell.y1) / 2 + ((ly + hy) / 2) * u, u, c, R }
+  }
   // the nearest corner can be drawn a little bigger than the sphere (perspective)
   // no zoom floor: a figure in metres (a hall 160 m across) needs about 1 px a unit
   const u = Math.max(0.02, room / (2 * R * (EYE / (EYE - 1))))
@@ -882,6 +917,31 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       out.push({ key: `A-${i}-${g.at}`, tex: g.tex, col: g.col ?? CHALK, at: G.labelAt, anchor: G.C, size, op: S.vis.marks.v, pulse: g.pulse })
     })
   }
+  // the metre stick's numbers: every cm once there is room to read them, else every 10 cm
+  const M = S.meter
+  if (M && S.vis.solid.v > 0.01) {
+    const f = S.fitD ?? S.fit, u = f?.u ?? 1
+    const step = u >= 22 ? 1 : u * 10 >= 26 ? 10 : 50
+    const small = L.compact ? 12 : 14
+    for (let k = 0; k <= M.len; k += step) {
+      const at = proj(S, [M.x0 + k, M.y0 + M.w * 0.75 - Math.max(0.3, 13 / u), 0])
+      // a stick that runs off the screen: its numbers stop short of the edge
+      if (at[0] < 16 || at[0] > S.w - 16 || at[1] < 16 || at[1] > S.h - 16) continue
+      // a close-up stick beside a ladder is cut off at the edge of its room
+      if (S.ladderOn && (at[0] < L.solidCell.x0 - 4 || at[0] > L.solidCell.x1 + 4 || at[1] > L.solidCell.y1 + 4)) continue
+      out.push({ key: `MT-${k}`, tex: String(k), col: CHALK, at, anchor: at, size: small, op: S.vis.solid.v * 0.95 })
+    }
+    for (const [i, mk] of (M.marks ?? []).entries()) {
+      if (!mk.tex) continue
+      const at = proj(S, [M.x0 + mk.at, M.y0 + M.w + Math.max(0.6, 26 / u), 0])
+      out.push({ key: `MM-${i}`, tex: mk.tex, col: mk.col, at, anchor: at, size: size + 1, op: S.vis.solid.v })
+    }
+  }
+  for (const [i, g] of S.sqGrids.entries()) {
+    if (!g.tex) continue
+    const at = proj(S, [g.x0 + g.size / 2, g.y0 + g.size / 2, 0])
+    out.push({ key: `SG-${i}`, tex: g.tex, col: g.col, at, anchor: at, size: size + 4, op: S.vis.solid.v })
+  }
   if (S.vis.flats.v > 0.01) {
     for (const F of S.flats) {
       if (F.t.v < 0.05 || F.pts.some(n => !F.pos[n])) continue
@@ -932,6 +992,9 @@ export function step(S: Scene, dt: number) {
   if (S.box) { Object.assign(S.P3, boxPts(S.box.l, S.box.w, S.box.h)); S.faces = S.box.h < 0.05 ? [BOX_FACES[0]] : BOX_FACES }
   if (S.pyr) { Object.assign(S.P3, pyramidPts(S.pyr.l, S.pyr.w, S.pyr.h)); S.faces = S.pyr.h < 0.05 ? [PYRAMID_FACES[0]] : PYRAMID_FACES }
   if (S.stick) { const T = stickTop(S.stick); S.P3.P = [...S.stick.base] as V3; S.P3.T = T; S.P3.Tf = [T[0], T[1], 0] }
+  // a ladder of units takes the side of the board (as a lifted triangle does), and gives it back when it goes
+  // (a ladder alone has the whole board)
+  S.ladderOn = !!S.ladder && !!(S.meter || S.sqGrids.length || S.cubes.length || S.water || S.faces)
   // a net folds smoothly to where it is going (at once under a finger)
   if (S.net) S.net.tD += (S.net.t - S.net.tD) * (S.drag?.kind === "handle" ? 1 : k(0.1))
   // a sheet through the solid: which plane it is clicked into; it follows the finger, glides into a
@@ -973,7 +1036,8 @@ export function step(S: Scene, dt: number) {
 
   // room for the flats, and the solid fading back while a triangle comes out of it (acts may hold these)
   // (a triangle still waiting to come out does not count)
-  S.split.t = S.flats.some(F => F.t.t > 0 || F.fly) && S.vis.flats.t > 0.5 ? 1 : 0
+  // (a ladder of units holds the room too)
+  S.split.t = (S.flats.some(F => F.t.t > 0 || F.fly) && S.vis.flats.t > 0.5) || S.ladderOn ? 1 : 0
   S.split.v += (S.split.t - S.split.v) * k(0.05)
   if (Math.abs(S.split.t - S.split.v) < 0.002) S.split.v = S.split.t
   S.dim.v += (S.dim.t - S.dim.v) * k(0.06)
@@ -1113,6 +1177,12 @@ export function resetBeat(S: Scene) {
   S.net = null
   S.netEdit = null
   S.onFloor = null
+  S.meter = null
+  S.sqGrids = []
+  S.cubes = []
+  S.water = null
+  S.ladder = null
+  S.ladders = []
   S.sheet = null
   S.drag = null
   S.names = {}
@@ -1163,6 +1233,9 @@ export function resetBeat(S: Scene) {
   S.spin = 0
   S.turned = 0
   S.fitPts = null
+  S.fitRect = null
+  S.fitLeft = false
+  S.splitBelow = false
   S.labSlow = {}
   S.acts = []
   S.act = null
@@ -1535,7 +1608,16 @@ export function typeKey(S: Scene, key: string) {
 function check(S: Scene) {
   const inp = S.input!
   if (!inp.value) return
-  const { verdict, v } = judge(inp.value, inp.answer, { sf: inp.sf, dp: inp.dp })
+  const judged = judge(inp.value, inp.answer, { sf: inp.sf, dp: inp.dp }), v = judged.v
+  let verdict = judged.verdict
+  // an exact answer (a conversion) is right only exactly
+  if (inp.exact && (verdict === "right" || verdict === "rough")) verdict = v !== null && Math.abs(v - inp.answer) <= 1e-9 * Math.max(1, Math.abs(inp.answer)) ? "right" : "wrong"
+  // in terms of π: the right number without π in it is not what was asked
+  if (inp.piForm && verdict === "right" && !inp.value.includes("π")) {
+    inp.fresh = true
+    say(S, "That's the right size. Now give it in terms of $\\pi$: keep $\\pi$ in your answer.", "calm", 4.5)
+    return
+  }
   if (verdict === "error") {
     inp.tries++; inp.state = "wrong"; inp.wrongAt = S.time
     say(S, "Math ERROR. Is something the wrong way round?", "wrong", 4.5)
