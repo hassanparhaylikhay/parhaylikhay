@@ -6,7 +6,7 @@ import EquationView from "../EquationView"
 import { type Vec, add, sub, mul, lerpV, unit } from "../geometry"
 import {
   type Scene, type Layout, type Poly, CHALK, GREEN, YELLOW, QUIET,
-  PD, ptS, toScreen, marksOf, handleAt, polyPts, dragAt, RAD,
+  PD, ptS, toScreen, marksOf, handleAt, polyPts, dragAt, slicePolys, RAD,
 } from "./scene"
 
 /**
@@ -32,10 +32,12 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
           <g opacity={v("grid")}><Grid S={S} /></g>
           <g opacity={v("shapes")}>
             <CellsView S={S} />
+            <SlicesView S={S} />
             <Shades S={S} />
             {S.polys.map(pl => <PolyView key={pl.id} S={S} pl={pl} />)}
             <g clipPath="url(#tl-board)">{S.segs.map(sg => <SegView key={sg.id} S={S} id={sg.id} />)}</g>
             <CircleView S={S} />
+            <ArcsView S={S} />
           </g>
           <g opacity={v("marks")}><Marks S={S} /></g>
           <Dots S={S} />
@@ -96,7 +98,15 @@ function Shades({ S }: { S: Scene }) {
       {S.shades.map(sh => {
         let Q: Vec[] = []
         if (sh.kind === "poly" && sh.pts) Q = sh.pts.map(n => ptS(S, n))
-        else if (S.circle && sh.a1 !== undefined && sh.a2 !== undefined) {
+        else if (sh.kind === "ring" && sh.c && S.pts[sh.c]) {
+          // between two radii about its own centre: out along the far arc, back along the near one (or to the centre)
+          const c = PD(S, sh.c), r1 = sh.r1 ?? 0, r2 = sh.r2 ?? 1, a1 = sh.a1 ?? 0
+          const span = ((((sh.a2 ?? 360) - a1) % 360) + 360) % 360 || 360
+          const at = (r: number, a: number): Vec => toScreen(S, [c[0] + r * Math.cos(a * RAD), c[1] + r * Math.sin(a * RAD)])
+          for (let i = 0; i <= 64; i++) Q.push(at(r2, a1 + (span * i) / 64))
+          if (r1 > 0) for (let i = 64; i >= 0; i--) Q.push(at(r1, a1 + (span * i) / 64))
+          else if (span < 360) Q.push(toScreen(S, c))
+        } else if (S.circle && sh.a1 !== undefined && sh.a2 !== undefined) {
           const c = PD(S, S.circle.c), r = S.circle.r
           const span = (((sh.a2 - sh.a1) % 360) + 360) % 360 || 360
           const arc: Vec[] = []
@@ -147,17 +157,37 @@ function SegView({ S, id }: { S: Scene; id: string }) {
 function CircleView({ S }: { S: Scene }) {
   if (!S.circle) return null
   const c = ptS(S, S.circle.c), r = S.circle.r * (S.fitD?.u ?? 30)
-  const out: React.ReactNode[] = [<circle key="c" cx={c[0]} cy={c[1]} r={r} fill={CHALK} fillOpacity={0.04} stroke={CHALK} strokeWidth={2.4} />]
+  return <circle cx={c[0]} cy={c[1]} r={r} fill={CHALK} fillOpacity={0.04} stroke={CHALK} strokeWidth={2.4} />
+}
+
+/** Arcs: part of the circle's edge, or of any circle about a point (an arc of a sector, an angle mark). */
+function ArcsView({ S }: { S: Scene }) {
+  const out: React.ReactNode[] = []
   for (const ar of S.arcs) {
+    const cn = ar.c ?? S.circle?.c, r = ar.r ?? S.circle?.r
+    if (!cn || r === undefined || !S.pts[cn]) continue
     const span = (((ar.a2 - ar.a1) % 360) + 360) % 360 || 360
     const pts: Vec[] = []
-    const w = PD(S, S.circle.c)
-    for (let i = 0; i <= 64; i++) { const a = (ar.a1 + (span * i) / 64) * RAD; pts.push(toScreen(S, [w[0] + S.circle.r * Math.cos(a), w[1] + S.circle.r * Math.sin(a)])) }
+    const w = PD(S, cn)
+    for (let i = 0; i <= 64; i++) { const a = (ar.a1 + (span * i) / 64) * RAD; pts.push(toScreen(S, [w[0] + r * Math.cos(a), w[1] + r * Math.sin(a)])) }
     const d = pts.map((p, i) => `${i ? "L" : "M"} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ")
     if (ar.glow) out.push(<path key={`g${ar.id}`} d={d} fill="none" stroke={ar.col} strokeWidth={11} strokeLinecap="round" filter="url(#tl-soft)"><animate attributeName="stroke-opacity" values="0.15;0.6;0.15" dur="1.6s" repeatCount="indefinite" /></path>)
-    out.push(<path key={ar.id} d={d} fill="none" stroke={ar.col} strokeWidth={ar.w ?? 4} strokeLinecap="round" />)
+    out.push(<path key={ar.id} d={d} fill="none" stroke={ar.col} strokeWidth={ar.w ?? 4} strokeLinecap="round" strokeDasharray={ar.dash ? "7 7" : undefined} />)
   }
   return <>{out}</>
+}
+
+/** A cut circle's slices, from the circle toward the strip: every other one a little brighter so they can be told apart. */
+function SlicesView({ S }: { S: Scene }) {
+  const sl = S.slices
+  if (!sl) return null
+  return (
+    <>
+      {slicePolys(sl).map((Q, i) => (
+        <polygon key={i} points={poly(Q.map(p => toScreen(S, p)))} fill={sl.col} fillOpacity={i % 2 ? 0.14 : 0.3} stroke={CHALK} strokeOpacity={0.8} strokeWidth={1.3} strokeLinejoin="round" />
+      ))}
+    </>
+  )
 }
 
 /** Ticks on a side's middle (n of them), across it. */

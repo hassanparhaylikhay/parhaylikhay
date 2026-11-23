@@ -29,6 +29,8 @@ import ConstructLesson from "./bearings/ConstructLesson"
 import NetsLesson from "./three-d/NetsLesson"
 import UnitsLesson from "./three-d/UnitsLesson"
 import PerimeterAreaLesson from "./terms/PerimeterAreaLesson"
+import CirclesLesson from "./terms/CirclesLesson"
+import SectorsLesson from "./terms/SectorsLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -174,6 +176,18 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Walk round a shape for its perimeter, count the squares in a rectangle, cut and turn triangles, parallelograms and trapeziums into rectangles, and use the four area formulas on exam questions.",
     topicHref: "/dashboard/maths/05/02",
     Lesson: PerimeterAreaLesson,
+  },
+  circles: {
+    title: "Circles",
+    description: "Roll a circle along a line to see where π comes from, cut one into slices to find its area, and answer in terms of π or with the π key.",
+    topicHref: "/dashboard/maths/05/03",
+    Lesson: CirclesLesson,
+  },
+  "arcs-and-sectors": {
+    title: "Arcs and sectors",
+    description: "Turn a radius to make a sector, see the fraction of the circle it takes, and find arc lengths and sector areas, working backwards too.",
+    topicHref: "/dashboard/maths/05/03",
+    Lesson: SectorsLesson,
   },
   "symmetry-of-solids": {
     title: "Symmetry of solids",

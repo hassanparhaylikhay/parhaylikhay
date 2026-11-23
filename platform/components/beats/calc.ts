@@ -65,10 +65,11 @@ export const MENS_KEYS: string[][] = [
   ["7", "8", "9", "0", ".", "×", "÷"],
   ["+", "−", "x²", "√", "π", "go"],
 ]
-/** The mensuration calculator on a keyboard: p for π, and the cosine rule's keys. */
+/** The mensuration calculator on a keyboard: p for π, and the cosine rule's keys that it has (no sin, cos, tan or Ans). */
 export function mensKeyOf(key: string): string | null {
   if (key === "p" || key === "P") return "π"
-  return cosKeyOf(key)
+  const k = cosKeyOf(key)
+  return k && MENS_KEYS.some(r => r.includes(k)) ? k : null
 }
 
 /** The cosine rule's calculator on a keyboard: + and -, ^ for x², r for √, and the sine rule's keys. */

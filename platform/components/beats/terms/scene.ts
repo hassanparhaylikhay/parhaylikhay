@@ -47,9 +47,28 @@ export interface Dot { pt: string; col?: string; r?: number; pulse?: boolean }
 /** A right-angle square at a point, between its lines to two other points. */
 export interface Sq { at: string; a: string; b: string; col?: string; pulse?: boolean }
 /** A region shaded: a sector or segment of the circle (angles in degrees, anticlockwise from a1 to a2), or a shape. */
-export interface Shade { id: string; kind: "sector" | "segment" | "poly"; a1?: number; a2?: number; pts?: string[]; col: string; op?: number; pulse?: boolean }
+export interface Shade {
+  id: string
+  kind: "sector" | "segment" | "poly" | "ring"
+  a1?: number
+  a2?: number
+  pts?: string[]
+  col: string
+  op?: number
+  pulse?: boolean
+  /** a ring: about point `c`, between radius r1 (0: from the centre, a sector) and r2, from a1 anticlockwise to a2 */
+  c?: string
+  r1?: number
+  r2?: number
+}
 /** Part of the circle's edge, anticlockwise from a1 to a2 (degrees). */
-export interface ArcEl { id: string; a1: number; a2: number; col: string; w?: number; glow?: boolean }
+export interface ArcEl { id: string; a1: number; a2: number; col: string; w?: number; glow?: boolean; dash?: boolean; /** about this point at this radius (else the circle's) */ c?: string; r?: number }
+/**
+ * A circle of radius r about `c` cut into n equal slices, laid head to tail
+ * as far as t says (0: the circle, 1: a strip from (x0, y0), the slices
+ * pointing down and up in turn).
+ */
+export interface Slices { c: Vec; r: number; n: number; t: number; x0: number; y0: number; col: string }
 /** A label at a point (by name or in the world), nudged in pixels. */
 export interface FreeLab { key: string; at: string | Vec; tex: string; col?: string; size?: number; dx?: number; dy?: number; pulse?: boolean }
 
@@ -112,6 +131,7 @@ export interface Scene {
   circle: { c: string; r: number } | null
   arcs: ArcEl[]
   shades: Shade[]
+  slices: Slices | null
   dots: Dot[]
   /** unit squares lit as they are counted */
   cells: Cells[]
@@ -169,7 +189,7 @@ export function createScene(): Scene {
   for (const k of VIS_KEYS) vis[k] = { v: 0, t: 0 }
   return {
     w: 0, h: 0, time: 0, beatStart: 0,
-    pts: {}, names: {}, nameFrom: {}, polys: [], segs: [], circle: null, arcs: [], shades: [], dots: [], cells: [], squares: [], freeLabs: [], grid: null,
+    pts: {}, names: {}, nameFrom: {}, polys: [], segs: [], circle: null, arcs: [], shades: [], slices: null, dots: [], cells: [], squares: [], freeLabs: [], grid: null,
     frame: { x0: -5, y0: -4, x1: 5, y1: 4 }, fit: null, fitD: null,
     handles: [], snapped: null, locked: new Set(), taps: null, onTap: null,
     eq: createBoard(), eqFn: null, eqRoom: { v: 0, t: 0 }, choice: null, stepper: null, input: null,
@@ -403,6 +423,32 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
   return out
 }
 
+/**
+ * Each slice of a cut circle as a polygon in the world (its point first,
+ * then its arc), carried from the circle toward the strip as far as `t`
+ * says: it glides and turns the short way round.
+ */
+export function slicePolys(sl: Slices, steps = 6): Vec[][] {
+  const { n, r, c } = sl
+  const e = sl.t * sl.t * (3 - 2 * sl.t)
+  const half = Math.PI / n, L = (2 * Math.PI * r) / n
+  const out: Vec[][] = []
+  for (let i = 0; i < n; i++) {
+    const b0 = ((i + 0.5) * 2 * Math.PI) / n
+    // in the strip: even slices hang from the top edge, odd ones stand on the bottom between them
+    const up = i % 2 === 1, k = Math.floor(i / 2)
+    const apex: Vec = up ? [sl.x0 + (k + 1) * L, sl.y0] : [sl.x0 + (k + 0.5) * L, sl.y0 + r]
+    const b1 = up ? Math.PI / 2 : -Math.PI / 2
+    let db = b1 - b0
+    db = ((((db + Math.PI) % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI)) - Math.PI
+    const b = b0 + db * e, ap = lerpV(c, apex, e)
+    const poly: Vec[] = [ap]
+    for (let j = 0; j <= steps; j++) { const a = b - half + (2 * half * j) / steps; poly.push([ap[0] + r * Math.cos(a), ap[1] + r * Math.sin(a)]) }
+    out.push(poly)
+  }
+  return out
+}
+
 /** A length for the board, to 1 decimal place (a whole number without one). */
 export function numText(x: number): string {
   const r = Math.round(x * 10) / 10
@@ -507,6 +553,7 @@ export function resetBeat(S: Scene) {
   S.circle = null
   S.arcs = []
   S.shades = []
+  S.slices = null
   S.dots = []
   S.cells = []
   S.squares = []

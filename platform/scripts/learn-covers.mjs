@@ -56,6 +56,8 @@ const PICKS = {
   "drawing-nets": "eleven",
   "units-of-measure": "thousand",
   "perimeter-and-area": "pg-rect",
+  circles: "strip-a",
+  "arcs-and-sectors": "major",
 }
 
 /** Figures whose lines run to the board's edges are cropped by hand (1280 × 800 page coordinates). */
