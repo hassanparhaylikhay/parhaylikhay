@@ -31,6 +31,8 @@ import UnitsLesson from "./three-d/UnitsLesson"
 import PerimeterAreaLesson from "./terms/PerimeterAreaLesson"
 import CirclesLesson from "./terms/CirclesLesson"
 import SectorsLesson from "./terms/SectorsLesson"
+import VolumeLesson from "./three-d/VolumeLesson"
+import SurfaceLesson from "./three-d/SurfaceLesson"
 
 /**
  * Every beat lesson, by URL slug. The dashboard page and the public page
@@ -188,6 +190,18 @@ export const BEAT_LESSONS: Record<string, BeatLesson> = {
     description: "Turn a radius to make a sector, see the fraction of the circle it takes, and find arc lengths and sector areas, working backwards too.",
     topicHref: "/dashboard/maths/05/03",
     Lesson: SectorsLesson,
+  },
+  "volume-of-prisms": {
+    title: "Volume of prisms and cylinders",
+    description: "Fill a box with cubes layer by layer, slide a cross-section along to sweep out a prism or a cylinder, and work out volumes, times to fill and missing lengths.",
+    topicHref: "/dashboard/maths/05/04",
+    Lesson: VolumeLesson,
+  },
+  "surface-area": {
+    title: "Surface area",
+    description: "Open boxes and prisms out into nets, unroll a cylinder's curved face into a rectangle, and find the surface area of a tank with an open top.",
+    topicHref: "/dashboard/maths/05/04",
+    Lesson: SurfaceLesson,
   },
   "symmetry-of-solids": {
     title: "Symmetry of solids",

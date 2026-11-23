@@ -9,7 +9,7 @@ import {
   ptS, proj, p3, toCam, faceFront, segHidden, edgesOf, segKey, dirCol, arcGeom, arcPx, chipRects, dragAt,
   vsub, vadd, vmul, vunit, vdot, vcross, vlerp, facesEye,
 } from "./scene"
-import { curvedCloud, curvedRings, hull, foldNet } from "./solids"
+import { curvedCloud, curvedRings, hull, foldNet, ring, unrollGeom } from "./solids"
 import { normalOf, sideOf, upOf, cutOf, curvedMesh, mirror3 } from "./sheet"
 import { cubeBoxes, boxFaces, type Box, type Ladder } from "./mens"
 
@@ -36,6 +36,7 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
           <MensFloor S={S} L={L} op={vis("solid")} />
           <NetView S={S} op={vis("solid")} />
           <CurvedView S={S} op={vis("solid")} />
+          <UnrollView S={S} op={vis("solid")} />
           <SheetView S={S} op={vis("solid")} />
           <WaterView S={S} op={vis("solid")} />
           <CubesView S={S} op={vis("solid")} />
@@ -187,6 +188,8 @@ function CurvedView({ S, op }: { S: Scene; op: number }) {
   const out: React.ReactNode[] = []
   const H = hull(curvedCloud(c).map(p => proj(S, p)))
   out.push(<polygon key="body" points={poly(H)} fill={CHALK} fillOpacity={0.07} stroke={CHALK} strokeWidth={2.4} strokeLinejoin="round" />)
+  // its cross-section lit: the top filled
+  if (c.lit && c.kind === "cylinder") out.push(<polygon key="lit" points={poly(ring(c.r, c.h).map(p => proj(S, p)))} fill={c.lit} fillOpacity={0.3} stroke={c.lit} strokeWidth={2.4} strokeLinejoin="round" />)
   curvedRings(c).forEach((rg, i) => {
     const mid: V3 = [0, 0, rg.pts[0][2]]
     const capSeen = rg.cap ? facesEye(S, mid, rg.cap) : false
@@ -212,6 +215,27 @@ function CurvedView({ S, op }: { S: Scene; op: number }) {
   return <g opacity={op}>{out}</g>
 }
 
+/** A cylinder unrolling: the strips of its curved face and its two circles, drawn from the back forward. */
+function UnrollView({ S, op }: { S: Scene; op: number }) {
+  const U = S.unroll
+  if (!U) return null
+  const G = unrollGeom(U.r, U.h, U.u, U.cap)
+  const depth = (P: V3[]) => P.reduce((s, p) => s + toCam(S, p)[2], 0) / P.length
+  const side = U.cols?.side ?? CHALK, ends = U.cols?.ends ?? CHALK
+  const parts: { P: V3[]; col: string; strip: boolean }[] = [...G.strips.map(P => ({ P, col: side, strip: true })), { P: G.top, col: ends, strip: false }, { P: G.bottom, col: ends, strip: false }]
+  parts.sort((a, b) => depth(a.P) - depth(b.P))
+  const out = parts.map((pt, i) => (
+    <polygon key={i} points={poly(pt.P.map(p => proj(S, p)))} fill={pt.col} fillOpacity={pt.strip ? 0.05 : 0.22} stroke={pt.strip ? "none" : pt.col} strokeWidth={2} strokeLinejoin="round" />
+  ))
+  // the curved face's outline: its top and bottom edges and its two free sides
+  const edge = (z: number) => G.strips.map(P => P[z ? 3 : 0]).concat([G.strips[G.strips.length - 1][z ? 2 : 1]])
+  const path = (Q: V3[]) => Q.map((p, k) => { const q = proj(S, p); return `${k ? "L" : "M"} ${q[0].toFixed(1)} ${q[1].toFixed(1)}` }).join(" ")
+  const first = G.strips[0], last = G.strips[G.strips.length - 1]
+  out.push(<path key="e0" d={path(edge(0))} fill="none" stroke={side} strokeWidth={2.2} />, <path key="e1" d={path(edge(1))} fill="none" stroke={side} strokeWidth={2.2} />)
+  out.push(<path key="s0" d={path([first[0], first[3]])} fill="none" stroke={side} strokeWidth={2.2} />, <path key="s1" d={path([last[1], last[2]])} fill="none" stroke={side} strokeWidth={2.2} />)
+  return <g opacity={op}>{out}</g>
+}
+
 /** A net, folded as far as it has got: its faces drawn from the back forward. */
 function NetView({ S, op }: { S: Scene; op: number }) {
   const n = S.net
@@ -224,7 +248,9 @@ function NetView({ S, op }: { S: Scene; op: number }) {
     <g opacity={op}>
       {order.map(([id, P]) => {
         const col = n.cols?.[id]
-        return <polygon key={id} points={poly(P.map(p => proj(S, p)))} fill={col ?? CHALK} fillOpacity={col ? 0.28 : 0.1} stroke={col ?? CHALK} strokeWidth={2} strokeLinejoin="round" />
+        // orange and pink go muddy over the dark board when filled strongly: their edges carry the colour
+        const op = !col ? 0.1 : col === ORANGE || col === PINK ? 0.05 : 0.28
+        return <polygon key={id} points={poly(P.map(p => proj(S, p)))} fill={col ?? CHALK} fillOpacity={op} stroke={col ?? CHALK} strokeWidth={2} strokeLinejoin="round" />
       })}
       {/* where a face can be added: breathing yellow squares */}
       {E && n.tD < 0.02 && E.cand.map(([i, j]) => {

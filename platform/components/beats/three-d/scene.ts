@@ -22,7 +22,7 @@
 
 import { type Vec, type Rect, add, sub, mul, dot, dist, lerpV, clamp, turn, DEG, RAD } from "../geometry"
 import { createBoard, eqSet, eqStep, eqHit, eqCentre, eqSlow, extent, measure, row, frac, type EqBoard, type ENode } from "../equation"
-import { calcType, calcTex, judge, isCalculation, slipMatches, setAns, calcValue, roundedAns, ansReminder, INV_KEY } from "../calc"
+import { calcType, calcTex, judge, isCalculation, slipMatches, setAns, calcValue, roundedAns, ansReminder, INV_KEY, onMensKeys } from "../calc"
 import type { Curved, Net } from "./solids"
 import type { Sheet } from "./sheet"
 import type { Meter, SqGrid, Cubes, Water, Ladder } from "./mens"
@@ -206,6 +206,13 @@ export interface Scene {
   curved: Curved | null
   /** a net, and how far it is folded: `t` where it is going, `tD` as drawn (0 flat, 1 closed); faces in a colour of their own */
   net: { def: Net; t: number; tD: number; cols?: Record<string, string> } | null
+  /**
+   * A cylinder (radius r, height h, standing on the origin) whose curved face
+   * unrolls (`u`: 0 round, 1 flat, a rectangle 2πr wide in front of where it
+   * stood) and whose circles swing out from its front edge (`cap`: 0 in
+   * place, 1 above and below the rectangle, as in a net).
+   */
+  unroll: { r: number; h: number; u: number; cap: number; cols?: { side?: string; ends?: string } } | null
   /** a net being made on the floor's grid: faces `k` cm square, and the squares where one can be added (they breathe) */
   netEdit: { k: number; cand: [number, number][] } | null
   /** a tap on the floor (world x, y), in tapFloor mode */
@@ -347,7 +354,7 @@ export function createScene(): Scene {
   for (const k of VIS_KEYS) vis[k] = { v: 0, t: 0 }
   return {
     w: 0, h: 0, time: 0, beatStart: 0, mode: "none",
-    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, net: null, netEdit: null, onFloor: null, meter: null, sqGrids: [], cubes: [], water: null, ladder: null, ladders: [], splitBelow: false, ladderOn: false, sheet: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, keep: {}, glowPts: [],
+    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, unroll: null, net: null, netEdit: null, onFloor: null, meter: null, sqGrids: [], cubes: [], water: null, ladder: null, ladders: [], splitBelow: false, ladderOn: false, sheet: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, keep: {}, glowPts: [],
     stick: null, light: [], box: null, pyr: null, handles: [], floorGrid: 1,
     yaw: -32, pitch: 22, yawD: -32, pitchD: 22, spin: 0, fling: { yaw: 0, pitch: 0 }, lastTouch: -9, turned: 0, fitPts: null, fitRect: null, fitLeft: false, fit: null, fitD: null,
     flats: [], flatMem: {}, acts: [], act: null, split: { v: 0, t: 0 }, dim: { v: 0, t: 0 }, dimMax: 0.62, liftLit: null, picked: {}, hands: {}, regions: null, onRegion: null, regionLit: null, tapPoints: null, onPoint: null, joinFrom: null, onJoin: null,
@@ -1175,6 +1182,7 @@ export function resetBeat(S: Scene) {
   S.faceLit = {}
   S.curved = null
   S.net = null
+  S.unroll = null
   S.netEdit = null
   S.onFloor = null
   S.meter = null
@@ -1596,6 +1604,8 @@ export function typeKey(S: Scene, key: string) {
   const inp = S.input
   if (!inp || inp.state === "right" || inp.state === "guessed") return
   if (key === "go") { check(S); return }
+  // the mensuration keypad: keys it has not got (sin, Ans from a keyboard) do nothing
+  if (S.keyRows === 3 && !onMensKeys(key)) return
   if (key === "SHIFT") { inp.shift = !inp.shift; return }
   if ((inp.state === "wrong" || inp.fresh) && key !== "back") inp.value = ""
   inp.fresh = false

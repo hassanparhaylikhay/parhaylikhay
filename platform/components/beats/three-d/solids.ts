@@ -19,7 +19,7 @@ import { type V3, vadd, vsub, vmul, vdot, vcross, vunit } from "./scene"
 // ── curved solids ────────────────────────────────────────────────────────
 
 export type CurvedKind = "cylinder" | "cone" | "frustum" | "sphere" | "hemisphere"
-export interface Curved { kind: CurvedKind; r: number; h: number; r2?: number }
+export interface Curved { kind: CurvedKind; r: number; h: number; r2?: number; /** its top filled in this colour (a cylinder's cross-section) */ lit?: string }
 
 const N = 64
 
@@ -78,6 +78,35 @@ export function hull(P: Vec[]): Vec[] {
   for (const p of pts) { while (lower.length >= 2 && crossZ(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop(); lower.push(p) }
   for (const p of [...pts].reverse()) { while (upper.length >= 2 && crossZ(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop(); upper.push(p) }
   return [...lower.slice(0, -1), ...upper.slice(0, -1)]
+}
+
+// ── a cylinder unrolling ─────────────────────────────────────────────────
+
+/**
+ * A cylinder's curved face as it unrolls about its front line (y = -r):
+ * a point s along its edge from that line lies on a circle of radius
+ * r / (1 - u), which grows until the face is flat (u = 1). Its circles turn
+ * about their front edges, up and down, into the plane of the flat face.
+ * Strips of the face (each four corners), the two circles, and where the
+ * flat face's corners are.
+ */
+export function unrollGeom(r: number, h: number, u: number, cap: number, n = 48): { strips: V3[][]; top: V3[]; bottom: V3[] } {
+  const at = (s: number, z: number): V3 => {
+    if (u > 0.999) return [s, -r, z]
+    const R = r / (1 - u), a = s / R
+    return [R * Math.sin(a), -r + R - R * Math.cos(a), z]
+  }
+  const strips: V3[][] = []
+  for (let i = 0; i < n; i++) {
+    const s0 = -Math.PI * r + (2 * Math.PI * r * i) / n, s1 = -Math.PI * r + (2 * Math.PI * r * (i + 1)) / n
+    strips.push([at(s0, 0), at(s1, 0), at(s1, h), at(s0, h)])
+  }
+  // a circle turned about the line along x through its front point, by `deg` (up for the top, down for the bottom)
+  const disc = (z: number, deg: number): V3[] => ring(r, 0, 64).map(p => {
+    const y = p[1] + r, t = (deg * Math.PI) / 180
+    return [p[0], -r + y * Math.cos(t), z + y * Math.sin(t)] as V3
+  })
+  return { strips, top: disc(h, 90 * cap), bottom: disc(0, -90 * cap) }
 }
 
 // ── nets ─────────────────────────────────────────────────────────────────
@@ -198,6 +227,43 @@ export function prismNet(a = 1.6, b = 1.4, len = 2.2): Net {
       { id: "bottom", flat: [[a, 0], [0, 0], [a, -b]], parent: "mid", hinge: [0, 1], angle: 90 },
     ],
   }
+}
+
+/**
+ * Any prism's net as a strip: its cross-section `end` (anticlockwise, in x
+ * and z, its first side along the bottom from the origin) gives one
+ * rectangle per side, `len` long, in a row along x; each folds up off the
+ * last by the turn at that corner, and an end is hinged to each long edge
+ * of the first. Folded, the prism lies along y with that first side on the
+ * floor. Faces: r0, r1, ... and endA (at y = 0), endB (at y = len). With
+ * `open`, that side has no face (an open top): the sides before it go off
+ * to the right of the first and the ones after it off to the left.
+ */
+export function stripNet(end: Vec[], len: number, open?: number): Net {
+  const n = end.length
+  const side = (i: number) => Math.hypot(end[(i + 1) % n][0] - end[i][0], end[(i + 1) % n][1] - end[i][1])
+  const dir = (i: number) => Math.atan2(end[(i + 1) % n][1] - end[i][1], end[(i + 1) % n][0] - end[i][0])
+  // the turn at corner i, from side i - 1 to side i (degrees, 0 to 180)
+  const turn = (i: number) => ((((dir(i) - dir((i + n - 1) % n)) * 180) / Math.PI) % 360 + 360) % 360
+  const faces: NetFace[] = [{ id: "r0", flat: rect(0, 0, side(0), len) }]
+  const stop = open ?? n
+  let x = side(0)
+  for (let i = 1; i < stop; i++) {
+    faces.push({ id: `r${i}`, flat: rect(x, 0, side(i), len), parent: `r${i - 1}`, hinge: [0, 3], angle: turn(i) })
+    x += side(i)
+  }
+  if (open !== undefined) {
+    // the rest go the other way, each hinged by its right-hand edge to the one after it
+    let xl = 0
+    for (let i = n - 1; i > open; i--) {
+      faces.push({ id: `r${i}`, flat: rect(xl - side(i), 0, side(i), len), parent: i === n - 1 ? "r0" : `r${i + 1}`, hinge: [1, 2], angle: turn((i + 1) % n) })
+      xl -= side(i)
+    }
+  }
+  // the ends, flat beside the first rectangle's two long edges: the cross-section as it is, mirrored for the near one
+  faces.push({ id: "endA", flat: end.map(p => [p[0], -p[1]] as Vec), parent: "r0", hinge: [0, 1], angle: 90 })
+  faces.push({ id: "endB", flat: end.map(p => [p[0], len + p[1]] as Vec), parent: "r0", hinge: [0, 1], angle: 90 })
+  return { faces }
 }
 
 // ── nets made on a grid ──────────────────────────────────────────────────

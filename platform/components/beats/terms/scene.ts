@@ -17,7 +17,7 @@
 
 import { type Vec, type Rect, add, sub, mul, dot, cross, dist, lerpV, clamp, unit, len } from "../geometry"
 import { createBoard, eqSet, eqStep, eqHit, eqCentre, eqSlow, extent, row, type EqBoard, type ENode } from "../equation"
-import { calcType, calcTex, judge, slipMatches } from "../calc"
+import { calcType, calcTex, judge, slipMatches, onMensKeys } from "../calc"
 
 export const CHALK = "#e8e6e0"
 export const BLUE = "#00abfa"
@@ -772,6 +772,7 @@ export function typeKey(S: Scene, key: string) {
   if (!inp || inp.state === "right") return
   if (inp.calc) {
     if (key === "go") { checkCalc(S, inp); return }
+    if (!onMensKeys(key)) return
     if ((inp.state === "wrong" || inp.fresh) && key !== "back") inp.value = ""
     inp.fresh = false
     inp.value = calcType(inp.value, key, 14)

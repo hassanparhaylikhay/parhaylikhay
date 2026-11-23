@@ -65,12 +65,13 @@ export const MENS_KEYS: string[][] = [
   ["7", "8", "9", "0", ".", "×", "÷"],
   ["+", "−", "x²", "√", "π", "go"],
 ]
-/** The mensuration calculator on a keyboard: p for π, and the cosine rule's keys that it has (no sin, cos, tan or Ans). */
+/** The mensuration calculator on a keyboard: p for π, and the cosine rule's keys (a board with the mensuration keypad ignores the ones it has not got: see onMensKeys). */
 export function mensKeyOf(key: string): string | null {
   if (key === "p" || key === "P") return "π"
-  const k = cosKeyOf(key)
-  return k && MENS_KEYS.some(r => r.includes(k)) ? k : null
+  return cosKeyOf(key)
 }
+/** Whether the mensuration keypad has this key (so sin or Ans typed on a keyboard does nothing there). */
+export const onMensKeys = (k: string) => MENS_KEYS.some(r => r.includes(k))
 
 /** The cosine rule's calculator on a keyboard: + and -, ^ for x², r for √, and the sine rule's keys. */
 export function cosKeyOf(key: string): string | null {
@@ -344,6 +345,9 @@ export function judge(value: string, truth: number, { sf, dp }: { sf?: number; d
     const near = unit > 0 && Math.abs(v - truth) <= 0.5 * unit
     return { verdict: same || near ? "right" : "wrong", v }
   }
+  // a whole number whose last zeros are figures: the answer rounded as asked, exactly (30 600, or 120 for 119.6)
+  const whole = value.replace(/^[-+]/, "")
+  if (sf && /^\d*[1-9]\d*0$/.test(whole) && whole.replace(/^0+/, "").length >= sf && Math.abs(v - toSig(truth, sf)) <= 1e-9 * scale) return { verdict: "right", v }
   const tol = 0.5 * 10 ** -decimals(value) + 1e-9 * scale
   if (Math.abs(v - truth) > tol) return { verdict: "wrong", v }
   if (sf && sigFigs(value) < sf) return { verdict: "rough", v }
