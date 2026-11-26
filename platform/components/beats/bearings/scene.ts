@@ -408,10 +408,24 @@ function fitFor(S: Scene, L: Layout) {
     if (p[1] - m < y0) { y0 = p[1] - m; grew = true }
     if (p[1] + m > y1) { y1 = p[1] + m; grew = true }
   }
+  // a protractor lying on a place: it is drawn a set size on the screen, so it needs that much room round its centre
+  const pr = S.prot
+  if (pr && pr.on && S.P[pr.on]) {
+    for (let k = 0; k < 2; k++) {
+      const m = (protPx(S) + 10 - edge) / u
+      if (m <= 0) break
+      x0 = Math.min(x0, pr.c[0] - m); x1 = Math.max(x1, pr.c[0] + m)
+      y0 = Math.min(y0, pr.c[1] - m); y1 = Math.max(y1, pr.c[1] + m)
+      u = scale()
+    }
+  }
   if (grew) u = scale()
   const c: Vec = [(x0 + x1) / 2, (y0 + y1) / 2]
   return { cx: (b.x0 + b.x1) / 2, cy: (b.y0 + top + b.y1 - edge) / 2, u, c }
 }
+
+/** The protractor's radius on the screen: big enough on a phone for its two rings of numbers to stay apart. */
+export const protPx = (S: Scene) => clamp(Math.min(S.w, S.h) * (S.w < 560 ? 0.33 : 0.2), 110, 150)
 
 /** A world point on the screen. */
 export function toScreen(S: Scene, p: Vec, drawn = true): Vec {
@@ -506,9 +520,10 @@ function lineDirs(S: Scene, n: string): number[] {
  * labels on the same line), and not in a gap another label at that place
  * has taken.
  */
-function arcLabelSpot(S: Scene, at: string, from: number, sweep: number, r: number, size: number, tex: string, used: number[]): Vec {
+function arcLabelSpot(S: Scene, at: string, from: number, sweep: number, r: number, size: number, tex: string, used: number[], avoid: number[] = []): Vec {
   const c = ptS(S, at)
-  const inside = lineDirs(S, at).map(d => norm(d - from)).filter(d => d > 1 && d < sweep - 1).sort((x, y) => x - y)
+  // the place's own letter, inside a full turn, splits the gap it sits in (the 320° and the B both took its middle, and the 320° was pushed off the paper)
+  const inside = [...lineDirs(S, at), ...avoid].map(d => norm(d - from)).filter(d => d > 1 && d < sweep - 1).sort((x, y) => x - y)
   if (sweep < 44 && !inside.length) return arcLabelAt(c, from, sweep, r, size, tex)
   const cuts = [0, ...inside, sweep]
   const gaps = cuts.slice(1).map((y, i) => ({ mid: from + (cuts[i] + y) / 2, w: y - cuts[i] }))
@@ -527,6 +542,27 @@ function nameDir(S: Scene, n: string): number {
   const here = S.arcs.filter(a => a.at === n)
   if (here.reduce((t, a) => t + a.sweep, 0) < 270) for (const a of here) for (let k = 0; k <= Math.ceil(a.sweep / 24); k++) dirs.push(norm(a.from + Math.min(a.sweep, k * 24)))
   for (const r of S.rays) if (r.at === n && r.arc) for (let k = 0; k <= Math.ceil(norm(r.d) / 24); k++) dirs.push(norm(Math.min(norm(r.d), k * 24)))
+  // a ruler lying across the place covers its body's side: the name goes the other way (the B sat on the ruler's 10)
+  const R = S.ruler
+  if (R && R.on && R.along) {
+    const G = rulerGeom(S), q = sub(ptS(S, n), G.Z)
+    const t = dot(q, G.e) / G.u, across = dot(q, G.n)
+    if (t > -0.8 && t < R.len + 0.8 && across > -8 && across < G.W + 8) {
+      const body = norm((Math.atan2(G.n[0], -G.n[1]) * 180) / Math.PI)
+      for (const k of [-90, -45, 0, 45, 90]) dirs.push(norm(body + k))
+    }
+  }
+  // a place on a lying protractor's straight edge: its half circle (bearings rot to rot + 180) covers that side,
+  // so the name goes the other way (the A sat on the protractor's 180)
+  // (wherever the protractor lies, placed or still being carried: it is drawn over the places either way)
+  const pr = S.prot
+  if (pr) {
+    const C = toScreen(S, pr.c), v = sub(ptS(S, n), C), R = protPx(S), d = Math.hypot(v[0], v[1])
+    const along = dot(v, dirS(pr.rot)), across = dot(v, dirS(pr.rot + 90))
+    if (Math.abs(along) < R + 8 && across > -10 && across < 16) for (const k of [0, 45, 90, 135, 180]) dirs.push(norm(pr.rot + k))
+    // a place at the rim (C where its line crosses the edge): its rings of numbers are just inside, so the name goes out past the rim
+    else if (across > 0 && d > R - 40 && d < R + 30) { const inward = norm((Math.atan2(-v[0], v[1]) * 180) / Math.PI); for (const k of [-90, -45, 0, 45, 90]) dirs.push(norm(inward + k)) }
+  }
   const key = `L-${n}`
   if (!dirs.length) { const d = S.labSide[key] ?? 225; S.labSide[key] = d; return d }
   const sorted = [...new Set(dirs.map(d => Math.round(norm(d) * 10) / 10))].sort((a, b) => a - b)
@@ -558,7 +594,18 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
         const rel = norm(d - a.from)
         if (rel <= a.sweep + 25 || rel >= 335) off = Math.max(off, L.arcPx * (a.r ?? 1) + size * 0.8)
       }
-      out.push({ key: `L-${n}`, tex, col: S.nameCol[n] ?? CHALK, at: add(p, mul(dirS(d), off)), anchor: p, size: size + 1, op: S.vis.letters.v })
+      let at = add(p, mul(dirS(d), off))
+      // a protractor over the place: the name never sits in its rings of numbers (B under the resting
+      // protractor sat on its 100): the nearest way round the place that is clear of them
+      if (S.prot && !word) {
+        const G = protGeom(S, L), sm = L.compact ? 11 : 13, nd = dirS(S.prot.rot + 90)
+        const inRings = (q: Vec) => { const v = sub(q, G.C), r = Math.hypot(v[0], v[1]); return dot(v, nd) > -size * 0.6 && r > G.R - sm * 3.8 - size * 0.5 && r < G.R + size * 0.6 }
+        if (inRings(at)) {
+          const turn = [30, -30, 60, -60, 90, -90, 120, -120, 150, -150, 180].find(k => !inRings(add(p, mul(dirS(d + k), off))))
+          if (turn !== undefined) at = add(p, mul(dirS(d + turn), off))
+        }
+      }
+      out.push({ key: `L-${n}`, tex, col: S.nameCol[n] ?? CHALK, at, anchor: p, size: size + 1, op: S.vis.letters.v })
     }
   }
   if (S.vis.fig.v > 0.01) {
@@ -607,7 +654,7 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       if (g < 0.6) continue
       const c = ptS(S, a.at)
       const r = L.arcPx * (a.r ?? 1)
-      out.push({ key: `A-${a.id}`, tex: a.tex, col: a.col, at: arcLabelSpot(S, a.at, a.from, a.sweep, r, size, a.tex, (used[a.at] ??= [])), anchor: c, size, op: S.vis.marks.v * clamp((g - 0.6) / 0.4, 0, 1), pulse: a.pulse })
+      out.push({ key: `A-${a.id}`, tex: a.tex, col: a.col, at: arcLabelSpot(S, a.at, a.from, a.sweep, r, size, a.tex, (used[a.at] ??= []), S.names[a.at] ? [nameDir(S, a.at)] : []), anchor: c, size, op: S.vis.marks.v * clamp((g - 0.6) / 0.4, 0, 1), pulse: a.pulse })
     }
     for (const r of S.rays) {
       if (!r.arc || !S.P[r.at]) continue
@@ -628,6 +675,16 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
   const lens = S.ruler ? lensGeom(S, L) : null
   const pl = S.prot ? protLensGeom(S, L) : null
   const seen = (l: Lab) => (!lens || l.key.startsWith("RL-") || dist(l.at, lens.c) > lens.r + l.size * 0.4) && (!pl || l.key.startsWith("PL-") || dist(l.at, pl.c) > pl.r + l.size * 0.4)
+  // an angle's label under the protractor's rings of numbers is under the protractor: it shows faintly through
+  // (the 96° at B sat on the 50 while the protractor lay on A)
+  if (S.prot) {
+    const G = protGeom(S, L), small = L.compact ? 11 : 13
+    for (const l of out) {
+      if (!l.key.startsWith("A-") && !l.key.startsWith("RA-")) continue
+      const v = sub(l.at, G.C), d = Math.hypot(v[0], v[1]), half = labelWidth(l.tex, l.size) / 2
+      if (dot(v, dirS(S.prot.rot + 90)) > -l.size * 0.6 && d > G.R - small * 3.8 - half && d < G.R + half) l.op *= 0.25
+    }
+  }
   return unclash(lens || pl ? out.filter(seen) : out)
 }
 
@@ -942,7 +999,14 @@ export function pageRect(S: Scene, L = layout(S)): { x0: number; y0: number; x1:
   const m = L.labelSize * 1.4
   const top = S.norths.length && S.northLen === null ? northPx(S, L) + L.labelSize * 1.3 : m
   const xs = P.map(p => p[0]), ys = P.map(p => p[1])
-  return { x0: Math.min(...xs) - pad - m, y0: Math.min(...ys) - pad - top, x1: Math.max(...xs) + pad + m, y1: Math.max(...ys) + pad + m + L.labelSize }
+  const r = { x0: Math.min(...xs) - pad - m, y0: Math.min(...ys) - pad - top, x1: Math.max(...xs) + pad + m, y1: Math.max(...ys) + pad + m + L.labelSize }
+  // a protractor lying on a place stays on the paper (it hung off the edge at A, Hassan's review 26 Nov 2026)
+  const pr = S.prot
+  if (pr && pr.on && S.P[pr.on]) {
+    const C = toScreen(S, pr.c), R = protPx(S) + 8
+    r.x0 = Math.min(r.x0, C[0] - R); r.x1 = Math.max(r.x1, C[0] + R); r.y0 = Math.min(r.y0, C[1] - R); r.y1 = Math.max(r.y1, C[1] + R)
+  }
+  return r
 }
 
 /** How much the reading lens magnifies. */
@@ -968,10 +1032,15 @@ export function lensGeom(S: Scene, L = layout(S)) {
   const x = clamp((r - small * 1.2) / Math.max(1, dist(end, num) / 2), 1.5, LENS_X)
   const b = L.board
   const np = northPx(S, L)
-  // nothing it would hide: a North arrow, a place, the end itself
+  // nothing it would hide: a North arrow and its word, a place and its letter, the end itself
+  const word = labelWidth("\\text{North}", L.labelSize) / 2 + 6
   const clear = (c: Vec) =>
-    S.norths.every(n => { const p = ptS(S, n); return Math.abs(c[0] - p[0]) > r + 18 || c[1] > p[1] + r + 6 || c[1] < p[1] - np - r - 24 }) &&
-    Object.keys(S.names).every(n => !S.P[n] || dist(c, ptS(S, n)) > r + 16)
+    S.norths.every(n => {
+      const p = ptS(S, n)
+      const dx = Math.max(p[0] - word - c[0], 0, c[0] - p[0] - word), dy = Math.max(p[1] - np - L.labelSize * 1.5 - c[1], 0, c[1] - p[1] - 4)
+      return Math.hypot(dx, dy) > r + 8
+    }) &&
+    Object.keys(S.names).every(n => !S.P[n] || dist(c, ptS(S, n)) > r + L.labelSize * 1.6)
   const fits = (c: Vec) => c[0] - r > b.x0 - 4 && c[0] + r < b.x1 + 4 && c[1] - r > b.y0 - 4 && c[1] + r < b.y1 + 4
   const tries: Vec[] = []
   for (const ang of [135, 225, 45, 315, 180, 90, 270, 0]) for (const k of [1.9, 2.5]) tries.push(add(end, mul(dirS(ang), r * k)))
@@ -1011,8 +1080,7 @@ export function rulerGeom(S: Scene) {
 export function protGeom(S: Scene, L = layout(S)) {
   const P = S.prot!
   const C = toScreen(S, P.c)
-  // big enough on a phone for its two rings of numbers to stay apart
-  const R = clamp(Math.min(S.w, S.h) * (S.w < 560 ? 0.33 : 0.2), 110, 150)
+  const R = protPx(S)
   void L
   // its turning handle is at its 0 end, or the other end, or the top of its rim: whichever is on the screen (always in reach)
   const m = 24
@@ -1045,9 +1113,12 @@ export function protLensGeom(S: Scene, L = layout(S)) {
   // outside the protractor, clear of the places' letters, and off the lines of the figure if it can be
   const offLines = (c: Vec) => S.segs.every(sg => { if (!S.P[sg.a] || !S.P[sg.b]) return true; const A = ptS(S, sg.a), B = ptS(S, sg.b), d = sub(B, A), l2 = dot(d, d) || 1, t = clamp(dot(sub(c, A), d) / l2, 0, 1); return dist(c, add(A, mul(d, t))) > r + 6 })
   const clear = (c: Vec) => dist(c, G.C) > G.R + r * 0.75 && Object.keys(S.names).every(n => !S.P[n] || dist(c, ptS(S, n)) > r + 14)
+  // wholly on the paper or wholly off it, never across its edge (it hung over the paper's edge at C)
+  const pg = pageRect(S, L)
+  const whole = (c: Vec) => !pg || (c[0] - r > pg.x0 + 4 && c[0] + r < pg.x1 - 4 && c[1] - r > pg.y0 + 4 && c[1] + r < pg.y1 - 4) || c[0] + r < pg.x0 - 4 || c[0] - r > pg.x1 + 4 || c[1] + r < pg.y0 - 4 || c[1] - r > pg.y1 + 4
   const tries: Vec[] = []
-  for (const kk of [1.7, 2.3, 3.0]) for (const dd of [0, 25, -25, 50, -50, 80, -80, 120, -120, 180]) tries.push(add(cross, mul(dirS(P.spot + dd), r * kk)))
-  const c = tries.find(q => fits(q) && clear(q) && offLines(q)) ?? tries.find(q => fits(q) && clear(q)) ?? tries.find(fits) ?? tries[0]
+  for (const kk of [1.7, 2.3, 3.0, 3.7]) for (const dd of [0, 25, -25, 50, -50, 80, -80, 120, -120, 180]) tries.push(add(cross, mul(dirS(P.spot + dd), r * kk)))
+  const c = tries.find(q => fits(q) && clear(q) && offLines(q) && whole(q)) ?? tries.find(q => fits(q) && clear(q) && offLines(q)) ?? tries.find(q => fits(q) && clear(q)) ?? tries.find(fits) ?? tries[0]
   return { c, r, at, cross, x }
 }
 

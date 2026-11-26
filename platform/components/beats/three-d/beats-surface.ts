@@ -23,7 +23,7 @@ import { atom, row, op } from "../equation"
 import { type Scene, type V3, BLUE, ORANGE, GREEN, PINK, CHALK, YELLOW, segKey, addSeg, goodView, resetBeat } from "./scene"
 import { type Beat, look, watch, askBeat, lens, num, c } from "./kit"
 import { stripNet } from "./solids"
-import { type NetLab, netBoard, glowFaces, glowEdges, tagFaces, addLab, unfold } from "./netkit"
+import { type NetLab, netBoard, glowFaces, glowEdges, tagFaces, addLab, dropLab, unfold } from "./netkit"
 const cm2 = (v: string | number) => `${v}\\text{ cm}^2`
 
 /** A number typed on the calculator keys: `lead = [box] cm²`; `then` writes the result on the figure. */
@@ -75,19 +75,25 @@ const W11_LEN: NetLab = { key: "ln", face: "r0", i: 1, j: 2, tex: "20", col: ORA
 const W11_NAMES: Record<string, [string, number]> = { D: ["endA", 0], C: ["endA", 1], B: ["endA", 2], A: ["endA", 3] }
 const W11_COLS = { endA: BLUE, endB: BLUE, r0: ORANGE, r1: ORANGE, r2: ORANGE, r3: ORANGE }
 const STRIP = ["r0", "r1", "r2", "r3"], W11_ENDS = ["endA", "endB"]
-/** The bottom edge of each rectangle in the strip: as long as the side of the trapezium it folds onto. */
+/**
+ * The bottom edge of each rectangle in the strip: as long as the side of the
+ * trapezium it folds onto. Written inside its rectangle, so the strip's whole
+ * width, 16, can sit under the edge (and the 6 is clear of the end's area).
+ * The orange 6 is the trapezium's DC too, so DC's own 6 gives way to it.
+ */
 const STRIP_W: NetLab[] = [
-  { key: "w0", face: "r0", i: 0, j: 1, tex: "6", col: ORANGE },
-  { key: "w1", face: "r1", i: 0, j: 1, tex: "5", col: ORANGE },
-  { key: "w2", face: "r2", i: 0, j: 1, tex: "2", col: ORANGE },
-  { key: "w3", face: "r3", i: 0, j: 1, tex: "3", col: ORANGE },
+  { key: "w0", face: "r0", i: 0, j: 1, tex: "6", col: ORANGE, in: true },
+  { key: "w1", face: "r1", i: 0, j: 1, tex: "5", col: ORANGE, in: true },
+  { key: "w2", face: "r2", i: 0, j: 1, tex: "2", col: ORANGE, in: true },
+  { key: "w3", face: "r3", i: 0, j: 1, tex: "3", col: ORANGE, in: true },
 ]
 /** The prism, folded or flat, its ends' area written on them once found (and the strip's). */
 function w11Board(S: Scene, t: number, o: { ends?: boolean; strip?: boolean; widths?: boolean; glow?: string[] } = {}) {
   const tags: Record<string, string> = {}
   if (o.ends) for (const f of W11_ENDS) tags[f] = cm2(12)
   if (o.strip) tags.r1 = cm2(320)
-  netBoard(S, W11, { t, cols: W11_COLS, labs: [...W11_END, W11_LEN, ...(o.widths ? STRIP_W : [])], names: t > 0.5 ? W11_NAMES : {}, tags, glow: o.glow })
+  const end = o.widths ? W11_END.filter(L => L.key !== "dc") : W11_END
+  netBoard(S, W11, { t, cols: W11_COLS, labs: [...end, W11_LEN, ...(o.widths ? STRIP_W : [])], names: t > 0.5 ? W11_NAMES : {}, tags, glow: o.glow })
 }
 
 // ── the open tank, 4024/22/O/N/24 Q3(b) ──────────────────────────────────
@@ -138,6 +144,8 @@ function fitCyl(S: Scene, r: number, h: number, flat: boolean) {
   S.fitPts = room.map((_, i) => `_u${i}`)
 }
 
+/** Where along the unrolled face's long edge its width is written: left of the circle on its middle. */
+const W_ALONG = 0.2
 /**
  * A cylinder (radius r, height h) unrolled `u` of the way and its circles
  * swung out `cap`. Flat: the rectangle's width and height, the circle's
@@ -156,7 +164,8 @@ function cylNet(S: Scene, r: number, h: number, u: number, cap: number, o: { w?:
   S.fitRect = [-12, 16]
   Object.assign(S.P3, { U1: [-W, -r, 0], U2: [W, -r, 0], U3: [W, -r, h], TC: [0, -r, h + r], TR: [r, -r, h + r], BC: [0, -r, -r], O: [0, 0, h], R: [r, 0, h], RL: [-r, 0, h], B0: [r, 0, 0], MID: [0, -r, h / 2] } as Record<string, V3>)
   if (u > 0.99 && cap > 0.99) {
-    if (o.w) S.lens[segKey("U1", "U2")] = lens(o.w, o.w === "?" ? PINK : ORANGE)
+    // the width is written off to the left, clear of the circle that sits on the middle of that edge
+    if (o.w) S.lens[segKey("U1", "U2")] = lens(o.w, o.w === "?" ? PINK : ORANGE, W_ALONG)
     if (o.h) S.lens[segKey("U2", "U3")] = lens(o.h, ORANGE)
     if (o.r) { addSeg(S, "TC", "TR", { col: BLUE, grown: true }); S.lens[segKey("TC", "TR")] = lens(o.r, BLUE) }
     if (o.side) S.tags.push({ key: "side", at: "MID", tex: o.side, col: o.side.includes("cm") ? GREEN : ORANGE })
@@ -264,6 +273,8 @@ const PART_2: Beat[] = [
     enter: S => {
       w11Board(S, 1, { ends: true })
       unfold(S, 0)
+      // flat, the corner letters go (the flat net is drawn without them from here; on a phone they sat on the 3 and the 2)
+      S.acts.push({ dur: 0.01, end: S2 => { S2.names = {} } })
       inTurn(S, [[0.3, S2 => glowFaces(S2, W11_ENDS)], [1.4, S2 => glowFaces(S2, STRIP)], [1.6, S2 => glowFaces(S2, [])]])
       look(S)
     },
@@ -277,7 +288,7 @@ const PART_2: Beat[] = [
       // each side of the trapezium lights, and the rectangle it folds onto gets its width
       STRIP_W.forEach((w, i) => {
         const side = ["dc", "cb", "ba", "ad"][i]
-        S.acts.push({ dur: i ? 1.1 : 0.8, end: S2 => { addLab(S2, w); glowEdges(S2, [side, w.key], ORANGE); glowFaces(S2, [`r${i}`]) } })
+        S.acts.push({ dur: i ? 1.1 : 0.8, end: S2 => { if (!i) dropLab(S2, "dc"); addLab(S2, w); glowEdges(S2, [side, w.key], ORANGE); glowFaces(S2, [`r${i}`]) } })
       })
       S.acts.push({ dur: 1.2, end: S2 => {
         glowEdges(S2, []); glowFaces(S2, STRIP)
@@ -338,7 +349,7 @@ const PART_3: Beat[] = [
     enter: S => {
       cylNet(S, 1.6, 3.2, 1, 1, { h: "h", r: "r", glow: ["side"] })
       // the width lights with the circle's edge it came from
-      inTurn(S, [[0.8, S2 => { S2.lens[segKey("U1", "U2")] = lens("2\\pi r", ORANGE); S2.edgeGlow = { [segKey("U1", "U2")]: ORANGE }; glowCyl(S2, ["side", "top"]) }]])
+      inTurn(S, [[0.8, S2 => { S2.lens[segKey("U1", "U2")] = lens("2\\pi r", ORANGE, W_ALONG); S2.edgeGlow = { [segKey("U1", "U2")]: ORANGE }; glowCyl(S2, ["side", "top"]) }]])
       look(S)
     },
     cta: "", ctaAfter: 3.4,

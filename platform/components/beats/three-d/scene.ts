@@ -150,7 +150,7 @@ export interface Act {
 }
 
 /** A label: where it belongs (`at`) and the point on the figure it is attached to (`anchor`), which it follows exactly. */
-export interface Lab { key: string; tex: string; col: string; at: Vec; anchor: Vec; size: number; op: number; pulse?: boolean }
+export interface Lab { key: string; tex: string; col: string; at: Vec; anchor: Vec; size: number; op: number; pulse?: boolean; /** an edge's number: its line's direction on the screen, and half its length */ line?: { u: Vec; half: number } }
 
 export interface CalcInput {
   value: string
@@ -234,8 +234,8 @@ export interface Scene {
   /** edges of the solid in a colour, or lit, by segKey */
   edgeCol: Record<string, string>
   segs: Record<string, Seg>
-  /** what a line or edge says, by segKey (`along`: how far from its first point, when the middle is taken) */
-  lens: Record<string, { tex: string; col?: string; pulse?: boolean; along?: number; keep?: boolean }>
+  /** what a line or edge says, by segKey (`along`: how far from its first point, when the middle is taken; `toward`: a point on the side it sits) */
+  lens: Record<string, { tex: string; col?: string; pulse?: boolean; along?: number; keep?: boolean; toward?: string }>
   tris: Tri[]
   rights: Right[]
   arcs: Arc3[]
@@ -922,7 +922,9 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       const sg = S.segs[key]
       if (sg && sg.grow.v < 0.95) continue
       const A = ptS(S, a), B = ptS(S, b), along = lb.along ?? 0.5
-      out.push({ key: `N-${key}`, tex: lb.tex, col: lb.col ?? CHALK, at: besideLine(A, B, size, lb.tex, mid, along, lineSide(S, `N-${key}`, A, B, mid)), anchor: lerpV(A, B, along), size: size + 1, op: S.vis.lens.v * back(a, b), pulse: lb.pulse })
+      const side = lb.toward && S.P3[lb.toward] ? sub(ptS(S, lb.toward), lerpV(A, B, along)) : lineSide(S, `N-${key}`, A, B, mid)
+      const AB = sub(B, A), ab = Math.hypot(AB[0], AB[1]) || 1
+      out.push({ key: `N-${key}`, tex: lb.tex, col: lb.col ?? CHALK, at: besideLine(A, B, size, lb.tex, mid, along, side), anchor: lerpV(A, B, along), size: size + 1, op: S.vis.lens.v * back(a, b), pulse: lb.pulse, line: { u: [AB[0] / ab, AB[1] / ab], half: ab / 2 } })
     }
   }
   if (S.vis.lens.v > 0.01) {
@@ -953,10 +955,15 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       if (S.ladderOn && (at[0] < L.solidCell.x0 - 4 || at[0] > L.solidCell.x1 + 4 || at[1] > L.solidCell.y1 + 4)) continue
       out.push({ key: `MT-${k}`, tex: String(k), col: CHALK, at, anchor: at, size: small, op: S.vis.solid.v * 0.95 })
     }
-    for (const [i, mk] of (M.marks ?? []).entries()) {
-      if (!mk.tex) continue
-      const at = proj(S, [M.x0 + mk.at, M.y0 + M.w + Math.max(0.6, 26 / u), 0])
-      out.push({ key: `MM-${i}`, tex: mk.tex, col: mk.col, at, anchor: at, size: size + 1, op: S.vis.solid.v })
+    // two marks close together (78 mm just short of 8 cm): each label stands off to its own side of its line
+    const mks = (M.marks ?? []).map((mk, i) => ({ mk, i, at: proj(S, [M.x0 + mk.at, M.y0 + M.w + Math.max(0.6, 26 / u), 0]) })).filter(m => m.mk.tex)
+    const half = (tex: string) => labelWidth(tex, size + 1) / 2
+    for (const m of mks) {
+      let at = m.at
+      const near = mks.filter(o => o !== m && Math.abs(o.at[0] - m.at[0]) < half(o.mk.tex!) + half(m.mk.tex!) + 6)
+      if (near.some(o => o.at[0] > m.at[0])) at = [at[0] - half(m.mk.tex!) - 5, at[1]]
+      else if (near.some(o => o.at[0] < m.at[0])) at = [at[0] + half(m.mk.tex!) + 5, at[1]]
+      out.push({ key: `MM-${m.i}`, tex: m.mk.tex!, col: m.mk.col, at, anchor: at, size: size + 1, op: S.vis.solid.v })
     }
   }
   for (const [i, g] of S.sqGrids.entries()) {
@@ -992,6 +999,36 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
         out.push({ key: `FA-${F.id}`, tex: F.angle.tex, col: F.angle.col ?? CHALK, at: add(C, mul([Math.cos(bis), Math.sin(bis)], Math.min(r, size * 5))), anchor: C, size, op: numOp })
       }
     }
+  }
+  return clearEdgeNumbers(out)
+}
+
+/**
+ * An edge's number never sits on the words written on a face, or on another
+ * label: when it would, it goes to the other side of its line, if that side
+ * is clear (the 6 on the strip sat on the end's 12 cm², Hassan 26 Nov 2026).
+ * Decided afresh each frame from where things are, so a number comes back
+ * once its own side is clear; it glides there like any label.
+ */
+function clearEdgeNumbers(out: Lab[]): Lab[] {
+  // with a little room round each: a number right up against an area reads as part of it ("πr² r")
+  const box = (l: Lab, at: Vec) => { const hw = labelWidth(l.tex, l.size) / 2 + 7, hh = l.size * 0.74; return [at[0] - hw, at[1] - hh, at[0] + hw, at[1] + hh] }
+  const hit = (a: number[], b: number[]) => a[0] < b[2] && b[0] < a[2] && a[1] < b[3] && b[1] < a[3]
+  const seen = (l: Lab) => l.op > 0.05
+  const fixed = out.filter(l => !l.key.startsWith("N-") && seen(l)).map(l => box(l, l.at))
+  const placed: number[][] = []
+  for (const l of out) {
+    if (!l.key.startsWith("N-") || !seen(l)) continue
+    const blocked = (at: Vec) => { const b = box(l, at); return fixed.some(o => hit(b, o)) || placed.some(o => hit(b, o)) }
+    if (blocked(l.at)) {
+      const other = sub(mul(l.anchor, 2), l.at)
+      // the other side, or, when both are taken (a corner's letter at each end of a short edge), along the line a little
+      const k = l.line ? Math.min(l.line.half * 0.45, 26) : 0
+      const tries: Vec[] = [other, ...(l.line && k > 4 ? [1, -1].flatMap(sg => [add(l.at, mul(l.line!.u, sg * k)), add(other, mul(l.line!.u, sg * k))]) : [])]
+      const free = tries.find(t => !blocked(t))
+      if (free) l.at = free
+    }
+    placed.push(box(l, l.at))
   }
   return out
 }

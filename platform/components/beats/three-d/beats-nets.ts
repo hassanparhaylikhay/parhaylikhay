@@ -269,7 +269,7 @@ const PART_2: Beat[] = [
     slips: [{ v: 9, say: "That's the area. What length times itself makes $9$?" }, { v: 4.5, say: "That's half of $9$. What length times itself makes $9$?" }],
     walk: [
       { say: "The face is a square, so its sides are the same length.", show: S => { S.edgeGlow = { [segKey("s0", "s1")]: PINK, [segKey("s1", "s2")]: PINK } } },
-      { say: "Its area, $9$, is the side times itself. What times itself makes $9$?", tex: "? \\times ? = 9", show: S => { S.edgeGlow = {}; S.tags = S.tags.map(t => ({ ...t, pulse: true })) } },
+      { say: "Its area, $9$, is the side times itself. What times itself makes $9$?", tex: "{?} \\times {?} = 9", show: S => { S.edgeGlow = {}; S.tags = S.tags.map(t => ({ ...t, pulse: true })) } },
     ],
     then: S => { S.lens[segKey("s0", "s1")] = lens("3\\text{ cm}", GREEN); S.lens[segKey("s1", "s2")] = lens("3\\text{ cm}", GREEN) },
   }),

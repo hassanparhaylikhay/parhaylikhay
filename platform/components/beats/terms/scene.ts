@@ -261,7 +261,9 @@ export function layout(S: Scene): Layout {
   } else if (on(S, "keypad")) { y -= S.keyRows * 46 + 8 + 14; keypadTop = y }
   let stepperY = y
   if (on(S, "stepper")) { stepperY = y - 56; y -= 70 }
-  const lineY = y
+  // a Show me how line gets its own band under the answer, never jammed against the box
+  let lineY = y
+  if (S.walkTex) { lineY = y - lineSize * 0.9; y -= lineSize * 2.2 }
   let chipsY = y
   if (on(S, "chips")) { chipsY = y - 26; y -= 62 }
   let eqY = y

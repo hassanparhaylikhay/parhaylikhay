@@ -73,6 +73,8 @@ function cubeBox(S: Scene, l: number, w: number, h: number, o: { n?: number; len
   }
   if (o.water !== undefined) S.water = { x0: -l / 2, y0: -w / 2, z0: 0, x1: l / 2, y1: w / 2, z1: h, level: o.water, col: BLUE }
   goodView(S, ...SIDE)
+  // fitted to the view it is seen from, so the areas and volumes written on it have room
+  S.fitRect = S.w >= 560 ? SIDE : null
 }
 const volLine = (l: string, w: string, h: string, v?: string) => row([atom("v", "\\text{Volume}"), op("e", "="), atom("l", l, { col: BLUE }), op("x1", "\\times"), atom("w", w, { col: BLUE }), op("x2", "\\times"), atom("h", h, { col: ORANGE }), ...(v ? [op("e2", "="), atom("t", v, { col: GREEN })] : [])])
 const glowEdges = (S: Scene, edges: [string, string][]) => { S.edgeGlow = Object.fromEntries(edges) }
@@ -97,6 +99,10 @@ function prismBoard(S: Scene, end: Vec[], len: number, o: { s?: number; lit?: bo
   if (o.lit) S.faceLit = { 0: BLUE }
   if (o.slice && n === 3) S.tris = [{ id: "slice", pts: ["M0", "M1", "M2"], col: BLUE }]
   goodView(S, ...(o.view ?? SIDE))
+  // fitted to the view it is seen from: a long prism fitted for any turn was small, and its cross-section
+  // too small to hold its own area (the 4.5 cm² spilled over the triangle)
+  // (on a phone the loose fit stays: there is no room beside a tight one for the labels outside the solid)
+  S.fitRect = S.w >= 560 ? o.view ?? SIDE : null
 }
 /** The prism's back sweeps out along its length, from nothing. */
 function sweep(S: Scene, end: Vec[], len: number, dur = 2.6) {
@@ -156,6 +162,8 @@ function cylBoard(S: Scene, r: number, h: number, o: { lit?: boolean; pulse?: bo
   if (o.hLab) S.lens[segKey("R", "B0")] = lens(o.hLab, ORANGE)
   if (o.vol) tag(S, "vol", [0, 0, h * 0.45], o.vol)
   goodView(S, -30, 22)
+  // fitted to the view it is seen from: the barrel's 32 000π cm³ was as wide as the barrel
+  S.fitRect = S.w >= 560 ? [-30, 22] : null
 }
 const litTop = (S: Scene, on: boolean) => { if (S.curved) S.curved.pulse = on }
 
@@ -251,18 +259,18 @@ const PART_1: Beat[] = [
       { say: "One layer of cubes on the floor is $10 \\times 8 = 80$.", tex: "10 \\times 8 = 80", show: S => { S.cubes = [{ o: [-5, -4, 0], s: 1, nx: 10, ny: 8, nz: 9, count: 80, col: BLUE }]; glowEdges(S, [[LEN, BLUE], [WID, BLUE]]) } },
       { say: "There are $9$ layers, up to the top.", tex: "80 \\times 9", show: S => { over(S, 1.4, (S2, e) => { if (S2.cubes[0]) S2.cubes[0].count = Math.round(80 + 640 * e) }, 0.2); glowEdges(S, [[HGT, ORANGE]]) } },
     ],
-    then: S => tag(S, "vol", [0, 0, 4.5], "720\\text{ cm}^3"),
+    then: S => tag(S, "vol", [1.5, 0, 4.5], "720\\text{ cm}^3"),
   }),
   ask("w25-time", "Water drips in at $6$ ml a second. How many seconds does it take to fill?", S => {
     cubeBox(S, 10, 8, 9, { lens: ["10", "8", "9"], water: 0 })
-    tag(S, "vol", [0, 0, 4.5], "720\\text{ cm}^3")
+    tag(S, "vol", [1.5, 0, 4.5], "720\\text{ cm}^3")
     over(S, 6, (S2, e) => { if (S2.water) S2.water.level = 0.6 * e }, 0.5)
   }, {
     lead: "\\text{Time}", unit: "s", answer: 120,
     slips: [{ v: 4320, say: "That multiplies. Each second fills $6$ ml, so divide." }, { v: 720, say: "That's the volume, $720$ ml. Each second fills $6$ ml of it." }],
     walk: [
-      { say: "The container holds $720$ cm$^3$, which is $720$ ml.", show: S => tag(S, "vol", [0, 0, 4.5], "720\\text{ ml}", GREEN, true) },
-      { say: "Each second fills $6$ ml of it. How many sixes in $720$?", tex: "720 \\div 6", show: S => { pulseTag(S, ""); tag(S, "drip", [0, 0, 10.8], "6\\text{ ml a second}", BLUE, true) } },
+      { say: "The container holds $720$ cm$^3$, which is $720$ ml.", show: S => tag(S, "vol", [1.5, 0, 4.5], "720\\text{ ml}", GREEN, true) },
+      { say: "Each second fills $6$ ml of it. How many sixes in $720$?", tex: "720 \\div 6", show: S => { pulseTag(S, ""); tag(S, "drip", [0, 0, 12.4], "6\\text{ ml a second}", BLUE, true) } },
     ],
   }),
   // 4024/21/M/J/22 Q4(a)
@@ -286,7 +294,8 @@ const PART_1: Beat[] = [
     slips: [{ v: 625, say: "That multiplies. The $10$ came across dividing." }],
     walk: [
       { say: "$x^2$ is the area of the square on top, $x$ by $x$.", show: S => { S.faceLit = { [TOP]: PINK }; S.faceGlow = [TOP] } },
-      { say: "Volume $\\div$ height gives that area.", tex: "62.5 \\div 10", show: S => { S.faceGlow = []; glowEdges(S, [[HGT, ORANGE]]) } },
+      // x² = 62.5 ÷ 10 is already above the box, from the beat before
+      { say: "Volume $\\div$ height gives that area.", show: S => { S.faceGlow = []; glowEdges(S, [[HGT, ORANGE]]) } },
     ],
     then: S => { S.faceLit = { [TOP]: PINK }; tag(S, "top", [0, 0, 11.2], "x^2 = 6.25", PINK) },
   }),
@@ -479,7 +488,8 @@ const PART_4: Beat[] = [
     slips: [{ v: 1.296, say: "That multiplies. The $0.72$ came across dividing." }],
     walk: [
       { say: "The base is $0.72$ m$^2$ and the volume is $1.8$ m$^3$.", show: S => { S.faceGlow = [BOT]; S.tags = S.tags.map(t => ({ ...t, pulse: true })) } },
-      { say: "Volume $\\div$ base area gives the height.", tex: "1.8 \\div 0.72", show: S => { S.faceGlow = []; pulseTag(S, ""); glowEdges(S, [[HGT, PINK]]) } },
+      // h = 1.8 ÷ 0.72 is already above the box
+      { say: "Volume $\\div$ base area gives the height.", show: S => { S.faceGlow = []; pulseTag(S, ""); glowEdges(S, [[HGT, PINK]]) } },
     ],
   }),
   ask("tank-90", "Fuel fills it to $90\\%$ of its volume. How many m$^3$ is that?", S => { tankBoard(S, "2.5"); tag(S, "vol", [0, 0, 2.2], "1.8\\text{ m}^3"); fuel(S, 0.9) }, {

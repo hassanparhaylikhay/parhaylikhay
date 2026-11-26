@@ -13,7 +13,8 @@ export const SIDE: [number, number] = [-30, 24]
 export const FLAT: [number, number] = [-16, 58]
 
 /** A label on a net's edge: from corner i to corner j of a face. */
-export interface NetLab { key: string; face: string; i: number; j: number; tex: string; col?: string }
+/** An edge label on a net: edge i to j of `face` (`in`: on the face's own side of the edge, not out from the middle). */
+export interface NetLab { key: string; face: string; i: number; j: number; tex: string; col?: string; in?: boolean }
 /** What a beat writes on its net as it folds: edge labels, and words in the middle of faces (an area). */
 const NETLABS = new WeakMap<Scene, NetLab[]>()
 const FACETAGS = new WeakMap<Scene, Record<string, { tex: string; col?: string }>>()
@@ -42,6 +43,11 @@ export function netBoard(S: Scene, net: Net, o: { t: number; cols?: Record<strin
       const a = F[L.face][L.i], b = F[L.face][L.j]
       S2.P3[`${L.key}a`] = a; S2.D3[`${L.key}a`] = a; S2.P3[`${L.key}b`] = b; S2.D3[`${L.key}b`] = b
       S2.lens[segKey(`${L.key}a`, `${L.key}b`)] = lens(L.tex, L.col)
+      if (L.in) {
+        const P = F[L.face], c: V3 = [0, 1, 2].map(k => P.reduce((s, p) => s + p[k], 0) / P.length) as V3
+        S2.P3[`${L.key}c`] = c; S2.D3[`${L.key}c`] = c
+        S2.lens[segKey(`${L.key}a`, `${L.key}b`)].toward = `${L.key}c`
+      }
     }
     for (const [n, [face, i]] of Object.entries(o.names ?? {})) { S2.P3[n] = F[face][i]; S2.D3[n] = F[face][i] }
     // words on faces sit in each face's middle
@@ -63,6 +69,12 @@ export const glowEdges = (S: Scene, keys: string[], col = YELLOW) => { S.edgeGlo
 export const tagFaces = (S: Scene, faces: string[], tex: string, col = GREEN) => { const T = FACETAGS.get(S); if (T) for (const f of faces) T[f] = { tex, col } }
 /** Add an edge label after the board is made. */
 export const addLab = (S: Scene, L: NetLab) => { NETLABS.get(S)?.push(L) }
+/** Takes an edge label off the net (another label now says it). */
+export const dropLab = (S: Scene, key: string) => {
+  const L = NETLABS.get(S)
+  if (L) NETLABS.set(S, L.filter(l => l.key !== key))
+  delete S.lens[segKey(`${key}a`, `${key}b`)]
+}
 
 /** The view fits the net as it is at t (folded: the solid; flat: the whole net). */
 export function fitNet(S: Scene, net: Net, t: number) {

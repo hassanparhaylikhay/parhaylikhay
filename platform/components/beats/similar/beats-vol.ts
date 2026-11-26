@@ -178,8 +178,9 @@ function w25Areas(S: Scene, pqr?: string) {
 function w22Areas(S: Scene, dec?: string) {
   w22Board(S, { col1: true })
   S.inLabs = [{ sh: "ABC", tex: sq("160") }]
-  // DEC is too small to hold its area: it goes in the open space beside it
-  if (dec) S.inLabs.push({ sh: "DEC", tex: dec === "?" ? "?" : sq(dec), col: dec === "?" ? PINK : GREEN, pulse: dec === "?", loc: [-14, -14] })
+  // DEC is too small to hold its area: it sits just outside its long side CE, away from D, so it reads as DEC's
+  // (in DEC's own coordinates, so it turns with the figure on a phone; above CD it floated off on its own)
+  if (dec) S.inLabs.push({ sh: "DEC", tex: dec === "?" ? "?" : sq(dec), col: dec === "?" ? PINK : GREEN, pulse: dec === "?", loc: [-8, 15] })
 }
 
 /** Rectangles ABCD (12 by 9, shaded) and PQRS (PQ = 8) turned inside it (4024/11/M/J/23 Q21). */
@@ -232,7 +233,7 @@ const PART_2: Beat[] = [
       { v: 7.11, say: "That's $16 \\div 2.25$. $PQR$ is the big one, so multiply." },
     ],
     walk: [
-      { say: "$ABC$'s area is $16$. $PQR$ is the big one, so its area is bigger.", tex: "16 \\to ?", show: S => { glowAll(S, "PQR", ["A", "B", "C"]); pulseIn(S, "ABC") } },
+      { say: "$ABC$'s area is $16$. $PQR$ is the big one, so its area is bigger.", tex: "16 \\to {?}", show: S => { glowAll(S, "PQR", ["A", "B", "C"]); pulseIn(S, "ABC") } },
       { say: "Multiply by the area factor.", tex: "16 \\times 2.25", show: S => pulseIn(S, "PQR") },
     ],
     then: S => { S.inLabs = S.inLabs.map(l => (l.sh === "PQR" ? { ...l, tex: sq("36"), col: GREEN, pulse: false } : l)) },
@@ -269,7 +270,7 @@ const PART_2: Beat[] = [
       { v: 40, say: "That's $160 \\div 4$, the scale factor. An area uses the area factor, $16$." },
     ],
     walk: [
-      { say: "$ABC$'s area is $160$. $DEC$ is the small one, so its area is smaller.", tex: "160 \\to ?", show: S => { glowAll(S, "DEC", ["A", "B", "C"]); pulseIn(S, "ABC") } },
+      { say: "$ABC$'s area is $160$. $DEC$ is the small one, so its area is smaller.", tex: "160 \\to {?}", show: S => { glowAll(S, "DEC", ["A", "B", "C"]); pulseIn(S, "ABC") } },
       { say: "Divide by the area factor.", tex: "160 \\div 16", show: S => pulseIn(S, "DEC") },
     ],
     then: S => { S.inLabs = S.inLabs.map(l => (l.sh === "DEC" ? { ...l, tex: sq("10"), col: GREEN, pulse: false } : l)) },
@@ -375,7 +376,8 @@ function prBoard(S: Scene, o: { big?: boolean; x?: string; small?: string; bigV?
     { sh: "P1", a: "B", b: "B'", tex: "3" },
   ]
   if (o.big) S.sideLabs.push({ sh: "P2", a: "A", b: "B", tex: o.x ?? "x", col: o.x ? GREEN : PINK, pulse: !o.x })
-  S.inLabs = [{ sh: "P1", tex: o.small ?? cu("180"), dy: 0.6 }]
+  // beside the big one the small prism is too small to hold its volume: it sits above its top corner
+  S.inLabs = [{ sh: "P1", tex: o.small ?? cu("180"), ...(o.big ? { loc: [5.5, 16] as Vec } : { dy: 0.6 }) }]
   if (o.big) S.inLabs.push({ sh: "P2", tex: o.bigV ?? cu("1440"), dy: 0.6 })
 }
 
@@ -434,7 +436,8 @@ const PART_4: Beat[] = [
       { v: 4, say: "$4 \\times 4 \\times 4 = 64$. Try a smaller number." },
     ],
     walk: [
-      { say: "The scale factor is how many times longer the big prism is. Which number times itself three times makes $8$?", tex: "? \\times ? \\times ? = 8", show: S => glowS(S, ["P1", "A", "B"], ["P2", "A", "B"]) },
+      { say: "The scale factor is how many times longer the big prism is.", show: S => glowS(S, ["P1", "A", "B"], ["P2", "A", "B"]) },
+      { say: "Which number times itself three times makes $8$?", tex: "{?} \\times {?} \\times {?} = 8", show: S => { glowS(S, ["P1", "A", "B"], ["P2", "A", "B"]); pulseIn(S, "P1", "P2") } },
       { say: "Try $2$.", tex: "2 \\times 2 \\times 2 = 8", show: S => pulseS(S, ["P1", "A", "B"], ["P2", "A", "B"]) },
     ],
   }),
@@ -464,13 +467,13 @@ const PART_4: Beat[] = [
   }, 3.0),
   askNum("mug-4", "Which number cubed makes $64$?", S => mugBoard(S, { ml: true }), {
     lead: "\\text{Number}", answer: 4,
-    above: () => row([atom("q", "? \\times ? \\times ? = 64")]),
+    above: () => row([atom("q", "{?} \\times {?} \\times {?} = 64")]),
     slips: [{ v: 8, say: "$8 \\times 8 = 64$, but cubed needs three of them: $8 \\times 8 \\times 8$ is far more." }, { v: 21.33, say: "That's $64 \\div 3$. Cubed means a number times itself, three times." }],
     walk: [{ say: "Try $4$.", tex: "4 \\times 4 \\times 4", show: S => pulseIn(S, "M2") }],
   }),
   askNum("mug-3", "And which number cubed makes $27$?", S => mugBoard(S, { ml: true }), {
     lead: "\\text{Number}", answer: 3,
-    above: () => row([atom("q", "? \\times ? \\times ? = 27")]),
+    above: () => row([atom("q", "{?} \\times {?} \\times {?} = 27")]),
     slips: [{ v: 9, say: "That's $27 \\div 3$. Which number times itself three times makes $27$?" }],
     walk: [{ say: "Try $3$.", tex: "3 \\times 3 \\times 3", show: S => pulseIn(S, "M1") }],
   }),

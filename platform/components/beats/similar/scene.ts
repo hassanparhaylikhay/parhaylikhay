@@ -376,7 +376,11 @@ const clearBy = (n: Vec, w: number, h: number) => Math.abs(n[0]) * w / 2 + Math.
 
 /** Where a side's label goes: outside the shape by its middle, clear by its own size. */
 function sideLabelAt(S: Scene, sh: Shape, a: string, b: string, size: number, tex: string): Vec {
-  const { m, n } = sideOut(S, sh, a, b)
+  const o = sideOut(S, sh, a, b), n = o.n
+  let m = o.m
+  // a prism's side whose outside is where the prism goes back: out from the front, its label would sit on the
+  // back face, across its edge (the 13 on the small prism), so it goes past the back face's matching edge
+  if (sh.depth && !a.endsWith("'") && !b.endsWith("'") && dot(n, [BACK[0], -BACK[1]]) > 0.1) m = lerpV(atS(S, sh, `${a}'`), atS(S, sh, `${b}'`), 0.5)
   const w = labelWidth(tex, size)
   // a mug's bottom is curved: its label goes below the curve
   const curve = sh.mug && [a, b].sort().join("") === "AB" ? dist(atS(S, sh, a), atS(S, sh, b)) * 0.14 : 0
@@ -406,6 +410,23 @@ function angleLabelAt(S: Scene, sh: Shape, n: string, count: number, size: numbe
 const sideKey = (sh: string, a: string, b: string) => `${sh}:${[a, b].sort().join("")}`
 export { sideKey }
 
+/** The ways the sides of every shape drawn leave a point on the screen (screen angles, radians). */
+function edgesAt(S: Scene, p: Vec): number[] {
+  const dirs: number[] = []
+  for (const sh of S.shapes) {
+    if (sh.ghost) continue
+    const o = sh.order
+    o.forEach((m, i) => {
+      if (dist(atS(S, sh, m), p) > 2) return
+      for (const q of [o[(i + 1) % o.length], o[(i + o.length - 1) % o.length]]) {
+        const v = sub(atS(S, sh, q), p)
+        if (Math.hypot(v[0], v[1]) > 1) dirs.push(Math.atan2(v[1], v[0]))
+      }
+    })
+  }
+  return dirs
+}
+
 function computeLabels(S: Scene, L: Layout): Lab[] {
   const out: Lab[] = []
   const size = L.labelSize
@@ -416,7 +437,18 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       for (const n of sh.order) {
         const tex = sh.names[n]
         if (!tex) continue
-        const p = atS(S, sh, n), d = sub(p, mid), l = Math.hypot(d[0], d[1]) || 1
+        const p = atS(S, sh, n)
+        let d = sub(p, mid)
+        // a corner two shapes share (C, where ABC and DEC meet): out from one shape's middle lands in the
+        // other's angle, on its sides, so the letter takes the widest gap between all the sides that meet there
+        const meet = edgesAt(S, p)
+        if (meet.length > 2) {
+          const a = meet.sort((x, y) => x - y)
+          let best = 0, gap = -1
+          a.forEach((x, i) => { const y = i + 1 < a.length ? a[i + 1] : a[0] + 2 * Math.PI; if (y - x > gap) { gap = y - x; best = x + (y - x) / 2 } })
+          d = [Math.cos(best), Math.sin(best)]
+        }
+        const l = Math.hypot(d[0], d[1]) || 1
         out.push({ key: `L-${sh.id}:${n}`, tex, col: CHALK, at: add(p, mul(d, (size * 0.95 + 4) / l)), size: size + 1, op: S.vis.letters.v * (sh.quiet ? 0.45 : 1) })
       }
     }

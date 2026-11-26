@@ -40,7 +40,8 @@ const PRISM: Def = {
 const PYR_AT = [200, 320, 80]
 /** 4024/23/M/J/25 Q22: a pyramid ABCV on an equilateral triangle, V straight above its middle. */
 const PYR: Def = (() => {
-  const s = 3.4, r = s / Math.sqrt(3), at = (deg: number): V3 => [r * Math.cos((deg * Math.PI) / 180), r * Math.sin((deg * Math.PI) / 180), 0]
+  // drawn wider than the paper's 34 to 82, so its base and its labels have room
+  const s = 4.2, r = s / Math.sqrt(3), at = (deg: number): V3 => [r * Math.cos((deg * Math.PI) / 180), r * Math.sin((deg * Math.PI) / 180), 0]
   return {
     // turned as in the paper from the usual view: A on the left, C at the front, B at the back on the right
     pts: { A: at(PYR_AT[0]), C: at(PYR_AT[1]), B: at(PYR_AT[2]), V: [0, 0, 5.4] },
@@ -195,6 +196,21 @@ function askBeat(id: string, text: string, board: (S: Scene) => void, o: { answe
 }
 
 /** Show me how, one plane: the sheet goes there and clicks in; the copy goes through; a match stays, blue. */
+/**
+ * An upright plane seen nearly face on is just a disc in front of the solid (the cut through V, A and the
+ * middle of BC hid the whole pyramid): the view turns, the short way, till it is nearly edge on (72°), a slice.
+ */
+function seeSideOn(S: Scene, n: V3) {
+  if (Math.abs(n[2]) > 0.2) return
+  const th = (Math.atan2(n[1], n[0]) * 180) / Math.PI
+  // the way the student looks, as an angle on the floor (an upright sheet faces them at FACING from the usual view)
+  const off = ((((90 - S.yaw) - th) % 180) + 180) % 180
+  if (Math.min(off, 180 - off) >= 55) return
+  const near = (y: number) => S.yaw + ((((y - S.yaw) % 360) + 540) % 360) - 180
+  const ways = [90 - th + 72, 90 - th - 72].map(near)
+  goodView(S, ways.reduce((a, b) => (Math.abs(a - S.yaw) <= Math.abs(b - S.yaw) ? a : b)), S.pitch)
+}
+
 function planeStep(text: string, n: V3, count: number, first = false): WalkStep<Scene> {
   return {
     say: text,
@@ -203,6 +219,7 @@ function planeStep(text: string, n: V3, count: number, first = false): WalkStep<
       // the first step starts clean (Show me how can be offered again)
       if (first) sh.found = []
       sh.hidden = false
+      seeSideOn(S, n)
       const match = sh.fits(n)
       S.vals.wn = count - (match ? 1 : 0)
       goTo(sh, n)

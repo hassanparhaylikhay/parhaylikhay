@@ -116,7 +116,7 @@ const PART_B: Beat[] = [
     ],
     above: () => fullTurn("?", "120^\\circ"),
     walk: [
-      { say: "The blue part and the orange part make $360^\\circ$.", tex: "? + 120^\\circ = 360^\\circ", show: S => pulseArcs(S, "b-A", "l-A") },
+      { say: "The blue part and the orange part make $360^\\circ$.", show: S => pulseArcs(S, "b-A", "l-A") },
       { say: "So take the orange part from $360^\\circ$.", tex: "360 - 120", show: S => pulseArcs(S, "l-A") },
     ],
     then: S => { S.arcs = S.arcs.map(a => (a.id === "b-A" ? { ...a, tex: "240^\\circ" } : a)) },
@@ -157,7 +157,7 @@ const PART_C: Beat[] = [
     ],
     above: () => fullTurn("320^\\circ", "?"),
     walk: [
-      { say: "The blue part and the orange part make $360^\\circ$.", tex: "320^\\circ + ? = 360^\\circ", show: S => pulseArcs(S, "b-B", "l-B") },
+      { say: "The blue part and the orange part make $360^\\circ$.", show: S => pulseArcs(S, "b-B", "l-B") },
       { say: "So take the blue part from $360^\\circ$.", tex: "360 - 320", show: S => pulseArcs(S, "b-B") },
     ],
     then: S => { S.arcs = S.arcs.map(a => (a.id === "l-B" ? { ...a, tex: "40^\\circ" } : a)) },
@@ -205,7 +205,7 @@ const PART_X: Beat[] = [
     slips: [{ v: 72, say: "That's $252^\\circ - 180^\\circ$. The two angles make $360^\\circ$." }, { v: 252, say: "That's the bearing. The angle on the left is the rest of the full turn." }],
     above: () => fullTurn("252^\\circ", "?"),
     walk: [
-      { say: "The blue part and the orange part make $360^\\circ$.", tex: "252^\\circ + ? = 360^\\circ", show: S => pulseArcs(S, "b-B", "l-B") },
+      { say: "The blue part and the orange part make $360^\\circ$.", show: S => pulseArcs(S, "b-B", "l-B") },
       { say: "So take the blue part from $360^\\circ$.", tex: "360 - 252", show: S => pulseArcs(S, "b-B") },
     ],
     then: S => { S.arcs = S.arcs.map(a => (a.id === "l-B" ? { ...a, tex: "108^\\circ" } : a)) },

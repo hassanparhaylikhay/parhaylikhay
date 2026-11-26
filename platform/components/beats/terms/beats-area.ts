@@ -756,7 +756,8 @@ const PART_6: Beat[] = [
     lead: `${c(PINK, "y")} + ${c(BLUE, "13")}`, answer: 18,
     above: () => row([atom("y0", "y", { col: PINK }), op("p0", "+"), atom("t0", "13", { col: BLUE }), op("e0", "="), atom("a0", "36", { col: GREEN }), op("d0", "\\div"), atom("w0", "2")]),
     slips: [{ v: 72, say: "That multiplies. It's $36$ divided by $2$." }],
-    walk: [{ say: "The area is $36$, and the $2$ came across dividing.", tex: "36 \\div 2", show: S => pulseLabs(S, "area") }],
+    // y + 13 = 36 ÷ 2 is already above the box
+    walk: [{ say: "The area is $36$, and the $2$ came across dividing.", show: S => pulseLabs(S, "area") }],
   }),
   {
     id: "s24-cross13",
@@ -779,7 +780,7 @@ const PART_6: Beat[] = [
     lead: "y", leadCol: PINK, answer: 5,
     slips: [{ v: 31, say: "The $13$ came across as a take-away." }],
     above: () => row([atom("y0", "y", { col: PINK }), op("e0", "="), atom("a0", "18"), op("m0", "-"), atom("t0", "13", { col: BLUE })]),
-    walk: [{ say: "The bottom's $13$ came across as a take-away. What is left is the top, $y$.", tex: "18 - 13", show: S => { glowOn(S, "bot", "top"); pulseLabs(S, "bot", "top") } }],
+    walk: [{ say: "The bottom's $13$ came across as a take-away. What is left is the top, $y$.", show: S => { glowOn(S, "bot", "top"); pulseLabs(S, "bot", "top") } }],
     then: S => { S.freeLabs = S.freeLabs.map(f => (f.key === "top" ? { ...f, tex: "5", col: GREEN } : f)) },
   }),
   {

@@ -104,7 +104,8 @@ function q20Board(S: Scene, o: { lit?: "ab" | "cd" | "ac" | "big" | "small"; ac?
 const Q20_AB = { key: "abl", at: at(6, 140), tex: "2\\pi", col: GREEN, dx: 18, dy: 12 }
 const Q20_CD = { key: "cdl", at: at(9, 140), tex: "3\\pi", col: GREEN, dx: -22, dy: -14 }
 /** The whole circle an arc is part of, dashed: the rest of the way round. */
-const wholeRound = (S: Scene, rad: number) => { S.arcs = [...S.arcs.filter(a => a.id !== "whole"), { id: "whole", c: "O", r: rad, a1: Q20.a2, a2: Q20.a1 + 360, col: GREEN, w: 2, dash: true }]; S.frame = { x0: -rad - 1.4, y0: -rad - 1.4, x1: rad + 1.4, y1: rad + 1.4 } }
+/** The whole circle the arc is part of, dashed; the view grows to hold it and everything already there (D sat on the phrase). */
+const wholeRound = (S: Scene, rad: number) => { S.arcs = [...S.arcs.filter(a => a.id !== "whole"), { id: "whole", c: "O", r: rad, a1: Q20.a2, a2: Q20.a1 + 360, col: GREEN, w: 2, dash: true }]; const f = S.frame; S.frame = { x0: Math.min(f.x0, -rad - 1.4), y0: Math.min(f.y0, -rad - 1.4), x1: Math.max(f.x1, rad + 1.4), y1: Math.max(f.y1, rad + 1.4) } }
 /** A straight line from O to a point, lit. */
 const radius = (S: Scene, id: string, to: string, col = PINK) => { S.segs = [...S.segs.filter(g => g.id !== id), { id, a: "O", b: to, col, w: 3.4, glow: true }] }
 

@@ -214,7 +214,8 @@ const PART_2: Beat[] = [
     above: () => row([atom("d0", "d", { col: PINK }), op("e0", "="), atom("n0", "28", { col: GREEN }), op("v0", "\\div"), atom("p0", "\\pi")]),
     slips: [{ v: 28 * Math.PI, say: "That multiplies by $\\pi$. Moving across, it divides." }],
     walk: [
-      { say: "The circumference is $28$, and the $\\pi$ came across dividing.", tex: `${c(PINK, "d")} = 28 \\div \\pi`, show: S => { glowOn(S, "rim", "d"); pulseLabs(S, "rim") } },
+      // the student's own d = 28 ÷ π is already on the board, above the box
+      { say: "The circumference is $28$, and the $\\pi$ came across dividing.", show: S => { glowOn(S, "rim", "d"); pulseLabs(S, "rim") } },
       { say: "Type $28$, then $\\div$, then the $\\pi$ key.", show: S => { glowOn(S); pulseLabs(S); keys(S, "2", "8", "÷", "π") } },
     ],
   }),
