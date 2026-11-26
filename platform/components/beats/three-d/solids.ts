@@ -19,7 +19,21 @@ import { type V3, vadd, vsub, vmul, vdot, vcross, vunit } from "./scene"
 // ── curved solids ────────────────────────────────────────────────────────
 
 export type CurvedKind = "cylinder" | "cone" | "frustum" | "sphere" | "hemisphere"
-export interface Curved { kind: CurvedKind; r: number; h: number; r2?: number; /** its top filled in this colour (a cylinder's cross-section) */ lit?: string }
+export interface Curved {
+  kind: CurvedKind; r: number; h: number; r2?: number
+  /** its top filled in this colour (a cylinder's cross-section) */
+  lit?: string
+  /** that top (and lit ends) breathe */
+  pulse?: boolean
+  /** its flat circle ends filled in this colour (a cylinder's two, a cone's base, a frustum's two) */
+  ends?: string
+  /** a cone's tip marked in this colour */
+  tip?: string
+  /** a frustum: the cone that was cut off its top, dashed */
+  ghost?: boolean
+}
+/** How tall the whole cone a frustum was cut from is. */
+export const frustumApex = (c: Curved) => (c.h * c.r) / (c.r - (c.r2 ?? c.r / 2))
 
 const N = 64
 

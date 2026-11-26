@@ -9,7 +9,7 @@ import {
   ptS, proj, p3, toCam, faceFront, segHidden, edgesOf, segKey, dirCol, arcGeom, arcPx, chipRects, dragAt,
   vsub, vadd, vmul, vunit, vdot, vcross, vlerp, facesEye,
 } from "./scene"
-import { curvedCloud, curvedRings, hull, foldNet, ring, unrollGeom } from "./solids"
+import { curvedCloud, curvedRings, hull, foldNet, ring, unrollGeom, frustumApex } from "./solids"
 import { normalOf, sideOf, upOf, cutOf, curvedMesh, mirror3 } from "./sheet"
 import { cubeBoxes, boxFaces, type Box, type Ladder } from "./mens"
 
@@ -54,7 +54,7 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
       <EquationView B={S.eq} time={S.time} opacity={vis("eq")} />
       <Chips S={S} L={L} op={vis("chips")} />
       <Carried S={S} />
-      {S.walkTex ? <div key={S.walkTex} className={`${styles.line} ${styles.walkLine}`} style={{ top: L.lineY - L.lineSize * 0.85, height: L.lineSize * 1.7, ["--line-size" as string]: `${L.lineSize}px` }}><Tex tex={S.walkTex} /></div> : null}
+      {S.walkTex ? <div key={S.walkTex} className={`${styles.line} ${styles.walkLine}`} style={{ top: L.lineY - L.lineSize * 0.85, height: L.lineSize * 1.7, ["--line-size" as string]: `${L.lineSize}px`, ...(L.keypadCx !== undefined ? { right: "auto", width: 2 * L.midX } : {}) }}><Tex tex={S.walkTex} /></div> : null}
     </>
   )
 }
@@ -160,6 +160,19 @@ function Solid({ S, op }: { S: Scene; op: number }) {
     if (!f) continue
     out.push(<polygon key={`lit${k}`} points={poly(f.map(n => ptS(S, n)))} fill={col} fillOpacity={(faceFront(S, f) ? 0.3 : 0.12) * fade} stroke="none" />)
   }
+  // the faces and edges a phrase is about breathe in their colour
+  for (const k of S.faceGlow) {
+    const f = faces[k]
+    if (!f) continue
+    const col = S.faceLit[k] ?? YELLOW
+    out.push(<polygon key={`fg${k}`} points={poly(f.map(n => ptS(S, n)))} fill={col} fillOpacity={0.12} stroke={col} strokeWidth={6} strokeLinejoin="round" filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.15;0.7;0.15" dur="1.6s" repeatCount="indefinite" /><animate attributeName="fill-opacity" values="0.06;0.3;0.06" dur="1.6s" repeatCount="indefinite" /></polygon>)
+  }
+  for (const [key, col] of Object.entries(S.edgeGlow)) {
+    const [a, b] = key.split("-")
+    if (!S.P3[a] || !S.P3[b]) continue
+    const A = ptS(S, a), B = ptS(S, b)
+    out.push(<line key={`eg${key}`} x1={A[0]} y1={A[1]} x2={B[0]} y2={B[1]} stroke={col} strokeWidth={10} strokeLinecap="round" filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.15;0.7;0.15" dur="1.6s" repeatCount="indefinite" /></line>)
+  }
   for (const [i, f] of front.entries()) {
     const s = shade(S, f)
     out.push(<polygon key={`ff${i}`} points={poly(f.map(n => ptS(S, n)))} fill={CHALK} fillOpacity={(0.03 + 0.06 * s) * fade} stroke="none" />)
@@ -188,8 +201,26 @@ function CurvedView({ S, op }: { S: Scene; op: number }) {
   const out: React.ReactNode[] = []
   const H = hull(curvedCloud(c).map(p => proj(S, p)))
   out.push(<polygon key="body" points={poly(H)} fill={CHALK} fillOpacity={0.07} stroke={CHALK} strokeWidth={2.4} strokeLinejoin="round" />)
+  // a frustum: the cone cut off its top, dashed, up to where its tip was
+  if (c.ghost && c.kind === "frustum") {
+    const Z = frustumApex(c), r2 = c.r2 ?? c.r / 2
+    const G = hull([...ring(r2, c.h).map(p => proj(S, p)), proj(S, [0, 0, Z])])
+    out.push(<polygon key="ghost" points={poly(G)} fill={CHALK} fillOpacity={0.03} stroke={CHALK} strokeOpacity={0.55} strokeWidth={1.8} strokeDasharray="6 6" strokeLinejoin="round" />)
+  }
+  // its flat circle ends filled
+  if (c.ends && c.kind !== "sphere") {
+    const caps: [number, number][] = c.kind === "cylinder" ? [[c.r, 0], [c.r, c.h]] : c.kind === "frustum" ? [[c.r, 0], [c.r2 ?? c.r / 2, c.h]] : [[c.r, 0]]
+    caps.forEach(([r, z], i) => {
+      const Q = poly(ring(r, z).map(p => proj(S, p)))
+      out.push(<polygon key={`end${i}`} points={Q} fill={c.ends} fillOpacity={0.24} stroke={c.ends} strokeWidth={2.4} strokeLinejoin="round">{c.pulse && <animate attributeName="fill-opacity" values="0.14;0.4;0.14" dur="1.6s" repeatCount="indefinite" />}</polygon>)
+    })
+  }
   // its cross-section lit: the top filled
-  if (c.lit && c.kind === "cylinder") out.push(<polygon key="lit" points={poly(ring(c.r, c.h).map(p => proj(S, p)))} fill={c.lit} fillOpacity={0.3} stroke={c.lit} strokeWidth={2.4} strokeLinejoin="round" />)
+  if (c.lit && c.kind === "cylinder") {
+    const Q = poly(ring(c.r, c.h).map(p => proj(S, p)))
+    if (c.pulse) out.push(<polygon key="litg" points={Q} fill="none" stroke={c.lit} strokeWidth={8} filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.15;0.75;0.15" dur="1.6s" repeatCount="indefinite" /></polygon>)
+    out.push(<polygon key="lit" points={Q} fill={c.lit} fillOpacity={0.3} stroke={c.lit} strokeWidth={2.4} strokeLinejoin="round">{c.pulse && <animate attributeName="fill-opacity" values="0.2;0.45;0.2" dur="1.6s" repeatCount="indefinite" />}</polygon>)
+  }
   curvedRings(c).forEach((rg, i) => {
     const mid: V3 = [0, 0, rg.pts[0][2]]
     const capSeen = rg.cap ? facesEye(S, mid, rg.cap) : false
@@ -212,6 +243,12 @@ function CurvedView({ S, op }: { S: Scene; op: number }) {
     }
     flush(`r${i}-end`)
   })
+  // a cone's tip, marked
+  if (c.tip && c.kind === "cone") {
+    const T = proj(S, [0, 0, c.h])
+    out.push(<circle key="tip" cx={T[0]} cy={T[1]} r={10} fill="none" stroke={c.tip} strokeWidth={3} filter="url(#pl-soft)"><animate attributeName="r" values="7;15;7" dur="1.6s" repeatCount="indefinite" /><animate attributeName="stroke-opacity" values="0.9;0.3;0.9" dur="1.6s" repeatCount="indefinite" /></circle>)
+    out.push(<circle key="tipd" cx={T[0]} cy={T[1]} r={4.5} fill={c.tip} />)
+  }
   return <g opacity={op}>{out}</g>
 }
 
@@ -222,15 +259,34 @@ function UnrollView({ S, op }: { S: Scene; op: number }) {
   const G = unrollGeom(U.r, U.h, U.u, U.cap)
   const depth = (P: V3[]) => P.reduce((s, p) => s + toCam(S, p)[2], 0) / P.length
   const side = U.cols?.side ?? CHALK, ends = U.cols?.ends ?? CHALK
-  const parts: { P: V3[]; col: string; strip: boolean }[] = [...G.strips.map(P => ({ P, col: side, strip: true })), { P: G.top, col: ends, strip: false }, { P: G.bottom, col: ends, strip: false }]
+  const glow = new Set(U.glow ?? [])
+  const parts: { P: V3[]; col: string; strip: boolean; lit: boolean }[] = [
+    ...G.strips.map(P => ({ P, col: side, strip: true, lit: glow.has("side") })),
+    { P: G.top, col: ends, strip: false, lit: glow.has("top") },
+    { P: G.bottom, col: ends, strip: false, lit: glow.has("bottom") },
+  ]
   parts.sort((a, b) => depth(a.P) - depth(b.P))
-  const out = parts.map((pt, i) => (
-    <polygon key={i} points={poly(pt.P.map(p => proj(S, p)))} fill={pt.col} fillOpacity={pt.strip ? 0.05 : 0.22} stroke={pt.strip ? "none" : pt.col} strokeWidth={2} strokeLinejoin="round" />
-  ))
+  const out: React.ReactNode[] = parts.map((pt, i) => {
+    const Q = poly(pt.P.map(p => proj(S, p)))
+    const op = pt.strip ? 0.05 : 0.22
+    return (
+      <g key={i}>
+        {pt.lit && !pt.strip && <polygon points={Q} fill="none" stroke={pt.col} strokeWidth={8} strokeLinejoin="round" filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.15;0.75;0.15" dur="1.6s" repeatCount="indefinite" /></polygon>}
+        <polygon points={Q} fill={pt.col} fillOpacity={op} stroke={pt.strip ? "none" : pt.col} strokeWidth={2} strokeLinejoin="round">
+          {pt.lit && <animate attributeName="fill-opacity" values={`${op};${pt.strip ? 0.22 : 0.42};${op}`} dur="1.6s" repeatCount="indefinite" />}
+        </polygon>
+      </g>
+    )
+  })
   // the curved face's outline: its top and bottom edges and its two free sides
   const edge = (z: number) => G.strips.map(P => P[z ? 3 : 0]).concat([G.strips[G.strips.length - 1][z ? 2 : 1]])
   const path = (Q: V3[]) => Q.map((p, k) => { const q = proj(S, p); return `${k ? "L" : "M"} ${q[0].toFixed(1)} ${q[1].toFixed(1)}` }).join(" ")
   const first = G.strips[0], last = G.strips[G.strips.length - 1]
+  // the curved face breathing: a soft glow all round its outline
+  if (glow.has("side")) {
+    const ring = [...edge(0), last[2], ...[...edge(1)].reverse(), first[0]]
+    out.push(<path key="sideglow" d={path(ring)} fill="none" stroke={side} strokeWidth={8} strokeLinejoin="round" filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.15;0.75;0.15" dur="1.6s" repeatCount="indefinite" /></path>)
+  }
   out.push(<path key="e0" d={path(edge(0))} fill="none" stroke={side} strokeWidth={2.2} />, <path key="e1" d={path(edge(1))} fill="none" stroke={side} strokeWidth={2.2} />)
   out.push(<path key="s0" d={path([first[0], first[3]])} fill="none" stroke={side} strokeWidth={2.2} />, <path key="s1" d={path([last[1], last[2]])} fill="none" stroke={side} strokeWidth={2.2} />)
   return <g opacity={op}>{out}</g>
@@ -250,7 +306,18 @@ function NetView({ S, op }: { S: Scene; op: number }) {
         const col = n.cols?.[id]
         // orange and pink go muddy over the dark board when filled strongly: their edges carry the colour
         const op = !col ? 0.1 : col === ORANGE || col === PINK ? 0.05 : 0.28
-        return <polygon key={id} points={poly(P.map(p => proj(S, p)))} fill={col ?? CHALK} fillOpacity={op} stroke={col ?? CHALK} strokeWidth={2} strokeLinejoin="round" />
+        const Q = poly(P.map(p => proj(S, p)))
+        // a face a phrase is about breathes: a soft edge and a fill that comes and goes
+        if (n.glow?.includes(id)) {
+          const g = col ?? YELLOW
+          return (
+            <g key={id}>
+              <polygon points={Q} fill={g} fillOpacity={op} stroke={g} strokeWidth={7} strokeLinejoin="round" filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.15;0.75;0.15" dur="1.6s" repeatCount="indefinite" /></polygon>
+              <polygon points={Q} fill={g} fillOpacity={op} stroke={g} strokeWidth={3} strokeLinejoin="round"><animate attributeName="fill-opacity" values={`${op};${Math.max(0.3, op * 2)};${op}`} dur="1.6s" repeatCount="indefinite" /></polygon>
+            </g>
+          )
+        }
+        return <polygon key={id} points={Q} fill={col ?? CHALK} fillOpacity={op} stroke={col ?? CHALK} strokeWidth={2} strokeLinejoin="round" />
       })}
       {/* where a face can be added: breathing yellow squares */}
       {E && n.tD < 0.02 && E.cand.map(([i, j]) => {

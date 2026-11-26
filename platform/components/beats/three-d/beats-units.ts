@@ -90,10 +90,10 @@ function litresBoard(S: Scene, L: number) {
 const count = (S: Scene, dur: number, set: (S: Scene, e: number) => void, wait = 0.6) => S.acts.push({ dur: wait }, { dur, run: (S2, _e, t) => set(S2, t), end: S2 => set(S2, 1) })
 
 /** A number typed: exact, on the mensuration keypad; the board is set by `board`. */
-function convert(id: string, text: string, board: (S: Scene) => void, o: { from: string; answer: number; unit: string; slips?: { v: number; say: string }[]; walk: { say: string; tex?: string; show?: (S: Scene) => void }[] }): Beat {
+function convert(id: string, text: string, board: (S: Scene) => void, o: { from: string; answer: number; unit: string; slips?: { v: number; say: string }[]; walk: { say: string; tex?: string; show?: (S: Scene) => void }[]; then?: (S: Scene) => void }): Beat {
   const unit = `\\text{ ${o.unit}}`
   return askBeat(id, text, S => { board(S); S.keyRows = 3 }, {
-    name: o.from, col: BLUE, answer: o.answer, shown: `${String(o.answer).replace(/\B(?=(\d{3})+(?!\d))/g, "\\,")}${unit}`, after: unit, typed: String(o.answer), exact: true, slips: o.slips, walk: o.walk,
+    name: o.from, col: BLUE, answer: o.answer, shown: `${String(o.answer).replace(/\B(?=(\d{3})+(?!\d))/g, "\\,")}${unit}`, after: unit, typed: String(o.answer), exact: true, slips: o.slips, walk: o.walk, then: o.then,
   })
 }
 
@@ -135,7 +135,7 @@ const PART_1: Beat[] = [
     ],
     walk: [
       { say: "mm to cm is one step up the ladder: divide by $10$.", tex: "78 \\div 10", show: S => { if (S.ladder) S.ladder = { ...S.ladder, lit: { from: 3, to: 2 } } } },
-      { say: "On the stick, $78$ mm is just short of the $8$ cm mark." },
+      { say: "On the stick, $78$ mm is just short of the $8$ cm mark.", show: S => { if (S.meter) S.meter = { ...S.meter, lit: 7.8, marks: [...(S.meter.marks ?? []), { at: 8, col: GREEN, tex: "8\\text{ cm}" }] } } },
     ],
   }),
   // 4024/23/M/J/25 Q5(a)
@@ -280,7 +280,7 @@ const PART_3: Beat[] = [
     ],
     walk: [
       { say: "cm$^3$ is the same as ml. Up the ladder to litres: divide by $1000$.", tex: "250 \\div 1000", show: S => { if (S.ladder) S.ladder = { ...S.ladder, lit: { from: 2, to: 1 } } } },
-      { say: "The cube is a litre. $250$ cm$^3$ fills a quarter of it." },
+      { say: "The cube is a litre, $1000$ cm$^3$. $250$ cm$^3$ fills a quarter of it.", show: S => { S.tags = [{ key: "l", at: [5, 5, 10], tex: "1\\text{ litre}", col: GREEN }, { key: "w", at: [5, 5, 1.25], tex: "250\\text{ cm}^3", col: BLUE, pulse: true }] } },
     ],
   }),
   // 4024/23/M/J/25 Q5(b)
@@ -294,13 +294,13 @@ const PART_3: Beat[] = [
     from: "2.5\\text{ litres}", answer: 2500, unit: "ml",
     slips: [{ v: 250, say: "That's $\\times 100$. A litre is $1000$ ml." }, { v: 0.0025, say: "That's dividing. ml are smaller, so there are more of them." }],
     walk: [{ say: "Down the ladder from litres to ml: multiply by $1000$.", tex: "2.5 \\times 1000", show: S => { if (S.ladder) S.ladder = { ...S.ladder, lit: { from: 1, to: 2 } } } }],
+    then: S => { S.tags = [{ key: "ml", at: [12.5, 5, 10], tex: "2500\\text{ ml}", col: GREEN }] },
   }),
-  askBeat("ratio", "So it's $175 : 2500$. In its simplest form, that's $7 : ?$", S => { litresBoard(S, 2.5); S.keyRows = 3 }, {
+  askBeat("ratio", "So it's $175 : 2500$. In its simplest form, that's $7 : ?$", S => { litresBoard(S, 2.5); S.keyRows = 3; S.tags = [{ key: "ml", at: [12.5, 5, 10], tex: "2500\\text{ ml}", col: GREEN }] }, {
     name: "175 : 2500 = 7", sep: ":", col: BLUE, answer: 100, shown: "100", typed: "100", exact: true,
     slips: [{ v: 2500, say: "Both parts must be divided by the same number." }],
     walk: [
-      { say: "$175$ became $7$: it was divided by $25$.", tex: "175 \\div 25 = 7" },
-      { say: "Divide $2500$ by $25$ too.", tex: "2500 \\div 25" },
+      { say: "$175$ became $7$: it was divided by $25$. Divide the $2500$ by $25$ too.", tex: "175 \\div 25 = 7, \\quad 2500 \\div 25", show: S => { S.tags = S.tags.map(t => ({ ...t, pulse: true })) } },
     ],
   }),
   {

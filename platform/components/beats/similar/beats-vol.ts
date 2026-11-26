@@ -25,6 +25,15 @@ import {
 import { type Beat, type ShapeSpec, askNum, watch, look, tall, c, tri, tapSides, w25Board, w22Board } from "./beats"
 
 const sq = (tex: string) => `${tex}\\text{ cm}^2`
+type Side = [string, string, string]
+/** Sides glow (by shape and end letters); the rest stop. */
+const glowS = (S: Scene, ...sides: Side[]) => { S.sideGlow = new Set(sides.map(([sh, a, b]) => sideKey(sh, a, b))) }
+/** Side labels pulse (either way round); the rest stop. */
+const pulseS = (S: Scene, ...sides: Side[]) => { S.sideLabs = S.sideLabs.map(l => ({ ...l, pulse: sides.some(([sh, a, b]) => l.sh === sh && ((l.a === a && l.b === b) || (l.a === b && l.b === a))) })) }
+/** The words inside shapes pulse (an area, a volume); the rest stop. */
+const pulseIn = (S: Scene, ...shs: string[]) => { S.inLabs = S.inLabs.map(l => ({ ...l, pulse: shs.includes(l.sh) })) }
+/** A shape's whole outline glows. */
+const glowAll = (S: Scene, sh: string, letters: string[]) => { S.sideGlow = new Set(letters.map((a, i) => sideKey(sh, a, letters[(i + 1) % letters.length]))) }
 const cu = (tex: string) => `${tex}\\text{ cm}^3`
 /** A keypad with a square root, for going back from an area factor. */
 const ROOT_KEYS = [["1", "2", "3", "4", "5", "back"], ["6", "7", "8", "9", "0", "."], ["×", "÷", "√", "go"]]
@@ -77,10 +86,10 @@ function countBeat(id: string, text: string, n: number, cube: boolean, slips: { 
   }, {
     lead: cube ? "\\text{Cubes}" : "\\text{Squares}", answer: total, slips,
     walk: cube ? [
-      { say: `One layer is ${n} rows of ${n}.`, tex: `${n} \\times ${n} = ${n * n}` },
-      { say: `There are ${n} layers.`, tex: `${n} \\times ${n} \\times ${n}` },
+      { say: `One layer is ${n} rows of ${n}.`, tex: `${n} \\times ${n} = ${n * n}`, show: S => { const g = shapeOf(S, "G"); if (g) g.cubes = n * n; glowS(S, ["G", "A", "B"], ["G", "D", "A"]) } },
+      { say: `There are ${n} layers.`, tex: `${n} \\times ${n} \\times ${n}`, show: S => { const g = shapeOf(S, "G"); if (g) g.cubes = n ** 3; S.sideGlow = new Set() } },
     ] : [
-      { say: `There are ${n} rows of ${n}.`, tex: `${n} \\times ${n}` },
+      { say: `There are ${n} rows of ${n}.`, tex: `${n} \\times ${n}`, show: S => { glowS(S, ["G", "A", "B"], ["G", "D", "A"]); pulseS(S, ["G", "A", "B"], ["G", "D", "A"]) } },
     ],
     then: S => {
       if (cube) {
@@ -199,7 +208,10 @@ const PART_2: Beat[] = [
   askNum("w25-k", "What is the scale factor from $ABC$ to $PQR$?", S => w25Areas(S), {
     lead: "\\text{Scale factor}", answer: 1.5,
     slips: [{ v: 3, say: "That's $9 - 6$. How many times bigger is $9$ than $6$?" }, { v: 0.67, say: "That's $6 \\div 9$. Divide the big side by the small side." }],
-    walk: [{ say: "$PQ$ is $9$, and its matching side $AB$ is $6$.", tex: "6 \\to 9" }, { say: "Divide the big side by the small side.", tex: "9 \\div 6" }],
+    walk: [
+      { say: "$PQ$ is $9$, and its matching side $AB$ is $6$.", tex: "6 \\to 9", show: S => { glowS(S, ["ABC", "A", "B"], ["PQR", "A", "B"]); pulseS(S, ["ABC", "A", "B"], ["PQR", "A", "B"]) } },
+      { say: "Divide the big side by the small side.", tex: "9 \\div 6", show: S => pulseS(S, ["PQR", "A", "B"]) },
+    ],
   }),
   watch("w25-area", "The area of triangle $ABC$ is $16\\text{ cm}^2$.", S => { w25Areas(S, "?"); look(S) }, 2.4),
   askNum("w25-af", "What is the area factor?", S => w25Areas(S, "?"), {
@@ -209,7 +221,7 @@ const PART_2: Beat[] = [
       { v: 1.5, say: "That's the scale factor. The area factor is the scale factor squared." },
       { v: 3, say: "That's $1.5 \\times 2$. Squared means $1.5 \\times 1.5$." },
     ],
-    walk: [{ say: "The area factor is the scale factor squared.", tex: "1.5^2" }, { say: "Squared means times itself.", tex: "1.5 \\times 1.5" }],
+    walk: [{ say: "The area factor is the scale factor squared: $1.5$ times itself.", tex: "1.5 \\times 1.5", show: S => glowS(S, ["ABC", "A", "B"], ["PQR", "A", "B"]) }],
   }),
   askNum("w25-pqr", "So what is the area of triangle $PQR$?", S => w25Areas(S, "?"), {
     lead: "\\text{Area of } PQR", answer: 36, unit: "cm^2",
@@ -219,7 +231,10 @@ const PART_2: Beat[] = [
       { v: 18.25, say: "That's $16 + 2.25$. The area factor multiplies." },
       { v: 7.11, say: "That's $16 \\div 2.25$. $PQR$ is the big one, so multiply." },
     ],
-    walk: [{ say: "$PQR$ is the big one, so its area is bigger.", tex: "16 \\to ?" }, { say: "Multiply by the area factor.", tex: "16 \\times 2.25" }],
+    walk: [
+      { say: "$ABC$'s area is $16$. $PQR$ is the big one, so its area is bigger.", tex: "16 \\to ?", show: S => { glowAll(S, "PQR", ["A", "B", "C"]); pulseIn(S, "ABC") } },
+      { say: "Multiply by the area factor.", tex: "16 \\times 2.25", show: S => pulseIn(S, "PQR") },
+    ],
     then: S => { S.inLabs = S.inLabs.map(l => (l.sh === "PQR" ? { ...l, tex: sq("36"), col: GREEN, pulse: false } : l)) },
   }),
 
@@ -229,13 +244,16 @@ const PART_2: Beat[] = [
   askNum("w22-k", "What is the scale factor from $DEC$ to $ABC$?", S => w22Areas(S, "?"), {
     lead: "\\text{Scale factor}", answer: 4,
     slips: [{ v: 9, say: "That's $12 - 3$. How many times bigger is $12$ than $3$?" }, { v: 0.25, say: "That's $3 \\div 12$. Divide the big side by the small side." }],
-    walk: [{ say: "$AB$ is $12$, and its matching side $DE$ is $3$.", tex: "3 \\to 12" }, { say: "Divide the big side by the small side.", tex: "12 \\div 3" }],
+    walk: [
+      { say: "$AB$ is $12$, and its matching side $DE$ is $3$.", tex: "3 \\to 12", show: S => { glowS(S, ["ABC", "A", "B"], ["DEC", "A", "B"]); pulseS(S, ["ABC", "A", "B"], ["DEC", "A", "B"]) } },
+      { say: "Divide the big side by the small side.", tex: "12 \\div 3", show: S => pulseS(S, ["ABC", "A", "B"]) },
+    ],
   }),
   askNum("w22-af", "What is the area factor?", S => w22Areas(S, "?"), {
     lead: "\\text{Area factor}", answer: 16,
     above: () => row([atom("sfl", "\\text{Scale factor}"), op("sfe", "="), atom("sfv", "4")]),
     slips: [{ v: 8, say: "That's $4 \\times 2$. Squared means $4 \\times 4$." }, { v: 4, say: "That's the scale factor. Square it." }],
-    walk: [{ say: "The area factor is the scale factor squared.", tex: "4^2 = 4 \\times 4" }],
+    walk: [{ say: "The area factor is the scale factor squared.", tex: "4^2 = 4 \\times 4", show: S => glowS(S, ["ABC", "A", "B"], ["DEC", "A", "B"]) }],
   }),
   watch("w22-small", "$DEC$ is the small one. So this time, divide.", S => {
     w22Areas(S, "?")
@@ -250,7 +268,10 @@ const PART_2: Beat[] = [
       { v: 2560, say: "That's $160 \\times 16$. $DEC$ is the small one, so divide." },
       { v: 40, say: "That's $160 \\div 4$, the scale factor. An area uses the area factor, $16$." },
     ],
-    walk: [{ say: "$DEC$ is the small one, so its area is smaller.", tex: "160 \\to ?" }, { say: "Divide by the area factor.", tex: "160 \\div 16" }],
+    walk: [
+      { say: "$ABC$'s area is $160$. $DEC$ is the small one, so its area is smaller.", tex: "160 \\to ?", show: S => { glowAll(S, "DEC", ["A", "B", "C"]); pulseIn(S, "ABC") } },
+      { say: "Divide by the area factor.", tex: "160 \\div 16", show: S => pulseIn(S, "DEC") },
+    ],
     then: S => { S.inLabs = S.inLabs.map(l => (l.sh === "DEC" ? { ...l, tex: sq("10"), col: GREEN, pulse: false } : l)) },
   }),
 
@@ -260,7 +281,7 @@ const PART_2: Beat[] = [
   askNum("s23-big", "First, what is the area of $ABCD$?", S => s23Board(S), {
     lead: "\\text{Area of } ABCD", answer: 108, unit: "cm^2",
     slips: [{ v: 21, say: "That's $12 + 9$. The area of a rectangle is length times width." }, { v: 42, say: "That's the four sides added up. The area is length times width." }],
-    walk: [{ say: "The area of a rectangle is length times width.", tex: "12 \\times 9" }],
+    walk: [{ say: "The area of a rectangle is length times width: $12$ by $9$.", tex: "12 \\times 9", show: S => { glowS(S, ["ABCD", "A", "B"], ["ABCD", "B", "C"]); pulseS(S, ["ABCD", "A", "B"], ["ABCD", "B", "C"]) } }],
   }),
   tapSides("s23-pq", "Which side of $ABCD$ matches $PQ$? Tap it.", S => { s23Board(S); S.sideCol[sideKey("PQRS", "P", "Q")] = BLUE }, {
     want: ["ABCD:AB"], among: ["ABCD:AB", "ABCD:BC", "ABCD:CD", "ABCD:DA"], col: BLUE,
@@ -270,26 +291,29 @@ const PART_2: Beat[] = [
   askNum("s23-k", "What is the scale factor from $PQRS$ to $ABCD$?", S => s23Board(S, { col1: true }), {
     lead: "\\text{Scale factor}", answer: 1.5, above: bigArea,
     slips: [{ v: 4, say: "That's $12 - 8$. How many times bigger is $12$ than $8$?" }, { v: 0.67, say: "That's $8 \\div 12$. Divide the big side by the small side." }],
-    walk: [{ say: "$AB$ is $12$, and its matching side $PQ$ is $8$.", tex: "8 \\to 12" }, { say: "Divide the big side by the small side.", tex: "12 \\div 8" }],
+    walk: [
+      { say: "$AB$ is $12$, and its matching side $PQ$ is $8$.", tex: "8 \\to 12", show: S => { glowS(S, ["ABCD", "A", "B"], ["PQRS", "P", "Q"]); pulseS(S, ["ABCD", "A", "B"], ["PQRS", "P", "Q"]) } },
+      { say: "Divide the big side by the small side.", tex: "12 \\div 8", show: S => pulseS(S, ["ABCD", "A", "B"]) },
+    ],
   }),
   askNum("s23-af", "What is the area factor?", S => s23Board(S, { col1: true }), {
     lead: "\\text{Area factor}", answer: 2.25,
     above: () => lines(bigArea(), row([atom("sfl", "\\text{Scale factor}"), op("sfe", "="), atom("sfv", "1.5")])),
     slips: [{ v: 3, say: "That's $1.5 \\times 2$. Squared means $1.5 \\times 1.5$." }, { v: 1.5, say: "That's the scale factor. Square it." }],
-    walk: [{ say: "The area factor is the scale factor squared.", tex: "1.5 \\times 1.5" }],
+    walk: [{ say: "The area factor is the scale factor squared.", tex: "1.5 \\times 1.5", show: S => glowS(S, ["ABCD", "A", "B"], ["PQRS", "P", "Q"]) }],
   }),
   askNum("s23-small", "$PQRS$ is the small one. What is its area?", S => s23Board(S, { col1: true, small: "?" }), {
     lead: "\\text{Area of } PQRS", answer: 48, unit: "cm^2",
     above: () => lines(bigArea(), row([atom("afl", "\\text{Area factor}"), op("afe", "="), atom("afv", "2.25")])),
     slips: [{ v: 243, say: "That's $108 \\times 2.25$. $PQRS$ is the small one, so divide." }, { v: 72, say: "That's $108 \\div 1.5$, the scale factor. An area uses the area factor." }],
-    walk: [{ say: "$PQRS$ is the small one, so divide.", tex: "108 \\div 2.25" }],
+    walk: [{ say: "$ABCD$ is $108$. $PQRS$ is the small one, so divide.", tex: "108 \\div 2.25", show: S => { glowAll(S, "PQRS", ["P", "Q", "R", "S"]); pulseIn(S, "PQRS") } }],
     then: S => { S.inLabs = S.inLabs.map(l => (l.sh === "PQRS" ? { ...l, tex: sq("48"), col: GREEN, pulse: false } : l)) },
   }),
   askNum("s23-shade", "So what is the shaded area?", S => s23Board(S, { col1: true, small: "48", pulse: true }), {
     lead: "\\text{Shaded area}", answer: 60, unit: "cm^2",
     above: () => lines(bigArea(), row([atom("pal", "\\text{Area of } PQRS"), op("pae", "="), atom("pav", sq("48"))])),
     slips: [{ v: 156, say: "That's $108 + 48$. The shaded part is $ABCD$ with $PQRS$ taken out." }],
-    walk: [{ say: "The shaded part is $ABCD$ with $PQRS$ taken out.", tex: "108 - 48" }],
+    walk: [{ say: "The shaded part is $ABCD$ with $PQRS$ taken out.", tex: "108 - 48", show: S => { glowAll(S, "ABCD", ["A", "B", "C", "D"]); pulseIn(S, "PQRS") } }],
     keys: [["1", "2", "3", "4", "5", "back"], ["6", "7", "8", "9", "0", "."], ["+", "−", "go"]],
   }),
 ]
@@ -400,7 +424,7 @@ const PART_4: Beat[] = [
   askNum("pr-vf", "What is the volume factor?", S => prBoard(S, { big: true }), {
     lead: "\\text{Volume factor}", answer: 8,
     slips: [{ v: 1260, say: "That's $1440 - 180$. How many times bigger is $1440$ than $180$?" }],
-    walk: [{ say: "How many times bigger is the big volume? Divide.", tex: "1440 \\div 180" }],
+    walk: [{ say: "How many times bigger is the big volume? Divide.", tex: "1440 \\div 180", show: S => pulseIn(S, "P1", "P2") }],
   }),
   askNum("pr-k", "The volume factor is the scale factor cubed. What is the scale factor?", S => prBoard(S, { big: true }), {
     lead: "\\text{Scale factor}", answer: 2,
@@ -409,13 +433,19 @@ const PART_4: Beat[] = [
       { v: 2.67, say: "That's $8 \\div 3$. Cubed means a number times itself, three times." },
       { v: 4, say: "$4 \\times 4 \\times 4 = 64$. Try a smaller number." },
     ],
-    walk: [{ say: "Which number times itself three times makes $8$?", tex: "? \\times ? \\times ? = 8" }, { say: "Try $2$.", tex: "2 \\times 2 \\times 2 = 8" }],
+    walk: [
+      { say: "The scale factor is how many times longer the big prism is. Which number times itself three times makes $8$?", tex: "? \\times ? \\times ? = 8", show: S => glowS(S, ["P1", "A", "B"], ["P2", "A", "B"]) },
+      { say: "Try $2$.", tex: "2 \\times 2 \\times 2 = 8", show: S => pulseS(S, ["P1", "A", "B"], ["P2", "A", "B"]) },
+    ],
   }),
   askNum("pr-x", "So what is $x$?", S => prBoard(S, { big: true }), {
     lead: "x", answer: 20,
     above: () => row([atom("sfl", "\\text{Scale factor}"), op("sfe", "="), atom("sfv", "2")]),
     slips: [{ v: 80, say: "That's $10 \\times 8$, the volume factor. A length uses the scale factor." }, { v: 5, say: "That's $10 \\div 2$. The big prism's base is longer, so multiply." }],
-    walk: [{ say: "$x$ matches the small prism's base, $10$ cm.", tex: "10 \\to x" }, { say: "Multiply by the scale factor.", tex: "10 \\times 2" }],
+    walk: [
+      { say: "$x$ matches the small prism's base, $10$ cm.", tex: "10 \\to x", show: S => { glowS(S, ["P1", "A", "B"]); pulseS(S, ["P1", "A", "B"]) } },
+      { say: "The big prism is the bigger one, so multiply by the scale factor.", tex: "10 \\times 2", show: S => { glowS(S, ["P1", "A", "B"], ["P2", "A", "B"]); pulseS(S, ["P2", "A", "B"]) } },
+    ],
     then: S => { S.sideLabs = S.sideLabs.map(l => (l.sh === "P2" ? { ...l, tex: "20", col: GREEN, pulse: false } : l)) },
   }),
 
@@ -425,7 +455,7 @@ const PART_4: Beat[] = [
   askNum("mug-vf", "What is the volume factor?", S => mugBoard(S, { ml: true }), {
     lead: "\\text{Volume factor}", answer: 640 / 270, sf: 3, shownTex: "\\dfrac{640}{270}", typed: "640÷270",
     slips: [{ v: 370, say: "That's $640 - 270$. How many times bigger is $640$ than $270$?" }, { v: 0.42, say: "That's $270 \\div 640$. Divide the big one by the small one." }],
-    walk: [{ say: "Divide the big volume by the small one.", tex: "640 \\div 270" }],
+    walk: [{ say: "Divide the big volume by the small one.", tex: "640 \\div 270", show: S => pulseIn(S, "M1", "M2") }],
   }),
   watch("mug-64", "$640 \\div 270$ is the same as $64 \\div 27$.", S => {
     mugBoard(S, { ml: true })
@@ -436,13 +466,13 @@ const PART_4: Beat[] = [
     lead: "\\text{Number}", answer: 4,
     above: () => row([atom("q", "? \\times ? \\times ? = 64")]),
     slips: [{ v: 8, say: "$8 \\times 8 = 64$, but cubed needs three of them: $8 \\times 8 \\times 8$ is far more." }, { v: 21.33, say: "That's $64 \\div 3$. Cubed means a number times itself, three times." }],
-    walk: [{ say: "Try $4$.", tex: "4 \\times 4 \\times 4" }],
+    walk: [{ say: "Try $4$.", tex: "4 \\times 4 \\times 4", show: S => pulseIn(S, "M2") }],
   }),
   askNum("mug-3", "And which number cubed makes $27$?", S => mugBoard(S, { ml: true }), {
     lead: "\\text{Number}", answer: 3,
     above: () => row([atom("q", "? \\times ? \\times ? = 27")]),
     slips: [{ v: 9, say: "That's $27 \\div 3$. Which number times itself three times makes $27$?" }],
-    walk: [{ say: "Try $3$.", tex: "3 \\times 3 \\times 3" }],
+    walk: [{ say: "Try $3$.", tex: "3 \\times 3 \\times 3", show: S => pulseIn(S, "M1") }],
   }),
   watch("mug-k", "So the scale factor is $4 \\div 3$.", S => {
     mugBoard(S, { ml: true, colW: true })
@@ -456,7 +486,10 @@ const PART_4: Beat[] = [
       { v: 10.67, say: "That's $8 \\times \\tfrac{4}{3}$. $w$ is on the small mug, so divide." },
       { v: 3.38, say: "That's $8 \\div 2.37$, the volume factor. A width uses the scale factor." },
     ],
-    walk: [{ say: "$w$ is on the small mug, so divide.", tex: "8 \\div \\tfrac{4}{3}" }, { say: "Type $8 \\div 4 \\times 3$.", tex: "8 \\div 4 \\times 3" }],
+    walk: [
+      { say: "$w$ matches the large mug's $8$ cm. It's on the small mug, so divide.", tex: "8 \\div \\tfrac{4}{3}", show: S => { glowS(S, ["M1", "A", "B"], ["M2", "A", "B"]); pulseS(S, ["M2", "A", "B"]) } },
+      { say: "Dividing by $\\tfrac{4}{3}$ is the same as $\\div 4$, then $\\times 3$.", tex: "8 \\div 4 \\times 3", show: S => pulseS(S, ["M1", "A", "B"]) },
+    ],
     then: S => { S.sideLabs = S.sideLabs.map(l => (l.sh === "M1" ? { ...l, tex: "6\\text{ cm}", col: GREEN, pulse: false } : l)) },
   }),
 
@@ -467,20 +500,23 @@ const PART_4: Beat[] = [
     lead: "\\text{Cross-section}", answer: 100, unit: "cm^2",
     above: pxNote,
     slips: [{ v: 250000, say: "That's $5000 \\times 50$. The volume is the cross-section times the length, so divide." }],
-    walk: [{ say: "A prism's volume is its cross-section times its length.", tex: "\\text{Volume} = \\text{cross-section} \\times \\text{length}" }, { say: "So divide the volume by the length.", tex: "5000 \\div 50" }],
+    walk: [
+      { say: "A prism's volume is its cross-section times its length, $50$.", tex: "\\text{Volume} = \\text{cross-section} \\times \\text{length}", show: S => { glowS(S, ["PA", "C", "C'"]); pulseS(S, ["PA", "C", "C'"]) } },
+      { say: "So divide the volume by the length.", tex: "5000 \\div 50", show: S => { S.sideGlow = new Set(); pulseS(S); pulseIn(S, "PA") } },
+    ],
     then: S => { S.inLabs = [{ sh: "PA", tex: sq("100"), col: GREEN }] },
   }),
   watch("px-b", "Prism $B$'s cross-section is $16\\text{ cm}^2$.", S => { pxBoard(S, { areaA: sq("100"), areaB: sq("16") }); look(S) }, 2.6),
   askNum("px-af", "What is the area factor?", S => pxBoard(S, { areaA: sq("100"), areaB: sq("16") }), {
     lead: "\\text{Area factor}", answer: 6.25,
     slips: [{ v: 84, say: "That's $100 - 16$. How many times bigger is $100$ than $16$?" }, { v: 0.16, say: "That's $16 \\div 100$. Divide the big one by the small one." }],
-    walk: [{ say: "Divide the big area by the small one.", tex: "100 \\div 16" }],
+    walk: [{ say: "Divide the big area by the small one.", tex: "100 \\div 16", show: S => pulseIn(S, "PA", "PB") }],
   }),
   askNum("px-k", "The area factor is the scale factor squared. What is the scale factor?", S => pxBoard(S, { areaA: sq("100"), areaB: sq("16") }), {
     lead: "\\text{Scale factor}", answer: 2.5, keys: ROOT_KEYS, typed: "√6.25",
     above: () => row([atom("afl", "\\text{Area factor}"), op("afe", "="), atom("afv", "6.25")]),
     slips: [{ v: 3.13, say: "That's $6.25 \\div 2$. Squared means a number times itself. Use $\\sqrt{\\;}$." }, { v: 39.06, say: "That's $6.25^2$. Go back the other way: square root." }],
-    walk: [{ say: "Which number times itself makes $6.25$? That is its square root.", tex: "\\sqrt{6.25}" }],
+    walk: [{ say: "Which number times itself makes $6.25$? That is its square root.", tex: "\\sqrt{6.25}", show: S => pulseIn(S, "PA", "PB") }],
   }),
   askNum("px-len", "So how long is prism $B$?", S => pxBoard(S, { areaA: sq("100"), areaB: sq("16"), lenB: "?" }), {
     lead: "\\text{Length of } B", answer: 20, unit: "cm",
@@ -489,7 +525,7 @@ const PART_4: Beat[] = [
       { v: 125, say: "That's $50 \\times 2.5$. $B$ is the small one, so divide." },
       { v: 8, say: "That's $50 \\div 6.25$, the area factor. A length uses the scale factor." },
     ],
-    walk: [{ say: "$B$ is the small one, so divide.", tex: "50 \\div 2.5" }],
+    walk: [{ say: "$A$ is $50$ cm long. $B$ is the small one, so divide.", tex: "50 \\div 2.5", show: S => { glowS(S, ["PA", "C", "C'"], ["PB", "C", "C'"]); pulseS(S, ["PA", "C", "C'"]) } }],
     then: S => { S.sideLabs = S.sideLabs.map(l => (l.sh === "PB" ? { ...l, tex: "20\\text{ cm}", col: GREEN, pulse: false } : l)) },
   }),
 

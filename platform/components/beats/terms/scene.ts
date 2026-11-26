@@ -158,6 +158,8 @@ export interface Scene {
   input: TermsInput | null
   /** rows of keys: 2 digits only, 3 the calculator (decimal point, + − × ÷, x², √, π) */
   keyRows: number
+  /** calculator keys lit to show what to press (a Show me how step) */
+  keyHint: string[]
   /** moving a piece of the equation across the = (see startCross) */
   solve: CrossState | null
   dragAtoms: string[]
@@ -193,7 +195,7 @@ export function createScene(): Scene {
     frame: { x0: -5, y0: -4, x1: 5, y1: 4 }, fit: null, fitD: null,
     handles: [], snapped: null, locked: new Set(), taps: null, onTap: null,
     eq: createBoard(), eqFn: null, eqRoom: { v: 0, t: 0 }, choice: null, stepper: null, input: null,
-    keyRows: 2, solve: null, dragAtoms: [], onAtomDrop: null, dragTex: {},
+    keyRows: 2, keyHint: [], solve: null, dragAtoms: [], onAtomDrop: null, dragTex: {},
     acts: [], act: null, tick: null, timers: [], vis, labs: [], labD: {}, walkTex: null,
     drag: null, touch: false, moved: 0, got: new Set(), vals: {}, mem: {}, touched: null, flashGood: 0, note: null,
   }
@@ -570,6 +572,7 @@ export function resetBeat(S: Scene) {
   S.stepper = null
   S.input = null
   S.keyRows = 2
+  S.keyHint = []
   S.solve = null
   S.dragAtoms = []
   S.onAtomDrop = null

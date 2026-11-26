@@ -205,14 +205,14 @@ export interface Scene {
   /** a solid with a curved surface, drawn smooth (null: none) */
   curved: Curved | null
   /** a net, and how far it is folded: `t` where it is going, `tD` as drawn (0 flat, 1 closed); faces in a colour of their own */
-  net: { def: Net; t: number; tD: number; cols?: Record<string, string> } | null
+  net: { def: Net; t: number; tD: number; cols?: Record<string, string>; glow?: string[] } | null
   /**
    * A cylinder (radius r, height h, standing on the origin) whose curved face
    * unrolls (`u`: 0 round, 1 flat, a rectangle 2πr wide in front of where it
    * stood) and whose circles swing out from its front edge (`cap`: 0 in
    * place, 1 above and below the rectangle, as in a net).
    */
-  unroll: { r: number; h: number; u: number; cap: number; cols?: { side?: string; ends?: string } } | null
+  unroll: { r: number; h: number; u: number; cap: number; cols?: { side?: string; ends?: string }; glow?: ("side" | "top" | "bottom")[] } | null
   /** a net being made on the floor's grid: faces `k` cm square, and the squares where one can be added (they breathe) */
   netEdit: { k: number; cand: [number, number][] } | null
   /** a tap on the floor (world x, y), in tapFloor mode */
@@ -249,6 +249,12 @@ export interface Scene {
   keep: Record<string, number>
   /** points the phrase is about: they glow */
   glowPts: string[]
+  /** faces of the solid that breathe (the part a phrase or a step is about), by their place in `faces` */
+  faceGlow: number[]
+  /** edges of the solid that breathe, by segKey, in a colour */
+  edgeGlow: Record<string, string>
+  /** words at a point (a name or a world point): an area written on a face, a total on a part */
+  tags: { key: string; at: string | V3; tex: string; col?: string; size?: number; pulse?: boolean }[]
   /** a stick on the floor (its top is the point T, its shadow's end Tf) */
   stick: Stick | null
   /** points with a light straight above them: a dashed drop from each down to the floor */
@@ -322,6 +328,8 @@ export interface Scene {
   dragTex: Record<string, string>
   eqRoom: Spring
   keyRows: number
+  /** calculator keys lit to show what to press (a Show me how step) */
+  keyHint: string[]
 
   choice: { options: string[]; answer: number; picked: number | null; state: "idle" | "wrong" | "right"; wrongAt: number; guess: boolean; onPick?: (S: Scene, k: number, right: boolean) => void } | null
   /** small cards at the bottom of the board (the build targets) */
@@ -354,12 +362,12 @@ export function createScene(): Scene {
   for (const k of VIS_KEYS) vis[k] = { v: 0, t: 0 }
   return {
     w: 0, h: 0, time: 0, beatStart: 0, mode: "none",
-    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, unroll: null, net: null, netEdit: null, onFloor: null, meter: null, sqGrids: [], cubes: [], water: null, ladder: null, ladders: [], splitBelow: false, ladderOn: false, sheet: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, keep: {}, glowPts: [],
+    P3: {}, D3: {}, names: {}, letterDir: {}, faces: null, faceLit: {}, curved: null, unroll: null, net: null, netEdit: null, onFloor: null, meter: null, sqGrids: [], cubes: [], water: null, ladder: null, ladders: [], splitBelow: false, ladderOn: false, sheet: null, edgeCol: {}, segs: {}, lens: {}, tris: [], rights: [], arcs: [], dots: [], ticks: [], vals: {}, keep: {}, glowPts: [], faceGlow: [], edgeGlow: {}, tags: [],
     stick: null, light: [], box: null, pyr: null, handles: [], floorGrid: 1,
     yaw: -32, pitch: 22, yawD: -32, pitchD: 22, spin: 0, fling: { yaw: 0, pitch: 0 }, lastTouch: -9, turned: 0, fitPts: null, fitRect: null, fitLeft: false, fit: null, fitD: null,
     flats: [], flatMem: {}, acts: [], act: null, split: { v: 0, t: 0 }, dim: { v: 0, t: 0 }, dimMax: 0.62, liftLit: null, picked: {}, hands: {}, regions: null, onRegion: null, regionLit: null, tapPoints: null, onPoint: null, joinFrom: null, onJoin: null,
     tapSegs: null, onSeg: null, tapArcs: null, onArc: null, tapFlat: null, onFlatSide: null,
-    eq: createBoard(), eqFn: null, solve: null, dragAtoms: [], onAtomDrop: null, dragTex: {}, eqRoom: { v: 0, t: 0 }, keyRows: 4,
+    eq: createBoard(), eqFn: null, solve: null, dragAtoms: [], onAtomDrop: null, dragTex: {}, eqRoom: { v: 0, t: 0 }, keyRows: 4, keyHint: [],
     choice: null, chipsOn: null, tick: null, timers: [], vis, labs: [], labD: {}, labOff: {}, labSide: {}, labSlow: {}, walkTex: null, input: null, drag: null, touch: false,
     got: new Set(), touched: null, flashGood: 0, note: null,
   }
@@ -917,6 +925,13 @@ function computeLabels(S: Scene, L: Layout): Lab[] {
       out.push({ key: `N-${key}`, tex: lb.tex, col: lb.col ?? CHALK, at: besideLine(A, B, size, lb.tex, mid, along, lineSide(S, `N-${key}`, A, B, mid)), anchor: lerpV(A, B, along), size: size + 1, op: S.vis.lens.v * back(a, b), pulse: lb.pulse })
     }
   }
+  if (S.vis.lens.v > 0.01) {
+    for (const t of S.tags) {
+      const at = typeof t.at === "string" ? (S.P3[t.at] ? ptS(S, t.at) : null) : proj(S, t.at)
+      if (!at) continue
+      out.push({ key: `T-${t.key}`, tex: t.tex, col: t.col ?? CHALK, at, anchor: at, size: t.size ?? size + 1, op: S.vis.lens.v, pulse: t.pulse })
+    }
+  }
   if (S.vis.marks.v > 0.01 && !flatsOut) {
     S.arcs.forEach((g, i) => {
       if (!g.tex) return
@@ -1179,6 +1194,7 @@ export function say(S: Scene, text: string, tone: "wrong" | "calm" = "wrong", se
 export function resetBeat(S: Scene) {
   S.mode = "none"
   S.keyRows = 4
+  S.keyHint = []
   S.faceLit = {}
   S.curved = null
   S.net = null
@@ -1205,6 +1221,9 @@ export function resetBeat(S: Scene) {
   S.ticks = []
   S.vals = {}
   S.glowPts = []
+  S.faceGlow = []
+  S.edgeGlow = {}
+  S.tags = []
   S.light = []
   S.handles = []
   S.flats = []

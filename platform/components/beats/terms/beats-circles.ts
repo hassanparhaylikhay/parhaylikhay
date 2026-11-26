@@ -19,7 +19,7 @@ import type { Vec } from "../geometry"
 import { applyParts } from "../chapter"
 import { atom, row, op } from "../equation"
 import { type Scene, type CrossState, BLUE, ORANGE, GREEN, PINK, CHALK, place, startCross, crossDone, lerpV, RAD, DEG } from "./scene"
-import { type Beat, look, watch, c, board, ask, glide, over } from "./kit"
+import { type Beat, look, watch, c, board, ask, glide, over, keys, glowOn, pulseLabs, pulseShades, putLab } from "./kit"
 
 const TAU = 2 * Math.PI
 
@@ -104,7 +104,7 @@ function laidDiameters(S: Scene, animate: boolean) {
 
 /** 4024/22/O/N/14 Q5: a track 100 m straight, a semicircle of diameter d at each end; 1 unit is 10 m. */
 const TD = 200 / Math.PI / 10, TR = TD / 2
-function trackBoard(S: Scene, o: { join?: boolean; joined?: boolean } = {}) {
+function trackBoard(S: Scene, o: { join?: boolean; joined?: boolean; whole?: boolean } = {}) {
   board(S, [-TR - 0.8, -1.4, 10 + TR + 0.8, TD + 1.4])
   place(S, { T1: [0, 0], T2: [10, 0], T3: [10, TD], T4: [0, TD], LC: [0, TR], RC: [o.joined ? 0 : 10, TR] })
   S.segs = [{ id: "bot", a: "T1", b: "T2", col: CHALK }, { id: "top", a: "T4", b: "T3", col: CHALK }, { id: "d", a: "T2", b: "T3", col: PINK, dash: true, w: 2 }]
@@ -116,13 +116,17 @@ function trackBoard(S: Scene, o: { join?: boolean; joined?: boolean } = {}) {
     { key: "l", at: [-TR * 0.5, TR], tex: "100\\text{ m}", col: GREEN },
     { key: "rt", at: [10 + TR * 0.5, TR], tex: "100\\text{ m}", col: GREEN },
   ]
-  if (o.joined) S.freeLabs = S.freeLabs.filter(f => f.key !== "l" && f.key !== "rt").concat({ key: "c", at: [0, TR], tex: "200\\text{ m}", col: GREEN })
+  // joined, each half keeps its own 100 m (the student adds them); `whole`: the circle's 200 m, once found
+  const halves = (S2: Scene) => {
+    S2.freeLabs = S2.freeLabs.filter(f => f.key !== "l" && f.key !== "rt")
+    S2.freeLabs.push({ key: "l", at: [-TR * 0.5, TR], tex: "100\\text{ m}", col: GREEN }, { key: "rt", at: [TR * 0.5, TR], tex: "100\\text{ m}", col: GREEN })
+  }
+  if (o.joined) halves(S)
+  if (o.whole) S.freeLabs = S.freeLabs.filter(f => f.key !== "l" && f.key !== "rt").concat({ key: "c", at: [0, TR], tex: "200\\text{ m}", col: GREEN })
   if (o.join) {
-    // the right-hand end glides over onto the left-hand one: a whole circle
-    glide(S, 1.6, e => ({ RC: [10 - 10 * e, TR] }), 0.9, S2 => {
-      S2.freeLabs = S2.freeLabs.filter(f => f.key !== "l" && f.key !== "rt").concat({ key: "c", at: [0, TR], tex: "200\\text{ m}", col: GREEN })
-      S2.flashGood = 1
-    })
+    // the right-hand end glides over onto the left-hand one: a whole circle, its label riding with it
+    glide(S, 1.6, e => ({ RC: [10 - 10 * e, TR] }), 0.9, S2 => { halves(S2); S2.flashGood = 1 })
+    S.tick = S2 => { const f = S2.freeLabs.find(g => g.key === "rt"); if (f && S2.pts.RC.p[0] > 0.01) f.at = [S2.pts.RC.p[0] + TR * 0.5, TR] }
   }
 }
 
@@ -207,10 +211,11 @@ const PART_2: Beat[] = [
   },
   ask("s10-d", "So what is $d$? Keep $\\pi$ in your answer.", S => circleBoard(S, 2, { d: "d", dCol: PINK, rim: "28\\text{ cm}" }), {
     lead: "d", leadCol: PINK, unit: "cm", answer: 28 / Math.PI, shown: "\\dfrac{28}{\\pi}", typed: "28/p", piForm: true,
+    above: () => row([atom("d0", "d", { col: PINK }), op("e0", "="), atom("n0", "28", { col: GREEN }), op("v0", "\\div"), atom("p0", "\\pi")]),
     slips: [{ v: 28 * Math.PI, say: "That multiplies by $\\pi$. Moving across, it divides." }],
     walk: [
-      { say: "The $\\pi$ came across dividing.", tex: `${c(PINK, "d")} = 28 \\div \\pi`, show: S => { S.arcs = S.arcs.map(a => ({ ...a, glow: true })) } },
-      { say: "Type $28 \\div$ and then the $\\pi$ key." },
+      { say: "The circumference is $28$, and the $\\pi$ came across dividing.", tex: `${c(PINK, "d")} = 28 \\div \\pi`, show: S => { glowOn(S, "rim", "d"); pulseLabs(S, "rim") } },
+      { say: "Type $28$, then $\\div$, then the $\\pi$ key.", show: S => { glowOn(S); pulseLabs(S); keys(S, "2", "8", "÷", "π") } },
     ],
   }),
   watch("track", "This running track has a semicircle at each end. Each curved end is $100$ m.", S => { trackBoard(S); look(S) }, 3),
@@ -219,9 +224,13 @@ const PART_2: Beat[] = [
   ask("track-c", "What is the circumference of the whole circle?", S => trackBoard(S, { joined: true }), {
     lead: "C", leadCol: GREEN, unit: "m", answer: 200,
     slips: [{ v: 100, say: "That's one end. The circle is both ends together." }],
-    walk: [{ say: "Each end is $100$ m.", tex: "100 + 100", show: S => { S.arcs = S.arcs.map(a => ({ ...a, glow: true })) } }, { say: "Together they go all the way round." }],
+    walk: [
+      { say: "This half of the circle is one curved end, $100$ m.", show: S => { glowOn(S, "l"); pulseLabs(S, "l") } },
+      { say: "This half is the other end, $100$ m. Together they go all the way round.", tex: "100 + 100", show: S => { glowOn(S, "rt"); pulseLabs(S, "rt") } },
+    ],
+    then: S => { S.freeLabs = S.freeLabs.filter(f => f.key !== "l" && f.key !== "rt"); putLab(S, { key: "c", at: [0, TR], tex: "200\\text{ m}", col: GREEN }) },
   }),
-  ask("track-d", "Now find $d$, to $3$ significant figures.", S => trackBoard(S, { joined: true }), {
+  ask("track-d", "Now find $d$, to $3$ significant figures.", S => trackBoard(S, { joined: true, whole: true }), {
     lead: "d", leadCol: PINK, unit: "m", answer: 200 / Math.PI, sf: 3, typed: "200/p",
     slips: [
       { v: 100 / Math.PI, say: "That's using one end. The whole circumference is $200$." },
@@ -230,8 +239,8 @@ const PART_2: Beat[] = [
       { v: 63.6, say: "Nearly. $63.66\\ldots$ rounds up to $63.7$." },
     ],
     walk: [
-      { say: "Circumference $= \\pi d$.", tex: `\\pi \\times ${c(PINK, "d")} = 200`, show: S => { S.segs = S.segs.map(g => (g.id === "d" ? { ...g, glow: true } : g)) } },
-      { say: "Move the $\\pi$ across: it divides.", tex: `${c(PINK, "d")} = 200 \\div \\pi` },
+      { say: "The circle goes $200$ m round, and circumference $= \\pi d$.", tex: `\\pi \\times ${c(PINK, "d")} = 200`, show: S => { glowOn(S, "l", "rt"); pulseLabs(S, "c") } },
+      { say: "Move the $\\pi$ across: it divides. Type $200$, then $\\div$, then the $\\pi$ key.", tex: `${c(PINK, "d")} = 200 \\div \\pi`, show: S => { glowOn(S, "d"); pulseLabs(S, "d"); keys(S, "÷", "π") } },
     ],
   }),
 ]
@@ -321,14 +330,18 @@ const PART_4: Beat[] = [
       { v: 6 * Math.PI, say: "Square the radius: $6^2$." },
     ],
     walk: [
-      { say: "The radius is half the diameter.", tex: `${c(ORANGE, "r")} = 6`, show: S => { S.segs = [{ id: "r1", a: "E1", b: "O", col: ORANGE, w: 3.4 }]; S.freeLabs = [{ key: "r1", at: [-1, 0], tex: "6", col: ORANGE, dy: -18 }] } },
-      { say: "Area $= \\pi r^2$.", tex: `\\pi \\times ${c(ORANGE, "6")}^2` },
+      { say: "The radius is half the diameter, $6$ cm.", tex: `${c(ORANGE, "r")} = 6`, show: S => { S.segs = [{ id: "r1", a: "E1", b: "O", col: ORANGE, w: 3.4, glow: true }]; S.freeLabs = [{ key: "r1", at: [-1, 0], tex: "6", col: ORANGE, dy: -18, pulse: true }] } },
+      { say: "The area inside is $\\pi r^2$.", tex: `\\pi \\times ${c(ORANGE, "6")}^2`, show: S => { glowOn(S); pulseLabs(S); pulseShades(S, "in") } },
     ],
+    then: S => putLab(S, { key: "area", at: [0, -1], tex: "36\\pi\\text{ cm}^2", col: GREEN }),
   }),
-  ask("w25-calc", "On a calculator paper, it would be a number. Give it to $3$ significant figures.", S => circleBoard(S, 2, { d: "12\\text{ cm}", fill: true }), {
+  ask("w25-calc", "On a calculator paper, it would be a number. Give it to $3$ significant figures.", S => { circleBoard(S, 2, { d: "12\\text{ cm}", fill: true }); putLab(S, { key: "area", at: [0, -1], tex: "36\\pi\\text{ cm}^2", col: GREEN }) }, {
     lead: "\\text{Area}", unit: "cm2", answer: 36 * Math.PI, sf: 3, typed: "36*p",
     slips: [{ v: 144 * Math.PI, say: "That used the diameter. The radius is $6$." }, { v: 36, say: "Multiply by $\\pi$ too: use the $\\pi$ key." }],
-    walk: [{ say: "The area is $36\\pi$.", tex: "36 \\times \\pi" }, { say: "Type $36 \\times$ and then the $\\pi$ key." }],
+    walk: [
+      { say: "You found the area: $36\\pi$. That's $36 \\times \\pi$.", tex: "36 \\times \\pi", show: S => { pulseLabs(S, "area"); pulseShades(S, "in") } },
+      { say: "Type $36$, then $\\times$, then the $\\pi$ key.", show: S => { pulseLabs(S); pulseShades(S); keys(S, "3", "6", "×", "π") } },
+    ],
   }),
   {
     id: "end",

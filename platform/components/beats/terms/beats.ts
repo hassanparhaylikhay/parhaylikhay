@@ -365,6 +365,23 @@ function quadBoard(S: Scene, o: { drag?: boolean; to?: Record<string, Vec> } = {
   if (o.drag) S.handles = QN.map(n => ({ id: `h${n}`, kind: "point" as const, pt: n, grid: true, ok: (S2: Scene) => simpleShape(QN.map(x => P(S2, x))) }))
 }
 
+/**
+ * The shape a definition is about, on the same grid: it glides out of the
+ * student's last shape into an example, its marks (equal sides, parallel
+ * sides, right angles) showing what the words say. The student's own shape
+ * is kept for the next beat to start from.
+ */
+function exampleBoard(S: Scene, to: Vec[]) {
+  quadBoard(S)
+  const EN = ["E1", "E2", "E3", "E4"]
+  place(S, Object.fromEntries(EN.map((n, i) => [n, P(S, QN[i])])))
+  S.polys = [{ id: "ex", pts: EN, marks: true }]
+  S.acts.push({ dur: 0.5 }, {
+    dur: 1.2,
+    run: (S2, e) => EN.forEach((n, i) => { const q = lerpV(P(S2, QN[i]), to[i], e); S2.pts[n].p = q; S2.pts[n].D = q }),
+  })
+}
+
 /** Make a special quadrilateral by dragging corners on the grid; a dashed example after a while. */
 function makeQuad(id: string, text: string, want: string, hint: Vec[]): Beat {
   return {
@@ -455,13 +472,13 @@ const PART_3: Beat[] = [
   watch("q-square-name", "It has four equal sides and four right angles. It is a *square*.", S => { quadBoard(S, quadNow(S) === "square" ? {} : { to: SQUARE }); look(S) }, 3.0),
   makeQuad("q-rect", "Now make a rectangle that is not a square.", "rectangle", [[-3, -2], [3, -2], [3, 2], [-3, 2]]),
   watch("q-rect-name", "A *rectangle* has four right angles. Its opposite sides are equal.", S => { quadBoard(S, quadNow(S) === "rectangle" ? {} : { to: RECT }); look(S) }, 3.0),
-  watch("q-para-def", "A *parallelogram* has two pairs of parallel sides.", S => { quadBoard(S); look(S) }, 2.6),
+  watch("q-para-def", "A *parallelogram* has two pairs of parallel sides.", S => { exampleBoard(S, [[-3, -2], [2, -2], [3, 2], [-2, 2]]); look(S) }, 3.0),
   makeQuad("q-para", "Make one that has no right angles.", "parallelogram", [[-3, -2], [2, -2], [3, 2], [-2, 2]]),
-  watch("q-rhom-def", "A *rhombus* is a parallelogram with four equal sides.", S => { quadBoard(S); look(S) }, 2.6),
+  watch("q-rhom-def", "A *rhombus* is a parallelogram with four equal sides.", S => { exampleBoard(S, [[0, -3], [2, 0], [0, 3], [-2, 0]]); look(S) }, 3.0),
   makeQuad("q-rhom", "Make a rhombus that is not a square.", "rhombus", [[0, -3], [2, 0], [0, 3], [-2, 0]]),
-  watch("q-trap-def", "A *trapezium* has one pair of parallel sides.", S => { quadBoard(S); look(S) }, 2.6),
+  watch("q-trap-def", "A *trapezium* has one pair of parallel sides.", S => { exampleBoard(S, [[-3, -2], [3, -2], [1, 2], [-1, 2]]); look(S) }, 3.0),
   makeQuad("q-trap", "Make a trapezium.", "trapezium", [[-3, -2], [3, -2], [1, 2], [-1, 2]]),
-  watch("q-kite-def", "A *kite* has two pairs of equal sides, next to each other.", S => { quadBoard(S); look(S) }, 2.8),
+  watch("q-kite-def", "A *kite* has two pairs of equal sides, next to each other.", S => { exampleBoard(S, [[0, 3], [2, 1], [0, -3], [-2, 1]]); look(S) }, 3.2),
   makeQuad("q-kite", "Make a kite.", "kite", [[0, 3], [2, 1], [0, -3], [-2, 1]]),
   watch("q-sq-rect", "A square has four right angles, so it is a rectangle too.", S => { quadBoard(S, { to: SQUARE }); look(S) }, 3.0),
   watch("q-sq-rhom", "It has four equal sides, so it is a rhombus too.", S => { quadBoard(S, { to: SQUARE }); look(S) }, 2.8),
@@ -653,6 +670,8 @@ function circBoard(S: Scene, o: { radius?: boolean; diameter?: boolean; chord?: 
   if (o.diameter) { place(S, { D1: onCircle(S, DIA_AT), D2: onCircle(S, DIA_AT - 180) }); S.segs.push({ id: "dia", a: "D1", b: "D2", w: 2.6 }) }
   if (o.chord) { if (!S.pts.C2) place(S, { C1: onCircle(S, CHORD_AT), C2: onCircle(S, 30) }); S.segs.push({ id: "chord", a: "C1", b: "C2", w: 2.6 }) }
 }
+/** The line a name is about glows. */
+const litSeg = (S: Scene, id: string) => { S.segs = S.segs.map(g => (g.id === id ? { ...g, glow: true } : g)) }
 /** The chord's ends as angles: the minor arc runs anticlockwise from m1 to m2. */
 function minorArc(S: Scene): [number, number] {
   const a = angleOn(S, P(S, "C1")), b = angleOn(S, P(S, "C2"))
@@ -696,7 +715,7 @@ const PART_5: Beat[] = [
     place(S, { R1: to })
     S.segs.push({ id: "rad", a: "O", b: "R1", w: 2.6 })
   }),
-  watch("rad-name", "A line from the centre to the edge is a *radius*.", S => { circBoard(S, { radius: true }); look(S) }, 2.6),
+  watch("rad-name", "A line from the centre to the edge is a *radius*.", S => { circBoard(S, { radius: true }); litSeg(S, "rad"); look(S) }, 2.6),
   drawBeat("dia", "Now draw from this point, through $O$, to the other side.", S => { circBoard(S); place(S, { D1: onCircle(S, DIA_AT) }) }, "D1",
     (S, to) => (Math.abs(((angleOn(S, to) - (DIA_AT - 180)) % 360 + 540) % 360 - 180) < 9 ? null : "Go through the centre, $O$."),
     (S, end) => { const a = angleOn(S, end); return Math.abs(((a - (DIA_AT - 180)) % 360 + 540) % 360 - 180) < 9 ? onCircle(S, DIA_AT - 180) : onCircle(S, a) },
@@ -704,7 +723,7 @@ const PART_5: Beat[] = [
   {
     id: "dia-name",
     say: "A line across the circle through $O$ is a *diameter*.",
-    enter: S => { circBoard(S, { diameter: true }); say(S, "It is two radii long. Radii means more than one radius.", "calm", 600); look(S) },
+    enter: S => { circBoard(S, { diameter: true }); litSeg(S, "dia"); say(S, "It is two radii long. Radii means more than one radius.", "calm", 600); look(S) },
     cta: "", ctaAfter: 2.8,
   },
   {
@@ -726,11 +745,11 @@ const PART_5: Beat[] = [
       return d < 0.8 ? "That goes too close to $O$. Try a shorter one." : null
     }, undefined,
     (S, to) => { place(S, { C2: to }); S.segs.push({ id: "chord", a: "C1", b: "C2", w: 2.6 }) }),
-  watch("chord-name", "A line joining two points on the edge is a *chord*.", S => { circBoard(S, { chord: true }); look(S) }, 2.6),
+  watch("chord-name", "A line joining two points on the edge is a *chord*.", S => { circBoard(S, { chord: true }); litSeg(S, "chord"); look(S) }, 2.6),
   watch("seg", "A chord cuts the circle into two *segments*.", S => {
     circBoard(S, { chord: true })
     const [m1, m2] = minorArc(S)
-    S.shades = [{ id: "minor", kind: "segment", a1: m1, a2: m2, col: BLUE, op: 0.3 }, { id: "major", kind: "segment", a1: m2, a2: m1, col: ORANGE, op: 0.2 }]
+    S.shades = [{ id: "minor", kind: "segment", a1: m1, a2: m2, col: BLUE, op: 0.3 }, { id: "major", kind: "segment", a1: m2, a2: m1, col: ORANGE, op: 0.07 }]
     look(S)
   }, 2.6),
   tapBeat("seg-tap", "Tap the smaller segment.", S => {
@@ -795,7 +814,7 @@ const PART_5: Beat[] = [
   watch("tan-name", "A line that touches the circle at one point is a *tangent*.", S => {
     circBoard(S, { frame: { x0: -4.4, y0: -3.8, x1: 4.4, y1: 5.2 } })
     place(S, { T1: [-3, 3], T2: [3, 3], Tt: [0, 3] })
-    S.segs = [{ id: "tan", a: "T1", b: "T2", ext: true }]
+    S.segs = [{ id: "tan", a: "T1", b: "T2", ext: true, glow: true }]
     S.dots.push({ pt: "Tt", col: BLUE, pulse: true })
     look(S)
   }, 2.8),

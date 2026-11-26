@@ -559,12 +559,18 @@ const PART_C: Beat[] = [
     ],
     then: S => { S.arcs = [...S.arcs, { id: "long", at: "O", from: 0, sweep: 290, col: BLUE, r: 1.45, tex: B3(290) }] },
   }),
-  askBrg("o-oa", "Now stand at $A$. What is the bearing of $O$ from $A$?", S => oBoard(S, { northA: true }), {
+  askBrg("o-oa", "Now stand at $A$. What is the bearing of $O$ from $A$?", oaBoard, {
     answer: 250,
     slips: [{ v: 70, say: "That's the bearing of $A$ from $O$. Stand at $A$ and look back." }, { v: 110, say: "That's $180^\\circ - 70^\\circ$. Turning round adds $180^\\circ$." }, { v: 290, say: "That's $360^\\circ - 70^\\circ$. Turning round is half a turn." }],
-    walk: backWalk("O", "A", 70, S => oBoard(S, { northA: true }), ["O", "A"]),
+    walk: backWalk("O", "A", 70, oaBoard, ["O", "A"]),
   }),
 ]
+
+/** O's board with North at A, and the bearing of A from O (found two beats back) written on its arc. */
+function oaBoard(S: Scene) {
+  oBoard(S, { northA: true })
+  S.arcs = S.arcs.map(a => (a.id === "r70" ? { ...a, col: BLUE, tex: B3(70) } : a))
+}
 
 // ── 6. Exam questions ──
 

@@ -17,7 +17,7 @@ import { row, op, atom } from "../equation"
 import type { Vec } from "../geometry"
 import { type Scene, BLUE, ORANGE, along, addSeg } from "./scene"
 import {
-  type Beat, type MapSpec, look, mapBoard, withProt, watch, askNum, protBeat, markBeat, crossBeat, protWalk,
+  type Beat, type MapSpec, look, mapBoard, withProt, watch, askNum, protBeat, markBeat, crossBeat, protWalk, pulseArcs,
   brgArc, leftArc, slideOn, nameBetween, S25, S25_C, W22, W22_C, S23, S24,
 } from "./scale-kit"
 
@@ -116,8 +116,8 @@ const PART_B: Beat[] = [
     ],
     above: () => fullTurn("?", "120^\\circ"),
     walk: [
-      { say: "The blue part and the orange part make $360^\\circ$.", tex: "? + 120^\\circ = 360^\\circ" },
-      { say: "So take the orange part from $360^\\circ$.", tex: "360 - 120" },
+      { say: "The blue part and the orange part make $360^\\circ$.", tex: "? + 120^\\circ = 360^\\circ", show: S => pulseArcs(S, "b-A", "l-A") },
+      { say: "So take the orange part from $360^\\circ$.", tex: "360 - 120", show: S => pulseArcs(S, "l-A") },
     ],
     then: S => { S.arcs = S.arcs.map(a => (a.id === "b-A" ? { ...a, tex: "240^\\circ" } : a)) },
   }),
@@ -157,8 +157,8 @@ const PART_C: Beat[] = [
     ],
     above: () => fullTurn("320^\\circ", "?"),
     walk: [
-      { say: "The blue part and the orange part make $360^\\circ$.", tex: "320^\\circ + ? = 360^\\circ" },
-      { say: "So take the blue part from $360^\\circ$.", tex: "360 - 320" },
+      { say: "The blue part and the orange part make $360^\\circ$.", tex: "320^\\circ + ? = 360^\\circ", show: S => pulseArcs(S, "b-B", "l-B") },
+      { say: "So take the blue part from $360^\\circ$.", tex: "360 - 320", show: S => pulseArcs(S, "b-B") },
     ],
     then: S => { S.arcs = S.arcs.map(a => (a.id === "l-B" ? { ...a, tex: "40^\\circ" } : a)) },
   }),
@@ -203,10 +203,12 @@ const PART_X: Beat[] = [
   }, {
     name: "\\text{Angle}", answer: 108,
     slips: [{ v: 72, say: "That's $252^\\circ - 180^\\circ$. The two angles make $360^\\circ$." }, { v: 252, say: "That's the bearing. The angle on the left is the rest of the full turn." }],
+    above: () => fullTurn("252^\\circ", "?"),
     walk: [
-      { say: "The blue part and the orange part make $360^\\circ$.", tex: "252^\\circ + ? = 360^\\circ" },
-      { say: "So take the blue part from $360^\\circ$.", tex: "360 - 252" },
+      { say: "The blue part and the orange part make $360^\\circ$.", tex: "252^\\circ + ? = 360^\\circ", show: S => pulseArcs(S, "b-B", "l-B") },
+      { say: "So take the blue part from $360^\\circ$.", tex: "360 - 252", show: S => pulseArcs(S, "b-B") },
     ],
+    then: S => { S.arcs = S.arcs.map(a => (a.id === "l-B" ? { ...a, tex: "108^\\circ" } : a)) },
   }),
   protBeat("x1-bon", "Put the protractor's centre on $B$.", W22, "B", 180, { job: "place", startRot: 0, more: shipA }),
   protBeat("x1-bturn", "Turn it round to the left, so its $0$ lies on the North line.", W22, "B", 180, { job: "turn", startRot: 0, more: shipA }),

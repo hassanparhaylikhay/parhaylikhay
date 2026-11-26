@@ -48,7 +48,7 @@ export default function Stage({ S, L }: { S: Scene; L: Layout }) {
       <Labels S={S} />
       <EquationView B={S.eq} time={S.time} opacity={v("eq")} />
       <Carried S={S} />
-      {S.walkTex ? <div key={S.walkTex} className={`${styles.line} ${styles.walkLine}`} style={{ top: L.lineY - L.lineSize * 0.85, height: L.lineSize * 1.7, ["--line-size" as string]: `${L.lineSize}px` }}><Tex tex={S.walkTex} /></div> : null}
+      {S.walkTex ? <div key={S.walkTex} className={`${styles.line} ${styles.walkLine}`} style={{ top: L.lineY - L.lineSize * 0.85, height: L.lineSize * 1.7, ["--line-size" as string]: `${L.lineSize}px`, ...(L.keypadCx !== undefined ? { right: "auto", width: 2 * L.midX } : {}) }}><Tex tex={S.walkTex} /></div> : null}
     </>
   )
 }

@@ -17,6 +17,7 @@ import { applyParts } from "../chapter"
 import { type Scene, type V3, BLUE, ORANGE, PINK, GREEN, resetBeat, say, goodView, segKey } from "./scene"
 import { type Beat, look, watch, askBeat, lens } from "./kit"
 import { type Net, netFromCells, clashes, w25Net, foldNet } from "./solids"
+import { type NetLab, netBoard, glowFaces, glowEdges, tagFaces, addLab, unfold } from "./netkit"
 
 /** The floor seen from straight above (the net as a drawing on squared paper), and leaning back to watch it fold. */
 const TOP: [number, number] = [0, 89]
@@ -27,7 +28,7 @@ type Cell = [number, number]
 const CROSS: Cell[] = [[1, 1], [0, 1], [2, 1], [3, 1], [1, 0], [1, 2]]
 
 /** A net on the floor: the view fits round `area` (cells of `k` cm, as [i0, j0, i1, j1]), so it holds still while faces come and go. */
-function netBoard(S: Scene, net: Net, o: { k: number; area: [number, number, number, number]; t?: number; view?: [number, number]; cols?: Record<string, string> }) {
+function netBoard0(S: Scene, net: Net, o: { k: number; area: [number, number, number, number]; t?: number; view?: [number, number]; cols?: Record<string, string> }) {
   resetBeat(S)
   S.box = null
   S.pyr = null
@@ -91,7 +92,7 @@ function makeBeat(id: string, text: string, o: { k: number; area: [number, numbe
       let cells: Cell[] = [o.start]
       let folding = false
       const show = (S2: Scene) => {
-        netBoard(S2, netFromCells(cells, o.k), { k: o.k, area: o.area })
+        netBoard0(S2, netFromCells(cells, o.k), { k: o.k, area: o.area })
         S2.netEdit = { k: o.k, cand: cells.length < 6 ? candidates(cells, o.area) : [] }
         S2.mode = "tapFloor"
         S2.onFloor = onFloor
@@ -185,75 +186,97 @@ function elevenNet(): Net {
 // ── 4024/21/O/N/25 Q3: the cuboid's net, its faces in pairs ──────────────
 
 /** The net's faces in their pairs (3 by 4.7, 5.2 by 4.7, 3 by 5.2), coloured. */
-const PAIRS: Record<string, string> = { mid: BLUE, end: BLUE, right: ORANGE, left: ORANGE, top: PINK, bottom: PINK }
-/** Points at the net's corners, so its lengths can be written on it (flat on the floor). */
-function w25Labels(S: Scene, which: ("a" | "b" | "h")[] = ["a", "b", "h"]) {
-  const a = 3, b = 5.2, h = 4.7, x = -a / 2, y = -h / 2
-  // as the paper writes them: 3 across the top face's top, 5.2 down its side, 4.7 down the right-hand face
-  Object.assign(S.P3, { tA: [x, y + h + b, 0], tB: [x + a, y + h + b, 0], mB: [x + a, y + h, 0], r1: [x + a + b, y, 0], r2: [x + a + b, y + h, 0] } as Record<string, V3>)
-  if (which.includes("a")) S.lens[segKey("tA", "tB")] = lens("3")
-  if (which.includes("b")) S.lens[segKey("mB", "tB")] = lens("5.2")
-  if (which.includes("h")) S.lens[segKey("r1", "r2")] = lens("4.7")
-}
-function w25Board(S: Scene, cols?: Record<string, string>) {
-  netBoard(S, w25Net(), { k: 1, area: [-10, -8, 6, 7], cols })
-  w25Labels(S)
-}
-const areaWalk = (what: string, l: string, w: string): WalkStep<Scene>[] => [
-  { say: `Each ${what} face is a rectangle, $${l}$ by $${w}$.` },
-  { say: "Its area is its length times its width.", tex: `${l} \\times ${w}` },
+const BLUES = { mid: BLUE, end: BLUE }, ORANGES = { right: ORANGE, left: ORANGE }, PINKS = { top: PINK, bottom: PINK }
+const PAIRS: Record<string, string> = { ...BLUES, ...ORANGES, ...PINKS }
+/** Its lengths as the paper writes them: 3 across the top face's top, 5.2 down its side, 4.7 down the right-hand face. */
+const PAPER: NetLab[] = [
+  { key: "pa", face: "top", i: 3, j: 2, tex: "3" },
+  { key: "pb", face: "top", i: 1, j: 2, tex: "5.2" },
+  { key: "ph", face: "right", i: 1, j: 2, tex: "4.7" },
 ]
+/** The areas found so far, written on their faces. */
+const FOUND = { blue: ["mid", "end"], orange: ["right", "left"], pink: ["top", "bottom"] } as const
+const AREAS = { blue: "14.1", orange: "24.44", pink: "15.6" }
+/** The cuboid's net flat on squared paper, its pairs coloured as far as asked, the areas found so far on their faces. */
+function w25Board(S: Scene, cols: Record<string, string> = {}, found: (keyof typeof FOUND)[] = []) {
+  const tags: Record<string, string> = {}
+  for (const k of found) for (const f of FOUND[k]) tags[f] = onFace(AREAS[k])
+  netBoard(S, w25Net(), { t: 0, cols, labs: PAPER, tags, flat: TOP })
+  S.floorGrid = 1
+}
+const cm2 = (v: string) => `${v}\\text{ cm}^2`
+/** An area written on a face: the number over its unit, so it fits a narrow face. */
+const onFace = (v: string) => `\\begin{array}{c}${v}\\\\[-3pt]\\text{cm}^2\\end{array}`
+/** A face area typed on the calculator keys; once right it is written on both faces of the pair. */
+function pairAsk(id: string, text: string, what: keyof typeof FOUND, o: { cols: Record<string, string>; found: (keyof typeof FOUND)[]; col: string; answer: number; typed: string; sf: number; slips?: { v: number; say: string }[]; walk: WalkStep<Scene>[] }): Beat {
+  return askBeat(id, text, S => { w25Board(S, o.cols, o.found); S.keyRows = 3; look(S, ["eq", "keypad"]) }, {
+    name: `\\text{${what[0].toUpperCase()}${what.slice(1)}}`, col: o.col, answer: o.answer, shown: cm2(AREAS[what]), typed: o.typed, sf: o.sf, after: "\\text{ cm}^2",
+    slips: o.slips, walk: o.walk,
+    then: S => tagFaces(S, [...FOUND[what]], onFace(AREAS[what])),
+  })
+}
+
+// ── 4024/12/M/J/25 Q3: one face of a cube, 9 cm² ─────────────────────────
+
+/** The one face (3 cm square, on squared paper), its area written in it; its sides `?` until found. */
+function faceBoard(S: Scene, sides?: string) {
+  netBoard0(S, netFromCells([[1, 1]], 3), { k: 3, area: [1, 1, 1, 1], cols: { c1_1: BLUE } })
+  S.tags = [{ key: "area", at: [4.5, 4.5, 0], tex: "9\\text{ cm}^2", col: GREEN }]
+  if (sides) {
+    Object.assign(S.P3, { s0: [3, 3, 0], s1: [6, 3, 0], s2: [6, 6, 0] } as Record<string, V3>)
+    S.lens[segKey("s0", "s1")] = lens(sides, sides === "?" ? PINK : GREEN)
+    S.lens[segKey("s1", "s2")] = lens(sides, sides === "?" ? PINK : GREEN)
+  }
+}
 
 // ── the lesson ───────────────────────────────────────────────────────────
 
 const AREA: [number, number, number, number] = [-1, -1, 4, 3]
 
 const PART_1: Beat[] = [
-  watch("net-hi", "This is the net of a cube, drawn on squared paper.", S => { netBoard(S, netFromCells(CROSS, 2), { k: 2, area: [0, 0, 3, 2] }); look(S) }, 2.6),
+  watch("net-hi", "This is the net of a cube, drawn on squared paper.", S => { netBoard0(S, netFromCells(CROSS, 2), { k: 2, area: [0, 0, 3, 2] }); look(S) }, 2.6),
   {
     id: "fold",
     say: "Let's fold it up.",
     enter: S => {
-      netBoard(S, netFromCells(CROSS, 2), { k: 2, area: [0, 0, 3, 2] })
+      netBoard0(S, netFromCells(CROSS, 2), { k: 2, area: [0, 0, 3, 2] })
       S.acts.push({ dur: 0.5, begin: S2 => { goodView(S2, ...SIDE); fitFolded(S2, S2.net!.def) } }, { dur: 2.6, run: (S2, e) => { if (S2.net) S2.net.t = e } })
       look(S)
     },
     cta: "", ctaAfter: 3.6,
   },
-  watch("six", "Six squares make the six faces of the cube.", S => { netBoard(S, netFromCells(CROSS, 2), { k: 2, area: [0, 0, 3, 2], t: 1, view: SIDE }); fitFolded(S, S.net!.def); look(S) }, 2.4),
+  watch("six", "Six squares make the six faces of the cube.", S => { netBoard0(S, netFromCells(CROSS, 2), { k: 2, area: [0, 0, 3, 2], t: 1, view: SIDE }); fitFolded(S, S.net!.def); look(S) }, 2.4),
   makeBeat("make", "Now make your own. Tap a square next to this face to add one.", { k: 2, area: AREA, start: [1, 1] }),
   {
     id: "not-every",
     say: "Not every six squares fold into a cube.",
     enter: S => {
       const block: Cell[] = [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]]
-      netBoard(S, netFromCells(block, 2), { k: 2, area: [0, 0, 2, 1] })
+      netBoard0(S, netFromCells(block, 2), { k: 2, area: [0, 0, 2, 1] })
       S.acts.push({ dur: 0.6, begin: S2 => { goodView(S2, ...SIDE); fitFolded(S2, S2.net!.def) } }, { dur: 2.4, run: (S2, e) => { if (S2.net) S2.net.t = e } }, { dur: 0.1, end: S2 => { if (S2.net) S2.net.cols = Object.fromEntries(clashes(S2.net.def).map(f => [f, PINK])) } })
       look(S)
     },
     cta: "", ctaAfter: 3.8,
   },
-  watch("eleven", "A cube has $11$ different nets.", S => { netBoard(S, elevenNet(), { k: 1, area: [0, -9, 23, 3] }); look(S) }, 3.0),
+  watch("eleven", "A cube has $11$ different nets.", S => { netBoard0(S, elevenNet(), { k: 1, area: [0, -9, 23, 3] }); look(S) }, 3.0),
 ]
 
 const PART_2: Beat[] = [
   // 4024/12/M/J/25 Q3
-  watch("s25", "The area of one face of a cube is $9$ cm$^2$.", S => {
-    netBoard(S, netFromCells([[1, 1]], 3), { k: 3, area: [-1, -1, 3, 2], cols: { c1_1: BLUE } })
-    look(S)
-  }, 2.6),
-  askBeat("s25-side", "How long is each side of the face?", S => { netBoard(S, netFromCells([[1, 1]], 3), { k: 3, area: [-1, -1, 3, 2], cols: { c1_1: BLUE } }); S.keyRows = 4; look(S, ["eq", "keypad"]) }, {
-    name: "\\text{Side}", col: BLUE, answer: 3, shown: "3\\text{ cm}", typed: "3",
+  watch("s25", "The area of one face of a cube is $9$ cm$^2$.", S => { faceBoard(S); look(S) }, 2.6),
+  askBeat("s25-side", "How long is each side of the face?", S => { faceBoard(S, "?"); S.keyRows = 3; look(S, ["eq", "keypad"]) }, {
+    name: "\\text{Side}", col: BLUE, answer: 3, shown: "3\\text{ cm}", typed: "3", exact: true, after: "\\text{ cm}",
     slips: [{ v: 9, say: "That's the area. What length times itself makes $9$?" }, { v: 4.5, say: "That's half of $9$. What length times itself makes $9$?" }],
     walk: [
-      { say: "The face is a square, so its sides are the same length." },
-      { say: "Its area is the side times itself. What times itself makes $9$?", tex: "? \\times ? = 9" },
+      { say: "The face is a square, so its sides are the same length.", show: S => { S.edgeGlow = { [segKey("s0", "s1")]: PINK, [segKey("s1", "s2")]: PINK } } },
+      { say: "Its area, $9$, is the side times itself. What times itself makes $9$?", tex: "? \\times ? = 9", show: S => { S.edgeGlow = {}; S.tags = S.tags.map(t => ({ ...t, pulse: true })) } },
     ],
+    then: S => { S.lens[segKey("s0", "s1")] = lens("3\\text{ cm}", GREEN); S.lens[segKey("s1", "s2")] = lens("3\\text{ cm}", GREEN) },
   }),
   makeBeat("s25-draw", "Draw a net of the cube on the $1$ cm grid. Each face is $3$ cm square.", { k: 3, area: [-1, -1, 3, 2], start: [1, 1] }),
   watch("s25-done", "It folds into the cube, each edge $3$ cm.", S => {
     const cells = keptNet(S)
-    netBoard(S, netFromCells(cells, 3), { k: 3, area: [-1, -1, 3, 2], t: 1, view: SIDE, cols: Object.fromEntries(cells.map(c => [`c${c[0]}_${c[1]}`, GREEN])) })
+    netBoard0(S, netFromCells(cells, 3), { k: 3, area: [-1, -1, 3, 2], t: 1, view: SIDE, cols: Object.fromEntries(cells.map(c => [`c${c[0]}_${c[1]}`, GREEN])) })
     fitFolded(S, S.net!.def)
     look(S)
   }, 2.6),
@@ -266,37 +289,48 @@ const PART_3: Beat[] = [
     id: "w25-fold",
     say: "Its faces come in pairs of the same size.",
     enter: S => {
-      w25Board(S, PAIRS)
-      // it folds up, and the pairs are seen opposite each other
-      S.acts.push({ dur: 0.8, begin: S2 => { goodView(S2, ...SIDE); for (const n of ["tA", "tB", "mB", "r1", "r2"]) delete S2.P3[n]; S2.lens = {}; fitFolded(S2, S2.net!.def) } }, { dur: 2.6, run: (S2, e) => { if (S2.net) S2.net.t = e } })
+      // it folds up, and the pairs are seen opposite each other (the paper's lengths stay on the flat drawing)
+      netBoard(S, w25Net(), { t: 0, cols: PAIRS, flat: TOP })
+      S.floorGrid = 1
+      unfold(S, 1, 2.6, 0.8)
       look(S)
     },
     cta: "", ctaAfter: 4.0,
   },
-  askBeat("w25-blue", "What is the area of one blue face?", S => { w25Board(S, { mid: BLUE, end: BLUE }); look(S, ["eq", "keypad"]) }, {
-    name: "\\text{Blue}", col: BLUE, answer: 14.1, shown: "14.1", typed: "3*4.7", sf: 3,
-    walk: areaWalk("blue", "3", "4.7"),
+  pairAsk("w25-blue", "What is the area of one blue face?", "blue", {
+    cols: BLUES, found: [], col: BLUE, answer: 14.1, typed: "3*4.7", sf: 3,
+    slips: [{ v: 7.7, say: "That adds the sides. Area is length times width." }],
+    walk: [
+      { say: "A blue face is as wide as the top face above it: $3$.", show: S => { glowFaces(S, ["mid", "end"]); glowEdges(S, ["pa"], BLUE); addLab(S, { key: "mw", face: "mid", i: 0, j: 1, tex: "3", col: BLUE }) } },
+      { say: "And as tall as the face beside it: $4.7$.", tex: "3 \\times 4.7", show: S => { glowEdges(S, ["ph"], BLUE); addLab(S, { key: "mh", face: "mid", i: 3, j: 0, tex: "4.7", col: BLUE }) } },
+    ],
   }),
-  askBeat("w25-orange", "And one orange face?", S => { w25Board(S, { mid: BLUE, end: BLUE, right: ORANGE, left: ORANGE }); look(S, ["eq", "keypad"]) }, {
-    name: "\\text{Orange}", col: ORANGE, answer: 24.44, shown: "24.44", typed: "5.2*4.7", sf: 4,
-    walk: areaWalk("orange", "5.2", "4.7"),
+  pairAsk("w25-orange", "And one orange face?", "orange", {
+    cols: { ...BLUES, ...ORANGES }, found: ["blue"], col: ORANGE, answer: 24.44, typed: "5.2*4.7", sf: 4,
+    slips: [{ v: 9.9, say: "That adds the sides. Area is length times width." }],
+    walk: [
+      { say: "An orange face is $4.7$ tall, written on its side.", show: S => { glowFaces(S, ["right", "left"]); glowEdges(S, ["ph"], ORANGE) } },
+      { say: "It's as wide as the top face's side: $5.2$.", tex: "5.2 \\times 4.7", show: S => { glowEdges(S, ["pb"], ORANGE); addLab(S, { key: "ow", face: "right", i: 0, j: 1, tex: "5.2", col: ORANGE }) } },
+    ],
   }),
-  askBeat("w25-pink", "And one pink face?", S => { w25Board(S, PAIRS); look(S, ["eq", "keypad"]) }, {
-    name: "\\text{Pink}", col: PINK, answer: 15.6, shown: "15.6", typed: "3*5.2", sf: 3,
-    walk: areaWalk("pink", "3", "5.2"),
+  pairAsk("w25-pink", "And one pink face?", "pink", {
+    cols: PAIRS, found: ["blue", "orange"], col: PINK, answer: 15.6, typed: "3*5.2", sf: 3,
+    slips: [{ v: 8.2, say: "That adds the sides. Area is length times width." }],
+    walk: [{ say: "The top face is pink. Its sides are written on it: $3$ by $5.2$.", tex: "3 \\times 5.2", show: S => { glowFaces(S, ["top", "bottom"]); glowEdges(S, ["pa", "pb"], PINK) } }],
   }),
-  askBeat("w25-total", "So what is the total surface area of the cuboid?", S => { w25Board(S, PAIRS); look(S, ["eq", "keypad"]) }, {
-    name: "\\text{Total}", col: GREEN, answer: 108.28, shown: "108.28\\text{ cm}^2", typed: "2*14.1+2*24.44+2*15.6", sf: 3,
+  askBeat("w25-total", "So what is the total surface area of the cuboid?", S => { w25Board(S, PAIRS, ["blue", "orange", "pink"]); S.keyRows = 3; look(S, ["eq", "keypad"]) }, {
+    name: "\\text{Total}", col: GREEN, answer: 108.28, shown: "108.28\\text{ cm}^2", typed: "2*14.1+2*24.44+2*15.6", sf: 3, after: "\\text{ cm}^2",
     slips: [{ v: 54.14, say: "That's one of each. There are two of each colour." }, { v: 54.1, say: "That's one of each. There are two of each colour." }],
     walk: [
-      { say: "There are two faces of each colour." },
-      { say: "So add one of each, and double it.", tex: "2 \\times (14.1 + 24.44 + 15.6)" },
+      { say: "Two blue faces, $14.1$ each.", show: S => glowFaces(S, ["mid", "end"]) },
+      { say: "Two orange faces, $24.44$ each.", show: S => glowFaces(S, ["right", "left"]) },
+      { say: "Two pink faces, $15.6$ each. Add all six.", tex: "2 \\times 14.1 + 2 \\times 24.44 + 2 \\times 15.6", show: S => glowFaces(S, ["top", "bottom"]) },
     ],
   }),
   {
     id: "end",
     say: "In summary, a net is the faces of a solid laid flat. Its total area is the solid's surface area.",
-    enter: S => { w25Board(S, PAIRS); look(S) },
+    enter: S => { w25Board(S, PAIRS, ["blue", "orange", "pink"]); look(S) },
     cta: "Finish", ctaAfter: 3, close: true,
   },
 ]

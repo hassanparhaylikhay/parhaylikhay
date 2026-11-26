@@ -16,7 +16,7 @@
 
 import type { Vec } from "../geometry"
 import { applyParts } from "../chapter"
-import { type Scene, BLUE, GREEN, PINK, along, addSeg, say, dist, add, sub, mul, brgOf, norm } from "./scene"
+import { type Scene, BLUE, GREEN, PINK, ORANGE, along, addSeg, say, dist, add, sub, mul, brgOf, norm } from "./scene"
 import { type Beat, type MapSpec, look, watch, askNum, mapBoard, S24, layBeat, withRuler, readWalk } from "./scale-kit"
 import { fig, angleProtBeat, readAngleBeat, markAngleBeat, penBeat, angArcTo } from "./angle-kit"
 import { circlesCross, keepArcs, compBeat, tapCrossBeat, type ArcSpec } from "./compass-kit"
@@ -50,10 +50,23 @@ const S21A: Vec = [0, 10], S21C: Vec = [0, 0]
 const [S21B] = circlesCross(S21A, 8, S21C, 6)
 const S21D = along(S21A, 230, 4.5)
 const S21 = fig({ pts: { A: S21A, C: S21C }, segs: [["A", "C"]], prot: [-5, 2.5], ruler: RULER(1.2, -1.4, 10), room: [S21B, add(S21B, [1.2, 0]), along(S21A, 230, 6.2)] })
+const S21_GIVEN = "AB = 8\\text{ cm} \\qquad BC = 6\\text{ cm}"
 const S21Q: MapSpec = { ...S21, pts: { A: S21A, C: S21C, B: S21B, D: S21D }, names: { A: "A", B: "B", C: "C", D: "D" }, segs: [["A", "C"], ["A", "B"], ["B", "C"], ["A", "D"], ["D", "C"]] }
 /** 4024/12/M/J/24 Q10(b): the field; D is 250 m from C and 300 m from A (5 cm and 6 cm at 1 cm to 50 m). */
 const [FD, FDb] = circlesCross(S24.pts.C, 5, S24.pts.A, 6)
 const FIELD: MapSpec = { ...S24, room: [FD, add(FD, [1.4, -1.2]), FDb] }
+/** A scale bar on the field's page, 1 cm pieces, `lit` of them marked 50 (m). */
+function scaleBar(S: Scene, lit: number) {
+  S.P.K0 = [0.8, -3.6]
+  S.P.K1 = [6.8, -3.6]
+  addSeg(S, "K0", "K1", { col: GREEN })
+  S.along = { a: "K0", b: "K1", step: 1, tex: "50", lit }
+}
+/** Map to real on the field: 1 cm is 50 m, so `m` metres is `m / 50` pieces. */
+const fieldWalk = (m: number) => [
+  { say: "Each cm on the map stands for $50$ m.", tex: "1\\text{ cm} \\to 50\\text{ m}", show: (S: Scene) => scaleBar(S, 1) },
+  { say: `How many lots of $50$ m make $${m}$ m?`, tex: `${m} \\div 50`, show: (S: Scene) => scaleBar(S, m / 50) },
+]
 
 /** The two lines from a new corner, ruled. */
 function joined(S: Scene, c: string, a: string, b: string, grow = false) {
@@ -234,14 +247,15 @@ function construct(id: string, M: MapSpec, ra: number, rb: number, C: Vec, Cb: V
   const A = M.pts.A, B = M.pts.B
   const arcs = arcsTo("A", A, ra, "B", B, rb, C)
   const board = (S: Scene) => mapBoard(S, M)
+  const given = `AC = ${ra}\\text{ cm} \\qquad BC = ${rb}\\text{ cm}`
   return [
     watch(id, o.ask, S => { board(S); look(S) }, 3.0),
     compBeat(`${id}-a`, "Draw the arc from $A$.", M, "A", ra, {
-      job: "all", through: [brgOf(A, C)], shortSay: "Draw it further round, over where $C$ could be.",
+      job: "all", through: [brgOf(A, C)], shortSay: "Draw it further round, over where $C$ could be.", given,
       wrongOpen: [{ v: rb, say: `From $A$ we need $AC$, which is $${ra}$ cm.` }],
     }),
     compBeat(`${id}-b`, "Now the arc from $B$.", M, "B", rb, {
-      job: "all", through: [brgOf(B, C)], shortSay: "Draw it further round, until it crosses the first arc.",
+      job: "all", through: [brgOf(B, C)], shortSay: "Draw it further round, until it crosses the first arc.", given,
       wrongOpen: [{ v: ra, say: `From $B$ we need $BC$, which is $${rb}$ cm.` }],
       more: S => keepArcs(S, [arcs[0]]),
     }),
@@ -329,7 +343,16 @@ const PART_5: Beat[] = [
     for (const [a, b] of [["A", "B"], ["B", "C"], ["C", "D"], ["D", "A"]]) addSeg(S, a, b, { col: GREEN, lab: { tex: "5", col: GREEN } })
     look(S)
   }, 3.0),
-  watch("rh-ac", "Its diagonal $AC$ is $8$ cm. It splits the rhombus into two triangles.", S => { mapBoard(S, RH); look(S) }, 3.0),
+  watch("rh-ac", "Its diagonal $AC$ is $8$ cm. It splits the rhombus into two triangles.", S => {
+    mapBoard(S, RH)
+    addSeg(S, "A", "C", { lab: { tex: "8\\text{ cm}" } })
+    // the rhombus still to draw, dashed: a triangle above AC and one below it
+    S.P.Bx = RB
+    S.P.Dx = RD
+    addSeg(S, "A", "Bx", { col: BLUE, dash: true }); addSeg(S, "Bx", "C", { col: BLUE, dash: true })
+    addSeg(S, "A", "Dx", { col: ORANGE, dash: true }); addSeg(S, "Dx", "C", { col: ORANGE, dash: true })
+    look(S)
+  }, 3.0),
   compBeat("rh-a", "Draw an arc of $5$ cm from $A$, above $AC$.", RH, "A", 5, { job: "all", through: [brgOf([0, 0], RB)] }),
   compBeat("rh-c", "Now an arc of $5$ cm from $C$.", RH, "C", 5, { job: "all", through: [brgOf([8, 0], RB)], more: S => keepArcs(S, [rhArcs()[0]]) }),
   tapCrossBeat("rh-b", "Tap $B$, where they cross.", S => { mapBoard(S, RH); keepArcs(S, rhArcs()) }, [RB, RD], "B", { ok: [0], wrongSay: "Take the one above $AC$ first.", arcs: [["A", 5], ["C", 5]] }),
@@ -340,8 +363,8 @@ const PART_5: Beat[] = [
 
   // 4024/21/M/J/21 Q4(a)
   watch("s21", "$AC = 10$ cm has been drawn. First make triangle $ABC$, with $AB = 8$ cm and $BC = 6$ cm.", S => { mapBoard(S, S21); look(S) }, 3.2),
-  compBeat("s21-a", "Draw the arc from $A$.", S21, "A", 8, { job: "all", through: [brgOf(S21A, S21B)], wrongOpen: [{ v: 6, say: "From $A$ we need $AB$, which is $8$ cm." }] }),
-  compBeat("s21-c", "Now the arc from $C$.", S21, "C", 6, { job: "all", through: [brgOf(S21C, S21B)], wrongOpen: [{ v: 8, say: "From $C$ we need $BC$, which is $6$ cm." }], more: S => keepArcs(S, [s21Arcs[0]]) }),
+  compBeat("s21-a", "Draw the arc from $A$.", S21, "A", 8, { job: "all", through: [brgOf(S21A, S21B)], wrongOpen: [{ v: 6, say: "From $A$ we need $AB$, which is $8$ cm." }], given: S21_GIVEN }),
+  compBeat("s21-c", "Now the arc from $C$.", S21, "C", 6, { job: "all", through: [brgOf(S21C, S21B)], wrongOpen: [{ v: 8, say: "From $C$ we need $BC$, which is $6$ cm." }], more: S => keepArcs(S, [s21Arcs[0]]), given: S21_GIVEN }),
   tapCrossBeat("s21-b", "Tap $B$. It is on the right of $AC$.", S => { mapBoard(S, S21); keepArcs(S, s21Arcs) }, circlesCross(S21A, 8, S21C, 6), "B", { ok: [0], wrongSay: "That one is on the left. $B$ is on the right of $AC$.", arcs: [["A", 8], ["C", 6]] }),
   watch("s21-d", "Now for $D$, with $AD = 4.5$ cm and angle $DAC = 50^\\circ$.", S => { s21Board(S, { b: true }); angArcTo(S, "A", "C", 230, PINK, { tex: "50^\\circ" }); look(S) }, 3.0),
   angleProtBeat("s21-prot", "Put the protractor on $A$, with its $0$ along $AC$.", S21, "A", "C", "C", {
@@ -366,8 +389,7 @@ const PART_5: Beat[] = [
   }, {
     name: "\\text{Perimeter}", answer: 26.4, unit: "cm", dec: true, tol: 0.1, near: 1,
     walk: [
-      { say: "The perimeter goes all the way round $ABCD$.", show: S => { S.segs = S.segs.map(sg => (["A-B", "B-C", "D-C", "A-D"].includes(`${sg.a}-${sg.b}`) ? { ...sg, glow: true } : sg)) } },
-      { say: "So add the four sides.", tex: "8 + 6 + 7.9 + 4.5" },
+      { say: "The perimeter goes all the way round $ABCD$, so add the four sides.", tex: "8 + 6 + 7.9 + 4.5", show: S => { S.segs = S.segs.map(sg => (["A-B", "B-C", "D-C", "A-D"].includes(`${sg.a}-${sg.b}`) ? { ...sg, glow: true } : sg)) } },
     ],
   }),
 
@@ -375,11 +397,11 @@ const PART_5: Beat[] = [
   watch("field", "This is part of a field, $ABCD$. $D$ is $250$ m from $C$ and $300$ m from $A$.", S => { mapBoard(S, FIELD); look(S) }, 3.0),
   askNum("field-5", "The scale is $1$ cm to $50$ m. How many cm is $250$ m?", S => mapBoard(S, FIELD), {
     name: "250\\text{ m}", answer: 5, unit: "cm", dec: true,
-    walk: [{ say: "Each cm stands for $50$ m.", tex: "1\\text{ cm} \\to 50\\text{ m}" }, { say: "How many lots of $50$ m make $250$ m?", tex: "250 \\div 50" }],
+    walk: fieldWalk(250),
   }),
   askNum("field-6", "And $300$ m?", S => mapBoard(S, FIELD), {
     name: "300\\text{ m}", answer: 6, unit: "cm", dec: true,
-    walk: [{ say: "Each cm stands for $50$ m.", tex: "1\\text{ cm} \\to 50\\text{ m}" }, { say: "How many lots of $50$ m make $300$ m?", tex: "300 \\div 50" }],
+    walk: fieldWalk(300),
   }),
   compBeat("field-c", "Draw an arc of $5$ cm from $C$.", FIELD, "C", 5, { job: "all", through: [brgOf(S24.pts.C, FD)], shortSay: "Draw it further round." }),
   compBeat("field-a", "Now an arc of $6$ cm from $A$.", FIELD, "A", 6, { job: "all", through: [brgOf(S24.pts.A, FD)], shortSay: "Draw it further round, until it crosses the first arc.", more: S => keepArcs(S, [{ at: "C", r: 5, through: [brgOf(S24.pts.C, FD)] }]) }),

@@ -261,6 +261,8 @@ function Lens({ S, L }: { S: Scene; L: Layout }) {
         </g>
       </g>
       <circle cx={lens.c[0]} cy={lens.c[1]} r={lens.r} fill="none" stroke={CHALK} strokeOpacity={0.7} strokeWidth={1.6} />
+      {S.walkLit === "lens" && <circle cx={lens.c[0]} cy={lens.c[1]} r={lens.r + 3} fill="none" stroke={YELLOW} strokeWidth={6} filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.15;0.8;0.15" dur="1.6s" repeatCount="indefinite" /></circle>}
+      {S.walkLit === "zero" && S.ruler && (() => { const Z = rulerGeom(S).Z; return <circle cx={Z[0]} cy={Z[1]} r={11} fill="none" stroke={YELLOW} strokeWidth={3} filter="url(#pl-soft)"><animate attributeName="r" values="8;16;8" dur="1.6s" repeatCount="indefinite" /><animate attributeName="stroke-opacity" values="0.9;0.3;0.9" dur="1.6s" repeatCount="indefinite" /></circle> })()}
     </g>
   )
 }

@@ -11,7 +11,7 @@
 import { applyParts } from "../chapter"
 import { row, op, atom, frac } from "../equation"
 import type { Vec } from "../geometry"
-import { type Scene, BLUE, GREEN, resetBeat, later, places, addSeg } from "./scene"
+import { type Scene, BLUE, GREEN, PINK, resetBeat, later, places, addSeg } from "./scene"
 import { type Beat, look, mapBoard, withRuler, watch, askNum, layBeat, readWalk, realWalk, S25, W22, S23 } from "./scale-kit"
 
 // ── the beats ────────────────────────────────────────────────────────────
@@ -145,8 +145,8 @@ const PART_A: Beat[] = [
       { v: 10, say: "That's $15 - 5$. Count the $5$ km pieces: each one is $1$ cm." },
     ],
     walk: [
-      { say: "Each $5$ km piece becomes $1$ cm.", tex: "5\\text{ km} \\to 1\\text{ cm}" },
-      { say: "So count the $5$ km pieces in $15$ km.", tex: "15 \\div 5" },
+      { say: "Each $5$ km piece becomes $1$ cm.", tex: "5\\text{ km} \\to 1\\text{ cm}", show: S => { if (S.along) S.along = { ...S.along, lit: 1 } } },
+      { say: "So count the $5$ km pieces in $15$ km.", tex: "15 \\div 5", show: S => { if (S.along) S.along = { ...S.along, lit: 3 } } },
     ],
     // the path shrinks onto the map: each piece is a centimetre now
     then: S => shrinkPath(S),
@@ -174,7 +174,7 @@ const PART_A: Beat[] = [
     done: S => S.got.has("drawn") && !S.ruler,
     advanceAfter: 1600,
   },
-  askNum("road2", "A road is really $8$ km long. How long is it on this map?", S => plainPage(S, {}, [], {}), {
+  askNum("road2", "A road is really $8$ km long. How long is it on this map?", S => roadReal(S), {
     name: "\\text{Map}", answer: 1.6, unit: "cm", dec: true,
     slips: [
       { v: 40, say: "That's $8 \\times 5$. From real life to the map: divide." },
@@ -183,8 +183,8 @@ const PART_A: Beat[] = [
     ],
     above: () => atom("rule", BOTH_WAYS),
     walk: [
-      { say: "Each $5$ km on the ground is $1$ cm on the map.", tex: "5\\text{ km} \\to 1\\text{ cm}" },
-      { say: "So how many fives are in $8$?", tex: "8 \\div 5" },
+      { say: "Each $5$ km on the ground is $1$ cm on the map.", tex: "5\\text{ km} \\to 1\\text{ cm}", show: S => { if (S.along) S.along = { ...S.along, lit: 1 } } },
+      { say: "So how many fives are in $8$? One five, and $3$ km more.", tex: "8 \\div 5", show: S => { S.P.F5 = [1, 0]; addSeg(S, "F5", "T", { col: PINK, lab: { tex: "3\\text{ km}", col: PINK } }); if (S.along) S.along = { ...S.along, lit: 1 } } },
     ],
   }),
 
@@ -194,7 +194,7 @@ const PART_A: Beat[] = [
   askNum("cm-m", "Let's turn it into metres. How many cm are in $1$ m?", S => ratioPage(S, "50\\,000\\text{ cm}"), {
     name: "1\\text{ m}", answer: 100, unit: "cm", max: 7,
     slips: [{ v: 10, say: "That's the mm in $1$ cm. Count the cm in a metre." }, { v: 1000, say: "That's the mm in a metre. Count the cm." }],
-    walk: [{ say: "Think of a metre ruler. What is the last number on it?", tex: "1\\text{ m} \\to \\;?\\text{ cm}" }],
+    walk: [{ say: "Think of a metre ruler. What is the last number on it?", tex: "1\\text{ m} \\to \\;?\\text{ cm}", show: S => { if (S.along) S.along = { ...S.along, pulse: true } } }],
   }),
   askNum("m-500", "So how many metres is $50\\,000$ cm?", S => ratioPage(S, "50\\,000\\text{ cm}"), {
     name: "50\\,000\\text{ cm}", answer: 500, unit: "m", max: 7,
@@ -204,10 +204,7 @@ const PART_A: Beat[] = [
       { v: 50, say: "That's dividing by $1000$. There are $100$ cm in a metre." },
     ],
     above: () => atom("fact", "100\\text{ cm} = 1\\text{ m}"),
-    walk: [
-      { say: "Every $100$ cm makes $1$ m.", tex: "100\\text{ cm} \\to 1\\text{ m}" },
-      { say: "So count the hundreds in $50\\,000$.", tex: "50\\,000 \\div 100" },
-    ],
+    walk: [{ say: "Every $100$ cm makes $1$ m, so count the hundreds in $50\\,000$.", tex: "50\\,000 \\div 100", show: S => { if (S.along) S.along = { ...S.along, pulse: true } } }],
     then: S => { if (S.along) S.along = { ...S.along, tex: "500\\text{ m}" } },
   }),
   watch("m-500-says", "So $1$ cm on this map stands for $500$ m.", S => { ratioPage(S, "500\\text{ m}"); look(S) }, 2.4),
@@ -222,8 +219,8 @@ const PART_A: Beat[] = [
       { v: 4.5, say: "That's $9 - 4.5$. Share the $9$ km between the $4.5$ cm." },
     ],
     walk: [
-      { say: "$4.5$ cm stands for $9$ km.", tex: "4.5\\text{ cm} \\to 9\\text{ km}" },
-      { say: "Share the $9$ km between the $4.5$ cm.", tex: "9 \\div 4.5" },
+      { say: "$4.5$ cm stands for $9$ km.", tex: "4.5\\text{ cm} \\to 9\\text{ km}", show: S => { S.segs = S.segs.map(sg => ({ ...sg, glow: true })) } },
+      { say: "Share the $9$ km between the $4.5$ cm: what does each cm get?", tex: "9 \\div 4.5", show: S => { S.segs = S.segs.map(sg => ({ ...sg, glow: false })); if (S.along) S.along = { ...S.along, pulse: true } } },
     ],
     then: S => { if (S.along) S.along = { ...S.along, tex: "2\\text{ km}" } },
   }),
@@ -232,12 +229,10 @@ const PART_A: Beat[] = [
   askNum("lm-m", "First, how many metres is $2$ km?", S => lmPage(S, "2\\text{ km}"), {
     name: "2\\text{ km}", answer: 2000, unit: "m", max: 7,
     slips: [{ v: 200, say: "$1$ km is $1000$ m. So $2$ km is two lots of $1000$ m." }, { v: 1000, say: "That's $1$ km. We have $2$ km." }, { v: 20, say: "$1$ km is $1000$ m. So $2$ km is two lots of $1000$ m." }],
-    walk: [
-      { say: "$1$ km is $1000$ m.", tex: "1\\text{ km} = 1000\\text{ m}" },
-      { say: "$2$ km is two lots of that.", tex: "2 \\times 1000" },
-    ],
+    walk: [{ say: "$1$ km is $1000$ m, so $2$ km is two lots of that.", tex: "2 \\times 1000", show: S => { if (S.along) S.along = { ...S.along, pulse: true } } }],
+    then: S => { if (S.along) S.along = { ...S.along, tex: "2000\\text{ m}", pulse: false } },
   }),
-  askNum("lm-cm", "And how many cm is $2000$ m?", S => lmPage(S, "2\\text{ km}"), {
+  askNum("lm-cm", "And how many cm is $2000$ m?", S => lmPage(S, "2000\\text{ m}"), {
     name: "2000\\text{ m}", answer: 200000, unit: "cm", max: 7,
     slips: [
       { v: 20000, say: "That's $2000 \\times 10$. There are $100$ cm in a metre." },
@@ -245,10 +240,7 @@ const PART_A: Beat[] = [
       { v: 2000000, say: "That's $2000 \\times 1000$. There are $100$ cm in a metre." },
     ],
     above: () => atom("km-m", "2\\text{ km} = 2000\\text{ m}"),
-    walk: [
-      { say: "Each metre is $100$ cm.", tex: "1\\text{ m} = 100\\text{ cm}" },
-      { say: "So $2000$ m is $2000$ lots of $100$ cm.", tex: "2000 \\times 100" },
-    ],
+    walk: [{ say: "Each metre is $100$ cm, so $2000$ m is $2000$ lots of $100$ cm.", tex: "2000 \\times 100", show: S => { if (S.along) S.along = { ...S.along, pulse: true } } }],
   }),
   {
     id: "lm-n",
@@ -277,6 +269,15 @@ function roadPage(S: Scene) {
   S.along = { a: "R", b: "T", step: 1, tex: "5\\text{ km}", lit: 3 }
 }
 
+/** The road as it really is: 8 km (world units are km), its 5 km pieces to mark. */
+function roadReal(S: Scene) {
+  resetBeat(S)
+  places(S, { R: [-4, 0], T: [4, 0] })
+  S.fitPts = ["R", "T"]
+  S.fitPad = 3
+  addSeg(S, "R", "T", { lab: { tex: "8\\text{ km}" } })
+  S.along = { a: "R", b: "T", step: 5, tex: "5\\text{ km}", lit: 0 }
+}
 /** The path as it really is: 15 km, cut into 5 km pieces (`lit` of them marked). World units are km here. */
 function pathReal(S: Scene, lit: number) {
   resetBeat(S)
@@ -349,11 +350,11 @@ const PART_X: Beat[] = [
     slips: [{ v: 56, say: "That's in millimetres. $10$ mm make $1$ cm." }],
     walk: readWalk(),
   }),
-  askNum("x1-m", "Each cm stands for $30$ m. So how far is $B$ from $A$ really?", S => { mapBoard(S, W22) }, {
+  askNum("x1-m", "Each cm stands for $30$ m. So how far is $B$ from $A$ really?", S => { mapBoard(S, W22); addSeg(S, "A", "B", { lab: { tex: "5.6\\text{ cm}" } }) }, {
     name: "\\text{Real}", answer: 168, unit: "m", dec: true,
     slips: [{ v: 35.6, say: "That's $5.6 + 30$. Map to real: multiply." }, { v: 0.19, say: "The real distance is bigger: $5.6$ lots of $30$ m." }],
     above: () => row([atom("ab", "AB"), op("e", "="), atom("v", "5.6\\text{ cm}")]),
-    walk: realWalk("5.6", "30", "m"),
+    walk: realWalk("5.6", "30", "m", ["A", "B"]),
   }),
 
   // 4024/12/M/J/23 Q6(a)
@@ -364,11 +365,11 @@ const PART_X: Beat[] = [
     slips: [{ v: 95, say: "That's in millimetres. $10$ mm make $1$ cm." }],
     walk: readWalk(),
   }),
-  askNum("x2-km", "Each cm stands for $2$ km. So what is the real distance?", S => mapBoard(S, S23), {
+  askNum("x2-km", "Each cm stands for $2$ km. So what is the real distance?", S => { mapBoard(S, S23); addSeg(S, "A", "B", { lab: { tex: "9.5\\text{ cm}" } }) }, {
     name: "\\text{Real}", answer: 19, unit: "km", dec: true,
     slips: [{ v: 11.5, say: "That's $9.5 + 2$. Map to real: multiply." }, { v: 4.75, say: "The real distance is bigger: $9.5$ lots of $2$ km." }],
     above: () => row([atom("ab", "AB"), op("e", "="), atom("v", "9.5\\text{ cm}")]),
-    walk: realWalk("9.5", "2", "km"),
+    walk: realWalk("9.5", "2", "km", ["A", "B"]),
   }),
 
   {

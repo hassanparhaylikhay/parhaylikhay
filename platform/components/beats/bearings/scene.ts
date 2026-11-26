@@ -152,7 +152,7 @@ export interface Comp {
 export interface PenArc { id: string; at: Vec; r: number; from: number; sweep: number; col?: string; pulse?: boolean }
 
 /** Marks along a line at every `step` (world units), each piece labelled; `lit` pieces glow. */
-export interface Along { a: string; b: string; step: number; tex?: string; under?: string; lit: number }
+export interface Along { a: string; b: string; step: number; tex?: string; under?: string; lit: number; pulse?: boolean }
 
 /** A timed piece of choreography; acts play one after another. */
 export interface Act { dur: number; begin?: (S: Scene) => void; run?: (S: Scene, e: number, t: number) => void; end?: (S: Scene) => void }
@@ -288,6 +288,8 @@ export interface Scene {
   holdFit: boolean
   /** the keypad's keys (null: digits only) */
   keyRows: string[][] | null
+  /** what a Show me how step points at on the ruler: its 0, or the reading lens */
+  walkLit: "zero" | "lens" | null
   touched: string | null
   flashGood: number
   note: { text: string; until: number; tone: "wrong" | "calm" } | null
@@ -306,7 +308,7 @@ export function createScene(): Scene {
     eq: createBoard(), eqFn: null, eqRoom: { v: 0, t: 0 }, input: null, choice: null,
     acts: [], act: null, tick: null, timers: [], vis, labs: [], labD: {}, labOff: {}, labSide: {}, walkTex: null,
     drag: null, touch: false, got: new Set(), vals: {}, keep: {}, touched: null, flashGood: 0, note: null,
-    ruler: null, prot: null, page: null, along: null, holdFit: false, keyRows: null, squares: [], comp: null, penArcs: [], arcMem: [],
+    ruler: null, prot: null, page: null, along: null, holdFit: false, keyRows: null, walkLit: null, squares: [], comp: null, penArcs: [], arcMem: [],
   }
 }
 
@@ -695,7 +697,7 @@ function toolLabels(S: Scene, L: Layout, all: Lab[]) {
     for (let k = 0; k < A.lit && k < count; k++) {
       const m = add(a, mul(e, stepPx * (k + 0.5)))
       const q = add(m, mul(nrm, small * 1.5))
-      out.push({ key: `AL-${k}`, tex: A.tex, col: BLUE, at: q, anchor: q, size: small, op: 1 })
+      out.push({ key: `AL-${k}`, tex: A.tex, col: BLUE, at: q, anchor: q, size: small, op: 1, pulse: A.pulse })
       if (A.under) { const q2 = sub(m, mul(nrm, small * 1.5)); out.push({ key: `AU-${k}`, tex: A.under, col: CHALK, at: q2, anchor: q2, size: small, op: 1 }) }
     }
   }
@@ -824,6 +826,7 @@ export function say(S: Scene, text: string, tone: "wrong" | "calm" = "wrong", se
 /** Clear everything a beat sets; the places stay where they are, so a new board glides from the old. */
 export function resetBeat(S: Scene) {
   S.mode = "none"
+  S.walkLit = null
   S.drag = null
   S.names = {}
   S.nameCol = {}

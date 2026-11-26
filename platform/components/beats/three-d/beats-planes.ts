@@ -16,7 +16,7 @@
 import type { WalkStep } from "../walk"
 import { atom, row, op } from "../equation"
 import { applyParts } from "../chapter"
-import { type Scene, type V3, BLUE, GREEN, BOX_FACES, boxPts, resetBeat, say, startInput, boxNode, segKey, goodView, vadd, vmul } from "./scene"
+import { type Scene, type V3, BLUE, GREEN, BOX_FACES, boxPts, resetBeat, say, startInput, boxNode, segKey, addSeg, goodView, vadd, vmul } from "./scene"
 import { type Beat, look, watch, solidBoard, lens } from "./kit"
 import { type Curved, type Net, curvedBounds, netBounds, w25Net } from "./solids"
 import { type Sheet, makeSheet, sheetHandles, anglesOf, angGap, samePlane, curvedFits } from "./sheet"
@@ -275,7 +275,16 @@ const PART_2: Beat[] = [
   {
     id: "cube-why",
     say: "They work because the top of the cube is a square. A square's diagonal is a line of symmetry.",
-    enter: S => { planeBoard(S, CUBE, { hidden: true, found: [X, Y, Z, ...diagsOf(2.4, 2.4)] }); S.faceLit[1] = BLUE; countLine(S); look(S, ["eq"]) },
+    enter: S => {
+      planeBoard(S, CUBE, { hidden: true, found: [X, Y, Z, ...diagsOf(2.4, 2.4)] })
+      S.faceLit[1] = BLUE
+      // the top square's two diagonals, where the two corner-to-corner sheets cut it
+      addSeg(S, "A", "C", { col: BLUE, grown: true })
+      addSeg(S, "B", "D", { col: BLUE, grown: true })
+      S.edgeGlow = { [segKey("A", "C")]: BLUE, [segKey("B", "D")]: BLUE }
+      countLine(S)
+      look(S, ["eq"])
+    },
     cta: "", ctaAfter: 3.4,
   },
   {

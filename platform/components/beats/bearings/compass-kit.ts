@@ -7,6 +7,7 @@
  */
 
 import type { Vec } from "../geometry"
+import { atom } from "../equation"
 import { type Scene, type PenArc, PINK, norm, brgOf, along, addSeg, say, arcsCover, dist, ptS, compGeom } from "./scene"
 import { type Beat, type MapSpec, look, mapBoard, nameBetween } from "./scale-kit"
 
@@ -75,6 +76,8 @@ export function compBeat(id: string, say0: string, M: MapSpec, at: string, r: nu
   /** what the student is to do once the point is on the place */
   drawSay?: string
   shortSay?: string
+  /** the lengths the question gives, kept on the board under the drawing (the student picks which one this arc needs) */
+  given?: string
 }): Beat {
   return {
     id, say: say0,
@@ -132,7 +135,8 @@ export function compBeat(id: string, say0: string, M: MapSpec, at: string, r: nu
         }
         if (!S2.got.has(`short${mine.length}`)) { S2.got.add(`short${mine.length}`); say(S2, o.shortSay ?? "Draw it further round.", "wrong", 3.4) }
       }
-      look(S)
+      if (o.given) S.eqFn = () => atom("given", o.given!)
+      look(S, o.given ? ["eq"] : [])
     },
     done: S => S.got.has("done"),
     advanceAfter: 1400,

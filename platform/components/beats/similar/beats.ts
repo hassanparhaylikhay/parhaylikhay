@@ -401,7 +401,7 @@ const PART_2: Beat[] = [
     ],
     walk: [
       { say: "$AB$ on the small triangle matches $PQ$ on the big one.", tex: "6 \\to 9", show: S => { S.sideLabs = S.sideLabs.map(l => (l.a === "A" && l.b === "B" ? { ...l, pulse: true } : l)) } },
-      { say: "How many times bigger is it? Divide the big side by the small side.", tex: "9 \\div 6" },
+      { say: "How many times bigger is it? Divide the big side by the small side.", tex: "9 \\div 6", show: S => { S.sideGlow = new Set([sideKey("ABC", "A", "B"), sideKey("PQR", "A", "B")]) } },
     ],
   }),
   tapSides("w25-ac", "Which side of $PQR$ matches $AC$? Tap it.", S => { w25Board(S, { col1: true }); S.sideCol[sideKey("ABC", "A", "C")] = ORANGE }, {
@@ -418,7 +418,7 @@ const PART_2: Beat[] = [
     ],
     walk: [
       { say: "$PR$ matches $AC$, which is $7$ cm.", tex: "7 \\to PR", show: S => { S.sideLabs = S.sideLabs.map(l => (l.a === "A" && l.b === "C" ? { ...l, pulse: true } : l)) } },
-      { say: "Every side of the big triangle is $1.5$ times its matching side.", tex: "7 \\times 1.5" },
+      { say: "Every side of the big triangle is $1.5$ times its matching side.", tex: "7 \\times 1.5", show: S => { S.sideGlow = new Set([sideKey("ABC", "C", "A"), sideKey("PQR", "C", "A")]) } },
     ],
     then: S => { S.sideLabs = S.sideLabs.map(l => (l.sh === "PQR" && l.a === "A" && l.b === "C" ? { ...l, tex: "10.5\\text{ cm}", col: GREEN, pulse: false } : l)) },
   }),
@@ -492,8 +492,8 @@ const PART_3: Beat[] = [
       { v: 36, say: "That's $12 \\times 3$. How many times bigger is $12$ than $3$?" },
     ],
     walk: [
-      { say: "$DE$ is $3$, and its matching side $AB$ is $12$.", tex: "3 \\to 12" },
-      { say: "How many times bigger? Divide the big side by the small side.", tex: "12 \\div 3" },
+      { say: "$DE$ is $3$, and its matching side $AB$ is $12$.", tex: "3 \\to 12", show: S => { S.sideGlow = new Set([sideKey("DEC", "A", "B"), sideKey("ABC", "A", "B")]); pulseSides(S, ["DEC", "A", "B"], ["ABC", "A", "B"]) } },
+      { say: "How many times bigger? Divide the big side by the small side.", tex: "12 \\div 3", show: S => pulseSides(S, ["ABC", "A", "B"]) },
     ],
   }),
   tapSides("w22-cd", "Which side of triangle $ABC$ matches $CD$? Tap it.", S => { w22Board(S, { turned: true, col1: true }); S.sideCol[sideKey("DEC", "C", "A")] = ORANGE }, {
@@ -506,8 +506,8 @@ const PART_3: Beat[] = [
     above: () => row([atom("sfl", "\\text{Scale factor}"), op("sfe", "="), atom("sfv", "4")]),
     slips: [{ v: 11, say: "That's $7 + 4$. The scale factor multiplies." }, { v: 1.75, say: "That's $7 \\div 4$. $AC$ is on the big triangle, so multiply." }],
     walk: [
-      { say: "$AC$ matches $CD$, which is $7$ cm.", tex: "7 \\to AC" },
-      { say: "Every side of $ABC$ is $4$ times its matching side.", tex: "7 \\times 4" },
+      { say: "$AC$ matches $CD$, which is $7$ cm.", tex: "7 \\to AC", show: S => { S.sideGlow = new Set([sideKey("DEC", "C", "A")]); pulseSides(S, ["DEC", "C", "A"]) } },
+      { say: "Every side of $ABC$ is $4$ times its matching side.", tex: "7 \\times 4", show: S => { S.sideGlow = new Set([sideKey("DEC", "C", "A"), sideKey("ABC", "C", "A")]); pulseSides(S, ["ABC", "C", "A"]) } },
     ],
     then: S => { S.sideLabs = S.sideLabs.map(l => (l.sh === "ABC" && l.a === "C" && l.b === "A" ? { ...l, tex: "28", col: GREEN, pulse: false } : l)) },
   }),
@@ -696,6 +696,14 @@ const PART_4: Beat[] = [
 // ── 5. Exam questions ────────────────────────────────────────────────────
 
 /** The bars for AD and AB (or AE and AC): AB is AD and 0.75 of AD more, which is BD. */
+/** Side labels pulse (by shape and end letters, either way round); the rest stop. */
+function pulseSides(S: Scene, ...sides: [string, string, string][]) {
+  S.sideLabs = S.sideLabs.map(l => ({ ...l, pulse: sides.some(([sh, a, b]) => l.sh === sh && ((l.a === a && l.b === b) || (l.a === b && l.b === a))) }))
+}
+/** One piece of the bar model pulses (row, piece); the rest stop. */
+function pulseBar(S: Scene, row: number, piece: number) {
+  if (S.bars) S.bars = S.bars.map((r, i) => ({ ...r, parts: r.parts.map((p, j) => ({ ...p, pulse: i === row && j === piece })) }))
+}
 function bars(S: Scene, which: "D" | "E", known: boolean) {
   const [small, big, extra, v] = which === "D" ? ["AD", "AB", "BD", "2.7"] : ["AE", "AC", "CE", "3.9"]
   S.bars = [
@@ -738,8 +746,8 @@ const PART_X: Beat[] = [
       { v: 0.57, say: "That's $5.6 \\div 9.8$, from big to small. We go from $ADE$ to $ABC$." },
     ],
     walk: [
-      { say: "$DE$ matches $BC$: $5.6$ and $9.8$.", tex: "5.6 \\to 9.8" },
-      { say: "Divide the big side by the small side.", tex: "9.8 \\div 5.6" },
+      { say: "$DE$ matches $BC$: $5.6$ and $9.8$.", tex: "5.6 \\to 9.8", show: S => { S.sideGlow = new Set([sideKey("DBCE", "E", "D"), sideKey("DBCE", "B", "C")]) } },
+      { say: "Divide the big side by the small side.", tex: "9.8 \\div 5.6", show: S => { S.sideGlow = new Set([sideKey("DBCE", "B", "C")]) } },
     ],
   }),
   watch("x1-bar", "So $AB$ is $1.75$ times as long as $AD$.", S => { w24Board(S); bars(S, "D", false); look(S, ["bars"]) }, 2.6),
@@ -752,8 +760,8 @@ const PART_X: Beat[] = [
       { v: 3.45, say: "That's $2.7 + 0.75$. $0.75$ of $AD$ is $2.7$, so divide." },
     ],
     walk: [
-      { say: "$0.75$ of $AD$ is $2.7$.", tex: "0.75 \\times AD = 2.7" },
-      { say: "So $AD$ is $2.7$ divided by $0.75$.", tex: "AD = 2.7 \\div 0.75" },
+      { say: "$0.75$ of $AD$ is $2.7$.", tex: "0.75 \\times AD = 2.7", show: S => pulseBar(S, 1, 1) },
+      { say: "So $AD$ is $2.7$ divided by $0.75$.", tex: "AD = 2.7 \\div 0.75", show: S => pulseBar(S, 0, 0) },
     ],
     rightNote: "That's $AD = 3.6$ cm, as the question says.",
   }),
@@ -762,8 +770,8 @@ const PART_X: Beat[] = [
     lead: "AE", answer: 5.2, unit: "cm",
     slips: [{ v: 2.925, say: "That's $3.9 \\times 0.75$. $0.75$ of $AE$ is $3.9$, so divide." }],
     walk: [
-      { say: "$0.75$ of $AE$ is $3.9$.", tex: "0.75 \\times AE = 3.9" },
-      { say: "So $AE$ is $3.9$ divided by $0.75$.", tex: "AE = 3.9 \\div 0.75" },
+      { say: "$0.75$ of $AE$ is $3.9$.", tex: "0.75 \\times AE = 3.9", show: S => pulseBar(S, 1, 1) },
+      { say: "So $AE$ is $3.9$ divided by $0.75$.", tex: "AE = 3.9 \\div 0.75", show: S => pulseBar(S, 0, 0) },
     ],
   }),
 
@@ -783,8 +791,8 @@ const PART_X: Beat[] = [
     lead: "\\text{Scale factor}", answer: 1.6,
     slips: [{ v: 3, say: "That's $8 - 5$. How many times bigger is $8$ than $5$?" }, { v: 0.625, say: "That's $5 \\div 8$, from big to small." }],
     walk: [
-      { say: "$AB$ is $5$, and its matching side $CB$ is $8$.", tex: "5 \\to 8" },
-      { say: "Divide the big side by the small side.", tex: "8 \\div 5" },
+      { say: "$AB$ is $5$, and its matching side $CB$ is $8$.", tex: "5 \\to 8", show: S => { S.sideGlow = new Set([sideKey("ABC", "A", "B"), sideKey("CBD", "C", "B")]) } },
+      { say: "Divide the big side by the small side.", tex: "8 \\div 5", show: S => { S.sideGlow = new Set([sideKey("CBD", "C", "B")]) } },
     ],
   }),
   tapSides("x2-bd", "Which side of triangle $CBD$ matches $BC$? Tap it.", S => { s24Board(S, { col1: true }); S.sideCol[sideKey("ABC", "B", "C")] = ORANGE }, {
@@ -797,8 +805,8 @@ const PART_X: Beat[] = [
     above: () => row([atom("sfl", "\\text{Scale factor}"), op("sfe", "="), atom("sfv", "1.6")]),
     slips: [{ v: 9.6, say: "That's $8 + 1.6$. The scale factor multiplies." }, { v: 5, say: "That's $8 \\div 1.6$. $BD$ is on the big triangle, so multiply." }],
     walk: [
-      { say: "$BD$ matches $BC$, which is $8$ cm.", tex: "8 \\to BD" },
-      { say: "Every side of $CBD$ is $1.6$ times its matching side.", tex: "8 \\times 1.6" },
+      { say: "$BD$ matches $BC$, which is $8$ cm.", tex: "8 \\to BD", show: S => { S.sideGlow = new Set([sideKey("ABC", "B", "C")]); pulseSides(S, ["ABC", "B", "C"]) } },
+      { say: "Every side of $CBD$ is $1.6$ times its matching side.", tex: "8 \\times 1.6", show: S => { S.sideGlow = new Set([sideKey("ABC", "B", "C"), sideKey("CBD", "B", "D")]); pulseSides(S, ["CBD", "B", "D"]) } },
     ],
     then: S => { S.sideLabs = S.sideLabs.map(l => (l.sh === "CBD" ? { ...l, tex: "12.8", col: GREEN, pulse: false } : l)) },
   }),

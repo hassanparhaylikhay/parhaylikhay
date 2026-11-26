@@ -124,6 +124,12 @@ function s23Board(S: Scene, o: { line?: boolean; c?: boolean } = {}) {
   if (o.line && !o.c) ruledLine(S, "A", 345, 9.5)
 }
 
+/** The sides known so far, written on them: AC as given, and AB once it has been measured. */
+function s23Known(S: Scene) {
+  addSeg(S, "A", "C", { lab: { tex: "8.3\\text{ cm}" } })
+  addSeg(S, "A", "B", { lab: { tex: "9\\text{ cm}" } })
+}
+
 const PART_3: Beat[] = [
   // 4024/12/O/N/19 Q19(b)
   watch("w19", "$D$ is below $AB$. Angle $BAD = 28^\\circ$ and angle $ABD = 96^\\circ$.", S => { w19Board(S); restProt(S, W19, true); look(S) }, 3.2),
@@ -161,8 +167,8 @@ const PART_3: Beat[] = [
   askNum("s23-ab", "How long is $AB$?", S => { s23Board(S, { line: true, c: true }); withRuler(S, S23C, { on: "A", along: "B", follow: true, fixed: true }) }, {
     name: "AB", answer: 9, unit: "cm", dec: true, tol: 0.1, near: 0.4, walk: readWalk(),
   }),
-  layBeat("s23-lay-bc", "Now lay it along $BC$.", S23C, "B", "C", S => s23Board(S, { line: true, c: true })),
-  askNum("s23-bc", "How long is $BC$?", S => { s23Board(S, { line: true, c: true }); withRuler(S, S23C, { on: "B", along: "C", follow: true, fixed: true }) }, {
+  layBeat("s23-lay-bc", "Now lay it along $BC$.", S23C, "B", "C", S => { s23Board(S, { line: true, c: true }); s23Known(S) }),
+  askNum("s23-bc", "How long is $BC$?", S => { s23Board(S, { line: true, c: true }); s23Known(S); withRuler(S, S23C, { on: "B", along: "C", follow: true, fixed: true }) }, {
     name: "BC", answer: 13.7, unit: "cm", dec: true, tol: 0.1, near: 0.4, walk: readWalk(),
   }),
   askNum("s23-per", "So what is the perimeter of triangle $ABC$?", S => {
@@ -171,8 +177,7 @@ const PART_3: Beat[] = [
   }, {
     name: "\\text{Perimeter}", answer: 31, unit: "cm", dec: true, tol: 0.2, near: 1,
     walk: [
-      { say: "The perimeter is the distance all the way round.", show: S => { S.segs = S.segs.map(sg => ({ ...sg, glow: true })) } },
-      { say: "So add the three sides.", tex: "9 + 13.7 + 8.3" },
+      { say: "The perimeter is the distance all the way round, so add the three sides.", tex: "9 + 13.7 + 8.3", show: S => { S.segs = S.segs.map(sg => ({ ...sg, glow: true })) } },
     ],
   }),
   {

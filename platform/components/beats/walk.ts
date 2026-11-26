@@ -34,6 +34,8 @@ export interface WalkScene {
   walkTex: string | null
   vis: { keypad: { t: number }; hint: { t: number }; line: { t: number } }
   note: unknown
+  /** calculator keys a step lights (what to press); the keypad stays up to show them */
+  keyHint?: string[]
 }
 
 /**
@@ -57,7 +59,7 @@ export function applyStep<S extends WalkScene>(S: S, step: WalkStep<S>) {
   // a step with no working of its own keeps the line before it; the
   // student's wrong answer never shows during the walkthrough
   S.walkTex = step.tex ?? S.walkTex ?? ""
-  S.vis.keypad.t = 0
+  S.vis.keypad.t = S.keyHint?.length ? 1 : 0
   S.vis.hint.t = 0
   S.vis.line.t = 1
 }

@@ -58,7 +58,7 @@ export const solidEngine: BeatEngine<Scene, Layout> = {
   // a count needs only digits; the rest of the 3D lessons use the calculator
   // keyRows 3: mensuration (no trig; π)
   keypadKeys: S => (S.keyRows === 2 ? DIGIT_KEYS : S.keyRows === 3 ? MENS_KEYS : S.input?.shift ? COS_KEYS_SHIFT : COS_KEYS),
-  keypadLit: S => (S.input?.shift ? ["SHIFT"] : []),
+  keypadLit: S => (S.input?.shift ? ["SHIFT", ...S.keyHint] : S.keyHint),
   keyOf: mensKeyOf,
   controls: (S, L) => (S.choice && S.vis.chips.t > 0.5 ? (
     <Choices top={L.chipsY - 22} options={S.choice.options} picked={S.choice.picked} state={S.choice.state} wrongAt={S.choice.wrongAt} onPick={k => pick(S, k)} />

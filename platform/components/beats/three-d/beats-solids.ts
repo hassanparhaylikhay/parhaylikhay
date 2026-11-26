@@ -17,7 +17,7 @@ import {
   boxPts, BOX_FACES, pyramidPts, PYRAMID_FACES, resetBeat, say, startInput, boxNode, segKey, edgesOf, faceFront,
 } from "./scene"
 import { type Beat, look, watch, turnBeat as turnIt, solidBoard } from "./kit"
-import { type Curved, type Net, curvedBounds, netBounds, foldNet, cubeNet, cuboidNet, pyramidNet, prismNet } from "./solids"
+import { type Curved, type Net, curvedBounds, netBounds, foldNet, cubeNet, cuboidNet, pyramidNet, prismNet, frustumApex } from "./solids"
 
 /** Turn the solid: the arrow comes once it has been turned this far. */
 const turnBeat = (id: string, text: string, enter: (S: Scene) => void, degrees = 60): Beat => turnIt(id, text, S => { enter(S); look(S) }, degrees)
@@ -299,11 +299,11 @@ const HEMI: Curved = { kind: "hemisphere", r: 1.6, h: 1.6 }
 const FRUSTUM: Curved = { kind: "frustum", r: 1.5, h: 1.6, r2: 0.8 }
 
 const PART_3: Beat[] = [
-  turnBeat("cyl", "This is a *cylinder*. Its two ends are circles.", S => curvedBoard(S, CYL), 60),
-  turnBeat("cone", "This is a *cone*. It has a circle at the bottom and a point at the top.", S => curvedBoard(S, CONE), 60),
+  turnBeat("cyl", "This is a *cylinder*. Its two ends are circles.", S => curvedBoard(S, { ...CYL, ends: BLUE, pulse: true }), 60),
+  turnBeat("cone", "This is a *cone*. It has a circle at the bottom and a point at the top.", S => curvedBoard(S, { ...CONE, ends: BLUE, pulse: true, tip: ORANGE }), 60),
   watch("sphere", "This is a *sphere*. It is round like a ball.", S => { curvedBoard(S, SPHERE); S.spin = 18; look(S) }, 2.4),
   turnBeat("hemi", "Half a sphere is a *hemisphere*.", S => curvedBoard(S, HEMI), 60),
-  turnBeat("frustum", "A cone with its top cut off is a *frustum*.", S => curvedBoard(S, FRUSTUM), 60),
+  turnBeat("frustum", "A cone with its top cut off is a *frustum*.", S => { curvedBoard(S, { ...FRUSTUM, ghost: true }); S.P3._apex = [0, 0, frustumApex(FRUSTUM)]; S.fitPts = Object.keys(S.P3) }, 60),
   nameBeat("quiz-cone", "What is this solid called?", S => { curvedBoard(S, CONE); S.spin = 14 }, {
     options: ["Cylinder", "Pyramid", "Cone", "Frustum"], answer: 2,
     notes: { 0: "A cylinder has a circle at each end.", 1: "A pyramid has flat faces.", 3: "A frustum has its top cut off." },
@@ -359,8 +359,8 @@ const PART_4: Beat[] = [
     done: S => S.input?.state === "right",
     advanceAfter: 1800,
     walk: [
-      { say: "The square at the bottom has $4$ corners.", tex: "4" },
-      { say: "The triangles meet at one more, at the top.", tex: "4 + 1" },
+      { say: "The square at the bottom has $4$ corners.", tex: "4", show: S => { const F = foldNet(pyramidNet(2, 2.6), 1); F.base.forEach((p, i) => { S.P3[`V${i}`] = p }); S.glowPts = ["V0", "V1", "V2", "V3"] } },
+      { say: "The triangles meet at one more, at the top.", tex: "4 + 1", show: S => { S.P3.V4 = foldNet(pyramidNet(2, 2.6), 1).t1[2]; S.glowPts = [...S.glowPts, "V4"] } },
     ],
   },
   {

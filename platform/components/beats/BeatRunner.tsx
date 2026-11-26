@@ -128,7 +128,7 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
     if (process.env.NODE_ENV !== "production" || new URLSearchParams(window.location.search).has("debug")) {
       (window as unknown as { __beatScene?: S }).__beatScene = S;
       // what the test scripts need of each beat: an arrow beat (`cta`, no `done`) must show something (cold.cjs)
-      (window as unknown as { __beatApi?: unknown }).__beatApi = { ...engine.debug, beats: beats.map(b => ({ id: b.id, walk: b.walk?.length ?? 0, cta: b.cta, done: !!b.done })) }
+      (window as unknown as { __beatApi?: unknown }).__beatApi = { ...engine.debug, beats: beats.map(b => ({ id: b.id, say: b.say, walk: b.walk?.length ?? 0, steps: (b.walk ?? []).map(w => ({ say: w.say, tex: w.tex ?? null, show: !!w.show })), cta: b.cta, done: !!b.done })) }
     }
     let raf = 0
     let last = performance.now()
@@ -220,7 +220,9 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
         if (e.key === "Enter" || e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); liftCard() }
         return
       }
-      if (S.input && S.vis.keypad.t > 0.5) {
+      const st = beats[idxRef.current]?.walk
+      const stepping = !!st && walkAt.current >= 0 && walkAt.current < st.length
+      if (S.input && S.vis.keypad.t > 0.5 && !stepping) {
         if (engine.keyOf) {
           const k = engine.keyOf(e.key)
           if (k) { e.preventDefault(); engine.typeKey(S, k); return }
@@ -236,7 +238,7 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [go, onCta, ctaReady, liftCard, engine])
+  }, [go, onCta, ctaReady, liftCard, engine, beats])
 
   const local = (e: React.PointerEvent): Point => {
     const r = e.currentTarget.getBoundingClientRect()
@@ -283,7 +285,7 @@ export default function BeatRunner<S extends RunnerScene, L extends { keypadTop:
         {S && L && <Stage S={S} L={L} />}
       </div>
       {S && L && S.input && S.vis.keypad.t > 0.5 && (
-        <Keypad top={L.keypadTop} cx={(L as { keypadCx?: number }).keypadCx} rows={engine.keypadKeys?.(S)} lit={engine.keypadLit?.(S)} onKey={k => engine.typeKey(sceneRef.current!, k)} />
+        <Keypad top={L.keypadTop} cx={(L as { keypadCx?: number }).keypadCx} rows={engine.keypadKeys?.(S)} lit={engine.keypadLit?.(S)} still={walking && w < (steps?.length ?? 0)} onKey={k => engine.typeKey(sceneRef.current!, k)} />
       )}
       {S && L && engine.controls?.(S, L)}
     </Shell>

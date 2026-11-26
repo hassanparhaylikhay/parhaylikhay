@@ -16,6 +16,7 @@ export const termsEngine: BeatEngine<Scene, Layout> = {
   cursor: S => (S.drag && S.drag.kind !== "pan" ? "grabbing" : S.taps || S.handles.length ? "pointer" : "default"),
   // digits, or the calculator (a decimal point, + − × ÷, x², √, π)
   keypadKeys: S => (S.keyRows === 3 ? MENS_KEYS : undefined),
+  keypadLit: S => S.keyHint,
   keyOf: mensKeyOf,
   debug: {
     layout,

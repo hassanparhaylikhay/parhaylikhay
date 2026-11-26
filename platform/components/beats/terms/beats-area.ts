@@ -21,7 +21,7 @@ import type { Vec } from "../geometry"
 import { applyParts } from "../chapter"
 import { atom, row, op, paren, type ENode } from "../equation"
 import { type Scene, type FreeLab, type CrossState, BLUE, ORANGE, GREEN, PINK, CHALK, YELLOW, P, place, say, startCross, crossDone, labelWidth, add, dist, lerpV } from "./scene"
-import { type Beat, look, watch, c, cm, cm2, HALF, board, edgeLab, mid, segTaps, tapBeat, ask, glide, turned } from "./kit"
+import { type Beat, look, watch, c, cm, cm2, HALF, board, edgeLab, mid, segTaps, tapBeat, ask, glide, turned, glowOn, pulseLabs, pulseShades, putLab } from "./kit"
 
 // ── 1. Perimeter ─────────────────────────────────────────────────────────
 
@@ -305,13 +305,13 @@ const PART_3: Beat[] = [
     halvesBoard(S)
     S.segs = [{ id: "diag", a: "A", b: "C", col: CHALK }]
     S.polys.push({ id: "lo", pts: ["A", "B", "C"], col: BLUE, fill: BLUE, fillOp: 0.14 })
-    S.freeLabs = [edgeLab("ab", T6.A, T6.B, cm(6), CHALK, [3, 2]), edgeLab("bc", T6.B, T6.C, cm(4), CHALK, [3, 2])]
+    S.freeLabs = [edgeLab("ab", T6.A, T6.B, cm(6), CHALK, [3, 2]), edgeLab("bc", T6.B, T6.C, cm(4), CHALK, [3, 2]), { key: "whole", at: [1.6, 3], tex: cm2(24), col: GREEN }]
   }, {
     lead: "\\text{Half}", unit: "cm2", answer: 12,
     slips: [{ v: 24, say: "That's the whole rectangle. Take half of it." }, { v: 48, say: "That's double. Take half of $24$." }],
     walk: [
-      { say: "The two halves are the same size.", show: S => { S.shades = [{ id: "lo", kind: "poly", pts: ["A", "B", "C"], col: BLUE, op: 0.2, pulse: true }, { id: "up", kind: "poly", pts: ["A", "C", "D"], col: BLUE, op: 0.2, pulse: true }] } },
-      { say: "So one half is the rectangle's area divided by $2$.", tex: "24 \\div 2" },
+      { say: "The line from corner to corner cuts the $24$ cm$^2$ into two halves the same size.", show: S => { S.shades = [{ id: "lo", kind: "poly", pts: ["A", "B", "C"], col: BLUE, op: 0.2, pulse: true }, { id: "up", kind: "poly", pts: ["A", "C", "D"], col: ORANGE, op: 0.06, pulse: true }]; pulseLabs(S, "whole") } },
+      { say: "So one half is $24 \\div 2$.", tex: "24 \\div 2", show: S => { pulseShades(S, "lo"); pulseLabs(S) } },
     ],
   }),
   {
@@ -386,7 +386,10 @@ const PART_3: Beat[] = [
   ask("w24-h", "How long is the height?", S => w24Board(S, { base: true, height: true }), {
     lead: "\\text{height}", leadCol: ORANGE, unit: "cm", answer: 4,
     slips: [{ v: 5, say: "Count the squares from $A$ across to $BC$." }],
-    walk: [{ say: "Count the squares from $A$ across to $BC$.", tex: "4", show: S => { S.cells = [{ id: "c", x0: 0, y0: 0, nx: 4, ny: 1, lit: 4, col: ORANGE }] } }, { say: "That's how far $A$ is from the base." }],
+    walk: [
+      { say: "The height goes from $A$ straight across to $BC$.", show: S => glowOn(S, "h") },
+      { say: "Count the squares along it.", tex: "4", show: S => { S.cells = [{ id: "c", x0: 0, y0: 0, nx: 4, ny: 1, lit: 4, col: ORANGE }] } },
+    ],
   }),
   ask("w24", "Work out the area of triangle $ABC$.", S => {
     w24Board(S, { base: true, height: true })
@@ -399,7 +402,7 @@ const PART_3: Beat[] = [
     ],
     walk: [
       { say: `Area $= ${HALF} \\times$ base $\\times$ height.`, tex: `${HALF} \\times ${c(BLUE, "10")} \\times ${c(ORANGE, "4")}`, show: S => { S.segs = S.segs.map(s => ({ ...s, glow: true })) } },
-      { say: "Multiply the base by the height, then halve it.", tex: `${c(BLUE, "10")} \\times ${c(ORANGE, "4")} \\div 2` },
+      { say: "Multiply the base by the height, then halve it for the triangle.", tex: `${c(BLUE, "10")} \\times ${c(ORANGE, "4")} \\div 2`, show: S => { glowOn(S); S.shades = [{ id: "t", kind: "poly", pts: ["A", "B", "C"], col: BLUE, op: 0.2, pulse: true }] } },
     ],
   }),
 ]
@@ -489,8 +492,8 @@ const PART_4: Beat[] = [
       { v: 14.6, say: "That's two sides. There are four." },
     ],
     walk: [
-      { say: "Opposite sides are equal.", show: S => { const cen = mid(S14.A, S14.C); S.freeLabs.push(edgeLab("bot", S14.A, S14.B, "9", BLUE, cen), edgeLab("left", S14.A, S14.D, "5.6", BLUE, cen)) } },
-      { say: "Add all four sides.", tex: "9 + 5.6 + 9 + 5.6", show: S => { S.polys = [{ id: "pg", pts: ["A", "B", "C", "D"], col: GREEN }] } },
+      { say: "Opposite sides are equal: the bottom is $9$ and the left side is $5.6$.", show: S => { const cen = mid(S14.A, S14.C); S.freeLabs.push(edgeLab("bot", S14.A, S14.B, "9", BLUE, cen), edgeLab("left", S14.A, S14.D, "5.6", BLUE, cen)); S.segs.push({ id: "gb", a: "A", b: "B", col: BLUE, w: 3, glow: true }, { id: "gl", a: "A", b: "D", col: BLUE, w: 3, glow: true }) } },
+      { say: "Add all four sides.", tex: "9 + 5.6 + 9 + 5.6", show: S => { S.segs = S.segs.filter(g => g.id !== "gb" && g.id !== "gl"); S.polys = [{ id: "pg", pts: ["A", "B", "C", "D"], col: GREEN, glow: GREEN }] } },
     ],
   }),
   tapBeat("s14-tap", "For the area we need the height. Tap it.", S => s14Board(S, { taps: true, sides: true }), {
@@ -510,8 +513,8 @@ const PART_4: Beat[] = [
       { v: 19.35, say: "That's half. A parallelogram is base $\\times$ height, with no half." },
     ],
     walk: [
-      { say: "Area $=$ base $\\times$ height.", show: S => { S.segs = S.segs.map(s => ({ ...s, glow: true })) } },
-      { say: "The base is $9$ and the height is $4.3$.", tex: `${c(BLUE, "9")} \\times ${c(ORANGE, "4.3")}` },
+      { say: "Area $=$ base $\\times$ height. The base is $9$.", show: S => { glowOn(S, "base"); pulseLabs(S, "top") } },
+      { say: "The height is $4.3$, at right angles to it.", tex: `${c(BLUE, "9")} \\times ${c(ORANGE, "4.3")}`, show: S => { glowOn(S, "h"); pulseLabs(S, "h") } },
     ],
   }),
 ]
@@ -561,13 +564,23 @@ function tzBoard(S: Scene, o: { copy?: number; turn?: boolean; nums?: boolean; h
   }
 }
 /** The copy turned onto the end: its sides labelled too, so the parallelogram's base reads b + a. */
-function joined(S: Scene, nums: boolean) {
+function joined(S: Scene, nums: boolean, o: { span?: boolean } = {}) {
   tzBoard(S, { copy: 180, nums, h: true })
   S.dots = []
   const q = copyAt(180)
   S.freeLabs.push(edgeLab("a2", q.D2, q.C2, nums ? "4" : "a", BLUE, [10, 1.5]), edgeLab("b2", q.A2, q.B2, nums ? "8" : "b", BLUE, [10, 1.5]))
   S.segs.push({ id: "a2", a: "D2", b: "C2", col: BLUE, w: 3.4 }, { id: "b2", a: "A2", b: "B2", col: BLUE, w: 3.4 })
+  if (o.span) baseSpan(S)
 }
+/** The parallelogram's whole base, 12, under its two parts (once the student has found it). */
+function baseSpan(S: Scene) {
+  place(S, { Y1: [0, -1.15], Y2: [12, -1.15] })
+  S.segs.push({ id: "span", a: "Y1", b: "Y2", col: GREEN, w: 2.4 })
+  putLab(S, { key: "span", at: [6, -1.15], tex: "12", col: GREEN, dy: 18 })
+  S.frame = { ...S.frame, y0: -2.4 }
+}
+/** The parallelogram's outline (its area, once found, beside it). */
+const bigPara = (S: Scene) => { place(S, { P1: [0, 0], P2: [12, 0], P3: [14, 3], P4: [2, 3] }); S.polys.push({ id: "big", pts: ["P1", "P2", "P3", "P4"], col: GREEN, fill: GREEN, fillOp: 0.03 }) }
 
 /** 4024/13/M/J/25 Q13: a trapezium 6 along the top, 9 along the bottom, 4 up its upright side. */
 const S25: Record<string, Vec> = { A: [0, 0], B: [9, 0], C: [6, 4], D: [0, 4], F: [6, 0] }
@@ -632,17 +645,28 @@ const PART_5: Beat[] = [
   ask("tz-b12", "Here $a = 4$ and $b = 8$. How long is the parallelogram's base?", S => joined(S, true), {
     lead: "\\text{base}", answer: 12,
     slips: [{ v: 8, say: "That's only the first trapezium's part. Add the copy's part too." }, { v: 32, say: "That multiplies them. The two parts lie end to end, so add them." }],
-    walk: [{ say: "Along the bottom: $8$ from the trapezium, then $4$ from the copy.", tex: `${c(BLUE, "8")} + ${c(BLUE, "4")}`, show: S => { S.segs = S.segs.map(s => (s.id === "b" || s.id === "a2" ? { ...s, glow: true } : s)) } }, { say: "Add them to get the whole base." }],
+    walk: [
+      { say: "Along the bottom, $8$ is from the trapezium.", show: S => { glowOn(S, "b"); pulseLabs(S, "b") } },
+      { say: "Then $4$ is from the copy. Add them for the whole base.", tex: `${c(BLUE, "8")} + ${c(BLUE, "4")}`, show: S => { glowOn(S, "b", "a2"); pulseLabs(S, "a2") } },
+    ],
+    then: S => baseSpan(S),
   }),
-  ask("tz-36", "The height is $3$. What is the area of the parallelogram?", S => joined(S, true), {
+  ask("tz-36", "The height is $3$. What is the area of the parallelogram?", S => joined(S, true, { span: true }), {
     lead: "\\text{Area}", answer: 36,
     slips: [{ v: 15, say: "That adds them. Area is base $\\times$ height." }, { v: 18, say: "That's half. The whole parallelogram is base $\\times$ height." }],
-    walk: [{ say: "A parallelogram is base $\\times$ height.", tex: `${c(BLUE, "12")} \\times ${c(ORANGE, "3")}`, show: S => { S.segs = S.segs.map(s => (s.id === "h" ? { ...s, glow: true } : s)) } }, { say: "The base is $12$ and the height is $3$." }],
+    walk: [
+      { say: "A parallelogram is base $\\times$ height. You found its base: $12$.", show: S => { glowOn(S, "span"); pulseLabs(S, "span") } },
+      { say: "Its height is $3$.", tex: `${c(BLUE, "12")} \\times ${c(ORANGE, "3")}`, show: S => { glowOn(S, "h"); pulseLabs(S, "h") } },
+    ],
   }),
-  ask("tz-18", "So what is the area of one trapezium?", S => joined(S, true), {
+  ask("tz-18", "So what is the area of one trapezium?", S => { joined(S, true, { span: true }); bigPara(S) }, {
     lead: "\\text{Area}", answer: 18,
+    above: () => row([atom("pw", "\\text{Parallelogram}"), op("pe", "="), atom("p36", "36", { col: GREEN })]),
     slips: [{ v: 36, say: "That's both of them. Take half." }],
-    walk: [{ say: "The parallelogram is two trapeziums the same size.", show: S => { S.polys = S.polys.map(p => (p.id === "tz" ? { ...p, glow: BLUE } : p)) } }, { say: "So one is half of $36$.", tex: "36 \\div 2" }],
+    walk: [
+      { say: "The parallelogram is $36$. It's two trapeziums the same size.", show: S => { S.polys = S.polys.map(p => (p.id === "big" ? { ...p, glow: GREEN } : p)) } },
+      { say: "So one is half of $36$.", tex: "36 \\div 2", show: S => { S.polys = S.polys.map(p => (p.id === "big" ? { ...p, glow: undefined } : p.id === "tz" ? { ...p, glow: BLUE } : p)) } },
+    ],
   }),
   watch("tz-formula", `Area of a trapezium $= ${HALF}(a + b) \\times h$.`, S => {
     tzBoard(S, { h: true })
@@ -676,20 +700,28 @@ const PART_6: Beat[] = [
   ask("s25-gap", "How long is the bottom of this triangle?", S => s25Board(S, { drop: true, slope: "?" }), {
     lead: "\\text{bottom}", answer: 3,
     slips: [{ v: 9, say: "That's the whole bottom. Take away the part under the top, $6$." }, { v: 15, say: "Take the top away from the bottom." }],
-    walk: [{ say: "The whole bottom is $9$. The part under the top is $6$.", tex: "9 - 6", show: S => { S.segs.push({ id: "under", a: "A", b: "F", col: BLUE, w: 3.4, glow: true }) } }, { say: "The triangle's bottom is what is left." }],
+    walk: [
+      { say: "The whole bottom is $9$.", show: S => { S.segs.push({ id: "whole", a: "A", b: "B", col: BLUE, w: 3.4, glow: true }); pulseLabs(S, "bot") } },
+      { say: "The part under the top is $6$. The triangle's bottom is what is left.", tex: "9 - 6", show: S => { S.segs = S.segs.filter(g => g.id !== "whole"); S.segs.push({ id: "under", a: "A", b: "F", col: BLUE, w: 3.4 }, { id: "left", a: "F", b: "B", col: PINK, w: 3.4, glow: true }); pulseLabs(S, "top") } },
+    ],
+    then: S => putLab(S, { key: "gap", at: [7.5, 0], tex: "3", col: GREEN, dy: -16 }),
   }),
   ask("s25-slope", "Use Pythagoras to find the sloping side.", S => { s25Board(S, { drop: true, slope: "?" }); S.freeLabs.push({ key: "gap", at: [7.5, 0], tex: "3", col: CHALK, dy: -16 }) }, {
     lead: "\\text{side}", leadCol: PINK, answer: 5,
     slips: [{ v: 7, say: "That adds them. Square both, add, then take the square root." }, { v: 25, say: "That's its square. Now take the square root." }],
     walk: [
-      { say: "The sloping side is the longest side of this right-angled triangle.", tex: "3^2 + 4^2", show: S => { S.shades = [{ id: "tri", kind: "poly", pts: ["F", "B", "C"], col: PINK, op: 0.18, pulse: true }] } },
-      { say: "Square both, add, then take the square root.", tex: "\\sqrt{3^2 + 4^2}" },
+      { say: "The sloping side is the longest side of this right-angled triangle. The other two are $3$ and $4$.", tex: "3^2 + 4^2", show: S => { S.shades = [{ id: "tri", kind: "poly", pts: ["F", "B", "C"], col: PINK, op: 0.18, pulse: true }]; S.segs.push({ id: "g3", a: "F", b: "B", col: CHALK, w: 2, glow: true }, { id: "g4", a: "C", b: "F", col: CHALK, w: 2, glow: true }); pulseLabs(S, "gap", "drop") } },
+      { say: "Square both, add, then take the square root.", tex: "\\sqrt{3^2 + 4^2}", show: S => { S.segs = S.segs.filter(g => g.id !== "g3" && g.id !== "g4"); S.segs.push({ id: "sl", a: "B", b: "C", col: PINK, w: 3.4, glow: true }); pulseLabs(S, "slope"); pulseShades(S) } },
     ],
+    then: S => { S.freeLabs = S.freeLabs.map(f => (f.key === "slope" ? { ...f, tex: "5", col: GREEN } : f)) },
   }),
   ask("s25-perim", "Now work out the perimeter of the trapezium.", S => s25Board(S, { slope: "5" }), {
     lead: "\\text{Perimeter}", unit: "cm", answer: 24,
     slips: [{ v: 19, say: "Every side counts, the sloping one too." }, { v: 22, say: "Use the sloping side, $5$, not the $3$." }],
-    walk: [{ say: "Go all the way round.", tex: "6 + 5 + 9 + 4", show: S => { S.polys = [{ id: "tz", pts: ["A", "B", "C", "D"], col: GREEN }] } }, { say: "Add the four sides." }],
+    walk: [
+      { say: "Go all the way round: the sloping side is the $5$ you found.", show: S => { S.polys = [{ id: "tz", pts: ["A", "B", "C", "D"], col: GREEN }]; pulseLabs(S, "slope") } },
+      { say: "Add the four sides.", tex: "6 + 5 + 9 + 4", show: S => { S.polys = [{ id: "tz", pts: ["A", "B", "C", "D"], col: GREEN, glow: GREEN }]; pulseLabs(S, "top", "slope", "bot", "lft") } },
+    ],
   }),
   watch("s24-fill", "This trapezium's area is $36$ cm$^2$. Put its numbers in the formula.", S => {
     s24Board(S)
@@ -698,9 +730,10 @@ const PART_6: Beat[] = [
   }, 3),
   // 4024/12/M/J/24 Q5(b)
   ask("s24-half", `First, what is ${"$"}${HALF} \\times 4$?`, S => s24Board(S), {
-    lead: `${HALF} \\times 4`, answer: 2,
+    lead: `${HALF} \\times ${c(ORANGE, "4")}`, answer: 2,
+    above: () => row([atom("hf0", HALF), yPlus(), op("x0", "\\times"), atom("h40", "4", { col: ORANGE }), op("eq0", "="), atom("n360", "36", { col: GREEN })]),
     slips: [{ v: 8, say: "That's double. Take half of $4$." }],
-    walk: [{ say: "Halving means dividing by $2$.", tex: "4 \\div 2" }, { say: "So what is half of $4$?" }],
+    walk: [{ say: "The $4$ is the height. Half of it is $4 \\div 2$.", tex: "4 \\div 2", show: S => { glowOn(S, "h"); pulseLabs(S, "h") } }],
   }),
   {
     id: "s24-cross2",
@@ -721,8 +754,9 @@ const PART_6: Beat[] = [
   },
   ask("s24-18", "Work out $36 \\div 2$.", S => s24Board(S), {
     lead: `${c(PINK, "y")} + ${c(BLUE, "13")}`, answer: 18,
+    above: () => row([atom("y0", "y", { col: PINK }), op("p0", "+"), atom("t0", "13", { col: BLUE }), op("e0", "="), atom("a0", "36", { col: GREEN }), op("d0", "\\div"), atom("w0", "2")]),
     slips: [{ v: 72, say: "That multiplies. It's $36$ divided by $2$." }],
-    walk: [{ say: "The $2$ came across dividing.", tex: "36 \\div 2" }, { say: "Now work it out." }],
+    walk: [{ say: "The area is $36$, and the $2$ came across dividing.", tex: "36 \\div 2", show: S => pulseLabs(S, "area") }],
   }),
   {
     id: "s24-cross13",
@@ -744,7 +778,8 @@ const PART_6: Beat[] = [
   ask("s24-y", "So what is $y$?", S => s24Board(S), {
     lead: "y", leadCol: PINK, answer: 5,
     slips: [{ v: 31, say: "The $13$ came across as a take-away." }],
-    walk: [{ say: "The $13$ came across as a take-away.", tex: "18 - 13" }, { say: "Now work it out." }],
+    above: () => row([atom("y0", "y", { col: PINK }), op("e0", "="), atom("a0", "18"), op("m0", "-"), atom("t0", "13", { col: BLUE })]),
+    walk: [{ say: "The bottom's $13$ came across as a take-away. What is left is the top, $y$.", tex: "18 - 13", show: S => { glowOn(S, "bot", "top"); pulseLabs(S, "bot", "top") } }],
     then: S => { S.freeLabs = S.freeLabs.map(f => (f.key === "top" ? { ...f, tex: "5", col: GREEN } : f)) },
   }),
   {

@@ -327,19 +327,27 @@ export function crossBeat(id: string, say0: string, board: (S: Scene) => void, a
 
 /** Reading the ruler: its 0 is on one end; read the other end in the lens. */
 export const readWalk = (): WalkStep<Scene>[] => [
-  { say: "The ruler's $0$ is on one end of the line.", tex: "0\\text{ cm}" },
-  { say: "Read the number at the other end, in the lens. Each small mark is a millimetre, $0.1$ cm.", tex: "\\;?\\text{ cm}" },
+  { say: "The ruler's $0$ is on one end of the line.", tex: "0\\text{ cm}", show: S => { S.walkLit = "zero" } },
+  { say: "Read the number at the other end, in the lens. Each small mark is a millimetre, $0.1$ cm.", tex: "\\;?\\text{ cm}", show: S => { S.walkLit = "lens" } },
 ]
-/** Map to real: each cm stands for so much. */
-export const realWalk = (cm: string, per: string, unit: string): WalkStep<Scene>[] => [
-  { say: `Each cm on the map stands for $${per}$ ${unit}.`, tex: `1\\text{ cm} \\to ${per}\\text{ ${unit}}` },
-  { say: `So $${cm}$ cm stands for $${cm}$ lots of $${per}$.`, tex: `${cm} \\times ${per}` },
-]
+/** Map to real: each cm stands for so much (its centimetres marked along `line`, or along the line already marked). */
+export const realWalk = (cm: string, per: string, unit: string, line?: [string, string]): WalkStep<Scene>[] => {
+  const pieces = (S: Scene, lit: number) => {
+    if (line) S.along = { a: line[0], b: line[1], step: 1, tex: `${per}\\text{ ${unit}}`, lit }
+    else if (S.along) S.along = { ...S.along, lit }
+  }
+  return [
+    { say: `Each cm on the map stands for $${per}$ ${unit}.`, tex: `1\\text{ cm} \\to ${per}\\text{ ${unit}}`, show: S => pieces(S, 1) },
+    { say: `So $${cm}$ cm stands for $${cm}$ lots of $${per}$.`, tex: `${cm} \\times ${per}`, show: S => pieces(S, 99) },
+  ]
+}
 /** Reading the protractor: the row of numbers that starts at 0 on North, up to where the line crosses. */
 export const protWalk = (line: string): WalkStep<Scene>[] => [
-  { say: "Find the row of numbers that starts at $0$ on the North line.", tex: "\\text{Start at } 0 \\text{ on North}" },
-  { say: `Follow that row round to where $${line}$ crosses the edge.`, tex: `\\text{Read where } ${line} \\text{ crosses}` },
+  { say: "Find the row of numbers that starts at $0$ on the North line.", tex: "\\text{Start at } 0 \\text{ on North}", show: S => { if (S.prot) S.prot.find = 0 } },
+  { say: `Follow that row round to where $${line}$ crosses the edge.`, tex: `\\text{Read where } ${line} \\text{ crosses}`, show: S => { if (S.prot) S.prot.find = undefined } },
 ]
+/** Angle arcs by id pulse (the rest stop). */
+export const pulseArcs = (S: Scene, ...ids: string[]) => { S.arcs = S.arcs.map(a => ({ ...a, pulse: ids.includes(a.id) })) }
 
 // ── angles on the map ────────────────────────────────────────────────────
 

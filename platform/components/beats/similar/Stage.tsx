@@ -55,7 +55,7 @@ function ShapeView({ S, sh }: { S: Scene; sh: Shape }) {
   if (sh.ghost) {
     return <polygon points={poly(P)} fill={CHALK} fillOpacity={0.03} stroke={CHALK} strokeOpacity={0.4} strokeWidth={1.8} strokeDasharray="6 6" strokeLinejoin="round" />
   }
-  if (sh.mug) return <g>{mugParts(S, sh, P, op)}</g>
+  if (sh.mug) return <g>{mugParts(S, sh, P, op)}{extraGlow(S, sh, false)}</g>
   const mid: Vec = [P.reduce((s, p) => s + p[0], 0) / P.length, P.reduce((s, p) => s + p[1], 0) / P.length]
   if (sh.depth) out.push(...prismParts(S, sh, P, mid, op))
   const full = sh.cubes !== undefined && sh.cubes >= 1
@@ -93,7 +93,27 @@ function ShapeView({ S, sh }: { S: Scene; sh: Shape }) {
       out.push(<path key={`ar${ar.a}${ar.b}${j}`} d={`M ${l[0]} ${l[1]} L ${tip[0]} ${tip[1]} L ${r[0]} ${r[1]}`} fill="none" stroke={CHALK} strokeOpacity={op} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />)
     }
   }
+  out.push(...extraGlow(S, sh, true))
   return <g>{out}</g>
+}
+
+/**
+ * Glowing lines the outline loop does not draw: a prism's edges along its
+ * length (to a primed corner), and a mug's sides (drawn as curves).
+ */
+function extraGlow(S: Scene, sh: Shape, skipOutline: boolean): React.ReactNode[] {
+  const names = [...sh.order, ...(sh.depth ? sh.order.map(n => `${n}'`) : [])]
+  const k = sh.order.length
+  const out: React.ReactNode[] = []
+  for (let i = 0; i < names.length; i++) for (let j = i + 1; j < names.length; j++) {
+    const key = sideKey(sh.id, names[i], names[j])
+    if (!S.sideGlow.has(key)) continue
+    const outline = j < k && (j === i + 1 || (i === 0 && j === k - 1))
+    if (skipOutline && outline) continue
+    const a = atS(S, sh, names[i]), b = atS(S, sh, names[j]), col = S.sideCol[key] ?? CHALK
+    out.push(<line key={`xg${key}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={col} strokeWidth={10} strokeLinecap="round" filter="url(#pl-soft)"><animate attributeName="stroke-opacity" values="0.1;0.7;0.1" dur="1.6s" repeatCount="indefinite" /></line>)
+  }
+  return out
 }
 
 /** Which of a prism's side faces can be seen: those whose outside faces the way the prism goes back. */
@@ -301,7 +321,7 @@ function Bars({ S, L, op }: { S: Scene; L: Layout; op: number }) {
     let x = x0
     r.parts.forEach((pt, j) => {
       const w = pt.w * u
-      shapes.push(<rect key={`b${i}${j}`} x={x} y={y} width={w} height={h} rx={3} fill={pt.col} fillOpacity={pt.dash ? 0 : 0.3} stroke={pt.col} strokeWidth={1.6} strokeDasharray={pt.dash ? "4 4" : undefined} />)
+      shapes.push(<rect key={`b${i}${j}`} x={x} y={y} width={w} height={h} rx={3} fill={pt.col} fillOpacity={pt.dash ? 0 : 0.3} stroke={pt.col} strokeWidth={1.6} strokeDasharray={pt.dash ? "4 4" : undefined}>{pt.pulse && <animate attributeName="fill-opacity" values="0.2;0.6;0.2" dur="1.6s" repeatCount="indefinite" />}</rect>)
       if (pt.tex) texts.push(<div key={`t${i}${j}`} className={styles.label} style={{ ...place([x + w / 2, y + h / 2]), color: CHALK, fontSize: L.compact ? 15 : 18, opacity: op }}><Tex tex={pt.tex} /></div>)
       x += w
     })

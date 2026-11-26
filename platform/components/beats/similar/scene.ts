@@ -84,7 +84,7 @@ export interface Arrow { sh: string; a: string; b: string; n: number }
 /** A line drawn over the figure through world points (the F or Z of a reason). */
 export interface Line { pts: Vec[]; col: string; glow?: boolean; dash?: boolean; w?: number }
 /** A bar of parts, for comparing lengths ("1 part" against "1.75 parts"). */
-export interface BarRow { label: string; parts: { w: number; col: string; tex?: string; dash?: boolean }[] }
+export interface BarRow { label: string; parts: { w: number; col: string; tex?: string; dash?: boolean; pulse?: boolean }[] }
 
 /** Something the student drags. */
 export interface Handle {

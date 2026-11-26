@@ -110,7 +110,7 @@ export const DIGIT_KEYS: string[][] = [
 /** A calculator's function keys, as maths (sin⁻¹ reads as it does on paper). */
 const FN_KEY_TEX: Record<string, string> = { "π": "\\pi", sin: "\\sin", cos: "\\cos", tan: "\\tan", "sin⁻¹": "\\sin^{-1}", "cos⁻¹": "\\cos^{-1}", "tan⁻¹": "\\tan^{-1}", "x²": "x^{2}", "√": "\\sqrt{\\phantom{x}}" }
 
-export function Keypad({ top, cx, onKey, rows = DIGIT_KEYS, lit = [] }: { top: number; cx?: number; onKey: (k: string) => void; rows?: string[][]; lit?: string[] }) {
+export function Keypad({ top, cx, onKey, rows = DIGIT_KEYS, lit = [], still = false }: { top: number; cx?: number; onKey: (k: string) => void; rows?: string[][]; lit?: string[]; /** shown only to point at keys (a Show me how step): it takes no presses */ still?: boolean }) {
   const calc = rows.some(r => r.some(k => k.startsWith("sin") || k === "×"))
   // a keypad with SHIFT sets its function keys as maths, so they look the same shifted or not
   const shiftPad = rows.some(r => r.includes("SHIFT"))
@@ -118,8 +118,9 @@ export function Keypad({ top, cx, onKey, rows = DIGIT_KEYS, lit = [] }: { top: n
     <div key={i} className={styles.keyRow}>
       {keys.map((k, j) => (
         <button key={`${i}-${j}`} type="button" className={`${styles.key} ${k === "go" ? styles.keyGo : ""} ${k.length > 1 && k !== "go" && k !== "back" ? styles.keyFn : ""} ${k === "SHIFT" ? styles.keyShift : ""} ${lit.includes(k) ? styles.keyLit : ""}`}
-          onPointerDown={e => { e.preventDefault(); onKey(k) }}
-          aria-label={k === "go" ? "Check" : k === "back" ? "Delete" : k}>
+          onPointerDown={e => { e.preventDefault(); if (!still) onKey(k) }}
+          tabIndex={still ? -1 : undefined}
+          aria-label={still ? undefined : k === "go" ? "Check" : k === "back" ? "Delete" : k}>
           {k === "back" ? <Delete size={19} strokeWidth={1.7} /> : k === "go" ? (calc ? "=" : <ArrowRight size={20} strokeWidth={2} />) : (shiftPad || ["x²", "√", "π"].includes(k)) && FN_KEY_TEX[k] ? <Tex tex={FN_KEY_TEX[k]} /> : k}
         </button>
       ))}
@@ -128,7 +129,7 @@ export function Keypad({ top, cx, onKey, rows = DIGIT_KEYS, lit = [] }: { top: n
   return (
     // centred under the board, or (beside the working on a wide screen) centred on `cx`
     // (a zero-width column centred on cx: its rows overflow it evenly both ways; transform is the entry animation's)
-    <div className={styles.keypad} style={cx === undefined ? { top } : { top, left: cx, right: "auto", width: 0 }}>
+    <div className={styles.keypad} aria-hidden={still || undefined} style={{ ...(cx === undefined ? { top } : { top, left: cx, right: "auto", width: 0 }), ...(still ? { pointerEvents: "none" as const } : {}) }}>
       {rows.map(row)}
     </div>
   )

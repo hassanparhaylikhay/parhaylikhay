@@ -9,7 +9,7 @@
 import type { BeatOf } from "../beat"
 import type { WalkStep } from "../walk"
 import type { Vec } from "../geometry"
-import { atom, row, op } from "../equation"
+import { atom, row, op, frac, type ENode } from "../equation"
 import { type Scene, type VisKey, type Tap, type FreeLab, GREEN, resetBeat, show, say, startInput, boxNode, ptS, distToSeg, labelWidth, add, sub, mul, dot, lerpV, len } from "./scene"
 
 export type Beat = BeatOf<Scene>
@@ -85,6 +85,8 @@ export function ask(id: string, text: string, board0: (S: Scene) => void, o: {
   slips?: { v: number; say: string }[]
   walk: Walk
   then?: (S: Scene) => void
+  /** the working so far, kept above the box (the line the student just made, so they don't redo it) */
+  above?: () => ENode
 }): Beat {
   const after = o.unit ? UNIT[o.unit] : ""
   const val = o.shown ?? String(o.answer)
@@ -101,7 +103,8 @@ export function ask(id: string, text: string, board0: (S: Scene) => void, o: {
       })
       S.eqFn = S2 => {
         const right = S2.input?.state === "right"
-        return row([atom("ql", o.lead, o.leadCol ? { col: o.leadCol } : {}), op("eq", "="), right ? atom("qa", shown, { col: GREEN }) : boxNode(S2), ...(after && !right ? [atom("qu", after)] : [])])
+        const line = row([atom("ql", o.lead, o.leadCol ? { col: o.leadCol } : {}), op("eq", "="), right ? atom("qa", shown, { col: GREEN }) : boxNode(S2), ...(after && !right ? [atom("qu", after)] : [])])
+        return o.above ? frac("work", o.above(), line, "rgba(0,0,0,0)") : line
       }
       look(S, ["eq", "keypad"])
     },
@@ -125,5 +128,18 @@ export const turned = (pts: Record<string, Vec>, cen: Vec, deg: number): Record<
   return Object.fromEntries(Object.entries(pts).map(([n, p]) => { const q = sub(p, cen); return [n, add(cen, [q[0] * co - q[1] * si, q[0] * si + q[1] * co])] }))
 }
 /** Run something over time (a count, a level): `set(S, e)` with e from 0 to 1. */
+/** Calculator keys lit to show what to press. */
+export const keys = (S: Scene, ...k: string[]) => { S.keyHint = k }
+/** Lines and arcs by id glow (the rest stop). */
+export const glowOn = (S: Scene, ...ids: string[]) => {
+  S.segs = S.segs.map(g => ({ ...g, glow: ids.includes(g.id) }))
+  S.arcs = S.arcs.map(a => ({ ...a, glow: ids.includes(a.id) }))
+}
+/** Labels by key pulse (the rest stop). */
+export const pulseLabs = (S: Scene, ...keys0: string[]) => { S.freeLabs = S.freeLabs.map(f => ({ ...f, pulse: keys0.includes(f.key) })) }
+/** Shaded regions by id pulse (the rest stop). */
+export const pulseShades = (S: Scene, ...ids: string[]) => { S.shades = S.shades.map(h => ({ ...h, pulse: ids.includes(h.id) })) }
+/** A label put on the board (or put back in place of one with its key). */
+export const putLab = (S: Scene, f: FreeLab) => { S.freeLabs = [...S.freeLabs.filter(g => g.key !== f.key), f] }
 export const over = (S: Scene, dur: number, set: (S: Scene, e: number) => void, wait = 0.5, end?: (S: Scene) => void) =>
   S.acts.push({ dur: wait }, { dur, run: (S2, e) => set(S2, e), end: S2 => { set(S2, 1); end?.(S2) } })
